@@ -10,81 +10,81 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - User Account Creation (Priority: P1)
+### User Story 1 - Creación de cuenta de usuario (Priority: P1)
 
-As a new visitor, I want to create an account using my email and a password so that I can access the system's protected features.
+Como nuevo visitante, quiero crear una cuenta utilizando mi correo electrónico y una contraseña para poder acceder a las funciones protegidas del sistema.
 
-**Why this priority**: Essential first step for any user-specific functionality; required for identification and security.
+**Why this priority**: Primer paso esencial para cualquier funcionalidad específica del usuario; necesario para la identificación y la seguridad.
 
-**Independent Test**: Can be tested by submitting the registration form with valid data and verifying that the user can subsequently attempt a login.
+**Independent Test**: Se puede probar enviando el formulario de registro con datos válidos y verificando que el usuario pueda intentar iniciar sesión posteriormente.
 
 **Acceptance Scenarios**:
 
-1. **Given** a visitor is on the registration page, **When** they submit a valid email ("test@example.com") and a non-empty password, **Then** the system creates the account and confirms success.
-2. **Given** a visitor attempts to register with an email that already exists in the system, **When** they submit the registration, **Then** the system rejects the registration and provides a clear error message.
-3. **Given** a visitor provides an invalid email format, **When** they submit the registration, **Then** the system rejects the request.
+1. **Given** un visitante está en la página de registro, **When** envía un correo electrónico válido ("test@example.com") y una contraseña no vacía, **Then** el sistema crea la cuenta y confirma el éxito.
+2. **Given** un visitante intenta registrarse con un correo electrónico que ya existe en el sistema, **When** envía el registro, **Then** el sistema rechaza el registro y proporciona un mensaje de error claro.
+3. **Given** un visitante proporciona un formato de correo electrónico no válido, **When** envía el registro, **Then** el sistema rechaza la solicitud.
 
 ---
 
-### User Story 2 - User Login (Priority: P1)
+### User Story 2 - Inicio de sesión de usuario (Priority: P1)
 
-As a registered user, I want to log in with my credentials so that I can access my private session and data.
+Como usuario registrado, quiero iniciar sesión con mis credenciales para poder acceder a mi sesión y datos privados.
 
-**Why this priority**: Core functionality to verify identity and grant access to the system.
+**Why this priority**: Funcionalidad central para verificar la identidad y otorgar acceso al sistema.
 
-**Independent Test**: Can be tested by providing correct credentials for an existing user and verifying that a session is established.
+**Independent Test**: Se puede probar proporcionando las credenciales correctas de un usuario existente y verificando que se establezca una sesión.
 
 **Acceptance Scenarios**:
 
-1. **Given** a registered user with email "user@test.com" and password "pass123", **When** they submit these credentials on the login page, **Then** the system grants access and establishes a session.
-2. **Given** a user provides a correct email but an incorrect password, **When** they submit, **Then** the system denies access.
-3. **Given** a user provides an email that is not registered, **When** they submit, **Then** the system denies access.
+1. **Given** un usuario registrado con correo electrónico "user@test.com" y contraseña "pass123", **When** envía estas credenciales en la página de inicio de sesión, **Then** el sistema concede el acceso y establece una sesión.
+2. **Given** un usuario proporciona un correo electrónico correcto pero una contraseña incorrecta, **When** envía, **Then** el sistema niega el acceso.
+3. **Given** un usuario proporciona un correo electrónico que no está registrado, **When** envía, **Then** el sistema niega el acceso.
 
 ---
 
 ### Edge Cases
 
-- **Case sensitivity**: How does the system handle "User@Test.com" vs "user@test.com"? (Emails should be treated as case-insensitive for identification).
-- **Special characters**: How does the system handle non-standard characters in passwords? (Passwords should allow any characters provided they are non-empty).
+- **Case sensitivity**: ¿Cómo maneja el sistema "User@Test.com" vs "user@test.com"? (Los correos electrónicos deben tratarse como insensibles a mayúsculas para la identificación).
+- **Special characters**: ¿Cómo maneja el sistema caracteres no estándar en las contraseñas? (Las contraseñas deben permitir cualquier carácter siempre que no estén vacías).
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: The system MUST allow users to register by providing an email and a password.
-- **FR-002**: The system MUST validate that the email is not empty and has a valid email format.
-- **FR-003**: The system MUST validate that the password is not empty.
-- **FR-004**: The system MUST ensure that each email is unique; duplicate registrations for the same email MUST be rejected.
-- **FR-005**: The system MUST allow users to authenticate (login) using their registered email and password.
-- **FR-006**: The system MUST reject login attempts with non-existent emails or incorrect passwords.
-- **FR-007**: The system MUST protect credentials: passwords MUST NOT be stored in plain text.
-- **FR-008**: The system MUST NOT expose sensitive data (passwords, clear-text credentials) in responses, error messages, or system logs.
-- **FR-009**: The API endpoints for registration and authentication MUST be documented according to the project's documentation standards (Constitution Principle 10).
+- **FR-001**: System MUST permitir a los usuarios registrarse proporcionando un correo electrónico y una contraseña.
+- **FR-002**: System MUST validar que el correo electrónico no esté vacío y tenga un formato de correo electrónico válido.
+- **FR-003**: System MUST validar que la contraseña no esté vacía.
+- **FR-004**: System MUST asegurar que cada correo electrónico sea único; los registros duplicados para el mismo correo electrónico MUST NOT ser aceptados.
+- **FR-005**: System MUST permitir a los usuarios autenticarse (iniciar sesión) utilizando su correo electrónico registrado y su contraseña.
+- **FR-006**: System MUST rechazar intentos de inicio de sesión con correos electrónicos inexistentes o contraseñas incorrectas.
+- **FR-007**: System MUST proteger las credenciales: las contraseñas MUST NOT almacenarse en texto plano.
+- **FR-008**: System MUST NOT exponer datos sensibles (contraseñas, credenciales en texto plano) en respuestas, mensajes de error o registros del sistema.
+- **FR-009**: Los endpoints de la API para el registro y la autenticación MUST ser documentados de acuerdo con los estándares de documentación del proyecto (Principio 10 de la Constitución).
 
 ### Key Entities *(include if feature involves data)*
 
-- **User**: Represents a registered individual in the system.
-  - Attributes: Email, Password
+- **Usuario**: Representa a un individuo registrado en el sistema.
+- Attributes: Correo electrónico, Contraseña
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can successfully complete the registration process.
-- **SC-002**: 100% of registration attempts with existing emails are correctly identified and rejected.
-- **SC-003**: 100% of stored passwords use secure cryptographic hashing (no plain text).
-- **SC-004**: Zero instances of plain-text passwords appear in system logs or API responses.
-- **SC-005**: API documentation is 100% complete and matches the implementation for both endpoints.
+- **SC-001**: Los usuarios pueden completar con éxito el proceso de registro.
+- **SC-002**: El 100% de los intentos de registro con correos electrónicos existentes son identificados y rechazados correctamente.
+- **SC-003**: El 100% de las contraseñas almacenadas utilizan hashing criptográfico seguro (sin texto plano).
+- **SC-004**: Cero instancias de contraseñas en texto plano aparecen en los registros del sistema o en las respuestas de la API.
+- **SC-005**: La documentación de la API está 100% completa y coincide con la implementación para ambos endpoints.
 
 ## Assumptions
 
-- **Secure Transport**: It is assumed that all authentication traffic is carried over HTTPS/TLS to protect data in transit.
-- **Email Normalization**: It is assumed that emails will be normalized (e.g., lowercased) before storage and comparison to avoid case-sensitivity issues.
-- **Standard Hashing**: It is assumed that an industry-standard hashing algorithm (like BCrypt or Argon2) will be used, as per general security practices.
+- **Transporte seguro**: Se asume que todo el tráfico de autenticación se realiza sobre HTTPS/TLS para proteger los datos en tránsito.
+- **Normalización del correo electrónico**: Se asume que los correos electrónicos serán normalizados (p. ej., convertidos a minúsculas) antes del almacenamiento y la comparación para evitar problemas de sensibilidad a mayúsculas/minúsculas.
+- **Hashing estándar**: Se asume que se utilizará un algoritmo de hashing estándar de la industria (como BCrypt o Argon2), según las prácticas generales de seguridad.
 
 ## Out of Scope
 
-- **Password Recovery**: No mechanism for resetting or recovering forgotten passwords.
-- **Email Verification**: No email confirmation links or codes.
-- **Account Lockout**: No blocking of accounts after multiple failed login attempts.
-- **Multi-factor Authentication (MFA)**: Only single-factor authentication (email/password) is required.
+- **Recuperación de contraseña**: No hay mecanismo para restablecer o recuperar contraseñas olvidadas.
+- **Verificación de correo electrónico**: No hay enlaces o códigos de confirmación por correo electrónico.
+- **Bloqueo de cuenta**: No hay bloqueo de cuentas después de múltiples intentos fallidos de inicio de sesión.
+- **Multi-factor Authentication (MFA)**: Solo se requiere autenticación de factor único (correo electrónico/contraseña).
