@@ -7,6 +7,7 @@
 Registra un nuevo usuario.
 
 **Request Body** (JSON):
+
 ```json
 {
   "email": "user@example.com",
@@ -15,8 +16,9 @@ Registra un nuevo usuario.
 ```
 
 **Responses**:
+
 - `201 Created`: Usuario registrado exitosamente.
-- `400 Bad Request`: Datos inválidos (email no válido, campos vacíos).
+- `400 Bad Request`: Datos inválidos, como email no válido o campos vacíos.
 - `409 Conflict`: El email ya está registrado.
 
 ---
@@ -28,6 +30,7 @@ Registra un nuevo usuario.
 Autentica a un usuario y retorna un JWT.
 
 **Request Body** (JSON):
+
 ```json
 {
   "email": "user@example.com",
@@ -36,6 +39,14 @@ Autentica a un usuario y retorna un JWT.
 ```
 
 **Responses**:
+
 - `200 OK`: Autenticación exitosa.
-  - Body: `{"token": "JWT_TOKEN_HERE"}`
+  - Body:
+
+```json
+{
+  "token": "JWT_TOKEN_HERE"
+}
+```
+
 - `401 Unauthorized`: Credenciales inválidas.

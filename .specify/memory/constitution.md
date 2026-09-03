@@ -1,12 +1,12 @@
 <!--
 Sync Impact Report:
-- Version change: 1.1.0 -> 1.2.0
+- Version change: 1.2.0 -> 1.3.0
 - List of modified principles:
   - None
 - Added sections:
-  - None
+  - Politica de Idioma
 - Modified sections:
-  - Política de Idioma
+  - None
 - Removed sections:
   - None
 - Follow-up TODOs: None
@@ -142,4 +142,4 @@ La Constitución es el documento de máxima jerarquía técnica del proyecto y r
 
 - **Política de Versionado**: Se utiliza Versionado Semántico (SemVer). Los cambios mayores (MAJOR) implican cambios en la gobernanza o eliminación de principios. Los cambios menores (MINOR) añaden o expanden principios. Los parches (PATCH) son clarificaciones no semánticas.
 
-**Version**: 1.2.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-01
+**Version**: 1.3.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-03

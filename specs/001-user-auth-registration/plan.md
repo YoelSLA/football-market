@@ -1,115 +1,68 @@
-# Implementation Plan: User Registration and Authentication
+# Implementation Plan: User Auth & Registration
 
-**Branch**: `001-user-auth-registration` | **Date**: 2026-09-01 | **Spec**: [spec.md](spec.md)
+**Branch**: `001-user-auth-registration` | **Date**: 2026-09-03 | **Spec**: `specs/001-user-auth-registration/spec.md`
 
-**Input**: Feature specification from `specs/001-user-auth-registration/spec.md`
+**Input**: Especificación de la funcionalidad ubicada en `specs/001-user-auth-registration/spec.md`
+
+**Nota**: Este documento corresponde al plan de implementación de la funcionalidad y se genera a partir de la especificación, la Constitution y la estructura real del repositorio.
 
 ## Summary
 
-Implementación de un sistema de registro y autenticación de usuarios. Los usuarios podrán crear cuentas proporcionando un email (normalizado a minúsculas) y una contraseña (almacenada mediante hashing seguro). La autenticación se realizará mediante JWT y Spring Security. Se seguirá una arquitectura por capas: Controller -> Service -> Repository -> PostgreSQL, asegurando que los passwords nunca se expongan ni se almacenen en texto plano.
+Implementar el registro y la autenticación de usuarios para Football Market. La funcionalidad permitirá que nuevos usuarios creen una cuenta mediante email y contraseña, y que los usuarios registrados puedan autenticarse mediante sus credenciales.
+
+La implementación deberá integrarse con la arquitectura existente del backend, respetando la separación de responsabilidades definida por la Constitution. La recepción y validación de las solicitudes corresponderá al Controller, la lógica de negocio al Service y el acceso a la persistencia al Repository. Los datos sensibles deberán manejarse de acuerdo con las reglas de seguridad establecidas por la Constitution.
+
+La funcionalidad estará limitada a los casos de uso definidos en `spec.md`, incluyendo los endpoints de registro y login, sus validaciones, manejo de errores, persistencia necesaria, pruebas automatizadas y la correspondiente actualización de la colección de Postman existente.
 
 ## Technical Context
 
 **Language/Version**: Java 21
 
-**Gradle**: 8.14+
+**Primary Dependencies**: Spring Boot 4.1.1, Spring Security, Spring Data JPA, Spring Boot Validation, Flyway, PostgreSQL JDBC Driver, Spring Security OAuth2 Resource Server y Spring Security OAuth2 JOSE.
 
-**Primary Dependencies**:
-- Spring Boot 4.1.1 (managed)
-- Spring Security 7.0.x (managed by SB 4.1.1)
-- Spring Data JPA (managed by SB 4.1.1)
-- PostgreSQL JDBC Driver (managed by SB 4.1.1)
-- Spring Security OAuth2 Resource Server (managed by SB 4.1.1)
-- Spring Security OAuth2 JOSE (managed by SB 4.1.1)
-- Spring Boot Validation (managed by SB 4.1.1)
-- Jakarta Validation 3.1.1
-- Flyway (version explicitly defined in build.gradle)
+**Storage**: PostgreSQL
 
-**Database**: PostgreSQL 18.3
+**Testing**: JUnit Jupiter, Mockito, AssertJ, Spring Boot Test y Testcontainers con PostgreSQL.
 
-**Security**:
-- Password Hashing: BCrypt using `BCryptPasswordEncoder` from Spring Security.
-- JWT: Nimbus JOSE + JWT (via Spring Security OAuth2 JOSE).
+**Target Platform**: Backend ejecutado sobre JVM.
 
-**DTO Validation**:
-- Jakarta Validation 3.1.1.
-- DTOs implemented as Java records.
-- Validation via `jakarta.validation.*` annotations.
-- HTTP validation via Spring Boot Validation.
-- DTO request validation handles email and password rules (lowercase normalization, etc.).
+**Project Type**: Servicio web backend.
 
-**Constraints**: El email debe ser único y normalizado (lowercase). El password debe almacenarse como un hash seguro (BCrypt). No exponer passwords ni hashes en responses o logs.
+**Performance Goals**: No se define un objetivo de rendimiento específico para esta funcionalidad en `spec.md`.
 
-**Scale/Scope**: Sistema inicial de gestión de usuarios; base para futuras funcionalidades protegidas.
+**Constraints**: La implementación debe respetar la arquitectura y las dependencias definidas por la Constitution. El Controller debe limitarse a responsabilidades HTTP y delegar la lógica de negocio al Service. El acceso a persistencia debe realizarse mediante Repository. Las contraseñas deben almacenarse de forma segura y nunca exponerse mediante las respuestas de la API. Los tests nuevos deben utilizar explícitamente el perfil `test`. No se permite modificar los archivos YAML existentes ni crear archivos YAML alternativos para esta funcionalidad. La implementación debe limitarse a los endpoints `POST /api/auth/register` y `POST /api/auth/login` definidos por la especificación.
 
-## Testing
-
-**Dependencies**:
-- JUnit Jupiter 5.14.3
-- Mockito 5.20.0
-- AssertJ 3.27.6
-- Spring Boot Test 4.1.1
-- Testcontainers 2.0.3
-- PostgreSQL Testcontainers module 2.0.3
-
-**Constraints**:
-- Assertions MUST use AssertJ exclusively.
-- DO NOT use `org.junit.jupiter.api.Assertions`.
-- DO NOT use Hamcrest.
-- DO NOT introduce any other assertion library.
-
-**Scope**: Unit tests for Model/Entity, Service, and Controller; Integration tests as defined in the feature.
+**Scale/Scope**: La funcionalidad se limita al registro y autenticación de usuarios definidos en `spec.md`, incluyendo las validaciones correspondientes, manejo de errores, persistencia, generación de JWT, pruebas automatizadas y actualización de la colección Postman existente.
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- **Principio 1 (Separación de responsabilidades)**: Se garantiza mediante el uso de la arquitectura por capas definida (Controller -> Service -> Repository).
-- **Principio 2 (Lógica de negocio)**: La lógica de negocio de registro y autenticación pertenece al Service. El Model/Entity puede contener sus propias validaciones relacionadas con su estado e invariantes. Las validaciones propias del Model/Entity no deben trasladarse obligatoriamente al Service si pertenecen naturalmente al estado o invariantes de la entidad. No interpretar esto como que el Entity debe contener toda la validación de entrada HTTP.
-- **Principio 4 y 5 (Testing)**: Se definieron tests unitarios para Model/Entity, Service, Controller y tests de integración.
-- **Principio 8 (Seguridad)**: Se implementará hashing de contraseñas, JWT para sesiones y Spring Security para protección de recursos. No se expondrán datos sensibles.
-- **Principio 10 (Documentación)**: Se utilizará OpenAPI/Swagger para documentar los nuevos endpoints de registro y login.
+- **Idioma**: PASS — Todo el contenido documental del plan debe redactarse en español. Los identificadores técnicos pueden conservar su denominación original.
 
-## Endpoints
+- **Stack tecnológico**: PASS — La implementación utilizará exclusivamente las tecnologías y versiones establecidas por la Constitution.
 
-Los endpoints de registro y login deben definirse explícitamente antes de la implementación en `footballmarket.controller.auth.AuthController`.
+- **Arquitectura por capas**: PASS — Se respetará la separación entre Controller, Service, Repository y Model/Entity definida por la Constitution.
 
-### AuthController (Responsabilidades)
-- Implementar `POST /api/auth/register` y `POST /api/auth/login`.
-- Recibir requests y validar DTOs (utilizando `jakarta.validation`).
-- Delegar la lógica de negocio al `Service`.
-- Convertir resultados del `Service` a `Response DTO`.
-- Devolver HTTP status correctos.
-- **Restricción**: NO contener lógica de negocio, hashing de passwords, generación de JWT ni acceso directo al `Repository`.
+- **Responsabilidad del Controller**: PASS — El Controller se limitará al manejo HTTP, validación de entrada, delegación al Service y construcción de respuestas. No contendrá lógica de negocio, hashing de contraseñas, generación de JWT, acceso directo al Repository ni lógica de persistencia.
 
-### Registration
+- **Lógica de negocio**: PASS — La lógica de negocio corresponderá al Service. Las invariantes propias del dominio permanecerán en el Model/Entity cuando corresponda.
 
-- **POST /api/auth/register**
-- **Tipo**: Público.
-- **Request DTO**: `footballmarket.controller.auth.dto.RegisterRequest` (Contiene email y password).
-- **Response DTO**: `footballmarket.controller.auth.dto.RegisterResponse` (Información del usuario registrado, sin password/hash).
-- **Validaciones**:
-    - Email: Formato válido, normalizado a lowercase antes de persistir.
-    - Password: Validado según especificación y almacenado como BCrypt hash.
-- **Comportamiento**:
-    - Email duplicado: Manejo de error específico (e.g., 409 Conflict).
-- **HTTP Status**: 201 Created (éxito), 400 Bad Request (validación), 409 Conflict (duplicado).
+- **Persistencia**: PASS — El acceso a datos se realizará mediante Repository, sin acceso directo desde el Controller.
 
-### Login
+- **Seguridad**: PASS — Las contraseñas deberán almacenarse mediante hashing seguro y nunca podrán exponerse en las respuestas. La autenticación y generación de JWT deberán utilizar los mecanismos establecidos por la Constitution.
 
-- **POST /api/auth/login**
-- **Tipo**: Público.
-- **Request DTO**: `footballmarket.controller.auth.dto.LoginRequest` (Contiene email y password).
-- **Response DTO**: `footballmarket.controller.auth.dto.LoginResponse` (JWT firmado).
-- **Validaciones**:
-    - Email: Normalizado a lowercase antes de buscar.
-    - Password: Verificación mediante `BCryptPasswordEncoder`.
-- **Comportamiento**:
-    - Credenciales correctas: Genera y devuelve un JWT.
-    - Autenticación stateless.
-    - Acceso a endpoints protegidos: Esquema Bearer.
-    - Nunca devolver password o hash.
-- **HTTP Status**: 200 OK (éxito), 401 Unauthorized (credenciales incorrectas).
+- **DTOs y mapeo**: PASS — Los DTOs de request y response se utilizarán como contratos de la API y el mapeo correspondiente se realizará mediante los componentes ubicados en `controller/mapper`, evitando exponer directamente las entidades.
+
+- **Testing**: PASS — Se implementarán las pruebas correspondientes a las capas afectadas. Cada nueva clase de test deberá utilizar explícitamente `@ActiveProfiles("test")`.
+
+- **Configuración**: PASS — No se modificarán los archivos YAML existentes ni se crearán archivos YAML alternativos para esta funcionalidad.
+
+- **Alcance**: PASS — La implementación se limitará a los casos de uso especificados en `spec.md`, sin incorporar funcionalidades adicionales fuera del alcance.
+
+- **Postman**: PASS — Se modificará la colección existente de Postman para incorporar los endpoints de registro y login, sin crear una colección nueva.
+
+**Resultado**: PASS — No se identifican violaciones a la Constitution que requieran justificar complejidad adicional.
 
 ## Project Structure
 
@@ -117,89 +70,98 @@ Los endpoints de registro y login deben definirse explícitamente antes de la im
 
 ```text
 specs/001-user-auth-registration/
-├── spec.md              # Feature specification
-├── plan.md              # This file
-├── research.md          # Phase 0 output
-├── data-model.md        # Phase 1 output
-├── quickstart.md        # Phase 1 output
-├── contracts/           # Phase 1 output
-└── tasks.md             # Phase 2 output (generated later)
+
+├── plan.md              # Este archivo
+├── research.md          # Investigación técnica
+├── data-model.md        # Modelo de datos
+├── quickstart.md        # Guía de ejecución y validación
+├── contracts/           # Contratos de la API
+└── tasks.md             # Tareas de implementación
 ```
 
-### Source Code (repository root)
+### Source Code
 
 ```text
 backend/
+
 ├── src/
 │   ├── main/
-│   │   ├── java/footballmarket/
-│   │   │   ├── controller/
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── AuthController.java
-│   │   │   │   │   └── dto/
-│   │   │   │   │       ├── RegisterRequest.java
-│   │   │   │   │       ├── RegisterResponse.java
-│   │   │   │   │       ├── LoginRequest.java
-│   │   │   │   │       └── LoginResponse.java
-│   │   │   │   └── mapper/          # Mappers (DTO <-> Entity)
-│   │   │   ├── service/         # Lógica de negocio y Auth
-│   │   │   ├── repository/      # Persistencia (JPA)
-│   │   │   ├── model/           # Entities
-│   │   │   ├── security/        # Configuración de Spring Security y JWT
-│   │   │   └── config/          # Configuraciones generales
+│   │   ├── java/
+│   │   │   └── footballmarket/
+│   │   │       ├── controller/
+│   │   │       │   ├── auth/
+│   │   │       │   │   └── AuthController.java
+│   │   │       │   ├── dtos/
+│   │   │       │   │   ├── requests/
+│   │   │       │   │   │   ├── RegisterRequest.java
+│   │   │       │   │   │   └── LoginRequest.java
+│   │   │       │   │   └── responses/
+│   │   │       │   │       ├── RegisterResponse.java
+│   │   │       │   │       └── LoginResponse.java
+│   │   │       │   └── mapper/
+│   │   │       │       └── UserMapper.java
+│   │   │       │
+│   │   │       ├── models/
+│   │   │       │   ├── [entidades/modelos involucrados]
+│   │   │       │   └── exceptions/
+│   │   │       │       └── [excepciones necesarias]
+│   │   │       │
+│   │   │       ├── repositories/
+│   │   │       │   └── [repositories involucrados]
+│   │   │       │
+│   │   │       └── services/
+│   │   │           ├── AuthService.java
+│   │   │           ├── impl/
+│   │   │           │   └── AuthServiceImpl.java
+│   │   │           └── exceptions/
+│   │   │               └── [excepciones necesarias]
+│   │   │
 │   │   └── resources/
-│   │       ├── application.yml
-│   │       ├── application-dev.yml
-│   │       ├── application-test.yml
-│   │       └── db/migration/    # Migraciones de base de datos
+│   │       └── [archivos de configuración existentes, sin modificación]
+│   │
 │   └── test/
-│       └── java/footballmarket/
-│           ├── controller/
-│           │   └── auth/        # AuthController tests
-│           ├── service/
-│           ├── model/
-│           └── integration/
-├── postman/
-│   └── auth/
-│       └── User-Authentication.postman_collection.json
+│       ├── java/
+│       │   └── footballmarket/
+│       │       ├── controller/
+│       │       │   └── auth/
+│       │       ├── services/
+│       │       ├── models/
+│       │       ├── repositories/
+│       │       └── integration/
+│       │
+│       └── resources/
+│           └── application-test.yml
+│
+└── [estructura adicional existente]
+    
+postman/
+└── collections/
+    └── 34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json
 ```
 
-**Structure Decision**: Se adopta una estructura de backend Spring Boot estándar, organizando el código por capas (`footballmarket/`). Los DTOs de autenticación se implementan como Java records.
+**Structure Decision**: Se utilizará la estructura de backend existente del repositorio. La funcionalidad se implementará respetando la separación de responsabilidades establecida por la Constitution. El Controller de autenticación se ubicará en controller/auth, los DTOs en controller/dtos/requests y controller/dtos/responses, y el mapeo en controller/mapper. La lógica de autenticación se implementará mediante AuthService y AuthServiceImpl, mientras que el acceso a persistencia se realizará mediante los Repositories correspondientes. Las excepciones se ubicarán en los paquetes models/exceptions o services/exceptions según la responsabilidad que representen. Las pruebas se organizarán según las capas involucradas dentro de src/test/java. La colección existente de Postman será modificada para incorporar las solicitudes de registro y login.
 
-## Postman Collection
+## Endpoints
 
-Se creará una colección de Postman versionada en el repositorio: `postman/auth/User-Authentication.postman_collection.json`.
+| Method | Path | Purpose |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | User registration |
+| `POST` | `/api/auth/login` | User authentication |
 
-### Configuración
-- Uso de variable de entorno `{{baseUrl}}` para definir el host (no hardcodear URLs).
+## Database
+- Flyway migrations are required to add/update user table structure to support storage of hashed passwords if not already present.
 
-### Requests Requeridas
-- **Registration**: Registro exitoso, email inválido, password vacío, email duplicado.
-- **Login**: Autenticación exitosa, password incorrecto, email no registrado.
+## Testing Strategy
+- **Unit Tests**: Test Service logic and Mapping logic.
+- **Controller Tests**: Test HTTP endpoints with mocked Services.
+- **Integration Tests**: Test Registration/Login flows with Testcontainers/PostgreSQL.
+- **Test Profile**: Every new test class must include `@ActiveProfiles("test")`.
 
-### JWT Handling
-- Los requests de login permitirán capturar el JWT devuelto.
-- La colección configurará automáticamente el uso de este JWT como Bearer Token para futuros requests protegidos.
-
-### Application Configuration
-
-Se requiere configuración separada para desarrollo y testing utilizando perfiles de Spring:
-
-- `application.yml`: Configuración base común.
-- `application-dev.yml`: Configuración para desarrollo, base de datos de desarrollo.
-- `application-test.yml`: Configuración para testing, base de datos de testing.
-
-**Database Setup**:
-- Se utilizará el mismo clúster de PostgreSQL, pero con dos bases de datos independientes.
-- Las configuraciones de los perfiles `dev` y `test` garantizarán que los datos no se mezclen.
-- **No hardcodear credenciales**: Utilizar variables de entorno para passwords y otros secretos.
-
+## Postman Integration
+- Modify existing `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`.
+- Add `auth` folder.
+- Add `register` and `login` requests using `{{baseUrl}}/api/auth/...`.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+No se identifican violaciones a la Constitution que requieran justificar complejidad adicional.
