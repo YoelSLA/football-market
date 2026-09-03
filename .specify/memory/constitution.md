@@ -64,6 +64,22 @@ Las soluciones deben ser proporcionales a las necesidades reales del sistema. No
 
 Todo cambio debe estar justificado por una necesidad concreta y limitarse al alcance necesario para resolverla. No deben modificarse arbitrariamente componentes o funcionalidades que no estén relacionados con el objetivo del cambio. Los cambios deben considerar su impacto sobre el sistema existente y preservar el comportamiento previamente validados. Las herramientas automatizadas y los agentes de inteligencia artificial están sujetos a estas mismas reglas y no deben realizar modificaciones fuera del alcance de la tarea sin una justificación explícita.
 
+### 13. Idioma y convenciones lingüísticas
+
+El idioma principal y obligatorio de trabajo del proyecto es el español. Todo contenido específico del proyecto generado, modificado, revisado o analizado por personas o agentes de inteligencia artificial debe redactarse en español, salvo las excepciones establecidas explícitamente en este principio.
+
+Los artefactos de Spec Kit deben conservar en inglés únicamente la estructura, los encabezados, las palabras clave, los identificadores y las convenciones que formen parte de la especificación original de Spec Kit. El contenido específico del proyecto que acompañe dichos elementos debe redactarse en español.
+
+Las expresiones normativas y estructuras propias de Spec Kit, como `System MUST`, `MUST`, `MUST NOT`, `Given`, `When` y `Then`, deben conservarse en inglés cuando formen parte del formato requerido por Spec Kit. El texto descriptivo asociado debe redactarse en español.
+
+Los identificadores propios de Spec Kit, como `FR-001`, `SC-001`, `T001`, `US1`, `P1` y `[P]`, deben conservarse en su formato original.
+
+Los elementos definidos específicamente para el proyecto, incluyendo clases, métodos, variables, atributos, archivos, paquetes, módulos, entidades, servicios, repositorios, controladores, pruebas, comentarios, mensajes de la aplicación, endpoints y commits, deben utilizar español, salvo que exista una restricción técnica, de compatibilidad o una convención oficial que requiera mantener otra denominación.
+
+Los nombres oficiales de lenguajes, frameworks, librerías, APIs, servicios externos, herramientas, comandos, protocolos, estándares, productos, marcas y tecnologías deben conservarse en su denominación oficial. No deben traducirse ni modificarse para cumplir esta política.
+
+Los agentes de inteligencia artificial deben aplicar este principio a todos los artefactos que generen o modifiquen. Ante cualquier conflicto entre una convención lingüística del proyecto y una convención obligatoria de una tecnología o de Spec Kit, debe conservarse la denominación oficial de la tecnología o convención y redactarse en español el contenido específico del proyecto.
+
 ## Reglas Generales de Aplicación
 
 Estos criterios rigen la aplicación de los principios constitucionales y deben ser respetados por todos los colaboradores del proyecto, incluyendo agentes de inteligencia artificial.
@@ -76,27 +92,37 @@ Estos criterios rigen la aplicación de los principios constitucionales y deben 
 
 - Las decisiones concretas de arquitectura e implementación deberán definirse posteriormente durante las etapas de especificación y planificación.
 
-- **Política de Idioma**: El idioma principal de trabajo del proyecto es el español.
+## Stack Tecnológico
 
-  - **Documentación y artefactos de Spec Kit**: Todo el contenido específico del proyecto debe redactarse en español. Esto incluye specifications, clarifications, plans, tasks, análisis, checklists y cualquier otro artefacto generado o mantenido mediante Spec Kit.
+El proyecto utiliza el siguiente stack tecnológico. Las implementaciones y decisiones de desarrollo deben respetar estas tecnologías y versiones, salvo que una modificación del stack sea aprobada mediante el procedimiento de enmienda correspondiente o mediante la decisión de arquitectura establecida por el proyecto.
 
-  - **Estructura y terminología de Spec Kit**: La estructura, encabezados, palabras clave, identificadores y convenciones propias de los templates de Spec Kit deben conservarse en inglés y en su formato original. Esto incluye, entre otros, términos como `Feature Specification`, `User Story`, `Priority`, `Why this priority`, `Independent Test`, `Acceptance Scenarios`, `Given`, `When`, `Then`, `Edge Cases`, `Requirements`, `Functional Requirements`, `Key Entities`, `Success Criteria`, `Measurable Outcomes`, `Assumptions`, `Out of Scope`, `Implementation Plan`, `Technical Context`, `Constitution Check`, `Project Structure`, `Tasks`, `Phase`, `Goal`, `Checkpoint`, `Dependencies & Execution Order`, `Implementation Strategy`, `Notes` y `Checklist`.
+| **#** |      **Tecnología / Dependencia**      |          **Versión**         | **Uso**                                  |
+| :---: | :------------------------------------: | :--------------------------: | :--------------------------------------- |
+|   1   |                 Gradle                 |             8.14+            | Build y gestión de dependencias          |
+|   2   |                  Java                  |              21              | Lenguaje / JDK                           |
+|   3   |               Spring Boot              |             4.1.1            | Framework principal                      |
+|   4   |               Spring Web               | Managed by Spring Boot 4.1.1 | Desarrollo de API REST                   |
+|   5   |             Spring Security            | Managed by Spring Boot 4.1.1 | Autenticación y autorización             |
+|   6   | Spring Security OAuth2 Resource Server | Managed by Spring Boot 4.1.1 | Validación de JWT                        |
+|   7   |             Spring Data JPA            | Managed by Spring Boot 4.1.1 | Persistencia mediante JPA                |
+|   8   |         Spring Boot Validation         | Managed by Spring Boot 4.1.1 | Validación de DTOs y requests            |
+|   9   |           Jakarta Validation           |             3.1.1            | API de validaciones                      |
+|   10  |               PostgreSQL               |             18.x             | Base de datos                            |
+|   11  |         PostgreSQL JDBC Driver         | Managed by Spring Boot 4.1.1 | Conexión Java ↔ PostgreSQL               |
+|   12  |                 Flyway                 | Managed by Spring Boot 4.1.1 | Migraciones y versionado de BD           |
+|   13  |            Flyway PostgreSQL           | Managed by Spring Boot 4.1.1 | Soporte de Flyway para PostgreSQL        |
+|   14  |     SpringDoc OpenAPI / Swagger UI     |             3.1.0            | Documentación de APIs REST               |
+|   15  |            Spring Boot Test            |             4.1.1            | Testing de la aplicación                 |
+|   16  |              JUnit Jupiter             | Managed by Spring Boot 4.1.1 | Tests unitarios                          |
+|   17  |                 Mockito                | Managed by Spring Boot 4.1.1 | Mocking                                  |
+|   18  |                 AssertJ                | Managed by Spring Boot 4.1.1 | Assertions                               |
+|   19  |       Spring Boot Testcontainers       |             4.1.1            | Integración Spring Boot + Testcontainers |
+|   20  |      Testcontainers JUnit Jupiter      |             2.0.3            | Integración Testcontainers + JUnit       |
+|   21  |        Testcontainers PostgreSQL       |             2.0.3            | PostgreSQL para tests de integración     |
+|   22  |         SonarQube Gradle Plugin        |          6.0.1.5171          | Análisis estático / calidad de código    |
 
-  - **Convenciones normativas de los templates**: Las palabras clave y expresiones normativas propias de los templates deben conservarse en inglés. Esto incluye expresiones como `System MUST`, `MUST`, `MUST NOT`, `Given`, `When` y `Then`. El contenido específico que acompaña estas expresiones debe redactarse en español.
+Las versiones indicadas deben considerarse parte del contexto tecnológico vigente del proyecto. Las dependencias administradas por Spring Boot deben utilizar las versiones gestionadas por la versión de Spring Boot establecida, evitando definir versiones manuales cuando no exista una necesidad técnica justificada.
 
-  - **Identificadores de Spec Kit**: Los identificadores y convenciones como `FR-001`, `FR-002`, `SC-001`, `SC-002`, `T001`, `T002`, `US1`, `US2`, `P1`, `P2` y `[P]` deben conservarse en su formato original.
-
-  - **Código fuente**: Los elementos definidos por el equipo, incluyendo clases, métodos, variables, atributos, archivos, paquetes o módulos, entidades, servicios, repositorios, controladores y otros identificadores propios del proyecto deben utilizar español, salvo que exista una restricción técnica o de compatibilidad que requiera mantener la denominación original.
-
-  - **Endpoints**: Los endpoints propios de la API del proyecto deben utilizar español en sus recursos y rutas, salvo que exista una restricción técnica o de compatibilidad que requiera mantener una denominación original.
-
-  - **Pruebas y comentarios**: Las pruebas propias del proyecto, sus nombres, descripciones, datos descriptivos y comentarios deben redactarse en español. Las convenciones, APIs y elementos propios de los frameworks o herramientas de testing deben conservar su denominación original.
-
-  - **Mensajes y commits**: Los mensajes propios de la aplicación y los commits deben redactarse en español.
-
-  - **Excepciones técnicas**: Los nombres oficiales de tecnologías, lenguajes de programación, frameworks, librerías, APIs, servicios externos, herramientas, comandos, protocolos, estándares, productos, marcas y términos técnicos oficiales deben conservarse en su denominación original cuando corresponda. Por ejemplo: Java, Gradle, Spring Boot, Spring Security, JUnit, Mockito, PostgreSQL, OpenAPI, Swagger, Git, GitHub, HTTPS/TLS, BCrypt y Argon2.
-
-  - **Agentes de IA**: Todos los agentes de inteligencia artificial utilizados en el proyecto deben respetar esta política al generar, modificar, revisar o analizar cualquier artefacto. Los agentes deben mantener en inglés la estructura, keywords, identificadores y convenciones requeridas por Spec Kit o por las tecnologías utilizadas, y redactar en español el contenido específico del proyecto.
 
 ## Evolución y Conflictos
 
