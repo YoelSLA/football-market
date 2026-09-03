@@ -1,12 +1,12 @@
 <!--
 Sync Impact Report:
-- Version change: 1.2.0 -> 1.3.0
+- Version change: 1.3.0 -> 1.4.0
 - List of modified principles:
   - None
 - Added sections:
-  - Politica de Idioma
-- Modified sections:
   - None
+- Modified sections:
+  - Politica de Idioma
 - Removed sections:
   - None
 - Follow-up TODOs: None
@@ -68,7 +68,7 @@ Todo cambio debe estar justificado por una necesidad concreta y limitarse al alc
 
 El idioma principal y obligatorio de trabajo del proyecto es el español. Todo contenido específico del proyecto generado, modificado, revisado o analizado por personas o agentes de inteligencia artificial debe redactarse en español, salvo las excepciones establecidas explícitamente en este principio.
 
-Los artefactos de Spec Kit deben conservar en inglés únicamente la estructura, los encabezados, las palabras clave, los identificadores y las convenciones que formen parte de la especificación original de Spec Kit. El contenido específico del proyecto que acompañe dichos elementos debe redactarse en español.
+Todo texto generado dentro de un artefacto de Spec Kit que describa el proyecto, sus funcionalidades, requisitos, tareas, decisiones, objetivos, criterios, dependencias o implementación DEBE estar redactado en español. Solamente se mantienen en inglés los elementos que sean parte de la estructura, sintaxis, keywords o identificadores oficiales de Spec Kit.
 
 Las expresiones normativas y estructuras propias de Spec Kit, como `System MUST`, `MUST`, `MUST NOT`, `Given`, `When` y `Then`, deben conservarse en inglés cuando formen parte del formato requerido por Spec Kit. El texto descriptivo asociado debe redactarse en español.
 
@@ -142,4 +142,4 @@ La Constitución es el documento de máxima jerarquía técnica del proyecto y r
 
 - **Política de Versionado**: Se utiliza Versionado Semántico (SemVer). Los cambios mayores (MAJOR) implican cambios en la gobernanza o eliminación de principios. Los cambios menores (MINOR) añaden o expanden principios. Los parches (PATCH) son clarificaciones no semánticas.
 
-**Version**: 1.3.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-03
+**Version**: 1.4.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-03
