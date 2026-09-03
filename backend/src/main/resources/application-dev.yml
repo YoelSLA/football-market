@@ -1,0 +1,22 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/football_market_dev}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+
+  jpa:
+    show-sql: false
+    open-in-view: true
+    properties:
+      hibernate:
+        generate_statistics: false
+        format_sql: false
+
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.stat: OFF
