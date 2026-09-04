@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_TEST_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/football_market_test
+    username: postgres
+    password: root
 
     hikari:
       data-source-properties:
