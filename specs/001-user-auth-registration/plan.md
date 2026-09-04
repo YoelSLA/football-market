@@ -88,7 +88,7 @@ backend/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── footballmarket/
-│   │   │       ├── controller/
+│   │   │       ├── controllers/
 │   │   │       │   ├── auth/
 │   │   │       │   │   └── AuthController.java
 │   │   │       │   ├── dtos/
@@ -98,7 +98,7 @@ backend/
 │   │   │       │   │   └── responses/
 │   │   │       │   │       ├── RegisterResponse.java
 │   │   │       │   │       └── LoginResponse.java
-│   │   │       │   └── mapper/
+│   │   │       │   └── mappers/
 │   │   │       │       └── UserMapper.java
 │   │   │       │
 │   │   │       ├── models/
@@ -122,12 +122,11 @@ backend/
 │   └── test/
 │       ├── java/
 │       │   └── footballmarket/
-│       │       ├── controller/
+│       │       ├── controllers/
 │       │       │   └── auth/
 │       │       ├── services/
-│       │       ├── models/
-│       │       ├── repositories/
-│       │       └── integration/
+│       │       ├── models/  
+│       │       └── integrations/
 │       │
 │       └── resources/
 │           └── application-test.yml

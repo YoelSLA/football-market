@@ -42,6 +42,14 @@ dependencies {
 
 
     // ============================================================
+    // LOMBOK
+    // ============================================================
+
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
+
+    // ============================================================
     // RUNTIME ONLY
     // ============================================================
 
@@ -54,9 +62,13 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-postgresql")
+
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
 }
 
 tasks.named<Test>("test") {
