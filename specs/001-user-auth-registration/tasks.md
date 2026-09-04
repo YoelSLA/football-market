@@ -10,7 +10,6 @@
 
 **Purpose**: Inicialización del proyecto y estructura básica
 
-- [ ] T001 Configurar dependencias del proyecto en backend/build.gradle.kts
 - [ ] T002 [P] Configurar herramientas de linting y formateo
 
 ---
@@ -40,6 +39,9 @@
 ### Tests for User Story 1
 
 - [ ] T008 [P] [US1] Integration test for registration in backend/src/test/java/footballmarket/integration/auth/RegistrationIntegrationTest.java
+- [ ] T008a [US1] Unit tests for Model (User) - Validate constraints, positive and negative cases
+- [ ] T008b [US1] Unit tests for Service (AuthServiceImpl) - Registration logic (positive, negative, edge cases, branching)
+- [ ] T008c [US1] Unit tests for Controller (AuthController) - Registration endpoints (positive, negative, branching)
 
 ### Implementation for User Story 1
 
@@ -61,6 +63,8 @@
 ### Tests for User Story 2
 
 - [ ] T013 [P] [US2] Integration test for login in backend/src/test/java/footballmarket/integration/auth/LoginIntegrationTest.java
+- [ ] T013a [US2] Unit tests for Service (AuthServiceImpl) - Login logic (positive, negative, edge cases, branching)
+- [ ] T013b [US2] Unit tests for Controller (AuthController) - Login endpoints (positive, negative, branching)
 
 ### Implementation for User Story 2
 
