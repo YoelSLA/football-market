@@ -16,6 +16,7 @@ La funcionalidad se validará utilizando la colección de Postman existente, inc
 1. Ejecutar el backend utilizando el perfil de desarrollo:
 
    ```bash
+   cd backend
    ./gradlew bootRun --args='--spring.profiles.active=dev'
    ```
 
