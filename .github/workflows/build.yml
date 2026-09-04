@@ -1,36 +1,256 @@
+# ============================================================
+# NOMBRE DEL WORKFLOW
+# ============================================================
+# Nombre que aparecerá en GitHub Actions.
 name: SonarQube
+
+
+# ============================================================
+# EVENTOS QUE DISPARAN EL WORKFLOW
+# ============================================================
+# Define CUÁNDO GitHub debe ejecutar este CI.
 on:
+
+  # ----------------------------------------------------------
+  # PUSH A DEV
+  # ----------------------------------------------------------
+  # Ejecuta el CI cuando se hace push directamente sobre dev.
   push:
     branches:
-      - main
+      - dev
+
+
+  # ----------------------------------------------------------
+  # PULL REQUEST
+  # ----------------------------------------------------------
+  # Ejecuta el workflow cuando ocurre alguno de estos eventos
+  # dentro de un Pull Request:
+  #
+  # opened      -> se crea el PR
+  # synchronize -> se agregan nuevos commits al PR
+  # reopened    -> se vuelve a abrir un PR cerrado
+  #
+  # "branches" representa la RAMA DESTINO del Pull Request.
+  #
+  # Por lo tanto:
+  #
+  # feature/login -> dev     ✅ entra
+  # feature/login -> main    ✅ entra inicialmente
+  # dev          -> main     ✅ entra
+  #
   pull_request:
     types: [opened, synchronize, reopened]
+    branches:
+      - dev
+      - main
+
+
+# ============================================================
+# JOBS
+# ============================================================
+# Un workflow puede tener uno o varios jobs.
+#
+# En nuestro caso tenemos un único job encargado de:
+#
+#   1. Descargar el código
+#   2. Configurar Java
+#   3. Recuperar caches
+#   4. Compilar
+#   5. Ejecutar tests
+#   6. Analizar el código con SonarQube Cloud
+#
 jobs:
+
+  # Nombre interno del job.
   build:
+
+    # Nombre que veremos visualmente en GitHub Actions.
     name: Build and analyze
+
+
+    # ========================================================
+    # SISTEMA OPERATIVO
+    # ========================================================
+    # GitHub crea una máquina virtual Ubuntu temporal
+    # para ejecutar este job.
+    #
+    # Cuando termina el job, esta máquina se destruye.
+    #
     runs-on: ubuntu-latest
+
+
+    # ========================================================
+    # CONDICIÓN PARA EJECUTAR EL JOB
+    # ========================================================
+    # Esta condición permite definir exactamente qué casos
+    # queremos analizar.
+    #
+    # Queremos:
+    #
+    #   PUSH a dev                         -> ✅
+    #   PR cualquier-rama -> dev           -> ✅
+    #   PR dev -> main                     -> ✅
+    #   PR cualquier-rama -> main         -> ❌
+    #   PUSH a main                       -> ❌
+    #
+    if: >
+      github.event_name == 'push' ||
+      github.base_ref == 'dev' ||
+      (github.base_ref == 'main' && github.head_ref == 'dev')
+
+
+    # ========================================================
+    # STEPS
+    # ========================================================
+    # Los steps son las distintas acciones que se ejecutan
+    # dentro del job, en orden.
+    #
     steps:
+
+
+      # ======================================================
+      # 1. DESCARGAR EL REPOSITORIO
+      # ======================================================
+      # actions/checkout descarga nuestro código dentro de
+      # la máquina virtual de GitHub.
+      #
+      # Sin este paso, GitHub Actions no tendría nuestro
+      # código fuente para compilarlo y analizarlo.
+      #
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: Set up JDK 17
+
+          # Descarga todo el historial de Git.
+          #
+          # SonarQube recomienda desactivar los clones superficiales
+          # para poder realizar un análisis más preciso.
+          fetch-depth: 0
+
+
+      # ======================================================
+      # 2. CONFIGURAR JAVA
+      # ======================================================
+      # Nuestro backend utiliza Java 21.
+      #
+      # Por eso GitHub debe tener Java 21 disponible antes
+      # de ejecutar Gradle.
+      #
+      - name: Set up JDK 21
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4.8.0
+
         with:
-          java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available
+
+          # Versión de Java utilizada por el proyecto.
+          java-version: 21
+
+          # Distribución de Java que utilizará GitHub Actions.
+          distribution: 'zulu'
+
+
+      # ======================================================
+      # 3. CACHE DE SONARQUBE
+      # ======================================================
+      # SonarQube descarga determinados componentes durante
+      # el análisis.
+      #
+      # Guardamos esos archivos en cache para evitar descargarlos
+      # nuevamente en cada ejecución del CI.
+      #
       - name: Cache SonarQube packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+
         with:
+
+          # Directorio donde SonarQube guarda su cache.
           path: ~/.sonar/cache
+
+          # Identificador utilizado para encontrar la cache.
           key: ${{ runner.os }}-sonar
+
+          # Si no existe exactamente la key anterior,
+          # intenta utilizar una cache compatible.
           restore-keys: ${{ runner.os }}-sonar
+
+
+      # ======================================================
+      # 4. CACHE DE GRADLE
+      # ======================================================
+      # Gradle también descarga dependencias.
+      #
+      # Guardamos esas dependencias en cache para acelerar
+      # las siguientes ejecuciones.
+      #
       - name: Cache Gradle packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+
         with:
+
+          # Directorio donde Gradle almacena sus caches.
           path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+
+          # La key cambia si cambia alguno de los archivos
+          # de configuración de Gradle.
+          #
+          # De esta manera GitHub puede invalidar la cache
+          # cuando cambian las dependencias/configuración.
+          key: ${{ runner.os }}-gradle-${{ hashFiles('backend/**/*.gradle*', 'backend/gradle/wrapper/gradle-wrapper.properties') }}
+
+          # Si no encuentra una cache exacta, intenta reutilizar
+          # una cache anterior de Gradle.
           restore-keys: ${{ runner.os }}-gradle
+
+
+      # ======================================================
+      # 5. BUILD + TESTS + SONARQUBE
+      # ======================================================
+      # Este es el paso principal del CI.
+      #
+      # Nuestro Gradle está dentro de:
+      #
+      #     backend/
+      #
+      # Por eso indicamos:
+      #
+      #     working-directory: backend
+      #
+      # De esta manera "./gradlew" apunta correctamente a:
+      #
+      #     backend/gradlew
+      #
       - name: Build and analyze
+        working-directory: backend
+
+        # ====================================================
+        # TOKEN DE SONARQUBE
+        # ====================================================
+        # El token NO está escrito directamente en el archivo.
+        #
+        # GitHub lo obtiene del Secret:
+        #
+        #     Settings
+        #       -> Secrets and variables
+        #          -> Actions
+        #             -> SONAR_TOKEN
+        #
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+        # ====================================================
+        # COMANDO GRADLE
+        # ====================================================
+        #
+        # ./gradlew
+        #     Ejecuta el Gradle Wrapper del backend.
+        #
+        # build
+        #     Compila el proyecto y ejecuta los tests.
+        #
+        # sonar
+        #     Ejecuta el análisis de SonarQube Cloud.
+        #
+        # --info
+        #     Muestra información adicional en los logs,
+        #     útil para diagnosticar errores.
+        #
         run: ./gradlew build sonar --info
