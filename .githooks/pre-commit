@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "🚀 Ejecutando pre-commit..."
+
+.githooks/pre-commit-spotless || exit 1
+
+echo "✅ Pre-commit finalizado correctamente."

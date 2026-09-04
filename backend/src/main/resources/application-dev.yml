@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+    hikari:
+      data-source-properties:
+        TimeZone: UTC
+
+  jpa:
+    show-sql: false
+    open-in-view: true
+    properties:
+      hibernate:
+        generate_statistics: false
+        format_sql: false

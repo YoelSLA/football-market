@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "🚀 Ejecutando validaciones antes del push..."
+
+echo ""
+echo "🧪 Ejecutando tests del backend..."
+
+cd backend || exit 1
+
+if ! ./gradlew test --no-daemon; then
+	echo "❌ Los tests del backend fallaron."
+	echo "🚫 Push cancelado."
+	exit 1
+fi
+
+cd ..
+
+echo ""
+echo "✅ Todas las validaciones pasaron."
+echo "🚀 Push permitido."
