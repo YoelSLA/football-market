@@ -10,6 +10,7 @@
 			"item": [
 				{
 					"name": "Register",
+					"id": "34427701-21bb0ea0-53f9-4d1a-b986-77c0f298dc3a",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -23,14 +24,22 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "auth", "register"]
+							"raw": "{{BASE_URL}}/api/auth/register",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
 						}
-					}
+					},
+					"response": []
 				},
 				{
 					"name": "Login",
+					"id": "34427701-91d7652d-d60a-448f-830c-da2ccd87a6a1",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -44,13 +53,21 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/login",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "auth", "login"]
+							"raw": "{{BASE_URL}}/api/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
 						}
-					}
+					},
+					"response": []
 				}
-			]
+			],
+			"id": "34427701-f6597bf4-4083-4fd2-aeec-b6dbfce95304"
 		}
 	]
 }
