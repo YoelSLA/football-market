@@ -6,6 +6,7 @@ import footballmarket.controllers.dtos.responses.auth.LoginResponse;
 import footballmarket.controllers.dtos.responses.auth.RegisterResponse;
 
 public interface AuthService {
-    RegisterResponse register(RegisterRequest request);
-    LoginResponse login(LoginRequest request);
+  RegisterResponse register(RegisterRequest request);
+
+  LoginResponse login(LoginRequest request);
 }
