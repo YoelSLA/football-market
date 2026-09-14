@@ -24,7 +24,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String normalizedEmail = user.getEmail().toLowerCase(Locale.ROOT);
 
     if (userRepository.existsByEmail(normalizedEmail)) {
-      throw new EmailAlreadyRegisteredException();
+      throw new EmailAlreadyRegisteredException("El email ya esta registrado.");
     }
 
     user.setEmail(normalizedEmail);
@@ -38,10 +38,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     String normalizedEmail = email.toLowerCase(Locale.ROOT);
 
     User user =
-        userRepository.findByEmail(normalizedEmail).orElseThrow(InvalidCredentialsException::new);
+        userRepository
+            .findByEmail(normalizedEmail)
+            .orElseThrow(() -> new InvalidCredentialsException("Credenciales invalidas."));
 
     if (!passwordEncoder.matches(password, user.getPassword())) {
-      throw new InvalidCredentialsException();
+      throw new InvalidCredentialsException("Credenciales invalidas.");
     }
 
     return jwtProvider.generateToken(user.getEmail());

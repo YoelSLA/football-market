@@ -6,6 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import footballmarket.models.User;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
+import footballmarket.services.impl.AuthenticationServiceImpl;
+import footballmarket.services.impl.UserServiceImpl;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,15 +18,16 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class AuthenticationServiceTest {
 
-  @Autowired private AuthenticationService authenticationService;
+  @Autowired private AuthenticationServiceImpl authenticationServiceImpl;
+  @Autowired private UserServiceImpl userServiceImpl;
 
   @Test
   void seRegistraUnUsuarioCorrectamente() {
     User user = new User("test@test.com", "password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    String token = authenticationService.login("test@test.com", "password");
+    String token = authenticationServiceImpl.login("test@test.com", "password");
 
     assertThat(token).isNotBlank();
   }
@@ -32,7 +36,7 @@ class AuthenticationServiceTest {
   void seNormalizaElEmailAlRegistrarUsuario() {
     User user = new User("test@test.com", "password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
     assertThat(user.getEmail()).isEqualTo("test@test.com");
   }
@@ -43,7 +47,7 @@ class AuthenticationServiceTest {
     user.setEmail("hash@test.com");
     user.setPassword("password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
     assertThat(user.getPassword()).isNotEqualTo("password");
   }
@@ -54,9 +58,9 @@ class AuthenticationServiceTest {
     user.setEmail("original@test.com");
     user.setPassword("password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    String token = authenticationService.login("original@test.com", "password");
+    String token = authenticationServiceImpl.login("original@test.com", "password");
 
     assertThat(token).isNotBlank();
   }
@@ -65,9 +69,10 @@ class AuthenticationServiceTest {
   void noDeberiaPoderIniciarSesionConLaContrasenaHasheada() {
     User user = new User("hash-login@test.com", "password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    assertThatThrownBy(() -> authenticationService.login("hash-login@test.com", user.getPassword()))
+    assertThatThrownBy(
+            () -> authenticationServiceImpl.login("hash-login@test.com", user.getPassword()))
         .isInstanceOf(InvalidCredentialsException.class);
   }
 
@@ -75,11 +80,11 @@ class AuthenticationServiceTest {
   void deberiaLanzarExcepcionCuandoElEmailYaExiste() {
     User firstUser = new User("duplicate@test.com", "password");
 
-    authenticationService.register(firstUser);
+    authenticationServiceImpl.register(firstUser);
 
     User secondUser = new User("DUPLICATE@TEST.COM", "anotherPassword");
 
-    assertThatThrownBy(() -> authenticationService.register(secondUser))
+    assertThatThrownBy(() -> authenticationServiceImpl.register(secondUser))
         .isInstanceOf(EmailAlreadyRegisteredException.class);
   }
 
@@ -89,9 +94,9 @@ class AuthenticationServiceTest {
     user.setEmail("login@test.com");
     user.setPassword("password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    String token = authenticationService.login("login@test.com", "password");
+    String token = authenticationServiceImpl.login("login@test.com", "password");
 
     assertThat(token).isNotBlank();
   }
@@ -102,16 +107,16 @@ class AuthenticationServiceTest {
     user.setEmail("normalize@test.com");
     user.setPassword("password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    String token = authenticationService.login("NORMALIZE@TEST.COM", "password");
+    String token = authenticationServiceImpl.login("NORMALIZE@TEST.COM", "password");
 
     assertThat(token).isNotBlank();
   }
 
   @Test
   void deberiaLanzarExcepcionCuandoElUsuarioNoExiste() {
-    assertThatThrownBy(() -> authenticationService.login("nonexistent@test.com", "password"))
+    assertThatThrownBy(() -> authenticationServiceImpl.login("nonexistent@test.com", "password"))
         .isInstanceOf(InvalidCredentialsException.class);
   }
 
@@ -119,9 +124,9 @@ class AuthenticationServiceTest {
   void deberiaLanzarExcepcionCuandoLaContrasenaEsIncorrecta() {
     User user = new User("invalid@test.com", "password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    assertThatThrownBy(() -> authenticationService.login("invalid@test.com", "wrongPassword"))
+    assertThatThrownBy(() -> authenticationServiceImpl.login("invalid@test.com", "wrongPassword"))
         .isInstanceOf(InvalidCredentialsException.class);
   }
 
@@ -131,10 +136,15 @@ class AuthenticationServiceTest {
     user.setEmail("token@test.com");
     user.setPassword("password");
 
-    authenticationService.register(user);
+    authenticationServiceImpl.register(user);
 
-    String token = authenticationService.login("token@test.com", "password");
+    String token = authenticationServiceImpl.login("token@test.com", "password");
 
     assertThat(token).isNotNull().isNotBlank();
+  }
+
+  @AfterEach
+  void eliminar() {
+    this.userServiceImpl.deteleAllUsers();
   }
 }

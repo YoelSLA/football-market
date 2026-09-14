@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import footballmarket.controllers.dtos.requests.LoginRequestDTO;
 import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
+import footballmarket.services.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,8 +23,8 @@ import tools.jackson.databind.ObjectMapper;
 class AuthenticationControllerTest {
 
   @Autowired private MockMvc mockMvc;
-
   @Autowired private ObjectMapper objectMapper;
+  @Autowired private UserService userService;
 
   @Test
   void deberiaRegistrarUsuario() throws Exception {
@@ -193,7 +195,7 @@ class AuthenticationControllerTest {
 
     mockMvc
         .perform(
-            post("/auth/login")
+            post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
@@ -205,7 +207,7 @@ class AuthenticationControllerTest {
 
     mockMvc
         .perform(
-            post("/auth/login")
+            post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
@@ -217,9 +219,14 @@ class AuthenticationControllerTest {
 
     mockMvc
         .perform(
-            post("/auth/login")
+            post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest());
+  }
+
+  @BeforeEach
+  void deleteAll() {
+    userService.deteleAllUsers();
   }
 }

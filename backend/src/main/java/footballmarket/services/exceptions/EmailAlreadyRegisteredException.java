@@ -1,8 +1,8 @@
 package footballmarket.services.exceptions;
 
-public class EmailAlreadyRegisteredException extends FootballMarketException {
+public class EmailAlreadyRegisteredException extends RuntimeException {
 
-  public EmailAlreadyRegisteredException() {
-    super("Email is already registered");
+  public EmailAlreadyRegisteredException(String message) {
+    super(message);
   }
 }
