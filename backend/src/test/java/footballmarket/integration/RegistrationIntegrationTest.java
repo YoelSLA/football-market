@@ -1,4 +1,4 @@
-package footballmarket.integration.auth;
+package footballmarket.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import footballmarket.repositories.UserRepository;

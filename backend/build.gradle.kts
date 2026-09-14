@@ -40,6 +40,13 @@ dependencies {
         "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion"
     )
 
+    // ============================================================
+    // JWT
+    // ============================================================
+
+    implementation("io.jsonwebtoken:jjwt-api:0.13.0")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 
     // ============================================================
     // LOMBOK
@@ -48,13 +55,11 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-
     // ============================================================
     // RUNTIME ONLY
     // ============================================================
 
     runtimeOnly("org.postgresql:postgresql")
-
 
     // ============================================================
     // TEST IMPLEMENTATION
@@ -74,7 +79,6 @@ dependencies {
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }
-
 
 // ============================================================
 // SPOTLESS
@@ -109,7 +113,6 @@ spotless {
         endWithNewline()
     }
 }
-
 
 // ============================================================
 // SONARQUBE

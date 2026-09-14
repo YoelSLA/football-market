@@ -1,21 +1,13 @@
 package footballmarket.controllers.mappers;
 
-import footballmarket.controllers.dtos.requests.auth.RegisterRequest;
-import footballmarket.controllers.dtos.responses.auth.RegisterResponse;
+import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
 import footballmarket.models.User;
-import org.springframework.stereotype.Component;
 
-@Component
 public class UserMapper {
 
-  public User toEntity(RegisterRequest request) {
-    return User.builder()
-        .email(request.getEmail().toLowerCase())
-        .password(request.getPassword())
-        .build();
-  }
+  private UserMapper() {}
 
-  public RegisterResponse toResponse(User user) {
-    return RegisterResponse.builder().id(user.getId()).email(user.getEmail()).build();
+  public static User toModel(RegisterRequestDTO request) {
+    return new User(request.email(), request.password());
   }
 }
