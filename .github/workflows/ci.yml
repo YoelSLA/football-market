@@ -26,19 +26,20 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_DB: footballmarket
+          POSTGRES_DB: football_market_test
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: root
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d footballmarket"
+          --health-cmd="pg_isready -U postgres -d football_market_test"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
 
@@ -57,4 +58,4 @@ jobs:
 
       - name: Build and test
         working-directory: backend
-        run: ./gradlew build
+        run: ./gradlew clean build
