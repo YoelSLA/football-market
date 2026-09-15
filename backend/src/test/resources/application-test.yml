@@ -21,6 +21,7 @@ jwt:
 logging:
   level:
     org.flywaydb: DEBUG
+    org.hibernate.tool.schema: DEBUG
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF
