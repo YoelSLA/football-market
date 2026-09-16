@@ -3,6 +3,7 @@ package footballmarket.security;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,13 +23,13 @@ public class JWTProvider {
   }
 
   public String generateToken(String email) {
-    Date now = new Date();
-    Date expirationDate = new Date(now.getTime() + expiration);
+    Instant now = Instant.now();
+    Instant expirationDate = now.plusMillis(expiration);
 
     return Jwts.builder()
         .subject(email)
-        .issuedAt(now)
-        .expiration(expirationDate)
+        .issuedAt(Date.from(now))
+        .expiration(Date.from(expirationDate))
         .signWith(secretKey)
         .compact();
   }
