@@ -620,4 +620,3 @@ No deben incorporarse nuevas tecnologías o dependencias fuera de este stack sin
 Las Specs y Plans no deben repetir estas restricciones globales salvo que una funcionalidad requiera una consideración técnica específica.
 
 **Version**: 1.11.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-10
-d
