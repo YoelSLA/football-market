@@ -4,6 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.sonarqube") version "7.3.1.8318"
     id("com.diffplug.spotless") version "7.2.1"
+    id("org.asciidoctor.jvm.convert") version "4.0.5"
 }
 
 group = "com.example"
@@ -18,6 +19,12 @@ java {
 repositories {
     mavenCentral()
 }
+
+// ============================================================
+// SPRING REST DOCS + ASCIIDOCTOR
+// ============================================================
+
+val snippetsDir = file("build/generated-snippets")
 
 dependencies {
 
@@ -49,8 +56,34 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-postgresql")
 }
 
+// ============================================================
+// TEST
+// ============================================================
+
 tasks.named<Test>("test") {
     useJUnitPlatform()
+
+    // Los tests de Spring REST Docs generan los snippets acá.
+    outputs.dir(snippetsDir)
+}
+
+// ============================================================
+// ASCIIDOCTOR
+// ============================================================
+
+tasks.named<org.asciidoctor.gradle.jvm.AsciidoctorTask>("asciidoctor") {
+    // Primero ejecuta los tests para generar los snippets.
+    dependsOn(tasks.test)
+
+    // Los snippets son una entrada de esta tarea.
+    inputs.dir(snippetsDir)
+
+    // Permite usar {snippets} dentro de index.adoc.
+    attributes(
+        mapOf(
+            "snippets" to snippetsDir
+        )
+    )
 }
 
 // ============================================================

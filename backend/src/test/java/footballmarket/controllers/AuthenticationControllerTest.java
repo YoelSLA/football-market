@@ -1,6 +1,7 @@
 package footballmarket.controllers;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -16,25 +17,37 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
-@ExtendWith({SpringExtension.class, RestDocumentationExtension.class})
+@ExtendWith(RestDocumentationExtension.class)
 class AuthenticationControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+  @Autowired private WebApplicationContext context;
 
   @Autowired private ObjectMapper objectMapper;
 
   @Autowired private UserService userService;
+
+  private MockMvc mockMvc;
+
+  @BeforeEach
+  void setUp(RestDocumentationContextProvider restDocumentation) {
+    mockMvc =
+            MockMvcBuilders.webAppContextSetup(context)
+                    .apply(documentationConfiguration(restDocumentation))
+                    .build();
+
+    userService.deteleAllUsers();
+  }
 
   // ============================================================
   // REGISTER
@@ -45,17 +58,17 @@ class AuthenticationControllerTest {
     RegisterRequestDTO request = new RegisterRequestDTO("register@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isOk())
-        .andDo(
-            document(
-                "auth-register",
-                requestFields(
-                    fieldWithPath("email").description("Email del usuario"),
-                    fieldWithPath("password").description("Contraseña del usuario"))));
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andDo(
+                    document(
+                            "auth-register-success",
+                            requestFields(
+                                    fieldWithPath("email").description("Email del usuario"),
+                                    fieldWithPath("password").description("Contraseña del usuario"))));
   }
 
   @Test
@@ -63,11 +76,18 @@ class AuthenticationControllerTest {
     RegisterRequestDTO request = new RegisterRequestDTO("email-invalido", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-register-invalid-email",
+                            requestFields(
+                                    fieldWithPath("email")
+                                            .description("Email inválido que no cumple con el formato requerido"),
+                                    fieldWithPath("password").description("Contraseña del usuario"))));
   }
 
   @Test
@@ -75,57 +95,86 @@ class AuthenticationControllerTest {
     RegisterRequestDTO request = new RegisterRequestDTO("", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-register-empty-email",
+                            requestFields(
+                                    fieldWithPath("email").description("Email vacío"),
+                                    fieldWithPath("password").description("Contraseña del usuario"))));
   }
 
   @Test
   void deberiaRechazarRegistroCuandoLaContrasenaEstaVacia() throws Exception {
-    RegisterRequestDTO request = new RegisterRequestDTO("empty-password@test.com", "");
+    RegisterRequestDTO request =
+            new RegisterRequestDTO("empty-password@test.com", "");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-register-empty-password",
+                            requestFields(
+                                    fieldWithPath("email").description("Email del usuario"),
+                                    fieldWithPath("password").description("Contraseña vacía"))));
   }
 
   @Test
   void deberiaRechazarRegistroCuandoLaContrasenaEsMuyCorta() throws Exception {
-    RegisterRequestDTO request = new RegisterRequestDTO("short-password@test.com", "1234567");
+    RegisterRequestDTO request =
+            new RegisterRequestDTO("short-password@test.com", "1234567");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-register-short-password",
+                            requestFields(
+                                    fieldWithPath("email").description("Email del usuario"),
+                                    fieldWithPath("password")
+                                            .description("Contraseña que no cumple con la longitud mínima requerida"))));
   }
 
   @Test
   void deberiaRechazarRegistroCuandoElEmailYaExiste() throws Exception {
-    RegisterRequestDTO firstRequest = new RegisterRequestDTO("duplicate@test.com", "password");
+    RegisterRequestDTO firstRequest =
+            new RegisterRequestDTO("duplicate@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(firstRequest)))
-        .andExpect(status().isOk());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(firstRequest)))
+            .andExpect(status().isOk());
 
     RegisterRequestDTO secondRequest =
-        new RegisterRequestDTO("DUPLICATE@TEST.COM", "anotherPassword");
+            new RegisterRequestDTO("DUPLICATE@TEST.COM", "anotherPassword");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(secondRequest)))
-        .andExpect(status().isConflict());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(secondRequest)))
+            .andExpect(status().isConflict())
+            .andDo(
+                    document(
+                            "auth-register-duplicate-email",
+                            requestFields(
+                                    fieldWithPath("email")
+                                            .description("Email ya registrado, independientemente de mayúsculas y minúsculas"),
+                                    fieldWithPath("password").description("Contraseña del usuario"))));
   }
 
   // ============================================================
@@ -135,103 +184,137 @@ class AuthenticationControllerTest {
   @Test
   void deberiaIniciarSesionCorrectamente() throws Exception {
     RegisterRequestDTO registerRequest =
-        new RegisterRequestDTO("login-controller@test.com", "password");
+            new RegisterRequestDTO("login-controller@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-        .andExpect(status().isOk());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(registerRequest)))
+            .andExpect(status().isOk());
 
-    LoginRequestDTO loginRequest = new LoginRequestDTO("login-controller@test.com", "password");
+    LoginRequestDTO loginRequest =
+            new LoginRequestDTO("login-controller@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.token").isNotEmpty())
-        .andDo(
-            document(
-                "auth-login",
-                requestFields(
-                    fieldWithPath("email").description("Email del usuario"),
-                    fieldWithPath("password").description("Contraseña del usuario")),
-                responseFields(
-                    fieldWithPath("token")
-                        .description("Token JWT utilizado para autenticar las solicitudes"))));
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginRequest)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isNotEmpty())
+            .andDo(
+                    document(
+                            "auth-login-success",
+                            requestFields(
+                                    fieldWithPath("email").description("Email del usuario"),
+                                    fieldWithPath("password").description("Contraseña del usuario")),
+                            responseFields(
+                                    fieldWithPath("token")
+                                            .description("Token JWT utilizado para autenticar las solicitudes"))));
   }
 
   @Test
   void deberiaPermitirIniciarSesionConEmailEnMayusculas() throws Exception {
     RegisterRequestDTO registerRequest =
-        new RegisterRequestDTO("uppercase-controller@test.com", "password");
+            new RegisterRequestDTO("uppercase-controller@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-        .andExpect(status().isOk());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(registerRequest)))
+            .andExpect(status().isOk());
 
-    LoginRequestDTO loginRequest = new LoginRequestDTO("UPPERCASE-CONTROLLER@TEST.COM", "password");
+    LoginRequestDTO loginRequest =
+            new LoginRequestDTO("UPPERCASE-CONTROLLER@TEST.COM", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.token").isNotEmpty());
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginRequest)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isNotEmpty())
+            .andDo(
+                    document(
+                            "auth-login-uppercase-email",
+                            requestFields(
+                                    fieldWithPath("email")
+                                            .description("Email del usuario ingresado utilizando mayúsculas"),
+                                    fieldWithPath("password").description("Contraseña del usuario")),
+                            responseFields(
+                                    fieldWithPath("token")
+                                            .description("Token JWT utilizado para autenticar las solicitudes"))));
   }
 
   @Test
   void deberiaRechazarLoginCuandoElEmailNoExiste() throws Exception {
-    LoginRequestDTO request = new LoginRequestDTO("nonexistent-controller@test.com", "password");
+    LoginRequestDTO request =
+            new LoginRequestDTO("nonexistent-controller@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isUnauthorized());
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isUnauthorized())
+            .andDo(
+                    document(
+                            "auth-login-nonexistent-email",
+                            requestFields(
+                                    fieldWithPath("email").description("Email no registrado en el sistema"),
+                                    fieldWithPath("password").description("Contraseña proporcionada"))));
   }
 
   @Test
   void deberiaRechazarLoginCuandoLaContrasenaEsIncorrecta() throws Exception {
     RegisterRequestDTO registerRequest =
-        new RegisterRequestDTO("wrong-password-controller@test.com", "password");
+            new RegisterRequestDTO("wrong-password-controller@test.com", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-        .andExpect(status().isOk());
+            .perform(
+                    post("/api/auth/register")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(registerRequest)))
+            .andExpect(status().isOk());
 
     LoginRequestDTO loginRequest =
-        new LoginRequestDTO("wrong-password-controller@test.com", "wrongPassword");
+            new LoginRequestDTO(
+                    "wrong-password-controller@test.com", "wrongPassword");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isUnauthorized());
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(loginRequest)))
+            .andExpect(status().isUnauthorized())
+            .andDo(
+                    document(
+                            "auth-login-wrong-password",
+                            requestFields(
+                                    fieldWithPath("email").description("Email de un usuario registrado"),
+                                    fieldWithPath("password").description("Contraseña incorrecta"))));
   }
 
   @Test
   void deberiaRechazarLoginCuandoElEmailEsInvalido() throws Exception {
-    LoginRequestDTO request = new LoginRequestDTO("email-invalido", "password");
+    LoginRequestDTO request =
+            new LoginRequestDTO("email-invalido", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-login-invalid-email",
+                            requestFields(
+                                    fieldWithPath("email")
+                                            .description("Email inválido que no cumple con el formato requerido"),
+                                    fieldWithPath("password").description("Contraseña del usuario"))));
   }
 
   @Test
@@ -239,31 +322,35 @@ class AuthenticationControllerTest {
     LoginRequestDTO request = new LoginRequestDTO("", "password");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-login-empty-email",
+                            requestFields(
+                                    fieldWithPath("email").description("Email vacío"),
+                                    fieldWithPath("password").description("Contraseña del usuario"))));
   }
 
   @Test
   void deberiaRechazarLoginCuandoLaContrasenaEstaVacia() throws Exception {
-    LoginRequestDTO request = new LoginRequestDTO("login@test.com", "");
+    LoginRequestDTO request =
+            new LoginRequestDTO("login@test.com", "");
 
     mockMvc
-        .perform(
-            post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
-  }
-
-  // ============================================================
-  // CLEANUP
-  // ============================================================
-
-  @BeforeEach
-  void deleteAll() {
-    userService.deteleAllUsers();
+            .perform(
+                    post("/api/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andDo(
+                    document(
+                            "auth-login-empty-password",
+                            requestFields(
+                                    fieldWithPath("email").description("Email del usuario"),
+                                    fieldWithPath("password").description("Contraseña vacía"))));
   }
 }
