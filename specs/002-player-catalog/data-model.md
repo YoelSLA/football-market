@@ -1,6 +1,6 @@
-# Data Model: Catálogo de jugadores
+# Modelo de datos: Catálogo de jugadores
 
-## Entity `Player`
+## Entidad `Player`
 
 | Atributo | Tipo | Restricciones | Notas |
 |---|---|---|---|
@@ -11,7 +11,7 @@
 | `position` | `String` | Obligatorio, no vacío | Posición recibida del plantel. |
 | `active` | `boolean` | Obligatorio | Determina si se muestra en `GET /players`. |
 
-## Transition Rules
+## Reglas de transición
 
 - Un candidato válido sin `id` local crea un `Player` activo.
 - Un candidato válido con `id` local actualiza sus datos y lo activa.
@@ -19,7 +19,7 @@
 - Un jugador inactivo que reaparece se actualiza y vuelve a estar activo.
 - Una foto externa fallida nunca llega a modificar esta entidad.
 
-## Indexes
+## Índices
 
 - La PK `id` garantiza la unicidad del identificador externo.
-- El índice `active` optimiza la consulta paginada del catálogo visible.
+- No se define de entrada un índice sobre `active`: al ser booleano, su utilidad depende de la distribución de datos y del plan real de las consultas paginadas.

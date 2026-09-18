@@ -28,7 +28,7 @@ Como consumidor de la API, quiero consultar el catálogo de jugadores de fútbol
 
 ### User Story 2 - Sincronizar manualmente el catálogo (Priority: P1)
 
-Como operador de la aplicación, quiero iniciar explícitamente una sincronización del catálogo para incorporar los jugadores disponibles en las competiciones configuradas.
+Como usuario autenticado de la aplicación, quiero iniciar explícitamente una sincronización del catálogo para incorporar los jugadores disponibles en las competiciones configuradas.
 
 **Why this priority**: Permite mantener el catálogo actualizado sin comprometer la disponibilidad de las consultas locales.
 
@@ -36,13 +36,14 @@ Como operador de la aplicación, quiero iniciar explícitamente una sincronizaci
 
 **Acceptance Scenarios**:
 
-1. **Given** que Football-Data.org está disponible para todas las competiciones configuradas, **When** un operador invoca `POST /players/sync`, **Then** el sistema incorpora o actualiza los jugadores válidos, actualiza sus estados cuando corresponda y devuelve una respuesta exitosa que informa el resultado de la sincronización.
+1. **Given** que Football-Data.org está disponible para todas las competiciones configuradas, **When** un usuario autenticado invoca `POST /players/sync`, **Then** el sistema incorpora o actualiza los jugadores válidos, actualiza sus estados cuando corresponda y devuelve una respuesta exitosa que informa el resultado de la sincronización.
 2. **Given** que un jugador recibido no existía previamente en el catálogo, **When** finaliza una sincronización completa y exitosa, **Then** el jugador se incorpora al catálogo como activo.
 3. **Given** que un jugador recibido ya existía en el catálogo, **When** finaliza una sincronización completa y exitosa, **Then** sus datos se actualizan, permanece o vuelve a quedar activo y no se genera un duplicado.
 4. **Given** que un jugador activo ya no está presente en una sincronización completa y exitosa, **When** esta finaliza, **Then** el jugador se conserva en el catálogo y queda inactivo.
 5. **Given** que un jugador inactivo vuelve a estar presente en una sincronización completa y exitosa, **When** esta finaliza, **Then** sus datos se actualizan y vuelve a quedar activo.
-6. **Given** que la fuente externa no puede completarse, **When** un operador invoca `POST /players/sync`, **Then** el sistema responde con un error apropiado, registra el error y conserva el estado correcto de los jugadores existentes.
+6. **Given** que la fuente externa no puede completarse, **When** un usuario autenticado invoca `POST /players/sync`, **Then** el sistema responde con un error, registra el error y conserva el estado correcto de los jugadores existentes.
 7. **Given** que un registro recibido no contiene la información obligatoria, **When** se procesa la sincronización, **Then** el registro se descarta, se registra el motivo y los demás registros válidos continúan procesándose.
+8. **Given** que una solicitud a `POST /players/sync` no presenta una autenticación válida, **When** se procesa la solicitud, **Then** el sistema responde `401 Unauthorized` sin iniciar la sincronización.
 
 ### Edge Cases
 
@@ -69,10 +70,11 @@ Como operador de la aplicación, quiero iniciar explícitamente una sincronizaci
 - **RF-012**: Tras una sincronización completa y exitosa, los jugadores válidos recibidos deben quedar activos. Los jugadores que estaban activos y ya no aparecen en la fuente deben conservarse y pasar a estar inactivos, sin eliminación física.
 - **RF-013**: Si un jugador inactivo vuelve a aparecer en una sincronización completa y exitosa, debe actualizarse y volver a estar activo.
 - **RF-014**: Si la sincronización falla o no se completa, el sistema debe registrar el error y no debe eliminar jugadores existentes ni marcarlos incorrectamente como inactivos. `GET /players` debe continuar disponible con el catálogo local, incluso cuando esté vacío.
-- **RF-015**: El resultado de `POST /players/sync` debe comunicar claramente el resultado de la operación mediante una respuesta exitosa cuando se complete y una respuesta de error apropiada ante la indisponibilidad de la fuente externa. La respuesta no debe revelar credenciales ni información sensible.
+- **RF-015**: El resultado de `POST /players/sync` debe comunicar el resultado de la operación mediante una respuesta exitosa cuando se complete y una respuesta de error ante la indisponibilidad de la fuente externa. La respuesta no debe revelar credenciales ni información sensible.
 - **RF-016**: Los errores de sincronización, los registros inválidos descartados y el inicio y resultado de cada sincronización deben quedar registrados. Los registros deben incluir las cantidades de jugadores obtenidos, incorporados, actualizados y marcados como inactivos, sin incluir credenciales ni datos sensibles.
 - **RF-017**: OpenAPI/Swagger debe documentar `GET /players` y `POST /players/sync`, los parámetros y límites de paginación, la estructura de las respuestas exitosas y los códigos de error aplicables.
-- **RF-018**: Esta feature no debe incorporar autenticación ni roles nuevos para `POST /players/sync`.
+- **RF-018**: `POST /players/sync` debe estar disponible para cualquier usuario autenticado mediante el mecanismo vigente del proyecto, sin exigir un rol o permiso adicional. Esta feature no debe incorporar mecanismos de autenticación ni roles nuevos.
+- **RF-019**: `GET /players` y `POST /players/sync` deben incorporarse como solicitudes en la colección Postman versionada del proyecto. Cada solicitud debe reflejar su método, ruta, parámetros, headers, autenticación y body cuando corresponda, con ejemplos utilizables sin secretos ni credenciales reales.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -90,12 +92,15 @@ Como operador de la aplicación, quiero iniciar explícitamente una sincronizaci
 - **SC-004**: Después de una sincronización completa y exitosa, los nuevos jugadores válidos están activos, los existentes se actualizan sin duplicarse y los que ya no están disponibles quedan inactivos sin eliminarse.
 - **SC-005**: Si Football-Data.org no está disponible, una sincronización informa el error sin alterar incorrectamente los jugadores existentes, mientras que `GET /players` continúa devolviendo el catálogo local disponible.
 - **SC-006**: La documentación OpenAPI permite identificar ambos endpoints, la paginación, las estructuras de respuesta y los códigos de respuesta aplicables.
+- **SC-007**: La colección Postman versionada contiene solicitudes utilizables para ambos endpoints, coherentes con sus contratos y sin secretos ni credenciales reales.
+- **SC-008**: Cualquier usuario autenticado puede iniciar `POST /players/sync` sin un rol adicional; una solicitud sin autenticación válida recibe `401 Unauthorized` y no inicia la sincronización.
 
 ## Assumptions
 
 - Football-Data.org proporciona una identidad estable que permite reconocer a un mismo jugador entre sincronizaciones.
 - Las competiciones incluidas en el catálogo están definidas en la configuración del proyecto.
 - Las credenciales necesarias para acceder a Football-Data.org están disponibles de forma segura en el entorno de ejecución.
+- La aplicación se despliega en una sola instancia; la serialización de sincronizaciones ocurre dentro de esa instancia.
 
 ## Out of Scope
 

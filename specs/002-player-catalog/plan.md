@@ -32,9 +32,9 @@ La solución incorpora la funcionalidad en las capas existentes: Controller → 
 - **DTO y Mapper**: PASS — los DTO HTTP serán `record`; `PlayerMapper` será `final`, sin estado, con constructor privado y métodos `static`. Las entidades no se expondrán directamente.
 - **Integración externa**: PASS — las rutas, respuestas, autenticación y fallos de Football-Data.org quedan aislados en `Integration`; el Controller y el Model no conocerán HTTP externo.
 - **Persistencia e invariantes**: PASS — el estado del jugador será encapsulado por el Model; el Controller no accederá al Repository. Flyway añadirá el esquema requerido.
-- **Seguridad**: PASS — la clave se leerá de configuración, no se registrará ni se incluirá en errores. Los endpoints conservarán la política de Spring Security ya existente; no se agregan roles ni mecanismos de autenticación.
-- **Contratos y documentación**: PASS — las respuestas, validaciones y errores se representarán con DTOs y se documentarán en OpenAPI.
-- **Testing**: PASS — habrá pruebas por responsabilidad y pruebas de integración con PostgreSQL; los proveedores externos serán aislados en tests.
+- **Seguridad**: PASS — la clave se leerá de configuración, no se registrará ni se incluirá en errores. Los endpoints conservarán la autenticación vigente; cualquier usuario autenticado podrá invocar `POST /players/sync` sin un rol adicional.
+- **Contratos y documentación**: PASS — las respuestas exitosas usarán DTOs y los errores gestionados por la aplicación usarán `ErrorResponseDTO`; los contratos se documentarán en OpenAPI y los dos endpoints se incorporarán a la colección Postman versionada.
+- **Testing**: PASS — habrá pruebas por responsabilidad y pruebas de integración con PostgreSQL; los proveedores externos serán aislados en tests. Los tests de Controller documentarán con Spring REST Docs los endpoints y los casos de respuesta verificados.
 
 ## Project Structure
 
@@ -98,7 +98,7 @@ backend/src/test/java/footballmarket/
 | `position` | `String` | Obligatorio y no vacío. |
 | `active` | `boolean` | Obligatorio; define la visibilidad en el catálogo. |
 
-La entidad no usará `Builder` ni `@Setter`. Expondrá operaciones de dominio para actualizar los datos desde una fuente válida, activar y desactivar. La migración `V2__create_players_table.sql` creará `players` con `id` como PK, columnas no nulas para los datos públicos y `active` no nulo; añadirá un índice sobre `active` para la consulta habitual del catálogo.
+La entidad no usará `Builder` ni `@Setter`. Expondrá operaciones de dominio para actualizar los datos desde una fuente válida, activar y desactivar. La migración `V2__create_players_table.sql` creará `players` con `id` como PK, columnas no nulas para los datos públicos y `active` no nulo. No se presupone un índice adicional sobre el campo booleano `active`; su necesidad se evaluará con datos y planes de consulta reales.
 
 `PlayerRepository` extenderá `JpaRepository<Player, Long>` y expondrá consultas para páginas de jugadores activos y para recuperar los jugadores activos que deban inactivarse. No contendrá reglas de negocio.
 
@@ -135,7 +135,7 @@ El Orchestrator seguirá este flujo:
 - una vez procesada la foto completa, desactiva a los jugadores que siguen activos pero no estén en ella;
 - nunca elimina filas.
 
-La fase de llamadas remotas sucede antes de abrir la transacción de escritura. La aplicación de la foto ocurre dentro de una única transacción. Una excepción de persistencia revierte todas las altas, actualizaciones e inactivaciones de esa ejecución. La sincronización manual se serializará dentro de la instancia para que dos ejecuciones no apliquen fotos simultáneas.
+La fase de llamadas remotas sucede antes de abrir la transacción de escritura. La aplicación de la foto ocurre dentro de una única transacción. Una excepción de persistencia revierte todas las altas, actualizaciones e inactivaciones de esa ejecución. Esta feature presupone un despliegue de una sola instancia. La sincronización manual se serializará dentro de esa instancia para que dos ejecuciones no apliquen fotos simultáneas. Un despliegue con varias instancias requiere definir coordinación entre ellas antes de habilitarlo.
 
 Los contadores tendrán una semántica única para logs y respuesta: `obtained` cuenta los integrantes de planteles leídos antes de validar y consolidar; `discardedInvalid` cuenta los que no cumplen los campos obligatorios; `created` cuenta IDs inexistentes; `updated` cuenta IDs ya existentes procesados, incluidas reactivaciones; y `markedInactive` cuenta únicamente cambios efectivos de activo a inactivo. Un jugador repetido y válido se consolida por ID y no incrementa `created` ni `updated` más de una vez.
 
@@ -158,19 +158,23 @@ La Integration validará toda respuesta externa antes de entregarla: ausencia o 
 
 ### Errores, logs y seguridad
 
-- Se añadirán excepciones de presentación para paginación inválida y de integración para indisponibilidad o respuesta inválida del proveedor. `GlobalExceptionHandler` incorporará manejadores acotados para devolver `400 Bad Request` y `502 Bad Gateway`, respectivamente, con mensajes seguros en español y sin detalles de infraestructura.
+- Se añadirán excepciones de presentación para paginación inválida y de integración para indisponibilidad o respuesta inválida del proveedor. `GlobalExceptionHandler` incorporará manejadores acotados para devolver `400 Bad Request` y `502 Bad Gateway`, respectivamente, mediante `ErrorResponseDTO` con `timestamp`, `status`, `error`, `message` y `path`; el código HTTP coincidirá con `status` y `path` identificará la ruta solicitada. Los mensajes serán seguros y estarán en español, sin detalles de infraestructura.
 - `POST /players/sync` devuelve `200 OK` con su resumen cuando se completa y `502 Bad Gateway` ante un fallo de Football-Data.org. El body de error no contendrá URL completa, clave, headers ni respuesta cruda del proveedor.
 - Se usarán logs de Spring para inicio, finalización, contadores de sincronización, descartes con su motivo y fallos de comunicación. No se registra `apiKey`, `X-Auth-Token` ni credenciales.
-- `SecurityConfig` no se modificará para esta feature. Los endpoints heredan la política existente de autenticación; no se agregan roles, permisos ni un sistema nuevo.
+- `SecurityConfig` no se modificará para esta feature. Los endpoints heredan la autenticación JWT vigente. Cualquier usuario autenticado podrá invocar `POST /players/sync` sin un rol o permiso adicional; una solicitud sin autenticación válida recibirá `401 Unauthorized` antes de iniciar la sincronización.
 
 ### OpenAPI
 
 `PlayerController` utilizará anotaciones SpringDoc para documentar:
 
-- `GET /players`: propósito, `page` y `size`, valores por defecto, límites, DTO de página y respuestas `200`/`400`.
-- `POST /players/sync`: propósito, DTO de resultado y respuestas `200`/`502`.
+- `GET /players`: propósito, `page` y `size`, valores por defecto, límites, DTO de página, autenticación y respuestas `200`/`400`/`401`.
+- `POST /players/sync`: propósito, ausencia de body, autenticación sin rol adicional, DTO de resultado y respuestas `200`/`401`/`502`.
 - Los DTOs: significado, obligatoriedad y ejemplos de cada campo expuesto.
 - Los errores: formato seguro y códigos aplicables.
+
+### Postman
+
+La colección versionada del proyecto incorporará solicitudes para `GET /players` y `POST /players/sync` con método, ruta, parámetros, headers, autenticación y body según cada contrato. Los ejemplos serán utilizables sin incluir secretos ni credenciales reales.
 
 ## Testing Strategy
 
@@ -180,7 +184,7 @@ La Integration validará toda respuesta externa antes de entregarla: ausencia o 
 | Mapper | Conversión de `Player`, página y resultado de sincronización a DTOs, sin exposición de `active`. |
 | Integration | Mapeo de competición/equipos/planteles, omisión de registros incompletos y conversión de fallos HTTP, timeout o respuesta inválida a error de integración. Las respuestas externas se simularán; no se llamará a Football-Data.org real. |
 | Services | Consulta solo de activos, defaults recibidos desde Controller, creación, actualización sin duplicado, inactivación, reactivación, contadores y ausencia de mutaciones si la foto externa falla. |
-| Controller | `GET /players` con página válida, catálogo vacío, defaults y cada límite inválido; `POST /players/sync` exitoso y con proveedor no disponible; contrato JSON, códigos y documentación. Las solicitudes usarán la autenticación de prueba compatible con la política existente. |
+| Controller | `GET /players` con página válida, catálogo vacío, defaults y cada límite inválido; `POST /players/sync` exitoso, con proveedor no disponible, con cualquier usuario autenticado y sin autenticación válida; contrato JSON, códigos y documentación de los casos verificados mediante Spring REST Docs. |
 | Integración | Con Testcontainers/PostgreSQL y Flyway: persistencia de PK externa, consulta paginada exclusiva de activos, y aplicación transaccional de una foto completa frente a fallo previo a la aplicación. |
 
 Todos los tests nuevos usarán `@ActiveProfiles("test")`, serán deterministas y limpiarán los datos que creen. Los tests de Service e Integration aislarán Repository y proveedor con mocks o servidor HTTP de prueba provisto por Spring; los de persistencia usarán PostgreSQL real mediante Testcontainers.
