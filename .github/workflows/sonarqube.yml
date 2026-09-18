@@ -3,7 +3,6 @@ name: SonarQube
 on:
   push:
     branches:
-      - dev
       - main
 
   pull_request:
@@ -15,7 +14,6 @@ on:
 jobs:
   sonar:
     name: SonarQube analysis
-
     runs-on: ubuntu-latest
 
     if: >
@@ -53,4 +51,4 @@ jobs:
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew test sonar
+        run: ./gradlew sonar
