@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - main
 
   pull_request:
     types: [opened, synchronize, reopened]
@@ -23,7 +24,8 @@ jobs:
       (github.base_ref == 'main' && github.head_ref == 'dev')
 
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
 
@@ -51,4 +53,4 @@ jobs:
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar
+        run: ./gradlew test jacocoTestReport sonar
