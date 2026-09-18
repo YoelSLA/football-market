@@ -1,8 +1,6 @@
 package footballmarket.security;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import javax.crypto.SecretKey;
@@ -15,10 +13,9 @@ public class JWTProvider {
   private final SecretKey secretKey;
   private final long expiration;
 
-  public JWTProvider(
-      @Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expiration) {
+  public JWTProvider(SecretKey secretKey, @Value("${jwt.expiration}") long expiration) {
 
-    this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    this.secretKey = secretKey;
     this.expiration = expiration;
   }
 
@@ -30,7 +27,7 @@ public class JWTProvider {
         .subject(email)
         .issuedAt(Date.from(now))
         .expiration(Date.from(expirationDate))
-        .signWith(secretKey)
+        .signWith(secretKey, Jwts.SIG.HS256)
         .compact();
   }
 }

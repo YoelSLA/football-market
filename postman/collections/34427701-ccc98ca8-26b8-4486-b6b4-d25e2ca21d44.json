@@ -13,7 +13,13 @@
 					"id": "34427701-21bb0ea0-53f9-4d1a-b986-77c0f298dc3a",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password\"\n}",
@@ -42,7 +48,13 @@
 					"id": "34427701-91d7652d-d60a-448f-830c-da2ccd87a6a1",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password\"\n}",

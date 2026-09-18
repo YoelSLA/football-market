@@ -62,7 +62,7 @@ class AuthenticationControllerTest {
             post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isOk())
+        .andExpect(status().isCreated())
         .andDo(
             document(
                 "auth-register-success",
@@ -81,6 +81,11 @@ class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.timestamp").exists())
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.error").value("Bad Request"))
+        .andExpect(jsonPath("$.message").value("El email debe ser válido"))
+        .andExpect(jsonPath("$.path").value("/api/auth/register"))
         .andDo(
             document(
                 "auth-register-invalid-email",
@@ -155,7 +160,7 @@ class AuthenticationControllerTest {
             post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(firstRequest)))
-        .andExpect(status().isOk());
+        .andExpect(status().isCreated());
 
     RegisterRequestDTO secondRequest =
         new RegisterRequestDTO("DUPLICATE@TEST.COM", "anotherPassword");
@@ -166,6 +171,10 @@ class AuthenticationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(secondRequest)))
         .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.status").value(409))
+        .andExpect(jsonPath("$.error").value("Conflict"))
+        .andExpect(jsonPath("$.message").value("El email ya esta registrado."))
+        .andExpect(jsonPath("$.path").value("/api/auth/register"))
         .andDo(
             document(
                 "auth-register-duplicate-email",
@@ -190,7 +199,7 @@ class AuthenticationControllerTest {
             post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-        .andExpect(status().isOk());
+        .andExpect(status().isCreated());
 
     LoginRequestDTO loginRequest = new LoginRequestDTO("login-controller@test.com", "password");
 
@@ -222,7 +231,7 @@ class AuthenticationControllerTest {
             post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-        .andExpect(status().isOk());
+        .andExpect(status().isCreated());
 
     LoginRequestDTO loginRequest = new LoginRequestDTO("UPPERCASE-CONTROLLER@TEST.COM", "password");
 
@@ -273,7 +282,7 @@ class AuthenticationControllerTest {
             post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-        .andExpect(status().isOk());
+        .andExpect(status().isCreated());
 
     LoginRequestDTO loginRequest =
         new LoginRequestDTO("wrong-password-controller@test.com", "wrongPassword");

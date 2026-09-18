@@ -4,7 +4,7 @@
 
 **Prerequisites**: plan.md (obligatorio), spec.md (obligatorio para las historias de usuario), research.md, data-model.md, contracts/
 
-**Tests**: Se requieren pruebas automatizadas con JUnit Jupiter, Mockito, AssertJ, Spring Boot Test y Testcontainers con PostgreSQL, de acuerdo con la estrategia de pruebas definida en plan.md.
+**Tests**: El estado de las tareas refleja las clases de test presentes: `UserTest`, `AuthenticationServiceTest`, `AuthenticationControllerTest` y `JwtAuthenticationIntegrationTest`. La persistencia tiene cobertura indirecta mediante registro seguido de login; no hay una prueba de integración independiente que inspeccione la base de datos.
 
 **Language**: Todo el contenido descriptivo y documental de este archivo debe redactarse en español. Las keywords de Spec-Kit, identificadores técnicos, nombres de clases, métodos, paquetes, endpoints, tecnologías y otros términos técnicos deben conservar su denominación original.
 
@@ -12,7 +12,7 @@
 
 **Purpose**: Verificación de las dependencias e infraestructura existente necesarias para implementar la funcionalidad.
 
-- [X] T001 Verificar que las dependencias requeridas por la funcionalidad ya estén disponibles en backend/build.gradle.kts, sin incorporar dependencias fuera de la Constitution.
+- [X] T001 Verificar en `backend/build.gradle.kts` las dependencias de Spring Security, OAuth2 Resource Server, JJWT, Spring REST Docs, JUnit y Spring Boot Test.
 
 ---
 
@@ -22,14 +22,14 @@
 
 **⚠️ CRITICAL**: No se puede comenzar el trabajo de ninguna historia de usuario hasta que esta fase esté completa.
 
-- [X] T002 Crear las migraciones de Flyway necesarias para la funcionalidad de usuarios en `backend/src/main/resources/db/migration/`. Los archivos deben seguir el formato `V<numero>__<descripcion>.sql`, donde `V` es obligatorio, `<numero>` corresponde a la versión incremental de la migración y `<descripcion>` debe estar escrita completamente en minúsculas, utilizando `_` como separador entre palabras. Por ejemplo: `V1__init_schema.sql`. Las migraciones deben incluir la estructura requerida para almacenar usuarios y contraseñas hasheadas, sin modificar la configuración existente de PostgreSQL.
+- [X] T002 Crear `backend/src/main/resources/db/migration/V1__create_users_table.sql` con email único y columna para la contraseña hasheada.
 - [X] T003 Implementar la entidad `User` en `backend/src/main/java/footballmarket/models/User.java`, utilizando como referencia y fuente de verdad el modelo de datos definido en `data-model.md`.
 
 - [X] T004 [P] Configurar el repositorio base para Usuario en backend/src/main/java/footballmarket/repositories/UserRepository.java
 
-- [X] T005 [P] Configurar Spring Security para el hashing y la autenticación en backend/src/main/java/footballmarket/config/SecurityConfig.java
+- [X] T005 [P] Configurar BCrypt, rutas públicas y validación de JWT Bearer en `backend/src/main/java/footballmarket/config/SecurityConfig.java`.
 
-- [X] T006 Configurar el manejo de excepciones global en backend/src/main/java/footballmarket/exceptions/GlobalExceptionHandler.java
+- [X] T006 Configurar `backend/src/main/java/footballmarket/controllers/exceptions/GlobalExceptionHandler.java` y `controllers/dtos/responses/ErrorResponseDTO.java` para los errores de aplicación.
 
 **Checkpoint**: Base lista - la implementación de las historias de usuario puede comenzar
 
@@ -43,21 +43,21 @@
 
 - [X] T007 [US1] Implementar tests unitarios del modelo `User`, validando las restricciones definidas en `data-model.md` para casos válidos e inválidos.
 
-- [X] T008 [US1] Implementar tests unitarios de `AuthServiceImpl` para el registro, cubriendo casos positivos, negativos.
-- [X] T009 [US1] Implementar tests unitarios de `AuthController` para el endpoint de registro, cubriendo respuestas exitosas, errores de validación y casos negativos.
-- [X] T010 [US1] Implementar el test de integración del registro en `backend/src/test/java/footballmarket/integration/auth/RegistrationIntegrationTest.java`, verificando el flujo completo de registro y la persistencia del usuario en la base de datos.
+- [X] T008 [US1] Probar registro, normalización, hashing y email duplicado en `AuthenticationServiceTest`.
+- [X] T009 [US1] Probar `201 Created`, validaciones y `409 Conflict` en `AuthenticationControllerTest`, con snippets Spring REST Docs.
+- [ ] T010 [US1] Agregar una prueba de integración independiente que compruebe explícitamente la persistencia del usuario en la base de datos. No existe hoy una prueba ejecutable con esa verificación directa.
 
 ### Implementation for User Story 1
 
-- [X] T011 [US1] Crear `RegisterRequest` y `RegisterResponse` en `backend/src/main/java/footballmarket/controllers/dtos/requests/auth/RegisterRequest.java` y `backend/src/main/java/footballmarket/controllers/dtos/responses/auth/RegisterResponse.java`, utilizando como referencia el contrato de API definido en `contracts/api.md`.
+- [X] T011 [US1] Crear `controllers/dtos/requests/RegisterRequestDTO.java`. El registro responde `201 Created` sin body, por lo que no requiere un Response DTO.
 
-- [X] T012 [US1] Implementar `UserMapper` en `backend/src/main/java/footballmarket/controllers/mappers/UserMapper.java` para realizar, según las responsabilidades definidas en `plan.md`, la transformación entre los DTOs de registro y la entidad `User`, permitiendo convertir del DTO al modelo y del modelo al DTO.
+- [X] T012 [US1] Implementar `controllers/mappers/UserMapper.java` para convertir `RegisterRequestDTO` a `User`.
 
-- [X] T013 [US1] Implementar la interfaz `AuthService` en `backend/src/main/java/footballmarket/services/AuthService.java`, definiendo las operaciones necesarias para el registro de usuarios.
+- [X] T013 [US1] Definir el registro en `backend/src/main/java/footballmarket/services/AuthenticationService.java`.
 
-- [X] T014 [US1] Implementar `AuthServiceImpl` en `backend/src/main/java/footballmarket/services/impl/AuthServiceImpl.java` para gestionar la lógica de registro, incluyendo validación de existencia del email, hashing de la contraseña y persistencia del usuario.
+- [X] T014 [US1] Implementar el registro en `services/impl/AuthenticationServiceImpl.java`, incluyendo normalización, unicidad, hashing y persistencia.
 
-- [X] T015 [US1] Implementar `AuthController` en `backend/src/main/java/footballmarket/controllers/auth/AuthController.java` para exponer el endpoint `POST /api/auth/register`, realizando únicamente la validación de entrada y la construcción de la respuesta, y delegando la lógica de negocio al Service, según las responsabilidades definidas en `plan.md`.
+- [X] T015 [US1] Implementar `POST /api/auth/register` en `controllers/AuthenticationController.java` con respuesta `201 Created` sin body.
 
 **Checkpoint**: La historia de usuario 1 está totalmente funcional y es testeable de forma independiente.
 
@@ -69,21 +69,21 @@
 
 ### Tests for User Story 2
 
-- [X] T016 [US2] Implementar tests unitarios de `AuthServiceImpl` para el inicio de sesión, cubriendo casos positivos, negativos y casos límite.
+- [X] T016 [US2] Probar login y errores de credenciales en `AuthenticationServiceTest`.
 
-- [X] T017 [US2] Implementar tests unitarios de `AuthController` para el endpoint de inicio de sesión, cubriendo respuestas exitosas, errores de validación y casos negativos.
+- [X] T017 [US2] Probar `POST /api/auth/login` en `AuthenticationControllerTest`, con snippets Spring REST Docs.
 
-- [X] T018 [US2] Implementar el test de integración del inicio de sesión en `backend/src/test/java/footballmarket/integration/auth/LoginIntegrationTest.java`, verificando el flujo completo de autenticación y la generación de un JWT válido.
+- [X] T018 [US2] Probar el flujo registro → login → recurso protegido y los JWT ausentes, alterados o expirados en `integration/JwtAuthenticationIntegrationTest.java`.
 
 ### Implementation for User Story 2
 
-- [X] T019 [US2] Crear `LoginRequest` y `LoginResponse` en `backend/src/main/java/footballmarket/controllers/dtos/requests/auth/LoginRequest.java` y `backend/src/main/java/footballmarket/controllers/dtos/responses/auth/LoginResponse.java`, utilizando como referencia el contrato de API definido en `contracts/api.md`.
+- [X] T019 [US2] Crear `controllers/dtos/requests/LoginRequestDTO.java` y `controllers/dtos/responses/LoginResponseDTO.java`.
 
-- [X] T020 [US2] Extender `AuthService` en `backend/src/main/java/footballmarket/services/AuthService.java` con las operaciones necesarias para el inicio de sesión, según las responsabilidades definidas en `plan.md`.
+- [X] T020 [US2] Definir login en `services/AuthenticationService.java`.
 
-- [X] T021 [US2] Extender `AuthServiceImpl` en `backend/src/main/java/footballmarket/services/impl/AuthServiceImpl.java` para gestionar la lógica de inicio de sesión, incluyendo la validación de credenciales y la generación del JWT, según las responsabilidades definidas en `plan.md`.
+- [X] T021 [US2] Implementar login en `services/impl/AuthenticationServiceImpl.java` y generación HS256 en `security/JWTProvider.java`.
 
-- [X] T022 [US2] Extender `AuthController` en `backend/src/main/java/footballmarket/controllers/auth/AuthController.java` para exponer el endpoint `POST /api/auth/login`, realizando únicamente la validación de entrada y la construcción de la respuesta, y delegando la lógica de negocio al Service, según las responsabilidades definidas en `plan.md`.
+- [X] T022 [US2] Implementar `POST /api/auth/login` en `controllers/AuthenticationController.java` con respuesta `200 OK` y campo `token`.
 
 **Checkpoint**: Las historias de usuario 1 y 2 deberían funcionar de forma independiente.
 
@@ -93,13 +93,13 @@
 
 **Purpose**: Completar la documentación, los artefactos de prueba y las validaciones finales de la funcionalidad.
 
-- [X] T023 Actualizar la documentación OpenAPI de los endpoints `POST /api/auth/register` y `POST /api/auth/login` en `backend/src/main/java/footballmarket/controllers/auth/AuthController.java`, según los contratos definidos en `contracts/api.md`.
+- [X] T023 Documentar los endpoints con OpenAPI en `controllers/AuthenticationController.java` y con Spring REST Docs en `AuthenticationControllerTest.java`.
 
-- [X] T024 Actualizar la colección existente de Postman en `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`, incorporando las solicitudes de registro e inicio de sesión correspondientes a los endpoints implementados.
+- [X] T024 Mantener la colección Postman existente con `Auth / Register` y `Auth / Login`, usando `{{BASE_URL}}`.
 
-- [X] T025 Validar el flujo definido en `quickstart.md`, verificando que las instrucciones permitan ejecutar y probar correctamente la funcionalidad de registro e inicio de sesión.
+- [ ] T025 Ejecutar manualmente el flujo Postman de `quickstart.md` y confirmar sus resultados en un entorno de desarrollo. La guía está actualizada, pero esa ejecución manual no está acreditada en el repositorio.
 
-**Checkpoint**: La funcionalidad de registro e inicio de sesión está documentada, probada mediante la colección de Postman y validada según `quickstart.md`.
+**Checkpoint**: Los tests automatizados cubren registro, login y validación de JWT. Quedan pendientes la comprobación explícita de persistencia (T010) y la validación manual con Postman (T025).
 
 ## Dependencies & Execution Order
 

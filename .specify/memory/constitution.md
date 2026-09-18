@@ -1,15 +1,13 @@
 <!--
 Sync Impact Report:
 
-- Version change: 1.10.0 -> 1.11.0
+- Version change: 1.13.0 -> 1.14.0
 
 - List of modified principles:
-  - IV. Testing y control de calidad automatizado
-  - VII. Contratos entre componentes
-  - X. Cambios controlados
+  - 8. Documentación
 
-- Modified sections:
-  - Core Principles
+- Added sections:
+  - 8.2. Postman
 
 - Follow-up TODOs:
   - None
@@ -277,7 +275,8 @@ La elección del test debe corresponder a la responsabilidad del componente:
 - `Model` → reglas e invariantes de dominio.
 - `Service` → lógica de aplicación y uso de Repository/Integration.
 - `Orchestrator` → coordinación.
-- `Controller` → contrato HTTP.
+- `Controller` → contrato HTTP. Sus tests deben documentar mediante Spring REST Docs
+  los endpoints y los casos de respuesta que verifican.
 - `Mapper` → transformaciones DTO ↔ Model y manejo de errores, cuando su comportamiento no esté cubierto por el flujo HTTP validado.
 - `Repository` → persistencia real.
 - `Integration` → comunicación externa, respuestas y errores.
@@ -438,9 +437,15 @@ La validación debe realizarse en el componente responsable:
 - Validación de negocio → Service / Model.
 - Validación de contratos externos → Integration.
 
-Las excepciones de validación estructural HTTP lanzadas por Jakarta Validation deben capturarse desde el manejo de errores de presentación y devolverse mediante una respuesta HTTP uniforme cuyo body contenga únicamente el mensaje `String` definido por la excepción.
+Las excepciones de validación estructural HTTP lanzadas por Jakarta Validation deben capturarse
+desde el manejo de errores de presentación y devolverse mediante `ErrorResponseDTO`.
 
-Cuando existan múltiples errores de validación, debe utilizarse el primer mensaje disponible como body de la respuesta.
+Las respuestas HTTP de error gestionadas por la aplicación deben utilizar `ErrorResponseDTO`,
+con `timestamp`, `status`, `error`, `message` y `path`. El código HTTP de la respuesta y
+`status` deben coincidir; `path` debe identificar la ruta solicitada.
+
+Cuando existan múltiples errores de validación, `message` debe contener el primer mensaje
+disponible de la validación.
 
 Los contratos externos deben mantenerse aislados de los contratos HTTP e internos.
 
@@ -469,13 +474,23 @@ La documentación debe reflejar fielmente:
 
 Las anotaciones deben utilizarse de forma consistente con las convenciones definidas por el proyecto.
 
-### 8.2. DTO
+### 8.2. Postman
+
+Todo endpoint HTTP funcional nuevo debe incorporarse como solicitud en la colección Postman
+versionada del proyecto. Si cambia el contrato de un endpoint existente, su solicitud en Postman
+debe actualizarse como parte del mismo cambio.
+
+Cada solicitud debe reflejar el método, la ruta, los parámetros, los headers, la autenticación
+y el body que correspondan al contrato. Los ejemplos deben ser utilizables sin incluir secretos
+ni credenciales reales.
+
+### 8.3. DTO
 
 Los campos de los DTO que formen parte del contrato deben documentar su significado y, cuando sea relevante, ejemplos y restricciones.
 
 La documentación debe mantenerse consistente con el comportamiento real de la API.
 
-### 8.3. Javadoc
+### 8.4. Javadoc
 
 Los métodos y constructores públicos deben tener Javadoc cuando aporten información relevante sobre su contrato o comportamiento.
 
@@ -483,11 +498,11 @@ Los métodos sobrescritos no requieren repetir documentación heredada salvo que
 
 La documentación debe explicar comportamiento, condiciones, parámetros, retornos o excepciones que no sean evidentes del código.
 
-### 8.4. Consistencia
+### 8.5. Consistencia
 
 La documentación del proyecto debe estar escrita en español.
 
-OpenAPI, Javadoc e implementación deben mantenerse coherentes entre sí y con la Spec correspondiente.
+OpenAPI, Postman, Javadoc e implementación deben mantenerse coherentes entre sí y con la Spec correspondiente.
 
 ## 9. Idioma
 
@@ -578,13 +593,24 @@ Las violaciones o fallos preexistentes y no relacionados con el cambio no requie
 
 No deben ocultarse, ignorarse ni utilizarse para justificar modificaciones innecesarias.
 
-### 10.6. Constitution
+### 10.6. Sincronización entre Spec y código
+
+La Spec y el código deben mantenerse sincronizados como parte del mismo cambio.
+
+Si se modifica el comportamiento especificado, deben actualizarse la Spec, la implementación
+y los tests afectados para que describan y verifiquen el mismo comportamiento.
+
+Si la implementación revela una diferencia respecto de la Spec, debe resolverse la discrepancia
+antes de finalizar el cambio: corregir el código o actualizar la Spec según el comportamiento
+acordado. La Spec no debe actualizarse únicamente para justificar una desviación no acordada.
+
+### 10.7. Constitution
 
 Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution durante una tarea.
 
 Si una modificación necesaria entra en conflicto con la Constitution, debe proponerse una enmienda antes de realizar el cambio incompatible.
 
-### 10.7. Finalización
+### 10.8. Finalización
 
 Un cambio se considera terminado cuando los elementos directamente afectados son coherentes y los controles aplicables definidos en la sección 4.4 se ejecutan y aprueban, salvo la excepción de fallo preexistente definida en esa misma sección.
 
@@ -607,6 +633,7 @@ El proyecto utiliza:
 - Jakarta Validation 3.1.1.
 - SpringDoc OpenAPI 3.1.0.
 - Spring Boot Test.
+- Spring REST Docs.
 - JUnit.
 - Mockito.
 - AssertJ.
@@ -619,4 +646,4 @@ No deben incorporarse nuevas tecnologías o dependencias fuera de este stack sin
 
 Las Specs y Plans no deben repetir estas restricciones globales salvo que una funcionalidad requiera una consideración técnica específica.
 
-**Version**: 1.11.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-10
+**Version**: 1.14.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-18

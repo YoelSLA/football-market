@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,14 +27,15 @@ public class AuthenticationController {
   @Operation(
       summary = "Registrar usuario",
       description = "Registra un nuevo usuario en el sistema.")
-  @ApiResponse(responseCode = "200", description = "Usuario registrado correctamente.")
+  @ApiResponse(responseCode = "201", description = "Usuario registrado correctamente.")
   @ApiResponse(responseCode = "400", description = "Los datos proporcionados no son válidos.")
+  @ApiResponse(responseCode = "409", description = "El email ya está registrado.")
   @PostMapping("/register")
   public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequestDTO request) {
 
     authenticationService.register(UserMapper.toModel(request));
 
-    return ResponseEntity.ok().build();
+    return ResponseEntity.status(HttpStatus.CREATED).build();
   }
 
   @Operation(
