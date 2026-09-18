@@ -1,12 +1,16 @@
 spring:
   datasource:
-    url: ${DB_TEST_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/football_market_test
+    username: postgres
+    password: root
 
     hikari:
       data-source-properties:
         TimeZone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
   jpa:
     properties:
@@ -14,8 +18,14 @@ spring:
         jdbc:
           time_zone: UTC
 
+jwt:
+  secret: test-secret-key-for-football-market-2026
+  expiration: 3600000
+
 logging:
   level:
+    org.flywaydb: DEBUG
+    org.hibernate.tool.schema: DEBUG
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF

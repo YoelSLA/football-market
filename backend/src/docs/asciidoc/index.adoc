@@ -1,0 +1,120 @@
+= Football Market API
+:toc: left
+:toclevels: 3
+
+== Autenticación
+
+=== Registro
+
+==== Registro exitoso
+
+===== Request
+
+include::{snippets}/auth-register-success/http-request.adoc[]
+
+===== Campos
+
+include::{snippets}/auth-register-success/request-fields.adoc[]
+
+===== Response
+
+include::{snippets}/auth-register-success/http-response.adoc[]
+
+
+==== Email inválido
+
+include::{snippets}/auth-register-invalid-email/http-request.adoc[]
+
+include::{snippets}/auth-register-invalid-email/http-response.adoc[]
+
+
+==== Email vacío
+
+include::{snippets}/auth-register-empty-email/http-request.adoc[]
+
+include::{snippets}/auth-register-empty-email/http-response.adoc[]
+
+
+==== Contraseña vacía
+
+include::{snippets}/auth-register-empty-password/http-request.adoc[]
+
+include::{snippets}/auth-register-empty-password/http-response.adoc[]
+
+
+==== Contraseña demasiado corta
+
+include::{snippets}/auth-register-short-password/http-request.adoc[]
+
+include::{snippets}/auth-register-short-password/http-response.adoc[]
+
+
+==== Email ya registrado
+
+include::{snippets}/auth-register-duplicate-email/http-request.adoc[]
+
+include::{snippets}/auth-register-duplicate-email/http-response.adoc[]
+
+
+
+=== Login
+
+==== Login exitoso
+
+===== Request
+
+include::{snippets}/auth-login-success/http-request.adoc[]
+
+===== Campos del request
+
+include::{snippets}/auth-login-success/request-fields.adoc[]
+
+===== Response
+
+include::{snippets}/auth-login-success/http-response.adoc[]
+
+===== Campos del response
+
+include::{snippets}/auth-login-success/response-fields.adoc[]
+
+
+==== Login con email en mayúsculas
+
+include::{snippets}/auth-login-uppercase-email/http-request.adoc[]
+
+include::{snippets}/auth-login-uppercase-email/http-response.adoc[]
+
+
+==== Email inexistente
+
+include::{snippets}/auth-login-nonexistent-email/http-request.adoc[]
+
+include::{snippets}/auth-login-nonexistent-email/http-response.adoc[]
+
+
+==== Contraseña incorrecta
+
+include::{snippets}/auth-login-wrong-password/http-request.adoc[]
+
+include::{snippets}/auth-login-wrong-password/http-response.adoc[]
+
+
+==== Email inválido
+
+include::{snippets}/auth-login-invalid-email/http-request.adoc[]
+
+include::{snippets}/auth-login-invalid-email/http-response.adoc[]
+
+
+==== Email vacío
+
+include::{snippets}/auth-login-empty-email/http-request.adoc[]
+
+include::{snippets}/auth-login-empty-email/http-response.adoc[]
+
+
+==== Contraseña vacía
+
+include::{snippets}/auth-login-empty-password/http-request.adoc[]
+
+include::{snippets}/auth-login-empty-password/http-response.adoc[]

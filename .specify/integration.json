@@ -2,14 +2,19 @@
   "version": "1.0.1",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "gemini"
+    "gemini",
+    "codex"
   ],
   "integration_settings": {
     "gemini": {
       "script": "sh",
       "invoke_separator": "."
+    },
+    "codex": {
+      "script": "sh",
+      "invoke_separator": "-"
     }
   },
-  "integration": "gemini",
-  "default_integration": "gemini"
+  "integration": "codex",
+  "default_integration": "codex"
 }

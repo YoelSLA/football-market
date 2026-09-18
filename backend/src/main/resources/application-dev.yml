@@ -1,12 +1,16 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/football_market_dev
+    username: postgres
+    password: root
 
     hikari:
       data-source-properties:
         TimeZone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
   jpa:
     show-sql: false
@@ -15,3 +19,7 @@ spring:
       hibernate:
         generate_statistics: false
         format_sql: false
+
+jwt:
+  secret: test-secret-key-for-football-market-2026
+  expiration: 3600000

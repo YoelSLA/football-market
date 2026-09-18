@@ -1,145 +1,649 @@
 <!--
 Sync Impact Report:
-- Version change: 1.3.0 -> 1.4.0
+
+- Version change: 1.13.0 -> 1.14.0
+
 - List of modified principles:
-  - None
+  - 8. Documentación
+
 - Added sections:
+  - 8.2. Postman
+
+- Follow-up TODOs:
   - None
-- Modified sections:
-  - Politica de Idioma
-- Removed sections:
-  - None
-- Follow-up TODOs: None
 -->
 
-# Football Market Constitution
+## 1. Arquitectura
 
-## Core Principles
+### 1.1. Fundamentos generales
 
-### 1. Separación de responsabilidades y modularidad
+Cada componente debe tener una responsabilidad arquitectónica clara y mantener alta cohesión.
 
-Cada componente, módulo o parte del sistema debe tener una responsabilidad claramente definida y debe encargarse únicamente de las responsabilidades que le correspondan. Se debe evitar la concentración de responsabilidades, la mezcla de diferentes tipos de lógica y las dependencias innecesarias entre componentes. El sistema debe organizarse de manera modular, favoreciendo la cohesión y el bajo acoplamiento, de forma que las funcionalidades puedan evolucionar sin generar impactos innecesarios en otras partes del sistema. La organización de módulos, componentes y recursos debe responder a responsabilidades claramente identificables y permitir que la arquitectura evolucione conforme cambien las necesidades del proyecto.
+Los componentes deben encapsular sus detalles de implementación y exponer únicamente lo necesario mediante contratos.
 
-### 2. Lógica de negocio
+Un componente debe dividirse únicamente cuando exista una separación real de responsabilidades, falta de cohesión o una necesidad arquitectónica explícita. El tamaño o cantidad de código no justifica por sí solo una división.
 
-La lógica de negocio debe mantenerse dentro de las responsabilidades propias del dominio y separada de los mecanismos de presentación, persistencia e infraestructura. Las reglas que puedan resolverse utilizando únicamente el estado y comportamiento propio de una entidad o concepto del dominio deben permanecer asociadas a dicho concepto. Las reglas que requieran coordinar información, recursos o dependencias externas deben ubicarse en el componente responsable de dicha coordinación.
+El nuevo comportamiento debe incorporarse al componente cuya responsabilidad corresponda.
 
-### 3. Integración y confiabilidad de fuentes externas
+### 1.2. Arquitectura del backend
 
-Las APIs, servicios y fuentes de información externas deben mantenerse aisladas de la lógica interna de la aplicación y sus particularidades no deben propagarse innecesariamente por el sistema. La información proveniente de estas fuentes debe considerarse no confiable y validarse antes de ser incorporada. Las integraciones deben contemplar errores, respuestas inválidas, indisponibilidad y cambios inesperados, evitando que estos problemas comprometan el funcionamiento o la integridad de la aplicación. El sistema debe poder modificar o reemplazar una dependencia externa sin generar cambios innecesarios en el resto de la aplicación.
+El backend se organiza en:
 
-### 4. Testing obligatorio
+- Presentación: Controller.
+- Aplicación: Orchestrator y Service.
+- Dominio: Model.
+- Persistence: Repository.
+- Integración externa: Integration.
+- Soporte HTTP: DTO y Mapper.
 
-Todo comportamiento relevante del sistema, ya sea nuevo o modificado, debe estar respaldado por pruebas automatizadas que verifiquen su funcionamiento esperado y los escenarios de error relevantes. Las pruebas deben formar parte del desarrollo de cada funcionalidad y una funcionalidad no se considera terminada mientras las pruebas correspondientes no sean satisfactorias.
+#### 1.2.1. Controller
 
-### 5. Calidad y estabilidad de las pruebas
+Representa la frontera HTTP.
 
-Las pruebas deben verificar comportamientos y reglas relevantes del sistema, contemplando escenarios esperados, errores, límites y condiciones relevantes, y deben proporcionar una verificación real y reproducible del comportamiento esperado. No deben implementarse únicamente para aumentar métricas de cobertura. Las pruebas existentes deben mantenerse para proteger los comportamientos previamente validados y evitar regresiones. Cuando un requisito cambie intencionalmente, las pruebas correspondientes podrán actualizarse para reflejar el nuevo comportamiento, pero no deben modificarse para ocultar errores de implementación. Las pruebas de integraciones externas deben poder ejecutarse de forma controlada sin depender de la disponibilidad de terceros cuando dicha disponibilidad no sea parte de lo que se pretende verificar.
+Puede utilizar DTO, Mapper, Service y Orchestrator.
 
-### 6. Calidad de código
+No debe contener lógica de negocio ni acceder directamente a Model, Repository o Integration.
 
-El código debe ser claro, legible, consistente y mantenible, además de cumplir correctamente con los requisitos funcionales. Se debe evitar la duplicación innecesaria de lógica y mantener criterios consistentes en todo el sistema, evitando implementar de forma independiente las mismas reglas cuando esto pueda generar comportamientos inconsistentes. Las nuevas funcionalidades y modificaciones no deben degradar injustificadamente la calidad existente ni introducir prácticas que dificulten innecesariamente la comprensión y evolución del código.
+Puede pasar directamente a Service u Orchestrator el Model devuelto por un Mapper, y pasar directamente a un Mapper el Model devuelto por Service u Orchestrator. En ambos casos no debe construirlo, declararlo, modificarlo, inspeccionarlo ni aplicar lógica sobre él.
 
-### 7. Control de calidad automatizado
+Cuando una operación HTTP intercambie datos de dominio, el flujo permitido es: DTO → Mapper → Model → Service u Orchestrator → Model → Mapper → DTO.
 
-La calidad del código debe evaluarse de forma continua durante el desarrollo mediante las validaciones establecidas por el proyecto. Los cambios deben superar los controles correspondientes antes de considerarse terminados. Las métricas y herramientas de calidad deben utilizarse para detectar y prevenir problemas, pero no deben convertirse en un objetivo por sí mismas cuando hacerlo implique sacrificar la corrección, claridad o mantenibilidad del código.
+Se asume que Service u Orchestrator no devuelven `null` cuando el contrato de la operación espera una respuesta.
 
-### 8. Seguridad
+#### 1.2.2. Orchestrator
 
-La seguridad debe considerarse un requisito transversal del sistema desde su diseño y durante todo su desarrollo. Los datos, entradas, recursos y operaciones deben tratarse de forma segura, sin asumir como confiable la información proveniente de usuarios, clientes o fuentes externas. Las validaciones o restricciones aplicadas en el cliente no deben considerarse suficientes para garantizar la seguridad. El acceso a funcionalidades y recursos debe estar protegido mediante mecanismos adecuados de autenticación y autorización, verificando que cada usuario tenga los permisos necesarios para realizar una operación o acceder a un recurso. Los secretos y la información sensible deben mantenerse protegidos y no deben exponerse mediante el código, repositorio, logs, respuestas o mensajes de error. El sistema debe aplicar controles adecuados para evitar accesos no autorizados, manipulación de solicitudes y exposición o modificación indebida de información.
+Coordina operaciones de aplicación cuando exista una responsabilidad de coordinación que no corresponda a Controller o a un único Service.
 
-### 9. Contratos entre componentes
+Puede utilizar Service y Model.
 
-La comunicación entre las distintas partes del sistema debe basarse en contratos claros, explícitos y consistentes. Los consumidores deben utilizar dichos contratos sin depender de comportamientos implícitos o suposiciones sobre la implementación interna. Los cambios en un contrato deben considerar su compatibilidad e impacto sobre los componentes que dependan de él, evitando modificaciones que introduzcan incompatibilidades o regresiones de forma innecesaria.
+No debe contener lógica de dominio.
 
-### 10. Documentación de la API
+No puede depender de Repository, Integration ni otro Orchestrator.
 
-Todos los endpoints expuestos por el backend deben estar documentados mediante OpenAPI/Swagger. La documentación debe describir de forma clara el contrato de cada endpoint, incluyendo sus solicitudes, respuestas, parámetros, errores y requisitos de acceso cuando correspondan. La documentación debe mantenerse sincronizada con la implementación y actualizarse cuando cambie el comportamiento de la API.
+El uso de múltiples Services no obliga por sí solo a crear un Orchestrator.
 
-### 11. Simplicidad antes que sobreingeniería
+#### 1.2.3. Service
 
-Las soluciones deben ser proporcionales a las necesidades reales del sistema. No se debe introducir complejidad, abstracciones, patrones, dependencias o tecnologías que no aporten un beneficio concreto. Se debe evitar diseñar para necesidades hipotéticas o futuras, permitiendo que la arquitectura evolucione cuando exista una necesidad real.
+Implementa la lógica de aplicación.
 
-### 12. Cambios controlados
+Puede utilizar Model, Repository e Integration.
 
-Todo cambio debe estar justificado por una necesidad concreta y limitarse al alcance necesario para resolverla. No deben modificarse arbitrariamente componentes o funcionalidades que no estén relacionados con el objetivo del cambio. Los cambios deben considerar su impacto sobre el sistema existente y preservar el comportamiento previamente validados. Las herramientas automatizadas y los agentes de inteligencia artificial están sujetos a estas mismas reglas y no deben realizar modificaciones fuera del alcance de la tarea sin una justificación explícita.
+No puede depender de Controller, Orchestrator ni otros Services.
 
-### 13. Idioma y convenciones lingüísticas
+#### 1.2.4. Model
 
-El idioma principal y obligatorio de trabajo del proyecto es el español. Todo contenido específico del proyecto generado, modificado, revisado o analizado por personas o agentes de inteligencia artificial debe redactarse en español, salvo las excepciones establecidas explícitamente en este principio.
+Representa conceptos, estado, comportamiento e invariantes del dominio.
 
-Todo texto generado dentro de un artefacto de Spec Kit que describa el proyecto, sus funcionalidades, requisitos, tareas, decisiones, objetivos, criterios, dependencias o implementación DEBE estar redactado en español. Solamente se mantienen en inglés los elementos que sean parte de la estructura, sintaxis, keywords o identificadores oficiales de Spec Kit.
+Las reglas que puedan resolverse exclusivamente con información del dominio deben implementarse en Model.
 
-Las expresiones normativas y estructuras propias de Spec Kit, como `System MUST`, `MUST`, `MUST NOT`, `Given`, `When` y `Then`, deben conservarse en inglés cuando formen parte del formato requerido por Spec Kit. El texto descriptivo asociado debe redactarse en español.
+No puede depender de Service, Repository ni Integration.
 
-Los identificadores propios de Spec Kit, como `FR-001`, `SC-001`, `T001`, `US1`, `P1` y `[P]`, deben conservarse en su formato original.
+#### 1.2.5. Repository
 
-Los elementos definidos específicamente para el proyecto, incluyendo clases, métodos, variables, atributos, archivos, paquetes, módulos, entidades, servicios, repositorios, controladores, pruebas, comentarios, mensajes de la aplicación, endpoints y commits, deben utilizar español, salvo que exista una restricción técnica, de compatibilidad o una convención oficial que requiera mantener otra denominación.
+Gestiona el acceso a datos persistidos.
 
-Los nombres oficiales de lenguajes, frameworks, librerías, APIs, servicios externos, herramientas, comandos, protocolos, estándares, productos, marcas y tecnologías deben conservarse en su denominación oficial. No deben traducirse ni modificarse para cumplir esta política.
+No debe contener lógica de negocio.
 
-Los agentes de inteligencia artificial deben aplicar este principio a todos los artefactos que generen o modifiquen. Ante cualquier conflicto entre una convención lingüística del proyecto y una convención obligatoria de una tecnología o de Spec Kit, debe conservarse la denominación oficial de la tecnología o convención y redactarse en español el contenido específico del proyecto.
+Puede utilizar Model.
 
-## Reglas Generales de Aplicación
+No puede depender de Service ni DTO.
 
-Estos criterios rigen la aplicación de los principios constitucionales y deben ser respetados por todos los colaboradores del proyecto, incluyendo agentes de inteligencia artificial.
+#### 1.2.6. Integration
 
-- Los principios deben aplicarse tanto al código desarrollado manualmente como al código generado o modificado mediante agentes de inteligencia artificial.
+Puede ser utilizada por Service.
 
-- La Constitución debe ser clara, precisa y suficientemente explícita para que pueda ser utilizada como criterio obligatorio durante el desarrollo.
+No puede ser utilizada directamente por Controller, Orchestrator, Model ni Repository.
 
-- No deben introducirse decisiones tecnológicas, arquitectónicas o de implementación que no estén expresamente definidas en esta Constitución.
+### 1.3. DTO y Mapper
 
-- Las decisiones concretas de arquitectura e implementación deberán definirse posteriormente durante las etapas de especificación y planificación.
+#### 1.3.1. DTO
 
-## Stack Tecnológico
+Los DTO representan los contratos HTTP de entrada y salida.
 
-El proyecto utiliza el siguiente stack tecnológico. Las implementaciones y decisiones de desarrollo deben respetar estas tecnologías y versiones, salvo que una modificación del stack sea aprobada mediante el procedimiento de enmienda correspondiente o mediante la decisión de arquitectura establecida por el proyecto.
+Service, Model y Repository no deben depender de DTO.
 
-| **#** |      **Tecnología / Dependencia**      |          **Versión**         | **Uso**                                  |
-| :---: | :------------------------------------: | :--------------------------: | :--------------------------------------- |
-|   1   |                 Gradle                 |             8.14+            | Build y gestión de dependencias          |
-|   2   |                  Java                  |              21              | Lenguaje / JDK                           |
-|   3   |               Spring Boot              |             4.1.1            | Framework principal                      |
-|   4   |               Spring Web               | Managed by Spring Boot 4.1.1 | Desarrollo de API REST                   |
-|   5   |             Spring Security            | Managed by Spring Boot 4.1.1 | Autenticación y autorización             |
-|   6   | Spring Security OAuth2 Resource Server | Managed by Spring Boot 4.1.1 | Validación de JWT                        |
-|   7   |             Spring Data JPA            | Managed by Spring Boot 4.1.1 | Persistencia mediante JPA                |
-|   8   |         Spring Boot Validation         | Managed by Spring Boot 4.1.1 | Validación de DTOs y requests            |
-|   9   |           Jakarta Validation           |             3.1.1            | API de validaciones                      |
-|   10  |               PostgreSQL               |             18.x             | Base de datos                            |
-|   11  |         PostgreSQL JDBC Driver         | Managed by Spring Boot 4.1.1 | Conexión Java ↔ PostgreSQL               |
-|   12  |                 Flyway                 | Managed by Spring Boot 4.1.1 | Migraciones y versionado de BD           |
-|   13  |            Flyway PostgreSQL           | Managed by Spring Boot 4.1.1 | Soporte de Flyway para PostgreSQL        |
-|   14  |     SpringDoc OpenAPI / Swagger UI     |             3.1.0            | Documentación de APIs REST               |
-|   15  |            Spring Boot Test            |             4.1.1            | Testing de la aplicación                 |
-|   16  |              JUnit Jupiter             | Managed by Spring Boot 4.1.1 | Tests unitarios                          |
-|   17  |                 Mockito                | Managed by Spring Boot 4.1.1 | Mocking                                  |
-|   18  |                 AssertJ                | Managed by Spring Boot 4.1.1 | Assertions                               |
-|   19  |       Spring Boot Testcontainers       |             4.1.1            | Integración Spring Boot + Testcontainers |
-|   20  |      Testcontainers JUnit Jupiter      |             2.0.3            | Integración Testcontainers + JUnit       |
-|   21  |        Testcontainers PostgreSQL       |             2.0.3            | PostgreSQL para tests de integración     |
-|   22  |         SonarQube Gradle Plugin        |          6.0.1.5171          | Análisis estático / calidad de código    |
+#### 1.3.2. Mapper
 
-Las versiones indicadas deben considerarse parte del contexto tecnológico vigente del proyecto. Las dependencias administradas por Spring Boot deben utilizar las versiones gestionadas por la versión de Spring Boot establecida, evitando definir versiones manuales cuando no exista una necesidad técnica justificada.
+Los Mapper transforman exclusivamente entre DTO y Model:
 
+DTO → Model
+Model → DTO
 
-## Evolución y Conflictos
+No deben contener lógica de negocio, validaciones de negocio, cálculos ni decisiones semánticas.
 
-La Constitución establece reglas generales y permanentes. Su evolución debe ser un proceso controlado para garantizar la estabilidad del proyecto.
+No pueden depender de Service ni Repository.
 
-- Si una futura especificación o decisión entra en conflicto con un principio de esta Constitución, el conflicto debe identificarse explícitamente y la Constitución deberá ser revisada de forma controlada antes de ignorar o incumplir dicho principio.
+### 1.4. Dependencias arquitectónicas
 
-- Los agentes de inteligencia artificial deben respetar estos principios y no deben modificarlos por iniciativa propia.
+Las dependencias directas permitidas son:
 
-## Governance
+Controller → DTO, Mapper, Service, Orchestrator
+Orchestrator → Service, Model
+Service → Model, Repository, Integration
+Repository → Model
 
-La Constitución es el documento de máxima jerarquía técnica del proyecto y rige todas las decisiones posteriores.
+Las relaciones de DTO y Mapper se rigen por la sección 1.3.
 
-- **Procedimiento de Enmienda**: Cualquier cambio en esta Constitución debe estar justificado por una necesidad concreta, documentado mediante un incremento de versión y seguir el proceso de revisión del equipo.
+Toda dependencia no listada está prohibida.
 
-- **Cumplimiento de IA**: Los agentes de IA tienen estrictamente prohibido modificar o ignorar estos principios por iniciativa propia. Deben validar cada propuesta contra esta Constitución.
+Las dependencias transitivas no autorizan dependencias directas.
 
-- **Política de Versionado**: Se utiliza Versionado Semántico (SemVer). Los cambios mayores (MAJOR) implican cambios en la gobernanza o eliminación de principios. Los cambios menores (MINOR) añaden o expanden principios. Los parches (PATCH) son clarificaciones no semánticas.
+No deben existir dependencias circulares ni utilizarse intermediarios para evadir una restricción arquitectónica.
 
-**Version**: 1.4.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-03
+### 1.5. Reglas de dominio y aplicación
+
+Las reglas que puedan resolverse exclusivamente con información y comportamiento del dominio deben implementarse en Model.
+
+Las reglas que requieran Repository, Integration u otras capacidades externas al dominio deben implementarse en Service.
+
+Las reglas que involucren múltiples Model pueden permanecer en el dominio cuando puedan resolverse completamente mediante comportamiento de dominio.
+
+### 1.6. Evolución y nuevas áreas
+
+La arquitectura definida por esta Constitution prevalece sobre estructuras existentes.
+
+La existencia de clases, paquetes, interfaces o convenciones previas no obliga a conservarlas cuando contradigan la arquitectura.
+
+Las refactorizaciones necesarias para cumplir la arquitectura están permitidas.
+
+Toda nueva área debe definir explícitamente sus responsabilidades, componentes y dependencias.
+
+### 1.7. Resolución arquitectónica
+
+Las dependencias y responsabilidades no deben inferirse por conveniencia técnica.
+
+Cuando una situación relevante no pueda resolverse mediante las reglas existentes, la Spec o el código aplicable, el agente debe solicitar aclaración en lugar de inventar una regla arquitectónica.
+
+## 2. Convenciones
+
+Las convenciones definen cómo implementar técnicamente la arquitectura. No pueden contradecir las reglas arquitectónicas.
+
+### 2.1. Estructura física
+
+La estructura de paquetes, directorios y archivos debe ser coherente con los roles arquitectónicos definidos.
+
+La estructura física no modifica por sí misma la responsabilidad arquitectónica de un componente.
+
+### 2.2. DTO
+
+Los DTO HTTP deben implementarse como `record`.
+
+Los Request DTO pueden utilizar Jakarta Validation cuando las restricciones correspondan al contrato o a requisitos funcionales.
+
+Los mensajes de validación propios de la aplicación deben estar en español.
+
+La obligatoriedad y nulabilidad deben representar correctamente el contrato HTTP.
+
+### 2.3. Model
+
+Los Model deben preservar sus invariantes y encapsular su estado.
+
+No deben utilizar `Builder`.
+
+No deben utilizarse `@Setter` en los Model.
+
+Pueden utilizarse mecanismos de Persistence necesarios para representar el Model.
+
+### 2.4. Mapper
+
+Los Mapper deben ser `final`, sin estado mutable, con constructor privado y métodos `static`.
+
+No deben utilizarse instancias de Mapper.
+
+Un Mapper que pueda ser invocado fuera de un endpoint HTTP validado con Jakarta Validation y reciba `null` debe lanzar la excepción de mapeo definida por el proyecto.
+
+No se requiere una validación de `null` específica cuando el Mapper sólo sea alcanzable desde un endpoint HTTP cuya validación estructural ya impida ese caso.
+
+No debe convertir `null` en valores por defecto.
+
+### 2.5. Service
+
+Las interfaces para Service no son obligatorias.
+
+Solo deben utilizarse cuando exista una necesidad técnica o arquitectónica real.
+
+No debe crearse una interfaz únicamente por seguir una convención genérica.
+
+### 2.6. Framework y tecnología
+
+Las tecnologías y frameworks establecidos por el proyecto deben utilizarse respetando la arquitectura.
+
+Las anotaciones, clases base e interfaces proporcionadas por los frameworks no deben utilizarse para introducir responsabilidades o dependencias prohibidas.
+
+## 3. Integraciones externas
+
+### 3.1. Encapsulamiento
+
+Toda comunicación con sistemas externos debe realizarse mediante `Integration`.
+
+`Integration` encapsula:
+- comunicación y configuración del proveedor;
+- requests y responses externos;
+- transformación de datos externos;
+- errores técnicos de integración.
+
+`Model` no debe contener detalles de HTTP, clientes, proveedores ni protocolos externos.
+
+### 3.2. Respuestas y errores
+
+Las respuestas externas deben validarse antes de ser utilizadas.
+
+Los errores técnicos de integración deben mantenerse diferenciados de los errores de dominio.
+
+No se deben inventar datos ni modificar silenciosamente el comportamiento funcional ante respuestas inválidas o fallos externos.
+
+### 3.3. Timeouts y reintentos
+
+Las comunicaciones externas deben utilizar timeouts cuando la tecnología lo permita.
+
+Los reintentos no deben implementarse por defecto.
+
+Solo pueden utilizarse cuando la operación sea segura para reintentar y exista un límite explícito que evite efectos duplicados o cargas innecesarias.
+
+### 3.4. Disponibilidad
+
+La indisponibilidad de un sistema externo debe manejarse según los requisitos de la funcionalidad.
+
+No se deben introducir automáticamente cachés, degradaciones ni comportamientos alternativos sin una justificación funcional o técnica.
+
+### 3.5. Contratos y seguridad
+
+Los contratos externos deben mantenerse aislados de los contratos HTTP y de los Model internos.
+
+Los secretos, tokens y credenciales no deben almacenarse en el código ni exponerse en logs o respuestas.
+
+Las comunicaciones externas deben utilizar mecanismos seguros y no deben degradarse para facilitar la implementación.
+
+## 4. Testing
+
+### 4.1. Cobertura de comportamiento
+
+Todo código nuevo o modificado debe contar con tests automatizados suficientes para verificar el comportamiento afectado.
+
+Los tests deben cubrir, cuando corresponda:
+- comportamiento esperado;
+- errores y validaciones;
+- límites y estados inválidos;
+- regresiones relevantes.
+
+Los tests deben verificar comportamiento, no únicamente que se invoquen métodos.
+
+### 4.2. Tipo de test
+
+La elección del test debe corresponder a la responsabilidad del componente:
+
+- `Model` → reglas e invariantes de dominio.
+- `Service` → lógica de aplicación y uso de Repository/Integration.
+- `Orchestrator` → coordinación.
+- `Controller` → contrato HTTP. Sus tests deben documentar mediante Spring REST Docs
+  los endpoints y los casos de respuesta que verifican.
+- `Mapper` → transformaciones DTO ↔ Model y manejo de errores, cuando su comportamiento no esté cubierto por el flujo HTTP validado.
+- `Repository` → persistencia real.
+- `Integration` → comunicación externa, respuestas y errores.
+
+Los tests unitarios deben aislar dependencias externas.
+
+Los tests de integración deben utilizarse cuando sea necesario verificar persistencia, comunicación externa, serialización, configuración o contratos reales.
+
+### 4.3. Calidad de los tests
+
+Los tests deben ser:
+- deterministas;
+- independientes entre sí;
+- reproducibles;
+- descriptivos respecto del comportamiento probado.
+
+Los nombres de los tests pueden estar en español, de acuerdo con el Principio 9.
+
+### 4.4. Regresiones y controles
+
+Las correcciones de defectos deben incorporar un test de regresión cuando sea razonable.
+
+Antes de finalizar un cambio deben ejecutarse los controles aplicables del proyecto, incluyendo tests, compilación, análisis estático y Quality Gates cuando correspondan.
+
+Los controles aplicables son los disponibles o configurados en el proyecto y aquellos requeridos por el área modificada. Para considerar correcto un cambio, todos los controles aplicables deben aprobarse.
+
+No se deben modificar tests ni controles únicamente para ocultar un fallo introducido por el cambio.
+
+Si un control falla por una causa preexistente y verificablemente ajena al cambio, debe documentarse y reportarse. Ese fallo no bloquea la finalización del cambio ni habilita ampliar su alcance para corregirlo.
+
+## 5. Calidad y mantenibilidad
+
+### 5.1. Simplicidad
+
+El código debe ser claro, mantenible y simple.
+
+Debe preferirse la solución válida más simple, evitando complejidad, dependencias y abstracciones innecesarias.
+
+No deben introducirse patrones, interfaces o capas únicamente por seguir convenciones genéricas.
+
+### 5.2. Responsabilidades
+
+Cada clase y método debe mantener una responsabilidad coherente.
+
+No se debe fragmentar código trivial sin una razón arquitectónica o de mantenibilidad.
+
+La duplicación debe evaluarse antes de introducir una abstracción. No toda duplicación requiere ser eliminada.
+
+### 5.3. Dependencias
+
+No debe agregarse una dependencia externa cuando las capacidades existentes del proyecto sean suficientes.
+
+Las nuevas dependencias deben tener una justificación técnica real.
+
+### 5.4. Código innecesario
+
+Debe eliminarse código muerto, obsoleto o innecesario cuando forme parte del alcance del cambio.
+
+Los comentarios deben aportar información que no resulte evidente del código y mantenerse actualizados.
+
+### 5.5. Refactorización
+
+El código existente no debe modificarse sin una razón concreta.
+
+Las refactorizaciones deben:
+- aportar un beneficio técnico, arquitectónico o de mantenibilidad;
+- mantenerse dentro de un alcance razonable;
+- preservar el comportamiento no relacionado con el cambio.
+
+Las necesidades hipotéticas futuras no justifican complejidad adicional.
+
+## 6. Seguridad
+
+### 6.1. Principios generales
+
+La seguridad es obligatoria en todo cambio.
+
+Toda entrada externa debe considerarse no confiable y validarse según el contrato, las reglas de seguridad y los requisitos funcionales.
+
+No se deben deshabilitar mecanismos de seguridad para simplificar una implementación.
+
+### 6.2. Autenticación y autorización
+
+La autenticación debe utilizar el mecanismo definido por el proyecto.
+
+La autorización debe verificarse de forma explícita e independiente de la autenticación.
+
+Cuando corresponda, debe verificarse el rol, permiso o pertenencia del usuario al recurso solicitado.
+
+### 6.3. Datos y ataques
+
+Las consultas y operaciones que involucren datos externos deben utilizar mecanismos seguros de parametrización, binding o escaping.
+
+No se debe concatenar directamente entrada externa en consultas u operaciones cuando exista un mecanismo seguro equivalente.
+
+No se debe implementar criptografía propia. Deben utilizarse algoritmos y librerías estándar y seguros.
+
+### 6.4. Secretos y datos sensibles
+
+Los secretos, credenciales y tokens deben mantenerse fuera del código fuente y del repositorio.
+
+No deben exponerse datos sensibles en:
+- respuestas HTTP;
+- logs;
+- mensajes de error;
+- configuraciones versionadas.
+
+### 6.5. Comunicaciones y dependencias
+
+Las comunicaciones externas deben utilizar mecanismos seguros, como HTTPS cuando corresponda.
+
+Las dependencias con vulnerabilidades relevantes deben corregirse cuando sean introducidas o agravadas por el cambio.
+
+Debe aplicarse el principio de mínimo privilegio y utilizar configuraciones seguras por defecto.
+
+### 6.6. Testing
+
+Los cambios que afecten seguridad deben incluir tests que verifiquen los comportamientos de seguridad relevantes.
+
+## 7. Contratos
+
+### 7.1. Contratos explícitos
+
+Los componentes deben interactuar mediante contratos definidos.
+
+Los consumidores deben depender del contrato y no de detalles internos de implementación.
+
+Las modificaciones que alteren el comportamiento observable deben considerarse cambios de contrato.
+
+### 7.2. Contrato HTTP
+
+El contrato HTTP comprende, cuando corresponda:
+
+- métodos y rutas;
+- parámetros y headers;
+- Request y Response DTO;
+- códigos de estado;
+- validaciones;
+- estructura de errores.
+
+Los DTO representan el contrato HTTP y no deben exponer directamente los Model internos.
+
+Todo endpoint debe devolver un código de estado HTTP. El body es opcional; si una respuesta exitosa devuelve datos en el body, debe utilizar un Response DTO.
+
+### 7.3. Compatibilidad
+
+Antes de modificar un contrato debe evaluarse su impacto sobre los consumidores existentes.
+
+No deben introducirse cambios incompatibles de forma silenciosa.
+
+Agregar, eliminar, modificar obligatoriedad, cambiar significado o alterar errores puede constituir un cambio incompatible.
+
+### 7.4. Validación
+
+La validación debe realizarse en el componente responsable:
+
+- Validación estructural HTTP → Controller / DTO.
+- Validación de negocio → Service / Model.
+- Validación de contratos externos → Integration.
+
+Las excepciones de validación estructural HTTP lanzadas por Jakarta Validation deben capturarse
+desde el manejo de errores de presentación y devolverse mediante `ErrorResponseDTO`.
+
+Las respuestas HTTP de error gestionadas por la aplicación deben utilizar `ErrorResponseDTO`,
+con `timestamp`, `status`, `error`, `message` y `path`. El código HTTP de la respuesta y
+`status` deben coincidir; `path` debe identificar la ruta solicitada.
+
+Cuando existan múltiples errores de validación, `message` debe contener el primer mensaje
+disponible de la validación.
+
+Los contratos externos deben mantenerse aislados de los contratos HTTP e internos.
+
+### 7.5. Evolución
+
+Los contratos relevantes deben contar con tests que permitan detectar cambios incompatibles.
+
+Todo cambio de contrato debe actualizar los elementos afectados, como implementación, tests, DTO, documentación y OpenAPI cuando corresponda.
+
+Si no se conocen los consumidores de un contrato existente, debe tratarse como potencialmente utilizado.
+
+## 8. Documentación
+
+### 8.1. API HTTP
+
+Los endpoints HTTP funcionales deben estar documentados mediante OpenAPI.
+
+La documentación debe reflejar fielmente:
+- operación y propósito;
+- parámetros;
+- Request y Response DTO;
+- validaciones relevantes;
+- códigos de respuesta contractuales;
+- errores esperados;
+- seguridad cuando corresponda.
+
+Las anotaciones deben utilizarse de forma consistente con las convenciones definidas por el proyecto.
+
+### 8.2. Postman
+
+Todo endpoint HTTP funcional nuevo debe incorporarse como solicitud en la colección Postman
+versionada del proyecto. Si cambia el contrato de un endpoint existente, su solicitud en Postman
+debe actualizarse como parte del mismo cambio.
+
+Cada solicitud debe reflejar el método, la ruta, los parámetros, los headers, la autenticación
+y el body que correspondan al contrato. Los ejemplos deben ser utilizables sin incluir secretos
+ni credenciales reales.
+
+### 8.3. DTO
+
+Los campos de los DTO que formen parte del contrato deben documentar su significado y, cuando sea relevante, ejemplos y restricciones.
+
+La documentación debe mantenerse consistente con el comportamiento real de la API.
+
+### 8.4. Javadoc
+
+Los métodos y constructores públicos deben tener Javadoc cuando aporten información relevante sobre su contrato o comportamiento.
+
+Los métodos sobrescritos no requieren repetir documentación heredada salvo que agreguen comportamiento relevante.
+
+La documentación debe explicar comportamiento, condiciones, parámetros, retornos o excepciones que no sean evidentes del código.
+
+### 8.5. Consistencia
+
+La documentación del proyecto debe estar escrita en español.
+
+OpenAPI, Postman, Javadoc e implementación deben mantenerse coherentes entre sí y con la Spec correspondiente.
+
+## 9. Idioma
+
+### 9.1. Código
+
+Todo código nuevo o modificado debe utilizar inglés para:
+- clases;
+- métodos;
+- variables;
+- atributos;
+- paquetes;
+- endpoints;
+- campos JSON.
+
+Los nombres impuestos por frameworks, librerías o sistemas externos pueden mantenerse según su contrato.
+
+### 9.2. Tests
+
+Los nombres descriptivos de los tests pueden estar en español.
+
+El resto del código de los tests debe respetar las convenciones generales del proyecto.
+
+### 9.3. Documentación
+
+La documentación propia del proyecto debe estar en español.
+
+Esto incluye:
+- Constitution;
+- Specs;
+- documentación técnica;
+- Javadoc;
+- OpenAPI;
+- mensajes de validación.
+
+La documentación externa puede mantenerse en su idioma original.
+
+### 9.4. Git
+
+Los nombres de ramas, commits, Pull Requests e Issues deben estar en inglés.
+
+### 9.5. Código existente
+
+El código existente en español no debe modificarse únicamente para traducirlo.
+
+Cuando un archivo existente sea modificado como parte del alcance, los elementos nuevos o modificados deben respetar las convenciones de idioma establecidas.
+
+## 10. Cambios controlados
+
+### 10.1. Alcance
+
+Los cambios deben limitarse a lo necesario para:
+- completar la tarea;
+- cumplir la Constitution;
+- mantener la coherencia de los elementos directamente afectados.
+
+No deben realizarse refactorizaciones, mejoras u optimizaciones no relacionadas.
+
+### 10.2. Archivos y componentes
+
+Se pueden crear, modificar, eliminar o renombrar archivos y componentes cuando sean necesarios para el cambio.
+
+Los elementos no relacionados deben permanecer sin modificaciones.
+
+Antes de eliminar o renombrar elementos deben considerarse sus referencias y consumidores.
+
+### 10.3. Comportamiento existente
+
+Debe preservarse el comportamiento no relacionado con la tarea.
+
+Si el cambio modifica comportamiento funcional, deben actualizarse los elementos afectados, incluyendo cuando corresponda:
+- implementación;
+- tests;
+- contratos;
+- DTO;
+- OpenAPI;
+- documentación;
+- configuración.
+
+### 10.4. Tests existentes
+
+No deben modificarse tests únicamente para hacer que pasen.
+
+Si cambia el comportamiento esperado, los tests afectados deben actualizarse para representar el nuevo contrato.
+
+### 10.5. Problemas preexistentes
+
+Las violaciones o fallos preexistentes y no relacionados con el cambio no requieren una corrección fuera de alcance.
+
+No deben ocultarse, ignorarse ni utilizarse para justificar modificaciones innecesarias.
+
+### 10.6. Sincronización entre Spec y código
+
+La Spec y el código deben mantenerse sincronizados como parte del mismo cambio.
+
+Si se modifica el comportamiento especificado, deben actualizarse la Spec, la implementación
+y los tests afectados para que describan y verifiquen el mismo comportamiento.
+
+Si la implementación revela una diferencia respecto de la Spec, debe resolverse la discrepancia
+antes de finalizar el cambio: corregir el código o actualizar la Spec según el comportamiento
+acordado. La Spec no debe actualizarse únicamente para justificar una desviación no acordada.
+
+### 10.7. Constitution
+
+Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution durante una tarea.
+
+Si una modificación necesaria entra en conflicto con la Constitution, debe proponerse una enmienda antes de realizar el cambio incompatible.
+
+### 10.8. Finalización
+
+Un cambio se considera terminado cuando los elementos directamente afectados son coherentes y los controles aplicables definidos en la sección 4.4 se ejecutan y aprueban, salvo la excepción de fallo preexistente definida en esa misma sección.
+
+Cualquier modificación adicional fuera del alcance inicial debe estar justificada explícitamente.
+
+## Technology Constraints
+
+El proyecto utiliza:
+
+- Java 21.
+- Gradle 8.14+.
+- Spring Boot 4.1.1.
+- Spring Web.
+- Spring Security.
+- OAuth2 Resource Server.
+- Spring Data JPA.
+- PostgreSQL 18.x.
+- JDBC.
+- Flyway.
+- Jakarta Validation 3.1.1.
+- SpringDoc OpenAPI 3.1.0.
+- Spring Boot Test.
+- Spring REST Docs.
+- JUnit.
+- Mockito.
+- AssertJ.
+- Testcontainers.
+- SonarQube.
+
+Las versiones administradas por Spring Boot deben utilizarse sin sobrescribirlas salvo necesidad técnica justificada.
+
+No deben incorporarse nuevas tecnologías o dependencias fuera de este stack sin justificación y aprobación mediante el proceso de cambios correspondiente.
+
+Las Specs y Plans no deben repetir estas restricciones globales salvo que una funcionalidad requiera una consideración técnica específica.
+
+**Version**: 1.14.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-18

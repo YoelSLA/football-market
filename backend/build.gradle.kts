@@ -4,6 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.sonarqube") version "7.3.1.8318"
     id("com.diffplug.spotless") version "7.2.1"
+    id("org.asciidoctor.jvm.convert") version "4.0.5"
 }
 
 group = "com.example"
@@ -19,50 +20,71 @@ repositories {
     mavenCentral()
 }
 
-val springdocVersion = project.property("springdocVersion")
+// ============================================================
+// SPRING REST DOCS + ASCIIDOCTOR
+// ============================================================
+
+val snippetsDir = file("build/generated-snippets")
 
 dependencies {
 
-    // ============================================================
-    // IMPLEMENTATION
-    // ============================================================
+    implementation(libs.jjwt.api)
+    implementation(libs.spring.dotenv)
+    implementation(libs.springdoc.openapi)
 
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-
-    implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-web")
 
-    implementation(
-        "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocVersion"
-    )
-
-
-    // ============================================================
-    // RUNTIME ONLY
-    // ============================================================
+    compileOnly("org.projectlombok:lombok")
 
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly(libs.jjwt.impl)
+    runtimeOnly(libs.jjwt.jackson)
 
-
-    // ============================================================
-    // TEST IMPLEMENTATION
-    // ============================================================
+    annotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
-
+    testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-postgresql")
 }
 
+// ============================================================
+// TEST
+// ============================================================
+
 tasks.named<Test>("test") {
     useJUnitPlatform()
+
+    // Los tests de Spring REST Docs generan los snippets acá.
+    outputs.dir(snippetsDir)
 }
 
+// ============================================================
+// ASCIIDOCTOR
+// ============================================================
+
+tasks.named<org.asciidoctor.gradle.jvm.AsciidoctorTask>("asciidoctor") {
+    // Primero ejecuta los tests para generar los snippets.
+    dependsOn(tasks.test)
+
+    // Los snippets son una entrada de esta tarea.
+    inputs.dir(snippetsDir)
+
+    // Permite usar {snippets} dentro de index.adoc.
+    attributes(
+        mapOf(
+            "snippets" to snippetsDir
+        )
+    )
+}
 
 // ============================================================
 // SPOTLESS
@@ -97,7 +119,6 @@ spotless {
         endWithNewline()
     }
 }
-
 
 // ============================================================
 // SONARQUBE
