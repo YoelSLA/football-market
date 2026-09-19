@@ -1,4 +1,6 @@
-package footballmarket.models;
+package footballmarket.models.records;
+
+import footballmarket.models.exceptions.InvalidPlayerSynchronizationResultException;
 
 public record PlayerSynchronizationResult(
     int obtained, int created, int updated, int markedInactive, int discardedInvalid) {
@@ -9,7 +11,7 @@ public record PlayerSynchronizationResult(
         || markedInactive < 0
         || discardedInvalid < 0
         || (long) created + updated + discardedInvalid > obtained) {
-      throw new IllegalArgumentException("Los contadores de sincronización son inválidos");
+      throw new InvalidPlayerSynchronizationResultException();
     }
   }
 }

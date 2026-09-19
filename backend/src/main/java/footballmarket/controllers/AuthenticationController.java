@@ -33,7 +33,7 @@ public class AuthenticationController {
   @PostMapping("/register")
   public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequestDTO request) {
 
-    authenticationService.register(UserMapper.toModel(request));
+    this.authenticationService.register(UserMapper.toModel(request));
 
     return ResponseEntity.status(HttpStatus.CREATED).build();
   }
@@ -49,7 +49,7 @@ public class AuthenticationController {
   @PostMapping("/login")
   public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO request) {
 
-    String token = authenticationService.login(request.email(), request.password());
+    String token = this.authenticationService.login(request.email(), request.password());
 
     LoginResponseDTO response = new LoginResponseDTO(token);
 

@@ -1,5 +1,7 @@
-package footballmarket.models;
+package footballmarket.models.records;
 
+import footballmarket.models.Player;
+import footballmarket.models.exceptions.InvalidPlayerSnapshotException;
 import java.util.List;
 
 /** Foto completa: candidatos válidos y contadores anteriores a la consolidación por ID. */
@@ -10,7 +12,7 @@ public record PlayerSnapshot(List<Player> players, int obtained, int discardedIn
         || discardedInvalid < 0
         || discardedInvalid > obtained
         || players.size() > obtained - discardedInvalid) {
-      throw new IllegalArgumentException("Los contadores de la foto son inválidos");
+      throw new InvalidPlayerSnapshotException();
     }
   }
 }

@@ -6,7 +6,7 @@
 
 ## Summary
 
-Implementar el catálogo local de jugadores y sus dos contratos HTTP: `GET /players`, que consulta exclusivamente PostgreSQL con paginación, y `POST /players/sync`, que inicia una sincronización manual con Football-Data.org API v4.
+Implementar el catálogo local de jugadores y sus dos contratos HTTP: `GET /api/players`, que consulta exclusivamente PostgreSQL con paginación, y `POST /api/players/sync`, que inicia una sincronización manual con Football-Data.org API v4.
 
 La solución incorpora la funcionalidad en las capas existentes: Controller → DTO/Mapper → Service u Orchestrator → Model → Repository, y encapsula Football-Data.org en una `Integration`. La sincronización primero construye y valida una foto completa desde el proveedor y solo después actualiza la base local dentro de una transacción. Así, un fallo parcial del proveedor no puede inactivar ni eliminar datos locales.
 
@@ -32,7 +32,7 @@ La solución incorpora la funcionalidad en las capas existentes: Controller → 
 - **DTO y Mapper**: PASS — los DTO HTTP serán `record`; `PlayerMapper` será `final`, sin estado, con constructor privado y métodos `static`. Las entidades no se expondrán directamente.
 - **Integración externa**: PASS — las rutas, respuestas, autenticación y fallos de Football-Data.org quedan aislados en `Integration`; el Controller y el Model no conocerán HTTP externo.
 - **Persistencia e invariantes**: PASS — el estado del jugador será encapsulado por el Model; el Controller no accederá al Repository. Flyway añadirá el esquema requerido.
-- **Seguridad**: PASS — la clave se leerá de configuración, no se registrará ni se incluirá en errores. Los endpoints conservarán la autenticación vigente; cualquier usuario autenticado podrá invocar `POST /players/sync` sin un rol adicional.
+- **Seguridad**: PASS — la clave se leerá de configuración, no se registrará ni se incluirá en errores. Los endpoints conservarán la autenticación vigente; cualquier usuario autenticado podrá invocar `POST /api/players/sync` sin un rol adicional.
 - **Contratos y documentación**: PASS — las respuestas exitosas usarán DTOs y los errores gestionados por la aplicación usarán `ErrorResponseDTO`; los contratos se documentarán en OpenAPI y los dos endpoints se incorporarán a la colección Postman versionada.
 - **Testing**: PASS — habrá pruebas por responsabilidad y pruebas de integración con PostgreSQL; los proveedores externos serán aislados en tests. Los tests de Controller documentarán con Spring REST Docs los endpoints y los casos de respuesta verificados.
 
@@ -111,13 +111,13 @@ La entidad no usará `Builder` ni `@Setter`. Expondrá operaciones de dominio pa
 
 `PlayerMapper` transformará únicamente `Player` y resultados de sincronización a sus DTOs. El Controller no construirá ni inspeccionará entidades.
 
-### `GET /players`
+### `GET /api/players`
 
 `PlayerController` recibirá `page` y `size` como parámetros de consulta, con valores por defecto 0 y 20. Validará el contrato estructural: `page >= 0` y `1 <= size <= 100`; ante incumplimiento lanzará una excepción de presentación manejada como `400 Bad Request` con mensaje seguro en español.
 
 El Controller delegará en `PlayerCatalogService.getActivePlayers(page, size)`. El servicio consultará exclusivamente `PlayerRepository` usando paginación y el predicado `active = true`; nunca invocará `FootballDataIntegration`. El Mapper devolverá el DTO paginado. Una página válida sin jugadores devuelve `200 OK` y metadatos con contenido vacío.
 
-### `POST /players/sync`
+### `POST /api/players/sync`
 
 `PlayerController` delegará en `PlayerSynchronizationOrchestrator.synchronize()`. No recibirá cuerpo de petición ni disparará trabajo automático.
 
@@ -159,22 +159,22 @@ La Integration validará toda respuesta externa antes de entregarla: ausencia o 
 ### Errores, logs y seguridad
 
 - Se añadirán excepciones de presentación para paginación inválida y de integración para indisponibilidad o respuesta inválida del proveedor. `GlobalExceptionHandler` incorporará manejadores acotados para devolver `400 Bad Request` y `502 Bad Gateway`, respectivamente, mediante `ErrorResponseDTO` con `timestamp`, `status`, `error`, `message` y `path`; el código HTTP coincidirá con `status` y `path` identificará la ruta solicitada. Los mensajes serán seguros y estarán en español, sin detalles de infraestructura.
-- `POST /players/sync` devuelve `200 OK` con su resumen cuando se completa y `502 Bad Gateway` ante un fallo de Football-Data.org. El body de error no contendrá URL completa, clave, headers ni respuesta cruda del proveedor.
+- `POST /api/players/sync` devuelve `200 OK` con su resumen cuando se completa y `502 Bad Gateway` ante un fallo de Football-Data.org. El body de error no contendrá URL completa, clave, headers ni respuesta cruda del proveedor.
 - Se usarán logs de Spring para inicio, finalización, contadores de sincronización, descartes con su motivo y fallos de comunicación. No se registra `apiKey`, `X-Auth-Token` ni credenciales.
-- `SecurityConfig` no se modificará para esta feature. Los endpoints heredan la autenticación JWT vigente. Cualquier usuario autenticado podrá invocar `POST /players/sync` sin un rol o permiso adicional; una solicitud sin autenticación válida recibirá `401 Unauthorized` antes de iniciar la sincronización.
+- `SecurityConfig` no se modificará para esta feature. Los endpoints heredan la autenticación JWT vigente. Cualquier usuario autenticado podrá invocar `POST /api/players/sync` sin un rol o permiso adicional; una solicitud sin autenticación válida recibirá `401 Unauthorized` antes de iniciar la sincronización.
 
 ### OpenAPI
 
 `PlayerController` utilizará anotaciones SpringDoc para documentar:
 
-- `GET /players`: propósito, `page` y `size`, valores por defecto, límites, DTO de página, autenticación y respuestas `200`/`400`/`401`.
-- `POST /players/sync`: propósito, ausencia de body, autenticación sin rol adicional, DTO de resultado y respuestas `200`/`401`/`502`.
+- `GET /api/players`: propósito, `page` y `size`, valores por defecto, límites, DTO de página, autenticación y respuestas `200`/`400`/`401`.
+- `POST /api/players/sync`: propósito, ausencia de body, autenticación sin rol adicional, DTO de resultado y respuestas `200`/`401`/`502`.
 - Los DTOs: significado, obligatoriedad y ejemplos de cada campo expuesto.
 - Los errores: formato seguro y códigos aplicables.
 
 ### Postman
 
-La colección versionada del proyecto incorporará solicitudes para `GET /players` y `POST /players/sync` con método, ruta, parámetros, headers, autenticación y body según cada contrato. Los ejemplos serán utilizables sin incluir secretos ni credenciales reales.
+La colección versionada del proyecto incorporará solicitudes para `GET /api/players` y `POST /api/players/sync` con método, ruta, parámetros, headers, autenticación y body según cada contrato. Los ejemplos serán utilizables sin incluir secretos ni credenciales reales.
 
 ## Testing Strategy
 
@@ -184,7 +184,7 @@ La colección versionada del proyecto incorporará solicitudes para `GET /player
 | Mapper | Conversión de `Player`, página y resultado de sincronización a DTOs, sin exposición de `active`. |
 | Integration | Mapeo de competición/equipos/planteles, omisión de registros incompletos y conversión de fallos HTTP, timeout o respuesta inválida a error de integración. Las respuestas externas se simularán; no se llamará a Football-Data.org real. |
 | Services | Consulta solo de activos, defaults recibidos desde Controller, creación, actualización sin duplicado, inactivación, reactivación, contadores y ausencia de mutaciones si la foto externa falla. |
-| Controller | `GET /players` con página válida, catálogo vacío, defaults y cada límite inválido; `POST /players/sync` exitoso, con proveedor no disponible, con cualquier usuario autenticado y sin autenticación válida; contrato JSON, códigos y documentación de los casos verificados mediante Spring REST Docs. |
+| Controller | `GET /api/players` con página válida, catálogo vacío, defaults y cada límite inválido; `POST /api/players/sync` exitoso, con proveedor no disponible, con cualquier usuario autenticado y sin autenticación válida; contrato JSON, códigos y documentación de los casos verificados mediante Spring REST Docs. |
 | Integración | Con Testcontainers/PostgreSQL y Flyway: persistencia de PK externa, consulta paginada exclusiva de activos, y aplicación transaccional de una foto completa frente a fallo previo a la aplicación. |
 
 Todos los tests nuevos usarán `@ActiveProfiles("test")`, serán deterministas y limpiarán los datos que creen. Los tests de Service e Integration aislarán Repository y proveedor con mocks o servidor HTTP de prueba provisto por Spring; los de persistencia usarán PostgreSQL real mediante Testcontainers.

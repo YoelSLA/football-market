@@ -1,30 +1,33 @@
 package footballmarket.services;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.when;
 
-import footballmarket.config.FootballDataProperties;
-import footballmarket.integrations.footballdata.FootballDataIntegration;
-import footballmarket.integrations.footballdata.FootballDataUnavailableException;
+import footballmarket.integrations.FootballDataIntegration;
+import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
-import footballmarket.models.PlayerSnapshot;
+import footballmarket.models.records.PlayerSnapshot;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+@SpringBootTest
 @ActiveProfiles("test")
 class FootballDataPlayerServiceTest {
-  private final FootballDataIntegration integration = mock(FootballDataIntegration.class);
-  private final FootballDataPlayerService service =
-      new FootballDataPlayerService(
-          integration,
-          new FootballDataProperties("test-only", "https://provider.example", List.of("PL", "PD")));
+
+  @Autowired private FootballDataPlayerService footballDataPlayerService;
+  @MockitoBean private FootballDataIntegration footballDataIntegration;
 
   @Test
   void consolidatesByIdKeepingFirstCompetitionAndRawCounts() {
-    when(integration.fetchCompetition("PL"))
+    when(this.footballDataIntegration.fetchCompetition("PL"))
         .thenReturn(new PlayerSnapshot(List.of(new Player(1L, "N", "T", "First", "P")), 2, 1));
-    when(integration.fetchCompetition("PD"))
+    when(this.footballDataIntegration.fetchCompetition("PD"))
         .thenReturn(
             new PlayerSnapshot(
                 List.of(
@@ -32,20 +35,26 @@ class FootballDataPlayerServiceTest {
                     new Player(2L, "N", "T", "Second", "P")),
                 2,
                 0));
-    var result = service.fetchSnapshot();
+
+    var result = this.footballDataPlayerService.fetchSnapshot();
+
     assertThat(result.obtained()).isEqualTo(4);
     assertThat(result.discardedInvalid()).isEqualTo(1);
     assertThat(result.players()).extracting(Player::getId).containsExactly(1L, 2L);
     assertThat(result.players().getFirst().getLeague()).isEqualTo("First");
-    var order = inOrder(integration);
-    order.verify(integration).fetchCompetition("PL");
-    order.verify(integration).fetchCompetition("PD");
+    var order = inOrder(this.footballDataIntegration);
+    order.verify(this.footballDataIntegration).fetchCompetition("PL");
+    order.verify(this.footballDataIntegration).fetchCompetition("PD");
   }
 
   @Test
   void propagatesFailureOfLaterCompetition() {
-    when(integration.fetchCompetition("PL")).thenReturn(new PlayerSnapshot(List.of(), 0, 0));
-    when(integration.fetchCompetition("PD")).thenThrow(new FootballDataUnavailableException());
-    assertThatThrownBy(service::fetchSnapshot).isInstanceOf(FootballDataUnavailableException.class);
+    when(this.footballDataIntegration.fetchCompetition("PL"))
+        .thenReturn(new PlayerSnapshot(List.of(), 0, 0));
+    when(this.footballDataIntegration.fetchCompetition("PD"))
+        .thenThrow(new FootballDataUnavailableException());
+
+    assertThatThrownBy(this.footballDataPlayerService::fetchSnapshot)
+        .isInstanceOf(FootballDataUnavailableException.class);
   }
 }

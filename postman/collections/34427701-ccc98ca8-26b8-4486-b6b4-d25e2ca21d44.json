@@ -91,7 +91,7 @@
 						"auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{JWT_TOKEN}}", "type": "string"}]},
 						"header": [{"key": "Accept", "value": "application/json"}],
 						"url": {
-							"raw": "{{BASE_URL}}/players?page=0&size=20",
+							"raw": "{{BASE_URL}}/api/players?page=0&size=20",
 							"host": ["{{BASE_URL}}"],
 							"path": ["players"],
 							"query": [{"key": "page", "value": "0"}, {"key": "size", "value": "20"}]
@@ -99,7 +99,7 @@
 					},
 					"response": [{
 						"name": "Página de jugadores activos",
-						"originalRequest": {"method": "GET", "url": "{{BASE_URL}}/players?page=0&size=20"},
+						"originalRequest": {"method": "GET", "url": "{{BASE_URL}}/api/players?page=0&size=20"},
 						"status": "OK", "code": 200,
 						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": "{\"content\":[{\"id\":7821,\"name\":\"Joel Robles\",\"team\":\"Real Betis Balompié\",\"league\":\"Primera Division\",\"position\":\"Goalkeeper\"}],\"page\":0,\"size\":20,\"totalElements\":1,\"totalPages\":1}"
@@ -111,11 +111,11 @@
 						"method": "POST",
 						"auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{JWT_TOKEN}}", "type": "string"}]},
 						"header": [{"key": "Accept", "value": "application/json"}],
-						"url": {"raw": "{{BASE_URL}}/players/sync", "host": ["{{BASE_URL}}"], "path": ["players", "sync"]}
+						"url": {"raw": "{{BASE_URL}}/api/players/sync", "host": ["{{BASE_URL}}"], "path": ["players", "sync"]}
 					},
 					"response": [{
 						"name": "Sincronización completada",
-						"originalRequest": {"method": "POST", "url": "{{BASE_URL}}/players/sync"},
+						"originalRequest": {"method": "POST", "url": "{{BASE_URL}}/api/players/sync"},
 						"status": "OK", "code": 200,
 						"header": [{"key": "Content-Type", "value": "application/json"}],
 						"body": "{\"obtained\":500,\"created\":10,\"updated\":475,\"markedInactive\":3,\"discardedInvalid\":2}"

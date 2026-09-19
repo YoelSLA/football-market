@@ -2,6 +2,7 @@ package footballmarket.config;
 
 import static org.assertj.core.api.Assertions.*;
 
+import footballmarket.integrations.exceptions.InvalidFootballDataConfigurationException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,31 +21,31 @@ class FootballDataClientConfigTest {
       })
   void rejectsUnsafeProviderUrls(String url) {
     var properties = new FootballDataProperties("test-only", url, List.of("PL"));
-    assertThatIllegalArgumentException()
-        .isThrownBy(() -> new FootballDataClientConfig().footballDataRestClient(properties));
+    assertThatThrownBy(() -> new FootballDataClientConfig().footballDataRestClient(properties))
+        .isInstanceOf(InvalidFootballDataConfigurationException.class);
   }
 
   @Test
   void requiresOrderedNonemptyCompetitionsAndDoesNotPrintKey() {
-    assertThatIllegalArgumentException()
-        .isThrownBy(() -> new FootballDataProperties("key", "https://provider.example", null));
-    assertThatIllegalArgumentException()
-        .isThrownBy(() -> new FootballDataProperties("key", "https://provider.example", List.of()));
-    assertThatIllegalArgumentException()
-        .isThrownBy(
-            () -> new FootballDataProperties("key", "https://provider.example", List.of(" ")));
+    assertThatThrownBy(() -> new FootballDataProperties("key", "https://provider.example", null))
+        .isInstanceOf(InvalidFootballDataConfigurationException.class);
+    assertThatThrownBy(
+            () -> new FootballDataProperties("key", "https://provider.example", List.of()))
+        .isInstanceOf(InvalidFootballDataConfigurationException.class);
+    assertThatThrownBy(
+            () -> new FootballDataProperties("key", "https://provider.example", List.of(" ")))
+        .isInstanceOf(InvalidFootballDataConfigurationException.class);
     var properties =
         new FootballDataProperties(
             "private-test-key", "https://provider.example", List.of("PD", "PL"));
     assertThat(properties.competitions()).containsExactly("PD", "PL");
     assertThat(properties.toString()).doesNotContain("private-test-key");
     assertThat(new FootballDataClientConfig().footballDataRestClient(properties)).isNotNull();
-    assertThatIllegalArgumentException()
-        .isThrownBy(
+    assertThatThrownBy(
             () ->
                 new FootballDataClientConfig()
                     .footballDataRestClient(
-                        new FootballDataProperties(
-                            " ", "https://provider.example", List.of("PL"))));
+                        new FootballDataProperties(" ", "https://provider.example", List.of("PL"))))
+        .isInstanceOf(InvalidFootballDataConfigurationException.class);
   }
 }

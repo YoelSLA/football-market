@@ -22,4 +22,4 @@ spring:
 
 jwt:
   secret: test-secret-key-for-football-market-2026
-  expiration: 3600000
+  expiration: 43200000

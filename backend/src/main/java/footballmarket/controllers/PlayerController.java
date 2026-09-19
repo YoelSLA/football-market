@@ -5,8 +5,8 @@ import footballmarket.controllers.dtos.responses.PlayerSyncResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
 import footballmarket.controllers.exceptions.InvalidPlayerPageException;
 import footballmarket.controllers.mappers.PlayerMapper;
+import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.PlayerCatalogService;
-import footballmarket.services.PlayerSynchronizationOrchestrator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -21,7 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/players")
+@RequestMapping("/api/players")
 @RequiredArgsConstructor
 @Tag(name = "Jugadores", description = "Catálogo local y sincronización manual")
 @SecurityScheme(
@@ -31,8 +31,8 @@ import org.springframework.web.bind.annotation.*;
     bearerFormat = "JWT")
 @SecurityRequirement(name = "bearerAuth")
 public class PlayerController {
-  private final PlayerCatalogService service;
-  private final PlayerSynchronizationOrchestrator orchestrator;
+  private final PlayerCatalogService playerCatalogService;
+  private final PlayerSynchronizationOrchestrator playerSynchronizationOrchestrator;
 
   @PostMapping("/sync")
   @Operation(
@@ -46,7 +46,8 @@ public class PlayerController {
       description = "No se completó la lectura del proveedor; catálogo sin cambios",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   public ResponseEntity<PlayerSyncResponseDTO> synchronize() {
-    return ResponseEntity.ok(PlayerMapper.toResponse(orchestrator.synchronize()));
+    return ResponseEntity.ok(
+        PlayerMapper.toResponse(this.playerSynchronizationOrchestrator.synchronize()));
   }
 
   @GetMapping
@@ -73,6 +74,7 @@ public class PlayerController {
     if (page < 0 || size < 1 || size > 100) {
       throw new InvalidPlayerPageException();
     }
-    return ResponseEntity.ok(PlayerMapper.toResponse(service.getActivePlayers(page, size)));
+    return ResponseEntity.ok(
+        PlayerMapper.toResponse(this.playerCatalogService.getActivePlayers(page, size)));
   }
 }

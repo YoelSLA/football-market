@@ -1,8 +1,9 @@
 package footballmarket.models.exceptions;
 
-import footballmarket.exceptions.FootballMarketException;
+import footballmarket.exceptions.DomainException;
 
-public class EmailInvalidException extends FootballMarketException {
+/** Indica que el email no tiene un formato válido. */
+public class EmailInvalidException extends DomainException {
   public EmailInvalidException(String message) {
     super(message);
   }

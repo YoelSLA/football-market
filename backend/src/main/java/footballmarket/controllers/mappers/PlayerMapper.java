@@ -4,7 +4,7 @@ import footballmarket.controllers.dtos.responses.PlayerResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayerSyncResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
 import footballmarket.models.Player;
-import footballmarket.models.PlayerSynchronizationResult;
+import footballmarket.models.records.PlayerSynchronizationResult;
 import org.springframework.data.domain.Page;
 
 public final class PlayerMapper {

@@ -10,9 +10,12 @@ import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
+/** Implementación transaccional del registro y autenticación. */
 public class AuthenticationServiceImpl implements AuthenticationService {
 
   private final UserRepository userRepository;
@@ -20,32 +23,34 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final JWTProvider jwtProvider;
 
   @Override
+  /** {@inheritDoc} */
   public void register(User user) {
     String normalizedEmail = user.getEmail().toLowerCase(Locale.ROOT);
 
-    if (userRepository.existsByEmail(normalizedEmail)) {
+    if (this.userRepository.existsByEmail(normalizedEmail)) {
       throw new EmailAlreadyRegisteredException("El email ya esta registrado.");
     }
 
     user.setEmail(normalizedEmail);
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
+    user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 
-    userRepository.save(user);
+    this.userRepository.save(user);
   }
 
   @Override
+  /** {@inheritDoc} */
   public String login(String email, String password) {
     String normalizedEmail = email.toLowerCase(Locale.ROOT);
 
     User user =
-        userRepository
+        this.userRepository
             .findByEmail(normalizedEmail)
             .orElseThrow(() -> new InvalidCredentialsException("Credenciales invalidas."));
 
-    if (!passwordEncoder.matches(password, user.getPassword())) {
+    if (!this.passwordEncoder.matches(password, user.getPassword())) {
       throw new InvalidCredentialsException("Credenciales invalidas.");
     }
 
-    return jwtProvider.generateToken(user.getEmail());
+    return this.jwtProvider.generateToken(user.getEmail());
   }
 }

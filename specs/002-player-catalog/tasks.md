@@ -11,7 +11,7 @@
 **Objetivo**: Confirmar la infraestructura existente antes de ampliar el backend.
 
 - [X] T001 Verificar en `backend/build.gradle.kts` que ya están disponibles Spring Web, Spring Data JPA, Spring Security, Validation, Flyway, SpringDoc, REST Docs, Mockito y Testcontainers; añadir solo una dependencia requerida que falte.
-- [X] T002 Verificar la configuración existente de JWT y las reglas de autenticación para `/players` en `backend/src/main/java/footballmarket/config/SecurityConfig.java`, sin añadir roles ni modificarla si la protección actual ya cubre ambas rutas.
+- [X] T002 Verificar la configuración existente de JWT y las reglas de autenticación para `/api/players` en `backend/src/main/java/footballmarket/config/SecurityConfig.java`, sin añadir roles ni modificarla si la protección actual ya cubre ambas rutas.
 
 ## Fase 2: Base compartida
 
@@ -30,12 +30,12 @@
 
 **Objetivo**: Servir páginas de jugadores activos exclusivamente desde PostgreSQL.
 
-**Prueba independiente**: Con y sin jugadores activos, `GET /players` devuelve `200` y metadatos correctos; cuando se omiten los parámetros usa `page=0` y `size=20`, acepta `size` entre 1 y 100, rechaza `page<0`, `size<1` y `size>100` con `400`, y funciona sin acceso a Football-Data.org. Requiere JWT válido según el contrato.
+**Prueba independiente**: Con y sin jugadores activos, `GET /api/players` devuelve `200` y metadatos correctos; cuando se omiten los parámetros usa `page=0` y `size=20`, acepta `size` entre 1 y 100, rechaza `page<0`, `size<1` y `size>100` con `400`, y funciona sin acceso a Football-Data.org. Requiere JWT válido según el contrato.
 
 ### Tests
 
 - [X] T007 [P] [US1] Crear `backend/src/test/java/footballmarket/services/PlayerCatalogServiceTest.java` para consulta paginada exclusiva de activos, catálogo vacío y ausencia de llamadas externas.
-- [X] T008 [P] [US1] Crear `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` para respuesta `200`, campos exactos del jugador, metadatos, defaults, límites `400`, autenticación `401` y snippets REST Docs de `GET /players`.
+- [X] T008 [P] [US1] Crear `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` para respuesta `200`, campos exactos del jugador, metadatos, defaults, límites `400`, autenticación `401` y snippets REST Docs de `GET /api/players`.
 - [X] T009 [P] [US1] Crear `backend/src/test/java/footballmarket/integration/PlayerCatalogIntegrationTest.java` con Testcontainers/PostgreSQL y Flyway para comprobar PK externa, paginación y exclusión de inactivos.
 
 ### Implementación
@@ -43,15 +43,15 @@
 - [X] T010 [P] [US1] Crear los records `backend/src/main/java/footballmarket/controllers/dtos/responses/PlayerResponseDTO.java` y `backend/src/main/java/footballmarket/controllers/dtos/responses/PlayersPageResponseDTO.java` con los campos exactos de `contracts/api.md` y anotaciones de esquema OpenAPI en español.
 - [X] T011 [US1] Implementar la conversión de `Player` y `Page<Player>` a DTO en `backend/src/main/java/footballmarket/controllers/mappers/PlayerMapper.java` como clase `final`, sin estado, constructor privado y métodos `static`.
 - [X] T012 [US1] Implementar `getActivePlayers(page, size)` en `backend/src/main/java/footballmarket/services/PlayerCatalogService.java` mediante `PlayerRepository`, sin llamar al proveedor externo.
-- [X] T013 [US1] Implementar `GET /players` en `backend/src/main/java/footballmarket/controllers/PlayerController.java` con defaults 0/20 y validación estructural HTTP de `page >= 0` y `1 <= size <= 100` antes de delegar al Service y Mapper; documentar `200`, `400` y `401` en OpenAPI.
+- [X] T013 [US1] Implementar `GET /api/players` en `backend/src/main/java/footballmarket/controllers/PlayerController.java` con defaults 0/20 y validación estructural HTTP de `page >= 0` y `1 <= size <= 100` antes de delegar al Service y Mapper; documentar `200`, `400` y `401` en OpenAPI.
 - [X] T014 [US1] Añadir la excepción de paginación inválida en `backend/src/main/java/footballmarket/controllers/exceptions/InvalidPlayerPageException.java` y su manejo `400` seguro en `backend/src/main/java/footballmarket/controllers/exceptions/GlobalExceptionHandler.java`.
-- [X] T015 [US1] Añadir la solicitud autenticada `GET {{BASE_URL}}/players?page=0&size=20` a `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`, sin secretos reales.
+- [X] T015 [US1] Añadir la solicitud autenticada `GET {{BASE_URL}}/api/players?page=0&size=20` a `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`, sin secretos reales.
 
 **Punto de control**: US1 puede validarse sin ejecutar una sincronización ni llamar al proveedor.
 
 ## Fase 4: Historia de usuario 2 — Sincronizar manualmente (P1)
 
-**Objetivo**: Construir una foto completa desde Football-Data.org y aplicarla de forma atómica al catálogo local cuando un usuario autenticado invoque `POST /players/sync`.
+**Objetivo**: Construir una foto completa desde Football-Data.org y aplicarla de forma atómica al catálogo local cuando un usuario autenticado invoque `POST /api/players/sync`.
 
 **Prueba independiente**: Con respuestas externas simuladas, una ejecución completa crea, actualiza, reactiva y desactiva sin duplicados; una lectura externa incompleta o fallida devuelve `502` sin cambios locales; registros inválidos se descartan; sin JWT se devuelve `401` sin iniciar la sincronización.
 
@@ -61,7 +61,7 @@
 - [X] T017 [P] [US2] Crear `backend/src/test/java/footballmarket/services/FootballDataPlayerServiceTest.java` para consolidación por ID, precedencia de la primera competición configurada y contadores `obtained` y `discardedInvalid`.
 - [X] T018 [US2] Ampliar `backend/src/test/java/footballmarket/services/PlayerCatalogServiceTest.java` con creación, actualización, reactivación, inactivación, duplicados, contadores y rollback de la aplicación transaccional.
 - [X] T019 [P] [US2] Crear `backend/src/test/java/footballmarket/services/PlayerSynchronizationOrchestratorTest.java` para verificar que un fallo antes de completar la foto impide la aplicación local y que una foto válida se aplica una sola vez.
-- [X] T020 [US2] Ampliar `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` con `POST /players/sync` exitoso, `502` seguro, `401` sin invocación del Orchestrator, usuario autenticado sin rol adicional, JSON contractual y snippets REST Docs.
+- [X] T020 [US2] Ampliar `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` con `POST /api/players/sync` exitoso, `502` seguro, `401` sin invocación del Orchestrator, usuario autenticado sin rol adicional, JSON contractual y snippets REST Docs.
 - [X] T021 [US2] Ampliar `backend/src/test/java/footballmarket/integration/PlayerCatalogIntegrationTest.java` para verificar upsert, reactivación, inactivación sin borrado, y ausencia de cambios ante fallo previo o rollback en PostgreSQL.
 
 ### Implementación
@@ -75,9 +75,9 @@
 - [X] T028 [US2] Crear `backend/src/main/java/footballmarket/services/PlayerSynchronizationOrchestrator.java` para serializar sincronizaciones dentro de la única instancia prevista para esta feature, obtener toda la foto antes de abrir la transacción de escritura y delegar su aplicación al Service.
 - [X] T029 [US2] Crear `backend/src/main/java/footballmarket/controllers/dtos/responses/PlayerSyncResponseDTO.java` y ampliar `backend/src/main/java/footballmarket/controllers/mappers/PlayerMapper.java` para convertir el resultado a los cinco contadores contractuales, documentados en OpenAPI.
 - [X] T030 [US2] Añadir la excepción técnica `backend/src/main/java/footballmarket/integrations/footballdata/FootballDataUnavailableException.java` y su manejo `502` en `backend/src/main/java/footballmarket/controllers/exceptions/GlobalExceptionHandler.java` sin exponer URL, headers, credenciales o respuesta cruda.
-- [X] T031 [US2] Añadir `POST /players/sync` sin body en `backend/src/main/java/footballmarket/controllers/PlayerController.java`, delegado al Orchestrator, con respuesta DTO y documentación OpenAPI de `200`, `401` y `502`.
+- [X] T031 [US2] Añadir `POST /api/players/sync` sin body en `backend/src/main/java/footballmarket/controllers/PlayerController.java`, delegado al Orchestrator, con respuesta DTO y documentación OpenAPI de `200`, `401` y `502`.
 - [X] T032 [US2] Registrar con el logger habitual de Spring el inicio de cada sincronización y, al completarse, los contadores `obtained`, `created`, `updated`, `markedInactive` y `discardedInvalid` en `backend/src/main/java/footballmarket/services/PlayerSynchronizationOrchestrator.java`; registrar un fallo con causa general segura y cada descarte con el campo obligatorio ausente en `backend/src/main/java/footballmarket/integrations/footballdata/FootballDataIntegration.java`, sin clave, header de autenticación, respuesta cruda ni credenciales.
-- [X] T033 [US2] Añadir la solicitud autenticada `POST {{BASE_URL}}/players/sync` sin body a `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`, con ejemplo de respuesta y sin credenciales reales.
+- [X] T033 [US2] Añadir la solicitud autenticada `POST {{BASE_URL}}/api/players/sync` sin body a `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`, con ejemplo de respuesta y sin credenciales reales.
 
 **Punto de control**: US2 puede validarse con proveedor simulado y PostgreSQL local, sin depender de una llamada real para los tests.
 

@@ -6,8 +6,14 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan
+/** Punto de entrada de la aplicación Football Market. */
 public class FootballMarketApplication {
 
+  /**
+   * Inicia la aplicación Spring Boot.
+   *
+   * @param args argumentos de línea de comandos
+   */
   public static void main(String[] args) {
     SpringApplication.run(FootballMarketApplication.class, args);
   }

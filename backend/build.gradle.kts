@@ -29,8 +29,8 @@ val snippetsDir = file("build/generated-snippets")
 dependencies {
 
     implementation(libs.jjwt.api)
-    implementation(libs.spring.dotenv)
     implementation(libs.springdoc.openapi)
+    developmentOnly("me.paulschwarz:springboot4-dotenv:5.1.0")
 
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

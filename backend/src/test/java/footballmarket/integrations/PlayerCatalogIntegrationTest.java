@@ -1,18 +1,18 @@
-package footballmarket.integration;
+package footballmarket.integrations;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import footballmarket.integrations.footballdata.FootballDataUnavailableException;
+import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
-import footballmarket.models.PlayerSnapshot;
+import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.repositories.PlayerRepository;
 import footballmarket.security.JWTProvider;
 import footballmarket.services.FootballDataPlayerService;
 import footballmarket.services.PlayerCatalogService;
-import footballmarket.services.PlayerSynchronizationOrchestrator;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,20 +58,20 @@ class PlayerCatalogIntegrationTest {
     when(source.fetchSnapshot())
         .thenReturn(
             new PlayerSnapshot(List.of(new Player(7L, "Name", "Team", "League", "Forward")), 1, 0));
-    mvc.perform(post("/players/sync").header("Authorization", authorization))
+    mvc.perform(post("/api/players/sync").header("Authorization", authorization))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.created").value(1));
     when(source.fetchSnapshot()).thenThrow(new FootballDataUnavailableException());
-    mvc.perform(post("/players/sync").header("Authorization", authorization))
+    mvc.perform(post("/api/players/sync").header("Authorization", authorization))
         .andExpect(status().isBadGateway())
         .andExpect(jsonPath("$.status").value(502));
-    mvc.perform(get("/players").header("Authorization", authorization))
+    mvc.perform(get("/api/players").header("Authorization", authorization))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].id").value(7))
         .andExpect(jsonPath("$.size").value(20))
         .andExpect(jsonPath("$.totalElements").value(1));
     clearInvocations(source);
-    mvc.perform(post("/players/sync")).andExpect(status().isUnauthorized());
+    mvc.perform(post("/api/players/sync")).andExpect(status().isUnauthorized());
     verifyNoInteractions(source);
   }
 

@@ -2,6 +2,7 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
+import footballmarket.models.exceptions.InvalidPlayerException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -29,20 +30,25 @@ class PlayerTest {
 
   @Test
   void requiresId() {
-    assertThatIllegalArgumentException().isThrownBy(() -> new Player(null, "N", "T", "L", "P"));
+    assertThatThrownBy(() -> new Player(null, "N", "T", "L", "P"))
+        .isInstanceOf(InvalidPlayerException.class);
   }
 
   @ParameterizedTest
   @NullAndEmptySource
   @ValueSource(strings = {" ", "\t"})
   void requiresAllTextFieldsAndDoesNotPartiallyUpdate(String invalid) {
-    assertThatIllegalArgumentException().isThrownBy(() -> new Player(1L, invalid, "T", "L", "P"));
-    assertThatIllegalArgumentException().isThrownBy(() -> new Player(1L, "N", invalid, "L", "P"));
-    assertThatIllegalArgumentException().isThrownBy(() -> new Player(1L, "N", "T", invalid, "P"));
-    assertThatIllegalArgumentException().isThrownBy(() -> new Player(1L, "N", "T", "L", invalid));
+    assertThatThrownBy(() -> new Player(1L, invalid, "T", "L", "P"))
+        .isInstanceOf(InvalidPlayerException.class);
+    assertThatThrownBy(() -> new Player(1L, "N", invalid, "L", "P"))
+        .isInstanceOf(InvalidPlayerException.class);
+    assertThatThrownBy(() -> new Player(1L, "N", "T", invalid, "P"))
+        .isInstanceOf(InvalidPlayerException.class);
+    assertThatThrownBy(() -> new Player(1L, "N", "T", "L", invalid))
+        .isInstanceOf(InvalidPlayerException.class);
     Player player = new Player(1L, "N", "T", "L", "P");
-    assertThatIllegalArgumentException()
-        .isThrownBy(() -> player.update("Changed", "T", "L", invalid));
+    assertThatThrownBy(() -> player.update("Changed", "T", "L", invalid))
+        .isInstanceOf(InvalidPlayerException.class);
     assertThat(player.getName()).isEqualTo("N");
   }
 }

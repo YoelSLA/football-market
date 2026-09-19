@@ -18,25 +18,48 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+/** Define los componentes y reglas de seguridad de la API. */
 public class SecurityConfig {
 
+  /**
+   * @return codificador seguro de contraseñas
+   */
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
 
+  /**
+   * Construye la clave utilizada para firmar y validar JWT.
+   *
+   * @param secret secreto configurado
+   * @return clave HMAC
+   */
   @Bean
   public SecretKey jwtSecretKey(@Value("${jwt.secret}") String secret) {
     return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
   }
 
+  /**
+   * Configura el decodificador de JWT.
+   *
+   * @param jwtSecretKey clave de firma
+   * @return decodificador JWT
+   */
   @Bean
   public JwtDecoder jwtDecoder(SecretKey jwtSecretKey) {
     return NimbusJwtDecoder.withSecretKey(jwtSecretKey).macAlgorithm(MacAlgorithm.HS256).build();
   }
 
+  /**
+   * Define autorización, CSRF y autenticación Bearer de la API.
+   *
+   * @param http configurador de seguridad HTTP
+   * @return cadena de filtros configurada
+   * @throws Exception si Spring Security no puede construir la cadena
+   */
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         // API stateless: authentication is handled through JWT Bearer tokens,
         // not browser-managed cookies, so CSRF protection is not required here.

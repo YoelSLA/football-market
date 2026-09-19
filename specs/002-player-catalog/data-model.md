@@ -9,7 +9,7 @@
 | `team` | `String` | Obligatorio, no vacío | Equipo actual según la sincronización. |
 | `league` | `String` | Obligatorio, no vacío | Competición configurada que determina el catálogo. |
 | `position` | `String` | Obligatorio, no vacío | Posición recibida del plantel. |
-| `active` | `boolean` | Obligatorio | Determina si se muestra en `GET /players`. |
+| `active` | `boolean` | Obligatorio | Determina si se muestra en `GET /api/players`. |
 
 ## Reglas de transición
 

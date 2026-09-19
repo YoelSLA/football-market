@@ -1,5 +1,6 @@
 package footballmarket.models;
 
+import footballmarket.models.exceptions.InvalidPlayerException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -31,14 +32,14 @@ public class Player {
 
   public Player(Long id, String name, String team, String league, String position) {
     if (id == null) {
-      throw new IllegalArgumentException("El identificador del jugador es obligatorio");
+      throw new InvalidPlayerException("El identificador del jugador es obligatorio");
     }
     this.id = id;
-    update(name, team, league, position);
-    activate();
+    this.update(name, team, league, position);
+    this.activate();
   }
 
-  /** Valida todos los datos antes de modificar el estado del jugador. */
+  /** Válida todos los datos antes de modificar el estado del jugador. */
   public void update(String name, String team, String league, String position) {
     requireText(name);
     requireText(team);
@@ -51,16 +52,16 @@ public class Player {
   }
 
   public void activate() {
-    active = true;
+    this.active = true;
   }
 
   public void deactivate() {
-    active = false;
+    this.active = false;
   }
 
   private static void requireText(String value) {
     if (value == null || value.isBlank()) {
-      throw new IllegalArgumentException("Los datos del jugador son obligatorios");
+      throw new InvalidPlayerException("Los datos del jugador son obligatorios");
     }
   }
 }

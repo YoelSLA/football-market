@@ -1,9 +1,10 @@
-package footballmarket.integrations.footballdata;
+package footballmarket.integrations;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
+import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
 import java.net.SocketTimeoutException;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,11 +110,29 @@ class FootballDataIntegrationTest {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {301, 401, 429, 500, 503})
+  @ValueSource(ints = {301, 401, 500, 503})
   void rejectsHttpFailuresWithoutLeakingResponseOrRetrying(int status) {
     server
         .expect(requestTo("https://provider.example/v4/competitions/PL"))
         .andRespond(withStatus(HttpStatus.valueOf(status)).body("private-provider-response"));
+    assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+        .isInstanceOf(FootballDataUnavailableException.class)
+        .hasMessageNotContaining("private-provider-response")
+        .hasMessageNotContaining("provider.example");
+    server.verify();
+  }
+
+  @Test
+  void retriesRateLimitOnlyUpToConfiguredBound() {
+    for (int attempt = 0; attempt < 4; attempt++) {
+      server
+          .expect(requestTo("https://provider.example/v4/competitions/PL"))
+          .andRespond(
+              withStatus(HttpStatus.TOO_MANY_REQUESTS)
+                  .header("Retry-After", "0")
+                  .body("private-provider-response"));
+    }
+
     assertThatThrownBy(() -> integration.fetchCompetition("PL"))
         .isInstanceOf(FootballDataUnavailableException.class)
         .hasMessageNotContaining("private-provider-response")

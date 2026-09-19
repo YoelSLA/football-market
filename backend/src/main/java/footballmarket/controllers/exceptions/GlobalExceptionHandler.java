@@ -1,7 +1,7 @@
 package footballmarket.controllers.exceptions;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
-import footballmarket.integrations.footballdata.FootballDataUnavailableException;
+import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
 import footballmarket.services.exceptions.UserNotFoundException;

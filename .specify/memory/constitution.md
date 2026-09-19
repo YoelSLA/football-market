@@ -1,13 +1,23 @@
 <!--
 Sync Impact Report:
 
-- Version change: 1.13.0 -> 1.14.0
+- Version change: 1.14.0 -> 2.0.0
 
 - List of modified principles:
+  - 1. Arquitectura
+  - 2. Convenciones
+  - 4. Testing
+  - 7. Contratos
   - 8. Documentación
 
 - Added sections:
-  - 8.2. Postman
+  - 2.5. Excepciones
+  - 2.6. Referencias a miembros de instancia
+
+- Consolidated redundant rules:
+  - Service interfaces are governed by section 1.2.3.
+  - Service dependencies are governed by section 1.4.
+  - The HTTP `/api/` prefix is governed by section 7.2.
 
 - Follow-up TODOs:
   - None
@@ -62,13 +72,18 @@ No puede depender de Repository, Integration ni otro Orchestrator.
 
 El uso de múltiples Services no obliga por sí solo a crear un Orchestrator.
 
+Todo Orchestrator debe ubicarse en el paquete global `footballmarket.orchestrators`. No deben
+existir paquetes de Orchestrator dentro de cada feature ni ubicarse Orchestrator dentro de paquetes
+correspondientes a Controller, Service, Repository u otro rol.
+
 #### 1.2.3. Service
 
 Implementa la lógica de aplicación.
 
-Puede utilizar Model, Repository e Integration.
-
-No puede depender de Controller, Orchestrator ni otros Services.
+Todo Service debe definir una interfaz y una implementación separadas. Los consumidores deben
+depender de la interfaz; la implementación concreta no debe utilizarse como contrato. Esta regla
+es obligatoria incluso cuando exista una única implementación y, por ser una regla arquitectónica
+específica, prevalece sobre la prohibición general de crear interfaces innecesarias.
 
 #### 1.2.4. Model
 
@@ -87,6 +102,11 @@ No debe contener lógica de negocio.
 Puede utilizar Model.
 
 No puede depender de Service ni DTO.
+
+La anotación `@Repository` debe utilizarse únicamente en interfaces de Repository de Spring Data,
+como aquellas que extiendan `JpaRepository`. No debe utilizarse en puertos de persistencia,
+implementaciones manuales, repositorios de test ni otras clases o interfaces que cumplan
+conceptualmente un rol de persistencia.
 
 #### 1.2.6. Integration
 
@@ -196,15 +216,31 @@ No se requiere una validación de `null` específica cuando el Mapper sólo sea 
 
 No debe convertir `null` en valores por defecto.
 
-### 2.5. Service
+### 2.5. Excepciones
 
-Las interfaces para Service no son obligatorias.
+El código de la aplicación no debe lanzar directamente excepciones genéricas provistas por Java,
+como `RuntimeException`, `IllegalArgumentException` o `IllegalStateException`, para representar
+errores funcionales, de aplicación o de dominio.
 
-Solo deben utilizarse cuando exista una necesidad técnica o arquitectónica real.
+Todas las excepciones propias y controladas creadas por el proyecto deben heredar, directa o
+indirectamente, de `FootballMarketException`. Deben clasificarse por su naturaleza mediante
+`DomainException`, `IntegrationException` o `PersistenceException`, y cada excepción concreta debe
+heredar de la categoría correspondiente.
 
-No debe crearse una interfaz únicamente por seguir una convención genérica.
+Las excepciones pertenecientes a Java, Spring o librerías externas no están alcanzadas por esta
+regla. Pueden capturarse y traducirse en los límites apropiados; no se exige reemplazar el
+funcionamiento interno de esas tecnologías.
 
-### 2.6. Framework y tecnología
+### 2.6. Referencias a miembros de instancia
+
+Toda clase debe utilizar `this` al acceder a sus atributos de instancia y al invocar sus propios
+métodos de instancia, incluso cuando no exista ambigüedad. La regla se aplica también a clases de
+test, métodos triviales y al código de los `record` definido explícitamente por el proyecto.
+
+No aplica a miembros `static`, variables locales, parámetros que no sean miembros de la instancia
+ni código generado automáticamente por Java, Lombok, frameworks u otras herramientas.
+
+### 2.7. Framework y tecnología
 
 Las tecnologías y frameworks establecidos por el proyecto deben utilizarse respetando la arquitectura.
 
@@ -281,7 +317,23 @@ La elección del test debe corresponder a la responsabilidad del componente:
 - `Repository` → persistencia real.
 - `Integration` → comunicación externa, respuestas y errores.
 
-Los tests unitarios deben aislar dependencias externas.
+Los tests unitarios deben aislar dependencias externas. Los tests de Service son tests de
+integración y deben utilizar `@SpringBootTest`. El atributo bajo prueba debe declararse con el tipo
+de la interfaz del Service e inyectarse con `@Autowired`; Spring debe resolverlo con su
+implementación real.
+
+El Service y los Repository involucrados deben utilizar sus implementaciones reales y operar
+contra la base de datos configurada para el entorno de test. El código del test no debe declarar,
+inyectar, mockear, verificar ni acceder directamente a Repository. La implementación real del
+Service puede y debe utilizar sus Repository normalmente durante la ejecución.
+
+Las dependencias de tipo Integration deben mockearse. El código del test puede declarar y acceder
+directamente al mock de una Integration exclusivamente para configurar su comportamiento, por
+ejemplo mediante `when(...).thenReturn(...)`, `when(...).thenThrow(...)` u operaciones equivalentes
+de Mockito. No debe invocar directamente la Integration para ejecutar el comportamiento funcional
+bajo prueba ni realizar solicitudes a sistemas, API o endpoints externos reales. La ejecución del
+comportamiento funcional debe realizarse exclusivamente a través de Services y las verificaciones
+principales deben evaluar el comportamiento observable del Service, no la Integration mockeada.
 
 Los tests de integración deben utilizarse cuando sea necesario verificar persistencia, comunicación externa, serialización, configuración o contratos reales.
 
@@ -299,9 +351,12 @@ Los nombres de los tests pueden estar en español, de acuerdo con el Principio 9
 
 Las correcciones de defectos deben incorporar un test de regresión cuando sea razonable.
 
-Antes de finalizar un cambio deben ejecutarse los controles aplicables del proyecto, incluyendo tests, compilación, análisis estático y Quality Gates cuando correspondan.
+Antes de finalizar un cambio deben ejecutarse los tests y la compilación requeridos por el área
+modificada. Para considerar correcto un cambio, estos controles obligatorios deben aprobarse.
 
-Los controles aplicables son los disponibles o configurados en el proyecto y aquellos requeridos por el área modificada. Para considerar correcto un cambio, todos los controles aplicables deben aprobarse.
+SonarQube, los Quality Gates y otros controles opcionales pueden ejecutarse como herramientas
+complementarias de análisis y calidad, pero sus resultados no condicionan la finalización de un
+cambio aunque estén configurados en el proyecto.
 
 No se deben modificar tests ni controles únicamente para ocultar un fallo introducido por el cambio.
 
@@ -421,6 +476,10 @@ Los DTO representan el contrato HTTP y no deben exponer directamente los Model i
 
 Todo endpoint debe devolver un código de estado HTTP. El body es opcional; si una respuesta exitosa devuelve datos en el body, debe utilizar un Response DTO.
 
+La ruta de todo endpoint expuesto por un Controller debe comenzar con el prefijo exacto `/api/`.
+La ruta `/api` sin barra final no es válida, y tampoco lo son rutas que solo coincidan textualmente
+con el comienzo, como `/apiv2`, `/apiary` o `/apifootball`.
+
 ### 7.3. Compatibilidad
 
 Antes de modificar un contrato debe evaluarse su impacto sobre los consumidores existentes.
@@ -492,11 +551,21 @@ La documentación debe mantenerse consistente con el comportamiento real de la A
 
 ### 8.4. Javadoc
 
-Los métodos y constructores públicos deben tener Javadoc cuando aporten información relevante sobre su contrato o comportamiento.
+En código productivo, las clases públicas y los métodos `public` y `protected` deben tener Javadoc.
+Los métodos `private` deben tenerlo únicamente cuando contengan lógica relevante o su propósito no
+sea evidente; los métodos privados triviales quedan exceptuados.
 
-Los métodos sobrescritos no requieren repetir documentación heredada salvo que agreguen comportamiento relevante.
+Los constructores declarados explícitamente en código productivo deben tener Javadoc cuando su
+comportamiento, parámetros, precondiciones o propósito requieran explicación. Los constructores
+triviales, implícitos o generados automáticamente, por ejemplo mediante Lombok, quedan exceptuados.
 
-La documentación debe explicar comportamiento, condiciones, parámetros, retornos o excepciones que no sean evidentes del código.
+En código de test, los métodos anotados con `@Test`, `@BeforeEach`, `@AfterEach` u otras anotaciones
+de ciclo de vida no requieren Javadoc. Los métodos auxiliares de test solo lo requieren cuando su
+propósito o comportamiento necesite una explicación adicional. Modificar únicamente el cuerpo de
+un método no obliga a agregar Javadoc si el método pertenece a una categoría exceptuada.
+
+Los métodos sobrescritos deben conservar documentación accesible mediante Javadoc; puede
+utilizarse `{@inheritDoc}` cuando el contrato heredado describa completamente el comportamiento.
 
 ### 8.5. Consistencia
 
@@ -646,4 +715,4 @@ No deben incorporarse nuevas tecnologías o dependencias fuera de este stack sin
 
 Las Specs y Plans no deben repetir estas restricciones globales salvo que una funcionalidad requiera una consideración técnica específica.
 
-**Version**: 1.14.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-18
+**Version**: 2.0.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-19

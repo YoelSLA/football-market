@@ -1,6 +1,6 @@
 # Contratos de API: Catálogo de jugadores
 
-## `GET /players`
+## `GET /api/players`
 
 Consulta una página de jugadores activos del catálogo local.
 
@@ -41,7 +41,7 @@ Se devuelve si `page < 0`, `size < 1` o `size > 100`. La respuesta gestionada po
 
 Se devuelve cuando la solicitud no presenta un JWT válido, según la autenticación vigente del proyecto.
 
-## `POST /players/sync`
+## `POST /api/players/sync`
 
 Inicia una sincronización manual del catálogo con Football-Data.org. No acepta body.
 
@@ -69,4 +69,4 @@ Se devuelve cuando la solicitud no presenta un JWT válido. La sincronización n
 
 ## Seguridad
 
-Ambos endpoints requieren un JWT válido conforme a la configuración vigente de Spring Security. Cualquier usuario autenticado puede invocar `POST /players/sync` sin un rol o permiso adicional. Esta feature no define roles, permisos ni mecanismos de autenticación nuevos.
+Ambos endpoints requieren un JWT válido conforme a la configuración vigente de Spring Security. Cualquier usuario autenticado puede invocar `POST /api/players/sync` sin un rol o permiso adicional. Esta feature no define roles, permisos ni mecanismos de autenticación nuevos.
