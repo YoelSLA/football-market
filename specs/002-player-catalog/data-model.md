@@ -19,7 +19,16 @@
 - Un jugador inactivo que reaparece se actualiza y vuelve a estar activo.
 - Una foto externa fallida nunca llega a modificar esta entidad.
 
-## Índices
+## Modelos de sincronización
+
+- `PlayerSnapshot`: transporta la foto completa de candidatos válidos y los contadores
+  `obtained` y `discardedInvalid` entre la obtención externa y la aplicación local.
+  Conserva una lista de miembros inmutable y valida la coherencia de los contadores.
+- `PlayerSynchronizationResult`: contiene los cinco contadores contractuales, no negativos.
+  La suma de creados, actualizados y descartados no supera los registros obtenidos;
+  las inactivaciones son independientes de esa cantidad.
+
+## Índices de persistencia
 
 - La PK `id` garantiza la unicidad del identificador externo.
 - No se define de entrada un índice sobre `active`: al ser booleano, su utilidad depende de la distribución de datos y del plan real de las consultas paginadas.

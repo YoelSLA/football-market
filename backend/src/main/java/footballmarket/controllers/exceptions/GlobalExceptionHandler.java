@@ -1,6 +1,7 @@
 package footballmarket.controllers.exceptions;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
+import footballmarket.integrations.footballdata.FootballDataUnavailableException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
 import footballmarket.services.exceptions.UserNotFoundException;
@@ -14,6 +15,28 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(FootballDataUnavailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleFootballDataUnavailable(
+      HttpServletRequest request) {
+    return buildResponse(
+        "No se pudo completar la lectura del proveedor de jugadores",
+        HttpStatus.BAD_GATEWAY,
+        request);
+  }
+
+  @ExceptionHandler(InvalidPlayerPageException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidPlayerPage(
+      InvalidPlayerPageException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(
+      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(HttpServletRequest request) {
+    return buildResponse(
+        "El parámetro de consulta no tiene un formato válido", HttpStatus.BAD_REQUEST, request);
+  }
 
   private ResponseEntity<ErrorResponseDTO> buildResponse(
       String message, HttpStatus status, HttpServletRequest request) {

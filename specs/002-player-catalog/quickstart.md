@@ -6,6 +6,12 @@
 - Variables de configuración de desarrollo existentes.
 - `FOOTBALL_DATA_API_KEY` disponible en el entorno.
 - `football-data.competitions` configurada con los códigos de competición autorizados para la clave.
+- Definir `FOOTBALL_DATA_COMPETITIONS` como una lista ordenada separada por comas
+  (por ejemplo, `PL,PD` si la clave permite esas competiciones). No hay lista predeterminada.
+- Docker disponible para los tests de `PlayerCatalogIntegrationTest`, que crean
+  PostgreSQL 18 mediante Testcontainers. El resto de los tests de integración existentes
+  utiliza la base `football_market_test` configurada en `application-test.yml`.
+- En Postman, definir `BASE_URL` y `JWT_TOKEN` con el token obtenido del login.
 
 ## Ejecución y controles
 

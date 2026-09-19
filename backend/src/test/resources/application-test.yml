@@ -18,6 +18,11 @@ spring:
         jdbc:
           time_zone: UTC
 
+football-data:
+  api-key: test-only-not-a-credential
+  base-url: https://provider.example/v4
+  competitions: PL,PD
+
 jwt:
   secret: test-secret-key-for-football-market-2026
   expiration: 3600000
