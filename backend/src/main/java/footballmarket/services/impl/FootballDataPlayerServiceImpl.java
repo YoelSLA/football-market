@@ -15,11 +15,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 /* Consolida en una sola foto los jugadores de las competiciones configuradas. */
 public class FootballDataPlayerServiceImpl implements FootballDataPlayerService {
-
-  private static final List<String> COMPETITIONS =
-          List.of("PL", "PD", "BL1", "SA", "FL1");
-
   private final FootballDataIntegration footballDataIntegration;
+  private final FootballDataProperties footballDataProperties;
 
   @Override
   /** {@inheritDoc} */
@@ -29,7 +26,7 @@ public class FootballDataPlayerServiceImpl implements FootballDataPlayerService 
     int obtained = 0;
     int discarded = 0;
 
-    for (String code : COMPETITIONS) {
+    for (String code : this.footballDataProperties.competitions()) {
       PlayerSnapshot competition = this.footballDataIntegration.fetchCompetition(code);
 
       obtained += competition.obtained();
