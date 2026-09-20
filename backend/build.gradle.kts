@@ -63,6 +63,11 @@ dependencies {
 tasks.named<Test>("test") {
     useJUnitPlatform()
 
+    // Fuerza la JVM de los tests a utilizar UTC.
+    // Esto evita que pgjdbc tome la zona horaria local
+    // de Windows (America/Buenos_Aires) como TimeZone.
+    systemProperty("user.timezone", "UTC")
+
     // Los tests de Spring REST Docs generan los snippets acá.
     outputs.dir(snippetsDir)
 }
