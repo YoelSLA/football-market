@@ -4,15 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import footballmarket.models.Player;
 import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
+@Transactional
 class PlayerCatalogServiceTest {
 
   @Autowired private PlayerCatalogService playerCatalogService;
@@ -24,9 +29,9 @@ class PlayerCatalogServiceTest {
 
   @Test
   void createsUpdatesReactivatesAndMarksOnlyMissingActivePlayers() {
-    long firstId = System.nanoTime();
-    long createdId = firstId + 1;
-    long absentId = firstId + 2;
+    long firstId = 91001L;
+    long createdId = 91002L;
+    long absentId = 91003L;
     this.playerCatalogService.applySynchronization(
         new PlayerSnapshot(
             List.of(

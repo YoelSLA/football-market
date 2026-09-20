@@ -1,4 +1,4 @@
-package footballmarket.services;
+package footballmarket.orchestrators;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -6,21 +6,20 @@ import static org.mockito.Mockito.*;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
-import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
+import footballmarket.services.FootballDataPlayerService;
+import footballmarket.services.PlayerCatalogService;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
 
-@ActiveProfiles("test")
 class PlayerSynchronizationOrchestratorTest {
   private final FootballDataPlayerService source = mock(FootballDataPlayerService.class);
   private final PlayerCatalogService catalog = mock(PlayerCatalogService.class);
   private final PlayerSynchronizationOrchestrator orchestrator =
-      new PlayerSynchronizationOrchestrator(source, catalog);
+      new PlayerSynchronizationOrchestrator(this.source, this.catalog);
 
   @Test
   void failureBeforeCompletionNeverAppliesLocalChanges() {

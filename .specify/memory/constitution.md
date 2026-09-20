@@ -1,23 +1,26 @@
 <!--
 Sync Impact Report:
 
-- Version change: 1.14.0 -> 2.0.0
+- Version change: 2.2.1 -> 2.3.0
 
 - List of modified principles:
-  - 1. Arquitectura
-  - 2. Convenciones
   - 4. Testing
-  - 7. Contratos
-  - 8. Documentación
 
 - Added sections:
-  - 2.5. Excepciones
-  - 2.6. Referencias a miembros de instancia
+  - None
 
-- Consolidated redundant rules:
-  - Service interfaces are governed by section 1.2.3.
-  - Service dependencies are governed by section 1.4.
-  - The HTTP `/api/` prefix is governed by section 7.2.
+- Removed sections:
+  - None
+
+- Added requirements:
+  - `RestClient` obligatorio como cliente HTTP en tests E2E.
+  - Request y Response DTO obligatorios para cuerpos HTTP en tests E2E.
+
+- Removed requirements:
+  - JSON literal manual mediante text blocks en tests E2E.
+
+- Corrected references:
+  - None
 
 - Follow-up TODOs:
   - None
@@ -292,64 +295,353 @@ Las comunicaciones externas deben utilizar mecanismos seguros y no deben degrada
 
 ## 4. Testing
 
-### 4.1. Cobertura de comportamiento
+### 4.1. Principios generales
 
-Todo código nuevo o modificado debe contar con tests automatizados suficientes para verificar el comportamiento afectado.
+La suite debe organizarse alrededor de responsabilidades arquitectónicas y comportamientos
+observables, no de alcanzar cobertura por cobertura ni de crear obligatoriamente un test por cada
+clase. Cada test debe tener un propósito concreto y demostrar una responsabilidad de la capa o
+componente bajo prueba.
 
-Los tests deben cubrir, cuando corresponda:
-- comportamiento esperado;
-- errores y validaciones;
-- límites y estados inválidos;
-- regresiones relevantes.
+Los tests deben priorizar comportamiento observable, resultado, estado final, contratos e
+invariantes sobre detalles internos. No deben duplicar sin necesidad una responsabilidad ya
+demostrada en una capa inferior o más específica. Ningún tipo de test sustituye universalmente a
+los demás: la suite debe combinar tests unitarios precisos, tests de capa, integraciones con
+infraestructura real controlada y pocos E2E de flujos críticos.
 
-Los tests deben verificar comportamiento, no únicamente que se invoquen métodos.
+La existencia de mocks no convierte por sí sola una prueba en unitaria. El uso de
+`@SpringBootTest` no convierte por sí solo una prueba en E2E. La clasificación depende del alcance
+real verificado y de qué fronteras permanecen reales o son sustituidas. Debe utilizarse la mínima
+infraestructura necesaria; `@SpringBootTest` no debe utilizarse por defecto cuando sean suficientes
+JUnit puro, un slice de Spring o un contexto reducido.
 
-### 4.2. Tipo de test
+Los tests deben ser deterministas, repetibles, reproducibles e independientes. No deben depender
+de Internet, servicios externos reales, API keys productivas, datos externos variables, orden de
+ejecución, estado dejado por otros tests, un reloj externo controlable ni aleatoriedad innecesaria.
+Cada test debe poder ejecutarse de manera aislada.
 
-La elección del test debe corresponder a la responsabilidad del componente:
+### 4.2. Clasificación y alcance
 
-- `Model` → reglas e invariantes de dominio.
-- `Service` → lógica de aplicación y uso de Repository/Integration.
-- `Orchestrator` → coordinación.
-- `Controller` → contrato HTTP. Sus tests deben documentar mediante Spring REST Docs
-  los endpoints y los casos de respuesta que verifican.
-- `Mapper` → transformaciones DTO ↔ Model y manejo de errores, cuando su comportamiento no esté cubierto por el flujo HTTP validado.
-- `Repository` → persistencia real.
-- `Integration` → comunicación externa, respuestas y errores.
+Cada área debe demostrar exclusivamente su responsabilidad principal:
 
-Los tests unitarios deben aislar dependencias externas. Los tests de Service son tests de
-integración y deben utilizar `@SpringBootTest`. El atributo bajo prueba debe declararse con el tipo
-de la interfaz del Service e inyectarse con `@Autowired`; Spring debe resolverlo con su
-implementación real.
+- `Model`: invariantes y comportamiento de dominio.
+- `Repository`: comportamiento de persistencia propio que requiera prueba independiente.
+- `Service`: casos de uso, reglas de aplicación y estado persistido observable.
+- `Orchestrator`: coordinación entre casos de uso.
+- `Controller`: contrato HTTP y seguridad observable desde HTTP.
+- `Integration`: adaptación técnica frente a sistemas externos.
+- `Security`: funcionamiento conjunto de autenticación y autorización.
+- `Config`: binding, validación y construcción de infraestructura.
+- `E2E`: flujos críticos completos desde la frontera HTTP.
 
-El Service y los Repository involucrados deben utilizar sus implementaciones reales y operar
-contra la base de datos configurada para el entorno de test. El código del test no debe declarar,
-inyectar, mockear, verificar ni acceder directamente a Repository. La implementación real del
-Service puede y debe utilizar sus Repository normalmente durante la ejecución.
+Los Mapper no deben tener tests directos dedicados. Sus transformaciones y errores observables
+deben quedar verificados a través de los tests de Controller y del contrato HTTP que soportan.
 
-Las dependencias de tipo Integration deben mockearse. El código del test puede declarar y acceder
-directamente al mock de una Integration exclusivamente para configurar su comportamiento, por
-ejemplo mediante `when(...).thenReturn(...)`, `when(...).thenThrow(...)` u operaciones equivalentes
-de Mockito. No debe invocar directamente la Integration para ejecutar el comportamiento funcional
-bajo prueba ni realizar solicitudes a sistemas, API o endpoints externos reales. La ejecución del
-comportamiento funcional debe realizarse exclusivamente a través de Services y las verificaciones
-principales deben evaluar el comportamiento observable del Service, no la Integration mockeada.
+### 4.3. Tests de Model
 
-Los tests de integración deben utilizarse cuando sea necesario verificar persistencia, comunicación externa, serialización, configuración o contratos reales.
+Los tests ubicados en `src/test/java/footballmarket/models` deben ser unitarios puros. Deben
+demostrar que el dominio protege invariantes, reglas de validez, transiciones de estado,
+comportamiento propio, modificaciones de estado y atomicidad cuando corresponda.
 
-### 4.3. Calidad de los tests
+Deben cubrir, según el comportamiento existente, construcción válida e inválida, estado inicial,
+activación y desactivación, actualizaciones permitidas, excepciones de dominio y ausencia de
+modificaciones parciales tras una operación rechazada.
 
-Los tests deben ser:
-- deterministas;
-- independientes entre sí;
-- reproducibles;
-- descriptivos respecto del comportamiento probado.
+No deben levantar Spring, utilizar `@SpringBootTest`, base de datos, Repository, Integration,
+perfil `test` ni mocks, salvo una necesidad excepcional justificada por el diseño del dominio.
+No deben utilizar `@ActiveProfiles("test")`.
 
-Los nombres de los tests pueden estar en español, de acuerdo con el Principio 9.
+No deben existir tests dedicados únicamente a comportamiento trivial provisto por Java, `record` o
+Lombok, como getters o setters sin lógica. Esos miembros solo deben quedar cubiertos como parte de
+una comprobación significativa del dominio.
 
-### 4.4. Regresiones y controles
+### 4.4. Tests de Repository
 
-Las correcciones de defectos deben incorporar un test de regresión cuando sea razonable.
+No es obligatorio crear un test por cada Repository. Las operaciones estándar heredadas de Spring
+Data JPA, como `save`, `findById`, `findAll`, `delete` y `deleteAll`, no deben probarse aisladamente
+para demostrar el funcionamiento del framework. La persistencia estándar debe ejercitarse
+principalmente de forma indirecta mediante tests de Service.
+
+Deben existir tests específicos cuando haya comportamiento de persistencia propio que necesite
+verificación independiente: `@Query`, JPQL, SQL nativo, filtros complejos, joins, proyecciones,
+ordenamientos relevantes, queries derivadas complejas o constraints no demostradas adecuadamente
+desde Service.
+
+Estos tests deben usar la infraestructura real de persistencia de test y comprobar resultados
+observables. Nunca deben mockear el Repository bajo prueba.
+
+### 4.5. Tests de Service
+
+Los tests ubicados en `src/test/java/footballmarket/services` deben comprobar casos de uso, reglas
+de negocio y cambios de estado. Son deliberadamente tests de integración con Service, Repository,
+JPA/Hibernate y base de datos de test reales; las Integrations externas deben ser mocks y los
+servicios externos reales no deben utilizarse.
+
+Deben utilizar `@SpringBootTest` y `@ActiveProfiles("test")`. El Service bajo prueba debe declararse
+mediante su interfaz e inyectarse con `@Autowired`; Spring debe resolver su implementación real.
+
+El Act y el Assert funcional solo pueden interactuar con la API pública del Service bajo prueba.
+Durante el Arrange, el test puede inyectar e invocar otros Services reales exclusivamente para
+crear precondiciones pertenecientes a sus responsabilidades. Esos Services auxiliares no pueden
+convertirse en objeto de prueba, utilizarse durante el Act ni emplearse para verificar el resultado
+del caso de uso principal.
+
+El código del test no puede declarar, inyectar, acceder, invocar, mockear ni verificar directamente
+ningún Repository, ni siquiera para Arrange, limpieza o assertions. Tampoco puede acceder
+directamente a JPA, Hibernate, `EntityManager`, JDBC ni la base de datos. Repository, JPA y base de
+datos quedan ejercitados indirectamente y exclusivamente a través de Services reales.
+
+Todo Act y Assert funcional debe realizarse mediante la API pública productiva del Service bajo
+prueba. El Arrange debe utilizar su API o, únicamente para precondiciones externas a su
+responsabilidad, las APIs públicas productivas de Services auxiliares. No deben agregarse métodos
+productivos a ningún Service únicamente para facilitar los tests. Cuando el contrato público del
+Service bajo prueba no permita observar un detalle interno de persistencia, el test debe afirmar
+únicamente el comportamiento observable que dicho contrato exponga; no debe vulnerar la frontera
+para obtener acceso al detalle.
+
+Los tests deben favorecer el resultado retornado y el estado final observable mediante el Service:
+altas, modificaciones, reactivaciones, bajas lógicas, reglas de negocio, paginación, filtrado,
+entidades existentes o inexistentes, snapshots o entradas completas y consistencia posterior.
+`verify(repository...)` está prohibido y nunca sustituye la comprobación del resultado observable.
+
+El test puede declarar y configurar un mock de Integration mediante mecanismos como
+`@MockitoBean` y `when(...)`. No puede invocar la Integration para ejecutar el comportamiento
+funcional ni probar su implementación. La ejecución debe comenzar siempre mediante el Service; el
+protocolo de la Integration se prueba en sus propios tests.
+
+### 4.6. Preparación y limpieza de persistencia
+
+Cada test de Service debe partir de un estado conocido, independiente y determinista. No puede
+depender de datos creados por otro test ni del orden de ejecución.
+
+La preparación y limpieza deben respetar la frontera absoluta del Service definida en 4.5. No se
+permite usar Repository, JPA, JDBC, SQL ni acceso directo a la base de datos desde el test. Debe
+utilizarse aislamiento transaccional o un mecanismo de infraestructura de testing que restaure un
+estado conocido sin exponer esas dependencias al código del test. Si se necesitan datos
+funcionales, deben crearse mediante operaciones públicas productivas del Service bajo prueba o de
+un Service auxiliar cuando la precondición pertenezca a la responsabilidad de este último.
+
+Ninguna estrategia de preparación o limpieza puede afectar una base que no sea exclusiva de
+testing ni puede motivar la incorporación de métodos productivos destinados solo a tests.
+
+### 4.7. Tests de Orchestrator
+
+Los tests ubicados en `src/test/java/footballmarket/orchestrators` deben ser tests unitarios de
+coordinación. El Orchestrator debe ser real y sus Services u otros colaboradores permitidos deben
+ser mocks.
+
+Su objetivo exclusivo es comprobar qué colaboradores se invocan, qué datos se transfieren, qué
+resultado se propaga o compone y cuándo una falla impide invocaciones posteriores. Se permite
+`verify(...)`, `verifyNoInteractions(...)` y verificar orden cuando la interacción o el orden sean
+parte del comportamiento de coordinación.
+
+No deben levantar `@SpringBootTest`, utilizar base de datos, repetir lógica interna de los Services
+ni usar `@ActiveProfiles("test")` cuando sean unitarios puros.
+
+### 4.8. Tests de Controller y Spring REST Docs
+
+Los tests ubicados en `src/test/java/footballmarket/controllers` deben verificar el contrato HTTP:
+rutas, métodos, parámetros, path variables, bodies, DTO, serialización, códigos, estructura exacta
+de respuestas contractuales, validaciones, errores, `GlobalExceptionHandler` y seguridad visible
+desde HTTP.
+
+Deben preferir `@WebMvcTest(...)`: Spring MVC, Controller, configuración web relevante y Security
+Filter Chain deben ser reales; Service y Orchestrator deben ser mocks; Repository no debe
+utilizarse directamente y la base de datos no es necesaria salvo justificación excepcional. No
+deben volver a probar la lógica interna del Service.
+
+Las entradas inválidas deben rechazarse con el código y contrato de error correspondientes. Cuando
+el rechazo deba ocurrir antes del caso de uso, debe comprobarse la ausencia de interacción con
+Service u Orchestrator si esto aporta valor, por ejemplo ante paginación inválida o JWT ausente o
+inválido.
+
+Todo endpoint y todo caso de respuesta contractual verificado por tests de Controller debe generar
+su documentación mediante Spring REST Docs. No existe un subconjunto opcional. Cada caso
+contractual distinto de la API debe quedar representado, sin duplicar snippets por cada ejecución
+parametrizada ni por tests adicionales de propiedades internas cuando otro test ya documente el
+mismo caso HTTP.
+
+REST Docs no sustituye assertions. El test debe comprobar primero status, estructura y contenido
+contractual, y la documentación debe derivarse de ese comportamiento comprobado. No puede
+documentarse una respuesta no verificada. Snippets y descripciones deben permanecer sincronizados;
+todo cambio de request, response, status o campos documentados debe actualizar tests y
+documentación. Los Controller tests son la fuente principal de REST Docs; los E2E no deben
+duplicarla obligatoriamente.
+
+### 4.9. Tests de Integration externa
+
+Los tests ubicados en `src/test/java/footballmarket/integrations` deben verificar los adaptadores
+frente a proveedores externos. La Integration y su cliente o protocolo HTTP deben ser reales; el
+proveedor externo debe ser un servidor controlado o una herramienta equivalente, como
+`MockRestServiceServer`. Nunca deben realizar requests a Football-Data.org ni a otro proveedor real.
+
+Deben comprobar, según corresponda, URL, path, query parameters, headers, autenticación técnica,
+serialización, deserialización, mapeo externo a interno, datos incompletos, respuestas inválidas,
+códigos externos, timeouts, rate limiting, política y límite de retries, y traducción de errores a
+excepciones propias de Integration. Las capas superiores no deben conocer excepciones específicas
+del cliente HTTP. Cuando sea parte del contrato de seguridad, deben verificar que URLs, respuestas
+o excepciones no filtren información sensible.
+
+Los tests autocontenidos que construyan manualmente su configuración y no consuman el contexto de
+Spring no deben usar `@ActiveProfiles("test")`.
+
+### 4.10. Tests de Security
+
+Los tests transversales de autenticación y autorización deben ubicarse en
+`src/test/java/footballmarket/security`, nunca en `integrations`. Deben demostrar el funcionamiento
+conjunto de componentes reales de seguridad y pueden utilizar contexto Spring, Security Filter
+Chain, proveedor JWT, autenticación, persistencia real y MockMvc cuando el flujo lo requiera.
+
+Deben verificar, según corresponda, rechazo sin token, aceptación con token válido, rechazo de
+firma inválida o token expirado y flujos como registro, login, JWT y acceso protegido. Puede crearse
+un endpoint mínimo exclusivo del test cuando el objetivo sea la infraestructura de seguridad y no
+un Controller productivo. Deben usar `@ActiveProfiles("test")` cuando dependan de la base, secreto
+JWT u otras properties del perfil.
+
+### 4.11. Tests de configuración
+
+Los tests ubicados en `src/test/java/footballmarket/config` deben verificar configuración propia:
+`@ConfigurationProperties`, binding, validación, construcción de beans, requisitos de startup,
+clientes seguros, rechazo de valores inválidos y protección de secretos en representaciones como
+`toString()`.
+
+Deben usar la menor cantidad posible de contexto. Cuando alcance, deben instanciar directamente las
+clases; para binding o startup deben preferir `ApplicationContextRunner` a `@SpringBootTest`. Los
+tests autocontenidos que proporcionen todas sus properties no deben usar innecesariamente
+`@ActiveProfiles("test")`. Si una property inválida debe impedir el startup, el test debe demostrar
+el fallo del contexto.
+
+### 4.12. Perfil `test` y base de datos
+
+`@ActiveProfiles("test")` solo debe utilizarse cuando el test consuma `application-test.yml` o
+levante un contexto que necesite su infraestructura. Debe utilizarse normalmente en Service,
+Security con contexto, contexto completo, E2E y slices web que requieran beans del perfil. No debe
+utilizarse en Model, tests unitarios de Orchestrator, dependencias instanciadas manualmente,
+Integrations autocontenidas ni Config con properties explícitas. Estar bajo `src/test` no lo
+justifica.
+
+Todo test automatizado que requiera persistencia debe utilizar PostgreSQL real provisionado
+obligatoriamente mediante Testcontainers. Esto incluye tests de Repository, tests de integración
+de Service y Security, E2E y cualquier otra categoría que requiera persistencia.
+
+Testcontainers debe levantar una instancia PostgreSQL aislada y desechable para la suite. Flyway
+debe aplicar sobre ella las migraciones reales del proyecto antes de ejecutar los tests que la
+utilicen. Está prohibido sustituir PostgreSQL por H2 u otra base y depender de una instancia
+PostgreSQL previamente instalada, configurada en `localhost` o administrada externamente.
+
+La suite debe provisionar por sí misma la base necesaria cuando Docker esté disponible. No debe
+depender de la existencia previa de `football_market_test` ni de otra base local. Está prohibido
+usar o modificar bases de desarrollo o producción. El esquema probado debe ser el generado por las
+migraciones del proyecto, nunca uno creado manualmente de manera divergente.
+
+### 4.13. Tests E2E
+
+Los tests ubicados en `src/test/java/footballmarket/e2e` deben recorrer flujos críticos completos
+desde HTTP. Deben levantar un servidor real mediante
+`@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)`, usar el perfil
+`test` y realizar requests como un consumidor externo.
+
+El cliente HTTP de los tests E2E debe ser `org.springframework.web.client.RestClient`. No deben
+utilizarse `java.net.http.HttpClient`, `MockMvc`, `TestRestTemplate`, `WebTestClient` ni otro cliente
+para ejecutar el journey E2E.
+
+Los cuerpos de request deben construirse mediante los Request DTO productivos y entregarse a
+`RestClient` para su serialización. Los cuerpos de response deben deserializarse mediante
+`RestClient` al Response DTO productivo correspondiente, incluido `ErrorResponseDTO` para errores
+contractuales. Las respuestas sin body deben comprobarse como tales sin crear un DTO artificial.
+Los tests E2E no deben construir, concatenar ni interpretar JSON manualmente, ni utilizar
+`ObjectMapper` como sustituto de los DTO para interactuar con la API.
+
+Servidor Spring, MVC, Security, Controllers, Orchestrators, Services, Repositories, JPA/Hibernate,
+base de test e Integrations productivas deben ser reales. Los sistemas externos deben permanecer
+controlados: la `base-url` de la Integration real debe apuntar a un servidor simulado y el tráfico
+debe atravesar el cliente HTTP real. Nunca deben depender de un proveedor externo real.
+
+Invocar directamente un Service no es E2E; usar `@SpringBootTest` por sí solo tampoco. Un test de
+Controller con MockMvc y Service mockeado es de Controller. Los E2E deben proteger pocos journeys
+críticos, como registro, login, JWT y acceso protegido, o sincronización y consulta de catálogo, sin
+duplicar exhaustivamente combinaciones ya cubiertas en capas específicas.
+
+### 4.14. Mocks y test doubles
+
+Los mocks deben utilizarse solo en fronteras que el alcance del test sustituya deliberadamente, no
+por comodidad. Controller usa Service y Orchestrator mock; Service usa Integration mock y
+persistencia real; Orchestrator usa Services mock; Integration usa adaptador y cliente reales con
+proveedor controlado; E2E usa componentes internos reales con proveedor externo controlado.
+
+Nunca debe mockearse el componente principal bajo prueba ni una dependencia real necesaria para
+demostrar el comportamiento objetivo. No debe abusarse de `verify(...)` cuando exista un resultado
+observable más estable. Su uso corresponde cuando la interacción sea el comportamiento relevante,
+como coordinación o rechazo antes de iniciar un caso de uso.
+
+### 4.15. Assertions y selección de casos
+
+Las assertions deben comprobar resultados significativos: retorno, estado final, excepción, código
+y body HTTP, persistencia observable mediante la frontera permitida, invariantes y efectos
+observables. No deben acoplarse innecesariamente a detalles privados. Una operación atómica debe
+probar el rechazo y la ausencia de cambios parciales. Si el contrato exige campos exactos, debe
+verificarse el contrato exacto y no solo una presencia parcial.
+
+Para cada comportamiento deben considerarse, según corresponda, happy path, entradas inválidas,
+ausencia de datos, límites, estado inexistente o previo, excepciones, errores externos, vacíos,
+duplicados y transiciones. Debe usarse `@ParameterizedTest` cuando múltiples inputs expresen la
+misma regla y expectativa; no deben repetirse tests casi idénticos si la parametrización comunica
+mejor la intención.
+
+### 4.16. Nombres, legibilidad y estructura
+
+El nombre del test debe expresar condición y resultado esperado. El cuerpo debe conservar una
+estructura conceptual Arrange, Act, Assert sin comentarios artificiales. Los helpers pueden reducir
+ruido técnico, pero no ocultar la conducta principal; la claridad prevalece sobre abstracciones
+excesivas. Los nombres descriptivos pueden estar en español conforme a la sección 9.
+
+La estructura base es:
+
+```text
+src/test/java/footballmarket/
+├── config/
+├── controllers/
+├── e2e/
+├── integrations/
+├── models/
+├── orchestrators/
+├── repositories/     # solo para comportamiento propio justificado
+├── security/
+└── services/
+```
+
+La ubicación debe representar la responsabilidad bajo prueba. `integrations/` significa
+adaptadores externos, no cualquier prueba técnicamente considerada de integración.
+
+Esta estructura no es una lista cerrada. Pueden agregarse paquetes auxiliares como `fixtures/`,
+`builders/` y `support/` cuando exista reutilización real que lo justifique. Solo pueden contener
+construcción de datos de prueba, fixtures, builders o infraestructura técnica compartida, como el
+soporte común de Testcontainers. No constituyen nuevas categorías de tests.
+
+Los helpers compartidos y privados no deben ocultar el comportamiento principal, contener
+assertions ni encapsular flujos de negocio que vuelvan ilegible el test. Tampoco pueden eludir las
+restricciones de una capa. En particular, un helper utilizado por un test de Service no puede
+acceder directa ni indirectamente a Repository, JPA, `EntityManager`, JDBC, SQL o la base de datos.
+
+### 4.17. Criterio para cambios futuros
+
+Ante todo comportamiento nuevo o modificado, el agente debe identificar primero su responsabilidad
+arquitectónica y agregar o modificar el test en el nivel más específico capaz de demostrarla. No
+debe elegir `@SpringBootTest` automáticamente, crear E2E para reemplazar tests de Model, Service o
+Controller, ni agregar tests redundantes solo para elevar cobertura.
+
+Una validación de dominio o negocio corresponde a Model o Service según su responsabilidad; un
+status HTTP a Controller; una query compleja a Repository y, si afecta el caso de uso, a Service;
+un formato externo a Integration; un cambio JWT a Security y eventualmente al E2E crítico. Un
+cambio transversal puede requerir pruebas en más de un nivel.
+
+La suite debe proporcionar simultáneamente localización —un fallo de una responsabilidad debe
+señalar un área específica— e integración —los componentes aislados deben probarse también en sus
+conexiones relevantes—.
+
+### 4.18. Regresiones y controles
+
+Todo código nuevo o modificado debe contar con tests automatizados suficientes para el comportamiento
+afectado. Las correcciones de defectos deben incorporar un test de regresión cuando sea razonable.
 
 Antes de finalizar un cambio deben ejecutarse los tests y la compilación requeridos por el área
 modificada. Para considerar correcto un cambio, estos controles obligatorios deben aprobarse.
@@ -681,7 +973,9 @@ Si una modificación necesaria entra en conflicto con la Constitution, debe prop
 
 ### 10.8. Finalización
 
-Un cambio se considera terminado cuando los elementos directamente afectados son coherentes y los controles aplicables definidos en la sección 4.4 se ejecutan y aprueban, salvo la excepción de fallo preexistente definida en esa misma sección.
+Un cambio se considera terminado cuando los elementos directamente afectados son coherentes y los
+controles aplicables definidos en la sección 4.18 se ejecutan y aprueban, salvo la excepción de
+fallo preexistente definida en esa misma sección.
 
 Cualquier modificación adicional fuera del alcance inicial debe estar justificada explícitamente.
 
@@ -715,4 +1009,4 @@ No deben incorporarse nuevas tecnologías o dependencias fuera de este stack sin
 
 Las Specs y Plans no deben repetir estas restricciones globales salvo que una funcionalidad requiera una consideración técnica específica.
 
-**Version**: 2.0.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-19
+**Version**: 2.3.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-20

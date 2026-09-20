@@ -9,17 +9,20 @@ import footballmarket.integrations.FootballDataIntegration;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
 import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class FootballDataPlayerServiceTest {
 
   @Autowired private FootballDataPlayerService footballDataPlayerService;

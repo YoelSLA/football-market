@@ -8,9 +8,7 @@ import footballmarket.models.exceptions.EmailInvalidException;
 import footballmarket.models.exceptions.EmptyPasswordException;
 import footballmarket.models.exceptions.PasswordTooShortException;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
 
-@ActiveProfiles("test")
 class UserTest {
 
   @Test

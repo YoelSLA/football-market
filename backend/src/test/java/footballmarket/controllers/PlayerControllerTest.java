@@ -1,5 +1,6 @@
 package footballmarket.controllers;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
@@ -85,6 +86,7 @@ class PlayerControllerTest {
     this.mvc
         .perform(post("/api/players/sync").header("Authorization", this.authorization))
         .andExpect(status().isBadGateway())
+        .andExpect(jsonPath("$.*").value(hasSize(5)))
         .andExpect(jsonPath("$.timestamp").exists())
         .andExpect(jsonPath("$.status").value(502))
         .andExpect(jsonPath("$.error").value("Bad Gateway"))
@@ -108,10 +110,12 @@ class PlayerControllerTest {
     this.mvc
         .perform(post("/api/players/sync"))
         .andExpect(status().isUnauthorized())
+        .andExpect(content().string(""))
         .andDo(document("players-sync-unauthorized"));
     this.mvc
         .perform(post("/api/players/sync").header("Authorization", "Bearer invalid"))
         .andExpect(status().isUnauthorized())
+        .andExpect(content().string(""))
         .andDo(document("players-sync-invalid-jwt"));
     verifyNoInteractions(this.orchestrator, this.service);
   }
@@ -143,6 +147,7 @@ class PlayerControllerTest {
     this.mvc
         .perform(get("/api/players").header("Authorization", this.authorization))
         .andExpect(status().isOk())
+        .andExpect(jsonPath("$.*").value(hasSize(5)))
         .andExpect(
             content()
                 .json(
@@ -179,12 +184,21 @@ class PlayerControllerTest {
                 .param("size", "" + size)
                 .header("Authorization", this.authorization))
         .andExpect(status().isOk())
+        .andExpect(jsonPath("$.*").value(hasSize(5)))
         .andExpect(jsonPath("$.content").isEmpty())
         .andExpect(jsonPath("$.page").value(page))
         .andExpect(jsonPath("$.size").value(size))
         .andExpect(jsonPath("$.totalElements").value(0))
         .andExpect(jsonPath("$.totalPages").value(0))
-        .andDo(document("players-empty-" + size));
+        .andDo(
+            document(
+                "players-empty-" + size,
+                responseFields(
+                    fieldWithPath("content").description("Página vacía de jugadores activos"),
+                    fieldWithPath("page").description("Página solicitada"),
+                    fieldWithPath("size").description("Tamaño solicitado"),
+                    fieldWithPath("totalElements").description("Total de jugadores activos"),
+                    fieldWithPath("totalPages").description("Total de páginas"))));
   }
 
   @ParameterizedTest
@@ -197,12 +211,21 @@ class PlayerControllerTest {
                 .param("size", size)
                 .header("Authorization", this.authorization))
         .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.*").value(hasSize(5)))
         .andExpect(jsonPath("$.status").value(400))
         .andExpect(jsonPath("$.path").value("/api/players"))
         .andExpect(jsonPath("$.timestamp").exists())
         .andExpect(jsonPath("$.error").value("Bad Request"))
         .andExpect(jsonPath("$.message").isNotEmpty())
-        .andDo(document("players-invalid-" + page + "-" + size));
+        .andDo(
+            document(
+                "players-invalid-" + page + "-" + size,
+                responseFields(
+                    fieldWithPath("timestamp").description("Fecha del error"),
+                    fieldWithPath("status").description("Código HTTP"),
+                    fieldWithPath("error").description("Descripción HTTP"),
+                    fieldWithPath("message").description("Mensaje de validación"),
+                    fieldWithPath("path").description("Ruta solicitada"))));
     verifyNoInteractions(this.service);
   }
 
@@ -211,10 +234,12 @@ class PlayerControllerTest {
     this.mvc
         .perform(get("/api/players"))
         .andExpect(status().isUnauthorized())
+        .andExpect(content().string(""))
         .andDo(document("players-unauthorized"));
     this.mvc
         .perform(get("/api/players").header("Authorization", "Bearer invalid"))
         .andExpect(status().isUnauthorized())
+        .andExpect(content().string(""))
         .andDo(document("players-invalid-jwt"));
     verifyNoInteractions(this.service);
   }

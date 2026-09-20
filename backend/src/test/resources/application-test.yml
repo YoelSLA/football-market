@@ -1,9 +1,5 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/football_market_test
-    username: postgres
-    password: root
-
     hikari:
       data-source-properties:
         TimeZone: UTC

@@ -9,17 +9,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ActiveProfiles;
 
-@ActiveProfiles("test")
 class FootballDataPropertiesTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
           .withUserConfiguration(PropertiesConfiguration.class)
           .withPropertyValues(
-              "spring.profiles.active=test",
-              "football-data.api-key=test-only",
-              "football-data.base-url=https://provider.example");
+              "football-data.api-key=test-only", "football-data.base-url=https://provider.example");
 
   @ParameterizedTest
   @ValueSource(strings = {"PL,BL1,PD,SA,FL1", "BL1,PL,PD,SA,FL1", "FL1,SA,PD,BL1,PL"})
