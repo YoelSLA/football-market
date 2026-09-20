@@ -1,23 +1,56 @@
 <!--
 Sync Impact Report:
 
-- Version change: 2.2.1 -> 2.3.0
+- Version change: 2.3.0 -> 2.4.0
 
 - List of modified principles:
+  - 1. Arquitectura
+  - 2. Convenciones
+  - 3. Integraciones externas del backend
   - 4. Testing
+  - 8. Documentación
+  - Technology Constraints
+
+- Renamed sections:
+  - 1.3. DTO y Mapper -> 1.3. DTO y Mapper del backend
+  - 1.4. Dependencias arquitectónicas -> 1.4. Dependencias arquitectónicas del backend
+  - 1.5. Reglas de dominio y aplicación -> 1.5. Reglas de dominio y aplicación del backend
+  - 1.6. Evolución y nuevas áreas -> 1.7. Evolución y nuevas áreas
+  - 1.7. Resolución arquitectónica -> 1.8. Resolución arquitectónica
+  - 2.2-2.6 delimitadas explícitamente como convenciones del backend/Java
+  - 3. Integraciones externas -> 3. Integraciones externas del backend
+  - 4.2. Clasificación y alcance -> 4.2. Clasificación y alcance del backend
+  - 8.4. Javadoc -> 8.4. Javadoc del backend
 
 - Added sections:
-  - None
+  - 1.6. Arquitectura del frontend
+  - 1.6.1. Organización y estructura conceptual
+  - 1.6.2. Aislamiento y API pública de features
+  - 1.6.3. Page
+  - 1.6.4. Component
+  - 1.6.5. Hooks
+  - 1.6.6. Service
+  - 1.6.7. HTTP compartido
+  - 1.6.8. DTO, Model y Mapper
+  - 1.6.9. Formularios y validación
+  - 1.6.10. Estado remoto y stores
+  - 1.6.11. Autenticación
+  - 1.6.12. Router, layouts y providers
+  - 1.6.13. Utils, constants y query keys
+  - 1.6.14. Dependencias frontend
+  - 1.6.15. Crecimiento y resolución arquitectónica
 
 - Removed sections:
   - None
 
 - Added requirements:
-  - `RestClient` obligatorio como cliente HTTP en tests E2E.
-  - Request y Response DTO obligatorios para cuerpos HTTP en tests E2E.
+  - Arquitectura frontend organizada principalmente por feature.
+  - Encapsulación mediante APIs públicas y prohibición de dependencias entre features.
+  - Fronteras explícitas para UI, Hooks, Services, HTTP, DTO, Model y Mapper.
+  - Matriz normativa de dependencias frontend permitidas y prohibidas.
 
 - Removed requirements:
-  - JSON literal manual mediante text blocks en tests E2E.
+  - None
 
 - Corrected references:
   - None
@@ -117,7 +150,7 @@ Puede ser utilizada por Service.
 
 No puede ser utilizada directamente por Controller, Orchestrator, Model ni Repository.
 
-### 1.3. DTO y Mapper
+### 1.3. DTO y Mapper del backend
 
 #### 1.3.1. DTO
 
@@ -136,7 +169,7 @@ No deben contener lógica de negocio, validaciones de negocio, cálculos ni deci
 
 No pueden depender de Service ni Repository.
 
-### 1.4. Dependencias arquitectónicas
+### 1.4. Dependencias arquitectónicas del backend
 
 Las dependencias directas permitidas son:
 
@@ -153,7 +186,7 @@ Las dependencias transitivas no autorizan dependencias directas.
 
 No deben existir dependencias circulares ni utilizarse intermediarios para evadir una restricción arquitectónica.
 
-### 1.5. Reglas de dominio y aplicación
+### 1.5. Reglas de dominio y aplicación del backend
 
 Las reglas que puedan resolverse exclusivamente con información y comportamiento del dominio deben implementarse en Model.
 
@@ -161,7 +194,295 @@ Las reglas que requieran Repository, Integration u otras capacidades externas al
 
 Las reglas que involucren múltiples Model pueden permanecer en el dominio cuando puedan resolverse completamente mediante comportamiento de dominio.
 
-### 1.6. Evolución y nuevas áreas
+### 1.6. Arquitectura del frontend
+
+La unidad principal de organización funcional del frontend debe ser la feature. La arquitectura
+debe mantener alta cohesión, encapsulación y separación por responsabilidad.
+
+Una feature o componente arquitectónico solo debe dividirse cuando exista una responsabilidad real
+que lo justifique. La cantidad de archivos, líneas o código no autoriza por sí sola una división.
+Ninguna feature está obligada a contener todos los roles posibles.
+
+#### 1.6.1. Organización y estructura conceptual
+
+La organización conceptual del frontend debe contemplar:
+
+```text
+src/
+├── app/
+├── features/
+├── infrastructure/
+├── shared/
+├── styles/
+├── App.tsx
+└── main.tsx
+```
+
+Esta estructura define fronteras globales, no obliga a crear carpetas sin contenido ni
+responsabilidad. Dentro de una feature pueden existir, cuando sean necesarias, `components`,
+`constants`, `form`, `hooks`, `mappers`, `models`, `pages`, `services`, `store`, `types`, `utils` e
+`index.ts`. Esta enumeración describe roles posibles y no constituye una plantilla obligatoria.
+
+`app` se reserva para composición y configuración global: router, layouts y providers globales,
+store global, configuración global de TanStack Query y composición entre features. No debe contener
+lógica específica de una feature. `main.tsx` debe ser un bootstrap mínimo. Configuraciones globales
+como `queryClient` deben pertenecer conceptualmente a `app`, no a la raíz de `src` como contenedor
+arbitrario.
+
+`features` contiene las unidades funcionales. Cada feature debe encapsular sus Pages, Components,
+Hooks, Services, Models, Mappers, formularios y demás elementos específicos que realmente necesite.
+
+`shared` contiene únicamente elementos genuinamente reutilizables entre features. No puede recibir
+conceptos específicos de una feature para permitir que otra dependa de ellos ni utilizarse para
+evadir restricciones entre features.
+
+`infrastructure` contiene adaptadores técnicos globales hacia el entorno, como almacenamiento del
+navegador. No debe contener lógica de negocio ni funcionar como contenedor residual. El acceso a
+mecanismos concretos como `localStorage` o `sessionStorage` debe encapsularse cuando corresponda y
+no puede quedar disperso en Components, Pages, Hooks o Services.
+
+Los estilos específicos de una Page o Component deben permanecer colocalizados con ellos mediante
+CSS Modules o SCSS Modules cuando corresponda. `src/styles` queda reservado para estilos globales,
+como base, resets, abstracts, variables y mixins.
+
+#### 1.6.2. Aislamiento y API pública de features
+
+Cada feature debe exponer explícitamente su API pública mediante `index.ts`. Un consumidor externo
+solo puede importar desde esa API y no desde archivos internos. Por ejemplo, desde afuera de la
+feature se permite `import { PlayersPage } from "@/features/players"` y se prohíbe importar desde
+`@/features/players/pages/PlayersPage`. Los módulos internos de la misma feature sí pueden utilizar
+imports internos.
+
+Una feature no puede depender directa ni indirectamente de otra feature, incluso mediante la API
+pública de esta última. La composición de múltiples features debe realizarse desde `app` utilizando
+sus APIs públicas. `app` puede componerlas, pero no absorber su lógica interna.
+
+No se permite trasladar código específico de una feature a `shared` para eludir esta prohibición.
+Los submódulos de `shared` deben exponer APIs públicas cuando corresponda, de modo que sus
+consumidores no conozcan arbitrariamente su estructura interna, por ejemplo
+`@/shared/components`, `@/shared/http` o `@/shared/utils`.
+
+#### 1.6.3. Page
+
+Una Page representa una pantalla asociada a una ruta o a la composición de una funcionalidad. Su
+responsabilidad principal es componer Components y Hooks.
+
+Puede utilizar Components, Hooks, Models y lógica estrictamente de presentación o renderizado,
+incluidas decisiones visuales basadas en loading, colecciones vacías u otros estados de UI. No debe
+contener lógica de negocio ni acceso externo. No puede utilizar directamente Services, HTTP ni DTO.
+
+No es obligatorio crear un Page Hook. Debe existir únicamente cuando haya suficiente estado o
+coordinación de UI para justificar esa extracción; de lo contrario, la Page puede utilizar
+directamente los Hooks correspondientes.
+
+#### 1.6.4. Component
+
+Un Component representa UI y comportamiento local. Puede utilizar Hooks, Models, estado local y
+lógica de presentación, incluidos Hooks de su propia feature.
+
+No puede utilizar directamente Services, realizar HTTP ni comunicarse directamente con el backend
+bajo ninguna circunstancia.
+
+#### 1.6.5. Hooks
+
+Los Hooks constituyen la frontera entre la UI React y el comportamiento de aplicación. Una feature
+puede subdividirlos en `pages`, `queries` y `mutations` cuando existan esas responsabilidades; la
+subdivisión no es obligatoria.
+
+Los Page Hooks coordinan estado y comportamiento de una Page cuando la complejidad justifica la
+extracción. Los Query Hooks encapsulan lecturas de estado remoto mediante TanStack Query. Los
+Mutation Hooks encapsulan modificaciones de estado remoto mediante TanStack Query.
+
+Queries, mutations, invalidaciones y comportamiento asociado al estado remoto de TanStack Query
+deben permanecer encapsulados en Hooks. Service no puede depender de TanStack Query. Pages y
+Components no pueden utilizar Services como sustituto de Hooks. El flujo de UI debe ser
+`Page / Component → Hook → Service`.
+
+#### 1.6.6. Service
+
+Service representa las operaciones externas de una feature y su frontera funcional con el backend.
+Los endpoints y URLs propios de la feature deben permanecer en sus Services. Pages, Components y
+Hooks no pueden definir ni utilizar directamente endpoints HTTP.
+
+Service puede utilizar el cliente HTTP compartido. No debe convertirse en un contenedor genérico
+de lógica. La lógica de dominio pertenece a Model; la coordinación de UI, a Hook; la transformación,
+a Mapper; y el acceso externo, a Service.
+
+Un Service puede depender de otro Service de la misma feature únicamente si existe una separación
+real de responsabilidades. No deben dividirse Services artificialmente para encadenarlos ni pueden
+existir dependencias circulares.
+
+#### 1.6.7. HTTP compartido
+
+`shared/http` contiene el cliente HTTP común. Puede resolver base URL, configuración del cliente,
+headers comunes, interceptores, incorporación técnica de credenciales, normalización de errores de
+transporte y comportamiento HTTP técnico transversal.
+
+No debe contener lógica funcional de una feature, mensajes funcionales de UI ni operaciones de
+negocio como login o compra de jugadores. Puede normalizar timeout, network errors, status HTTP y
+otros errores técnicos de transporte. Cada feature debe interpretar sus errores funcionales, como
+`PLAYER_NOT_AVAILABLE`, `INSUFFICIENT_BALANCE` o `EMAIL_ALREADY_REGISTERED`, y determinar el
+comportamiento de UI correspondiente. Los errores técnicos y funcionales deben permanecer separados.
+
+#### 1.6.8. DTO, Model y Mapper
+
+DTO representa exclusivamente el contrato HTTP de entrada o salida del backend y debe quedar
+encapsulado en la frontera de integración de la feature. Pages, Components y Hooks de UI no pueden
+trabajar con DTO cuando Service pueda encapsular esa frontera.
+
+Model representa conceptos, estado y comportamiento de dominio utilizados por el frontend. Puede
+implementarse mediante `type`, `interface`, clase u otra construcción TypeScript sin alterar su
+responsabilidad. Las reglas resolubles exclusivamente con información del dominio deben
+implementarse en Model. Model no puede depender de React, Hooks, Services, HTTP, DTO ni
+infraestructura técnica. Pages, Components y Hooks pueden trabajar con Model.
+
+Mapper realiza exclusivamente transformaciones entre DTO, Model y Form Model. Debe ser puro y no
+puede realizar HTTP, utilizar Services o Hooks, mantener estado, contener lógica de negocio ni
+coordinar operaciones. Cada feature debe poseer sus Mappers cuando sean necesarios. Un Mapper
+compartido solo puede existir para una transformación genuinamente transversal y reutilizable.
+
+En lecturas, el flujo debe ser
+`Backend → shared/http → Service → DTO → Mapper → Model → Service → Hook → Page / Component`.
+Service debe exponer Model, no DTO, hacia Hooks.
+
+En escrituras, el flujo debe ser
+`Component / Form → Form Model → Hook → Service → Mapper → DTO → shared/http → Backend`.
+Hook no debe conocer el DTO.
+
+#### 1.6.9. Formularios y validación
+
+Form Model representa el estado y las necesidades de UI de un formulario; DTO representa el
+contrato HTTP. Deben permanecer separados aunque inicialmente tengan los mismos campos.
+
+`form` puede contener Hooks de formulario, schemas de validación y responsabilidades estrictamente
+relacionadas con formularios. Los componentes visuales continúan siendo Components de la feature.
+Un Form Hook no es obligatorio y solo debe crearse cuando encapsule una responsabilidad real, como
+configuración de React Hook Form, valores iniciales, schema o comportamiento interno complejo.
+
+Las validaciones de entrada y UX, como formato de email o campo obligatorio, pueden pertenecer al
+schema del formulario. Las reglas genuinas del dominio deben pertenecer a Model cuando puedan
+resolverse con información de dominio; no pueden desplazarse a un schema solo porque el dato
+provenga de un formulario.
+
+La validación frontend mejora UX y consistencia del cliente, pero nunca sustituye al backend como
+autoridad de validación y protección de reglas. Las validaciones genéricas y genuinamente
+reutilizables entre features pueden pertenecer a `shared/validation`.
+
+#### 1.6.10. Estado remoto y stores
+
+TanStack Query es responsable del estado remoto y caché proveniente del backend. Ese estado no debe
+duplicarse innecesariamente en stores globales o de feature.
+
+`app/store` queda reservado para estado cliente verdaderamente transversal. El hecho de que un dato
+sea estado no justifica ubicarlo allí. El estado local, como apertura de modales, debe permanecer en
+el Component, Hook o feature correspondiente cuando no sea global.
+
+Una feature puede definir su propio store cuando exista estado cliente compartido entre múltiples
+elementos de esa feature sin ser global a la aplicación. El estado específico de una feature no
+puede trasladarse a `app/store` solo para centralizarlo.
+
+#### 1.6.11. Autenticación
+
+La lógica funcional de autenticación pertenece a la feature de autenticación: login, registro,
+logout y estado o comportamiento funcional del usuario autenticado.
+
+`shared/http` solo debe resolver el mecanismo HTTP transversal, como incorporar técnicamente el
+token o tratar respuestas técnicas. El almacenamiento concreto de credenciales o tokens debe
+encapsularse mediante `infrastructure` cuando corresponda. Components, Pages, Hooks y Services no
+pueden acceder de forma dispersa a `localStorage`, `sessionStorage` u otros mecanismos concretos.
+
+#### 1.6.12. Router, layouts y providers
+
+La configuración global del router pertenece exclusivamente a `app/router`. Las Pages concretas
+pertenecen a sus features y su asociación con rutas globales se realiza desde `app/router`. Una
+feature puede navegar cuando lo necesite, pero no ensamblar ni poseer el router global.
+
+`app/layouts` contiene exclusivamente layouts globales o transversales, como layouts públicos,
+autenticados o de aplicación. Una estructura visual específica de una feature debe permanecer
+dentro de ella aunque visualmente se considere un layout.
+
+Los providers globales deben configurarse y componerse desde `app`, incluidos TanStack Query,
+router, tema, store global y cualquier otro provider realmente global.
+
+#### 1.6.13. Utils, constants y query keys
+
+`utils` contiene exclusivamente funciones auxiliares puras que no correspondan mejor a otro rol.
+No debe funcionar como contenedor residual. Si una operación representa comportamiento de Model,
+debe permanecer en Model.
+
+`constants` contiene constantes propias de la feature cuando exista una responsabilidad real. No
+deben extraerse valores allí únicamente para reducir el tamaño visual de otro archivo.
+
+Las query keys de TanStack Query deben centralizarse por feature cuando esta utilice TanStack Query.
+No deben dispersarse strings de query keys si existe una definición central correspondiente.
+
+#### 1.6.14. Dependencias frontend
+
+Las dependencias directas permitidas dentro de una feature son:
+
+```text
+Page → Component de la misma feature o shared, Hook de la misma feature, Model
+Component → Component de la misma feature o shared, Hook de la misma feature, Model
+Hook → Service de la misma feature, Model, Form Model, Hook de formulario, Feature store
+Service → Mapper, Model, DTO, Form Model, shared/http, adaptador público de infrastructure,
+          Service de la misma feature
+Mapper → Model, DTO, Form Model
+Hook de formulario → Model, Form Model, validación de la misma feature, shared/validation
+Form Model o schema → Model, validación de la misma feature, shared/validation
+Feature store → Model
+Model → ninguna capa técnica o de aplicación
+```
+
+La dependencia `Service → Service` solo está permitida dentro de la misma feature y bajo las
+restricciones de 1.6.6. La dependencia `Service → infrastructure` solo permite utilizar la API
+pública de un adaptador técnico necesario y no autoriza accesos directos al mecanismo concreto. Un
+Hook de formulario no puede depender de Query Hooks o Mutation Hooks para evadir sus fronteras.
+
+Una dependencia hacia una API pública de `shared` solo está permitida si su responsabilidad ya está
+autorizada para el consumidor. Por ejemplo, Page y Component pueden utilizar Components
+compartidos; Service puede utilizar `shared/http`; Form puede utilizar `shared/validation`; y los
+roles pueden utilizar utilidades puras compartidas que no introduzcan una dependencia prohibida.
+
+Las dependencias globales permitidas son:
+
+```text
+app → APIs públicas de features, APIs públicas de shared, infrastructure
+feature → APIs públicas de shared compatibles con su rol
+Service de feature → API pública de infrastructure según la regla anterior
+shared/http → infrastructure técnica cuando sea necesaria
+shared → ningún módulo específico de feature
+infrastructure → ningún módulo específico de feature ni lógica de negocio
+```
+
+Toda dependencia directa no autorizada está prohibida. En particular:
+
+- Page o Component no puede depender de Service, HTTP ni DTO.
+- Hook no puede depender de DTO ni definir endpoints HTTP.
+- Service no puede depender de React, Component, Page, Hook ni TanStack Query.
+- Model no puede depender de React, Hook, Service, HTTP, DTO ni infrastructure.
+- Mapper no puede depender de Service, Hook, HTTP, React ni infrastructure.
+- una feature no puede depender de otra feature;
+- `shared` e `infrastructure` no pueden depender de features;
+- ningún módulo puede utilizar `app`, barrels o intermediarios para evadir estas reglas.
+
+Las dependencias transitivas no autorizan dependencias directas. No pueden existir dependencias
+circulares en ninguna parte de la arquitectura frontend.
+
+#### 1.6.15. Crecimiento y resolución arquitectónica
+
+La estructura existente del frontend no prevalece sobre esta Constitution. El código, carpetas o
+convenciones incompatibles deben refactorizarse cuando formen parte del alcance aplicable.
+
+No debe crearse una carpeta, Hook, Service, Mapper, Model, Store u otro componente únicamente porque
+aparezca en esta arquitectura. Toda creación y subdivisión debe responder a una responsabilidad o
+agrupación conceptual real, nunca solo a tamaño, líneas o cantidad de archivos.
+
+Las responsabilidades no deben asignarse por conveniencia técnica. Si una situación relevante no
+puede resolverse mediante esta Constitution, la Spec o el código aplicable, el agente debe solicitar
+aclaración. No puede inventar una capa, mover código a `shared`, introducir dependencias entre
+features ni crear excepciones arquitectónicas por conveniencia.
+
+### 1.7. Evolución y nuevas áreas
 
 La arquitectura definida por esta Constitution prevalece sobre estructuras existentes.
 
@@ -171,7 +492,7 @@ Las refactorizaciones necesarias para cumplir la arquitectura están permitidas.
 
 Toda nueva área debe definir explícitamente sus responsabilidades, componentes y dependencias.
 
-### 1.7. Resolución arquitectónica
+### 1.8. Resolución arquitectónica
 
 Las dependencias y responsabilidades no deben inferirse por conveniencia técnica.
 
@@ -187,7 +508,7 @@ La estructura de paquetes, directorios y archivos debe ser coherente con los rol
 
 La estructura física no modifica por sí misma la responsabilidad arquitectónica de un componente.
 
-### 2.2. DTO
+### 2.2. DTO del backend
 
 Los DTO HTTP deben implementarse como `record`.
 
@@ -197,7 +518,7 @@ Los mensajes de validación propios de la aplicación deben estar en español.
 
 La obligatoriedad y nulabilidad deben representar correctamente el contrato HTTP.
 
-### 2.3. Model
+### 2.3. Model del backend
 
 Los Model deben preservar sus invariantes y encapsular su estado.
 
@@ -207,7 +528,7 @@ No deben utilizarse `@Setter` en los Model.
 
 Pueden utilizarse mecanismos de Persistence necesarios para representar el Model.
 
-### 2.4. Mapper
+### 2.4. Mapper del backend
 
 Los Mapper deben ser `final`, sin estado mutable, con constructor privado y métodos `static`.
 
@@ -219,7 +540,7 @@ No se requiere una validación de `null` específica cuando el Mapper sólo sea 
 
 No debe convertir `null` en valores por defecto.
 
-### 2.5. Excepciones
+### 2.5. Excepciones del backend
 
 El código de la aplicación no debe lanzar directamente excepciones genéricas provistas por Java,
 como `RuntimeException`, `IllegalArgumentException` o `IllegalStateException`, para representar
@@ -234,7 +555,7 @@ Las excepciones pertenecientes a Java, Spring o librerías externas no están al
 regla. Pueden capturarse y traducirse en los límites apropiados; no se exige reemplazar el
 funcionamiento interno de esas tecnologías.
 
-### 2.6. Referencias a miembros de instancia
+### 2.6. Referencias a miembros de instancia en Java
 
 Toda clase debe utilizar `this` al acceder a sus atributos de instancia y al invocar sus propios
 métodos de instancia, incluso cuando no exista ambigüedad. La regla se aplica también a clases de
@@ -249,7 +570,7 @@ Las tecnologías y frameworks establecidos por el proyecto deben utilizarse resp
 
 Las anotaciones, clases base e interfaces proporcionadas por los frameworks no deben utilizarse para introducir responsabilidades o dependencias prohibidas.
 
-## 3. Integraciones externas
+## 3. Integraciones externas del backend
 
 ### 3.1. Encapsulamiento
 
@@ -319,7 +640,7 @@ de Internet, servicios externos reales, API keys productivas, datos externos var
 ejecución, estado dejado por otros tests, un reloj externo controlable ni aleatoriedad innecesaria.
 Cada test debe poder ejecutarse de manera aislada.
 
-### 4.2. Clasificación y alcance
+### 4.2. Clasificación y alcance del backend
 
 Cada área debe demostrar exclusivamente su responsabilidad principal:
 
@@ -841,9 +1162,9 @@ Los campos de los DTO que formen parte del contrato deben documentar su signific
 
 La documentación debe mantenerse consistente con el comportamiento real de la API.
 
-### 8.4. Javadoc
+### 8.4. Javadoc del backend
 
-En código productivo, las clases públicas y los métodos `public` y `protected` deben tener Javadoc.
+En código productivo del backend, las clases públicas y los métodos `public` y `protected` deben tener Javadoc.
 Los métodos `private` deben tenerlo únicamente cuando contengan lógica relevante o su propósito no
 sea evidente; los métodos privados triviales quedan exceptuados.
 
@@ -983,6 +1304,15 @@ Cualquier modificación adicional fuera del alcance inicial debe estar justifica
 
 El proyecto utiliza:
 
+Frontend:
+
+- TypeScript.
+- React.
+- TanStack Query para estado remoto.
+- CSS Modules o SCSS Modules para estilos colocalizados cuando corresponda.
+
+Backend:
+
 - Java 21.
 - Gradle 8.14+.
 - Spring Boot 4.1.1.
@@ -1009,4 +1339,4 @@ No deben incorporarse nuevas tecnologías o dependencias fuera de este stack sin
 
 Las Specs y Plans no deben repetir estas restricciones globales salvo que una funcionalidad requiera una consideración técnica específica.
 
-**Version**: 2.3.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-20
+**Version**: 2.4.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-09-20
