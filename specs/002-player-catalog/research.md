@@ -5,14 +5,14 @@
 ### Fuente y recorrido de Football-Data.org
 
 - **Decisión**: Usar Football-Data.org API v4 a través de una Integration dedicada.
-- **Recorrido**: por cada competición configurada, consultar la competición, obtener sus equipos y consultar el plantel de cada equipo.
+- **Recorrido**: consultar Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`); para cada una, obtener sus equipos y consultar el plantel de cada equipo.
 - **Motivo**: La API no ofrece un recurso global de catálogo de jugadores. La documentación oficial expone `GET /competitions/{code}`, `GET /competitions/{code}/teams` y `GET /teams/{id}`; el último contiene `squad` con los jugadores. [Competition](https://docs.football-data.org/general/v4/competition.html), [Team](https://docs.football-data.org/general/v4/team.html).
 - **Mapeo**: `competition.name` → `league`; `team.name` → `team`; `squad[].id`, `squad[].name` y `squad[].position` → `id`, `name` y `position`.
 
 ### Configuración de competiciones
 
-- **Decisión**: Añadir una lista ordenada `football-data.competitions` a `FootballDataProperties`.
-- **Motivo**: La spec establece que las competiciones pertenecen a la configuración del proyecto y que la primera en dicho orden determina `league` ante jugadores repetidos. La lista no tendrá valores hardcodeados.
+- **Decisión**: Añadir `football-data.competitions` a `FootballDataProperties` y aceptar cualquier orden del conjunto `PL,BL1,PD,SA,FL1`.
+- **Motivo**: El catálogo está limitado siempre a esas cinco ligas. Validar faltantes, adicionales, duplicados durante el arranque evita sincronizaciones parciales y mantiene determinista la selección de `league` ante jugadores repetidos.
 
 ### Cliente HTTP y credenciales
 
@@ -28,7 +28,7 @@
 ### Duplicados
 
 - **Decisión**: Usar el ID de Football-Data.org como PK local y consolidar los candidatos en memoria por ID antes de persistirlos.
-- **Motivo**: Previene duplicados tanto frente al proveedor como en la base. Al iterar las competiciones en su orden configurado, el primer candidato conserva la regla funcional de `league`.
+- **Motivo**: Previene duplicados tanto frente al proveedor como en la base. Al iterar las ligas en el orden configurado para las cinco ligas, el primer candidato conserva la regla funcional de `league`.
 
 ### Disponibilidad y reintentos
 

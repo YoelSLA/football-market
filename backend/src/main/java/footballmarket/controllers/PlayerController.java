@@ -38,7 +38,7 @@ public class PlayerController {
   @Operation(
       summary = "Sincronizar jugadores",
       description =
-          "Sincronización manual sin body. Disponible para cualquier usuario con JWT válido, sin rol adicional.")
+          "Sincronización manual sin body de Premier League (PL), Bundesliga (BL1), La Liga (PD), Serie A (SA) y Ligue 1 (FL1), sin exigir un orden. Disponible para cualquier usuario con JWT válido, sin rol adicional.")
   @ApiResponse(responseCode = "200", description = "Foto completa aplicada al catálogo")
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(

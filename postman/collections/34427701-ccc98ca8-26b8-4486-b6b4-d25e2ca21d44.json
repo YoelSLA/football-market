@@ -108,6 +108,7 @@
 				{
 					"name": "Sincronizar jugadores",
 					"request": {
+						"description": "Sincroniza exclusivamente Premier League (PL), Bundesliga (BL1), La Liga (PD), Serie A (SA) y Ligue 1 (FL1), sin exigir un orden. Si falla cualquiera, el catálogo permanece sin cambios.",
 						"method": "POST",
 						"auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{JWT_TOKEN}}", "type": "string"}]},
 						"header": [{"key": "Accept", "value": "application/json"}],

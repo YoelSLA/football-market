@@ -5,9 +5,8 @@
 - Java 21 y PostgreSQL disponibles.
 - Variables de configuración de desarrollo existentes.
 - `FOOTBALL_DATA_API_KEY` disponible en el entorno.
-- `football-data.competitions` configurada con los códigos de competición autorizados para la clave.
-- Definir `FOOTBALL_DATA_COMPETITIONS` como una lista ordenada separada por comas
-  (por ejemplo, `PL,PD` si la clave permite esas competiciones). No hay lista predeterminada.
+- La credencial debe tener acceso a Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`).
+- Definir `FOOTBALL_DATA_COMPETITIONS` con las cinco ligas (por ejemplo, `PL,BL1,PD,SA,FL1`), en cualquier orden; una lista incompleta, con duplicados o ligas adicionales debe impedir el arranque de la aplicación.
 - Docker disponible para los tests de `PlayerCatalogIntegrationTest`, que crean
   PostgreSQL 18 mediante Testcontainers. El resto de los tests de integración existentes
   utiliza la base `football_market_test` configurada en `application-test.yml`.

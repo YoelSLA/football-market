@@ -20,7 +20,8 @@ class FootballDataClientConfigTest {
         "https://provider.example#fragment"
       })
   void rejectsUnsafeProviderUrls(String url) {
-    var properties = new FootballDataProperties("test-only", url, List.of("PL"));
+    var properties =
+        new FootballDataProperties("test-only", url, List.of("PL", "BL1", "PD", "SA", "FL1"));
     assertThatThrownBy(() -> new FootballDataClientConfig().footballDataRestClient(properties))
         .isInstanceOf(InvalidFootballDataConfigurationException.class);
   }
@@ -37,15 +38,20 @@ class FootballDataClientConfigTest {
         .isInstanceOf(InvalidFootballDataConfigurationException.class);
     var properties =
         new FootballDataProperties(
-            "private-test-key", "https://provider.example", List.of("PD", "PL"));
-    assertThat(properties.competitions()).containsExactly("PD", "PL");
+            "private-test-key",
+            "https://provider.example",
+            List.of("PL", "BL1", "PD", "SA", "FL1"));
+    assertThat(properties.competitions()).containsExactly("PL", "BL1", "PD", "SA", "FL1");
     assertThat(properties.toString()).doesNotContain("private-test-key");
     assertThat(new FootballDataClientConfig().footballDataRestClient(properties)).isNotNull();
     assertThatThrownBy(
             () ->
                 new FootballDataClientConfig()
                     .footballDataRestClient(
-                        new FootballDataProperties(" ", "https://provider.example", List.of("PL"))))
+                        new FootballDataProperties(
+                            " ",
+                            "https://provider.example",
+                            List.of("PL", "BL1", "PD", "SA", "FL1"))))
         .isInstanceOf(InvalidFootballDataConfigurationException.class);
   }
 }

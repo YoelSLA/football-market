@@ -49,7 +49,7 @@ specs/002-player-catalog/
 
 backend/src/main/java/footballmarket/
 ├── config/
-│   ├── FootballDataProperties.java              # ampliar con competiciones configuradas
+│   ├── FootballDataProperties.java              # validar las cinco ligas obligatorias
 │   └── FootballDataClientConfig.java            # RestClient del proveedor y timeouts
 ├── controllers/
 │   ├── PlayerController.java
@@ -123,7 +123,7 @@ El Controller delegará en `PlayerCatalogService.getActivePlayers(page, size)`. 
 
 El Orchestrator seguirá este flujo:
 
-1. Solicita a `FootballDataPlayerService` una foto validada de jugadores de todas las competiciones configuradas.
+1. Solicita a `FootballDataPlayerService` una foto validada de jugadores de las cinco ligas obligatorias, según el orden configurado.
 2. Si la obtención completa falla, propaga el error de proveedor y no invoca la aplicación local de cambios.
 3. Si la foto está completa, delega en `PlayerCatalogService.applySynchronization(...)`.
 4. Devuelve el resultado del Service para que el Controller lo convierta al DTO HTTP.
@@ -143,7 +143,7 @@ Los contadores tendrán una semántica única para logs y respuesta: `obtained` 
 
 `FootballDataIntegration` será el único componente que conozca los recursos y los JSON del proveedor. Usará un `RestClient` configurado con la URL base de `FootballDataProperties`, HTTPS, timeouts de conexión y lectura, y la clave configurada mediante `FOOTBALL_DATA_API_KEY` en el encabezado requerido por Football-Data.org. No se implementarán reintentos automáticos.
 
-Para cada código de competición, respetando su orden configurado, la integración realizará:
+Para cada código de competición, respetando el orden configurado para las cinco ligas, la integración realizará:
 
 1. `GET /competitions/{competitionCode}` para obtener el nombre de la competición, que alimenta `league`.
 2. `GET /competitions/{competitionCode}/teams` para obtener sus equipos.
@@ -152,9 +152,9 @@ Para cada código de competición, respetando su orden configurado, la integraci
 
 La documentación oficial confirma que el recurso de competición expone `name`, que su subrecurso de equipos existe y que el recurso de equipo expone `name` y `squad`, cuyos integrantes incluyen `id`, `name` y `position`. [Competition](https://docs.football-data.org/general/v4/competition.html), [Team](https://docs.football-data.org/general/v4/team.html).
 
-La configuración ampliará `FootballDataProperties` con una lista ordenada, no vacía y obligatoria `competitions`, vinculada a `football-data.competitions`. No habrá códigos de competición hardcodeados: cada ambiente suministra los códigos a los que la credencial tiene acceso. La configuración actual de `apiKey` y `baseUrl` se conserva.
+La configuración ampliará `FootballDataProperties` con una lista obligatoria `competitions`, vinculada a `football-data.competitions`, que debe contener `PL,BL1,PD,SA,FL1` en cualquier orden. La aplicación validará al iniciar que estén exactamente esos cinco códigos, sin faltantes, adicionales, duplicados; se acepta cualquier orden; una configuración inválida impedirá el arranque y, por lo tanto, cualquier sincronización parcial. La configuración actual de `apiKey` y `baseUrl` se conserva.
 
-La Integration validará toda respuesta externa antes de entregarla: ausencia o valor vacío de `id`, `name`, `team`, `league` o `position` descarta solo ese candidato, registra un motivo seguro y aumenta `discardedInvalid`. Si una competición, equipo o plantel no se puede obtener, o el proveedor responde un estado no exitoso o una estructura inválida, se aborta toda la foto y se lanza una excepción técnica de integración. `FootballDataPlayerService` consolidará los candidatos válidos por ID usando el primero encontrado: al recorrer las competiciones en el orden configurado, esa regla preserva el `league` requerido cuando el mismo jugador aparezca en más de una competición.
+La Integration validará toda respuesta externa antes de entregarla: ausencia o valor vacío de `id`, `name`, `team`, `league` o `position` descarta solo ese candidato, registra un motivo seguro y aumenta `discardedInvalid`. Si una de las cinco ligas, un equipo o un plantel no se puede obtener, o el proveedor responde un estado no exitoso o una estructura inválida, se aborta toda la foto y se lanza una excepción técnica de integración. `FootballDataPlayerService` consolidará los candidatos válidos por ID usando el primero encontrado: al recorrer las ligas en el orden configurado, esa regla preserva el `league` requerido cuando el mismo jugador aparezca en más de una competición.
 
 ### Errores, logs y seguridad
 
@@ -193,12 +193,12 @@ Todos los tests nuevos usarán `@ActiveProfiles("test")`, serán deterministas y
 
 | Área | Acción planificada |
 |---|---|
-| `config/FootballDataProperties.java` | Añadir la lista ordenada de competiciones configuradas. |
+| `config/FootballDataProperties.java` | Validar el conjunto de ligas `PL,BL1,PD,SA,FL1`. |
 | `config/FootballDataClientConfig.java` | Crear el cliente HTTP seguro y con timeouts para la Integration. |
 | `models`, `repositories`, `services`, `integrations`, `controllers` | Añadir los componentes descritos, respetando responsabilidades y dependencias de la Constitution. |
 | `controllers/exceptions/GlobalExceptionHandler.java` | Añadir manejo seguro de los errores propios del catálogo sin alterar reglas de negocio. |
 | `resources/db/migration/V2__create_players_table.sql` | Crear la estructura persistente de jugadores. |
-| `resources/application.properties` y configuración de prueba | Declarar la lista de competiciones sin incorporar credenciales al repositorio. |
+| `resources/application.properties` y configuración de prueba | Declarar exactamente `PL,BL1,PD,SA,FL1`, sin incorporar credenciales al repositorio. |
 | `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json` | Añadir solicitudes para el catálogo y la sincronización a la colección existente. |
 | `src/test` | Añadir las pruebas unitarias, de Controller, de Integration y de persistencia definidas. |
 

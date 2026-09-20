@@ -28,15 +28,15 @@ Como consumidor de la API, quiero consultar el catálogo de jugadores de fútbol
 
 ### User Story 2 - Sincronizar manualmente el catálogo (Priority: P1)
 
-Como usuario autenticado de la aplicación, quiero iniciar explícitamente una sincronización del catálogo para incorporar los jugadores disponibles en las competiciones configuradas.
+Como usuario autenticado de la aplicación, quiero iniciar explícitamente una sincronización del catálogo para incorporar los jugadores disponibles en Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`).
 
 **Why this priority**: Permite mantener el catálogo actualizado sin comprometer la disponibilidad de las consultas locales.
 
-**Independent Test**: Con datos disponibles en Football-Data.org para las competiciones configuradas, invocar `POST /api/players/sync` y comprobar la incorporación, actualización, activación e inactivación de jugadores, junto con el resultado informado de la sincronización.
+**Independent Test**: Con datos disponibles en Football-Data.org para `PL`, `BL1`, `PD`, `SA` y `FL1`, invocar `POST /api/players/sync` y comprobar que se consultan exactamente esas cinco ligas y que sus jugadores se incorporan, actualizan, activan o inactivan según corresponda, junto con el resultado informado de la sincronización.
 
 **Acceptance Scenarios**:
 
-1. **Given** que Football-Data.org está disponible para todas las competiciones configuradas, **When** un usuario autenticado invoca `POST /api/players/sync`, **Then** el sistema incorpora o actualiza los jugadores válidos, actualiza sus estados cuando corresponda y devuelve una respuesta exitosa que informa el resultado de la sincronización.
+1. **Given** que Football-Data.org está disponible para `PL`, `BL1`, `PD`, `SA` y `FL1`, **When** un usuario autenticado invoca `POST /api/players/sync`, **Then** el sistema consulta exactamente esas cinco ligas, incorpora o actualiza sus jugadores válidos, actualiza sus estados cuando corresponda y devuelve una respuesta exitosa que informa el resultado de la sincronización.
 2. **Given** que un jugador recibido no existía previamente en el catálogo, **When** finaliza una sincronización completa y exitosa, **Then** el jugador se incorpora al catálogo como activo.
 3. **Given** que un jugador recibido ya existía en el catálogo, **When** finaliza una sincronización completa y exitosa, **Then** sus datos se actualizan, permanece o vuelve a quedar activo y no se genera un duplicado.
 4. **Given** que un jugador activo ya no está presente en una sincronización completa y exitosa, **When** esta finaliza, **Then** el jugador se conserva en el catálogo y queda inactivo.
@@ -47,7 +47,8 @@ Como usuario autenticado de la aplicación, quiero iniciar explícitamente una s
 
 ### Edge Cases
 
-- Si un jugador aparece en más de una competición configurada, debe figurar una sola vez en el catálogo, identificado por su ID de Football-Data.org. Se expone como `league` la primera competición en el orden configurado para el catálogo.
+- Si un jugador aparece en más de una de las cinco ligas, debe figurar una sola vez en el catálogo, identificado por su ID de Football-Data.org. Se expone como `league` la primera liga en el orden configurado entre `PL`, `BL1`, `PD`, `SA`, `FL1`.
+- Si no puede obtenerse por completo cualquiera de las cinco ligas, la sincronización completa debe considerarse fallida.
 - Una sincronización incompleta o fallida no representa una actualización válida del catálogo y no debe causar inactivaciones incorrectas.
 - Los registros inválidos se descartan y no se consideran jugadores disponibles en una sincronización completa.
 - Solo los jugadores activos forman parte de la respuesta de `GET /api/players`; los inactivos se conservan para futuras sincronizaciones y no se exponen en esta feature.
@@ -62,7 +63,8 @@ Como usuario autenticado de la aplicación, quiero iniciar explícitamente una s
 - **RF-004**: Cada jugador expuesto por el catálogo debe contener exactamente los campos `id`, `name`, `team`, `league` y `position`.
 - **RF-005**: El contrato HTTP del catálogo debe utilizar representaciones de datos específicas para la API y no debe exponer directamente la entidad de persistencia.
 - **RF-006**: El sistema debe conservar localmente los jugadores obtenidos desde Football-Data.org, la fuente externa seleccionada para esta feature.
-- **RF-007**: La sincronización debe obtener desde Football-Data.org los jugadores correspondientes a las competiciones configuradas para el proyecto. No se debe establecer una cantidad fija de jugadores para el catálogo.
+- **RF-007**: La sincronización debe obtener desde Football-Data.org los jugadores correspondientes exclusivamente a estas cinco ligas, en el orden configurado entre Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`). No debe admitir ligas adicionales ni omitir ninguna de las cinco. No se debe establecer una cantidad fija de jugadores para el catálogo.
+- **RF-021**: La configuración efectiva de la sincronización debe representar exactamente los códigos `PL,BL1,PD,SA,FL1`. Si falta un código, existe uno adicional o se duplica uno, el sistema debe rechazar la configuración y no iniciar una sincronización parcial.
 - **RF-008**: La credencial utilizada para acceder a Football-Data.org debe mantenerse segura: no debe exponerse por la API, quedar hardcodeada, versionarse ni registrarse en logs.
 - **RF-009**: El sistema debe exponer `POST /api/players/sync` para iniciar manualmente la sincronización. Esta feature no debe realizar sincronización automática.
 - **RF-010**: Antes de incorporar o actualizar un jugador, el sistema debe verificar que estén presentes `id`, `name`, `team`, `league` y `position`. Si falta alguno, debe descartar el registro y registrar el motivo.
@@ -95,11 +97,12 @@ Como usuario autenticado de la aplicación, quiero iniciar explícitamente una s
 - **SC-006**: La documentación OpenAPI permite identificar ambos endpoints, la paginación, las estructuras de respuesta y los códigos de respuesta aplicables.
 - **SC-007**: La colección Postman versionada contiene solicitudes utilizables para ambos endpoints, coherentes con sus contratos y sin secretos ni credenciales reales.
 - **SC-008**: Cualquier usuario autenticado puede iniciar `POST /api/players/sync` sin un rol adicional; una solicitud sin autenticación válida recibe `401 Unauthorized` y no inicia la sincronización.
+- **SC-009**: Cada sincronización iniciada consulta exactamente `PL`, `BL1`, `PD`, `SA` y `FL1`, sin exigir un orden; una configuración distinta es rechazada antes de consultar Football-Data.org.
 
 ## Assumptions
 
 - Football-Data.org proporciona una identidad estable que permite reconocer a un mismo jugador entre sincronizaciones.
-- Las competiciones incluidas en el catálogo están definidas en la configuración del proyecto.
+- El catálogo siempre incluye únicamente Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`), sin exigir un orden.
 - Las credenciales necesarias para acceder a Football-Data.org están disponibles de forma segura en el entorno de ejecución.
 - La aplicación se despliega en una sola instancia; la serialización de sincronizaciones ocurre dentro de esa instancia.
 

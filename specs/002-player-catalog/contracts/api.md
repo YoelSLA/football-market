@@ -43,7 +43,7 @@ Se devuelve cuando la solicitud no presenta un JWT válido, según la autenticac
 
 ## `POST /api/players/sync`
 
-Inicia una sincronización manual del catálogo con Football-Data.org. No acepta body.
+Inicia una sincronización manual del catálogo con Football-Data.org para Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`), sin exigir un orden. No acepta body.
 
 ### Respuesta `200 OK`
 

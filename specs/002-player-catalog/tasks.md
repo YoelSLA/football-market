@@ -58,7 +58,7 @@
 ### Tests
 
 - [X] T016 [P] [US2] Crear `backend/src/test/java/footballmarket/integrations/footballdata/FootballDataIntegrationTest.java` con respuestas HTTP simuladas para competición, equipos y planteles, descartes por campos faltantes, timeouts, errores HTTP y estructuras incompletas.
-- [X] T017 [P] [US2] Crear `backend/src/test/java/footballmarket/services/FootballDataPlayerServiceTest.java` para consolidación por ID, precedencia de la primera competición configurada y contadores `obtained` y `discardedInvalid`.
+- [X] T017 [P] [US2] Crear `backend/src/test/java/footballmarket/services/FootballDataPlayerServiceTest.java` para consolidación por ID, precedencia de la primera competición recorrida y contadores `obtained` y `discardedInvalid`.
 - [X] T018 [US2] Ampliar `backend/src/test/java/footballmarket/services/PlayerCatalogServiceTest.java` con creación, actualización, reactivación, inactivación, duplicados, contadores y rollback de la aplicación transaccional.
 - [X] T019 [P] [US2] Crear `backend/src/test/java/footballmarket/services/PlayerSynchronizationOrchestratorTest.java` para verificar que un fallo antes de completar la foto impide la aplicación local y que una foto válida se aplica una sola vez.
 - [X] T020 [US2] Ampliar `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` con `POST /api/players/sync` exitoso, `502` seguro, `401` sin invocación del Orchestrator, usuario autenticado sin rol adicional, JSON contractual y snippets REST Docs.
@@ -89,6 +89,16 @@
 - [X] T035 Revisar `specs/002-player-catalog/contracts/api.md` frente a los DTO, OpenAPI y Postman implementados; corregir solo discrepancias de implementación o documentación acordada.
 - [ ] T036 Ejecutar `backend/gradlew.bat test spotlessCheck` desde `backend/`, validar el flujo manual de `specs/002-player-catalog/quickstart.md` y comprobar que el CI aprueba `clean build` y que el análisis de SonarQube y su Quality Gate aprueban cuando estén disponibles; registrar los fallos preexistentes y verificablemente ajenos al cambio sin alterar controles para ocultarlos.
 
+## Fase 6: Restringir el catálogo a las cinco ligas obligatorias
+
+**Objetivo**: Alinear la implementación con el conjunto obligatorio de ligas `PL`, `BL1`, `PD`, `SA`, `FL1`. T037–T040 implementadas; T041 pendiente de Docker y del flujo manual contra el proveedor real.
+
+- [X] T037 [P] [US2] Ampliar las pruebas de configuración para aceptar únicamente `PL,BL1,PD,SA,FL1` y rechazar listas con faltantes, códigos adicionales, duplicados; aceptar cualquier orden antes de iniciar la aplicación.
+- [X] T038 [P] [US2] Ampliar las pruebas de sincronización para verificar que se consultan exactamente las cinco ligas según el orden configurado, y que el fallo de cualquiera impide aplicar una foto parcial.
+- [X] T039 [US2] Ajustar `FootballDataProperties` y la configuración de los ambientes para imponer el conjunto exacto de ligas `PL,BL1,PD,SA,FL1`.
+- [X] T040 [US2] Actualizar OpenAPI, REST Docs y los ejemplos afectados para comunicar que la sincronización siempre abarca las cinco ligas obligatorias.
+- [ ] T041 Ejecutar los controles de T036 y validar el flujo manual con acceso autorizado a las cinco ligas.
+
 ## Dependencias y orden de ejecución
 
 **Estado de validación**: T036 pendiente por Docker no disponible y controles
@@ -100,6 +110,7 @@ Preparación (T001–T002)
     → US1 consulta (T007–T015)
       → US2 sincronización (T016–T033)
         → Pulido (T034–T036)
+          → Cinco ligas obligatorias (T037–T041)
 ```
 
 - US1 depende del modelo, la migración y el Repository de la base compartida. Dentro de US1, escribir primero los tests; los DTO preceden al Mapper, el Repository precede al Service y el Service precede al Controller.

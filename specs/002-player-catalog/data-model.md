@@ -7,7 +7,7 @@
 | `id` | `Long` | PK, obligatorio, no generado | ID estable entregado por Football-Data.org. |
 | `name` | `String` | Obligatorio, no vacío | Nombre expuesto por el catálogo. |
 | `team` | `String` | Obligatorio, no vacío | Equipo actual según la sincronización. |
-| `league` | `String` | Obligatorio, no vacío | Competición configurada que determina el catálogo. |
+| `league` | `String` | Obligatorio, no vacío | Nombre entregado por Football-Data.org para una de las ligas `PL`, `BL1`, `PD`, `SA` o `FL1`. |
 | `position` | `String` | Obligatorio, no vacío | Posición recibida del plantel. |
 | `active` | `boolean` | Obligatorio | Determina si se muestra en `GET /api/players`. |
 
