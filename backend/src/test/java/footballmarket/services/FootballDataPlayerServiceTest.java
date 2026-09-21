@@ -11,6 +11,8 @@ import footballmarket.models.Player;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -28,63 +30,68 @@ class FootballDataPlayerServiceTest {
   @Autowired private FootballDataPlayerService footballDataPlayerService;
   @MockitoBean private FootballDataIntegration footballDataIntegration;
 
-  @Test
-  void consolidatesByIdKeepingFirstCompetitionAndRawCounts() {
-    for (String code : List.of("BL1", "SA", "FL1")) {
-      when(this.footballDataIntegration.fetchCompetition(code))
-          .thenReturn(new PlayerSnapshot(List.of(), 0, 0));
+  @Nested
+  @DisplayName("Obtención del catálogo de las ligas configuradas")
+  class Snapshot {
+    @Test
+    void consolidaPorIdConservandoLaPrimeraLigaYLosContadoresOriginales() {
+      for (String code : List.of("BL1", "SA", "FL1")) {
+        when(footballDataIntegration.fetchCompetition(code))
+            .thenReturn(new PlayerSnapshot(List.of(), 0, 0));
+      }
+      when(footballDataIntegration.fetchCompetition("PL"))
+          .thenReturn(new PlayerSnapshot(List.of(new Player(1L, "N", "T", "First", "P")), 2, 1));
+      when(footballDataIntegration.fetchCompetition("PD"))
+          .thenReturn(
+              new PlayerSnapshot(
+                  List.of(
+                      new Player(1L, "Other", "T", "Second", "P"),
+                      new Player(2L, "N", "T", "Second", "P")),
+                  2,
+                  0));
+
+      var result = footballDataPlayerService.fetchSnapshot();
+
+      assertThat(result.obtained()).isEqualTo(4);
+      assertThat(result.discardedInvalid()).isEqualTo(1);
+      assertThat(result.players()).extracting(Player::getId).containsExactly(1L, 2L);
+      assertThat(result.players().getFirst().getLeague()).isEqualTo("First");
     }
-    when(this.footballDataIntegration.fetchCompetition("PL"))
-        .thenReturn(new PlayerSnapshot(List.of(new Player(1L, "N", "T", "First", "P")), 2, 1));
-    when(this.footballDataIntegration.fetchCompetition("PD"))
-        .thenReturn(
-            new PlayerSnapshot(
-                List.of(
-                    new Player(1L, "Other", "T", "Second", "P"),
-                    new Player(2L, "N", "T", "Second", "P")),
-                2,
-                0));
 
-    var result = this.footballDataPlayerService.fetchSnapshot();
+    @ParameterizedTest
+    @ValueSource(strings = {"PL", "BL1", "PD", "SA", "FL1"})
+    void propagaElFalloDeCualquierLigaRequerida(String failedLeague) {
+      when(footballDataIntegration.fetchCompetition(anyString()))
+          .thenAnswer(
+              invocation -> {
+                String code = invocation.getArgument(0);
+                if (code.equals(failedLeague)) {
+                  throw new FootballDataUnavailableException();
+                }
+                return new PlayerSnapshot(List.of(new Player(1L, "N", "T", code, "P")), 1, 0);
+              });
 
-    assertThat(result.obtained()).isEqualTo(4);
-    assertThat(result.discardedInvalid()).isEqualTo(1);
-    assertThat(result.players()).extracting(Player::getId).containsExactly(1L, 2L);
-    assertThat(result.players().getFirst().getLeague()).isEqualTo("First");
-  }
+      assertThatThrownBy(footballDataPlayerService::fetchSnapshot)
+          .isInstanceOf(FootballDataUnavailableException.class);
+    }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"PL", "BL1", "PD", "SA", "FL1"})
-  void propagatesFailureOfAnyRequiredLeague(String failedLeague) {
-    when(this.footballDataIntegration.fetchCompetition(anyString()))
-        .thenAnswer(
-            invocation -> {
-              String code = invocation.getArgument(0);
-              if (code.equals(failedLeague)) {
-                throw new FootballDataUnavailableException();
-              }
-              return new PlayerSnapshot(List.of(new Player(1L, "N", "T", code, "P")), 1, 0);
-            });
-
-    assertThatThrownBy(this.footballDataPlayerService::fetchSnapshot)
-        .isInstanceOf(FootballDataUnavailableException.class);
-  }
-
-  @Test
-  void includesExactlyFiveLeaguesInFixedOrder() {
-    var codes = List.of("PL", "BL1", "PD", "SA", "FL1");
-    when(this.footballDataIntegration.fetchCompetition(anyString()))
-        .thenAnswer(
-            invocation -> {
-              String code = invocation.getArgument(0);
-              int index = codes.indexOf(code);
-              assertThat(index).isNotNegative();
-              return new PlayerSnapshot(List.of(new Player(index + 1L, "N", "T", code, "P")), 1, 0);
-            });
-    var snapshot = this.footballDataPlayerService.fetchSnapshot();
-    assertThat(snapshot.players())
-        .extracting(Player::getLeague)
-        .containsExactly("PL", "BL1", "PD", "SA", "FL1");
-    assertThat(snapshot.obtained()).isEqualTo(5);
+    @Test
+    void incluyeLasCincoLigasEnElOrdenConfigurado() {
+      var codes = List.of("PL", "BL1", "PD", "SA", "FL1");
+      when(footballDataIntegration.fetchCompetition(anyString()))
+          .thenAnswer(
+              invocation -> {
+                String code = invocation.getArgument(0);
+                int index = codes.indexOf(code);
+                assertThat(index).isNotNegative();
+                return new PlayerSnapshot(
+                    List.of(new Player(index + 1L, "N", "T", code, "P")), 1, 0);
+              });
+      var snapshot = footballDataPlayerService.fetchSnapshot();
+      assertThat(snapshot.players())
+          .extracting(Player::getLeague)
+          .containsExactly("PL", "BL1", "PD", "SA", "FL1");
+      assertThat(snapshot.obtained()).isEqualTo(5);
+    }
   }
 }

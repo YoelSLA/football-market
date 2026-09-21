@@ -8,6 +8,8 @@ import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
 import java.net.SocketTimeoutException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,126 +28,138 @@ class FootballDataIntegrationTest {
         RestClient.builder()
             .baseUrl("https://provider.example/v4")
             .defaultHeader("X-Auth-Token", "test-only");
-    this.server = MockRestServiceServer.bindTo(builder).build();
-    this.integration = new FootballDataIntegration(builder.build());
+    server = MockRestServiceServer.bindTo(builder).build();
+    integration = new FootballDataIntegration(builder.build());
   }
 
   private void respond(String path, String body) {
-    this.server
+    server
         .expect(requestTo("https://provider.example/v4" + path))
         .andExpect(header("X-Auth-Token", "test-only"))
         .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
   }
 
   private void competition(String name) {
-    this.respond("/competitions/PL", "{\"name\":" + name + "}");
-    this.respond("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}");
+    respond("/competitions/PL", "{\"name\":" + name + "}");
+    respond("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}");
   }
 
-  @Test
-  void mapsValidPlayersAndCountsEachInvalidRecord() {
-    this.competition("\"League\"");
-    this.respond(
-        "/teams/10",
-        """
-        {"name":"Team","squad":[
-        {"id":1,"name":"Name","position":"Forward"},
-        {"name":"Missing id","position":"Forward"},
-        {"id":2,"name":" ","position":"Forward"},
-        {"id":3,"name":"Missing position"},null]}
-        """);
-    var result = this.integration.fetchCompetition("PL");
-    assertThat(result.obtained()).isEqualTo(5);
-    assertThat(result.discardedInvalid()).isEqualTo(4);
-    assertThat(result.players()).extracting(Player::getName).containsExactly("Name");
-    assertThat(result.players().getFirst().getLeague()).isEqualTo("League");
-    assertThat(result.players().getFirst().getTeam()).isEqualTo("Team");
-    this.server.verify();
-  }
-
-  @Test
-  void discardsMissingLeagueAndTeamWithoutInventingValues() {
-    this.competition("null");
-    this.respond(
-        "/teams/10",
-        "{\"name\":\"Team\",\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
-    assertThat(this.integration.fetchCompetition("PL").discardedInvalid()).isEqualTo(1);
-    this.server.verify();
-    this.server.reset();
-    this.competition("\"League\"");
-    this.respond("/teams/10", "{\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
-    assertThat(this.integration.fetchCompetition("PL").discardedInvalid()).isEqualTo(1);
-    this.server.verify();
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"{}", "{\"squad\":null}", "{\"squad\":{}}", "not-json", "null"})
-  void rejectsIncompleteSquad(String body) {
-    this.competition("\"League\"");
-    this.respond("/teams/10", body);
-    assertThatThrownBy(() -> this.integration.fetchCompetition("PL"))
-        .isInstanceOf(FootballDataUnavailableException.class);
-    this.server.verify();
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {"{}", "{\"teams\":null}", "{\"teams\":[{}]}", "{\"teams\":[null]}", "null"})
-  void rejectsIncompleteTeamList(String body) {
-    this.respond("/competitions/PL", "{\"name\":\"League\"}");
-    this.respond("/competitions/PL/teams", body);
-    assertThatThrownBy(() -> this.integration.fetchCompetition("PL"))
-        .isInstanceOf(FootballDataUnavailableException.class);
-    this.server.verify();
-  }
-
-  @Test
-  void acceptsCompleteEmptySquad() {
-    this.competition("\"League\"");
-    this.respond("/teams/10", "{\"name\":\"Team\",\"squad\":[]}");
-    assertThat(this.integration.fetchCompetition("PL").obtained()).isZero();
-    this.server.verify();
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = {301, 401, 500, 503})
-  void rejectsHttpFailuresWithoutLeakingResponseOrRetrying(int status) {
-    this.server
-        .expect(requestTo("https://provider.example/v4/competitions/PL"))
-        .andRespond(withStatus(HttpStatus.valueOf(status)).body("private-provider-response"));
-    assertThatThrownBy(() -> this.integration.fetchCompetition("PL"))
-        .isInstanceOf(FootballDataUnavailableException.class)
-        .hasMessageNotContaining("private-provider-response")
-        .hasMessageNotContaining("provider.example");
-    this.server.verify();
-  }
-
-  @Test
-  void retriesRateLimitOnlyUpToConfiguredBound() {
-    for (int attempt = 0; attempt < 4; attempt++) {
-      this.server
-          .expect(requestTo("https://provider.example/v4/competitions/PL"))
-          .andRespond(
-              withStatus(HttpStatus.TOO_MANY_REQUESTS)
-                  .header("Retry-After", "0")
-                  .body("private-provider-response"));
+  @Nested
+  @DisplayName("Mapeo de jugadores del proveedor")
+  class PlayerMapping {
+    @Test
+    void mapeaJugadoresValidosYCuentaCadaRegistroInvalido() {
+      competition("\"League\"");
+      respond(
+          "/teams/10",
+          """
+          {"name":"Team","squad":[
+          {"id":1,"name":"Name","position":"Forward"},
+          {"name":"Missing id","position":"Forward"},
+          {"id":2,"name":" ","position":"Forward"},
+          {"id":3,"name":"Missing position"},null]}
+          """);
+      var result = integration.fetchCompetition("PL");
+      assertThat(result.obtained()).isEqualTo(5);
+      assertThat(result.discardedInvalid()).isEqualTo(4);
+      assertThat(result.players()).extracting(Player::getName).containsExactly("Name");
+      assertThat(result.players().getFirst().getLeague()).isEqualTo("League");
+      assertThat(result.players().getFirst().getTeam()).isEqualTo("Team");
+      server.verify();
     }
 
-    assertThatThrownBy(() -> this.integration.fetchCompetition("PL"))
-        .isInstanceOf(FootballDataUnavailableException.class)
-        .hasMessageNotContaining("private-provider-response")
-        .hasMessageNotContaining("provider.example");
-    this.server.verify();
+    @Test
+    void descartaJugadoresSinLigaOEquipoSinInventarValores() {
+      competition("null");
+      respond(
+          "/teams/10",
+          "{\"name\":\"Team\",\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
+      assertThat(integration.fetchCompetition("PL").discardedInvalid()).isEqualTo(1);
+      server.verify();
+      server.reset();
+      competition("\"League\"");
+      respond("/teams/10", "{\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
+      assertThat(integration.fetchCompetition("PL").discardedInvalid()).isEqualTo(1);
+      server.verify();
+    }
   }
 
-  @Test
-  void convertsTimeoutWithoutRetry() {
-    this.server
-        .expect(requestTo("https://provider.example/v4/competitions/PL"))
-        .andRespond(withException(new SocketTimeoutException("private-url")));
-    assertThatThrownBy(() -> this.integration.fetchCompetition("PL"))
-        .isInstanceOf(FootballDataUnavailableException.class)
-        .hasMessageNotContaining("private-url");
-    this.server.verify();
+  @Nested
+  @DisplayName("Validación de las respuestas del proveedor")
+  class ResponseValidation {
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"squad\":null}", "{\"squad\":{}}", "not-json", "null"})
+    void rechazaPlantillaIncompleta(String body) {
+      competition("\"League\"");
+      respond("/teams/10", body);
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class);
+      server.verify();
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {"{}", "{\"teams\":null}", "{\"teams\":[{}]}", "{\"teams\":[null]}", "null"})
+    void rechazaListaDeEquiposIncompleta(String body) {
+      respond("/competitions/PL", "{\"name\":\"League\"}");
+      respond("/competitions/PL/teams", body);
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class);
+      server.verify();
+    }
+
+    @Test
+    void aceptaPlantillaCompletaVacia() {
+      competition("\"League\"");
+      respond("/teams/10", "{\"name\":\"Team\",\"squad\":[]}");
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      server.verify();
+    }
+  }
+
+  @Nested
+  @DisplayName("Errores y reintentos del proveedor")
+  class ProviderFailures {
+    @ParameterizedTest
+    @ValueSource(ints = {301, 401, 500, 503})
+    void rechazaErroresHttpSinExponerRespuestaNiReintentar(int status) {
+      server
+          .expect(requestTo("https://provider.example/v4/competitions/PL"))
+          .andRespond(withStatus(HttpStatus.valueOf(status)).body("private-provider-response"));
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class)
+          .hasMessageNotContaining("private-provider-response")
+          .hasMessageNotContaining("provider.example");
+      server.verify();
+    }
+
+    @Test
+    void reintentaElLimiteDeSolicitudesHastaElMaximoConfigurado() {
+      for (int attempt = 0; attempt < 4; attempt++) {
+        server
+            .expect(requestTo("https://provider.example/v4/competitions/PL"))
+            .andRespond(
+                withStatus(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", "0")
+                    .body("private-provider-response"));
+      }
+
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class)
+          .hasMessageNotContaining("private-provider-response")
+          .hasMessageNotContaining("provider.example");
+      server.verify();
+    }
+
+    @Test
+    void traduceTiempoDeEsperaAgotadoSinReintentar() {
+      server
+          .expect(requestTo("https://provider.example/v4/competitions/PL"))
+          .andRespond(withException(new SocketTimeoutException("private-url")));
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class)
+          .hasMessageNotContaining("private-url");
+      server.verify();
+    }
   }
 }

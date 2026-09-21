@@ -61,6 +61,22 @@ include::{snippets}/players-sync-invalid-jwt/http-response.adoc[]
 
 == Autenticación
 
+=== Usuario actual
+
+`GET /api/auth/me` requiere un JWT Bearer válido cuyo sujeto identifique a un
+usuario existente. Devuelve exclusivamente el `id` y el `email` actuales obtenidos
+de persistencia. No recibe body ni parámetros.
+
+include::{snippets}/auth-me-success/http-request.adoc[]
+include::{snippets}/auth-me-success/http-response.adoc[]
+include::{snippets}/auth-me-success/response-fields.adoc[]
+
+Sin token utilizable, con firma inválida, token expirado, sujeto ausente o usuario
+inexistente, Spring Security responde `401 Unauthorized` sin cuerpo.
+
+include::{snippets}/auth-me-unauthorized/http-request.adoc[]
+include::{snippets}/auth-me-unauthorized/http-response.adoc[]
+
 === Registro
 
 ==== Registro exitoso

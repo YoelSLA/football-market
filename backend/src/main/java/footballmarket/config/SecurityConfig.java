@@ -1,5 +1,7 @@
 package footballmarket.config;
 
+import footballmarket.security.PersistedUserJwtAuthenticationConverter;
+import footballmarket.services.AuthenticationService;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -7,10 +9,12 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -60,24 +64,34 @@ public class SecurityConfig {
    * Define autorización, CSRF y autenticación Bearer de la API.
    *
    * @param http configurador de seguridad HTTP
+   * @param authenticationService servicio de identidad persistida
    * @return cadena de filtros configurada
    * @throws Exception si Spring Security no puede construir la cadena
    */
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain securityFilterChain(
+      HttpSecurity http, AuthenticationService authenticationService) throws Exception {
     http
         // API stateless: authentication is handled through JWT Bearer tokens,
         // not browser-managed cookies, so CSRF protection is not required here.
         .csrf(AbstractHttpConfigurer::disable) // NOSONAR
         .cors(Customizer.withDefaults())
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers(
-                        "/api/auth/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
+                auth.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login")
+                    .permitAll()
+                    .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+        .oauth2ResourceServer(
+            oauth2 ->
+                oauth2.jwt(
+                    jwt ->
+                        jwt.jwtAuthenticationConverter(
+                            new PersistedUserJwtAuthenticationConverter(authenticationService))));
 
     return http.build();
   }

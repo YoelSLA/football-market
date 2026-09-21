@@ -2,18 +2,24 @@ package footballmarket.controllers;
 
 import footballmarket.controllers.dtos.requests.LoginRequestDTO;
 import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
+import footballmarket.controllers.dtos.responses.CurrentUserResponseDTO;
 import footballmarket.controllers.dtos.responses.LoginResponseDTO;
 import footballmarket.controllers.mappers.UserMapper;
 import footballmarket.services.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+/** Expone el registro, inicio de sesión y consulta de la identidad actual. */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -23,6 +29,28 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
   private final AuthenticationService authenticationService;
+
+  /**
+   * Consulta la identidad actual del usuario de la sesión JWT validada.
+   *
+   * @param jwt principal autenticado por Spring Security
+   * @return identificador y email persistidos del usuario
+   */
+  @Operation(
+      summary = "Consultar usuario actual",
+      description = "Recupera el id y email actuales del usuario persistido asociado a la sesión.")
+  @SecurityRequirement(name = "bearerAuth")
+  @ApiResponse(responseCode = "200", description = "Identidad actual del usuario.")
+  @ApiResponse(
+      responseCode = "401",
+      description = "La sesión no está autenticada.",
+      content = @Content)
+  @GetMapping("/me")
+  public ResponseEntity<CurrentUserResponseDTO> getCurrentUser(@AuthenticationPrincipal Jwt jwt) {
+    return ResponseEntity.ok(
+        UserMapper.toCurrentUserResponse(
+            this.authenticationService.getCurrentUser(jwt.getSubject())));
+  }
 
   @Operation(
       summary = "Registrar usuario",

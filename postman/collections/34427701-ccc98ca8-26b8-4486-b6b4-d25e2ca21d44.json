@@ -9,6 +9,21 @@
 			"name": "Auth",
 			"item": [
 				{
+					"name": "Current user",
+					"request": {
+						"description": "Consulta el id y email actuales del usuario persistido asociado a la sesión. Una sesión inválida devuelve 401 sin cuerpo.",
+						"method": "GET",
+						"auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{JWT_TOKEN}}", "type": "string"}]},
+						"header": [{"key": "Accept", "value": "application/json"}],
+						"url": {
+							"raw": "{{BASE_URL}}/api/auth/me",
+							"host": ["{{BASE_URL}}"],
+							"path": ["api", "auth", "me"]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Register",
 					"id": "34427701-21bb0ea0-53f9-4d1a-b986-77c0f298dc3a",
 					"request": {

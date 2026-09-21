@@ -4,6 +4,7 @@ import footballmarket.models.User;
 import footballmarket.repositories.UserRepository;
 import footballmarket.security.JWTProvider;
 import footballmarket.services.AuthenticationService;
+import footballmarket.services.exceptions.CurrentUserNotFoundException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
 import java.util.Locale;
@@ -21,6 +22,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JWTProvider jwtProvider;
+
+  /** {@inheritDoc} */
+  @Override
+  @Transactional(readOnly = true)
+  public User getCurrentUser(String subjectEmail) {
+    if (subjectEmail == null || subjectEmail.isBlank()) {
+      throw new CurrentUserNotFoundException();
+    }
+    return this.userRepository
+        .findByEmail(subjectEmail.toLowerCase(Locale.ROOT))
+        .orElseThrow(CurrentUserNotFoundException::new);
+  }
 
   @Override
   /** {@inheritDoc} */
