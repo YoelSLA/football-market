@@ -4,7 +4,7 @@ La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend
 
 ## Guía de lectura
 
-Leer §1–2 y las reglas transversales §12, §14–18 al crear o modificar tests; consultar además la categoría afectada (§3–11 o §13). Para Service, incluir §6. Al modificar tests, consultar también arquitectura §2.6 y el párrafo de Javadoc de tests en §2.8. No cargar categorías ajenas a la tarea.
+Leer §1–2 y las reglas transversales §12, §14–18 al crear o modificar tests; consultar además la categoría afectada (§3–11 o §13). Para Service, incluir §6. Al modificar tests, consultar también [arquitectura del backend](architecture.md) §2.5 y el párrafo de Javadoc de tests en §2.7. No cargar categorías ajenas a la tarea.
 
 ## 1. Principios generales
 
@@ -125,7 +125,7 @@ Bajo `src/test/java/footballmarket/`, ubicar por responsabilidad: `models`, `rep
 
 El uso de `@Nested` de JUnit es obligatorio en todos los tests del backend, en todas las categorías de §2, tanto existentes como nuevos. Agrupar los casos en clases anidadas por funcionalidad o caso de uso; todos los métodos de prueba, incluidos los parametrizados, deben pertenecer a un grupo `@Nested`, sin métodos de prueba directamente en la clase contenedora. Esta regla también aplica cuando solo exista una funcionalidad o un caso de prueba. Nombrar cada grupo de forma que identifique la funcionalidad que verifica.
 
-Está prohibido usar `this` en todo el código de tests, incluidos métodos de prueba, ciclo de vida, helpers y clases `@Nested`. Acceder a atributos y métodos de instancia directamente, sin `this` ni referencias calificadas como `OuterTest.this`. Evitar nombres de parámetros o variables locales que oculten miembros necesarios de la instancia. Esta regla es la excepción explícita a la convención de código productivo de arquitectura §2.6.
+Está prohibido usar `this` en todo el código de tests, incluidos métodos de prueba, ciclo de vida, helpers y clases `@Nested`. Acceder a atributos y métodos de instancia directamente, sin `this` ni referencias calificadas como `OuterTest.this`. Evitar nombres de parámetros o variables locales que oculten miembros necesarios de la instancia. Esta regla es la excepción explícita a la convención de código productivo de [arquitectura del backend](architecture.md) §2.5.
 
 Nombres que expresen condición y resultado; estructura conceptual Arrange/Act/Assert sin comentarios artificiales. `fixtures`, `builders` y `support` se permiten con reutilización real para datos o infraestructura compartida, no como categorías nuevas.
 

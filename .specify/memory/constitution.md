@@ -2,7 +2,7 @@
 
 ## 1. Documentos normativos
 
-Esta constitución contiene las reglas globales. [Arquitectura](../../docs/architecture.md) define roles, dependencias y convenciones; [testing](../../docs/testing.md) define las pruebas del backend. Ambos tienen la misma obligatoriedad cuando resulten aplicables.
+Esta constitución contiene las reglas globales. [Arquitectura común](../../docs/architecture.md), [arquitectura del backend](../../docs/backend/architecture.md) y [arquitectura del frontend](../../docs/frontend/architecture.md) definen roles, dependencias y convenciones; [testing](../../docs/backend/testing.md) define las pruebas del backend. Todos tienen la misma obligatoriedad cuando resulten aplicables.
 
 Consultar solo las secciones pertinentes y sus reglas generales, siguiendo las guías de lectura de cada documento. Las instrucciones operativas están en [AGENTS.md](../../AGENTS.md). Specs y Plans no deben repetir restricciones globales salvo consideraciones específicas de la feature.
 
@@ -28,7 +28,7 @@ Los consumidores dependen de contratos, no de detalles internos. Todo cambio obs
 
 Actualizar en el mismo cambio los elementos afectados: Spec, implementación, tests del backend, DTO, documentación, OpenAPI, Postman y configuración. Resolver discrepancias entre Spec y código según el comportamiento acordado; nunca cambiar la Spec para justificar una desviación no acordada ni alterar tests o controles para ocultar fallos.
 
-Las convenciones HTTP y de documentación del backend se definen en arquitectura §2.7–2.8.
+Las convenciones HTTP y de documentación del backend se definen en arquitectura del backend §2.6–2.7.
 
 ## 5. Idioma
 
