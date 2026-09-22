@@ -13,7 +13,7 @@ public interface AuthenticationService {
   void register(User user);
 
   /**
-   * Autentica credenciales y genera un token.
+   * Auténtica credencial y genera un token.
    *
    * @param email email del usuario
    * @param password contraseña sin codificar

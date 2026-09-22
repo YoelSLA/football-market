@@ -25,9 +25,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/** Define los componentes y reglas de seguridad de la API. */
 @Configuration
 @EnableWebSecurity
-/** Define los componentes y reglas de seguridad de la API. */
 public class SecurityConfig {
 
   /**

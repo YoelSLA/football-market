@@ -7,8 +7,8 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-@Component
 /** Genera tokens JWT firmados para usuarios autenticados. */
+@Component
 public class JWTProvider {
 
   private final SecretKey secretKey;

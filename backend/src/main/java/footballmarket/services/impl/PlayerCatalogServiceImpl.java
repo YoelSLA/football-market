@@ -15,10 +15,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Implementación transaccional del catálogo local de jugadores. */
 @Service
 @Transactional
 @RequiredArgsConstructor
-/** Implementación transaccional del catálogo local de jugadores. */
 public class PlayerCatalogServiceImpl implements PlayerCatalogService {
   private final PlayerRepository playerRepository;
 
@@ -71,8 +71,8 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
         snapshot.obtained(), created, updated, markedInactive, snapshot.discardedInvalid());
   }
 
-  @Transactional(readOnly = true)
   /** {@inheritDoc} */
+  @Transactional(readOnly = true)
   @Override
   public Page<Player> getActivePlayers(int page, int size) {
     return this.playerRepository.findByActiveTrue(PageRequest.of(page, size, Sort.by("id")));

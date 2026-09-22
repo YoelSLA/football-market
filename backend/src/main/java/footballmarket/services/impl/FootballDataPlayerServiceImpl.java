@@ -18,8 +18,8 @@ public class FootballDataPlayerServiceImpl implements FootballDataPlayerService 
   private final FootballDataIntegration footballDataIntegration;
   private final FootballDataProperties footballDataProperties;
 
-  @Override
   /** {@inheritDoc} */
+  @Override
   public PlayerSnapshot fetchSnapshot() {
     Map<Long, Player> players = new LinkedHashMap<>();
 

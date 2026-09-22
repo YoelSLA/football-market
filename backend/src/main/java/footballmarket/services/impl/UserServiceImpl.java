@@ -8,22 +8,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Implementación transaccional de las operaciones administrativas de usuarios. */
 @Service
 @Transactional
 @RequiredArgsConstructor
-/** Implementación transaccional de las operaciones administrativas de usuarios. */
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
 
-  @Override
   /** {@inheritDoc} */
+  @Override
   public List<User> getAllUsers() {
     return this.userRepository.findAll();
   }
 
-  @Override
   /** {@inheritDoc} */
+  @Override
   public void deteleAllUsers() {
     this.userRepository.deleteAll();
   }

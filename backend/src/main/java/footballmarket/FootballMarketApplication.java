@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+/** Punto de entrada de la aplicación Football Market. */
 @SpringBootApplication
 @ConfigurationPropertiesScan
-/** Punto de entrada de la aplicación Football Market. */
 public class FootballMarketApplication {
 
   /**

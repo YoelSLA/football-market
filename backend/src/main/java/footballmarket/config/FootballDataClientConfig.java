@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
-@Configuration
 /** Configura el cliente HTTP seguro utilizado para comunicarse con Football-Data. */
+@Configuration
 public class FootballDataClientConfig {
 
   /**

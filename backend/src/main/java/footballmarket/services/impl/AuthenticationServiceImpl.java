@@ -13,10 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Implementación transaccional del registro y autenticación. */
 @Service
 @Transactional
 @RequiredArgsConstructor
-/** Implementación transaccional del registro y autenticación. */
 public class AuthenticationServiceImpl implements AuthenticationService {
 
   private final UserRepository userRepository;
@@ -35,8 +35,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         .orElseThrow(CurrentUserNotFoundException::new);
   }
 
-  @Override
   /** {@inheritDoc} */
+  @Override
   public void register(User user) {
     String normalizedEmail = user.getEmail().toLowerCase(Locale.ROOT);
 
@@ -50,8 +50,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     this.userRepository.save(user);
   }
 
-  @Override
   /** {@inheritDoc} */
+  @Override
   public String login(String email, String password) {
     String normalizedEmail = email.toLowerCase(Locale.ROOT);
 

@@ -6,13 +6,13 @@ Consultar §1–2 en toda tarea que involucre arquitectura, estructura o depende
 
 ## 1. Reglas comunes y alcance de matrices
 
-Crear o dividir componentes solo por responsabilidades reales, cohesión o necesidad arquitectónica, nunca por cantidad de líneas o archivos. Las estructuras enumeradas no obligan a crear carpetas o roles vacíos. Incorporar comportamiento al responsable correspondiente y exponer solo contratos necesarios.
+Crear o dividir componentes solo por responsabilidades, cohesión o necesidad arquitectónica, nunca por su tamaño. Los roles y estructuras definidos no obligan a crear componentes sin una responsabilidad real. Incorporar comportamiento al responsable correspondiente y exponer solo los contratos necesarios.
 
-Las matrices regulan dependencias entre roles arquitectónicos del proyecto, no todos los tipos utilizados. Java/TypeScript, colecciones, value types y colaboradores técnicos como `List`, `Clock`, `PasswordEncoder`, `JwtEncoder` o configuración pueden utilizarse cuando sean necesarios y compatibles con la responsabilidad del componente. Su ausencia en la matriz no justifica prohibirlos o eliminarlos.
+Las matrices regulan exclusivamente las dependencias entre los roles arquitectónicos definidos para cada área del proyecto. No regulan dependencias que no constituyan roles arquitectónicos. La ausencia de estas últimas en una matriz no debe interpretarse como una prohibición ni justificar su eliminación; su uso debe ser necesario y compatible con la responsabilidad del componente.
 
-Entre los roles regulados, toda dependencia no autorizada está prohibida. Ni colaboradores técnicos, frameworks, dependencias transitivas ni intermediarios permiten eludir restricciones expresas. No se permiten ciclos.
+Toda dependencia no autorizada entre roles regulados está prohibida. Las restricciones se aplican tanto a dependencias directas como indirectas y no pueden eludirse mediante intermediarios. No se permiten ciclos entre roles arquitectónicos.
 
-La arquitectura prevalece sobre estructuras existentes: refactorizar incompatibilidades dentro del alcance, sin conservarlas por costumbre. Toda nueva área debe definir responsabilidades, componentes y dependencias. Los vacíos normativos se resuelven según la gobernanza de la constitución.
+La arquitectura definida prevalece sobre prácticas o estructuras existentes incompatibles. Las incompatibilidades dentro del alcance de la tarea deben corregirse y no conservarse por precedente. Toda nueva área arquitectónica debe definir responsabilidades, componentes y dependencias. Los vacíos normativos se resuelven según la gobernanza de la constitución.
 
 ## 2. Convenciones
 
