@@ -2,7 +2,7 @@
 
 ## Guía de lectura
 
-Consultar §1–2 en toda tarea de código, estructura o dependencias. Para backend, continuar con la [arquitectura del backend](backend/architecture.md); para frontend, con la [arquitectura del frontend](frontend/architecture.md). No es necesario leer el área ajena a la tarea.
+Consultar §1–2 en toda tarea que involucre arquitectura, estructura o dependencias arquitectónicas. Para backend, consultar la [arquitectura del backend](backend/architecture.md); para frontend, consultar la [arquitectura del frontend](frontend/architecture.md). Para conocer o modificar el stack, tecnologías, versiones o dependencias, consultar [tecnologías del backend](backend/technologies.md) o [tecnologías del frontend](frontend/technologies.md), según corresponda. No es necesario consultar documentos tecnológicos ni del área ajena cuando la tarea no los afecte.
 
 ## 1. Reglas comunes y alcance de matrices
 

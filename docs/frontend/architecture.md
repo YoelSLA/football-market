@@ -2,7 +2,7 @@
 
 ## Guía de lectura
 
-Consultar primero las [reglas arquitectónicas comunes](../architecture.md) y luego las secciones pertinentes de este documento. No es necesario leer el área ajena a la tarea.
+Consultar primero las [reglas arquitectónicas comunes](../architecture.md) y luego las secciones pertinentes de este documento. Para conocer o modificar el stack, las versiones o las dependencias del frontend, consultar [tecnologías del frontend](technologies.md). No es necesario leer ese documento ni el área ajena cuando la tarea no los afecte.
 
 ## 1. Arquitectura
 
@@ -196,9 +196,3 @@ Aplican las [reglas arquitectónicas comunes](../architecture.md). Restricciones
 
 -   ningún módulo puede utilizar `app`, barrels o intermediarios para
     evadir estas reglas.
-
-## 2. Stack y versiones
-
-Las versiones efectivas se consultan en `frontend/package.json`. Las restricciones aprobadas siguientes no autorizan actualizar dependencias fuera de la tarea; cualquier discrepancia se resuelve según la constitución.
-
-TypeScript, React, TanStack Query para estado remoto y CSS Modules o SCSS Modules para estilos colocalizados cuando corresponda.

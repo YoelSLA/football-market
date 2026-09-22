@@ -2,7 +2,7 @@
 
 ## Guía de lectura
 
-Consultar primero las [reglas arquitectónicas comunes](../architecture.md). Leer §1 y las convenciones pertinentes de §2; para integraciones externas, también §3. El stack está en §4. No es necesario leer el área ajena a la tarea.
+Consultar primero las [reglas arquitectónicas comunes](../architecture.md). Leer §1 y las convenciones pertinentes de §2; para integraciones externas, también §3. Para conocer o modificar el stack, las versiones o las dependencias del backend, consultar [tecnologías del backend](technologies.md). No es necesario leer ese documento ni el área ajena cuando la tarea no los afecte.
 
 ## 1. Arquitectura
 
@@ -108,9 +108,3 @@ Toda comunicación externa pasa por Integration, que encapsula configuración, c
 Validar respuestas externas y distinguir errores técnicos de integración de errores de dominio. No inventar datos ni alterar silenciosamente el comportamiento ante fallos. Usar timeouts cuando la tecnología lo permita; retries solo con operación segura y límite explícito, nunca por defecto.
 
 Resolver indisponibilidad según requisitos funcionales; no introducir automáticamente cachés, degradaciones o alternativas sin justificación funcional o técnica. Aplican las reglas globales de seguridad de la constitución.
-
-## 4. Stack y versiones
-
-Las versiones efectivas se consultan en Gradle y su catálogo/wrapper. Las restricciones aprobadas siguientes no autorizan actualizar dependencias fuera de la tarea; cualquier discrepancia se resuelve según la constitución.
-
-Java 21, Gradle 8.14+, Spring Boot 4.1.1, Spring Web, Spring Security, OAuth2 Resource Server, Spring Data JPA, PostgreSQL 18.x, JDBC, Flyway, Jakarta Validation 3.1.1 y SpringDoc OpenAPI 3.1.0. Testing: Spring Boot Test, Spring REST Docs, JUnit, Mockito, AssertJ y Testcontainers. SonarQube es opcional según la constitución.

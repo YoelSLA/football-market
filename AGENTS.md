@@ -6,7 +6,8 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 
 | Tarea | Contexto adicional |
 | --- | --- |
-| Código, estructura o dependencias | [Arquitectura común](docs/architecture.md): guía de lectura al inicio. |
+| Código, estructura o dependencias arquitectónicas | [Arquitectura común](docs/architecture.md): guía de lectura al inicio. |
+| Stack, tecnologías o dependencias de herramientas/librerías | [Tecnologías del backend](docs/backend/technologies.md) o [tecnologías del frontend](docs/frontend/technologies.md), según el área afectada. |
 | Área backend afectada | [Instrucciones del backend](backend/AGENTS.md) y el contexto que estas indiquen. |
 | Área frontend afectada | [Instrucciones del frontend](frontend/AGENTS.md) y el contexto que estas indiquen. |
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
