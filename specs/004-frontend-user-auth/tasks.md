@@ -14,24 +14,24 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 **Purpose**: Completar la base técnica necesaria para la feature de autenticación.
 
-- [ ] T001 Revisar la configuración existente de React, TypeScript, Sass, React Router, TanStack Query, React Hook Form, Zod y Axios en `frontend/package.json` y `frontend/src/main.tsx`
-- [ ] T002 Configurar el cliente HTTP compartido y sus tipos de error en `frontend/src/shared/http/` sin mover URLs de autenticación fuera del service
-- [ ] T003 [P] Configurar el adaptador de almacenamiento de `localStorage` en `frontend/src/infrastructure/storage/`
-- [ ] T004 [P] Configurar el cliente de TanStack Query en `frontend/src/app/query/queryClient.ts`
+- [X] T001 Revisar la configuración existente de React, TypeScript, Sass, React Router, TanStack Query, React Hook Form, Zod y Axios en `frontend/package.json` y `frontend/src/main.tsx`
+- [X] T002 Configurar el cliente HTTP compartido y sus tipos de error en `frontend/src/shared/http/` sin mover URLs de autenticación fuera del service
+- [X] T003 [P] Configurar el adaptador de almacenamiento de `localStorage` en `frontend/src/infrastructure/storage/`
+- [X] T004 [P] Configurar el cliente de TanStack Query en `frontend/src/app/query/queryClient.ts`
 
 ## Phase 2: Foundational (prerrequisitos bloqueantes)
 
 **Purpose**: Crear contratos, modelos y estado común de sesión antes de las stories.
 
-- [ ] T005 Crear los DTOs y tipos públicos de autenticación en `frontend/src/features/auth/types/`
-- [ ] T006 [P] Crear los modelos de `CurrentUser`, `AuthSession` y formularios en `frontend/src/features/auth/models/`
-- [ ] T007 [P] Implementar los mappers entre DTOs y modelos en `frontend/src/features/auth/mappers/`
-- [ ] T008 Implementar schemas Zod y tipos de formulario de login y registro en `frontend/src/features/auth/form/`
-- [ ] T009 Implementar `AuthService` con `POST /api/auth/login`, `POST /api/auth/register` y `GET /api/auth/me` en `frontend/src/features/auth/services/AuthService.ts`
-- [ ] T010 Implementar la persistencia e invalidación del JWT mediante el adaptador de almacenamiento en `frontend/src/features/auth/services/AuthSessionStorage.ts`
-- [ ] T011 Crear el contexto y hook de autenticación en `frontend/src/features/auth/hooks/useAuth.tsx`, con `unknown` durante la inicialización, `checking` mientras se consulta `/me`, `authenticated` tras `200` y `anonymous` sin sesión restaurable o tras `401`
-- [ ] T012 Configurar el interceptor funcional para enviar `Authorization: Bearer <token>` e invalidar la sesión ante `401` en `frontend/src/shared/http/`
-- [ ] T013 Exportar la API pública de la feature en `frontend/src/features/auth/index.ts`
+- [X] T005 Crear los DTOs y tipos públicos de autenticación en `frontend/src/features/auth/types/`
+- [X] T006 [P] Crear los modelos de `CurrentUser`, `AuthSession` y formularios en `frontend/src/features/auth/models/`
+- [X] T007 [P] Implementar los mappers entre DTOs y modelos en `frontend/src/features/auth/mappers/`
+- [X] T008 Implementar schemas Zod y tipos de formulario de login y registro en `frontend/src/features/auth/form/`
+- [X] T009 Implementar `AuthService` con `POST /api/auth/login`, `POST /api/auth/register` y `GET /api/auth/me` en `frontend/src/features/auth/services/AuthService.ts`
+- [X] T010 Implementar la persistencia e invalidación del JWT mediante el adaptador de almacenamiento en `frontend/src/features/auth/services/AuthSessionStorage.ts`
+- [X] T011 Crear el contexto y hook de autenticación en `frontend/src/features/auth/hooks/useAuth.tsx`, con `unknown` durante la inicialización, `checking` mientras se consulta `/me`, `authenticated` tras `200` y `anonymous` sin sesión restaurable o tras `401`
+- [X] T012 Configurar el interceptor funcional para enviar `Authorization: Bearer <token>` e invalidar la sesión ante `401` en `frontend/src/shared/http/`
+- [X] T013 Exportar la API pública de la feature en `frontend/src/features/auth/index.ts`
 
 **Checkpoint**: La infraestructura de sesión, contratos y estado de autenticación está disponible; las stories pueden comenzar.
 
@@ -43,10 +43,10 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Implementar `RegisterPage` con formulario, enlaces a login, estados de carga y mensajes en `frontend/src/features/auth/pages/RegisterPage.tsx`
-- [ ] T015 [US1] Implementar la mutación de registro mediante TanStack Query en `frontend/src/features/auth/hooks/useRegister.ts`
-- [ ] T016 [US1] Conectar la validación Zod, el bloqueo de envíos simultáneos y el payload sin confirmación en `frontend/src/features/auth/hooks/useRegister.ts`
-- [ ] T017 [US1] Traducir respuestas `400`, `409` y fallos de comunicación a feedback recuperable con reintento manual en `frontend/src/features/auth/hooks/useRegister.ts`
+- [X] T014 [P] [US1] Implementar `RegisterPage` con formulario, enlaces a login, estados de carga y mensajes en `frontend/src/features/auth/pages/RegisterPage.tsx`
+- [X] T015 [US1] Implementar la mutación de registro mediante TanStack Query en `frontend/src/features/auth/hooks/useRegister.ts`
+- [X] T016 [US1] Conectar la validación Zod, el bloqueo de envíos simultáneos y el payload sin confirmación en `frontend/src/features/auth/hooks/useRegister.ts`
+- [X] T017 [US1] Traducir respuestas `400`, `409` y fallos de comunicación a feedback recuperable con reintento manual en `frontend/src/features/auth/hooks/useRegister.ts`
 
 **Checkpoint**: El registro funciona independientemente sin iniciar sesión ni proteger contenido privado.
 
@@ -58,11 +58,11 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 ### Implementation for User Story 2
 
-- [ ] T018 [P] [US2] Implementar `LoginPage` con formulario, enlace a registro, estados de carga y feedback en `frontend/src/features/auth/pages/LoginPage.tsx`
-- [ ] T019 [US2] Implementar la mutación de login y la extracción del token en `frontend/src/features/auth/hooks/useLogin.ts`
-- [ ] T020 [US2] Persistir el token, actualizar el estado autenticado y navegar a `/home` en `frontend/src/features/auth/hooks/useLogin.ts`
-- [ ] T021 [US2] Traducir respuestas `400`, `401` y fallos de comunicación a feedback recuperable con reintento manual en `frontend/src/features/auth/hooks/useLogin.ts`
-- [ ] T022 [P] [US2] Crear `HomePage` temporal con confirmación de acceso y espacio para cerrar sesión en `frontend/src/features/auth/pages/HomePage.tsx`
+- [X] T018 [P] [US2] Implementar `LoginPage` con formulario, enlace a registro, estados de carga y feedback en `frontend/src/features/auth/pages/LoginPage.tsx`
+- [X] T019 [US2] Implementar la mutación de login y la extracción del token en `frontend/src/features/auth/hooks/useLogin.ts`
+- [X] T020 [US2] Persistir el token, actualizar el estado autenticado y navegar a `/home` en `frontend/src/features/auth/hooks/useLogin.ts`
+- [X] T021 [US2] Traducir respuestas `400`, `401` y fallos de comunicación a feedback recuperable con reintento manual en `frontend/src/features/auth/hooks/useLogin.ts`
+- [X] T022 [P] [US2] Crear `HomePage` temporal con confirmación de acceso y espacio para cerrar sesión en `frontend/src/features/auth/pages/HomePage.tsx`
 
 **Checkpoint**: El login conduce a un home autenticado y los errores de credenciales son visibles.
 
@@ -74,13 +74,13 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 ### Implementation for User Story 3
 
-- [ ] T023 [P] [US3] Implementar la consulta de usuario actual con TanStack Query y mapper de `/me` en `frontend/src/features/auth/hooks/useCurrentUser.ts`
-- [ ] T024 [US3] Implementar la restauración de sesión y las transiciones `unknown → checking → authenticated` y `unknown → anonymous` en `frontend/src/features/auth/hooks/useAuth.tsx`
-- [ ] T025 [US3] Invalidar tokens ausentes, ilegibles o expirados antes de consultar `/me` en `frontend/src/features/auth/hooks/useAuth.tsx`
-- [ ] T026 [US3] Transicionar `unknown → checking` al detectar un JWT restaurable y mantener `checking` en fallos de comunicación, informando y ofreciendo reintento sin invalidar el token en `frontend/src/features/auth/hooks/useAuth.tsx`
-- [ ] T027 [US3] Invalidar la sesión y navegar a login ante `401` de `/me` o recursos protegidos en `frontend/src/features/auth/hooks/useAuth.tsx`
-- [ ] T028 [US3] Implementar guards de `/home`, `/login` y `/register` con estados de verificación y redirección en `frontend/src/app/router/AppRouter.tsx`
-- [ ] T029 [US3] Añadir la pantalla de verificación y reintento de sesión en `frontend/src/features/auth/components/SessionChecking.tsx`
+- [X] T023 [P] [US3] Implementar la consulta de usuario actual con TanStack Query y mapper de `/me` en `frontend/src/features/auth/hooks/useCurrentUser.ts`
+- [X] T024 [US3] Implementar la restauración de sesión y las transiciones `unknown → checking → authenticated` y `unknown → anonymous` en `frontend/src/features/auth/hooks/useAuth.tsx`
+- [X] T025 [US3] Invalidar tokens ausentes, ilegibles o expirados antes de consultar `/me` en `frontend/src/features/auth/hooks/useAuth.tsx`
+- [X] T026 [US3] Transicionar `unknown → checking` al detectar un JWT restaurable y mantener `checking` en fallos de comunicación, informando y ofreciendo reintento sin invalidar el token en `frontend/src/features/auth/hooks/useAuth.tsx`
+- [X] T027 [US3] Invalidar la sesión y navegar a login ante `401` de `/me` o recursos protegidos en `frontend/src/features/auth/hooks/useAuth.tsx`
+- [X] T028 [US3] Implementar guards de `/home`, `/login` y `/register` con estados de verificación y redirección en `frontend/src/app/router/AppRouter.tsx`
+- [X] T029 [US3] Añadir la pantalla de verificación y reintento de sesión en `frontend/src/features/auth/components/SessionChecking.tsx`
 
 **Checkpoint**: Las rutas privadas y públicas respetan el estado real de sesión y los fallos de `/me` no exponen contenido privado.
 
@@ -92,9 +92,9 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 ### Implementation for User Story 4
 
-- [ ] T030 [P] [US4] Añadir acción de cierre de sesión en `frontend/src/features/auth/components/LogoutButton.tsx`
-- [ ] T031 [US4] Implementar invalidación local, limpieza de estado y navegación a login en `frontend/src/features/auth/hooks/useLogout.ts`
-- [ ] T032 [US4] Conectar la acción de cierre con el estado autenticado en `frontend/src/features/auth/pages/HomePage.tsx`
+- [X] T030 [P] [US4] Añadir acción de cierre de sesión en `frontend/src/features/auth/components/LogoutButton.tsx`
+- [X] T031 [US4] Implementar invalidación local, limpieza de estado y navegación a login en `frontend/src/features/auth/hooks/useLogout.ts`
+- [X] T032 [US4] Conectar la acción de cierre con el estado autenticado en `frontend/src/features/auth/pages/HomePage.tsx`
 
 **Checkpoint**: El cierre de sesión invalida la sesión local de forma independiente del backend.
 
@@ -106,10 +106,10 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 ### Implementation for User Story 5
 
-- [ ] T033 [P] [US5] Crear componentes compartidos de layout y sección visual claramente separados en `frontend/src/features/auth/components/AuthLayout.tsx` y `frontend/src/features/auth/components/AuthVisualPanel.tsx`
-- [ ] T034 [US5] Aplicar estilos compartidos, responsive y prevention de desbordamiento horizontal en `frontend/src/styles/index.scss`
-- [ ] T035 [US5] Integrar layout, separación visual entre contenido y formulario y estados de carga/error visibles sin obstruir la página en `frontend/src/features/auth/pages/LoginPage.tsx` y `frontend/src/features/auth/pages/RegisterPage.tsx`
-- [ ] T036 [US5] Asegurar bloqueo de acciones y feedback visible durante envíos en `frontend/src/features/auth/form/`
+- [X] T033 [P] [US5] Crear componentes compartidos de layout y sección visual claramente separados en `frontend/src/features/auth/components/AuthLayout.tsx` y `frontend/src/features/auth/components/AuthVisualPanel.tsx`
+- [X] T034 [US5] Aplicar estilos compartidos, responsive y prevention de desbordamiento horizontal en `frontend/src/styles/index.scss`
+- [X] T035 [US5] Integrar layout, separación visual entre contenido y formulario y estados de carga/error visibles sin obstruir la página en `frontend/src/features/auth/pages/LoginPage.tsx` y `frontend/src/features/auth/pages/RegisterPage.tsx`
+- [X] T036 [US5] Asegurar bloqueo de acciones y feedback visible durante envíos en `frontend/src/features/auth/form/`
 
 **Checkpoint**: Las dos páginas mantienen coherencia visual y son utilizables sin desplazamiento horizontal.
 
@@ -117,11 +117,11 @@ description: "Lista de tareas para la autenticación de usuarios en el frontend"
 
 **Purpose**: Revisar coherencia, seguridad y flujo completo sin añadir alcance.
 
-- [ ] T037 Revisar que ningún componente o página accede directamente a HTTP, `localStorage` o al token en `frontend/src/features/auth/`
-- [ ] T038 Revisar normalización de errores `400`, `401`, `409` y comunicación en `frontend/src/shared/http/` y `frontend/src/features/auth/`
-- [ ] T039 Revisar guards, redirecciones y limpieza de sesión en `frontend/src/app/router/AppRouter.tsx` y `frontend/src/features/auth/hooks/`
+- [X] T037 Revisar que ningún componente o página accede directamente a HTTP, `localStorage` o al token en `frontend/src/features/auth/`
+- [X] T038 Revisar normalización de errores `400`, `401`, `409` y comunicación en `frontend/src/shared/http/` y `frontend/src/features/auth/`
+- [X] T039 Revisar guards, redirecciones y limpieza de sesión en `frontend/src/app/router/AppRouter.tsx` y `frontend/src/features/auth/hooks/`
 - [ ] T040 Validar manualmente el flujo completo siguiendo `specs/004-frontend-user-auth/quickstart.md`
-- [ ] T041 Ejecutar `npm run build` desde `frontend/` como único control de código permitido
+- [X] T041 Ejecutar `npm run build` desde `frontend/` como único control de código permitido
 
 ## Dependencias y orden de ejecución
 
@@ -204,3 +204,12 @@ T032 [US4] HomePage integration
 - Cada tarea incluye ruta exacta y las tareas de story están etiquetadas con su historia.
 - No se generan tests frontend ni tareas de infraestructura de testing.
 - El build frontend no acredita la ejecución de los flujos manuales de quickstart.
+
+## Registro de implementación y verificación
+
+- T001–T039 implementadas y revisadas estáticamente; T041 completada con `npm run build` (TypeScript y Vite) el 2026-09-23. El primer intento no encontró `tsc` por ausencia de dependencias; se instalaron desde el lockfile mediante `npm ci --ignore-scripts --no-audit --no-fund` y el siguiente build terminó correctamente.
+- T034 mantiene únicamente ajustes base en `src/styles/index.scss`; los estilos de autenticación y sus reglas responsive están colocalizados en módulos SCSS según la arquitectura vigente.
+- T017/T021/T038 interpretan los errores técnicos dentro del servicio de la feature y presentan su mensaje desde los hooks, sin hacer que los hooks dependan de HTTP o DTO.
+- T040 queda pendiente del usuario: ejecutar los escenarios de `quickstart.md` con el backend disponible, incluida la revisión visual en escritorio/móvil. No se crearon ni ejecutaron tests de frontend.
+- Los checklists se conservaron intactos; el usuario autorizó continuar con cuatro criterios de revisión pendientes.
+- No existe `.specify/extensions.yml`; no hay hooks de implementación que ejecutar.

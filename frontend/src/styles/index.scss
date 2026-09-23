@@ -38,7 +38,7 @@ html {
 }
 
 body {
-	min-width: 320px;
+	min-width: 0;
 	min-height: 100vh;
 }
 
@@ -75,4 +75,9 @@ a {
 
 button:not(:disabled) {
 	cursor: pointer;
+}
+
+:focus-visible {
+	outline: 3px solid #6484ec;
+	outline-offset: 3px;
 }

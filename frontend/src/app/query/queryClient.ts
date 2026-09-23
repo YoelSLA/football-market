@@ -9,5 +9,9 @@ export const queryClient = new QueryClient({
 			refetchOnWindowFocus: false,
 			staleTime: THIRTY_SECONDS,
 		},
+		mutations: {
+			retry: false,
+			gcTime: 0,
+		},
 	},
 });

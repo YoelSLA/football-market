@@ -15,9 +15,9 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 | Vite y plugin React | Vite 8.3.0; plugin React 6.1.1 | Servidor de desarrollo, preview y generación del build, con procesamiento de JSX/TSX y transformaciones de React mediante su plugin. |
 | TanStack Query | 5.103.1 | Configuración global del estado remoto, caché y políticas de queries; base para queries, mutations e invalidaciones de features. |
 | React Router DOM | 7.18.4 | Router del navegador, asociación de rutas globales y redirecciones de la aplicación. |
-| Axios | 1.20.0 | Dependencia instalada para el cliente HTTP compartido; todavía no está referenciada por el código fuente actual. |
-| React Hook Form y resolvers | React Hook Form 7.88.0; resolvers 5.9.1 | Dependencias instaladas para encapsular estado y comportamiento de formularios e integrar sus schemas; todavía no están referenciadas por el código bajo `src`. |
-| Zod | 4.6.5 | Dependencia instalada para schemas y validación de formularios; todavía no está referenciada por el código fuente actual. |
+| Axios | 1.20.0 | Cliente HTTP compartido, incorporación de credenciales Bearer en solicitudes protegidas y normalización técnica de errores; utilizado por el servicio de autenticación. |
+| React Hook Form y resolvers | React Hook Form 7.88.0; resolvers 5.9.1 | Estado y comportamiento de los formularios de login y registro mediante Form Hooks, con integración de schemas Zod. |
+| Zod | 4.6.5 | Schemas de validación de email, contraseña y confirmación de los formularios de autenticación. |
 | Sass | 1.104.1 | Compilación de los estilos SCSS globales y soporte para los módulos SCSS previstos por la arquitectura. |
 | Biome | 2.5.14 | Linting, formateo, organización de imports y controles recomendados sobre el frontend. |
 

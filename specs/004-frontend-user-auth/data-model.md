@@ -5,7 +5,7 @@
 ### Cuenta de usuario
 - `id`: identificador del usuario.
 - `email`: correo de la cuenta.
-- `password`: credencial solo durante login/registro; nunca se conserva después de enviar.
+- `password`: credencial mantenida únicamente en el formulario de login/registro; ante un error se conserva para permitir corregir o reintentar según FR-005/FR-008, y se descarta al completar la operación o abandonar el formulario.
 - La contraseña no se almacena en estado persistente.
 
 ### Sesión
