@@ -1,11 +1,19 @@
-description = "Create or update the feature specification from a natural language feature description."
-
-prompt = """
+---
+description: Create or update the feature specification from a natural language feature description.
+handoffs:
+  - label: Build Technical Plan
+    agent: speckit.plan
+    prompt: Create a plan for the spec. I am building with...
+  - label: Clarify Spec Requirements
+    agent: speckit.clarify
+    prompt: Clarify specification requirements
+    send: true
+---
 
 ## User Input
 
 ```text
-{{args}}
+$ARGUMENTS
 ```
 
 You **MUST** consider the user input before proceeding (if not empty).
@@ -47,7 +55,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `{{args}}` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
+The text the user typed after `/speckit.specify` in the triggering message **is** the feature description. Assume you always have it available in this conversation even if `$ARGUMENTS` appears literally below. Do not ask the user to repeat it unless they provided an empty command.
 
 Given that feature description, do this:
 
@@ -334,4 +342,4 @@ Success criteria must be:
 
 - [ ] Specification written to `SPEC_FILE` and validated against quality checklist
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
-- [ ] Completion reported to user with feature directory, spec file path, and checklist results"""
+- [ ] Completion reported to user with feature directory, spec file path, and checklist results

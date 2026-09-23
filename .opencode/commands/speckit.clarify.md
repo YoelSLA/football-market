@@ -1,11 +1,15 @@
-description = "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
-
-prompt = """
+---
+description: Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec.
+handoffs:
+  - label: Build Technical Plan
+    agent: speckit.plan
+    prompt: Create a plan for the spec. I am building with...
+---
 
 ## User Input
 
 ```text
-{{args}}
+$ARGUMENTS
 ```
 
 You **MUST** consider the user input before proceeding (if not empty).
@@ -58,7 +62,7 @@ Execution steps:
    - `FEATURE_SPEC`
    - (Optionally capture `IMPL_PLAN`, `TASKS` for future chained flows.)
    - If JSON parsing fails, abort and instruct user to re-run `/speckit.specify` or verify feature branch environment.
-   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\\''m Groot' (or double-quote if possible: "I'm Groot").
+   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **IF EXISTS**: Load `.specify/memory/constitution.md` for project principles and governance constraints.
 
@@ -228,7 +232,7 @@ Behavior rules:
 - If no questions asked due to full coverage, output a compact coverage summary (all categories Clear) then suggest advancing.
 - If quota reached with unresolved high-impact categories remaining, explicitly flag them under Deferred with rationale.
 
-Context for prioritization: {{args}}
+Context for prioritization: $ARGUMENTS
 
 ## Mandatory Post-Execution Hooks
 
@@ -280,4 +284,4 @@ Report completion (after questioning loop ends or early termination):
 - [ ] Spec ambiguities identified and clarifications integrated into spec file
 - [ ] Spec quality checklist re-validated against updated spec (if `FEATURE_DIR/checklists/requirements.md` exists)
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
-- [ ] Completion reported to user with questions answered, sections touched, checklist status, and coverage summary"""
+- [ ] Completion reported to user with questions answered, sections touched, checklist status, and coverage summary

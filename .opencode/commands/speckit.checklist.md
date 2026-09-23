@@ -1,6 +1,6 @@
-description = "Generate a custom checklist for the current feature based on user requirements."
-
-prompt = """
+---
+description: Generate a custom checklist for the current feature based on user requirements.
+---
 
 ## Checklist Purpose: "Unit Tests for English"
 
@@ -35,7 +35,7 @@ prompt = """
 ## User Input
 
 ```text
-{{args}}
+$ARGUMENTS
 ```
 
 You **MUST** consider the user input before proceeding (if not empty).
@@ -79,14 +79,14 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. **Setup**: Run `.specify/scripts/bash/check-prerequisites.sh --json --template checklist-template` from repo root and parse JSON for FEATURE_DIR, AVAILABLE_DOCS list, and TEMPLATE_CONTENT.
    - All file paths must be absolute.
-   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\\''m Groot' (or double-quote if possible: "I'm Groot").
+   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
 2. **IF EXISTS**: Load `.specify/memory/constitution.md` for project principles and governance constraints.
 
 3. **Clarify intent (dynamic)**: Derive up to THREE initial contextual clarifying questions (no pre-baked catalog). They MUST:
    - Be generated from the user's phrasing + extracted signals from spec/plan/tasks
    - Only ask about information that materially changes checklist content
-   - Be skipped individually if already unambiguous in `{{args}}`
+   - Be skipped individually if already unambiguous in `$ARGUMENTS`
    - Prefer precision over breadth
 
    Generation algorithm:
@@ -115,7 +115,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    Output the questions (label Q1/Q2/Q3). After answers: if ≥2 scenario classes (Alternate / Exception / Recovery / Non-Functional domain) remain unclear, you MAY ask up to TWO more targeted follow‑ups (Q4/Q5) with a one-line justification each (e.g., "Unresolved recovery path risk"). Do not exceed five total questions. Skip escalation if user explicitly declines more.
 
-4. **Understand user request**: Combine `{{args}}` + clarifying answers:
+4. **Understand user request**: Combine `$ARGUMENTS` + clarifying answers:
    - Derive checklist theme (e.g., security, review, deploy, ux)
    - Consolidate explicit must-have items mentioned by user
    - Map focus selections to category scaffolding
@@ -372,4 +372,4 @@ Check if `.specify/extensions.yml` exists in the project root.
     EXECUTE_COMMAND: {command}
     ```
     After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
-- If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently"""
+- If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
