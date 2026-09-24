@@ -1,203 +1,146 @@
 .auth-visual-panel {
-	min-width: 0;
-	overflow: hidden;
-	position: relative;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	min-height: 42rem;
-	padding: clamp(1.5rem, 3vw, 3rem);
-	border-radius: 1rem;
-	background: radial-gradient(ellipse at 85% 60%, #456ff1, transparent 65%), linear-gradient(140deg, #111c45, #243d91);
-	color: white;
+  position: relative;
+  min-width: 0;
+  min-height: 42rem;
+  overflow: hidden;
 
-	&__title {
-		margin-top: 1.5rem;
-		font-size: clamp(1.75rem, 3vw, 2.6rem);
-		line-height: 1.12;
-		letter-spacing: -.05em;
-		position: relative;
-		z-index: 1;
-	}
+  border-radius: 1rem;
+  background: #111c45;
+  color: white;
 
-	&__eyebrow {
-	font-size: .65rem;
-	letter-spacing: .18em;
-	color: #c6d3ff;
-	font-weight: 700;
-}
+  &__backgrounds {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
 
-	&__description {
-	margin-top: 1rem;
-	font-size: .9rem;
-	color: #c6d3ff;
-	max-width: 22rem;
-}
+    overflow: hidden;
+  }
 
-	&__scene {
-	min-height: 21rem;
-	position: relative;
-	margin-top: 2rem;
-}
+  &__background {
+    position: absolute;
+    inset: 0;
 
-	&__pitch {
-	position: absolute;
-	inset: 25% -35% -10%;
-	border: 1px solid #b6c6ff60;
-	transform: rotate(-20deg) skew(12deg);
-	background: repeating-linear-gradient(90deg, #6e8aea16 0 50px, #203b7710 50px 100px);
+    width: 100%;
+    height: 100%;
 
-	&-circle {
-		position: absolute;
-		width: 8rem;
-		height: 8rem;
-		border: 1px solid #b6c6ff60;
-		border-radius: 50%;
-		left: 35%;
-		top: 25%;
-	}
-}
+    object-fit: cover;
+    object-position: center;
 
-	&__player-card {
-	position: absolute;
-	width: 11.5rem;
-	left: 38%;
-	top: 1.3rem;
-	transform: rotate(12deg);
-	padding: 1rem;
-	border: 1px solid #ffffff90;
-	border-radius: 1rem;
-	background: linear-gradient(135deg, #eef3ff, #a7c0ff);
-	box-shadow: 0 1rem 2rem #0d153660;
-	color: #172858;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
 
-	&-caption {
-		font-size: .58rem;
-		font-weight: 800;
-		letter-spacing: .08em;
-		margin-top: .8rem;
-		text-align: center;
-	}
-}
+    user-select: none;
+    pointer-events: none;
 
-	&__card-top {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	font-size: .75rem;
-	font-weight: 800;
-}
+    &--active {
+      opacity: 1;
+    }
+  }
 
-	&__card-number {
-	font-size: 1.7rem;
-	font-weight: 800;
-	line-height: 1;
-}
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
 
-	&__shirt {
-	width: 6.5rem;
-	height: 7rem;
-	margin: .75rem auto;
-	display: grid;
-	place-items: center;
-	clip-path: polygon(25% 0, 40% 8%, 60% 8%, 75% 0, 100% 20%, 85% 45%, 75% 35%, 75% 100%, 25% 100%, 25% 35%, 15% 45%, 0 20%);
-	background: linear-gradient(90deg, #203abe 47%, #7199ff 48% 55%, #2948c4 56%);
-	color: #fff;
-	font-size: 1.35rem;
-	font-weight: 900;
-	text-shadow: 0 2px 4px #111c45;
-}
+    background:
+      linear-gradient(
+        180deg,
+        rgb(10 20 55 / 80%) 0%,
+        rgb(14 29 75 / 45%) 45%,
+        rgb(12 25 65 / 75%) 100%
+      ),
+      linear-gradient(
+        135deg,
+        rgb(20 40 100 / 55%),
+        rgb(48 80 190 / 20%)
+      );
 
-	&__player-card--back {
-	left: 5%;
-	top: 2rem;
-	transform: rotate(-17deg);
-	background: linear-gradient(135deg, #3156b5, #13275c);
-	color: #cfddff;
+    pointer-events: none;
+  }
 
-}
+  &__content {
+    position: relative;
+    z-index: 2;
 
-	&__shirt--back {
-	background: linear-gradient(90deg, #c1d6fc, #fff);
-	color: #2846a0;
-	text-shadow: none;
-}
+    min-height: 42rem;
+    height: 100%;
 
-	&__stats {
-	display: flex;
-	justify-content: space-around;
-	border-top: 1px solid #304c8c40;
-	padding-top: .6rem;
-	margin-top: .7rem;
-	font-size: .55rem;
-	text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 
-	&-value {
-		display: block;
-		font-size: 1rem;
-	}
-}
+    padding: clamp(1.5rem, 3vw, 3rem);
+  }
 
-	&__ball {
-	position: absolute;
-	right: 0;
-	bottom: 0;
-	width: 5rem;
-	height: 5rem;
-	border-radius: 50%;
-	display: grid;
-	place-items: center;
-	background: radial-gradient(circle at 30% 25%, #fff, #aec6ef 50%, #24377b);
-	color: #263d78;
-	font-size: 4rem;
-	box-shadow: .6rem .8rem 1.5rem #0b183860;
-	transform: rotate(-20deg);
-}
+  &__eyebrow {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    color: #d5deff;
+  }
 
-	&__caption {
-	display: flex;
-	align-items: center;
-	gap: .6rem;
-	font-size: .6rem;
-	letter-spacing: .1em;
-	margin-top: 2.5rem;
-	color: #c6d3ff;
+  &__title {
+    margin-top: 1.5rem;
 
-	&-dot {
-		width: .4rem;
-		height: .4rem;
-		border-radius: 50%;
-		background: #b1f9c8;
-		flex-shrink: 0;
-	}
-}
+    font-size: clamp(1.75rem, 3vw, 2.6rem);
+    line-height: 1.12;
+    letter-spacing: -.05em;
 
-	@media (max-width: 760px) {
-	& {
-		min-height: auto;
-		padding: 1.75rem;
-	}
+    color: #fff;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 25%);
+  }
 
-	&__scene {
-		min-height: 19rem;
-		width: min(100%, 22rem);
-		align-self: center;
-	}
-}
+  &__description {
+    max-width: 22rem;
+    margin-top: 1rem;
 
-	@media (max-width: 380px) {
-	&__player-card {
-		width: 9rem;
-		left: 30%;
-	}
+    font-size: .9rem;
+    color: #d5deff;
 
-	&__player-card--back {
-		left: 0;
-	}
+    text-shadow: 0 1px 8px rgb(0 0 0 / 35%);
+  }
 
-	&__shirt {
-		width: 5rem;
-		height: 5.5rem;
-	}
-}
+  &__caption {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+
+    margin-top: 2.5rem;
+
+    font-size: .6rem;
+    letter-spacing: .1em;
+    color: #d5deff;
+
+    text-shadow: 0 1px 6px rgb(0 0 0 / 40%);
+  }
+
+  &__caption-dot {
+    width: .4rem;
+    height: .4rem;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: #b1f9c8;
+    box-shadow: 0 0 .5rem rgb(177 249 200 / 55%);
+  }
+
+  @media (max-width: 760px) {
+    min-height: 28rem;
+
+    &__content {
+      min-height: 28rem;
+      padding: 1.75rem;
+    }
+
+    &__title {
+      font-size: clamp(1.75rem, 8vw, 2.3rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__background {
+      transition: none;
+    }
+  }
 }
