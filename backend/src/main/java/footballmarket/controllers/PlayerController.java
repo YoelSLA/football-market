@@ -43,7 +43,8 @@ public class PlayerController {
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
       responseCode = "502",
-      description = "No se completó la lectura del proveedor; catálogo sin cambios",
+      description =
+          "No se completó la lectura del proveedor; catálogo sin cambios (FOOTBALL_DATA_UNAVAILABLE)",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   public ResponseEntity<PlayerSyncResponseDTO> synchronize() {
     return ResponseEntity.ok(
@@ -57,7 +58,7 @@ public class PlayerController {
   @ApiResponse(responseCode = "200", description = "Página de jugadores activos")
   @ApiResponse(
       responseCode = "400",
-      description = "Paginación inválida",
+      description = "Paginación inválida (INVALID_PLAYER_PAGE o INVALID_PARAMETER_TYPE)",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   public ResponseEntity<PlayersPageResponseDTO> getPlayers(

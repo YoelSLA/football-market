@@ -2,7 +2,7 @@
 
 ## Guía de lectura
 
-Consultar primero las [reglas arquitectónicas comunes](../architecture.md) y luego las secciones pertinentes de este documento. Para conocer o modificar el stack, las versiones o las dependencias del frontend, consultar [tecnologías del frontend](technologies.md). No es necesario leer ese documento ni el área ajena cuando la tarea no los afecte.
+Consultar primero las [reglas arquitectónicas comunes](../architecture.md) y luego las secciones pertinentes de este documento. Las reglas de naming, formato y estilo de implementación están en [convenciones del frontend](conventions.md); las tecnologías, versiones y dependencias, en [tecnologías del frontend](technologies.md). Estos documentos se consultan según el área afectada.
 
 ## 1. Arquitectura
 
@@ -10,20 +10,9 @@ La unidad principal de organización funcional del frontend debe ser la feature.
 
 ### 1.1. Organización y estructura conceptual
 
-La organización conceptual del frontend debe contemplar:
+La organización conceptual de `src/` comprende `app/`, `features/`, `infrastructure/`, `shared/`, `styles/`, `App.tsx` y `main.tsx`.
 
-```text
-src/
-├── app/
-├── features/
-├── infrastructure/
-├── shared/
-├── styles/
-├── App.tsx
-└── main.tsx
-```
-
-Dentro de una feature pueden existir, según su responsabilidad, `components`, `constants`, `form`, `hooks`, `mappers`, `models`, `pages`, `services`, `store`, `types` y `utils`. Su `index.ts` obligatorio se rige por §1.2.
+Dentro de una feature pueden existir, según su responsabilidad, `components/`, `constants/`, `context/`, `form/`, `hooks/`, `mappers/`, `pages/`, `providers/`, `services/`, `store/`, `types/` y `utils/`. `form/` separa `hooks/` y `schemas/`; `hooks/` separa `context/`, `mutations/`, `navigation/`, `pages/` y `queries/` según las responsabilidades existentes. Las APIs de las carpetas modulares se rigen por §1.2. Los Models siguen siendo un rol arquitectónico, pero sus definiciones TypeScript se agrupan en `types/models.ts`, sin carpeta física `models/`; `types/` separa `dtos.ts` de `models.ts`.
 
 Estas carpetas representan posibilidades, no una estructura obligatoria. No deben crearse carpetas, archivos, roles o abstracciones vacías para uniformar features. La creación o división de Components y demás elementos se rige por las [reglas arquitectónicas comunes](../architecture.md) §1: responde a responsabilidades, cohesión, reutilización o necesidad arquitectónica, no a cantidad de líneas ni tamaño visual.
 
@@ -37,17 +26,21 @@ Estas carpetas representan posibilidades, no una estructura obligatoria. No debe
 
 Los estilos específicos de una Page o Component deben permanecer colocalizados con ellos mediante CSS Modules o SCSS Modules cuando corresponda. `src/styles` queda reservado para estilos globales, como base, resets, abstracts, variables y mixins.
 
+Cada Page se organiza como módulo autocontenido bajo `pages/<Page>/`, con su implementación, estilos exclusivos y `index.ts`. `pages/index.ts` agrega únicamente las APIs de las Pages que corresponde exponer. Los Components independientes siguen el mismo criterio bajo `components/<Component>/`, colocalizando sus archivos propios. Para otras unidades independientes con archivos asociados se aplica la misma organización cuando corresponda, sin crear carpetas por mera uniformidad ni separar archivos que forman una misma responsabilidad. Los recursos compartidos entre varias unidades permanecen en una ubicación común apropiada dentro de su feature, sin duplicarlos ni atribuirlos artificialmente a una de ellas.
+
 ### 1.2. Aislamiento y API pública de features
 
-Cada feature debe exponer explícitamente su API pública mediante `index.ts`, aunque actualmente no tenga consumidores externos. Un consumidor externo solo puede importar desde esa API y no desde archivos internos. La API pública debe exportar únicamente lo que corresponda exponer; no obliga a publicar elementos internos. Los módulos internos de la misma feature sí pueden utilizar imports internos.
+Cada feature debe exponer explícitamente su API pública mediante `index.ts`, aunque actualmente no tenga consumidores externos. Un consumidor externo solo puede importar desde esa API y no desde archivos internos. La API pública debe exportar únicamente lo que corresponda exponer; no obliga a publicar elementos internos.
 
 Una feature no puede depender directa ni indirectamente de otra feature, incluso mediante la API pública de esta última. La composición de múltiples features debe realizarse desde `app` utilizando sus APIs públicas. `app` puede componerlas, pero no absorber su lógica interna.
 
-Se permiten barrels internos, como `index.ts` en `components`, `hooks` u otros submódulos, cuando resulten útiles. No sustituyen la API pública obligatoria de la feature ni pueden utilizarse para eludir restricciones arquitectónicas.
+Cada carpeta modular con código del frontend debe tener un `index.ts` que defina su API para los demás módulos autorizados. Cualquier consumidor situado fuera de esa carpeta importa sus elementos exclusivamente mediante ese `index.ts`, sin deep imports a archivos internos. Dentro de la misma carpeta pueden utilizarse imports directos entre archivos, especialmente para evitar auto-imports y ciclos a través del propio barrel. Esta regla concierne a módulos de código: recursos como hojas de estilo colocalizadas se importan por su ruta. Los directorios contenedores de módulos sin API propia no requieren un barrel vacío.
 
-Los imports entre módulos arquitectónicos deben utilizar los aliases del proyecto, por ejemplo `@/features/...`, `@/shared/...`, `@/infrastructure/...` o `@/app/...`. Dentro del mismo módulo o feature pueden utilizarse imports relativos. Ninguna forma de import puede evadir las dependencias permitidas.
+El `index.ts` de una carpeta interna de una feature expone solo lo necesario a otros módulos permitidos de esa feature; no convierte sus elementos en parte de la API pública externa. El `index.ts` raíz de la feature reexporta desde esas APIs internas únicamente aquello que necesitan consumidores externos autorizados. Ningún barrel permite eludir la matriz de dependencias ni introducir ciclos.
 
-Los submódulos de `shared` deben exponer APIs públicas cuando corresponda, de modo que sus consumidores no conozcan arbitrariamente su estructura interna, por ejemplo `@/shared/components`, `@/shared/http` o `@/shared/utils`.
+Ninguna forma de import puede evadir las dependencias permitidas. La elección entre aliases e imports relativos se rige por [convenciones](conventions.md).
+
+Los submódulos de `shared` deben exponer APIs públicas cuando corresponda, de modo que sus consumidores no conozcan arbitrariamente su estructura interna.
 
 ### 1.3. Page
 
@@ -65,11 +58,13 @@ No puede utilizar directamente Services, realizar HTTP ni comunicarse directamen
 
 ### 1.5. Hooks
 
-Hook constituye la frontera obligatoria entre la UI React y Service. Los Hooks pueden subdividirse en `pages`, `queries` y `mutations` según responsabilidades.
+Hook constituye la frontera obligatoria entre la UI React y Service. Los Hooks funcionales se organizan, cuando existan esas responsabilidades, en `hooks/pages/`, `hooks/queries/`, `hooks/mutations/`, `hooks/navigation/` y `hooks/context/`. Los Form Hooks permanecen separados en `form/hooks/`. Los contratos de Context viven en `context/`; sus Providers, en `providers/`, fuera de `hooks/`. Las query keys pertenecen a `constants/`, no a `hooks/`.
 
-Los Page Hooks coordinan estado y comportamiento de una Page cuando la complejidad justifica la extracción. Los Query Hooks encapsulan lecturas de estado remoto mediante TanStack Query. Los Mutation Hooks encapsulan modificaciones de estado remoto mediante TanStack Query.
+Los Page Hooks coordinan estado y comportamiento de una Page cuando la complejidad justifica la extracción: pueden componer Form Hooks, Query Hooks, Mutation Hooks, Context Hooks y APIs de navegación según corresponda. Interpretan los errores funcionales del flujo de UI y entregan estado y acciones a la Page, sin HTTP directo ni DTO. Los Query Hooks encapsulan `useQuery` y la lectura remota mediante Service, sin coordinación de Page. Los Mutation Hooks encapsulan `useMutation` y la operación remota mediante Service, sin formularios, navegación, mensajes ni coordinación de UI.
 
-Queries, mutations, invalidaciones y todo comportamiento asociado a TanStack Query pertenecen exclusivamente a Hooks. Service no puede depender de TanStack Query. Pages y Components no pueden evitar esta frontera utilizando Services directamente. El flujo obligatorio de UI es `Page / Component → Hook → Service`.
+Los Navigation Hooks coordinan acciones de la feature que incluyen navegación sin representar por ello una operación HTTP. Los Context Hooks consumen de forma segura un Context de la feature y no implementan el Provider. Un Provider coordina el estado y el Context React de su alcance; no pertenece a `hooks/`. Cada carpeta expone solo los Hooks o elementos realmente necesarios mediante su `index.ts`, sin elevar preventivamente detalles a la API pública de la feature.
+
+Queries, mutations e invalidaciones ordinarias pertenecen a Hooks. El Provider de sesión puede limpiar la Query Cache al cambiar o finalizar la sesión como parte de ese ciclo de vida. Service no puede depender de TanStack Query. Pages y Components no pueden evitar la frontera de Hooks utilizando Services directamente. El flujo obligatorio de UI es `Page / Component → Hook → Service`.
 
 ### 1.6. Service
 
@@ -77,25 +72,31 @@ Service representa las operaciones externas de una feature y su frontera funcion
 
 Los endpoints y URLs propios de la feature deben permanecer en sus Services. Pages, Components y Hooks no pueden definir ni utilizar directamente endpoints HTTP.
 
-Service puede utilizar el cliente HTTP compartido. La lógica de dominio pertenece a Model; la coordinación de UI, a Hook; la transformación, a Mapper; y el acceso externo, a Service.
+Service puede utilizar el cliente HTTP compartido y adaptadores públicos de `infrastructure` cuando necesite mecanismos técnicos externos. La lógica de dominio pertenece a Model; la coordinación de UI, a Hook; la transformación, a Mapper; y el acceso externo, a Service. Por defecto deja propagar los errores de sus dependencias: solo los captura si la operación exige una acción propia de su responsabilidad, nunca para relanzarlos sin cambios ni para traducir HTTP a mensajes de UI.
 
 Un Service puede depender de otro Service de la misma feature únicamente si existe una separación real de responsabilidades. No deben dividirse Services artificialmente para encadenarlos ni pueden existir dependencias circulares.
 
 ### 1.7. HTTP compartido
 
-`shared/http` se limita al comportamiento HTTP técnico transversal. Puede resolver base URL, configuración del cliente, headers comunes, interceptores, incorporación técnica de credenciales, normalización de errores de transporte y responsabilidades equivalentes.
+`shared/http` se limita al comportamiento HTTP técnico transversal: base URL, configuración del cliente, headers comunes, interceptores, incorporación técnica de credenciales e inspección genérica de errores. Conserva el `AxiosError` original, sin envolverlo en un `HttpError` propio.
 
-No debe contener lógica funcional de una feature, mensajes funcionales de UI ni operaciones de negocio como login o compra de jugadores. Puede normalizar timeout, network errors, status HTTP y otros errores técnicos de transporte. Cada feature debe interpretar sus errores funcionales, como `PLAYER_NOT_AVAILABLE`, `INSUFFICIENT_BALANCE` o `EMAIL_ALREADY_REGISTERED`, y determinar el comportamiento de UI correspondiente. Los errores técnicos y funcionales deben permanecer separados.
+Su `ApiError` representa el contrato global `timestamp`, `status`, `error`, `code`, `message`, `path` del backend. Sus helpers inspeccionan el error sin reemplazarlo ni conocer códigos de features: `code` es identificador estable y `message` es texto presentable, nunca identificador programático. Los Hooks interpretan códigos funcionales de su feature y deciden el comportamiento de UI, con fallback cuando no exista un `ApiError` válido. Cada feature define solo los códigos que necesita en sus propias constantes.
+
+`authenticated: true` marca una solicitud que requiere token. `shared/http` obtiene la credencial mediante callbacks configurados desde `app`, no conoce auth ni su persistencia. Una respuesta 401 de una solicitud autenticada notifica `onUnauthorized` únicamente si la credencial utilizada sigue siendo la actual; la consecuencia corresponde a auth. Sin token, la solicitud no se envía: se notifica y se rechaza con un `Error` técnico local, sin inventar respuesta ni `AxiosError`.
 
 ### 1.8. DTO, Model y Mapper
 
 DTO representa exclusivamente el contrato HTTP de entrada o salida del backend y debe quedar encapsulado por Service. Pages, Components y Hooks no pueden trabajar con DTO. Service puede utilizar DTO internamente, pero hacia Hooks debe exponer Model, nunca DTO.
 
+Los contratos HTTP de cada feature se agrupan en `types/dtos.ts`. Las interfaces y los tipos de Model y Form Model se agrupan en `types/models.ts`, sin funciones en ese archivo. `types/index.ts` expone selectivamente ambos contratos a los módulos autorizados; compartir carpeta no equivale a reutilizar un DTO como Model. Por defecto se confía en el contrato tipado; no se replica manualmente su interfaz en validaciones runtime ad hoc de cada Service. Una necesidad real de validación runtime exige una estrategia arquitectónica explícita y consistente. El sufijo de los tipos DTO se rige por [convenciones](conventions.md).
+
 DTO y Model deben permanecer conceptual y tipadamente separados aunque tengan exactamente los mismos campos. No puede reutilizarse un DTO como Model ni un Model como DTO para evitar una transformación aparentemente redundante.
 
-Model representa conceptos, estado y comportamiento de dominio utilizados por el frontend. Puede implementarse mediante `type`, `interface`, clase u otra construcción TypeScript sin alterar su responsabilidad. Las reglas resolubles exclusivamente con información del dominio deben implementarse en Model. Model no puede depender de React, Hooks, Services, HTTP, DTO ni infraestructura técnica. Pages, Components y Hooks pueden trabajar con Model.
+Model representa conceptos y estado de dominio utilizados por el frontend, definidos mediante tipos/interfaces en `types/models.ts`. La ubicación física no altera su rol ni autoriza dependencias de Model hacia React, Hooks, Services, HTTP, DTO o infraestructura técnica. Las operaciones puras sobre un Model que no sean definiciones de tipo pueden vivir en `utils/` de la feature; las reglas de dominio deben permanecer asociadas al concepto Model y no desplazarse a Hooks, Services o DTO. Pages, Components y Hooks pueden trabajar con Model.
 
-Mapper realiza exclusivamente transformaciones entre DTO, Model y Form Model. Debe ser puro y no puede realizar HTTP, utilizar Services o Hooks, mantener estado, contener lógica de negocio ni coordinar operaciones. La frontera de Mapper se mantiene aunque origen y destino tengan exactamente la misma estructura: toda transformación `DTO ↔ Model` o `Form Model ↔ DTO` debe pasar por Mapper, incluso cuando sea 1:1. Cada feature debe poseer sus Mappers cuando sean necesarios. Un Mapper compartido solo puede existir para una transformación genuinamente transversal y reutilizable.
+Mapper realiza exclusivamente transformaciones puras entre DTO, Model y Form Model. No realiza HTTP, mantiene estado, coordina operaciones, valida protocolos, decodifica JWT ni contiene procesamiento técnico complejo o reglas de negocio. La frontera de Mapper se mantiene aunque origen y destino tengan exactamente la misma estructura: toda transformación `DTO ↔ Model` o `Form Model ↔ DTO` debe pasar por Mapper, incluso cuando sea 1:1. Service invoca Mapper dentro de su frontera; no constituye una capa posterior a Service. Cada feature debe poseer sus Mappers cuando sean necesarios. Un Mapper compartido solo puede existir para una transformación genuinamente transversal y reutilizable.
+
+Los Mappers consumen DTO y Model mediante `types/index.ts`, preservando la distinción conceptual entre `types/dtos.ts` y `types/models.ts`.
 
 Lecturas: `Backend → shared/http → Service → (DTO → Mapper → Model) → Hook → Page / Component`.
 
@@ -109,17 +110,19 @@ La transformación entre paréntesis ocurre dentro de la frontera de Service; ni
 
 Form Model representa el estado y las necesidades de UI de un formulario; DTO representa el contrato HTTP. Deben permanecer conceptual y tipadamente separados aunque tengan exactamente los mismos campos.
 
-`form` puede contener Hooks de formulario, schemas de validación y responsabilidades estrictamente relacionadas con formularios. Los componentes visuales continúan siendo Components de la feature.
+`form/hooks/` contiene los Form Hooks, uno por formulario; `form/schemas/` contiene los schemas correspondientes. No agrupar formularios distintos en archivos genéricos de Hooks o schemas de toda la feature. `form/hooks/index.ts` expone los Form Hooks, y `form/schemas/index.ts` expone los schemas que consumen esos Hooks. `form/index.ts` publica para el resto de la feature solo lo que necesita, normalmente los Form Hooks, sin reexportar schemas internos por defecto. Los componentes visuales continúan siendo Components de la feature.
 
-Todo formulario debe encapsular su configuración y comportamiento de formulario mediante un Form Hook. Este constituye la frontera propia del formulario para React Hook Form, valores iniciales, schema y comportamiento relacionado cuando corresponda. Su obligatoriedad no justifica crear otros Hooks sin responsabilidad real.
+Todo formulario debe encapsular su configuración y comportamiento de formulario mediante un Form Hook en `form/hooks/`: `useForm`, integración con `zodResolver`, valores iniciales, estado y manejo de submit propio del formulario cuando corresponda. Su obligatoriedad no justifica crear otros Hooks sin responsabilidad real. Los Hooks funcionales de la feature permanecen en `hooks/` y no asumen esta responsabilidad.
 
-Las validaciones de entrada y UX, como formato de email o campo obligatorio, pueden pertenecer al schema del formulario. Las reglas genuinas del dominio deben pertenecer a Model cuando puedan resolverse con información de dominio; no pueden desplazarse a un schema solo porque el dato provenga de un formulario.
+Los schemas de `form/schemas/` definen validaciones de entrada y UX, como formato de email, campo obligatorio y coherencia entre campos cuando corresponda al formulario. Las reglas genuinas del dominio deben pertenecer a Model cuando puedan resolverse con información de dominio; no pueden desplazarse a un schema solo porque el dato provenga de un formulario. Los Form Hooks importan los schemas mediante `form/schemas/index.ts`; los consumidores fuera de `form` importan los Form Hooks mediante `form/index.ts`, sin acceder a sus carpetas internas.
 
 La validación frontend mejora UX y consistencia del cliente, pero nunca sustituye al backend como autoridad de validación y protección de reglas. Las validaciones genéricas y genuinamente reutilizables entre features pueden pertenecer a `shared/validation`.
 
 ### 1.10. Estado remoto y stores
 
 TanStack Query es responsable del estado remoto y caché proveniente del backend. Ese estado no debe duplicarse innecesariamente en stores globales o de feature.
+
+Al finalizar o cambiar la identidad de una sesión se limpia toda la Query Cache con el QueryClient existente, para impedir que sobrevivan datos remotos de otra identidad.
 
 `app/store` queda reservado para estado cliente verdaderamente transversal. El hecho de que un dato sea estado no justifica ubicarlo allí. El estado local, como apertura de modales, debe permanecer en el Component, Hook o feature correspondiente cuando no sea global.
 
@@ -130,6 +133,8 @@ Una feature puede definir su propio store cuando exista estado cliente compartid
 La lógica funcional de autenticación pertenece a la feature de autenticación: login, registro, logout y estado o comportamiento funcional del usuario autenticado.
 
 `shared/http` solo debe resolver el mecanismo HTTP transversal, como incorporar técnicamente el token o tratar respuestas técnicas. El almacenamiento concreto de credenciales o tokens debe encapsularse mediante `infrastructure`. Components, Pages, Hooks y Services no pueden acceder directamente a `localStorage`, `sessionStorage` u otros mecanismos concretos.
+
+La sesión local (token y expiración) puede persistirse mediante un Service de almacenamiento dedicado que use el adaptador público de `infrastructure`; dicho Service solo persiste sesión. El usuario actual remoto proviene de un Query Hook con TanStack Query y no se duplica en el contexto de sesión. El Provider de auth coordina restauración, validez, comienzo, fin y expiración de sesión; `app` compone auth con `shared/http`.
 
 ### 1.12. Router, layouts y providers
 
@@ -143,11 +148,11 @@ Los providers globales deben configurarse y componerse desde `app`, incluidos Ta
 
 `utils` contiene exclusivamente funciones auxiliares puras que no correspondan mejor a otro rol.
 
-No debe funcionar como contenedor residual. Si una operación representa comportamiento de Model, debe permanecer en Model.
+No debe funcionar como contenedor residual. Las operaciones puras sobre los Models definidos como tipos en `types/models.ts` pueden ubicarse aquí cuando corresponda, separadas de las utilidades de procesamiento técnico según su responsabilidad. Los módulos externos a `utils/` las consumen mediante `utils/index.ts`.
 
 `constants` contiene constantes propias de la feature cuando exista una responsabilidad real. No deben extraerse valores allí únicamente para reducir el tamaño visual de otro archivo. Los endpoints y URLs de una feature pertenecen exclusivamente a sus Services y no deben centralizarse en `constants` ni en un catálogo global.
 
-Las query keys de TanStack Query deben centralizarse por feature cuando esta utilice TanStack Query.
+Las query keys de TanStack Query deben centralizarse por feature en `constants/` cuando esta utilice TanStack Query.
 
 No deben dispersarse strings de query keys si existe una definición central correspondiente.
 
@@ -155,34 +160,40 @@ No deben dispersarse strings de query keys si existe una definición central cor
 
 Las dependencias directas permitidas dentro de una feature son:
 
-```text
-Page → Component de la misma feature o shared, Hook de la misma feature, Model
-Component → Component de la misma feature o shared, Hook de la misma feature, Form Hook, Model,
-            Form Model
-Hook → Service de la misma feature, Model, Form Model, Form Hook, Feature store
-Service → Mapper, Model, DTO, Form Model, shared/http, adaptador público de infrastructure,
-          Service de la misma feature
-Mapper → Model, DTO, Form Model
-Form Hook → Model, Form Model, schema o validación de la misma feature, shared/validation
-Form Model o schema → Model, validación de la misma feature, shared/validation
-Feature store → Model
-Model → ninguna capa técnica o de aplicación
-```
+| Origen | Destinos permitidos |
+| --- | --- |
+| Page | Component de la misma feature o shared, Page Hook, Context Hook o Navigation Hook de la misma feature, Model. |
+| Component | Component de la misma feature o shared, Hook de la misma feature, Form Hook, Model, Form Model. |
+| Page Hook | Form Hook, Query Hook, Mutation Hook, Context Hook, Navigation Hook de la misma feature, Model, Form Model, Feature store, `shared/http` para inspección genérica de errores. |
+| Query Hook | Service de la misma feature, Model. |
+| Mutation Hook | Service de la misma feature, Model, Form Model. |
+| Navigation Hook | Context Hook o Hook de la misma feature, Model. |
+| Context Hook | Context de la misma feature. |
+| Context | Model. |
+| Provider de feature | Context, Query Hook, Model, Service de persistencia de la misma feature, `shared/http` para inspección genérica de errores. |
+| Service | Mapper, Model, DTO, Form Model, `shared/http`, adaptador público de `infrastructure`, Service de la misma feature. |
+| Mapper | Model, DTO, Form Model. |
+| Form Hook | Model, Form Model, schema o validación de la misma feature, `shared/validation`. |
+| Form Model o schema | Model, validación de la misma feature, `shared/validation`. |
+| Feature store | Model. |
+| Model | Ninguna capa técnica o de aplicación. |
 
-Todo formulario debe depender de su Form Hook conforme a §1.9. La fila específica de Form Hook define sus dependencias permitidas y prevalece sobre la fila general de Hook. La dependencia `Service → Service` solo está permitida dentro de la misma feature bajo §1.6. La dependencia `Service → infrastructure` solo permite utilizar la API pública de un adaptador técnico necesario y no autoriza accesos directos al mecanismo concreto. Un Form Hook no puede depender de Query Hooks o Mutation Hooks para evadir sus fronteras; el Hook de aplicación correspondiente recibe el Form Model y coordina la operación con Service.
+Todo formulario debe depender de su Form Hook conforme a §1.9. La fila específica de Form Hook, ubicado en `form/hooks/`, define sus dependencias permitidas; `form/schemas/` cumple el rol de schema de la matriz. La dependencia `Service → Service` solo está permitida dentro de la misma feature bajo §1.6. La dependencia `Service → infrastructure` solo permite utilizar la API pública de un adaptador técnico necesario y no autoriza accesos directos al mecanismo concreto. Un Form Hook no puede depender de Query Hooks o Mutation Hooks para evadir sus fronteras; el Page Hook correspondiente recibe el Form Model y coordina la operación con el Mutation Hook.
 
-Una dependencia hacia una API pública de `shared` solo está permitida si su responsabilidad ya está autorizada para el consumidor. Por ejemplo, Page y Component pueden utilizar Components compartidos; Service puede utilizar `shared/http`; Form puede utilizar `shared/validation`; y los roles pueden utilizar utilidades puras compartidas que no introduzcan una dependencia prohibida.
+`Hook → Hook` dentro de la misma feature se permite por composición o coordinación real, no simplemente para reutilizar una request. Form Hook conserva su responsabilidad específica y no encadena arbitrariamente Query/Mutation Hooks. El Provider puede usar el QueryClient para limpiar la caché al terminar o cambiar la sesión (§1.5 y §1.10), sin asumir las queries o mutations de los Hooks.
+
+Una dependencia hacia una API pública de `shared` solo está permitida si su responsabilidad ya está autorizada para el consumidor. Page y Component pueden utilizar Components compartidos; Service puede utilizar `shared/http`; Form puede utilizar `shared/validation`; y los roles pueden utilizar utilidades puras compartidas que no introduzcan una dependencia prohibida.
 
 Las dependencias globales permitidas son:
 
-```text
-app → APIs públicas de features, APIs públicas de shared, API pública de infrastructure
-feature → APIs públicas de shared compatibles con su rol
-Service de feature → API pública de infrastructure según la regla anterior
-shared/http → API pública de infrastructure técnica cuando sea necesaria
-shared → ningún módulo específico de feature
-infrastructure → ningún módulo específico de feature ni lógica de negocio
-```
+| Origen | Destinos permitidos |
+| --- | --- |
+| `app` | APIs públicas de features y `shared`, API pública de `infrastructure`. |
+| Feature | APIs públicas de `shared` compatibles con su rol. |
+| Service de feature | API pública de `infrastructure` según la regla anterior. |
+| `shared/http` | API pública de `infrastructure` técnica cuando sea necesaria. |
+| `shared` | Ningún módulo específico de feature. |
+| `infrastructure` | Ningún módulo específico de feature ni lógica de negocio. |
 
 Aplican las [reglas arquitectónicas comunes](../architecture.md). Restricciones expresas:
 
@@ -208,6 +219,6 @@ Aplican las [reglas arquitectónicas comunes](../architecture.md). Restricciones
 
 La matriz regula dependencias entre roles arquitectónicos y se interpreta con el alcance definido por las [reglas arquitectónicas comunes](../architecture.md) §1. Tipos del lenguaje, APIs estándar y dependencias técnicas compatibles con la responsabilidad del componente pueden utilizarse aunque no aparezcan enumerados.
 
-En el código TypeScript propio del proyecto está prohibido utilizar explícitamente `any`. Deben utilizarse tipos concretos, `unknown` con narrowing u otras alternativas tipadas. Esta regla no exige modificar código generado ni declaraciones externas.
+En esta matriz `Model`, `Form Model` y `DTO` son roles conceptuales distintos aunque sus definiciones se expongan mediante `types/index.ts`: `types/models.ts` contiene los primeros y `types/dtos.ts` los contratos HTTP. Los imports y reexports no autorizan a ningún consumidor a acceder a DTO fuera del límite de Service y Mapper.
 
 Cuando la documentación vigente no defina una decisión arquitectónica necesaria, se aplica la gobernanza de la constitución: consultar al usuario antes de introducir una regla, capa, patrón, abstracción o ubicación nueva.

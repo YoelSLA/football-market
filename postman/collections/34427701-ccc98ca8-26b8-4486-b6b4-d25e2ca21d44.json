@@ -12,6 +12,7 @@
 					"name": "Register",
 					"id": "34427701-21bb0ea0-53f9-4d1a-b986-77c0f298dc3a",
 					"request": {
+						"description": "Crea una cuenta. Un email duplicado devuelve 409 con ErrorResponseDTO (code: EMAIL_ALREADY_REGISTERED); datos inválidos devuelven 400 (code: INVALID_REQUEST). El error incluye timestamp, status, error, code, message y path.",
 						"method": "POST",
 						"header": [
 							{
@@ -47,6 +48,7 @@
 					"name": "Login",
 					"id": "34427701-91d7652d-d60a-448f-830c-da2ccd87a6a1",
 					"request": {
+						"description": "Obtiene un JWT. Credenciales inválidas devuelven 401 con ErrorResponseDTO (code: INVALID_CREDENTIALS); datos inválidos devuelven 400 (code: INVALID_REQUEST). El error incluye timestamp, status, error, code, message y path.",
 						"method": "POST",
 						"header": [
 							{
@@ -88,6 +90,7 @@
 					"name": "Consultar jugadores activos",
 					"id": "34427701-44e3aa4e-4fcf-4cde-9223-ddda95475ef9",
 					"request": {
+						"description": "Requiere JWT Bearer. Paginación inválida devuelve 400 con ErrorResponseDTO (code: INVALID_PLAYER_PAGE o INVALID_PARAMETER_TYPE); el error incluye timestamp, status, error, code, message y path.",
 						"auth": {
 							"type": "bearer",
 							"bearer": [
@@ -171,6 +174,7 @@
 					"name": "Sincronizar jugadores",
 					"id": "34427701-a42f2b2c-e7ff-4d8d-986b-59dd07b5fce2",
 					"request": {
+						"description": "Requiere JWT Bearer. Indisponibilidad del proveedor devuelve 502 con ErrorResponseDTO (code: FOOTBALL_DATA_UNAVAILABLE); el error incluye timestamp, status, error, code, message y path.",
 						"auth": {
 							"type": "bearer",
 							"bearer": [

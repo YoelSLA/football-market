@@ -210,10 +210,11 @@ class AuthenticationControllerTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isConflict())
-          .andExpect(jsonPath("$.*").value(hasSize(5)))
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.status").value(409))
           .andExpect(jsonPath("$.error").value("Conflict"))
+          .andExpect(jsonPath("$.code").value("EMAIL_ALREADY_REGISTERED"))
           .andExpect(jsonPath("$.message").value("El email ya esta registrado."))
           .andExpect(jsonPath("$.path").value("/api/auth/register"))
           .andDo(
@@ -226,6 +227,7 @@ class AuthenticationControllerTest {
                       fieldWithPath("timestamp").description("Fecha del error"),
                       fieldWithPath("status").description("Código HTTP"),
                       fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
                       fieldWithPath("message").description("Mensaje seguro"),
                       fieldWithPath("path").description("Ruta solicitada"))));
 
@@ -296,10 +298,11 @@ class AuthenticationControllerTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isUnauthorized())
-          .andExpect(jsonPath("$.*").value(hasSize(5)))
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.status").value(401))
           .andExpect(jsonPath("$.error").value("Unauthorized"))
+          .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
           .andExpect(jsonPath("$.message").value("Credenciales invalidas."))
           .andExpect(jsonPath("$.path").value("/api/auth/login"))
           .andDo(
@@ -312,6 +315,7 @@ class AuthenticationControllerTest {
                       fieldWithPath("timestamp").description("Fecha del error"),
                       fieldWithPath("status").description("Código HTTP"),
                       fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
                       fieldWithPath("message").description("Mensaje seguro"),
                       fieldWithPath("path").description("Ruta solicitada"))));
     }
@@ -374,10 +378,11 @@ class AuthenticationControllerTest {
       mockMvc
           .perform(post(path).contentType(MediaType.APPLICATION_JSON).content(body))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.*").value(hasSize(5)))
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.error").value("Bad Request"))
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
           .andExpect(jsonPath("$.message").value(message))
           .andExpect(jsonPath("$.path").value(path))
           .andDo(
@@ -390,6 +395,7 @@ class AuthenticationControllerTest {
                       fieldWithPath("timestamp").description("Fecha del error"),
                       fieldWithPath("status").description("Código HTTP"),
                       fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
                       fieldWithPath("message").description("Mensaje de validación"),
                       fieldWithPath("path").description("Ruta solicitada"))));
 

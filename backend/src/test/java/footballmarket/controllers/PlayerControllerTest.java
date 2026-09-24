@@ -109,10 +109,11 @@ class PlayerControllerTest {
       when(orchestrator.synchronize()).thenThrow(new FootballDataUnavailableException());
       mvc.perform(post("/api/players/sync").header("Authorization", authorization))
           .andExpect(status().isBadGateway())
-          .andExpect(jsonPath("$.*").value(hasSize(5)))
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.status").value(502))
           .andExpect(jsonPath("$.error").value("Bad Gateway"))
+          .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
           .andExpect(jsonPath("$.path").value("/api/players/sync"))
           .andExpect(
               jsonPath("$.message")
@@ -124,6 +125,7 @@ class PlayerControllerTest {
                       fieldWithPath("timestamp").description("Fecha del error"),
                       fieldWithPath("status").description("Código HTTP"),
                       fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
                       fieldWithPath("message").description("Mensaje seguro"),
                       fieldWithPath("path").description("Ruta solicitada"))));
     }
@@ -216,11 +218,17 @@ class PlayerControllerTest {
                   .param("size", size)
                   .header("Authorization", authorization))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.*").value(hasSize(5)))
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.path").value("/api/players"))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.error").value("Bad Request"))
+          .andExpect(
+              jsonPath("$.code")
+                  .value(
+                      page.equals("abc") || size.equals("2147483648")
+                          ? "INVALID_PARAMETER_TYPE"
+                          : "INVALID_PLAYER_PAGE"))
           .andExpect(jsonPath("$.message").isNotEmpty())
           .andDo(
               document(
@@ -229,6 +237,7 @@ class PlayerControllerTest {
                       fieldWithPath("timestamp").description("Fecha del error"),
                       fieldWithPath("status").description("Código HTTP"),
                       fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
                       fieldWithPath("message").description("Mensaje de validación"),
                       fieldWithPath("path").description("Ruta solicitada"))));
       verifyNoInteractions(service);

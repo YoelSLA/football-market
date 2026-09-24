@@ -1,5 +1,6 @@
-export { AuthProvider, useAuth } from "./hooks/useAuth";
-export { SessionChecking } from "./components/SessionChecking";
-export { HomePage } from "./pages/HomePage";
-export { LoginPage } from "./pages/LoginPage";
-export { RegisterPage } from "./pages/RegisterPage";
+export { SessionChecking } from "./components";
+export { useAuth } from "./hooks";
+export { isSessionValid } from "./utils";
+export { HomePage, LoginPage, RegisterPage } from "./pages";
+export { AuthProvider } from "./providers";
+export { authSessionStorage } from "./services";

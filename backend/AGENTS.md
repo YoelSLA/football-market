@@ -5,6 +5,7 @@ Este archivo complementa las instrucciones del `AGENTS.md` raíz. No duplica sus
 ## Contexto
 
 - Para código, estructura o dependencias arquitectónicas, consultar la [arquitectura del backend](../docs/backend/architecture.md), además de la arquitectura común indicada por el `AGENTS.md` raíz.
+- Para convenciones de implementación, formato o documentación de código y endpoints, consultar las [convenciones del backend](../docs/backend/conventions.md).
 - Para conocer el stack, las tecnologías, sus versiones o su propósito, y ante cambios de tecnologías o dependencias, consultar [tecnologías del backend](../docs/backend/technologies.md).
 - Al cambiar comportamiento backend o crear, modificar o analizar sus tests, consultar [testing del backend](../docs/backend/testing.md): reglas generales y categoría afectada.
 

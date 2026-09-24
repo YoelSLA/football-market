@@ -1,18 +1,16 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { HomePage, LoginPage, RegisterPage, SessionChecking, useAuth } from "@/features/auth";
+import { Navigate, Route, Routes } from "react-router-dom";
+import AuthGuard from "@/app/router/AuthGuard";
+import {
+  HomePage,
+  LoginPage,
+  RegisterPage,
+} from "@/features/auth";
 
-function AuthGuard({ privateRoute }: { privateRoute: boolean }) {
-  const { status } = useAuth();
-  if (status === "unknown" || status === "checking") return <SessionChecking />;
-  if (privateRoute && status === "anonymous") return <Navigate to="/login" replace />;
-  if (!privateRoute && status === "authenticated") return <Navigate to="/home" replace />;
-  return <Outlet />;
-}
 
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/players" replace />} />
+      <Route path="/" element={<Navigate to="/login" />} />
 
       <Route path="/players" element={<div>Players</div>} />
 

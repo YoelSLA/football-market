@@ -2,7 +2,7 @@
 
 ## 1. Documentos normativos
 
-Esta constitución contiene las reglas globales. [Arquitectura común](../../docs/architecture.md), [arquitectura del backend](../../docs/backend/architecture.md) y [arquitectura del frontend](../../docs/frontend/architecture.md) definen roles, dependencias y convenciones; [tecnologías del backend](../../docs/backend/technologies.md) y [tecnologías del frontend](../../docs/frontend/technologies.md) documentan el stack y su propósito; [testing](../../docs/backend/testing.md) define las pruebas del backend. Todos tienen la misma obligatoriedad cuando resulten aplicables. La configuración efectiva del proyecto conserva precedencia como fuente de verdad de dependencias y versiones.
+Esta constitución contiene las reglas globales. [Arquitectura común](../../docs/architecture.md), [arquitectura del backend](../../docs/backend/architecture.md) y [arquitectura del frontend](../../docs/frontend/architecture.md) definen roles y dependencias; las [convenciones del backend](../../docs/backend/conventions.md) y las [convenciones del frontend](../../docs/frontend/conventions.md) definen sus reglas de implementación; [tecnologías del backend](../../docs/backend/technologies.md) y [tecnologías del frontend](../../docs/frontend/technologies.md) documentan el stack y su propósito; [testing](../../docs/backend/testing.md) define las pruebas del backend. Todos tienen la misma obligatoriedad cuando resulten aplicables. La configuración efectiva del proyecto conserva precedencia como fuente de verdad de dependencias y versiones.
 
 Consultar solo las secciones pertinentes y sus reglas generales, siguiendo las guías de lectura de cada documento. Las instrucciones operativas están en [AGENTS.md](../../AGENTS.md). Specs y Plans no deben repetir restricciones globales salvo consideraciones específicas de la feature.
 
@@ -30,7 +30,7 @@ Actualizar en el mismo cambio los elementos afectados: Spec, implementación, te
 
 Todo cambio que afecte el inventario tecnológico —incorporación, eliminación, sustitución o actualización de una tecnología o dependencia, o cambio de su versión o propósito sustancial de uso— debe reflejarse en la misma tarea en el `docs/backend/technologies.md` o `docs/frontend/technologies.md` correspondiente. La configuración efectiva conserva precedencia como fuente de verdad.
 
-Las convenciones HTTP y de documentación del backend se definen en arquitectura del backend §2.6–2.7.
+El contrato HTTP del backend se define en [arquitectura del backend](../../docs/backend/architecture.md) §1.7; sus reglas de documentación, en [convenciones del backend](../../docs/backend/conventions.md).
 
 ## 5. Idioma
 

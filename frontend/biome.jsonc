@@ -1,60 +1,60 @@
 {
-  // Schema correspondiente a la versión de Biome utilizada por el proyecto.
-  // Permite que el IDE valide la configuración y ofrezca autocompletado.
-  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
-  // Integración de Biome con el sistema de control de versiones.
-  "vcs": {
-    // Habilita la integración con un VCS.
-    "enabled": true,
-    // El proyecto utiliza Git como sistema de control de versiones.
-    "clientKind": "git",
-    // Hace que Biome respete los archivos ignorados por Git.
-    // Por ejemplo, elementos incluidos en .gitignore.
-    "useIgnoreFile": true
-  },
-  // Configuración general de los archivos procesados por Biome.
-  "files": {
-    // Si Biome encuentra un tipo de archivo que no reconoce,
-    // no lo ignora silenciosamente.
-    "ignoreUnknown": false
-  },
-  // Configuración global del formatter.
-  "formatter": {
-    // Habilita el formateo automático mediante Biome.
-    "enabled": true,
-    // Utiliza tabulaciones para la indentación.
-    "indentStyle": "tab",
-    // Longitud máxima objetivo de una línea antes de que el
-    // formatter intente dividirla.
-    "lineWidth": 80
-  },
-  // Configuración del análisis estático (linting).
-  "linter": {
-    // Habilita el linter de Biome.
-    "enabled": true,
-    "rules": {
-      // Activa el conjunto de reglas recomendadas por Biome.
-      "recommended": true
-    }
-  },
-  // Reglas específicas para JavaScript/TypeScript.
-  "javascript": {
-    "formatter": {
-      // Utiliza comillas dobles al formatear strings.
-      "quoteStyle": "double"
-    }
-  },
-  // Acciones automáticas que Biome puede realizar sobre el código.
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        // Organiza automáticamente los imports.
-        //
-        // Puede eliminar imports innecesarios y mantenerlos
-        // organizados de manera consistente.
-        "organizeImports": "on"
-      }
-    }
-  }
+	// Schema correspondiente a la versión de Biome utilizada por el proyecto.
+	// Permite que el IDE valide la configuración y ofrezca autocompletado.
+	"$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+	// Integración de Biome con el sistema de control de versiones.
+	"vcs": {
+		// Habilita la integración con un VCS.
+		"enabled": true,
+		// El proyecto utiliza Git como sistema de control de versiones.
+		"clientKind": "git",
+		// Hace que Biome respete los archivos ignorados por Git.
+		// Por ejemplo, elementos incluidos en .gitignore.
+		"useIgnoreFile": true
+	},
+	// Configuración general de los archivos procesados por Biome.
+	"files": {
+		// Si Biome encuentra un tipo de archivo que no reconoce,
+		// no lo ignora silenciosamente.
+		"ignoreUnknown": false
+	},
+	// Configuración global del formatter.
+	"formatter": {
+		// Habilita el formateo automático mediante Biome.
+		"enabled": true,
+		// Utiliza tabulaciones para la indentación.
+		"indentStyle": "tab",
+		// Longitud máxima objetivo de una línea antes de que el
+		// formatter intente dividirla.
+		"lineWidth": 80
+	},
+	// Configuración del análisis estático (linting).
+	"linter": {
+		// Habilita el linter de Biome.
+		"enabled": true,
+		"rules": {
+			// Activa el conjunto de reglas recomendadas por Biome.
+			"recommended": true
+		}
+	},
+	// Reglas específicas para JavaScript/TypeScript.
+	"javascript": {
+		"formatter": {
+			// Utiliza comillas dobles al formatear strings.
+			"quoteStyle": "double"
+		}
+	},
+	// Acciones automáticas que Biome puede realizar sobre el código.
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				// Organiza automáticamente los imports.
+				//
+				// Puede eliminar imports innecesarios y mantenerlos
+				// organizados de manera consistente.
+				"organizeImports": "on"
+			}
+		}
+	}
 }

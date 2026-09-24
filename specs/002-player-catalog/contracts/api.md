@@ -35,7 +35,7 @@ Un catálogo vacío devuelve `content: []` y sus metadatos de paginación.
 
 ### Respuesta `400 Bad Request`
 
-Se devuelve si `page < 0`, `size < 1` o `size > 100`. La respuesta gestionada por la aplicación usa `ErrorResponseDTO` con `timestamp`, `status`, `error`, `message` y `path`. El mensaje de validación es seguro y está en español; `status` coincide con el código HTTP y `path` identifica la ruta solicitada.
+Se devuelve si `page < 0`, `size < 1` o `size > 100`. La respuesta gestionada por la aplicación usa `ErrorResponseDTO` con `timestamp`, `status`, `error`, `code`, `message` y `path`. `code` es `INVALID_PLAYER_PAGE` o `INVALID_PARAMETER_TYPE` según el error. El mensaje de validación es seguro y está en español; `status` coincide con el código HTTP y `path` identifica la ruta solicitada.
 
 ### Respuesta `401 Unauthorized`
 
@@ -61,7 +61,7 @@ Los contadores describen la ejecución completada; no se incluyen credenciales n
 
 ### Respuesta `502 Bad Gateway`
 
-Se devuelve si no puede completarse la lectura de Football-Data.org. La respuesta gestionada por la aplicación usa `ErrorResponseDTO` con `timestamp`, `status`, `error`, `message` y `path`. El mensaje es seguro y está en español; `status` coincide con el código HTTP y `path` identifica la ruta solicitada. La ejecución no modifica el catálogo local.
+Se devuelve si no puede completarse la lectura de Football-Data.org. La respuesta gestionada por la aplicación usa `ErrorResponseDTO` con `timestamp`, `status`, `error`, `code`, `message` y `path`. `code` es `FOOTBALL_DATA_UNAVAILABLE`. El mensaje es seguro y está en español; `status` coincide con el código HTTP y `path` identifica la ruta solicitada. La ejecución no modifica el catálogo local.
 
 ### Respuesta `401 Unauthorized`
 
