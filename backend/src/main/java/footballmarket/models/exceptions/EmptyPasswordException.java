@@ -1,8 +1,9 @@
 package footballmarket.models.exceptions;
 
-import footballmarket.exceptions.FootballMarketException;
+import footballmarket.exceptions.DomainException;
 
-public class EmptyPasswordException extends FootballMarketException {
+/** Indica que la contraseña requerida está vacía. */
+public class EmptyPasswordException extends DomainException {
   public EmptyPasswordException(String message) {
     super(message);
   }

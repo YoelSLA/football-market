@@ -2,7 +2,80 @@
 :toc: left
 :toclevels: 3
 
+== Catálogo de jugadores
+
+Ambos endpoints requieren un JWT Bearer válido. La sincronización está disponible
+para cualquier usuario autenticado, sin rol adicional. No se ejecuta automáticamente.
+
+=== Consulta paginada
+
+`GET /api/players` consulta exclusivamente la base local. `page` comienza en cero;
+`size` admite valores de 1 a 100. Los valores predeterminados son 0 y 20.
+
+include::{snippets}/players-list/http-request.adoc[]
+include::{snippets}/players-list/http-response.adoc[]
+include::{snippets}/players-list/response-fields.adoc[]
+
+==== Catálogo vacío y límites válidos
+
+include::{snippets}/players-empty-1/http-response.adoc[]
+include::{snippets}/players-empty-100/http-response.adoc[]
+
+==== Paginación inválida
+
+include::{snippets}/players-invalid--1-20/http-response.adoc[]
+include::{snippets}/players-invalid-0-0/http-response.adoc[]
+include::{snippets}/players-invalid-0-101/http-response.adoc[]
+include::{snippets}/players-invalid-abc-20/http-response.adoc[]
+include::{snippets}/players-invalid-0-2147483648/http-response.adoc[]
+
+==== Autenticación requerida
+
+include::{snippets}/players-unauthorized/http-response.adoc[]
+include::{snippets}/players-invalid-jwt/http-response.adoc[]
+
+=== Sincronización manual
+
+`POST /api/players/sync` no recibe body. Primero obtiene Premier League (`PL`),
+Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`), sin exigir un orden,
+y después aplica la foto completa dentro de una transacción. Si falla cualquiera
+de las cinco ligas, el catálogo permanece sin cambios. La configuración debe ser
+el conjunto `PL,BL1,PD,SA,FL1` en cualquier orden; una lista incompleta, con duplicados o ligas adicionales impide el arranque.
+Los jugadores ausentes se conservan como inactivos.
+
+include::{snippets}/players-sync/http-request.adoc[]
+include::{snippets}/players-sync/http-response.adoc[]
+include::{snippets}/players-sync/response-fields.adoc[]
+
+==== Proveedor no disponible
+
+El error no modifica el catálogo. La consulta local continúa disponible.
+
+include::{snippets}/players-sync-unavailable/http-response.adoc[]
+include::{snippets}/players-sync-unavailable/response-fields.adoc[]
+
+==== Autenticación requerida
+
+include::{snippets}/players-sync-unauthorized/http-response.adoc[]
+include::{snippets}/players-sync-invalid-jwt/http-response.adoc[]
+
 == Autenticación
+
+=== Usuario actual
+
+`GET /api/auth/me` requiere un JWT Bearer válido cuyo sujeto identifique a un
+usuario existente. Devuelve exclusivamente el `id` y el `email` actuales obtenidos
+de persistencia. No recibe body ni parámetros.
+
+include::{snippets}/auth-me-success/http-request.adoc[]
+include::{snippets}/auth-me-success/http-response.adoc[]
+include::{snippets}/auth-me-success/response-fields.adoc[]
+
+Sin token utilizable, con firma inválida, token expirado, sujeto ausente o usuario
+inexistente, Spring Security responde `401 Unauthorized` sin cuerpo.
+
+include::{snippets}/auth-me-unauthorized/http-request.adoc[]
+include::{snippets}/auth-me-unauthorized/http-response.adoc[]
 
 === Registro
 

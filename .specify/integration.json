@@ -2,19 +2,14 @@
   "version": "1.0.1",
   "integration_state_schema": 1,
   "installed_integrations": [
-    "gemini",
-    "codex"
+    "opencode"
   ],
   "integration_settings": {
-    "gemini": {
+    "opencode": {
       "script": "sh",
       "invoke_separator": "."
-    },
-    "codex": {
-      "script": "sh",
-      "invoke_separator": "-"
     }
   },
-  "integration": "codex",
-  "default_integration": "codex"
+  "integration": "opencode",
+  "default_integration": "opencode"
 }

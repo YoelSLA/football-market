@@ -1,0 +1,54 @@
+{
+	"compilerOptions": {
+		// Versión de JavaScript que TypeScript asume como objetivo.
+		// ESNext permite utilizar las características modernas del lenguaje.
+		// Vite se encarga posteriormente del proceso de build para el navegador.
+		"target": "ESNext",
+		// Sistema de módulos generado/interpretado por TypeScript.
+		// ESNext conserva los imports/exports modernos (ES Modules),
+		// que son procesados posteriormente por Vite.
+		"module": "ESNext",
+		// Estrategia utilizada para resolver imports.
+		// "bundler" está pensada para proyectos donde un bundler como Vite
+		// se encarga de resolver y empaquetar los módulos.
+		"moduleResolution": "bundler",
+		// Habilita JSX utilizando el runtime moderno de React.
+		// Permite escribir JSX/TSX sin importar React explícitamente
+		// únicamente para utilizar JSX.
+		"jsx": "react-jsx",
+		// Activa el conjunto completo de comprobaciones estrictas de TypeScript.
+		// Ayuda a detectar errores de tipos, null/undefined y otros problemas
+		// durante el desarrollo.
+		"strict": true,
+		// Evita comprobar internamente los archivos de declaraciones (.d.ts)
+		// provenientes principalmente de dependencias externas.
+		// Reduce tiempo de type-checking y evita que errores internos de tipos
+		// de una dependencia bloqueen nuestro proyecto.
+		"skipLibCheck": true,
+		// Obliga a respetar exactamente mayúsculas y minúsculas en los imports.
+		// Evita problemas entre sistemas de archivos con distinto comportamiento.
+		// Ejemplo: importar "./Player" cuando el archivo real es "./player".
+		"forceConsistentCasingInFileNames": true,
+		// TypeScript se utiliza para comprobar tipos, no para generar JavaScript.
+		// Vite es el responsable de generar el build final de la aplicación.
+		"noEmit": true,
+		// Define aliases reconocidos por TypeScript.
+		// Permite importar módulos desde src utilizando "@/..." en lugar
+		// de cadenas largas de imports relativos como "../../../shared/http".
+		//
+		// Este alias también debe existir en vite.config.ts, ya que esta
+		// configuración solo le enseña el alias a TypeScript.
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	// Archivos que forman parte del proyecto TypeScript.
+	// Todo el código fuente de la aplicación debe encontrarse dentro de src.
+	"include": ["src"],
+	// Directorios que TypeScript no debe considerar parte del código fuente.
+	//
+	// dist: resultado generado por el build.
+	// node_modules: dependencias externas instaladas por npm.
+	// coverage: reportes generados por herramientas de cobertura de tests.
+	"exclude": ["dist", "node_modules", "coverage"]
+}

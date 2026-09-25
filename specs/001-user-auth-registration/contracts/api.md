@@ -69,11 +69,12 @@ Las respuestas de error gestionadas por la aplicación utilizan `ErrorResponseDT
   "timestamp": "2026-09-18T15:00:00",
   "status": 409,
   "error": "Conflict",
+  "code": "EMAIL_ALREADY_REGISTERED",
   "message": "El email ya esta registrado.",
   "path": "/api/auth/register"
 }
 ```
 
-En errores de Jakarta Validation, `message` contiene el primer mensaje disponible. Los `401`
+`code` identifica el error de forma estable (`INVALID_CREDENTIALS` en login y `INVALID_REQUEST` en validación); `message` es legible. En errores de Jakarta Validation, `message` contiene el primer mensaje disponible. Los `401`
 generados por la capa de seguridad al validar JWT pueden tener un body diferente, ya que no
 pasan por el manejador de errores de aplicación.

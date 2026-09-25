@@ -1,0 +1,146 @@
+.auth-visual-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 42rem;
+  overflow: hidden;
+
+  border-radius: 1rem;
+  background: #111c45;
+  color: white;
+
+  &__backgrounds {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    overflow: hidden;
+  }
+
+  &__background {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+
+    user-select: none;
+    pointer-events: none;
+
+    &--active {
+      opacity: 1;
+    }
+  }
+
+  &__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    background:
+      linear-gradient(
+        180deg,
+        rgb(10 20 55 / 80%) 0%,
+        rgb(14 29 75 / 45%) 45%,
+        rgb(12 25 65 / 75%) 100%
+      ),
+      linear-gradient(
+        135deg,
+        rgb(20 40 100 / 55%),
+        rgb(48 80 190 / 20%)
+      );
+
+    pointer-events: none;
+  }
+
+  &__content {
+    position: relative;
+    z-index: 2;
+
+    min-height: 42rem;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    padding: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  &__eyebrow {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    color: #d5deff;
+  }
+
+  &__title {
+    margin-top: 1.5rem;
+
+    font-size: clamp(1.75rem, 3vw, 2.6rem);
+    line-height: 1.12;
+    letter-spacing: -.05em;
+
+    color: #fff;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 25%);
+  }
+
+  &__description {
+    max-width: 22rem;
+    margin-top: 1rem;
+
+    font-size: .9rem;
+    color: #d5deff;
+
+    text-shadow: 0 1px 8px rgb(0 0 0 / 35%);
+  }
+
+  &__caption {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+
+    margin-top: 2.5rem;
+
+    font-size: .6rem;
+    letter-spacing: .1em;
+    color: #d5deff;
+
+    text-shadow: 0 1px 6px rgb(0 0 0 / 40%);
+  }
+
+  &__caption-dot {
+    width: .4rem;
+    height: .4rem;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+    background: #b1f9c8;
+    box-shadow: 0 0 .5rem rgb(177 249 200 / 55%);
+  }
+
+  @media (max-width: 760px) {
+    min-height: 28rem;
+
+    &__content {
+      min-height: 28rem;
+      padding: 1.75rem;
+    }
+
+    &__title {
+      font-size: clamp(1.75rem, 8vw, 2.3rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__background {
+      transition: none;
+    }
+  }
+}

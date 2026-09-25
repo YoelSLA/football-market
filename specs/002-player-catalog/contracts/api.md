@@ -1,17 +1,17 @@
-# API Contracts: Catálogo de jugadores
+# Contratos de API: Catálogo de jugadores
 
-## `GET /players`
+## `GET /api/players`
 
 Consulta una página de jugadores activos del catálogo local.
 
-### Query Parameters
+### Parámetros de consulta
 
 | Parámetro | Tipo | Predeterminado | Restricción |
 |---|---|---:|---|
 | `page` | entero | `0` | Debe ser mayor o igual a `0`. |
 | `size` | entero | `20` | Debe estar entre `1` y `100`, inclusive. |
 
-### `200 OK` Response
+### Respuesta `200 OK`
 
 ```json
 {
@@ -33,15 +33,19 @@ Consulta una página de jugadores activos del catálogo local.
 
 Un catálogo vacío devuelve `content: []` y sus metadatos de paginación.
 
-### `400 Bad Request` Response
+### Respuesta `400 Bad Request`
 
-Se devuelve si `page < 0`, `size < 1` o `size > 100`. El body contiene un mensaje seguro de validación en español.
+Se devuelve si `page < 0`, `size < 1` o `size > 100`. La respuesta gestionada por la aplicación usa `ErrorResponseDTO` con `timestamp`, `status`, `error`, `code`, `message` y `path`. `code` es `INVALID_PLAYER_PAGE` o `INVALID_PARAMETER_TYPE` según el error. El mensaje de validación es seguro y está en español; `status` coincide con el código HTTP y `path` identifica la ruta solicitada.
 
-## `POST /players/sync`
+### Respuesta `401 Unauthorized`
 
-Inicia una sincronización manual del catálogo con Football-Data.org. No acepta body.
+Se devuelve cuando la solicitud no presenta un JWT válido, según la autenticación vigente del proyecto.
 
-### `200 OK` Response
+## `POST /api/players/sync`
+
+Inicia una sincronización manual del catálogo con Football-Data.org para Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`), sin exigir un orden. No acepta body.
+
+### Respuesta `200 OK`
 
 ```json
 {
@@ -55,10 +59,14 @@ Inicia una sincronización manual del catálogo con Football-Data.org. No acepta
 
 Los contadores describen la ejecución completada; no se incluyen credenciales ni datos internos del proveedor.
 
-### `502 Bad Gateway` Response
+### Respuesta `502 Bad Gateway`
 
-Se devuelve si no puede completarse la lectura de Football-Data.org. El body contiene un mensaje seguro en español; la ejecución no modifica el catálogo local.
+Se devuelve si no puede completarse la lectura de Football-Data.org. La respuesta gestionada por la aplicación usa `ErrorResponseDTO` con `timestamp`, `status`, `error`, `code`, `message` y `path`. `code` es `FOOTBALL_DATA_UNAVAILABLE`. El mensaje es seguro y está en español; `status` coincide con el código HTTP y `path` identifica la ruta solicitada. La ejecución no modifica el catálogo local.
 
-## Security
+### Respuesta `401 Unauthorized`
 
-Los endpoints conservan la configuración de Spring Security existente. Esta feature no define roles, permisos ni mecanismos de autenticación nuevos.
+Se devuelve cuando la solicitud no presenta un JWT válido. La sincronización no se inicia.
+
+## Seguridad
+
+Ambos endpoints requieren un JWT válido conforme a la configuración vigente de Spring Security. Cualquier usuario autenticado puede invocar `POST /api/players/sync` sin un rol o permiso adicional. Esta feature no define roles, permisos ni mecanismos de autenticación nuevos.
