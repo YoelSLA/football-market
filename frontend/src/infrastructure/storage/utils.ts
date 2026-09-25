@@ -1,3 +1,12 @@
+import { AuthSession } from "@/infrastructure/storage/types";
+
+export function isSessionValid(
+	session: AuthSession,
+	now = Date.now(),
+): boolean {
+	return Number.isFinite(session.expiresAt) && session.expiresAt > now;
+}
+
 export function getJwtExpiration(token: string): number {
 	const parts = token.split(".");
 	if (parts.length !== 3 || parts.some((part) => !/^[\w-]+$/.test(part)))

@@ -1,15 +1,31 @@
 import { Navigate, Outlet } from "react-router-dom";
 import {
   SessionChecking,
-  useAuth,
 } from "@/features/auth";
+import { useAuthStore } from "@/infrastructure/storage/useAuthStore";
+import { AuthStatus } from "@/infrastructure/storage/types";
 
-export default function AuthGuard({ privateRoute }: { privateRoute: boolean }) {
-  const { status } = useAuth();
-  if (status === "unknown" || status === "checking") return <SessionChecking />;
-  if (privateRoute && status === "anonymous")
+export default function AuthGuard({
+  privateRoute,
+}: {
+  privateRoute: boolean;
+}) {
+  const status = useAuthStore((state) => state.status);
+
+  if (
+    status === AuthStatus.UNKNOWN ||
+    status === AuthStatus.CHECKING
+  ) {
+    return <SessionChecking />;
+  }
+
+  if (privateRoute && status === AuthStatus.ANONYMOUS) {
     return <Navigate to="/login" replace />;
-  if (!privateRoute && status === "authenticated")
+  }
+
+  if (!privateRoute && status === AuthStatus.AUTHENTICATED) {
     return <Navigate to="/home" replace />;
+  }
+
   return <Outlet />;
 }

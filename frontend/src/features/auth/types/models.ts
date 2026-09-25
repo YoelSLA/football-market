@@ -7,14 +7,7 @@ export interface RegisterForm extends LoginForm {
 	passwordConfirmation: string;
 }
 
-export interface AuthSession {
-	token: string;
-	expiresAt: number;
-}
-
-export type AuthStatus = "unknown" | "checking" | "authenticated" | "anonymous";
-
-export interface CurrentUser {
+export type CurrentUser = {
 	id: string;
 	email: string;
 }

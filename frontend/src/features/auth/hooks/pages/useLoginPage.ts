@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 import { AUTH_ERROR_CODES } from "../../constants";
 import { useLoginForm } from "../../form";
-import { useAuth } from "../context";
 import { useLoginMutation } from "../mutations";
+import { useAuthStore } from "@/infrastructure/storage";
 
 export function useLoginPage() {
 	const form = useLoginForm();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const { startSession } = useAuth();
+  const startSession = useAuthStore((state) => state.startSession);
 	const [error, setError] = useState<string | null>(null);
 	const mutation = useLoginMutation();
 	const state: unknown = location.state;

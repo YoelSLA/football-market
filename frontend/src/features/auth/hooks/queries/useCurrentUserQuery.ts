@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { authQueryKeys } from "../../constants";
-import { authService } from "../../services";
+import { authService } from "../../auth.service";
 
 export function useCurrentUserQuery(
 	enabled: boolean,

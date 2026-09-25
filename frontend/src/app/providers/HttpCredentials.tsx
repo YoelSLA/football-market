@@ -1,13 +1,13 @@
 import { type ReactNode, useEffect } from "react";
-import { authSessionStorage, isSessionValid, useAuth } from "@/features/auth";
 import { configureHttpCredentials } from "@/infrastructure/http";
+import { authSessionStorage, isSessionValid, useAuthStore } from "@/infrastructure/storage";
 
 interface Props {
   children: ReactNode;
 }
 
 export default function HttpCredentials({ children }: Props) {
-  const { endSession } = useAuth();
+  const endSession = useAuthStore((state) => state.endSession);
 
   useEffect(
     () =>

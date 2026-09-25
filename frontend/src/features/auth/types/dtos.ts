@@ -1,13 +1,13 @@
-export interface CredentialsDTO {
+export type CredentialsDTO = {
 	email: string;
 	password: string;
 }
 
-export interface LoginResponseDTO {
+export type LoginResponseDTO = {
 	token: string;
 }
 
-export interface CurrentUserDTO {
+export type CurrentUserDTO = {
 	id: string;
 	email: string;
 }

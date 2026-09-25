@@ -1,12 +1,12 @@
-import { getJwtExpiration } from "../utils";
+import { getJwtExpiration } from "@/infrastructure/storage/utils";
 import type {
-	AuthSession,
 	CredentialsDTO,
 	CurrentUser,
 	CurrentUserDTO,
 	LoginForm,
 	LoginResponseDTO,
-} from "../types";
+} from "./types";
+import { AuthSession } from "@/infrastructure/storage/types";
 
 export function toCredentialsDTO(form: LoginForm): CredentialsDTO {
 	return { email: form.email, password: form.password };

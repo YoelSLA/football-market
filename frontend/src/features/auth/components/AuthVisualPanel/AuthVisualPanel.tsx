@@ -1,5 +1,5 @@
 import { useRotatingIndex } from "@/features/auth/hooks";
-import { footballVisuals } from "../../assets/footballVisuals";
+import { footballVisuals } from "../../utils/footballVisuals";
 import styles from "./AuthVisualPanel.module.scss";
 
 const ROTATION_INTERVAL = 8000;

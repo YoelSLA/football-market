@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context";
+import { useAuthStore } from "@/infrastructure/storage";
 
 export function useLogout() {
-	const { endSession } = useAuth();
+	const endSession = useAuthStore((state) => state.endSession);
 	const navigate = useNavigate();
 	return () => {
 		endSession();
