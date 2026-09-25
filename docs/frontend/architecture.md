@@ -12,7 +12,7 @@ La unidad principal de organización funcional del frontend debe ser la feature.
 
 La organización conceptual de `src/` comprende `app/`, `features/`, `infrastructure/`, `shared/`, `styles/`, `App.tsx` y `main.tsx`.
 
-Dentro de una feature pueden existir, según su responsabilidad, `components/`, `constants/`, `context/`, `form/`, `hooks/`, `mappers/`, `pages/`, `providers/`, `services/`, `store/`, `types/` y `utils/`. `form/` separa `hooks/` y `schemas/`; `hooks/` separa `context/`, `mutations/`, `navigation/`, `pages/` y `queries/` según las responsabilidades existentes. Las APIs de las carpetas modulares se rigen por §1.2. Los Models siguen siendo un rol arquitectónico, pero sus definiciones TypeScript se agrupan en `types/models.ts`, sin carpeta física `models/`; `types/` separa `dtos.ts` de `models.ts`.
+Dentro de una feature pueden existir, según su responsabilidad, `components/`, `constants/`, `form/`, `hooks/`, `pages/`, `types/` y `utils/`, así como archivos de Service y Mapper en la raíz de la feature. `form/` separa `hooks/` y `schemas/`; `hooks/` separa `mutations/`, `navigation/`, `pages/` y `queries/` según las responsabilidades existentes. Las APIs de las carpetas modulares se rigen por §1.2. Los Models siguen siendo un rol arquitectónico, pero sus definiciones TypeScript se agrupan en `types/models.ts`, sin carpeta física `models/`; `types/` separa `dtos.ts` de `models.ts`.
 
 Estas carpetas representan posibilidades, no una estructura obligatoria. No deben crearse carpetas, archivos, roles o abstracciones vacías para uniformar features. La creación o división de Components y demás elementos se rige por las [reglas arquitectónicas comunes](../architecture.md) §1: responde a responsabilidades, cohesión, reutilización o necesidad arquitectónica, no a cantidad de líneas ni tamaño visual.
 
@@ -22,7 +22,7 @@ Estas carpetas representan posibilidades, no una estructura obligatoria. No debe
 
 `shared` contiene únicamente elementos genuinamente reutilizables entre features. No deben moverse elementos allí preventivamente por una posible reutilización futura. No puede recibir conceptos específicos de una feature para permitir que otra dependa de ellos ni utilizarse para evadir restricciones entre features.
 
-`infrastructure` contiene adaptadores técnicos globales hacia el entorno, como almacenamiento del navegador. No debe contener lógica funcional o de negocio ni funcionar como contenedor residual. Components, Pages, Hooks y Services no pueden acceder directamente a mecanismos concretos como `localStorage` o `sessionStorage`; todo acceso debe quedar encapsulado por la API pública del adaptador correspondiente de `infrastructure` y sus consumidores deben respetar la matriz de §1.14.
+`infrastructure` contiene el cliente y los helpers HTTP transversales (`http/`), así como el adaptador del navegador, la persistencia y el estado de sesión (`storage/`). Components, Pages, Hooks y Services no deben acceder directamente a mecanismos concretos como `localStorage` o `sessionStorage`; el acceso queda encapsulado por el adaptador de almacenamiento. Los consumidores respetan la matriz de §1.14.
 
 Los estilos específicos de una Page o Component deben permanecer colocalizados con ellos mediante CSS Modules o SCSS Modules cuando corresponda. `src/styles` queda reservado para estilos globales, como base, resets, abstracts, variables y mixins.
 
@@ -58,13 +58,13 @@ No puede utilizar directamente Services, realizar HTTP ni comunicarse directamen
 
 ### 1.5. Hooks
 
-Hook constituye la frontera obligatoria entre la UI React y Service. Los Hooks funcionales se organizan, cuando existan esas responsabilidades, en `hooks/pages/`, `hooks/queries/`, `hooks/mutations/`, `hooks/navigation/` y `hooks/context/`. Los Form Hooks permanecen separados en `form/hooks/`. Los contratos de Context viven en `context/`; sus Providers, en `providers/`, fuera de `hooks/`. Las query keys pertenecen a `constants/`, no a `hooks/`.
+Hook constituye la frontera obligatoria entre la UI React y Service. Los Hooks funcionales se organizan, cuando existan esas responsabilidades, en `hooks/pages/`, `hooks/queries/`, `hooks/mutations/`, `hooks/navigation/`. Los Form Hooks permanecen separados en `form/hooks/`. Las query keys pertenecen a `constants/`, no a `hooks/`.
 
-Los Page Hooks coordinan estado y comportamiento de una Page cuando la complejidad justifica la extracción: pueden componer Form Hooks, Query Hooks, Mutation Hooks, Context Hooks y APIs de navegación según corresponda. Interpretan los errores funcionales del flujo de UI y entregan estado y acciones a la Page, sin HTTP directo ni DTO. Los Query Hooks encapsulan `useQuery` y la lectura remota mediante Service, sin coordinación de Page. Los Mutation Hooks encapsulan `useMutation` y la operación remota mediante Service, sin formularios, navegación, mensajes ni coordinación de UI.
+Los Page Hooks coordinan estado y comportamiento de una Page cuando la complejidad justifica la extracción: pueden componer Form Hooks, Query Hooks, Mutation Hooks y APIs de navegación según corresponda. Interpretan los errores funcionales del flujo de UI y entregan estado y acciones a la Page, sin HTTP directo ni DTO. Los Query Hooks encapsulan `useQuery` y la lectura remota mediante Service, sin coordinación de Page. Los Mutation Hooks encapsulan `useMutation` y la operación remota mediante Service, sin formularios, navegación, mensajes ni coordinación de UI.
 
-Los Navigation Hooks coordinan acciones de la feature que incluyen navegación sin representar por ello una operación HTTP. Los Context Hooks consumen de forma segura un Context de la feature y no implementan el Provider. Un Provider coordina el estado y el Context React de su alcance; no pertenece a `hooks/`. Cada carpeta expone solo los Hooks o elementos realmente necesarios mediante su `index.ts`, sin elevar preventivamente detalles a la API pública de la feature.
+Los Navigation Hooks coordinan acciones de la feature que incluyen navegación sin representar por ello una operación HTTP. Cada carpeta expone solo los Hooks o elementos realmente necesarios mediante su `index.ts`, sin elevar preventivamente detalles a la API pública de la feature.
 
-Queries, mutations e invalidaciones ordinarias pertenecen a Hooks. El Provider de sesión puede limpiar la Query Cache al cambiar o finalizar la sesión como parte de ese ciclo de vida. Service no puede depender de TanStack Query. Pages y Components no pueden evitar la frontera de Hooks utilizando Services directamente. El flujo obligatorio de UI es `Page / Component → Hook → Service`.
+Queries, mutations e invalidaciones ordinarias pertenecen a Hooks. Service no puede depender de TanStack Query. Pages y Components no pueden evitar la frontera de Hooks utilizando Services directamente. El flujo obligatorio de UI es `Page / Component → Hook → Service`.
 
 ### 1.6. Service
 
@@ -72,17 +72,17 @@ Service representa las operaciones externas de una feature y su frontera funcion
 
 Los endpoints y URLs propios de la feature deben permanecer en sus Services. Pages, Components y Hooks no pueden definir ni utilizar directamente endpoints HTTP.
 
-Service puede utilizar el cliente HTTP compartido y adaptadores públicos de `infrastructure` cuando necesite mecanismos técnicos externos. La lógica de dominio pertenece a Model; la coordinación de UI, a Hook; la transformación, a Mapper; y el acceso externo, a Service. Por defecto deja propagar los errores de sus dependencias: solo los captura si la operación exige una acción propia de su responsabilidad, nunca para relanzarlos sin cambios ni para traducir HTTP a mensajes de UI.
+Service puede utilizar el cliente HTTP y las APIs públicas de `infrastructure` cuando necesite mecanismos técnicos externos. La lógica de dominio pertenece a Model; la coordinación de UI, a Hook; la transformación, a Mapper; y el acceso externo, a Service. Por defecto deja propagar los errores de sus dependencias: solo los captura si la operación exige una acción propia de su responsabilidad, nunca para relanzarlos sin cambios ni para traducir HTTP a mensajes de UI.
 
 Un Service puede depender de otro Service de la misma feature únicamente si existe una separación real de responsabilidades. No deben dividirse Services artificialmente para encadenarlos ni pueden existir dependencias circulares.
 
-### 1.7. HTTP compartido
+### 1.7. HTTP de infraestructura
 
-`shared/http` se limita al comportamiento HTTP técnico transversal: base URL, configuración del cliente, headers comunes, interceptores, incorporación técnica de credenciales e inspección genérica de errores. Conserva el `AxiosError` original, sin envolverlo en un `HttpError` propio.
+`infrastructure/http` se limita al comportamiento HTTP técnico transversal: base URL, configuración del cliente, headers comunes, interceptores, incorporación técnica de credenciales e inspección genérica de errores. Conserva el `AxiosError` original, sin envolverlo en un `HttpError` propio.
 
 Su `ApiError` representa el contrato global `timestamp`, `status`, `error`, `code`, `message`, `path` del backend. Sus helpers inspeccionan el error sin reemplazarlo ni conocer códigos de features: `code` es identificador estable y `message` es texto presentable, nunca identificador programático. Los Hooks interpretan códigos funcionales de su feature y deciden el comportamiento de UI, con fallback cuando no exista un `ApiError` válido. Cada feature define solo los códigos que necesita en sus propias constantes.
 
-`authenticated: true` marca una solicitud que requiere token. `shared/http` obtiene la credencial mediante callbacks configurados desde `app`, no conoce auth ni su persistencia. Una respuesta 401 de una solicitud autenticada notifica `onUnauthorized` únicamente si la credencial utilizada sigue siendo la actual; la consecuencia corresponde a auth. Sin token, la solicitud no se envía: se notifica y se rechaza con un `Error` técnico local, sin inventar respuesta ni `AxiosError`.
+`authenticated: true` marca una solicitud que requiere token. `infrastructure/http` obtiene la credencial mediante callbacks configurados desde `app`, no conoce auth ni su persistencia. Una respuesta 401 de una solicitud autenticada notifica `onUnauthorized` únicamente si la credencial utilizada sigue siendo la actual; la consecuencia corresponde a auth. Sin token, la solicitud no se envía: se notifica y se rechaza con un `Error` técnico local, sin inventar respuesta ni `AxiosError`.
 
 ### 1.8. DTO, Model y Mapper
 
@@ -94,15 +94,15 @@ DTO y Model deben permanecer conceptual y tipadamente separados aunque tengan ex
 
 Model representa conceptos y estado de dominio utilizados por el frontend, definidos mediante tipos/interfaces en `types/models.ts`. La ubicación física no altera su rol ni autoriza dependencias de Model hacia React, Hooks, Services, HTTP, DTO o infraestructura técnica. Las operaciones puras sobre un Model que no sean definiciones de tipo pueden vivir en `utils/` de la feature; las reglas de dominio deben permanecer asociadas al concepto Model y no desplazarse a Hooks, Services o DTO. Pages, Components y Hooks pueden trabajar con Model.
 
-Mapper realiza exclusivamente transformaciones puras entre DTO, Model y Form Model. No realiza HTTP, mantiene estado, coordina operaciones, valida protocolos, decodifica JWT ni contiene procesamiento técnico complejo o reglas de negocio. La frontera de Mapper se mantiene aunque origen y destino tengan exactamente la misma estructura: toda transformación `DTO ↔ Model` o `Form Model ↔ DTO` debe pasar por Mapper, incluso cuando sea 1:1. Service invoca Mapper dentro de su frontera; no constituye una capa posterior a Service. Cada feature debe poseer sus Mappers cuando sean necesarios. Un Mapper compartido solo puede existir para una transformación genuinamente transversal y reutilizable.
+Mapper transforma entre DTO, Model y Form Model sin HTTP ni estado. En la implementación actual, `auth.mapper.ts` obtiene la expiración del token mediante una utilidad de `infrastructure/storage` al construir la sesión. La frontera de Mapper se mantiene aunque origen y destino tengan exactamente la misma estructura: toda transformación `DTO ↔ Model` o `Form Model ↔ DTO` debe pasar por Mapper, incluso cuando sea 1:1. Service invoca Mapper dentro de su frontera; no constituye una capa posterior a Service. Cada feature debe poseer sus Mappers cuando sean necesarios. Un Mapper compartido solo puede existir para una transformación genuinamente transversal y reutilizable.
 
 Los Mappers consumen DTO y Model mediante `types/index.ts`, preservando la distinción conceptual entre `types/dtos.ts` y `types/models.ts`.
 
-Lecturas: `Backend → shared/http → Service → (DTO → Mapper → Model) → Hook → Page / Component`.
+Lecturas: `Backend → infrastructure/http → Service → (DTO → Mapper → Model) → Hook → Page / Component`.
 
 La transformación entre paréntesis ocurre dentro de la frontera de Service; DTO no se expone a Hook.
 
-Escrituras: `Component / Form → Form Hook → Form Model → Hook → Service → (Mapper → DTO) → shared/http → Backend`.
+Escrituras: `Component / Form → Form Hook → Form Model → Hook → Service → (Mapper → DTO) → infrastructure/http → Backend`.
 
 La transformación entre paréntesis ocurre dentro de la frontera de Service; ni el Form Hook ni los demás Hooks conocen DTO.
 
@@ -122,7 +122,7 @@ La validación frontend mejora UX y consistencia del cliente, pero nunca sustitu
 
 TanStack Query es responsable del estado remoto y caché proveniente del backend. Ese estado no debe duplicarse innecesariamente en stores globales o de feature.
 
-Al finalizar o cambiar la identidad de una sesión se limpia toda la Query Cache con el QueryClient existente, para impedir que sobrevivan datos remotos de otra identidad.
+Al restaurar, iniciar o finalizar una sesión, el store cancela las consultas pendientes y limpia la Query Cache mediante el QueryClient configurado desde `app`, para que no sobrevivan datos remotos de otra identidad.
 
 `app/store` queda reservado para estado cliente verdaderamente transversal. El hecho de que un dato sea estado no justifica ubicarlo allí. El estado local, como apertura de modales, debe permanecer en el Component, Hook o feature correspondiente cuando no sea global.
 
@@ -130,11 +130,11 @@ Una feature puede definir su propio store cuando exista estado cliente compartid
 
 ### 1.11. Autenticación
 
-La lógica funcional de autenticación pertenece a la feature de autenticación: login, registro, logout y estado o comportamiento funcional del usuario autenticado.
+La feature de autenticación implementa login, registro, consulta del usuario actual y navegación de logout. El estado y la persistencia de la sesión se encuentran actualmente en `infrastructure/storage`.
 
-`shared/http` solo debe resolver el mecanismo HTTP transversal, como incorporar técnicamente el token o tratar respuestas técnicas. El almacenamiento concreto de credenciales o tokens debe encapsularse mediante `infrastructure`. Components, Pages, Hooks y Services no pueden acceder directamente a `localStorage`, `sessionStorage` u otros mecanismos concretos.
+`infrastructure/http` resuelve el mecanismo HTTP transversal, como incorporar técnicamente el token o tratar respuestas técnicas. El almacenamiento concreto de credenciales o tokens debe encapsularse mediante `infrastructure`. Components, Pages, Hooks y Services no pueden acceder directamente a `localStorage`, `sessionStorage` u otros mecanismos concretos.
 
-La sesión local (token y expiración) puede persistirse mediante un Service de almacenamiento dedicado que use el adaptador público de `infrastructure`; dicho Service solo persiste sesión. El usuario actual remoto proviene de un Query Hook con TanStack Query y no se duplica en el contexto de sesión. El Provider de auth coordina restauración, validez, comienzo, fin y expiración de sesión; `app` compone auth con `shared/http`.
+La sesión conserva el token en memoria y en `localStorage` mediante `infrastructure/storage/authSessionStorage`; la expiración se obtiene del JWT. `infrastructure/storage/useAuthStore` usa Zustand para las transiciones `UNKNOWN → CHECKING → AUTHENTICATED` o `ANONYMOUS` y para el error de verificación. Una sesión restaurada o iniciada permanece en `CHECKING` hasta que `/auth/me` confirme el usuario. `app/providers/SessionLifecycle` restaura la sesión, coordina el Query Hook de auth y comprueba la expiración mediante temporizador, foco y cambio de visibilidad; el usuario actual remoto no se duplica en el store. `app/providers/HttpCredentials` conecta el token y el fin de sesión con `infrastructure/http`; `app/router/AuthGuard` consulta el estado para controlar rutas.
 
 ### 1.12. Router, layouts y providers
 
@@ -162,38 +162,35 @@ Las dependencias directas permitidas dentro de una feature son:
 
 | Origen | Destinos permitidos |
 | --- | --- |
-| Page | Component de la misma feature o shared, Page Hook, Context Hook o Navigation Hook de la misma feature, Model. |
-| Component | Component de la misma feature o shared, Hook de la misma feature, Form Hook, Model, Form Model. |
-| Page Hook | Form Hook, Query Hook, Mutation Hook, Context Hook, Navigation Hook de la misma feature, Model, Form Model, Feature store, `shared/http` para inspección genérica de errores. |
+| Page | Component de la misma feature o shared, Page Hook o Navigation Hook de la misma feature, Model. |
+| Component | Component de la misma feature o shared, Hook de la misma feature, Form Hook, Model, Form Model, estado de sesión de `infrastructure/storage` para la pantalla de verificación. |
+| Page Hook | Form Hook, Query Hook, Mutation Hook, Navigation Hook de la misma feature, Model, Form Model, estado de sesión de `infrastructure/storage`, `infrastructure/http` para inspección genérica de errores. |
 | Query Hook | Service de la misma feature, Model. |
 | Mutation Hook | Service de la misma feature, Model, Form Model. |
-| Navigation Hook | Context Hook o Hook de la misma feature, Model. |
-| Context Hook | Context de la misma feature. |
-| Context | Model. |
-| Provider de feature | Context, Query Hook, Model, Service de persistencia de la misma feature, `shared/http` para inspección genérica de errores. |
-| Service | Mapper, Model, DTO, Form Model, `shared/http`, adaptador público de `infrastructure`, Service de la misma feature. |
-| Mapper | Model, DTO, Form Model. |
+| Navigation Hook | Hook de la misma feature, Model, estado de sesión de `infrastructure/storage`. |
+| Service | Mapper, Model, DTO, Form Model, `infrastructure/http`, adaptador público de `infrastructure`, Service de la misma feature. |
+| Mapper | Model, DTO, Form Model, utilidad de expiración de `infrastructure/storage` para la sesión. |
 | Form Hook | Model, Form Model, schema o validación de la misma feature, `shared/validation`. |
 | Form Model o schema | Model, validación de la misma feature, `shared/validation`. |
-| Feature store | Model. |
+| Store de sesión de infraestructura | Persistencia de sesión de `infrastructure/storage`. |
 | Model | Ninguna capa técnica o de aplicación. |
 
 Todo formulario debe depender de su Form Hook conforme a §1.9. La fila específica de Form Hook, ubicado en `form/hooks/`, define sus dependencias permitidas; `form/schemas/` cumple el rol de schema de la matriz. La dependencia `Service → Service` solo está permitida dentro de la misma feature bajo §1.6. La dependencia `Service → infrastructure` solo permite utilizar la API pública de un adaptador técnico necesario y no autoriza accesos directos al mecanismo concreto. Un Form Hook no puede depender de Query Hooks o Mutation Hooks para evadir sus fronteras; el Page Hook correspondiente recibe el Form Model y coordina la operación con el Mutation Hook.
 
-`Hook → Hook` dentro de la misma feature se permite por composición o coordinación real, no simplemente para reutilizar una request. Form Hook conserva su responsabilidad específica y no encadena arbitrariamente Query/Mutation Hooks. El Provider puede usar el QueryClient para limpiar la caché al terminar o cambiar la sesión (§1.5 y §1.10), sin asumir las queries o mutations de los Hooks.
+`Hook → Hook` dentro de la misma feature se permite por composición o coordinación real, no simplemente para reutilizar una request. Form Hook conserva su responsabilidad específica y no encadena arbitrariamente Query/Mutation Hooks.
 
-Una dependencia hacia una API pública de `shared` solo está permitida si su responsabilidad ya está autorizada para el consumidor. Page y Component pueden utilizar Components compartidos; Service puede utilizar `shared/http`; Form puede utilizar `shared/validation`; y los roles pueden utilizar utilidades puras compartidas que no introduzcan una dependencia prohibida.
+Una dependencia hacia una API pública de `shared` solo está permitida si su responsabilidad ya está autorizada para el consumidor. Page y Component pueden utilizar Components compartidos; Service puede utilizar `infrastructure/http`; Form puede utilizar `shared/validation`; y los roles pueden utilizar utilidades puras compartidas que no introduzcan una dependencia prohibida.
 
 Las dependencias globales permitidas son:
 
 | Origen | Destinos permitidos |
 | --- | --- |
 | `app` | APIs públicas de features y `shared`, API pública de `infrastructure`. |
-| Feature | APIs públicas de `shared` compatibles con su rol. |
+| Feature | APIs públicas de `shared` compatibles con su rol y de `infrastructure` conforme a la matriz anterior. |
 | Service de feature | API pública de `infrastructure` según la regla anterior. |
-| `shared/http` | API pública de `infrastructure` técnica cuando sea necesaria. |
+| `infrastructure/http` | API pública de `infrastructure/storage` cuando sea necesaria. |
 | `shared` | Ningún módulo específico de feature. |
-| `infrastructure` | Ningún módulo específico de feature ni lógica de negocio. |
+| `infrastructure` | Ningún módulo específico de feature; el store de sesión utiliza el adaptador de almacenamiento del mismo módulo. |
 
 Aplican las [reglas arquitectónicas comunes](../architecture.md). Restricciones expresas:
 
@@ -207,8 +204,7 @@ Aplican las [reglas arquitectónicas comunes](../architecture.md). Restricciones
 -   Model no puede depender de React, Hook, Service, HTTP, DTO ni
     infrastructure.
 
--   Mapper no puede depender de Service, Hook, HTTP, React ni
-    infrastructure.
+-   Mapper no puede depender de Service, Hook, HTTP ni React; el mapper de sesión utiliza la utilidad de expiración de `infrastructure/storage`.
 
 -   una feature no puede depender de otra feature;
 

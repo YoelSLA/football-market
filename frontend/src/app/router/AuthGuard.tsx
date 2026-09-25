@@ -2,8 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import {
   SessionChecking,
 } from "@/features/auth";
-import { useAuthStore } from "@/infrastructure/storage/useAuthStore";
-import { AuthStatus } from "@/infrastructure/storage/types";
+import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 
 export default function AuthGuard({
   privateRoute,

@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/infrastructure/storage/useAuthStore";
+import { useAuthStore } from "@/infrastructure/storage";
 
 import styles from "./SessionChecking.module.scss";
 
