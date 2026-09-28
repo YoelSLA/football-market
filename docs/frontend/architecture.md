@@ -12,7 +12,7 @@ La unidad principal de organización funcional del frontend debe ser la feature.
 
 La organización conceptual de `src/` comprende `app/`, `features/`, `infrastructure/`, `shared/`, `styles/`, `App.tsx` y `main.tsx`.
 
-Dentro de una feature pueden existir, según su responsabilidad, `components/`, `constants/`, `form/`, `hooks/`, `pages/`, `types/` y `utils/`, así como archivos de Service y Mapper en la raíz de la feature. `form/` separa `hooks/` y `schemas/`; `hooks/` separa `mutations/`, `navigation/`, `pages/` y `queries/` según las responsabilidades existentes. Las APIs de las carpetas modulares se rigen por §1.2. Los Models siguen siendo un rol arquitectónico, pero sus definiciones TypeScript se agrupan en `types/models.ts`, sin carpeta física `models/`; `types/` separa `dtos.ts` de `models.ts`.
+Dentro de una feature pueden existir, según su responsabilidad, `assets/`, `components/`, `constants/`, `form/`, `hooks/`, `pages/`, `types/` y `utils/`, así como archivos de Service y Mapper en la raíz de la feature. `assets/` contiene recursos estáticos específicos de la feature cuando no son globales ni compartidos. `form/` separa `hooks/` y `schemas/`; `hooks/` separa `mutations/`, `navigation/`, `pages/` y `queries/` según las responsabilidades existentes. Las APIs de las carpetas modulares se rigen por §1.2. Los Models siguen siendo un rol arquitectónico, pero sus definiciones TypeScript se agrupan en `types/models.ts`, sin carpeta física `models/`; `types/` separa `dtos.ts` de `models.ts`.
 
 Estas carpetas representan posibilidades, no una estructura obligatoria. No deben crearse carpetas, archivos, roles o abstracciones vacías para uniformar features. La creación o división de Components y demás elementos se rige por las [reglas arquitectónicas comunes](../architecture.md) §1: responde a responsabilidades, cohesión, reutilización o necesidad arquitectónica, no a cantidad de líneas ni tamaño visual.
 
@@ -122,7 +122,7 @@ La validación frontend mejora UX y consistencia del cliente, pero nunca sustitu
 
 TanStack Query es responsable del estado remoto y caché proveniente del backend. Ese estado no debe duplicarse innecesariamente en stores globales o de feature.
 
-Al restaurar, iniciar o finalizar una sesión, el store cancela las consultas pendientes y limpia la Query Cache mediante el QueryClient configurado desde `app`, para que no sobrevivan datos remotos de otra identidad.
+Al restaurar una sesión válida, iniciar una sesión o finalizarla, el store cancela las consultas pendientes y limpia la Query Cache mediante el QueryClient configurado desde `app`, para que no sobrevivan datos remotos de otra identidad. Una restauración sin sesión válida pasa directamente a estado anónimo y no ejecuta esa limpieza.
 
 `app/store` queda reservado para estado cliente verdaderamente transversal. El hecho de que un dato sea estado no justifica ubicarlo allí. El estado local, como apertura de modales, debe permanecer en el Component, Hook o feature correspondiente cuando no sea global.
 
@@ -134,7 +134,7 @@ La feature de autenticación implementa login, registro, consulta del usuario ac
 
 `infrastructure/http` resuelve el mecanismo HTTP transversal, como incorporar técnicamente el token o tratar respuestas técnicas. El almacenamiento concreto de credenciales o tokens debe encapsularse mediante `infrastructure`. Components, Pages, Hooks y Services no pueden acceder directamente a `localStorage`, `sessionStorage` u otros mecanismos concretos.
 
-La sesión conserva el token en memoria y en `localStorage` mediante `infrastructure/storage/authSessionStorage`; la expiración se obtiene del JWT. `infrastructure/storage/useAuthStore` usa Zustand para las transiciones `UNKNOWN → CHECKING → AUTHENTICATED` o `ANONYMOUS` y para el error de verificación. Una sesión restaurada o iniciada permanece en `CHECKING` hasta que `/auth/me` confirme el usuario. `app/providers/SessionLifecycle` restaura la sesión, coordina el Query Hook de auth y comprueba la expiración mediante temporizador, foco y cambio de visibilidad; el usuario actual remoto no se duplica en el store. `app/providers/HttpCredentials` conecta el token y el fin de sesión con `infrastructure/http`; `app/router/AuthGuard` consulta el estado para controlar rutas.
+La sesión conserva el token en memoria y en `localStorage` mediante `infrastructure/storage/authSessionStorage`; la expiración se obtiene del JWT. `infrastructure/storage/useAuthStore` usa Zustand para las transiciones `UNKNOWN → CHECKING → AUTHENTICATED` o `ANONYMOUS` y conserva el error de verificación. Una sesión restaurada o iniciada permanece en `CHECKING` hasta que `/auth/me` confirme el usuario. Una sesión ya autenticada vuelve temporalmente a `CHECKING` mientras se revalida después de una navegación. Si la verificación falla sin finalizar la sesión, el store conserva `CHECKING` y publica `verificationError`, que muestra `SessionChecking`. `app/providers/SessionLifecycle` restaura la sesión, coordina el Query Hook de auth, revalida `/auth/me` después de cada navegación y comprueba la expiración mediante un temporizador, al recuperar el foco y ante cambios de visibilidad. El usuario actual remoto no se duplica en el store. `app/providers/HttpCredentials` conecta el token y el fin de sesión con `infrastructure/http`; `app/router/AuthGuard` consulta el estado para controlar rutas.
 
 ### 1.12. Router, layouts y providers
 
@@ -143,6 +143,8 @@ La configuración global del router pertenece exclusivamente a `app/router`. Las
 `app/layouts` contiene exclusivamente layouts globales o transversales, como layouts públicos, autenticados o de aplicación. Una estructura visual específica de una feature debe permanecer dentro de ella aunque visualmente se considere un layout.
 
 Los providers globales deben configurarse y componerse desde `app`, incluidos TanStack Query, router, tema, store global y cualquier otro provider realmente global.
+
+La configuración actual define `/login` y `/register` como rutas públicas de autenticación y `/home` como ruta privada. `/` redirige a `/login`. El guard envía a `/login` a una identidad anónima que intenta acceder a una ruta privada y a `/home` a una identidad autenticada que intenta acceder a las rutas públicas de autenticación; mientras el estado sea `UNKNOWN` o `CHECKING`, muestra `SessionChecking`. `/players` es actualmente una ruta pública provisional con contenido inline, y la ruta comodín redirige a ella.
 
 ### 1.13. Utils, constants y query keys
 

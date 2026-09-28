@@ -19,7 +19,7 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 | Zustand | 5.0.15 | Store de sesión en `infrastructure/storage/useAuthStore`: estado de autenticación, inicio y cierre de sesión, conectado con la persistencia del token. |
 | React Hook Form y resolvers | React Hook Form 7.88.0; resolvers 5.9.1 | Estado y comportamiento de los formularios de login y registro mediante Form Hooks, con integración de schemas Zod. |
 | Zod | 4.6.5 | Schemas de validación de email, contraseña y confirmación de los formularios de autenticación. |
-| Sass | 1.104.1 | Compilación de los estilos SCSS globales y soporte para los módulos SCSS previstos por la arquitectura. |
+| Sass | 1.104.1 | Compilación de los estilos SCSS globales y de los SCSS Modules colocalizados con Pages y Components. |
 | Biome | 2.5.14 | Linting, formateo, organización de imports y controles recomendados sobre el frontend. |
 
 El frontend no declara actualmente una librería ni infraestructura de testing propia.
