@@ -38,7 +38,7 @@ No se envían parámetros de búsqueda, liga, posición u orden.
 }
 ```
 
-Todos los campos son requeridos. `content` contiene exclusivamente jugadores activos y está ordenado por identificador ascendente. El estado activo y las estadísticas de muestra no son campos HTTP.
+Todos los campos son requeridos. `content` contiene exclusivamente jugadores activos y está ordenado por identificador ascendente. `team` alimenta el bloque central de la tarjeta; el estado activo y las estadísticas fijas de muestra (`24` partidos, `8` goles y `5` asistencias) no son campos HTTP.
 
 Una página no negativa que exceda el total es una solicitud válida y puede responder `200` con `content` vacío. El cliente corrige esa selección a la última página disponible cuando `totalPages > 0`; `totalPages = 0` representa un catálogo realmente vacío.
 

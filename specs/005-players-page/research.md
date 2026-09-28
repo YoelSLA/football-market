@@ -34,8 +34,8 @@
 
 ### Separar DTO, Model y datos de presentación
 
-- **Decision**: Modelar exactamente la respuesta HTTP en DTO, transformarla a `Player` y `PlayersPage`, e inferir `active: true` en el Mapper porque el catálogo solo devuelve activos. Las estadísticas comunes y sus etiquetas serán constantes de presentación, no campos del DTO.
-- **Rationale**: Conserva el contrato real, hace explícita la semántica usada por la UI y evita presentar datos de muestra como datos del backend.
+- **Decision**: Modelar exactamente la respuesta HTTP en DTO, transformarla a `Player` y `PlayersPage`, e inferir `active: true` en el Mapper porque el catálogo solo devuelve activos. La tarjeta agrupará el equipo real del jugador con las estadísticas de presentación `24` partidos, `8` goles y `5` asistencias; solo las estadísticas y sus etiquetas serán constantes, no campos del DTO.
+- **Rationale**: Conserva el contrato real, hace explícito que el equipo procede del backend y que los valores numéricos son comunes a todas las tarjetas. Las etiquetas y el contraste de los textos respecto del fondo mantienen identificable cada atributo.
 - **Alternatives considered**: Reutilizar DTO como Model o añadir estadísticas al contrato. Ambas opciones contradicen la arquitectura o falsean el origen de los datos.
 
 ### Tratar liga y posición como valores abiertos con fallback

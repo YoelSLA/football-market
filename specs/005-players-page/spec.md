@@ -1,6 +1,6 @@
 # Feature Specification: Página de catálogo de jugadores
 
-**Feature Branch**: `dev`
+**Feature Branch**: `005-players-page`
 
 **Created**: 2026-09-28
 
@@ -23,12 +23,12 @@ Como usuario autenticado, quiero abrir la página de jugadores y ver el catálog
 
 **Why this priority**: Es el propósito principal de la página y entrega valor aun sin interacción con filtros ni cambio de página.
 
-**Independent Test**: Iniciar sesión, abrir `/players` con al menos un jugador disponible y comprobar que se muestran hasta 12 tarjetas con nombre, icono genérico, estadísticas numéricas, liga y posición, sin permitir el acceso a un visitante.
+**Independent Test**: Iniciar sesión, abrir `/players` con al menos un jugador disponible y comprobar que se muestran hasta 12 tarjetas con nombre, icono genérico, equipo, `24` partidos, `8` goles, `5` asistencias, liga y posición, sin permitir el acceso a un visitante.
 
 **Acceptance Scenarios**:
 
 1. **Given** un usuario con sesión válida y jugadores disponibles, **When** abre `/players`, **Then** ve la primera página del catálogo con hasta 12 tarjetas distribuidas en cuatro columnas y tres filas en una pantalla que permita esa disposición.
-2. **Given** una tarjeta de jugador visible, **When** el usuario la observa, **Then** identifica el icono genérico y nombre en la parte superior, las estadísticas en el centro y la liga y posición en la parte inferior.
+2. **Given** una tarjeta de jugador visible, **When** el usuario la observa, **Then** identifica el icono genérico y nombre en la parte superior, el equipo y las estadísticas en el centro y la liga y posición en la parte inferior.
 3. **Given** un visitante sin sesión válida, **When** intenta abrir `/players`, **Then** no ve el catálogo y es dirigido al acceso de usuarios.
 
 ---
@@ -95,8 +95,8 @@ Como usuario autenticado, quiero reconocer controles de búsqueda, liga y posici
 - **FR-001**: La aplicación debe ofrecer `/players` como una página privada accesible únicamente con una sesión autenticada válida.
 - **FR-002**: La página debe obtener el catálogo paginado existente y solicitar 12 jugadores por página.
 - **FR-003**: La página debe mostrar cada jugador en una tarjeta inspirada en `referencias-imagenes/Card Player.png`, sin exigir una reproducción literal de la referencia.
-- **FR-004**: Cada tarjeta debe mostrar `Player Generic-Icon.png` y el nombre del jugador en la parte superior; tres estadísticas numéricas comunes de muestra, etiquetadas como partidos, goles y asistencias, en el centro; y la liga y posición en la parte inferior.
-- **FR-005**: Mientras no existan estadísticas individuales, todas las tarjetas deben usar los mismos valores numéricos de muestra y distinguirlos visualmente de los datos reales del jugador.
+- **FR-004**: Cada tarjeta debe mostrar `Player Generic-Icon.png` y el nombre del jugador en la parte superior; un bloque central con el equipo real del jugador y tres estadísticas numéricas comunes de muestra, etiquetadas como partidos, goles y asistencias; y la liga y posición en la parte inferior.
+- **FR-005**: Mientras no existan estadísticas individuales, todas las tarjetas deben mostrar los valores fijos de muestra `24` partidos, `8` goles y `5` asistencias. El equipo y cada estadística deben mostrar su etiqueta, y sus textos deben mantener contraste suficiente respecto del color de fondo de la tarjeta.
 - **FR-006**: La página debe estar disponible exclusivamente en equipos de escritorio con una resolución mínima de 1280×720; desde esa resolución, el catálogo debe formar una cuadrícula de cuatro columnas y hasta tres filas por página sin desplazamiento horizontal.
 - **FR-007**: Cada una de las cinco ligas del catálogo debe tener un color de fondo suave, consistente y diferente para sus tarjetas, con contraste suficiente para leer toda la información.
 - **FR-008**: La liga debe representarse con el recurso gráfico correspondiente de `referencias-imagenes/`, además de conservar una identificación textual accesible.
@@ -117,7 +117,7 @@ Como usuario autenticado, quiero reconocer controles de búsqueda, liga y posici
 
 - **Jugador**: Elemento del catálogo con identificador, nombre, equipo, liga y posición. En el catálogo vigente, todo jugador visible se considera activo.
 - **Página de jugadores**: Grupo de hasta 12 jugadores acompañado por su número actual, cantidad total de elementos y cantidad total de páginas.
-- **Tarjeta de jugador**: Representación visual de un jugador que reúne identidad, estadísticas de muestra, liga, posición y estado.
+- **Tarjeta de jugador**: Representación visual de un jugador que reúne identidad, un bloque central con equipo y estadísticas de muestra, liga, posición y estado.
 - **Estado de navegación**: Página seleccionada y destinos válidos que permiten recorrer el catálogo sin exceder sus límites.
 
 ## Success Criteria *(mandatory)*
@@ -125,7 +125,7 @@ Como usuario autenticado, quiero reconocer controles de búsqueda, liga y posici
 ### Measurable Outcomes
 
 - **SC-001**: En el 100 % de los intentos sin una sesión válida, el catálogo de `/players` permanece oculto y el visitante llega al acceso de usuarios.
-- **SC-002**: En una revisión con datos de las cinco ligas y cuatro posiciones contempladas, el 100 % de las tarjetas muestra nombre, icono genérico, tres estadísticas numéricas, liga, posición y estado identificables.
+- **SC-002**: En una revisión con datos de las cinco ligas y cuatro posiciones contempladas, el 100 % de las tarjetas muestra nombre, icono genérico, equipo, `24` partidos, `8` goles, `5` asistencias, liga, posición y estado identificables, con textos legibles respecto del fondo.
 - **SC-003**: En equipos de escritorio con una resolución de 1280×720 o superior, cada página muestra como máximo 12 tarjetas en cuatro columnas y tres filas, y el 100 % del contenido y los controles permanece utilizable sin desplazamiento horizontal.
 - **SC-004**: En un catálogo de al menos 8 páginas, el usuario puede llegar a la primera, última y cualquier página ofrecida por la ventana de tres anteriores y tres posteriores en una sola acción del paginador.
 - **SC-005**: En el 100 % de los cambios de página exitosos, la página identificada como actual y los jugadores visibles corresponden a la selección más reciente.
@@ -139,7 +139,7 @@ Como usuario autenticado, quiero reconocer controles de búsqueda, liga y posici
 - La aplicación está destinada exclusivamente a equipos de escritorio; dispositivos móviles y pantallas táctiles quedan fuera del alcance.
 - El catálogo vigente contiene y devuelve únicamente jugadores activos; por ello el indicador solicitado comunica `Activo` para todos los jugadores visibles. La visualización de inactivos depende de un cambio futuro fuera de este alcance.
 - Las cinco ligas son Premier League, Bundesliga, Primera División, Serie A y Ligue 1, y sus nombres pueden relacionarse con los recursos disponibles en `referencias-imagenes/`.
-- Los valores iniciales de partidos, goles y asistencias son datos de muestra comunes a todos los jugadores y no representan estadísticas reales.
+- Los valores iniciales `24` partidos, `8` goles y `5` asistencias son datos de muestra comunes a todos los jugadores y no representan estadísticas reales; el equipo sí procede del catálogo.
 - La ventana del paginador se interpreta como hasta tres páginas anteriores y tres posteriores a la actual, además de los accesos a los extremos.
 
 ## Out of Scope

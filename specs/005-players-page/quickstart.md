@@ -37,9 +37,9 @@ Abrir la URL informada por Vite en un navegador de escritorio con viewport de al
 
 1. Usar datos que cubran las cinco ligas y las cuatro posiciones documentadas.
 2. Confirmar un máximo de 12 tarjetas, cuatro columnas y hasta tres filas, sin desplazamiento horizontal a 1280×720.
-3. Verificar en cada tarjeta icono genérico, nombre, equipo, liga, posición y las tres estadísticas comunes claramente identificadas como muestra.
+3. Verificar en cada tarjeta icono genérico, nombre, liga y posición, además de un bloque central con el equipo real, `24` partidos, `8` goles y `5` asistencias, cada atributo con su etiqueta.
 4. Confirmar recursos y color suave por liga, recurso por posición y texto accesible para ambas clasificaciones.
-5. Comprobar que nombres largos no invaden estadísticas ni metadatos.
+5. Comprobar que los textos del equipo y de las estadísticas contrastan con el fondo, y que nombres largos no invaden estadísticas ni metadatos.
 6. Pasar el puntero sobre cada tarjeta y confirmar que `Activo` entra desde la izquierda sin desplazar la cuadrícula ni ocultar información esencial; al retirar el puntero debe ocultarse de nuevo.
 
 ### Paginación y concurrencia

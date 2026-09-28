@@ -49,15 +49,15 @@ Representa exactamente un elemento de la respuesta de `GET /api/players`.
 
 ### PlayerSampleStatistics
 
-Datos de presentación comunes a todas las tarjetas, definidos como constantes y no como respuesta remota.
+Datos numéricos de presentación comunes a todas las tarjetas, definidos como constantes y no como respuesta remota. Se muestran en el mismo bloque central que el equipo real de `Player`, pero este no forma parte de `PlayerSampleStatistics`.
 
 | Campo | Tipo | Reglas |
 | --- | --- | --- |
-| `matches` | `number` | Valor fijo compartido, etiquetado como dato de muestra. |
-| `goals` | `number` | Valor fijo compartido, etiquetado como dato de muestra. |
-| `assists` | `number` | Valor fijo compartido, etiquetado como dato de muestra. |
+| `matches` | `number` | Valor fijo `24`, mostrado con la etiqueta `Partidos`. |
+| `goals` | `number` | Valor fijo `8`, mostrado con la etiqueta `Goles`. |
+| `assists` | `number` | Valor fijo `5`, mostrado con la etiqueta `Asistencias`. |
 
-Los valores concretos se fijarán en implementación y deberán ser iguales en todas las tarjetas. No se persistirán ni enviarán al backend.
+Los valores deberán ser iguales en todas las tarjetas. No se persistirán ni enviarán al backend. El equipo se mostrará con su propia etiqueta y, junto con las estadísticas, usará texto con contraste suficiente respecto del fondo de la tarjeta.
 
 ### PlayersPageState
 
@@ -75,7 +75,7 @@ Los estados remotos `loading`, `error`, `empty` y `populated` derivan de TanStac
 ## Relaciones
 
 - `PlayersPage` contiene cero o más `Player` y resume su paginación.
-- Cada `Player` se presenta mediante una tarjeta con `PlayerSampleStatistics` comunes.
+- Cada `Player` se presenta mediante una tarjeta cuyo bloque central combina su `team` real con `PlayerSampleStatistics` comunes.
 - `PlayersPageState.selectedPage` determina la clave de query y el parámetro `page`; los tres controles visuales quedan deliberadamente fuera de ambos.
 - Liga y posición seleccionan recursos mediante mappings de presentación, pero el texto original siempre permanece disponible.
 

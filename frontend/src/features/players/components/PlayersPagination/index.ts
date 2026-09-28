@@ -1,0 +1,1 @@
+export { PlayersPagination } from "./PlayersPagination";

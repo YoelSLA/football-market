@@ -8,7 +8,7 @@
 
 ## Summary
 
-Crear la página privada `/players` para consultar en tarjetas el catálogo paginado existente, con 12 jugadores por página, navegación, estados de carga/error/vacío, controles de filtrado exclusivamente visuales y recursos gráficos accesibles para liga, posición y estado activo. La implementación se encapsulará en una nueva feature frontend que consumirá `GET /api/players` mediante Axios y TanStack Query, transformará DTO a Model, reutilizará el guard y el ciclo de sesión actuales y no modificará backend, persistencia ni dependencias.
+Crear la página privada `/players` para consultar en tarjetas el catálogo paginado existente, con 12 jugadores por página, navegación, estados de carga/error/vacío, controles de filtrado exclusivamente visuales y recursos gráficos accesibles para liga, posición y estado activo. Cada tarjeta mostrará un bloque central con el equipo real y los valores fijos de muestra `24` partidos, `8` goles y `5` asistencias. La implementación se encapsulará en una nueva feature frontend que consumirá la ruta relativa `GET /players` mediante Axios y TanStack Query; `VITE_API_URL` ya incluye `/api`, por lo que la URL HTTP efectiva será `GET /api/players`. Transformará DTO a Model, reutilizará el guard y el ciclo de sesión actuales y no modificará backend, persistencia ni dependencias.
 
 ## Technical Context
 
@@ -38,7 +38,7 @@ Crear la página privada `/players` para consultar en tarjetas el catálogo pagi
 
 - **Simplicidad y alcance**: PASS. Se reutilizan router, guard, cliente HTTP, sesión, TanStack Query y componentes compartidos existentes; no se añaden capas ni dependencias ajenas a las responsabilidades definidas.
 - **Seguridad**: PASS. `/players` pasará al `AuthGuard` privado y la consulta usará `authenticated: true`; el interceptor actual conserva el token fuera de la feature y finaliza la sesión ante `401`.
-- **Contratos y sincronización**: PASS. La feature consume sin alterar el contrato vigente de `GET /api/players`; DTO, Model y Mapper permanecen separados y el contrato consumido queda documentado en `contracts/players-catalog.md`.
+- **Contratos y sincronización**: PASS. La feature consume sin alterar el contrato vigente de `GET /api/players` mediante la ruta relativa `/players` y el `VITE_API_URL` que ya incluye `/api`; DTO, Model y Mapper permanecen separados y el contrato consumido queda documentado en `contracts/players-catalog.md`.
 - **Arquitectura frontend**: PASS. El flujo previsto es `Page/Component → Hook → Service → infrastructure/http`, con transformación `DTO → Mapper → Model` dentro del Service, API pública de feature y estilos SCSS Modules colocalizados.
 - **Idioma**: PASS. Código y endpoints conservarán inglés; los artefactos de planificación, textos de interfaz y mensajes serán españoles.
 - **Verificación**: PASS. No se crearán ni ejecutarán tests frontend; la implementación posterior se verificará únicamente con el build permitido y los escenarios manuales de `quickstart.md`.

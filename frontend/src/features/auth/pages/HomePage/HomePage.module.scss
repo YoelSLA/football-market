@@ -30,11 +30,30 @@
 		font-size: .85rem;
 	}
 
+	&__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: .75rem;
+	}
+
+	&__players-link,
 	&__logout {
 		padding: .85rem 1.5rem;
-		background: #203ac5;
-		color: white;
 		border: 0;
 		border-radius: .6rem;
+		font: inherit;
+		font-weight: 700;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	&__players-link {
+		background: #203ac5;
+		color: white;
+	}
+
+	&__logout {
+		background: #e8ecf8;
+		color: #20305b;
 	}
 }
