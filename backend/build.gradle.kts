@@ -1,5 +1,7 @@
 plugins {
     java
+    jacoco
+
     id("org.springframework.boot") version "4.1.1"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.sonarqube") version "7.3.1.8318"
@@ -70,6 +72,27 @@ tasks.named<Test>("test") {
 
     // Los tests de Spring REST Docs generan los snippets acá.
     outputs.dir(snippetsDir)
+
+    // Genera el reporte de cobertura después de ejecutar los tests.
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+// ============================================================
+// JACOCO
+// ============================================================
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        // SonarQube utiliza el reporte XML para importar la cobertura.
+        xml.required.set(true)
+
+        // Reporte visual para consultar la cobertura localmente.
+        html.required.set(true)
+
+        csv.required.set(false)
+    }
 }
 
 // ============================================================
@@ -133,5 +156,17 @@ sonar {
     properties {
         property("sonar.projectKey", "YoelSLA_football-market")
         property("sonar.organization", "yoelsla")
+
+        // Reporte de cobertura generado por JaCoCo.
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            "build/reports/jacoco/test/jacocoTestReport.xml"
+        )
     }
+}
+
+// Sonar debe ejecutarse después de que JaCoCo haya generado
+// el reporte XML de cobertura.
+tasks.named("sonar") {
+    dependsOn(tasks.jacocoTestReport)
 }
