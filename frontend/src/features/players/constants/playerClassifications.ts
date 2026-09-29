@@ -29,7 +29,10 @@ const positionClassifications: Record<string, Classification> = {
 	Offence: { image: offenceImage, variant: "offence" },
 };
 
-const neutralClassification: Classification = { image: null, variant: "neutral" };
+const neutralClassification: Classification = {
+	image: null,
+	variant: "neutral",
+};
 
 export function getLeagueClassification(league: string): Classification {
 	return leagueClassifications[league] ?? neutralClassification;

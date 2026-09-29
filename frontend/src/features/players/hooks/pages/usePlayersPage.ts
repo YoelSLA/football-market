@@ -10,13 +10,17 @@ export function usePlayersPage() {
 	const query = usePlayersQuery(selectedPage);
 	const isLoading = query.isPending || query.isFetching;
 	const errorMessage = query.isError
-		? getErrorMessage(query.error, "No pudimos cargar los jugadores. Vuelve a intentarlo.")
+		? getErrorMessage(
+				query.error,
+				"No pudimos cargar los jugadores. Vuelve a intentarlo.",
+			)
 		: null;
 	const playersPage = isLoading || errorMessage ? undefined : query.data;
 
 	useEffect(() => {
 		const totalPages = query.data?.totalPages;
-		if (totalPages && selectedPage >= totalPages) setSelectedPage(totalPages - 1);
+		if (totalPages && selectedPage >= totalPages)
+			setSelectedPage(totalPages - 1);
 	}, [query.data?.totalPages, selectedPage]);
 
 	function selectPage(page: number) {

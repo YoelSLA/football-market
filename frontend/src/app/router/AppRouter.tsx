@@ -1,10 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AuthGuard from "@/app/router/AuthGuard";
-import {
-	HomePage,
-	LoginPage,
-	RegisterPage,
-} from "@/features/auth";
+import { HomePage, LoginPage, RegisterPage } from "@/features/auth";
 import { PlayersPage } from "@/features/players";
 
 export default function AppRouter() {

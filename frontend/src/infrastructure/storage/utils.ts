@@ -1,4 +1,4 @@
-import { AuthSession } from "@/infrastructure/storage/types";
+import type { AuthSession } from "@/infrastructure/storage/types";
 
 export function isSessionValid(
 	session: AuthSession,

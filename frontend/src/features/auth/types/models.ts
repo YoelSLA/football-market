@@ -10,4 +10,4 @@ export interface RegisterForm extends LoginForm {
 export type CurrentUser = {
 	id: string;
 	email: string;
-}
+};

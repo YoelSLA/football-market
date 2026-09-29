@@ -1,3 +1,4 @@
+import type { AuthSession } from "@/infrastructure/storage/types";
 import { getJwtExpiration } from "@/infrastructure/storage/utils";
 import type {
 	CredentialsDTO,
@@ -6,7 +7,6 @@ import type {
 	LoginForm,
 	LoginResponseDTO,
 } from "./types";
-import { AuthSession } from "@/infrastructure/storage/types";
 
 export function toCredentialsDTO(form: LoginForm): CredentialsDTO {
 	return { email: form.email, password: form.password };
