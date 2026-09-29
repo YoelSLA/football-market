@@ -5,21 +5,10 @@ on:
     branches:
       - main
 
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches:
-      - dev
-      - main
-
 jobs:
   sonar:
     name: SonarQube analysis
     runs-on: ubuntu-latest
-
-    if: >
-      github.event_name == 'push' ||
-      github.base_ref == 'dev' ||
-      (github.base_ref == 'main' && github.head_ref == 'dev')
 
     steps:
       - name: Checkout repository
@@ -31,7 +20,7 @@ jobs:
         uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9
         with:
           java-version: 21
-          distribution: 'zulu'
+          distribution: "zulu"
 
       - name: Cache SonarQube packages
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
