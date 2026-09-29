@@ -66,7 +66,7 @@ el acceso debe rechazarse.
 - **FR-008**: System MUST NOT exponer datos sensibles (contraseñas, credenciales en texto plano) en respuestas, mensajes de error o registros del sistema.
 - **FR-009**: Los endpoints de la API para el registro y la autenticación MUST ser documentados de acuerdo con la sección 8 de la Constitución.
 - **FR-010**: El registro exitoso MUST responder `201 Created` sin body; un email ya registrado MUST responder `409 Conflict`.
-- **FR-011**: Los errores gestionados por la aplicación MUST devolver un `ErrorResponseDTO` con `timestamp`, `status`, `error`, `message` y `path`. `status` MUST coincidir con el código HTTP y `path` MUST indicar la ruta solicitada. Para errores de Jakarta Validation, `message` MUST contener el primer mensaje de validación disponible.
+- **FR-011**: Los errores gestionados por la aplicación MUST devolver un `ErrorResponseDTO` con `timestamp`, `status`, `error`, `code`, `message` y `path`. `code` MUST identificar establemente el error; `status` MUST coincidir con el código HTTP y `path` MUST indicar la ruta solicitada. Para errores de Jakarta Validation, `message` MUST contener el primer mensaje de validación disponible.
 - **FR-012**: El login exitoso MUST responder `200 OK` con un JWT en el campo `token`. Las solicitudes a recursos protegidos MUST presentar ese token mediante `Authorization: Bearer`; el servidor MUST validar su firma y vigencia antes de permitir el acceso y responder `401 Unauthorized` si el token falta o no es válido.
 
 ### Key Entities *(include if feature involves data)*

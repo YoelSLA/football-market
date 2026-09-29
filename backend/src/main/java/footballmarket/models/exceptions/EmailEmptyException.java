@@ -1,8 +1,9 @@
 package footballmarket.models.exceptions;
 
-import footballmarket.exceptions.FootballMarketException;
+import footballmarket.exceptions.DomainException;
 
-public class EmailEmptyException extends FootballMarketException {
+/** Indica que el email requerido está vacío. */
+public class EmailEmptyException extends DomainException {
   public EmailEmptyException(String message) {
     super(message);
   }

@@ -4,24 +4,9 @@ Plataforma de mercado de jugadores de fútbol que permite consultar jugadores,
 calcular y consultar sus cotizaciones, operar con tokens y gestionar el
 portfolio de los usuarios.
 
-## Stack
+## Tecnologías
 
-### Backend
-- Java 21
-- Spring Boot 3.x
-
-### Frontend
-- React
-- Vite
-
-### Base de datos
-- PostgreSQL
-
-### Herramientas
-- GitHub Actions
-- SonarCloud
-- OpenAPI / Swagger
-- JWT
+El inventario vigente, sus versiones efectivas y el uso concreto en el proyecto se documentan en [tecnologías del backend](../docs/backend/technologies.md) y [tecnologías del frontend](../docs/frontend/technologies.md). La configuración efectiva de cada área conserva precedencia como fuente de verdad.
 
 ## Estructura del proyecto
 

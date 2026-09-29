@@ -1,0 +1,66 @@
+.auth-form {
+	display: grid;
+	gap: .5rem;
+	min-width: 0;
+
+	&__fields {
+		display: grid;
+		gap: .45rem;
+		border: 0;
+		padding: 0;
+		min-width: 0;
+	}
+
+	&__submit {
+		width: 100%;
+		border: 0;
+		border-radius: .5rem;
+		padding: .85rem 1rem;
+		background: #203ac5;
+		color: white;
+		font-size: .9rem;
+		font-weight: 650;
+		transition: background .15s;
+
+		&:hover:not(:disabled) {
+			background: #172b99;
+		}
+
+		&:disabled {
+			cursor: wait;
+			opacity: .65;
+		}
+	}
+
+	&__feedback {
+		font-size: .8rem;
+		overflow-wrap: anywhere;
+	}
+
+	&__error {
+		color: #a32739;
+	}
+
+	&__success {
+		color: #17613b;
+	}
+
+	&__switch {
+		margin: .5rem 0 0;
+		text-align: center;
+		color: #657087;
+		font-size: .8rem;
+	}
+
+	&__link {
+		color: #203ac5;
+		font-weight: 700;
+		text-decoration: underline;
+		text-underline-offset: .2em;
+
+		&[aria-disabled="true"] {
+			opacity: .5;
+			cursor: wait;
+		}
+	}
+}

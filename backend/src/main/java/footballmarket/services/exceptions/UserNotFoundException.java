@@ -1,8 +1,9 @@
 package footballmarket.services.exceptions;
 
-import footballmarket.exceptions.FootballMarketException;
+import footballmarket.exceptions.DomainException;
 
-public class UserNotFoundException extends FootballMarketException {
+/** Indica que no existe el usuario solicitado. */
+public class UserNotFoundException extends DomainException {
   public UserNotFoundException(String message) {
     super(message);
   }

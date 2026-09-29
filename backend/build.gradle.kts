@@ -29,8 +29,8 @@ val snippetsDir = file("build/generated-snippets")
 dependencies {
 
     implementation(libs.jjwt.api)
-    implementation(libs.spring.dotenv)
     implementation(libs.springdoc.openapi)
+    developmentOnly("me.paulschwarz:springboot4-dotenv:5.1.0")
 
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -62,6 +62,11 @@ dependencies {
 
 tasks.named<Test>("test") {
     useJUnitPlatform()
+
+    // Fuerza la JVM de los tests a utilizar UTC.
+    // Esto evita que pgjdbc tome la zona horaria local
+    // de Windows (America/Buenos_Aires) como TimeZone.
+    systemProperty("user.timezone", "UTC")
 
     // Los tests de Spring REST Docs generan los snippets acá.
     outputs.dir(snippetsDir)

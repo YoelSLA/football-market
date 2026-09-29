@@ -1,0 +1,124 @@
+.player-card {
+	position: relative;
+	min-width: 0;
+	min-height: 14.5rem;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	gap: .6rem;
+	overflow: hidden;
+	padding: .85rem .85rem .85rem 2.6rem;
+	border: 1px solid rgb(255 255 255 / 24%);
+	border-radius: 1.1rem;
+	background: linear-gradient(135deg, #eef3f8 0%, #a7b6c8 42%, #dce5ee 68%, #8799ae 100%);
+	color: #17213b;
+	box-shadow: 0 .85rem 1.75rem rgb(5 11 35 / 22%);
+
+	&--premier { background: linear-gradient(135deg, #d7e9ff 0%, #6ba0dc 38%, #b9d8f7 65%, #3976bb 100%); }
+	&--bundesliga { background: linear-gradient(135deg, #ffd9d4 0%, #dc7f75 38%, #f3b4ad 65%, #b94f47 100%); }
+	&--primera { background: linear-gradient(135deg, #fff0bd 0%, #d8a83f 38%, #f3d47e 65%, #b88422 100%); }
+	&--serie-a { background: linear-gradient(135deg, #d8f3df 0%, #68ad7a 38%, #b6dfc0 65%, #398750 100%); }
+	&--ligue-one { background: linear-gradient(135deg, #eadcff 0%, #9671c9 38%, #d0b7ef 65%, #67459b 100%); }
+
+	&::after {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(115deg, transparent 12%, rgb(255 255 255 / 28%) 35%, transparent 56%);
+		content: "";
+		pointer-events: none;
+	}
+
+	> * {
+		position: relative;
+		z-index: 1;
+	}
+
+	&__status {
+		position: absolute;
+		top: .75rem;
+		bottom: .75rem;
+		left: 0;
+		width: 1.75rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transform: translateX(-110%);
+		padding: .3rem;
+		border-radius: 0 1rem 1rem 0;
+		background: #12643c;
+		color: #fff;
+		font-size: .72rem;
+		font-weight: 800;
+		writing-mode: vertical-rl;
+		transition: transform 180ms ease-out;
+	}
+
+	&:hover &__status { transform: translateX(0); }
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: .75rem;
+		min-width: 0;
+		text-align: left;
+
+		h2 {
+			min-width: 0;
+			display: -webkit-box;
+			overflow: hidden;
+			font-size: 1.3rem;
+			font-weight: 900;
+			line-height: 1.1;
+			overflow-wrap: anywhere;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 2;
+		}
+	}
+
+	&__portrait {
+		width: 4rem;
+		height: 4rem;
+		flex: 0 0 auto;
+		object-fit: contain;
+	}
+
+	&__details {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		align-items: stretch;
+		gap: .45rem;
+
+		div {
+			min-width: 0;
+			display: grid;
+			align-content: center;
+			gap: .15rem;
+			padding: .45rem;
+			border-radius: .55rem;
+			background: rgb(255 255 255 / 58%);
+			text-align: center;
+		}
+
+		dt { color: #39435a; font-size: .65rem; font-weight: 800; }
+		dd { margin: 0; color: #10182b; font-size: 1rem; font-weight: 900; }
+	}
+
+	&__team {
+		grid-column: 1 / -1;
+	}
+
+	&__team dd {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__classifications {
+		display: flex;
+		justify-content: space-between;
+		gap: .5rem;
+
+		div { min-width: 0; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem; padding: .35rem .45rem; border-radius: .65rem; background: rgb(255 255 255 / 34%); text-align: center; }
+		img { width: 3rem; height: 3rem; flex: 0 0 auto; object-fit: contain; filter: drop-shadow(0 .2rem .2rem rgb(16 24 43 / 22%)); }
+		span { width: 100%; overflow: hidden; font-size: .75rem; font-weight: 800; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+	}
+}

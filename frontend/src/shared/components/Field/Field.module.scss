@@ -1,0 +1,36 @@
+.field {
+	display: grid;
+	gap: .35rem;
+	min-width: 0;
+
+	&__label {
+		font-size: .8rem;
+		font-weight: 600;
+	}
+
+	&__input {
+		width: 100%;
+		min-width: 0;
+		padding: .7rem .85rem;
+		border: 1px solid #d4dae7;
+		border-radius: .5rem;
+		color: #162240;
+		background: #fff;
+		font-size: .9rem;
+
+		&[aria-invalid="true"] {
+			border-color: #bd3743;
+		}
+
+		&:disabled {
+			background: #f0f3f9;
+		}
+	}
+
+	&__error {
+		min-height: 1.1rem;
+		color: #a32739;
+		font-size: .75rem;
+		overflow-wrap: anywhere;
+	}
+}

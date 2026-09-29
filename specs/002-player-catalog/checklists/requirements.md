@@ -8,6 +8,7 @@
 
 - [x] El alcance funcional del catálogo de jugadores está claramente definido.
 - [x] Football-Data.org está identificado como la fuente externa seleccionada.
+- [x] El catálogo está limitado exactamente a Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`), sin exigir un orden.
 - [x] La consulta del catálogo local y la sincronización manual están claramente diferenciadas.
 - [x] Las secciones obligatorias de la especificación están completas.
 - [x] La especificación describe principalmente qué debe hacer el sistema y su comportamiento observable, sin prescribir cómo implementarlo.
@@ -29,6 +30,7 @@
 - [x] Están definidos los escenarios de aceptación y los casos límite.
 - [x] La sincronización automática y las funcionalidades fuera del alcance están explícitamente excluidas.
 - [x] Las dependencias y los supuestos funcionales están identificados.
+- [x] El comportamiento ante una configuración que omita, agregue, duplique o reordene ligas está definido.
 
 ## Feature Readiness
 
@@ -43,4 +45,4 @@
 
 ## Notes
 
-- Especificación funcional validada y lista para la fase de planificación técnica.
+- Especificación funcional validada. El cambio de alcance está listo para implementar mediante T037–T041.

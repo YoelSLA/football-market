@@ -1,8 +1,9 @@
 package footballmarket.models.exceptions;
 
-import footballmarket.exceptions.FootballMarketException;
+import footballmarket.exceptions.DomainException;
 
-public class PasswordTooShortException extends FootballMarketException {
+/** Indica que la contraseña no alcanza la longitud mínima. */
+public class PasswordTooShortException extends DomainException {
   public PasswordTooShortException(String message) {
     super(message);
   }

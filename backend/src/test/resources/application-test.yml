@@ -1,9 +1,5 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/football_market_test
-    username: postgres
-    password: root
-
     hikari:
       data-source-properties:
         TimeZone: UTC
@@ -18,9 +14,14 @@ spring:
         jdbc:
           time_zone: UTC
 
+football-data:
+  api-key: test-only-not-a-credential
+  base-url: https://provider.example/v4
+  competitions: PL,BL1,PD,SA,FL1
+
 jwt:
   secret: test-secret-key-for-football-market-2026
-  expiration: 3600000
+  expiration: 43200000
 
 logging:
   level:
