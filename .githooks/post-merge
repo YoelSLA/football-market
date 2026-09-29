@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo ""
+echo "🔄 Merge completado. Verificando dependencias..."
+
+CHANGED_FILES=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD)
+
+if echo "$CHANGED_FILES" | grep -qE "^frontend/(package.json|package-lock.json)$"; then
+    echo ""
+    echo "📦 Se detectaron cambios en las dependencias del frontend."
+    echo "💡 Ejecutá npm install dentro de la carpeta frontend."
+fi
+
+if echo "$CHANGED_FILES" | grep -qE "^backend/(build.gradle.kts|settings.gradle.kts|gradle.properties|gradle/libs.versions.toml)$"; then
+    echo ""
+    echo "📦 Se detectaron cambios en la configuración de Gradle."
+    echo "💡 Gradle resolverá las dependencias en la próxima ejecución."
+fi
+
+echo ""
+echo "✅ Post-merge finalizado."

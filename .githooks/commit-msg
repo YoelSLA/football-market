@@ -1,0 +1,37 @@
+#!/bin/bash
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(head -n 1 "$COMMIT_MSG_FILE")
+
+if [[ ! "$COMMIT_MSG" =~ ^(feat|fix|refactor|test|docs|style|chore|perf|build|ci)(\([a-zA-Z0-9_-]+\))?:\ .+ ]]; then
+    echo ""
+    echo "❌ Mensaje de commit inválido."
+    echo ""
+    echo "Formato esperado:"
+    echo "  tipo: descripción"
+    echo "  tipo(scope): descripción"
+    echo ""
+    echo "Tipos permitidos:"
+    echo "  feat      Nueva funcionalidad"
+    echo "  fix       Corrección de errores"
+    echo "  refactor  Refactorización de código"
+    echo "  test      Agregar o modificar tests"
+    echo "  docs      Documentación"
+    echo "  style     Formato o estilo de código"
+    echo "  chore     Tareas de mantenimiento"
+    echo "  perf      Mejoras de rendimiento"
+    echo "  build     Build o dependencias"
+    echo "  ci        Integración y despliegue continuo"
+    echo ""
+    echo "Ejemplos:"
+    echo "  feat: agregar catálogo de jugadores"
+    echo "  feat(auth): agregar cierre de sesión"
+    echo "  fix(players): corregir sincronización de imágenes"
+    echo "  test(auth): agregar tests de autenticación"
+    echo "  docs: actualizar arquitectura del frontend"
+    echo "  ci: agregar análisis de SonarQube"
+    echo ""
+    exit 1
+fi
+
+echo "✅ Mensaje de commit válido."

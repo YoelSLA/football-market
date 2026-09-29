@@ -17,7 +17,9 @@ export function PlayersPage() {
 					<p>FOOTBALL MARKET</p>
 					<h1>Catálogo de jugadores</h1>
 				</div>
-				{page.playersPage && <span>{page.playersPage.totalElements} jugadores activos</span>}
+				{page.playersPage && (
+					<span>{page.playersPage.totalElements} jugadores activos</span>
+				)}
 			</header>
 
 			<PlayerCatalogControls
@@ -32,15 +34,26 @@ export function PlayersPage() {
 			{page.errorMessage ? (
 				<section className={styles["players-page__message"]} role="alert">
 					<p>{page.errorMessage}</p>
-					<button type="button" onClick={() => page.retry()}>Reintentar</button>
+					<button type="button" onClick={() => page.retry()}>
+						Reintentar
+					</button>
 				</section>
 			) : page.isLoading ? (
-				<p className={styles["players-page__message"]} role="status">Cargando jugadores...</p>
+				<p className={styles["players-page__message"]} role="status">
+					Cargando jugadores...
+				</p>
 			) : players.length === 0 ? (
-				<p className={styles["players-page__message"]} role="status">No hay jugadores disponibles.</p>
+				<p className={styles["players-page__message"]} role="status">
+					No hay jugadores disponibles.
+				</p>
 			) : (
-				<section className={styles["players-page__grid"]} aria-label="Jugadores">
-					{players.map((player) => <PlayerCard key={player.id} player={player} />)}
+				<section
+					className={styles["players-page__grid"]}
+					aria-label="Jugadores"
+				>
+					{players.map((player) => (
+						<PlayerCard key={player.id} player={player} />
+					))}
 				</section>
 			)}
 

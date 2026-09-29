@@ -53,7 +53,11 @@ export function RegisterPage() {
 						</p>
 					)}
 				</div>
-				<Button className={styles["auth-form__submit"]} type="submit" disabled={isPending}>
+				<Button
+					className={styles["auth-form__submit"]}
+					type="submit"
+					disabled={isPending}
+				>
 					{isPending ? "Creando tu cuenta…" : "Crear cuenta"}
 				</Button>
 				<p className={styles["auth-form__switch"]}>

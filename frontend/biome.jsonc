@@ -34,7 +34,7 @@
 		"enabled": true,
 		"rules": {
 			// Activa el conjunto de reglas recomendadas por Biome.
-			"recommended": true
+			"preset": "recommended"
 		}
 	},
 	// Reglas específicas para JavaScript/TypeScript.

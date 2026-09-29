@@ -7,6 +7,7 @@ plugins {
     id("org.sonarqube") version "7.3.1.8318"
     id("com.diffplug.spotless") version "7.2.1"
     id("org.asciidoctor.jvm.convert") version "4.0.5"
+
 }
 
 group = "com.example"

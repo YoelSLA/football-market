@@ -2,6 +2,43 @@
 
 echo "🚀 Ejecutando pre-commit..."
 
-.githooks/pre-commit-spotless || exit 1
+echo ""
+echo "🔧 Verificando backend con Spotless..."
 
+cd backend || {
+    echo "❌ No se encontró la carpeta backend."
+    echo "🚫 Commit cancelado."
+    exit 1
+}
+
+if ! ./gradlew spotlessCheck --no-daemon; then
+    echo ""
+    echo "❌ Hay archivos del backend sin formatear."
+    echo "💡 Ejecutá ./gradlew spotlessApply dentro de la carpeta backend."
+    echo "🚫 Commit cancelado."
+    exit 1
+fi
+
+cd ..
+
+echo ""
+echo "🔧 Verificando frontend con Biome..."
+
+cd frontend || {
+    echo "❌ No se encontró la carpeta frontend."
+    echo "🚫 Commit cancelado."
+    exit 1
+}
+
+if ! npm run biome:check; then
+    echo ""
+    echo "❌ Biome encontró problemas en el frontend."
+    echo "💡 Ejecutá npm run biome:fix dentro de la carpeta frontend."
+    echo "🚫 Commit cancelado."
+    exit 1
+fi
+
+cd ..
+
+echo ""
 echo "✅ Pre-commit finalizado correctamente."

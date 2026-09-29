@@ -51,7 +51,11 @@ export function LoginPage() {
 						)
 					)}
 				</div>
-				<Button className={styles["auth-form__submit"]} type="submit" disabled={isPending}>
+				<Button
+					className={styles["auth-form__submit"]}
+					type="submit"
+					disabled={isPending}
+				>
 					{isPending ? "Iniciando sesión…" : "Iniciar sesión"}
 				</Button>
 				<p className={styles["auth-form__switch"]}>

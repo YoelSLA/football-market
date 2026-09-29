@@ -1,2 +1,2 @@
 export type { PlayerResponseDTO, PlayersPageResponseDTO } from "./dtos";
-export type { Player, PlayersPage, PlayerSampleStatistics } from "./models";
+export type { Player, PlayerSampleStatistics, PlayersPage } from "./models";
