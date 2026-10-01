@@ -26,7 +26,7 @@ Consultar solo las secciones pertinentes y sus reglas generales, siguiendo las g
 
 Los consumidores dependen de contratos, no de detalles internos. Todo cambio observable es un cambio de contrato: evaluar compatibilidad, incluidos campos, obligatoriedad, significado y errores. No introducir incompatibilidades silenciosas; tratar contratos con consumidores desconocidos como potencialmente utilizados.
 
-Actualizar en el mismo cambio los elementos afectados: Spec, implementación, tests del backend, DTO, documentación, OpenAPI, Postman y configuración. Resolver discrepancias entre Spec y código según el comportamiento acordado; nunca cambiar la Spec para justificar una desviación no acordada ni alterar tests o controles para ocultar fallos.
+Actualizar en el mismo cambio los elementos afectados: Spec, implementación, tests del backend, DTO, documentación, OpenAPI y configuración. Resolver discrepancias entre Spec y código según el comportamiento acordado; nunca cambiar la Spec para justificar una desviación no acordada ni alterar tests o controles para ocultar fallos.
 
 Todo cambio que afecte el inventario tecnológico —incorporación, eliminación, sustitución o actualización de una tecnología o dependencia, o cambio de su versión o propósito sustancial de uso— debe reflejarse en la misma tarea en el `docs/backend/technologies.md` o `docs/frontend/technologies.md` correspondiente. La configuración efectiva conserva precedencia como fuente de verdad.
 
@@ -52,4 +52,4 @@ Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution ni los
 
 Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible. Si los documentos, la Spec y el código no resuelven una decisión normativa relevante, solicitar aclaración sin inventar reglas o excepciones.
 
-**Versión**: 3.2.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-09-22
+**Versión**: 3.3.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-09-30

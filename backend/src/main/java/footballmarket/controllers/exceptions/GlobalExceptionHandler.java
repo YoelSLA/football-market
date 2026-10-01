@@ -4,6 +4,7 @@ import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
+import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -15,6 +16,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(PlayerSynchronizationPersistenceException.class)
+  public ResponseEntity<ErrorResponseDTO> handlePlayerPersistence(HttpServletRequest request) {
+    return buildResponse(
+        "No se pudo aplicar la sincronización del catálogo",
+        "FOOTBALL_DATA_UNAVAILABLE",
+        HttpStatus.BAD_GATEWAY,
+        request);
+  }
 
   @ExceptionHandler(FootballDataUnavailableException.class)
   public ResponseEntity<ErrorResponseDTO> handleFootballDataUnavailable(

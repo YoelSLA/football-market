@@ -12,9 +12,16 @@ para cualquier usuario autenticado, sin rol adicional. No se ejecuta automática
 `GET /api/players` consulta exclusivamente la base local. `page` comienza en cero;
 `size` admite valores de 1 a 100. Los valores predeterminados son 0 y 20.
 
+El `id` es interno de FootballMarket. Cada jugador contiene además `name`, `team`,
+`league`, `position`, `dateOfBirth`, `nationality` e `imageUrl`. Los tres últimos
+aparecen como `null` cuando son desconocidos. No se exponen referencias externas
+ni el estado activo. La migración V3 reasigna los IDs anteriores y conserva el
+identificador de Football-Data.org exclusivamente en su referencia externa.
+
 include::{snippets}/players-list/http-request.adoc[]
 include::{snippets}/players-list/http-response.adoc[]
 include::{snippets}/players-list/response-fields.adoc[]
+include::{snippets}/players-list-known-optionals/http-response.adoc[]
 
 ==== Catálogo vacío y límites válidos
 
@@ -43,6 +50,17 @@ de las cinco ligas, el catálogo permanece sin cambios. La configuración debe s
 el conjunto `PL,BL1,PD,SA,FL1` en cualquier orden; una lista incompleta, con duplicados o ligas adicionales impide el arranque.
 Los jugadores ausentes se conservan como inactivos.
 
+La resolución usa `(FOOTBALL_DATA, externalId)`; una alta crea conjuntamente el jugador
+y su referencia. Los datos opcionales ausentes o inválidos no borran valores conocidos.
+La sincronización no obtiene ni modifica imágenes ni consulta otros proveedores.
+Ante `429` se respeta `Retry-After` con un máximo de tres reintentos por petición;
+otros errores HTTP o de comunicación no se reintentan.
+
+Un conflicto de referencia identificado se descarta sin reasignar jugadores. Si se
+detecta durante la persistencia, se revierte el intento y se reaplica la misma foto
+en una transacción nueva, sin repetir HTTP. Solo se publican contadores del commit
+final. Otros errores técnicos revierten la aplicación local sin cambios parciales.
+
 include::{snippets}/players-sync/http-request.adoc[]
 include::{snippets}/players-sync/http-response.adoc[]
 include::{snippets}/players-sync/response-fields.adoc[]
@@ -53,6 +71,8 @@ El error no modifica el catálogo. La consulta local continúa disponible.
 
 include::{snippets}/players-sync-unavailable/http-response.adoc[]
 include::{snippets}/players-sync-unavailable/response-fields.adoc[]
+include::{snippets}/players-sync-persistence-error/http-response.adoc[]
+include::{snippets}/players-sync-persistence-error/response-fields.adoc[]
 
 ==== Autenticación requerida
 

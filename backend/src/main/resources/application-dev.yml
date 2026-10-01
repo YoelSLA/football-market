@@ -14,7 +14,7 @@ spring:
 
   jpa:
     show-sql: false
-    open-in-view: true
+    open-in-view: false
     properties:
       hibernate:
         generate_statistics: false

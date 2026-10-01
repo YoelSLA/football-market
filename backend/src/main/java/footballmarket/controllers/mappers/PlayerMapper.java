@@ -7,6 +7,7 @@ import footballmarket.models.Player;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import org.springframework.data.domain.Page;
 
+/** Traducción del catálogo local a representaciones HTTP sin referencias externas. */
 public final class PlayerMapper {
   private PlayerMapper() {}
 
@@ -25,7 +26,10 @@ public final class PlayerMapper {
         player.getName(),
         player.getTeam(),
         player.getLeague(),
-        player.getPosition());
+        player.getPosition(),
+        player.getDateOfBirth(),
+        player.getNationality(),
+        player.getImageUrl());
   }
 
   public static PlayersPageResponseDTO toResponse(Page<Player> page) {
