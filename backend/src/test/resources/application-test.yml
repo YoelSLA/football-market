@@ -19,6 +19,13 @@ football-data:
   base-url: https://provider.example/v4
   competitions: PL,BL1,PD,SA,FL1
 
+the-sports-db:
+  api-key: test-only-not-a-credential
+  base-url: https://provider.example/api/v1/json
+  request-interval-ms: 2500
+  max-retries: 3
+  image-retry-days: 30
+
 jwt:
   secret: test-secret-key-for-football-market-2026
   expiration: 43200000

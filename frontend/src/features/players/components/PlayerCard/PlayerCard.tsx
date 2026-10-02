@@ -1,3 +1,4 @@
+import { useState } from "react";
 import genericPlayerImage from "../../assets/Player Generic-Icon.png";
 import {
 	getLeagueClassification,
@@ -12,6 +13,23 @@ interface PlayerCardProps {
 	player: Player;
 }
 
+function PlayerPortrait({ player }: PlayerCardProps) {
+	const [imageIndex, setImageIndex] = useState(0);
+	const images = [player.imageUrl, player.fallbackImageUrl]
+		.filter((url): url is string => Boolean(url))
+		.filter((url, index, urls) => urls.indexOf(url) === index);
+	images.push(genericPlayerImage);
+
+	return (
+		<img
+			className={styles["player-card__portrait"]}
+			src={images[imageIndex]}
+			alt=""
+			onError={() => setImageIndex((index) => Math.min(index + 1, images.length - 1))}
+		/>
+	);
+}
+
 export function PlayerCard({ player }: PlayerCardProps) {
 	const league = getLeagueClassification(player.league);
 	const position = getPositionClassification(player.position);
@@ -22,10 +40,9 @@ export function PlayerCard({ player }: PlayerCardProps) {
 		>
 			<span className={styles["player-card__status"]}>Activo</span>
 			<header className={styles["player-card__header"]}>
-				<img
-					className={styles["player-card__portrait"]}
-					src={genericPlayerImage}
-					alt=""
+				<PlayerPortrait
+					key={`${player.id}:${player.imageUrl}:${player.fallbackImageUrl}`}
+					player={player}
 				/>
 				<h2>{player.name}</h2>
 			</header>

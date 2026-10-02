@@ -11,12 +11,15 @@ import footballmarket.config.SecurityConfig;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
 import footballmarket.models.User;
+import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.AuthenticationService;
 import footballmarket.services.PlayerCatalogService;
+import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.crypto.SecretKey;
@@ -35,9 +38,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -78,8 +83,34 @@ class PlayerControllerTest {
   @DisplayName("Sincronización de jugadores")
   class Synchronization {
     @Test
+    @DisplayName("Un fallo técnico local devuelve el error seguro sin revelar la base")
+    void devuelveErrorDePersistencia() throws Exception {
+      when(orchestrator.synchronize()).thenThrow(new PlayerSynchronizationPersistenceException());
+      mvc.perform(post("/api/players/sync").header("Authorization", authorization))
+          .andExpect(status().isBadGateway())
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
+          .andExpect(jsonPath("$.status").value(502))
+          .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
+          .andExpect(
+              jsonPath("$.message").value("No se pudo aplicar la sincronización del catálogo"))
+          .andExpect(jsonPath("$.path").value("/api/players/sync"))
+          .andDo(
+              document(
+                  "players-sync-persistence-error",
+                  responseFields(
+                      fieldWithPath("timestamp").description("Fecha del error"),
+                      fieldWithPath("status").description("Código HTTP"),
+                      fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
+                      fieldWithPath("message").description("Mensaje seguro"),
+                      fieldWithPath("path").description("Ruta solicitada"))));
+    }
+
+    @Test
+    @DisplayName("Sincroniza con JWT válido y devuelve los contadores contractuales")
     void sincronizaConJwtValidoYDevuelveContadoresExactos() throws Exception {
-      when(orchestrator.synchronize()).thenReturn(new PlayerSynchronizationResult(5, 1, 2, 3, 1));
+      PlayerSynchronizationResult result = new PlayerSynchronizationResult(5, 1, 2, 3, 1);
+      when(orchestrator.synchronize()).thenReturn(result);
       mvc.perform(post("/api/players/sync").header("Authorization", authorization))
           .andExpect(status().isOk())
           .andExpect(
@@ -95,16 +126,20 @@ class PlayerControllerTest {
                   responseFields(
                       fieldWithPath("obtained")
                           .description("Registros leídos antes de validar y consolidar"),
-                      fieldWithPath("created").description("Identificadores nuevos"),
+                      fieldWithPath("created")
+                          .description("Jugadores nuevos con su referencia externa"),
                       fieldWithPath("updated")
-                          .description("Identificadores existentes, incluidas reactivaciones"),
+                          .description(
+                              "Jugadores resueltos por referencia, incluidas reactivaciones"),
                       fieldWithPath("markedInactive").description("Transiciones a inactivo"),
                       fieldWithPath("discardedInvalid")
-                          .description("Registros descartados por campos obligatorios"))));
+                          .description(
+                              "Registros descartados por obligatorios o conflictos de identidad"))));
       verify(orchestrator).synchronize();
     }
 
     @Test
+    @DisplayName("Responde con un error seguro cuando el proveedor falla")
     void devuelveElErrorContractualSeguroAnteFalloDelProveedor() throws Exception {
       when(orchestrator.synchronize()).thenThrow(new FootballDataUnavailableException());
       mvc.perform(post("/api/players/sync").header("Authorization", authorization))
@@ -131,11 +166,18 @@ class PlayerControllerTest {
     }
 
     @Test
+    @DisplayName("Rechaza sincronizar sin un token")
     void impideSincronizarSinAutorizacion() throws Exception {
       mvc.perform(post("/api/players/sync"))
           .andExpect(status().isUnauthorized())
           .andExpect(content().string(""))
           .andDo(document("players-sync-unauthorized"));
+      verifyNoInteractions(orchestrator, service);
+    }
+
+    @Test
+    @DisplayName("Rechaza sincronizar con un JWT inválido")
+    void impideSincronizarConJwtInvalido() throws Exception {
       mvc.perform(post("/api/players/sync").header("Authorization", "Bearer invalid"))
           .andExpect(status().isUnauthorized())
           .andExpect(content().string(""))
@@ -148,13 +190,59 @@ class PlayerControllerTest {
   @DisplayName("Consulta del catálogo")
   class Catalog {
     @Test
+    @DisplayName("Serializa opcionales conocidos y no expone referencias externas")
+    void devuelveOpcionalesConocidos() throws Exception {
+      Player player = new Player("Name", "Team", "League", "Forward");
+      ReflectionTestUtils.setField(player, "id", 7L);
+      ReflectionTestUtils.setField(player, "imageUrl", "https://images.example/p.jpg");
+      ReflectionTestUtils.setField(player, "fallbackImageUrl", "https://images.example/f.jpg");
+      player.updateOptionalDetails(LocalDate.of(1990, 6, 20), "Spain");
+      player.addExternalReference(PlayerProvider.FOOTBALL_DATA, "44");
+      List<Player> players = List.of(player);
+      Page<Player> page = new PageImpl<>(players, PageRequest.of(0, 20), 1);
+      when(service.getActivePlayers(0, 20)).thenReturn(page);
+      mvc.perform(get("/api/players").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(
+              content()
+                  .json(
+                      """
+              {"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward",
+               "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://images.example/p.jpg","fallbackImageUrl":"https://images.example/f.jpg"}],
+              "page":0,"size":20,"totalElements":1,"totalPages":1}
+              """,
+                      org.springframework.test.json.JsonCompareMode.STRICT))
+          .andDo(
+              document(
+                  "players-list-known-optionals",
+                  responseFields(
+                      fieldWithPath("content").description("Jugadores activos"),
+                      fieldWithPath("content[].id").description("ID interno"),
+                      fieldWithPath("content[].name").description("Nombre"),
+                      fieldWithPath("content[].team").description("Equipo"),
+                      fieldWithPath("content[].league").description("Liga"),
+                      fieldWithPath("content[].position").description("Posición"),
+                      fieldWithPath("content[].dateOfBirth").description("Fecha de nacimiento"),
+                      fieldWithPath("content[].nationality").description("Nacionalidad"),
+                      fieldWithPath("content[].imageUrl")
+                          .description("Imagen conservada sin enriquecimiento"),
+                      fieldWithPath("content[].fallbackImageUrl")
+                          .description("Imagen alternativa conservada localmente"),
+                      fieldWithPath("page").description("Página"),
+                      fieldWithPath("size").description("Tamaño"),
+                      fieldWithPath("totalElements").description("Total"),
+                      fieldWithPath("totalPages").description("Páginas"))));
+    }
+
+    @Test
+    @DisplayName("Devuelve los campos exactos del catálogo y su paginación predeterminada")
     void devuelveCamposExactosYMetadatosPredeterminados() throws Exception {
-      when(service.getActivePlayers(0, 20))
-          .thenReturn(
-              new PageImpl<>(
-                  List.of(new Player(7L, "Name", "Team", "League", "Forward")),
-                  PageRequest.of(0, 20),
-                  1));
+      Player player = new Player("Name", "Team", "League", "Forward");
+      ReflectionTestUtils.setField(player, "id", 7L);
+      player.addExternalReference(PlayerProvider.FOOTBALL_DATA, "44");
+      List<Player> players = List.of(player);
+      Page<Player> page = new PageImpl<>(players, PageRequest.of(0, 20), 1);
+      when(service.getActivePlayers(0, 20)).thenReturn(page);
       mvc.perform(get("/api/players").header("Authorization", authorization))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.*").value(hasSize(5)))
@@ -162,7 +250,7 @@ class PlayerControllerTest {
               content()
                   .json(
                       """
-{"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward"}],
+{"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward","dateOfBirth":null,"nationality":null,"imageUrl":null,"fallbackImageUrl":null}],
 "page":0,"size":20,"totalElements":1,"totalPages":1}
 """,
                       org.springframework.test.json.JsonCompareMode.STRICT))
@@ -171,11 +259,28 @@ class PlayerControllerTest {
                   "players-list",
                   responseFields(
                       fieldWithPath("content").description("Jugadores activos de la página"),
-                      fieldWithPath("content[].id").description("Identificador externo"),
+                      fieldWithPath("content[].id")
+                          .description("Identificador interno de FootballMarket"),
                       fieldWithPath("content[].name").description("Nombre"),
                       fieldWithPath("content[].team").description("Equipo"),
                       fieldWithPath("content[].league").description("Liga"),
                       fieldWithPath("content[].position").description("Posición"),
+                      fieldWithPath("content[].dateOfBirth")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Fecha de nacimiento o null"),
+                      fieldWithPath("content[].nationality")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Nacionalidad o null"),
+                      fieldWithPath("content[].imageUrl")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Imagen principal o null"),
+                      fieldWithPath("content[].fallbackImageUrl")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Imagen alternativa o null"),
                       fieldWithPath("page").description("Página desde cero"),
                       fieldWithPath("size").description("Tamaño solicitado"),
                       fieldWithPath("totalElements").description("Total de activos"),
@@ -183,6 +288,7 @@ class PlayerControllerTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Acepta los límites válidos de paginación con resultados vacíos")
     @CsvSource({"0,1", "2,100"})
     void aceptaLimitesDePaginacionYPaginasVacias(int page, int size) throws Exception {
       when(service.getActivePlayers(page, size)).thenReturn(Page.empty(PageRequest.of(page, size)));
@@ -210,6 +316,7 @@ class PlayerControllerTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Rechaza parámetros de paginación inválidos antes de consultar el catálogo")
     @CsvSource({"-1,20", "0,0", "0,101", "abc,20", "0,2147483648"})
     void rechazaPaginacionInvalida(String page, String size) throws Exception {
       mvc.perform(
@@ -244,11 +351,18 @@ class PlayerControllerTest {
     }
 
     @Test
-    void rechazaJwtAusenteOInvalido() throws Exception {
+    @DisplayName("Rechaza consultar el catálogo sin token")
+    void rechazaJwtAusente() throws Exception {
       mvc.perform(get("/api/players"))
           .andExpect(status().isUnauthorized())
           .andExpect(content().string(""))
           .andDo(document("players-unauthorized"));
+      verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("Rechaza consultar el catálogo con un JWT inválido")
+    void rechazaJwtInvalido() throws Exception {
       mvc.perform(get("/api/players").header("Authorization", "Bearer invalid"))
           .andExpect(status().isUnauthorized())
           .andExpect(content().string(""))

@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/** Contratos HTTP del catálogo local y su sincronización manual. */
 @RestController
 @RequestMapping("/api/players")
 @RequiredArgsConstructor
@@ -38,13 +39,13 @@ public class PlayerController {
   @Operation(
       summary = "Sincronizar jugadores",
       description =
-          "Sincronización manual sin body de Premier League (PL), Bundesliga (BL1), La Liga (PD), Serie A (SA) y Ligue 1 (FL1), sin exigir un orden. Disponible para cualquier usuario con JWT válido, sin rol adicional.")
+          "Sincronización manual exclusivamente con Football-Data.org de PL, BL1, PD, SA y FL1, sin body ni rol adicional. Resuelve por referencia externa y conserva la identidad interna. No obtiene imágenes. Ante 429 respeta Retry-After con hasta tres reintentos.")
   @ApiResponse(responseCode = "200", description = "Foto completa aplicada al catálogo")
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
       responseCode = "502",
       description =
-          "No se completó la lectura del proveedor; catálogo sin cambios (FOOTBALL_DATA_UNAVAILABLE)",
+          "Fallo del proveedor o de aplicación local; sin cambios parciales de la sincronización (FOOTBALL_DATA_UNAVAILABLE)",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   public ResponseEntity<PlayerSyncResponseDTO> synchronize() {
     return ResponseEntity.ok(
@@ -54,7 +55,8 @@ public class PlayerController {
   @GetMapping
   @Operation(
       summary = "Consultar jugadores activos",
-      description = "Consulta paginada exclusivamente local. Requiere JWT válido.")
+      description =
+          "Consulta paginada exclusivamente local. Expone el ID interno de FootballMarket y dateOfBirth, nationality, imageUrl y fallbackImageUrl como valores nullable, sin referencias externas. Requiere JWT válido.")
   @ApiResponse(responseCode = "200", description = "Página de jugadores activos")
   @ApiResponse(
       responseCode = "400",

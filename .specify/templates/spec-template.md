@@ -6,6 +6,8 @@
 
 **Status**: Draft
 
+<!-- Estados y criterios de transición: ../../specs/README.md. -->
+
 **Input**: User description: "$ARGUMENTS"
 
 ## User Scenarios & Testing *(mandatory)*

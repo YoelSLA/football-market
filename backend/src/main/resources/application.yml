@@ -25,3 +25,11 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF
+
+the-sports-db:
+  api-key: ${THE_SPORTS_DB_API_KEY}
+  base-url: ${THE_SPORTS_DB_BASE_URL:https://www.thesportsdb.com/api/v1/json}
+  request-interval-ms: ${THE_SPORTS_DB_REQUEST_INTERVAL_MS:2500}
+  max-retries: ${THE_SPORTS_DB_MAX_RETRIES:3}
+  image-retry-days: ${THE_SPORTS_DB_IMAGE_RETRY_DAYS:30}
+  audit-retention-days: ${THE_SPORTS_DB_AUDIT_RETENTION_DAYS:}

@@ -17,6 +17,7 @@ class UserTest {
   @DisplayName("Creación de usuarios")
   class Creation {
     @Test
+    @DisplayName("Construye usuarios con email y contraseña válidos")
     void creacionDeUsuarioExitosa() {
       User user1 = new User(1L, "test1@test.com", "password1");
       User user2 = new User("test2@test.com", "password2");
@@ -28,23 +29,27 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("Rechaza la creación con email vacío")
     void constructorLanzaExcepcionCuandoEmailEsVacio() {
       assertThatThrownBy(() -> new User("", "password")).isInstanceOf(EmailEmptyException.class);
     }
 
     @Test
+    @DisplayName("Rechaza la creación con email mal formado")
     void constructorLanzaExcepcionCuandoEmailEsInvalido() {
       assertThatThrownBy(() -> new User("test.com", "password"))
           .isInstanceOf(EmailInvalidException.class);
     }
 
     @Test
+    @DisplayName("Rechaza la creación con contraseña vacía")
     void constructorLanzaExcepcionCuandoPasswordEsVacia() {
       assertThatThrownBy(() -> new User("test@test.com", ""))
           .isInstanceOf(EmptyPasswordException.class);
     }
 
     @Test
+    @DisplayName("Rechaza la creación con contraseña demasiado corta")
     void constructorLanzaExcepcionCuandoPasswordEsMuyCorta() {
       assertThatThrownBy(() -> new User("test@test.com", "pass"))
           .isInstanceOf(PasswordTooShortException.class);
@@ -55,6 +60,7 @@ class UserTest {
   @DisplayName("Cambio de email")
   class EmailUpdate {
     @Test
+    @DisplayName("Actualiza el email de un usuario existente")
     void modificarMailExitoso() {
       User user = new User("test@test.com", "password");
 
@@ -64,6 +70,7 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("Rechaza cambiar el email por uno vacío")
     void setEmailLanzaExcepcionCuandoEmailEsVacio() {
       User user = new User("test@test.com", "password");
 
@@ -71,6 +78,7 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("Rechaza cambiar el email por uno mal formado")
     void setEmailLanzaExcepcionCuandoEmailEsInvalido() {
       User user = new User("test@test.com", "password");
 
@@ -82,6 +90,7 @@ class UserTest {
   @DisplayName("Cambio de contraseña")
   class PasswordUpdate {
     @Test
+    @DisplayName("Actualiza la contraseña de un usuario existente")
     void modificarPasswordExitoso() {
       User user = new User("test@test.com", "password");
 
@@ -91,6 +100,7 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("Rechaza cambiar la contraseña por una vacía")
     void setPasswordLanzaExcepcionCuandoPasswordEsVacia() {
       User user = new User("test@test.com", "password");
 
@@ -98,6 +108,7 @@ class UserTest {
     }
 
     @Test
+    @DisplayName("Rechaza cambiar la contraseña por una demasiado corta")
     void setPasswordLanzaExcepcionCuandoPasswordEsMuyCorta() {
       User user = new User("test@test.com", "password");
 

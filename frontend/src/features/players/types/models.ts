@@ -4,6 +4,10 @@ export interface Player {
 	team: string;
 	league: string;
 	position: string;
+	dateOfBirth: string | null;
+	nationality: string | null;
+	imageUrl: string | null;
+	fallbackImageUrl: string | null;
 	active: true;
 }
 

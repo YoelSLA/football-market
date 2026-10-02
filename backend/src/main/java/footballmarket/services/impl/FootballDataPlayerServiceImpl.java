@@ -2,7 +2,7 @@ package footballmarket.services.impl;
 
 import footballmarket.config.FootballDataProperties;
 import footballmarket.integrations.FootballDataIntegration;
-import footballmarket.models.Player;
+import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.services.FootballDataPlayerService;
 import java.util.LinkedHashMap;
@@ -11,9 +11,9 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/** Consolida por identidad externa los candidatos inmutables de las competiciones configuradas. */
 @Service
 @RequiredArgsConstructor
-/* Consolida en una sola foto los jugadores de las competiciones configuradas. */
 public class FootballDataPlayerServiceImpl implements FootballDataPlayerService {
   private final FootballDataIntegration footballDataIntegration;
   private final FootballDataProperties footballDataProperties;
@@ -21,7 +21,7 @@ public class FootballDataPlayerServiceImpl implements FootballDataPlayerService 
   /** {@inheritDoc} */
   @Override
   public PlayerSnapshot fetchSnapshot() {
-    Map<Long, Player> players = new LinkedHashMap<>();
+    Map<String, PlayerCandidate> players = new LinkedHashMap<>();
 
     int obtained = 0;
     int discarded = 0;
@@ -32,8 +32,8 @@ public class FootballDataPlayerServiceImpl implements FootballDataPlayerService 
       obtained += competition.obtained();
       discarded += competition.discardedInvalid();
 
-      for (Player player : competition.players()) {
-        players.putIfAbsent(player.getId(), player);
+      for (PlayerCandidate player : competition.players()) {
+        players.putIfAbsent(player.externalId(), player);
       }
     }
 
