@@ -23,3 +23,7 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 43200000
+
+# Las demás propiedades y la clave de TheSportsDB se enlazan mediante application.yml.
+the-sports-db:
+  base-url: ${THE_SPORTS_DB_BASE_URL:https://www.thesportsdb.com/api/v1/json}

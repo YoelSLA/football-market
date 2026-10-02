@@ -1,5 +1,6 @@
 package footballmarket.models;
 
+import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -34,6 +35,9 @@ public class Player {
 
   @Column(length = 2048)
   private String imageUrl;
+
+  @Column(length = 2048)
+  private String fallbackImageUrl;
 
   @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
   @Getter(AccessLevel.NONE)
@@ -112,6 +116,26 @@ public class Player {
     }
     if (nationality != null && !nationality.isBlank() && nationality.length() <= 255) {
       this.nationality = nationality.strip();
+    }
+  }
+
+  /** Prioriza la imagen recortada, promueve la secundaria válida y preserva URLs sin reemplazo. */
+  public void applyImages(String cutout, String thumbnail) {
+    if (cutout != null) {
+      if (thumbnail != null) {
+        this.fallbackImageUrl = thumbnail.equals(cutout) ? null : thumbnail;
+      } else if (this.fallbackImageUrl == null
+          && !cutout.equals(this.imageUrl)
+          && this.imageUrl != null) {
+        this.fallbackImageUrl = this.imageUrl;
+      }
+      this.imageUrl = cutout;
+    } else if (thumbnail != null) {
+      if (this.imageUrl == null) {
+        this.imageUrl = thumbnail;
+      } else if (!thumbnail.equals(this.imageUrl)) {
+        this.fallbackImageUrl = thumbnail;
+      }
     }
   }
 

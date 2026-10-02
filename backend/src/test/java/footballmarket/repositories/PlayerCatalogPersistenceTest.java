@@ -3,7 +3,7 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.*;
 
 import footballmarket.models.Player;
-import footballmarket.models.PlayerProvider;
+import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;

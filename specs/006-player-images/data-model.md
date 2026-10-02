@@ -1,38 +1,39 @@
-# Modelo de datos: imágenes de jugadores
+# Modelo de datos propuesto: imágenes de jugadores
 
-## Jugador existente (`players`)
+Derivado de [spec.md](spec.md); estructura física propuesta para PostgreSQL/JPA, sujeta a migración durante implementación. No modificar la identidad interna ni el modelo de referencias de `002-player-catalog`.
 
-| Campo | Tipo lógico | Regla |
+## Entidades y relaciones
+
+| Entidad | Campos relevantes | Relaciones/restricciones |
 | --- | --- | --- |
-| `id` | ID externo de Football-Data.org | Identidad estable; sin cambios. |
-| `name`, `team`, `league`, `position`, `active` | Datos actuales | Sin reemplazo por datos de TheSportsDB. |
-| `image_url` | Texto nullable | URL HTTPS validada del retrato (`strThumb`); `null` si no hay imagen asociada. |
-| `image_resolution` | Estado no nulo | `PENDING`, `FOUND` o `NO_MATCH`; migración inicial con `PENDING` para jugadores existentes. |
+| `Player` (existente) | `id` interno, `active`, datos de identidad, `imageUrl` nullable (existente), **`fallbackImageUrl` nullable (nuevo)** | Las URLs no contienen estado operativo; la sincronización del catálogo no las sobrescribe. Ampliar `players` con `fallback_image_url`, misma capacidad prevista para `image_url`. |
+| `PlayerExternalReference` (existente) | `playerId`, `provider`, `externalId` | Reutilizar el valor `THE_SPORTS_DB` ya existente en el modelo de `002-player-catalog`; referencia persistida aun sin imagen. Conservar unicidad existente `(provider, externalId)` y reglas de unicidad por jugador/proveedor del catálogo; no reasignar en conflictos. Coexiste con `FOOTBALL_DATA`. |
+| `PlayerImageResolution` (nueva) | `playerId`, `status`, `lastAttemptAt` nullable | Una por jugador, FK a `Player`; `PENDING` inicial. Estados operativos separados de imágenes y referencias. Indexar estado/fecha si se requieren filtros de elegibilidad. |
+| `PlayerImageSyncRun` (nueva) | `id`, `startedAt`, `finishedAt` nullable, `force`, `status`, `failureReason` nullable, `evaluated`, `processed`, `found`, `notFound`, `retryableErrors`, `failed`, `conflicts`, `skippedFound`, `skippedRetryWindow`, `skippedFailed`, `interrupted` | Una por invocación admitida; `durationMillis` derivada, nunca confundida con tiempo del último item. Los contadores se mantienen consistentes con items. Indexar `startedAt DESC, id DESC` para historial. |
+| `PlayerImageSyncRunItem` (nueva) | `id`, `runId`, `playerId`, `previousState`, `finalState`, `result` (`FOUND`, `NOT_FOUND`, `RETRYABLE_ERROR`, `FAILED`, `SKIPPED`, `INTERRUPTED` o pendiente interno), `identityResolved`, `imageFoundOrUpdated`, `skipReason` nullable (`FOUND`, `RETRY_WINDOW`, `FAILED`), `conflict`, `errorOccurred`, `outcomeDetail` seguro para exposición, `finishedAt` nullable | FK a run y jugador; único `(runId, playerId)`; sin items de jugadores inactivos al comenzar su evaluación individual. Los pendientes creados pero no cerrados son recuperables como `INTERRUPTED`; los completados nunca se reescriben por recuperación. Eliminación conjunta con run al vencer retención. |
 
-La imagen pertenece al mismo jugador que `id`; no se cambia su clave primaria ni se exige tabla adicional. `image_url` es nullable aun cuando el proveedor haya respondido sin coincidencia. El estado `FOUND` requiere URL; `PENDING` y `NO_MATCH` requieren URL nula. La migración debe preservar los jugadores existentes y ser compatible con la validación de esquema vigente.
+La retención se configura sin fijar un default funcional. No borrar resoluciones/referencias al purgar auditoría. Evitar almacenar respuestas crudas, secretos o URLs de proveedores en el detalle público. Timestamps en UTC; `lastAttemptAt` registra intento real y no omisiones; duration derivada de fechas. La pertenencia al run se determina según `active` al inicio de cada evaluación individual, no al comienzo del run. Si entonces es inactivo, no hay item ni incremento de `evaluated`/`processed`; si es activo, se crea exactamente un item y suma a `evaluated`, aunque luego se omita o cambie `active`. Recorrer con orden estable por id y sin offset sobre estados mutables.
 
-## Estados y transiciones
+## Invariantes de estados de resolución
 
-| Estado inicial | Suceso | Estado final | Efecto |
-| --- | --- | --- | --- |
-| Nuevo | Jugador creado desde Football-Data.org | `PENDING` | Sin URL. |
-| `PENDING` | Coincidencia inequívoca e imagen válida | `FOUND` | Guardar URL validada. |
-| `PENDING` | Sin coincidencia, ambigua o sin imagen | `NO_MATCH` | Conservar URL nula; no consultar de nuevo en el mismo estado. |
-| `PENDING` | 429 agotado, fallo HTTP/técnico o interrupción | `PENDING` | No falsear ausencia; permitir próxima invocación manual. |
-| `FOUND` o `NO_MATCH` | Nombre o equipo cambia en una sincronización exitosa | `PENDING` | Quitar URL previa si existe; revalidar identidad en próxima búsqueda manual. |
-| Cualquiera | Sincronización exitosa sin cambio de nombre/equipo | Igual | Conservar el estado y la URL. |
-| Cualquiera | Inactivación/reactivación del mismo jugador | Igual | Se conserva la imagen; solo jugadores activos son candidatos para nueva búsqueda. |
+| Actual | Evento | Final / próxima elegibilidad |
+| --- | --- | --- |
+| ausencia de resolución | alta de jugador o reparación durante sync | `PENDING`, intento inmediato si activo |
+| `PENDING`, `RETRYABLE_ERROR` | run normal o forzado | procesar de inmediato si activo |
+| `NOT_FOUND` | run normal | omitir `RETRY_WINDOW` hasta que transcurran los días configurados desde `lastAttemptAt` (30 por defecto); entonces procesar |
+| `FOUND` | run normal | omitir `FOUND` sin solicitud |
+| `FAILED` | run normal | omitir `FAILED` sin solicitud |
+| cualquiera | run con `force=true` y activo | procesar, pero nunca buscar por nombre si ya existe referencia externa |
+| cualquiera | respuesta válida sin resultados (también lookup vacío con referencia e imágenes previas), sin identidad confiable, o identidad esperada devuelta sin imágenes nuevas ni imágenes anteriores | `NOT_FOUND`, sin retry técnico; referencia e imágenes válidas preexistentes conservadas, sin rematching |
+| cualquiera | identidad esperada devuelta con imagen válida, o sin imágenes nuevas pero con imagen previa | `FOUND`; conservar URL previa si falta sustitución válida |
+| cualquiera | error transitorio agotado | `RETRYABLE_ERROR`, próximo run normal inmediato; preservar datos válidos |
+| cualquiera | error permanente, datos presentes de la identidad consultada por ID inequívocamente incompatibles según FR-015, o colisión de referencia | `FAILED`, elegible solo con force; preservar identidad/URLs anteriores; datos opcionales ausentes no demuestran contradicción |
 
-`NO_MATCH` significa que se completó una búsqueda sin foto asignable, no que el proveedor falló. Revisar periódicamente resultados antiguos o forzar una nueva búsqueda masiva queda fuera de alcance; un cambio de identidad reabre el estado.
+Jugador inactivo al comenzar su evaluación individual: ninguna transición por sync de imágenes, ningún item ni solicitud externa; tras reactivarse se usa el mismo estado y fecha. Si se inactiva después de comenzar una evaluación como activo, el item se termina normalmente, sin cancelar el intento ni revertir resultados previos; en runs posteriores queda excluido mientras permanezca inactivo. Una búsqueda aceptada crea referencia externa incluso cuando la resolución final es `NOT_FOUND`.
 
-## Ejecución de sincronización de imágenes
+## Estados y contabilidad de run
 
-La exclusión de ejecuciones simultáneas es de la instancia de aplicación, no una entidad de base de datos. Una ejecución enumera jugadores activos con `PENDING` en orden estable de `id`, consulta a TheSportsDB y persiste cada transición individualmente. Tras una interrupción, los que sigan `PENDING` podrán procesarse mediante un nuevo POST autenticado. No se mantienen locks de base de datos durante HTTP ni durante las esperas por cuota.
-
-Antes de guardar el resultado externo se comprueba de nuevo que el registro sigue activo y pendiente y que `name` y `team` siguen siendo los consultados. Si cambió por una sincronización simultánea de jugadores, el resultado obsoleto se descarta y la próxima invocación manual puede buscar la nueva identidad.
-
-El resumen de una ejecución completada incluye `processed` (búsquedas concluidas para jugadores), `found` (con URL asignada) y `withoutImage` (sin coincidencia válida); `processed = found + withoutImage`. Los reintentos no cuentan como jugadores adicionales. Ante ejecución incompleta se utiliza el error estándar y se conservan las transiciones ya persistidas.
-
-## Proyección HTTP y presentación
-
-`GET /api/players` sigue devolviendo exclusivamente activos con sus cinco campos vigentes más `imageUrl`, `null` en `PENDING` y `NO_MATCH`. La tarjeta muestra `imageUrl` si se carga correctamente; de lo contrario usa `Player Generic-Icon.png`. `image_resolution` es interno y nunca se expone como campo del jugador.
+- `RUNNING` al admitir POST, `COMPLETED` al acabar sin `RETRYABLE_ERROR`/`FAILED` individual ni conflictos (puede haber `NOT_FOUND`), `PARTIAL` al acabar con al menos uno de esos problemas, `FAILED` si se interrumpe por fallo global o reinicio. `finishedAt` solo al cerrar; `failureReason` identifica fallo global, especialmente `INTERRUPTED_BY_RESTART`.
+- `evaluated` = cantidad de items creados para jugadores activos al inicio de su evaluación individual (incluye skips aunque luego cambie `active`); `processed` = items con intento real de enriquecimiento (incluye resultados fallidos, excluye skips e items interrumpidos antes del intento). `found`, `notFound`, `retryableErrors`, `failed` contabilizan resultados finales individuales correspondientes; `conflicts` es subconjunto causal de `failed`, no una categoría sumable de nuevo a `processed`.
+- `skippedFound`, `skippedRetryWindow`, `skippedFailed` son disjuntos, con motivo explícito en item. `interrupted` cuenta exclusivamente items pendientes cerrados por recuperación; no se agrega a `failed`. Un item previamente terminado conserva su resultado tras el reinicio.
+- Para garantizar persistencia parcial, confirmar cada resultado de jugador y su item conjuntamente cuando sea posible; iniciar/finalizar run en unidades independientes. En una colisión de unicidad revertir solo el intento de ese jugador, registrar el conflicto en una unidad separada y seguir. No retener transacciones durante red ni espera de cuota. Si falla la propia escritura de auditoría, cerrar el run como `FAILED` cuando la base esté disponible, sin prometer persistencia imposible durante indisponibilidad completa.

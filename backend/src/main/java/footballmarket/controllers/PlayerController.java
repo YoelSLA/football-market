@@ -56,7 +56,7 @@ public class PlayerController {
   @Operation(
       summary = "Consultar jugadores activos",
       description =
-          "Consulta paginada exclusivamente local. Expone el ID interno de FootballMarket y dateOfBirth, nationality e imageUrl como valores nullable, sin referencias externas. Requiere JWT válido.")
+          "Consulta paginada exclusivamente local. Expone el ID interno de FootballMarket y dateOfBirth, nationality, imageUrl y fallbackImageUrl como valores nullable, sin referencias externas. Requiere JWT válido.")
   @ApiResponse(responseCode = "200", description = "Página de jugadores activos")
   @ApiResponse(
       responseCode = "400",

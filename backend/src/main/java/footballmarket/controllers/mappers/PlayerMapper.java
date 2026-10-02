@@ -29,7 +29,8 @@ public final class PlayerMapper {
         player.getPosition(),
         player.getDateOfBirth(),
         player.getNationality(),
-        player.getImageUrl());
+        player.getImageUrl(),
+        player.getFallbackImageUrl());
   }
 
   public static PlayersPageResponseDTO toResponse(Page<Player> page) {

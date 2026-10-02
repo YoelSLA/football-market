@@ -1,7 +1,7 @@
 package footballmarket.repositories;
 
 import footballmarket.models.PlayerExternalReference;
-import footballmarket.models.PlayerProvider;
+import footballmarket.models.enums.PlayerProvider;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -31,4 +31,7 @@ public interface PlayerExternalReferenceRepository
 
   @EntityGraph(attributePaths = "player")
   List<PlayerExternalReference> findByProvider(PlayerProvider provider);
+
+  Optional<PlayerExternalReference> findByPlayerIdAndProvider(
+      Long playerId, PlayerProvider provider);
 }

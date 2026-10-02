@@ -10,8 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import footballmarket.config.SecurityConfig;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.Player;
-import footballmarket.models.PlayerProvider;
 import footballmarket.models.User;
+import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.AuthenticationService;
@@ -195,6 +195,7 @@ class PlayerControllerTest {
       Player player = new Player("Name", "Team", "League", "Forward");
       ReflectionTestUtils.setField(player, "id", 7L);
       ReflectionTestUtils.setField(player, "imageUrl", "https://images.example/p.jpg");
+      ReflectionTestUtils.setField(player, "fallbackImageUrl", "https://images.example/f.jpg");
       player.updateOptionalDetails(LocalDate.of(1990, 6, 20), "Spain");
       player.addExternalReference(PlayerProvider.FOOTBALL_DATA, "44");
       List<Player> players = List.of(player);
@@ -207,7 +208,7 @@ class PlayerControllerTest {
                   .json(
                       """
               {"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward",
-              "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://images.example/p.jpg"}],
+               "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://images.example/p.jpg","fallbackImageUrl":"https://images.example/f.jpg"}],
               "page":0,"size":20,"totalElements":1,"totalPages":1}
               """,
                       org.springframework.test.json.JsonCompareMode.STRICT))
@@ -225,6 +226,8 @@ class PlayerControllerTest {
                       fieldWithPath("content[].nationality").description("Nacionalidad"),
                       fieldWithPath("content[].imageUrl")
                           .description("Imagen conservada sin enriquecimiento"),
+                      fieldWithPath("content[].fallbackImageUrl")
+                          .description("Imagen alternativa conservada localmente"),
                       fieldWithPath("page").description("Página"),
                       fieldWithPath("size").description("Tamaño"),
                       fieldWithPath("totalElements").description("Total"),
@@ -247,7 +250,7 @@ class PlayerControllerTest {
               content()
                   .json(
                       """
-{"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward","dateOfBirth":null,"nationality":null,"imageUrl":null}],
+{"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward","dateOfBirth":null,"nationality":null,"imageUrl":null,"fallbackImageUrl":null}],
 "page":0,"size":20,"totalElements":1,"totalPages":1}
 """,
                       org.springframework.test.json.JsonCompareMode.STRICT))
@@ -273,7 +276,11 @@ class PlayerControllerTest {
                       fieldWithPath("content[].imageUrl")
                           .type(JsonFieldType.STRING)
                           .optional()
-                          .description("Imagen o null; la sincronización no la obtiene"),
+                          .description("Imagen principal o null"),
+                      fieldWithPath("content[].fallbackImageUrl")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Imagen alternativa o null"),
                       fieldWithPath("page").description("Página desde cero"),
                       fieldWithPath("size").description("Tamaño solicitado"),
                       fieldWithPath("totalElements").description("Total de activos"),

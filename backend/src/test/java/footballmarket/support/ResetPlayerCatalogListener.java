@@ -17,7 +17,7 @@ public class ResetPlayerCatalogListener extends AbstractTestExecutionListener {
             DriverManager.getConnection(
                 container.getJdbcUrl(), container.getUsername(), container.getPassword());
         Statement statement = connection.createStatement()) {
-      statement.execute("TRUNCATE TABLE players CASCADE");
+      statement.execute("TRUNCATE TABLE players, player_image_sync_runs CASCADE");
     }
   }
 }

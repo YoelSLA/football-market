@@ -1,4 +1,4 @@
-package footballmarket.models;
+package footballmarket.models.enums;
 
 /**
  * Espacios de identidad externa; solo Football-Data participa de la sincronización del catálogo.

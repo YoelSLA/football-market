@@ -2,11 +2,13 @@ package footballmarket.services.impl;
 
 import footballmarket.models.Player;
 import footballmarket.models.PlayerExternalReference;
-import footballmarket.models.PlayerProvider;
+import footballmarket.models.PlayerImageResolution;
+import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.repositories.PlayerExternalReferenceRepository;
+import footballmarket.repositories.PlayerImageResolutionRepository;
 import footballmarket.repositories.PlayerRepository;
 import footballmarket.services.PlayerCatalogService;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
@@ -49,6 +51,7 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
 
   private final PlayerRepository playerRepository;
   private final PlayerExternalReferenceRepository referenceRepository;
+  private final PlayerImageResolutionRepository imageResolutionRepository;
   private final TransactionTemplate transaction;
 
   /**
@@ -56,15 +59,18 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
    *
    * @param playerRepository repositorio de jugadores
    * @param referenceRepository repositorio de referencias externas
+   * @param imageResolutionRepository repositorio de resoluciones de imágenes
    * @param transactionManager administrador de transacciones de Spring
    */
   public PlayerCatalogServiceImpl(
       PlayerRepository playerRepository,
       PlayerExternalReferenceRepository referenceRepository,
+      PlayerImageResolutionRepository imageResolutionRepository,
       PlatformTransactionManager transactionManager) {
 
     this.playerRepository = playerRepository;
     this.referenceRepository = referenceRepository;
+    this.imageResolutionRepository = imageResolutionRepository;
 
     this.transaction = new TransactionTemplate(transactionManager);
     this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -443,6 +449,7 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
     attempt.setCurrentExternalId(candidate.externalId());
 
     playerRepository.save(player);
+    this.imageResolutionRepository.save(new PlayerImageResolution(player));
   }
 
   /**

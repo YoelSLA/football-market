@@ -13,8 +13,8 @@ para cualquier usuario autenticado, sin rol adicional. No se ejecuta automática
 `size` admite valores de 1 a 100. Los valores predeterminados son 0 y 20.
 
 El `id` es interno de FootballMarket. Cada jugador contiene además `name`, `team`,
-`league`, `position`, `dateOfBirth`, `nationality` e `imageUrl`. Los tres últimos
-aparecen como `null` cuando son desconocidos. No se exponen referencias externas
+`league`, `position`, `dateOfBirth`, `nationality`, `imageUrl` y `fallbackImageUrl`.
+Los cuatro últimos aparecen como `null` cuando son desconocidos. No se exponen referencias externas
 ni el estado activo. La migración V3 reasigna los IDs anteriores y conserva el
 identificador de Football-Data.org exclusivamente en su referencia externa.
 
@@ -78,6 +78,63 @@ include::{snippets}/players-sync-persistence-error/response-fields.adoc[]
 
 include::{snippets}/players-sync-unauthorized/http-response.adoc[]
 include::{snippets}/players-sync-invalid-jwt/http-response.adoc[]
+
+== Imágenes de jugadores
+
+Todos los endpoints requieren JWT Bearer válido. La sincronización es manual y
+síncrona; no se invoca al proveedor durante las consultas de auditoría. `force`
+es `false` por defecto. Las URLs válidas anteriores permanecen si el proveedor
+no ofrece una sustitución. Los resultados individuales se consultan por separado.
+
+=== Sincronización manual de imágenes
+
+`POST /api/players/images/sync` admite `force=true` sin body. Un resultado parcial
+también responde `200`; una ejecución concurrente responde `409` sin crear otro run.
+Ante un fallo global se conservan los resultados previamente confirmados.
+
+include::{snippets}/player-images-sync/http-request.adoc[]
+include::{snippets}/player-images-sync/http-response.adoc[]
+include::{snippets}/player-images-sync/response-fields.adoc[]
+include::{snippets}/player-images-sync-partial/http-response.adoc[]
+include::{snippets}/player-images-sync-conflict/http-response.adoc[]
+include::{snippets}/player-images-sync-global-failure/http-response.adoc[]
+include::{snippets}/player-images-sync-invalid-configuration/http-response.adoc[]
+include::{snippets}/player-images-sync-unauthorized/http-response.adoc[]
+
+=== Historial de sincronizaciones
+
+`GET /api/players/images/sync-runs` devuelve resúmenes por inicio e ID
+descendentes. `page` comienza en 0 (valor por defecto 0), `size` admite
+1–100 (por defecto 20). La retención configurable elimina runs expirados y sus
+items, sin borrar referencias, resoluciones ni imágenes.
+
+include::{snippets}/player-images-runs/http-request.adoc[]
+include::{snippets}/player-images-runs/http-response.adoc[]
+include::{snippets}/player-images-runs-invalid-page/http-response.adoc[]
+include::{snippets}/player-images-runs-unauthorized/http-response.adoc[]
+
+=== Resumen de un run
+
+`GET /api/players/images/sync-runs/{id}` devuelve un resumen sin items. Un run
+inexistente responde `404` con código `PLAYER_IMAGE_SYNC_RUN_NOT_FOUND`.
+
+include::{snippets}/player-images-run/http-request.adoc[]
+include::{snippets}/player-images-run/http-response.adoc[]
+include::{snippets}/player-images-run-not-found/http-response.adoc[]
+include::{snippets}/player-images-run-unauthorized/http-response.adoc[]
+
+=== Detalle paginado de un run
+
+`GET /api/players/images/sync-runs/{id}/items` devuelve el resultado de cada
+jugador en orden ascendente de item. Usa los mismos límites de paginación.
+`INTERRUPTED` preserva el último estado durable de resolución y no suma a
+`failed`; la recuperación de runs huérfanos ocurre al arrancar.
+
+include::{snippets}/player-images-run-items/http-request.adoc[]
+include::{snippets}/player-images-run-items/http-response.adoc[]
+include::{snippets}/player-images-run-items-invalid-page/http-response.adoc[]
+include::{snippets}/player-images-run-items-not-found/http-response.adoc[]
+include::{snippets}/player-images-run-items-unauthorized/http-response.adoc[]
 
 == Autenticación
 

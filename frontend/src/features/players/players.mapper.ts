@@ -20,7 +20,11 @@ function isPlayerResponseDTO(value: unknown): value is PlayerResponseDTO {
 		typeof value.name === "string" &&
 		typeof value.team === "string" &&
 		typeof value.league === "string" &&
-		typeof value.position === "string"
+		typeof value.position === "string" &&
+		(value.dateOfBirth === null || typeof value.dateOfBirth === "string") &&
+		(value.nationality === null || typeof value.nationality === "string") &&
+		(value.imageUrl === null || typeof value.imageUrl === "string") &&
+		(value.fallbackImageUrl === null || typeof value.fallbackImageUrl === "string")
 	);
 }
 
@@ -65,6 +69,10 @@ export function toPlayer(dto: PlayerResponseDTO): Player {
 		team: dto.team,
 		league: dto.league,
 		position: dto.position,
+		dateOfBirth: dto.dateOfBirth,
+		nationality: dto.nationality,
+		imageUrl: dto.imageUrl,
+		fallbackImageUrl: dto.fallbackImageUrl,
 		active: true,
 	};
 }

@@ -46,7 +46,12 @@ public record PlayerResponseDTO(
             example = "Spain")
         String nationality,
     @Schema(
-            description = "Imagen opcional; esta sincronización no la obtiene ni la modifica",
+            description = "Imagen principal opcional persistida localmente",
             nullable = true,
             requiredMode = Schema.RequiredMode.REQUIRED)
-        String imageUrl) {}
+        String imageUrl,
+    @Schema(
+            description = "Imagen alternativa opcional persistida localmente",
+            nullable = true,
+            requiredMode = Schema.RequiredMode.REQUIRED)
+        String fallbackImageUrl) {}

@@ -2,6 +2,7 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
+import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

@@ -73,3 +73,49 @@
 - Add comments or findings inline
 - Link to relevant resources or documentation
 - Items are numbered sequentially for easy reference
+
+## Revisión vigente antes de tasks (2026-10-01)
+
+CHK001–CHK035 se preservan únicamente como histórico: sus referencias antiguas **no deben utilizarse como evidencia vigente**. La cobertura actual comienza en CHK036. Los ítems nuevos permanecen sin marcar: `[x]` requiere aprobación del revisor y no significa implementación terminada.
+
+### Completitud y coherencia de identidad y matching
+
+- [ ] CHK036 ¿FR-001, FR-007, FR-014 y FR-015 separan identidad interna, referencia `THE_SPORTS_DB` persistente e imágenes, incluso cuando no hay URL válida o se fuerza un refresh? [Consistencia, Spec §FR-001/FR-007/FR-014/FR-015]
+- [ ] CHK037 ¿FR-009–FR-013 definen con la misma validez el nombre principal y alternativo, normalización conservadora y ausencia de fuzzy matching? [Claridad, Spec §FR-009–FR-013]
+- [ ] CHK038 ¿Quedan definidos `Soccer` obligatorio, ignorar relevancia, coincidencia de equipo y veto por fecha de nacimiento/nacionalidad cuando ambas están presentes? [Completitud, Spec §FR-009–FR-011]
+- [ ] CHK039 ¿Exige expresamente el caso de equipo distinto fecha de nacimiento exacta y nacionalidad coincidente, ambas presentes en ambos lados, sin alias arbitrarios de clubes? [Claridad, Spec §FR-009/FR-012]
+- [ ] CHK040 ¿Están cubiertos cero, exactamente uno y más de un candidato válido sin escoger el primero ni usar relevancia, incluso si el proveedor normalmente limita resultados? [Cobertura, Spec §FR-013; Research §Acceso a TheSportsDB]
+- [ ] CHK041 ¿Está claramente prohibido el rematching tras persistir la referencia incluso con `force=true`, y se evita un lookup redundante después de una búsqueda que ya resolvió identidad e imágenes? [Consistencia, Spec §FR-007/FR-015; Research §Acceso a TheSportsDB]
+- [ ] CHK042 ¿Se define con precisión qué datos permiten considerar contradictoria una consulta por identidad ya persistida sin convertirla en un nuevo matching por nombre/equipo? [Ambigüedad, Spec §FR-015; Research §Matching y validación externa]
+
+### Imágenes y estados de resolución
+
+- [ ] CHK043 ¿La política principal/secundaria contempla URLs nullable, igualdad, ausencia, validación de HTTPS/hostname y conservación de URLs válidas previas sin comprobación HTTP adicional del recurso? [Cobertura, Spec §FR-002/FR-005/FR-006/FR-027]
+- [ ] CHK044 ¿Los escenarios y SC-001–SC-004/SC-009 cubren fallback real del navegador y la ausencia de llamadas frontend al proveedor sin confundirlo con selección de URLs persistidas? [Consistencia, Spec §FR-003/FR-005/FR-027]
+- [ ] CHK045 ¿Coinciden FR-008 (respuesta válida sin resultados ⇒ `NOT_FOUND` aun con imágenes previas), FR-018, FR-022/FR-027 (identidad esperada sin imágenes nuevas con foto previa ⇒ `FOUND`), el escenario 2.9, el escenario 3.6 y SC-009? [Conflicto, Spec §FR-008/FR-018/FR-022/FR-027; Story 2.9; Story 3.6; §SC-009]
+- [ ] CHK046 ¿Están descritas sin contradicción las transiciones `PENDING`, `FOUND`, `NOT_FOUND`, `RETRYABLE_ERROR` y `FAILED`, incluyendo referencia sin foto y preservación de datos previos? [Consistencia, Spec §FR-017–FR-022/FR-025–FR-027]
+- [ ] CHK047 ¿La ventana configurable de 30 días, el intento registrado en `lastAttemptAt`, la elegibilidad inmediata de `RETRYABLE_ERROR` y el alcance de `force=true` se distinguen de la política de retries dentro de un run? [Claridad, Spec §FR-019/FR-024–FR-026]
+
+### Actividad, auditoría y recuperación
+
+- [ ] CHK048 ¿Escenarios, SC-007, FR-020, quickstart y contratos aplican la misma frontera `active` al comenzar la evaluación individual, no al iniciar el run ni durante una comprobación posterior? [Conflicto, Spec §FR-020/SC-007; Story 2.7; Contracts §items]
+- [ ] CHK049 ¿Un inactivo al llegar su turno queda sin item, `evaluated`, `processed` ni solicitud, preservando imágenes/referencia/resolución también con `force=true`? [Cobertura, Spec §FR-020; Edge Cases]
+- [ ] CHK050 ¿Un activo al iniciar su evaluación recibe exactamente un item y suma `evaluated` aunque se omita o después se inactive, mientras `processed` solo suma ante un intento externo real? [Claridad, Spec §FR-020/FR-032/FR-033/SC-010]
+- [ ] CHK051 ¿Son consistentes los motivos de omisión `FOUND`, `RETRY_WINDOW` y `FAILED`, y se excluye a los inactivos de estos contadores? [Consistencia, Spec §FR-019/FR-020/FR-032/FR-033]
+- [ ] CHK052 ¿Se distinguen `found`, `notFound`, `retryableErrors`, `failed`, `conflicts`, `interrupted`, `evaluated` y `processed` sin sumar dos veces un conflicto individual? [Claridad, Spec §FR-030–FR-034; Data model §Estados y contabilidad]
+- [ ] CHK053 ¿Permiten los requisitos `COMPLETED` con `NOT_FOUND`, exigen `PARTIAL` con error/conflicto individual aun aislado y reservan `FAILED` a fallo global/fatal? [Consistencia, Spec §FR-030/FR-031/SC-011]
+- [ ] CHK054 ¿Se conserva al reiniciar un run huérfano como `FAILED` con `INTERRUPTED_BY_RESTART`, solo sus items inconclusos como `INTERRUPTED` y el contador `interrupted` separado de `failed`? [Cobertura, Spec §FR-034/SC-012]
+
+### Dependencias, contrato y restricciones
+
+- [ ] CHK055 ¿FR-024/FR-028 y el diseño definen un único control global con intervalo configurable ≥2500 ms, default 2500 ms, todos los envíos/reintentos, cuota de 30/min y `Retry-After` válido o espera ≥60 s? [Consistencia, Spec §FR-024/FR-028; Research §Rate limiting]
+- [ ] CHK056 ¿Se especifican tres reintentos *después* del intento inicial por defecto y no se transforma `NOT_FOUND` funcional en fallo técnico reintentable? [Claridad, Spec §FR-008/FR-024]
+- [ ] CHK057 ¿Se mantienen `GET /api/players` ampliado con ambas URLs y POST manual síncrono, autenticación sin rol nuevo y `409` sin ejecución duplicada? [Consistencia, Spec §FR-002/FR-023/FR-029; Contracts §GET/POST]
+- [ ] CHK058 ¿Historial, resumen e items tienen paginación, autenticación y separación summary/detalle coherentes con FR-035 y SC-013? [Consistencia, Spec §FR-035/SC-013; Contracts §sync-runs]
+- [ ] CHK059 ¿Queda explícito que `page=0`, `size=20` y máximo 100 son elecciones del contrato derivadas de la convención del catálogo, no requisitos nuevos de la spec? [Alcance, Research §Paginación de auditoría; Contracts §sync-runs]
+- [ ] CHK060 ¿El plan mantiene índices, columnas, transacciones, exclusión, ritmo y clases como decisiones justificadas de diseño sin introducir requisitos funcionales en la spec? [Alcance, Spec §Assumptions; Plan §Diseño de ejecución]
+- [ ] CHK061 ¿La separación de responsabilidades y dependencias, la validación/seguridad de URLs y secretos, la documentación HTTP y el diseño de pruebas respetan la constitución y las reglas locales de backend/frontend sin afirmar que se ejecutaron controles? [Dependencias, Constitution §1–6; Plan §Constitution Check]
+
+## Segunda revisión (2026-10-01)
+
+Los tres hallazgos previos (CHK042, CHK045 y CHK048) quedaron resueltos en `spec.md` y en los artefactos de Phase 0/1 tras las decisiones sobre lookup sin resultados, pertenencia por `active` e identidad contradictoria. La cobertura vigente sigue siendo CHK036–CHK061 y todos los ítems permanecen sin marcar: el revisor decide cuáles satisfacen calidad de requisitos. No se generó `tasks.md` ni se ejecutó ninguna verificación automática.
