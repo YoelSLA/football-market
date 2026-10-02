@@ -27,6 +27,7 @@ class FootballDataPropertiesTest {
   @DisplayName("Configuración de ligas al iniciar")
   class Competitions {
     @ParameterizedTest
+    @DisplayName("Inicia con las cinco ligas configuradas en el orden solicitado")
     @ValueSource(strings = {"PL,BL1,PD,SA,FL1", "BL1,PL,PD,SA,FL1", "FL1,SA,PD,BL1,PL"})
     void iniciaConLasCincoLigasConfiguradas(String competitions) {
       runner
@@ -40,6 +41,7 @@ class FootballDataPropertiesTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Impide el arranque con ligas incompletas, duplicadas o desconocidas")
     @ValueSource(
         strings = {
           "",
@@ -59,6 +61,7 @@ class FootballDataPropertiesTest {
     }
 
     @Test
+    @DisplayName("Impide el arranque cuando falta la configuración de ligas")
     void rechazaAusenciaDeLigasAlIniciar() {
       runner.run(
           context ->

@@ -85,6 +85,7 @@ class AuthenticationControllerTest {
   @DisplayName("Consulta del usuario actual")
   class CurrentUser {
     @Test
+    @DisplayName("Rechaza consultar el usuario actual sin token y sin invocar el caso de uso")
     void rechazaConsultaSinTokenConCuerpoVacio() throws Exception {
       mockMvc
           .perform(get("/api/auth/me"))
@@ -95,6 +96,7 @@ class AuthenticationControllerTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Rechaza credenciales inválidas antes de consultar al usuario")
     @ValueSource(strings = {"Bearer invalid", "Bearer", "Basic invalid", "expired", "signature"})
     void rechazaCredencialesInvalidasAntesDelCasoDeUso(String authorization) throws Exception {
       if (authorization.equals("expired")) {
@@ -122,6 +124,7 @@ class AuthenticationControllerTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Rechaza un sujeto firmado sin identidad persistida")
     @NullAndEmptySource
     @ValueSource(strings = {" ", "missing@test.com"})
     void rechazaIdentidadInexistenteAntesDelController(String subject) throws Exception {
@@ -145,6 +148,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    @DisplayName("Devuelve la identidad persistida, no los claims obsoletos del token")
     void devuelveSoloLaIdentidadPersistidaUsandoElSujeto() throws Exception {
       String token =
           Jwts.builder()
@@ -174,6 +178,7 @@ class AuthenticationControllerTest {
   @DisplayName("Registro de usuarios")
   class Registration {
     @Test
+    @DisplayName("Registra el usuario y transporta exactamente los datos de entrada")
     void registraUsuarioYMapeaElContratoDeEntrada() throws Exception {
       RegisterRequestDTO request = new RegisterRequestDTO("register@test.com", "password");
 
@@ -198,6 +203,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    @DisplayName("Traduce el email duplicado a un conflicto HTTP contractual")
     void traduceEmailDuplicadoAlContratoConflict() throws Exception {
       RegisterRequestDTO request = new RegisterRequestDTO("duplicate@test.com", "password");
       doThrow(new EmailAlreadyRegisteredException("El email ya esta registrado."))
@@ -239,6 +245,7 @@ class AuthenticationControllerTest {
   @DisplayName("Inicio de sesión")
   class Login {
     @Test
+    @DisplayName("Inicia sesión y devuelve únicamente el token contractual")
     void iniciaSesionYDevuelveElContratoExacto() throws Exception {
       LoginRequestDTO request = new LoginRequestDTO("login@test.com", "password");
       when(authenticationService.login("login@test.com", "password")).thenReturn("jwt-token");
@@ -263,6 +270,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    @DisplayName("Conserva el email original al invocar el caso de uso")
     void conservaElEmailDelContratoAlInvocarElCasoDeUso() throws Exception {
       LoginRequestDTO request = new LoginRequestDTO("LOGIN@TEST.COM", "password");
       when(authenticationService.login("LOGIN@TEST.COM", "password")).thenReturn("jwt-token");
@@ -287,6 +295,7 @@ class AuthenticationControllerTest {
     }
 
     @Test
+    @DisplayName("Traduce credenciales inválidas a una respuesta no autorizada")
     void traduceCredencialesInvalidasAlContratoUnauthorized() throws Exception {
       LoginRequestDTO request = new LoginRequestDTO("unknown@test.com", "password");
       when(authenticationService.login("unknown@test.com", "password"))
@@ -371,6 +380,7 @@ class AuthenticationControllerTest {
     }
 
     @ParameterizedTest(name = "{4}")
+    @DisplayName("Rechaza solicitudes inválidas antes de invocar el caso de uso")
     @MethodSource("invalidRequests")
     void rechazaEntradaInvalidaAntesDelCasoDeUso(
         String path, String body, String message, String snippet, String description)

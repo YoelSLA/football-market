@@ -3,13 +3,19 @@ package footballmarket.integrations;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import footballmarket.integrations.exceptions.FootballDataRateLimitException;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
-import footballmarket.models.Player;
+import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -29,17 +35,25 @@ public class FootballDataIntegration {
   private static final Logger LOG = LoggerFactory.getLogger(FootballDataIntegration.class);
   private static final int MAX_RETRIES = 3;
   private static final long DEFAULT_RETRY_SECONDS = 60;
-  private static final long RETRY_MARGIN_SECONDS = 1;
 
   private final RestClient client;
+  private final Clock clock;
+  private final RetryWait retryWait;
 
   /**
    * Crea la integración utilizando el cliente HTTP configurado para Football-Data.
    *
    * @param client cliente HTTP utilizado para realizar las peticiones a Football-Data
    */
+  @Autowired
   public FootballDataIntegration(@Qualifier("footballDataRestClient") RestClient client) {
+    this(client, Clock.systemUTC(), duration -> Thread.sleep(duration));
+  }
+
+  FootballDataIntegration(RestClient client, Clock clock, RetryWait retryWait) {
     this.client = client;
+    this.clock = clock;
+    this.retryWait = retryWait;
   }
 
   /**
@@ -64,7 +78,7 @@ public class FootballDataIntegration {
         throw new FootballDataUnavailableException();
       }
 
-      List<Player> players = new ArrayList<>();
+      List<PlayerCandidate> players = new ArrayList<>();
 
       int obtained = 0;
       int discarded = 0;
@@ -90,9 +104,15 @@ public class FootballDataIntegration {
             continue;
           }
 
-          Player player =
-              new Player(
-                  member.id(), member.name(), team.name(), competition.name(), member.position());
+          PlayerCandidate player =
+              new PlayerCandidate(
+                  member.id().toString(),
+                  member.name(),
+                  team.name(),
+                  competition.name(),
+                  member.position(),
+                  optionalDate(member.dateOfBirth()),
+                  optionalText(member.nationality()));
 
           players.add(player);
         }
@@ -133,7 +153,7 @@ public class FootballDataIntegration {
                     status -> status.value() == HttpStatus.TOO_MANY_REQUESTS.value(),
                     (request, response) -> {
                       long retryAfterSeconds =
-                          parseRetryAfter(response.getHeaders().getFirst("Retry-After"));
+                          this.parseRetryAfter(response.getHeaders().getFirst("Retry-After"));
 
                       throw new FootballDataRateLimitException(retryAfterSeconds);
                     })
@@ -155,9 +175,7 @@ public class FootballDataIntegration {
           throw new FootballDataUnavailableException();
         }
 
-        long waitSeconds = ex.retryAfterSeconds() + RETRY_MARGIN_SECONDS;
-
-        waitBeforeRetry(waitSeconds);
+        this.waitBeforeRetry(ex.retryAfterSeconds());
       }
     }
 
@@ -167,22 +185,29 @@ public class FootballDataIntegration {
   /**
    * Obtiene la cantidad de segundos indicada por el header {@code Retry-After}.
    *
-   * <p>Si el header no existe o su contenido no puede convertirse a un número, se utiliza el tiempo
-   * de espera predeterminado.
+   * <p>Acepta segundos y fechas HTTP; si no existe o es inválido conserva la espera predeterminada.
    *
    * @param retryAfter valor recibido en el header {@code Retry-After}
    * @return cantidad de segundos que deben esperarse antes de realizar otro intento
    */
-  private static long parseRetryAfter(String retryAfter) {
+  private long parseRetryAfter(String retryAfter) {
     if (retryAfter == null || retryAfter.isBlank()) {
       return DEFAULT_RETRY_SECONDS;
     }
 
     try {
-      long seconds = Long.parseLong(retryAfter);
+      long seconds = Long.parseLong(retryAfter.strip());
       return seconds >= 0 ? seconds : DEFAULT_RETRY_SECONDS;
     } catch (NumberFormatException ex) {
-      return DEFAULT_RETRY_SECONDS;
+      try {
+        Duration delay =
+            Duration.between(
+                this.clock.instant(),
+                ZonedDateTime.parse(retryAfter, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant());
+        return delay.isNegative() ? 0 : delay.getSeconds() + (delay.getNano() == 0 ? 0 : 1);
+      } catch (DateTimeParseException invalidDate) {
+        return DEFAULT_RETRY_SECONDS;
+      }
     }
   }
 
@@ -195,13 +220,37 @@ public class FootballDataIntegration {
    * @param seconds cantidad de segundos que debe esperar el hilo
    * @throws FootballDataUnavailableException si el hilo es interrumpido durante la espera
    */
-  private static void waitBeforeRetry(long seconds) {
+  private void waitBeforeRetry(long seconds) {
     try {
-      Thread.sleep(Duration.ofSeconds(seconds));
+      this.retryWait.await(Duration.ofSeconds(seconds));
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       throw new FootballDataUnavailableException();
     }
+  }
+
+  private static String optionalText(Object value) {
+    return value instanceof String text && !text.isBlank() && text.length() <= 255
+        ? text.strip()
+        : null;
+  }
+
+  private static LocalDate optionalDate(Object value) {
+    String text = optionalText(value);
+    if (text == null) {
+      return null;
+    }
+    try {
+      return LocalDate.parse(text);
+    } catch (DateTimeParseException invalidDate) {
+      return null;
+    }
+  }
+
+  /** Espera sustituible para controlar el tiempo sin demoras reales en las pruebas. */
+  @FunctionalInterface
+  interface RetryWait {
+    void await(Duration duration) throws InterruptedException;
   }
 
   /**
@@ -264,5 +313,6 @@ public class FootballDataIntegration {
 
   /** Representa la información necesaria de un jugador perteneciente a un plantel. */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  private record SquadMember(Long id, String name, String position) {}
+  private record SquadMember(
+      Long id, String name, String position, Object dateOfBirth, Object nationality) {}
 }

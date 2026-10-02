@@ -19,7 +19,7 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | JJWT | 0.13.0 | Generación y firma HS256 de tokens JWT utilizados por la autenticación. |
 | Jakarta Validation | Gestionada por Spring Boot 4.1.1 | Validación estructural de los DTO de entrada HTTP. |
 | PostgreSQL | 18 en tests; no fijada para desarrollo y producción | Base de datos relacional. Testcontainers levanta la imagen `postgres:18`; el proyecto no fija actualmente la versión del servidor utilizada fuera de tests. |
-| pgJDBC | Gestionada por Spring Boot 4.1.1 | Driver JDBC utilizado por los perfiles del backend para conectarse a PostgreSQL. |
+| pgJDBC | Gestionada por Spring Boot 4.1.1 | Driver JDBC y dependencia de compilación para clasificar errores de PostgreSQL por SQLSTATE, tabla y constraint estructurados, sin interpretar mensajes. |
 | Flyway | Gestionada por Spring Boot 4.1.1 | Aplicación de las migraciones SQL versionadas de usuarios y jugadores. |
 | SpringDoc OpenAPI | 2.8.13 | Generación de la especificación OpenAPI y UI a partir de los endpoints y sus anotaciones. |
 | Lombok | Gestionada por Spring Boot 4.1.1 | Generación en compilación de constructores, getters y constructores sin argumentos usados por componentes y Models. |
@@ -31,6 +31,5 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Spotless | 7.2.1 | Formato y controles de estilo de Java y archivos auxiliares, con Google Java Format y orden de imports. |
 | SonarQube Gradle Plugin | 7.3.1.8318 | Análisis estático del backend ejecutado por el workflow dedicado. |
 | GitHub Actions | Servicio sin versión fijada; acciones referenciadas por commit | CI del backend con JDK 21, build y tests, y ejecución separada del análisis de SonarQube. |
-| Postman | No fijada por el proyecto | Colección versionada para explorar y verificar manualmente el contrato HTTP documentado. |
 
 El catálogo contiene una entrada `springDotenv = "4.0.0"` asociada a `me.paulschwarz:spring-dotenv`, pero esa alias no es consumida por el build. La dependencia efectiva declarada es `me.paulschwarz:springboot4-dotenv:5.1.0`.

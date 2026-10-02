@@ -2,12 +2,40 @@
 
 ## Decisiones técnicas
 
+### Identidad del jugador y referencias externas
+
+- **Decisión**: El jugador del catálogo tiene un identificador interno propio, generado localmente por la base. El identificador que asigna Football-Data.org no se usa como clave primaria local, sino como `externalId` de una referencia externa.
+- **Modelo**: `Player` es la entidad de dominio; `PlayerExternalReference` representa la identidad que un proveedor externo le asigna a un jugador, con `provider` y `externalId`. La combinación `(provider, externalId)` es única y garantiza la identidad unívoca de la referencia.
+- **Motivo**: Acoplar la identidad del dominio a la de un proveedor obliga a redefinir el catálogo cada vez que cambia la fuente. Con identidad interna propia, el mismo jugador puede referenciarse en más de un proveedor sin que su identificador cambie, y las decisiones de la feature no dependen de la numeración de Football-Data.org.
+- **Proveedores**: `PlayerProvider` admite `FOOTBALL_DATA` y `THE_SPORTS_DB`. En esta feature solo `FOOTBALL_DATA` tiene operación: TheSportsDB no se consulta, no se busca, no se empareja y no aporta imágenes.
+
+### Migración de la identidad existente
+
+- **Decisión**: Una migración Flyway nueva sustituye `players.id` por una columna generada localmente y crea `player_external_references`, insertando una fila `FOOTBALL_DATA` por jugador existente cuyo `external_id` es el valor que tenía como identificador.
+- **Motivo**: La migración ya aplicada no puede modificarse, de modo que la transición debe ser aditiva y reversible por rollback de la propia migración. El identificador numérico anterior no se conserva como identificador interno: solo sobrevive como `externalId`, que es la única información de valor que aporta para el catálogo.
+- **Restricción**: La unicidad de `(provider, external_id)` no puede fallar en este paso, porque los valores de origen eran clave primaria y por tanto ya eran únicos.
+
 ### Fuente y recorrido de Football-Data.org
 
 - **Decisión**: Usar Football-Data.org API v4 a través de una Integration dedicada.
 - **Recorrido**: consultar Premier League (`PL`), Bundesliga (`BL1`), La Liga (`PD`), Serie A (`SA`) y Ligue 1 (`FL1`); para cada una, obtener sus equipos y consultar el plantel de cada equipo.
 - **Motivo**: La API no ofrece un recurso global de catálogo de jugadores. La documentación oficial expone `GET /competitions/{code}`, `GET /competitions/{code}/teams` y `GET /teams/{id}`; el último contiene `squad` con los jugadores. [Competition](https://docs.football-data.org/general/v4/competition.html), [Team](https://docs.football-data.org/general/v4/team.html).
-- **Mapeo**: `competition.name` → `league`; `team.name` → `team`; `squad[].id`, `squad[].name` y `squad[].position` → `id`, `name` y `position`.
+- **Mapeo**: `competition.name` → `league`; `team.name` → `team`; `squad[].id` → `externalId` de la referencia `FOOTBALL_DATA`; `squad[].name` y `squad[].position` → `name` y `position`. `squad[].dateOfBirth` y `squad[].nationality` se leen cuando el recurso los informa y se tratan como opcionales.
+
+### Atributos opcionales del jugador
+
+- **Decisión**: `dateOfBirth`, `nationality` e `imageUrl` son atributos opcionales y admiten ausencia de valor. La ausencia, el vacío y el formato no reconocido se interpretan como "dato no informado por la fuente".
+- **Motivo**: Las respuestas incompletas o degradadas del proveedor no deben destruir información válida ya conocida ni descartar un jugador por un campo opcional. Un dato no informado nunca sobrescribe un valor previo ni invalida el registro.
+- **`imageUrl`**: forma parte del modelo y del contrato público, pero esta feature no lo escribe ni lo resuelve. Su obtención pertenece a otra feature.
+
+### Resolución durante la sincronización
+
+- **Decisión**: Cada candidato se resuelve por su referencia `(FOOTBALL_DATA, externalId)` antes de escribir. Si existe, se actualiza el jugador asociado; si no, se crean conjuntamente el jugador y su referencia dentro de la misma operación lógica.
+- **Motivo**: Resolver por referencia evita duplicados entre sincronizaciones y desacopla la persistencia de la numeración del proveedor. El alta conjunta garantiza que no quede un jugador procedente de Football-Data.org sin su referencia.
+- **Conflicto de identidad**: si la referencia ya pertenece a otro jugador, el registro se descarta, se registra el motivo y se continúa. No se reasigna la referencia ni se altera ningún jugador.
+- **Restricción única**: la base mantiene la constraint inmediata `uk_player_external_references_provider_external_id` sobre `(provider, external_id)`. Solo SQLSTATE `23505` con esa constraint, tabla `player_external_references` y un candidato identificado constituye el conflicto funcional. Otras violaciones de integridad y errores no identificables son fallos técnicos.
+- **Aislamiento y recuperación**: ante ese conflicto se revierte el intento completo de aplicación y se reaplica la foto inmutable en una transacción y contexto JPA nuevos, excluyendo la clave conflictiva. La captura ocurre fuera del callback transaccional y después del rollback. No hay commits por jugador ni continuación en una transacción abortada. Cada repetición excluye al menos una clave nueva; no repite consultas HTTP y está acotada por el número de candidatos consolidados.
+- **Preservación**: los jugadores implicados se protegen también de la inactivación final, resolviendo de nuevo los propietarios de las claves excluidas. Los contadores de escritura proceden solo del intento confirmado; cada conflicto se registra y cuenta una vez. Los fallos técnicos no se reintentan ni se contabilizan como descartes.
 
 ### Configuración de competiciones
 
@@ -23,14 +51,14 @@
 ### Consistencia de la sincronización
 
 - **Decisión**: Construir y validar la foto completa del proveedor antes de iniciar la transacción que modifica jugadores locales.
-- **Motivo**: Si falla cualquier competición, equipo o plantel, no existe una foto fiable para decidir inactivaciones. Al no ejecutar la fase transaccional, se preserva el catálogo anterior. Si la foto se obtiene correctamente, una transacción única hace atómicos los upserts y las inactivaciones.
+- **Motivo**: Si falla cualquier competición, equipo o plantel, no existe una foto fiable para decidir inactivaciones y no se inicia ninguna escritura local. La aplicación tiene un único commit exitoso: los intentos fallidos se revierten completamente y solo el intento final confirma las altas conjuntas, actualizaciones e inactivaciones. Se elige reaplicar escrituras no confirmadas frente a commits independientes por jugador, que romperían el rollback global. El coste adicional solo aparece ante conflictos de persistencia; los huecos de secuencias tras rollback son admisibles.
 
 ### Duplicados
 
-- **Decisión**: Usar el ID de Football-Data.org como PK local y consolidar los candidatos en memoria por ID antes de persistirlos.
-- **Motivo**: Previene duplicados tanto frente al proveedor como en la base. Al iterar las ligas en el orden configurado para las cinco ligas, el primer candidato conserva la regla funcional de `league`.
+- **Decisión**: Consolidar los candidatos en memoria por identificador externo de Football-Data.org antes de persistirlos, y resolverlos en la base por su referencia externa.
+- **Motivo**: La consolidación en memoria evita aplicar el mismo jugador cuando aparece en más de una liga; la resolución por referencia evita duplicar el jugador entre sincronizaciones. Al iterar las ligas en el orden configurado para las cinco ligas, el primer candidato conserva la regla funcional de `league`.
 
 ### Disponibilidad y reintentos
 
-- **Decisión**: Configurar timeouts y no implementar reintentos automáticos.
-- **Motivo**: La Constitution los exige cuando la tecnología lo permite y prohíbe reintentos por defecto. Football-Data.org publica límites de solicitud, por lo que los reintentos aumentarían tráfico sin una necesidad funcional definida. [Políticas de API](https://docs.football-data.org/general/v4/policies.html).
+- **Decisión**: Configurar timeouts y no reintentar errores HTTP o de comunicación. La única excepción es `429 Too Many Requests`, para la cual se respeta la cabecera `Retry-After` del proveedor y se realizan como máximo tres reintentos; si tras ellos la operación no se completa, se propaga el fallo correspondiente.
+- **Motivo**: La Constitution exige reintentos cuando la tecnología lo permite y prohíbe reintentarlos por defecto. El proveedor publica límites de solicitud por lo que reintentar ante `429` es la conducta correcta y acotada, y hace innecesario reintentar cualquier otro fallo. Los reintentos también cuentan como peticiones. [Políticas de API](https://docs.football-data.org/general/v4/policies.html).
