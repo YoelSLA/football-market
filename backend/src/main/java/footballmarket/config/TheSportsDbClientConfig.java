@@ -16,22 +16,18 @@ public class TheSportsDbClientConfig {
   @Bean
   public RestClient theSportsDbRestClient(TheSportsDbProperties properties) {
     HttpClient client =
-            HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
-                    .followRedirects(HttpClient.Redirect.NEVER)
-                    .build();
+        HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(5))
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .build();
 
-    JdkClientHttpRequestFactory factory =
-            new JdkClientHttpRequestFactory(client);
+    JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
 
     factory.setReadTimeout(Duration.ofSeconds(15));
 
     return RestClient.builder()
-            .requestFactory(factory)
-            .baseUrl(
-                    properties.baseUrl()
-                            + "/api/v1/json/"
-                            + properties.apiKey())
-            .build();
+        .requestFactory(factory)
+        .baseUrl(properties.baseUrl() + "/api/v1/json/" + properties.apiKey())
+        .build();
   }
 }

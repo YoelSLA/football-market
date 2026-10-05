@@ -1,6 +1,6 @@
 # Testing del backend
 
-La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6; los comandos permitidos, en AGENTS.md.
+La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6 (Verificación); los comandos permitidos, en AGENTS.md.
 
 ## Guía de lectura
 
@@ -174,4 +174,4 @@ Elegir el nivel más específico capaz de demostrar la responsabilidad (§2), si
 
 ## 18. Entrega
 
-Aplicar la constitución §6: el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
+Aplicar la constitución §6 (Verificación): el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
