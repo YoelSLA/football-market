@@ -11,9 +11,9 @@ Este archivo complementa las instrucciones del `AGENTS.md` raíz. No duplica sus
 
 ## Antes y durante el cambio
 
-- Ante cambios HTTP, revisar Controller, DTO, seguridad, contrato, tests, OpenAPI, REST Docs y Postman.
+- Ante cambios HTTP, revisar Controller, DTO, seguridad, contrato, tests, OpenAPI y REST Docs.
 - Ante cambios de persistencia, revisar Model, Repository, migraciones y validación del esquema.
-- Las migraciones están en `backend/src/main/resources/db/migration/`, REST Docs en `backend/src/docs/asciidoc/` y la colección en `postman/collections/`.
+- Las migraciones están en `backend/src/main/resources/db/migration/` y REST Docs en `backend/src/docs/asciidoc/`.
 - `backend/README.md` puede estar desactualizado.
 - `backend/build/` es la salida generada específica del backend alcanzada por la regla global.
 

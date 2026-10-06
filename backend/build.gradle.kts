@@ -45,7 +45,7 @@ dependencies {
 
     compileOnly("org.projectlombok:lombok")
 
-    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.postgresql:postgresql")
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
 

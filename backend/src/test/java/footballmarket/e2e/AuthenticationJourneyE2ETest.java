@@ -38,10 +38,13 @@ class AuthenticationJourneyE2ETest {
   @DisplayName("Registro, inicio de sesión y acceso protegido")
   class AuthenticationJourney {
     @Test
+    @DisplayName("Se registra, inicia sesión y consulta identidad y catálogo con su token")
     void registraIniciaSesionYAccedeAlCatalogoProtegido() {
+      // Arrange
       RegisterRequestDTO registerRequest =
           new RegisterRequestDTO("critical-journey@test.com", "password123");
 
+      // Act / Assert: pasos del mismo recorrido crítico
       ResponseEntity<Void> register =
           restClient
               .post()

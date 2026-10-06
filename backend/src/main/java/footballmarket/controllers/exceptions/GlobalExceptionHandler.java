@@ -2,8 +2,16 @@ package footballmarket.controllers.exceptions;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
+import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
+import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
+import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
+import footballmarket.services.exceptions.PlayerImageResolutionPersistenceException;
+import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
+import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
+import footballmarket.services.exceptions.PlayerImageSynchronizationException;
+import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -15,6 +23,61 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(PlayerImageRunNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handleImageRunNotFound(
+      PlayerImageRunNotFoundException exception, HttpServletRequest request) {
+    return buildResponse(
+        exception.getMessage(), "PLAYER_IMAGE_SYNC_RUN_NOT_FOUND", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(InvalidTheSportsDbConfigurationException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidImageConfiguration(
+      HttpServletRequest request) {
+    return buildResponse(
+        "No se pudo iniciar la sincronización de imágenes",
+        "PLAYER_IMAGE_SYNC_FAILED",
+        HttpStatus.BAD_GATEWAY,
+        request);
+  }
+
+  @ExceptionHandler({
+    PlayerImageSynchronizationException.class,
+    PlayerImageResolutionPersistenceException.class
+  })
+  public ResponseEntity<ErrorResponseDTO> handlePlayerImageSyncFailure(HttpServletRequest request) {
+    return buildResponse(
+        "No se pudo completar la sincronización de imágenes",
+        "PLAYER_IMAGE_SYNC_FAILED",
+        HttpStatus.BAD_GATEWAY,
+        request);
+  }
+
+  @ExceptionHandler({TheSportsDbUnavailableException.class, TheSportsDbRateLimitException.class})
+  public ResponseEntity<ErrorResponseDTO> handleImageProviderUnavailable(
+      HttpServletRequest request) {
+    return buildResponse(
+        "No se pudo completar la lectura del proveedor de imágenes",
+        "PLAYER_IMAGE_SYNC_FAILED",
+        HttpStatus.BAD_GATEWAY,
+        request);
+  }
+
+  @ExceptionHandler(PlayerImageSyncInProgressException.class)
+  public ResponseEntity<ErrorResponseDTO> handlePlayerImageSyncInProgress(
+      PlayerImageSyncInProgressException exception, HttpServletRequest request) {
+    return buildResponse(
+        exception.getMessage(), "PLAYER_IMAGE_SYNC_IN_PROGRESS", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(PlayerSynchronizationPersistenceException.class)
+  public ResponseEntity<ErrorResponseDTO> handlePlayerPersistence(HttpServletRequest request) {
+    return buildResponse(
+        "No se pudo aplicar la sincronización del catálogo",
+        "FOOTBALL_DATA_UNAVAILABLE",
+        HttpStatus.BAD_GATEWAY,
+        request);
+  }
 
   @ExceptionHandler(FootballDataUnavailableException.class)
   public ResponseEntity<ErrorResponseDTO> handleFootballDataUnavailable(

@@ -32,6 +32,7 @@ class AuthenticationServiceTest {
   @DisplayName("Consulta del usuario actual")
   class CurrentUser {
     @ParameterizedTest
+    @DisplayName("Rechaza sujetos sin un usuario actual persistido")
     @NullAndEmptySource
     @ValueSource(strings = {" ", "missing@test.com"})
     void rechazaSujetoSinUsuarioActual(String subject) {
@@ -40,6 +41,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Recupera el usuario persistido aunque el sujeto cambie de mayúsculas")
     void recuperaElUsuarioPersistidoPorSujetoNormalizado() {
       User registered = new User("current@test.com", "password123");
       authenticationService.register(registered);
@@ -55,6 +57,7 @@ class AuthenticationServiceTest {
   @DisplayName("Registro de usuarios")
   class Registration {
     @Test
+    @DisplayName("Registra un usuario que puede iniciar sesión con sus credenciales")
     void seRegistraUnUsuarioCorrectamente() {
       User user = new User("test@test.com", "password");
 
@@ -66,8 +69,9 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Normaliza el email al registrar un usuario")
     void seNormalizaElEmailAlRegistrarUsuario() {
-      User user = new User("test@test.com", "password");
+      User user = new User("TEST@TEST.COM", "password");
 
       authenticationService.register(user);
 
@@ -75,6 +79,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Al registrar un usuario se almacena la contraseña cifrada")
     void deberiaHashearLaContrasenaAlRegistrarUsuario() {
       User user = new User();
       user.setEmail("hash@test.com");
@@ -86,6 +91,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Rechaza registrar un email que ya existe sin distinguir mayúsculas")
     void deberiaLanzarExcepcionCuandoElEmailYaExiste() {
       User firstUser = new User("duplicate@test.com", "password");
 
@@ -102,6 +108,7 @@ class AuthenticationServiceTest {
   @DisplayName("Inicio de sesión")
   class Login {
     @Test
+    @DisplayName("Permite iniciar sesión con la contraseña original")
     void deberiaPoderIniciarSesionConLaContrasenaOriginal() {
       User user = new User();
       user.setEmail("original@test.com");
@@ -115,6 +122,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Rechaza iniciar sesión con la contraseña almacenada cifrada")
     void noDeberiaPoderIniciarSesionConLaContrasenaHasheada() {
       User user = new User("hash-login@test.com", "password");
 
@@ -126,6 +134,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Emite un token al iniciar sesión con credenciales válidas")
     void deberiaIniciarSesionCorrectamente() {
       User user = new User();
       user.setEmail("login@test.com");
@@ -139,6 +148,7 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Acepta un email en mayúsculas al iniciar sesión")
     void deberiaNormalizarEmailAlIniciarSesion() {
       User user = new User();
       user.setEmail("normalize@test.com");
@@ -152,12 +162,14 @@ class AuthenticationServiceTest {
     }
 
     @Test
+    @DisplayName("Rechaza iniciar sesión cuando el usuario no existe")
     void deberiaLanzarExcepcionCuandoElUsuarioNoExiste() {
       assertThatThrownBy(() -> authenticationService.login("nonexistent@test.com", "password"))
           .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
+    @DisplayName("Rechaza iniciar sesión con una contraseña incorrecta")
     void deberiaLanzarExcepcionCuandoLaContrasenaEsIncorrecta() {
       User user = new User("invalid@test.com", "password");
 
@@ -165,19 +177,6 @@ class AuthenticationServiceTest {
 
       assertThatThrownBy(() -> authenticationService.login("invalid@test.com", "wrongPassword"))
           .isInstanceOf(InvalidCredentialsException.class);
-    }
-
-    @Test
-    void deberiaGenerarUnTokenParaElUsuarioAutenticado() {
-      User user = new User();
-      user.setEmail("token@test.com");
-      user.setPassword("password");
-
-      authenticationService.register(user);
-
-      String token = authenticationService.login("token@test.com", "password");
-
-      assertThat(token).isNotNull().isNotBlank();
     }
   }
 }

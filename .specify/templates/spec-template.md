@@ -1,10 +1,12 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`
+**Feature Branch**: `[<type>/<spec-id>-<scope>]` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `<spec-id>-<scope>`, sin el prefijo de tipo. La convención de ramas es normativa; ver la constitución §7.
 
 **Created**: [DATE]
 
 **Status**: Draft
+
+<!-- Estados y criterios de transición: ../../specs/README.md. -->
 
 **Input**: User description: "$ARGUMENTS"
 

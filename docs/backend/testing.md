@@ -1,6 +1,6 @@
 # Testing del backend
 
-La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6; los comandos permitidos, en AGENTS.md.
+La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6 (Verificación); los comandos permitidos, en AGENTS.md.
 
 ## Guía de lectura
 
@@ -127,7 +127,42 @@ El uso de `@Nested` de JUnit es obligatorio en todos los tests del backend, en t
 
 Está prohibido usar `this` en todo el código de tests, incluidos métodos de prueba, ciclo de vida, helpers y clases `@Nested`. Acceder a atributos y métodos de instancia directamente, sin `this` ni referencias calificadas como `OuterTest.this`. Evitar nombres de parámetros o variables locales que oculten miembros necesarios de la instancia. Esta regla es la excepción explícita a la convención de código productivo de [convenciones del backend](conventions.md).
 
-Nombres que expresen condición y resultado; estructura conceptual Arrange/Act/Assert sin comentarios artificiales. `fixtures`, `builders` y `support` se permiten con reutilización real para datos o infraestructura compartida, no como categorías nuevas.
+Nombres que expresen condición y resultado; estructura Arrange/Act/Assert/Verify explícita cuando corresponda, sin bloques vacíos. `fixtures`, `builders` y `support` se permiten con reutilización real para datos o infraestructura compartida, no como categorías nuevas.
+
+### Estilo de los escenarios
+
+- Un método prueba un comportamiento o escenario concreto. Separar reglas independientes (por ejemplo, crear, actualizar, reactivar e inactivar) en tests distintos; conservar juntas las comprobaciones que describen el mismo resultado. Un journey E2E puede abarcar pasos sucesivos de un único flujo crítico.
+- Usar `// Arrange` para datos, mocks y precondiciones; `// Act` para la operación bajo prueba; `// Assert` para retorno o excepción; `// Verify` para estado persistido observable e interacciones o consecuencias. Omitir los bloques sin contenido. Las operaciones previas que preparan estado, incluso cuando llaman al método bajo prueba, pertenecen a Arrange. Si una excepción se afirma al ejecutar la acción, `// Act / Assert` es válido.
+- No utilizar `var` en tests: declarar tipos explícitos, también para páginas, snapshots, resultados, builders y recursos concurrentes.
+- Declarar entidades y objetos relevantes antes de incluirlos en `List.of(...)`, snapshots, requests o llamadas a Services: `Player player = new Player(1L, "N", "T", "L", "P"); List<Player> players = List.of(player); PlayerSnapshot snapshot = new PlayerSnapshot(players, 1, 0);`. No crear variables para literales triviales cuando no aportan claridad.
+- Los identificadores siguen las convenciones de idioma de la constitución. Dar a cada método un nombre corto y descriptivo, y a cada test un `@DisplayName` en español natural que explique condición y comportamiento observable. Bien: `creaJugadorNuevo` con `@DisplayName("Crea un jugador cuando no existe en el catálogo")`; mal: `testPlayer`, `works` o `creaActualizaReactivaEInactiva`. El nombre visible no debe limitarse a repetir literalmente el método.
+- Agrupar mediante `@Nested` según §16 y dar al grupo un `@DisplayName` que describa la funcionalidad compartida (por ejemplo, «Sincronización del catálogo»), sin anidamientos adicionales superfluos.
+- Parametrizar únicamente cuando varíen las entradas de una misma regla y expectativa. Preferir `@CsvSource` para combinaciones, `@ValueSource` para un valor y `@NullAndEmptySource` para ausencias; usar otras fuentes cuando aporten claridad. Dar también un `@DisplayName` humano a los casos parametrizados. No juntar reglas conceptualmente distintas para ahorrar líneas.
+- Las assertions deben demostrar la promesa del test: retorno, excepción o respuesta directa en Assert; efecto observable y colaboraciones relevantes en Verify. No añadir comprobaciones ajenas para incrementar cobertura ni verificar implementación privada. Respetar la frontera de cada categoría (§2–14).
+- Antes de cambiar una expectativa, leer implementación y contrato; no modificar código productivo para hacer pasar un test ni ajustar silenciosamente un valor esperado por un fallo. Registrar discrepancias cuya semántica no esté clara.
+
+Ejemplo de Service (con estado inicial ya conocido):
+
+```java
+@Test
+@DisplayName("Crea un jugador cuando todavía no existe en el catálogo")
+void creaJugadorNuevo() {
+  // Arrange
+  Player player = new Player(1L, "Name", "Team", "League", "Forward");
+  List<Player> players = List.of(player);
+  PlayerSnapshot snapshot = new PlayerSnapshot(players, 1, 0);
+
+  // Act
+  PlayerSynchronizationResult result = playerCatalogService.applySynchronization(snapshot);
+
+  // Assert
+  assertThat(result.created()).isEqualTo(1);
+
+  // Verify
+  Page<Player> activePlayers = playerCatalogService.getActivePlayers(0, 20);
+  assertThat(activePlayers.getContent()).extracting(Player::getId).containsExactly(1L);
+}
+```
 
 Helpers privados o compartidos no contienen assertions ni ocultan comportamiento o flujos de negocio. Respetan la frontera de su categoría, incluida §6 para persistencia de Service.
 
@@ -139,4 +174,4 @@ Elegir el nivel más específico capaz de demostrar la responsabilidad (§2), si
 
 ## 18. Entrega
 
-Aplicar la constitución §6: el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
+Aplicar la constitución §6 (Verificación): el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
