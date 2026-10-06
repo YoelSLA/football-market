@@ -25,7 +25,9 @@ function PlayerPortrait({ player }: PlayerCardProps) {
 			className={styles["player-card__portrait"]}
 			src={images[imageIndex]}
 			alt=""
-			onError={() => setImageIndex((index) => Math.min(index + 1, images.length - 1))}
+			onError={() =>
+				setImageIndex((index) => Math.min(index + 1, images.length - 1))
+			}
 		/>
 	);
 }

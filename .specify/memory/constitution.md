@@ -36,7 +36,7 @@ El contrato HTTP del backend se define en [arquitectura del backend](../../docs/
 
 Código nuevo o modificado en inglés: identificadores, paquetes, endpoints y campos JSON. Los nombres impuestos por contratos externos conservan su forma. Los nombres descriptivos de tests deben estar en español; el resto de su código sigue la regla general.
 
-Documentación propia, Specs, Javadoc, OpenAPI y mensajes de validación en español; documentación externa puede conservar su idioma. Nombres de ramas, commits, Pull Requests e Issues en inglés. No traducir código existente fuera del alcance: aplicar estas convenciones a los elementos nuevos o modificados.
+Documentación propia, Specs, Javadoc, OpenAPI y mensajes de validación en español; documentación externa puede conservar su idioma. Los nombres de ramas se rigen por [§7](#7-nombres-de-ramas-y-trazabilidad); los de commits, Pull Requests e Issues, en inglés. No traducir código existente fuera del alcance: aplicar estas convenciones a los elementos nuevos o modificados.
 
 ## 6. Verificación
 
@@ -46,10 +46,50 @@ El único control ejecutable por el agente es el build sin tests del área cuyo 
 
 Se puede entregar con el build aprobado y los tests del backend explícitamente pendientes del usuario. Un fallo preexistente verificablemente ajeno al cambio no bloquea la entrega, pero debe reportarse. SonarQube, Quality Gates y otros controles opcionales quedan a cargo del usuario y no condicionan la finalización. El cambio debe dejar coherentes todos sus elementos afectados; toda ampliación del alcance requiere justificación explícita.
 
-## 7. Gobernanza
+## 7. Nombres de ramas y trazabilidad
+
+Esta convención es normativa y obligatoria. Aplica a toda rama creada en el repositorio, con independencia de quién la cree.
+
+### Formato
+
+```
+<type>/<spec-id?>-<scope>
+```
+
+El segmento `<spec-id>` es opcional y solo se incluye cuando el cambio corresponde a una spec existente.
+
+- `<type>` indica la naturaleza del cambio y se toma de esta lista cerrada: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `ci`.
+- `<spec-id>` es el identificador de la spec a la que pertenece el cambio.
+- `<scope>` describe brevemente el cambio en `kebab-case`.
+
+Si existe una spec relacionada:
+
+```
+<type>/<spec-id>-<scope>
+```
+
+Si el cambio es pequeño, técnico o independiente y no justifica una spec propia:
+
+```
+<type>/<scope>
+```
+
+### Reglas obligatorias
+
+1. Antes de crear una rama, el agente debe revisar las specs existentes y determinar si el cambio pertenece a alguna. No debe crear nombres de rama sin esa determinación previa.
+2. Un cambio que implemente, modifique o complete una spec existente debe reutilizar su identificador. Reutilizar el identificador no autoriza crear una spec nueva para un cambio que ya se asocia correctamente a una existente.
+3. No asociar artificialmente un cambio a una spec cuando no exista relación funcional clara.
+4. `<scope>` siempre en `kebab-case`. No se admiten `snake_case`, `camelCase` ni `PascalCase`.
+5. No se admiten nombres personales ni descripciones genéricas o ambiguas. El nombre debe ser breve, descriptivo y representar con claridad el cambio.
+6. Cuando la rama incluye un identificador de spec, el trabajo se vincula con el directorio correspondiente dentro de `specs/`, cuyos artefactos son la fuente principal de requisitos y contexto. La rama no sustituye ni reemplaza a los artefactos de la spec.
+7. Se mantiene la trazabilidad entre spec, rama, commits y Pull Request. El Pull Request referencia la spec y la rama; los commits de la rama se asocian a esa spec.
+
+Las herramientas de creación de features del proyecto pueden definir su propia nomenclatura interna para directorios de spec. Cuando su nomenclatura difiera del formato de rama de esta sección, esta sección prevalece para el nombre de la rama y la divergencia de la herramienta se reporta en lugar de resuelverse por cuenta propia.
+
+## 8. Gobernanza
 
 Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution ni los documentos normativos aplicables para justificar o facilitar una implementación incompatible. Solo pueden modificarlos cuando el usuario solicite explícitamente una modificación normativa.
 
 Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible. Si los documentos, la Spec y el código no resuelven una decisión normativa relevante, solicitar aclaración sin inventar reglas o excepciones.
 
-**Versión**: 3.3.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-09-30
+**Versión**: 4.0.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-05

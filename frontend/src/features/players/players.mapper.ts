@@ -24,7 +24,8 @@ function isPlayerResponseDTO(value: unknown): value is PlayerResponseDTO {
 		(value.dateOfBirth === null || typeof value.dateOfBirth === "string") &&
 		(value.nationality === null || typeof value.nationality === "string") &&
 		(value.imageUrl === null || typeof value.imageUrl === "string") &&
-		(value.fallbackImageUrl === null || typeof value.fallbackImageUrl === "string")
+		(value.fallbackImageUrl === null ||
+			typeof value.fallbackImageUrl === "string")
 	);
 }
 
