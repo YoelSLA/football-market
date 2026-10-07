@@ -5,6 +5,10 @@ tools: ['github/github-mcp-server/list_issues', 'github/github-mcp-server/issue_
 
 ## User Input
 
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. Este comando opcional exporta Tasks a GitHub Issues solo con autorización explícita; no es fase SDD ni autoriza crear tarjetas Trello. MUST NOT ejecutar tests ni hooks incompatibles ni continuar lifecycle automáticamente.
+
 ```text
 $ARGUMENTS
 ```

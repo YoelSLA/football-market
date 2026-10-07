@@ -1,16 +1,17 @@
 ---
 description: Create or update the feature specification from a natural language feature description.
 handoffs:
-  - label: Build Technical Plan
-    agent: speckit.plan
-    prompt: Create a plan for the spec. I am building with...
   - label: Clarify Spec Requirements
     agent: speckit.clarify
     prompt: Clarify specification requirements
-    send: true
+    send: false
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo la fase autorizada; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. MUST registrar evidencia de fase sin inferir aceptación por existencia de archivos. Trello solo se modifica con autorización operativa.
 
 ```text
 $ARGUMENTS
@@ -71,44 +72,20 @@ Given that feature description, do this:
      - "Create a dashboard for analytics" → "analytics-dashboard"
      - "Fix payment processing timeout bug" → "fix-payment-timeout"
 
-2. **Branch creation** (optional, via hook):
+2. **Mecanismo local de creación/reanudación**:
 
-   If a `before_specify` hook ran successfully in the Pre-Execution Checks above, it will have created/switched to a git branch and output JSON containing `BRANCH_NAME` and `FEATURE_NUM`. Note these values for reference, but the branch name does **not** dictate the spec directory name.
+   MUST revisar specs existentes y estado/diff Git antes de asignar identidad.
+   - Nueva SPEC: ejecutar una sola vez `.specify/scripts/bash/create-new-feature.sh --json --short-name '<scope>' '<requisito autorizado>'`, sin reservar número ni usar `--timestamp` (configuración local secuencial).
+   - SPEC existente: usar `--reuse --short-name '<directorio-o-scope-existente>'`. Coincidencia exacta o inequívoca; `--number` solo valida/desambigua identidad existente. MUST NOT crear otra SPEC para reanudar trabajo relacionado.
+   - MUST sustituir placeholders por valores reales. El script controla numeración, carpeta, plantilla inicial, persistencia de selección y creación/reutilización de rama; MUST NOT repetirlos con mkdir/copia ni mediante un hook de creación alternativo.
+   - `--reuse` no sobrescribe artefactos. `--allow-existing-branch` no equivale a reutilización. Si falta `spec.md` en una SPEC reutilizada, detenerse y reportar recuperación necesaria, no sobrescribirla silenciosamente.
+   - MUST inspeccionar hooks antes de ejecutarlos; si asignan una segunda identidad o contradicen el mecanismo local, detenerse antes del efecto incompatible. MUST preservar cambios locales.
 
-   If the user explicitly provided `GIT_BRANCH_NAME`, pass it through to the hook so the branch script uses the exact value as the branch name (bypassing all prefix/suffix generation).
+3. **Verificar salida y contexto**:
 
-3. **Create the spec feature directory**:
-
-   Specs live under the default `specs/` directory unless the user explicitly provides `SPECIFY_FEATURE_DIRECTORY`.
-
-   **Resolution order for `SPECIFY_FEATURE_DIRECTORY`**:
-   1. If the user explicitly provided `SPECIFY_FEATURE_DIRECTORY` (e.g., via environment variable, argument, or configuration), use it as-is
-   2. Otherwise, auto-generate it under `specs/`:
-      - Check `.specify/init-options.json` for `feature_numbering` (preferred) or `branch_numbering` (deprecated, migration only — will be removed in a future release)
-      - If `"timestamp"`: prefix is `YYYYMMDD-HHMMSS` (current timestamp)
-      - If `"sequential"` or absent: prefix is `NNN` (next available 3-digit number after scanning existing directories in `specs/`)
-      - Construct the directory name: `<prefix>-<short-name>` (e.g., `003-user-auth` or `20260319-143022-user-auth`)
-      - Set `SPECIFY_FEATURE_DIRECTORY` to `specs/<directory-name>`
-      - If `branch_numbering` was used (and `feature_numbering` was absent), emit a one-line warning: "⚠️ `branch_numbering` in init-options.json is deprecated. Rename to `feature_numbering`."
-
-   **Create the directory and spec file**:
-   - `mkdir -p SPECIFY_FEATURE_DIRECTORY`
-   - Resolve the active `spec-template` through the Spec Kit preset/template resolution stack (equivalent to `specify preset resolve spec-template`)
-   - Copy the resolved `spec-template` file to `SPECIFY_FEATURE_DIRECTORY/spec.md` as the starting point
-   - Set `SPEC_FILE` to `SPECIFY_FEATURE_DIRECTORY/spec.md`
-   - Persist the resolved path to `.specify/feature.json`:
-     ```json
-     {
-       "feature_directory": "<resolved feature dir>"
-     }
-     ```
-     Write the actual resolved directory path value (for example, `specs/003-user-auth`), not the literal string `SPECIFY_FEATURE_DIRECTORY`.
-     This allows downstream commands (`/speckit.plan`, `/speckit.tasks`, etc.) to locate the feature directory without relying on git branch name conventions.
-
-   **IMPORTANT**:
-   - You must only create one feature per `/speckit.specify` invocation
-   - The spec directory name and the git branch name are independent — they may be the same but that is the user's choice
-   - The spec directory and file are always created by this command, never by the hook
+   Leer `SPEC_NAME`, `SPEC_FILE`, `FEATURE_NUM`, `BRANCH_NAME`, `SPEC_ACTION` y `BRANCH_STATUS`. Si falta un campo, consultar salida efectiva y reportar, no inferir éxito. `SPEC_ACTION=created/reused` distingue acciones; un fallo/omisión de rama puede coexistir con SPEC materializada, pero bloquea operaciones que necesiten esa rama.
+   Derivar `SPECIFY_FEATURE_DIRECTORY` del directorio de `SPEC_FILE`; comprobar selección efectiva en `.specify/feature.json` y overrides de entorno antes de editar. La rama con prefijo de tipo no es el nombre de directorio. MUST NOT generar identidad por cuenta propia ni aceptar un override que apunte a otra SPEC.
+   En una SPEC nueva, completar la plantilla creada por el script. En una reutilizada, leer y modificar solo secciones autorizadas, preservando IDs, decisiones y artefactos. Asociar épica REQ a la SPEC real y sincronizar únicamente US nacidas de `spec.md` cuando la operación esté autorizada; no reservar números futuros ni inventar historias.
 
 4. Load the resolved active `spec-template` file to understand required sections.
 
@@ -273,9 +250,9 @@ Report completion to the user with:
 - `SPECIFY_FEATURE_DIRECTORY` — the feature directory path
 - `SPEC_FILE` — the spec file path
 - Checklist results summary
-- Readiness for the next phase (`/speckit.clarify` or `/speckit.plan`)
+- Preparación para Clarify; MUST NOT saltar su evaluación para ir directamente a Plan
 
-**NOTE:** Branch creation is handled by the `before_specify` hook (git extension). Spec directory and file creation are always handled by this core command.
+**Nota local:** Specify es la fase conceptual; `create-new-feature.sh` materializa o reutiliza identidad, carpeta y rama. El comando redacta/valida contenido sin crear una segunda SPEC. La existencia del archivo no completa la fase.
 
 ## Quick Guidelines
 

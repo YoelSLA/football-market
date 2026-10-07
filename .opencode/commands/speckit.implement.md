@@ -1,8 +1,12 @@
 ---
-description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+description: Implement the authorized Ready user story and its explicit prerequisites from tasks.md.
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar US formal autorizada en Ready y Analyze OK vigente antes de tomarla y moverla a En progreso. EPIC, Backlog y tarjetas técnicas no son ejecutables. MUST limitar ejecución a sus Tasks y prerrequisitos explícitamente autorizados; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests, ni indirectamente mediante hooks. Review requiere gates reales; Done requiere aceptación explícita. Implement de SPEC completa requiere todas sus US requeridas Done.
 
 ```text
 $ARGUMENTS
@@ -74,10 +78,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    - **If any checklist has unchecked items**:
      - Display the table with unchecked item counts
-     - **STOP** and ask: "Some checklists have unchecked items. Do you want to proceed with implementation anyway? (yes/no)"
-     - Wait for user response before continuing
-     - If user says "no" or "wait" or "stop", halt execution
-     - If user says "yes" or "proceed" or "continue", proceed to step 3
+     - **STOP** y reportar criterios pendientes al revisor. MUST NOT ofrecer una excepción genérica al Ready Gate. Solo reanudar con evaluación suficiente registrada, ausencia de bloqueantes y elegibilidad vigente conforme al workflow.
 
    - **If all checklists are checked**:
      - Display the table showing all checklists passed
@@ -145,7 +146,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 6. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
    - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together
-   - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
+   - **Tests:** escribir/modificar los necesarios del backend; su ejecución queda a cargo del usuario. MUST NOT ejecutar tests ni crear tests frontend.
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
@@ -165,12 +166,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
 9. Completion validation:
-   - Verify all required tasks are completed
+   - Verificar Tasks del alcance autorizado de la US, sin exigir ni marcar avance de otras historias
    - Check that implemented features match the original specification
-   - Validate that tests pass and coverage meets requirements
+   - Registrar evidencia de tests aportada por el usuario y verificaciones pendientes; MUST NOT afirmar PASS sin salida ni ejecutar tests. Aplicar únicamente builds permitidos cuando cambió código del área.
    - Confirm the implementation follows the technical plan
 
-Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
+Si faltan Tasks necesarias, detener implementación y solicitar corrección autorizada del desglose preservando IDs/avance, seguida de Analyze; MUST NOT regenerar destructivamente ni continuar sin gate vigente.
 
 ## Mandatory Post-Execution Hooks
 
@@ -212,7 +213,7 @@ Report final status with summary of completed work.
 
 ## Done When
 
-- [ ] All tasks in tasks.md completed and marked `[X]`
-- [ ] Implementation validated against specification, plan, and test coverage
+- [ ] Tasks del alcance de la US realmente completadas y verificadas marcadas `[X]`; ejecución/verificación pendiente permanece explícita, sin marcar trabajo ajeno
+- [ ] Implementación del alcance validada contra SPEC/plan, con gates reales y evidencia/pending de tests explícitos; lista para Review, no Done automático
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with summary of completed work

@@ -8,6 +8,10 @@ handoffs:
 
 ## User Input
 
+## Reglas locales obligatorias
+
+MUST leer Constitution vigente, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. Una enmienda MUST preservar estructura/secciones no afectadas, justificar versión y registrar impacto; la plantilla no autoriza reescritura global de una Constitution existente. MUST NOT ejecutar tests ni hooks incompatibles ni iniciar Specify por completar gobernanza.
+
 ```text
 $ARGUMENTS
 ```
@@ -99,7 +103,7 @@ Follow this execution flow:
      - PATCH: Clarifications, wording, typo fixes, non-semantic refinements.
    - If version bump type ambiguous, propose reasoning before finalizing.
 
-3. Draft the updated constitution content using the resolved template as the required structure:
+3. Redactar la enmienda preservando la estructura vigente si existe Constitution; usar la plantilla como estructura inicial solo si no existe:
    - Replace every placeholder with concrete text (no bracketed tokens left except intentionally retained template slots that the project has chosen not to define yet—explicitly justify any left).
    - Preserve heading hierarchy and comments can be removed once replaced unless they still add clarifying guidance.
    - Ensure each Principle section: succinct name line, paragraph (or bullet list) capturing non‑negotiable rules, explicit rationale if not obvious.

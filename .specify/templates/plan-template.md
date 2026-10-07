@@ -1,6 +1,10 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `[type/###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+
+<!-- MUST usar rama real según Constitution §7 y seguir docs/development/sdd-workflow.md.
+Plan no genera Tasks ni habilita Implement: siguen Checklists, Tasks y Analyze.
+Complexity Tracking registra decisiones, no autoriza violaciones de Constitution. -->
 
 **Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
