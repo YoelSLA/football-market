@@ -6,7 +6,7 @@ description: Implement the authorized Ready user story and its explicit prerequi
 
 ## Reglas locales obligatorias
 
-MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar US formal autorizada en Ready y Analyze OK vigente antes de tomarla y moverla a En progreso. EPIC, Backlog y tarjetas técnicas no son ejecutables. MUST limitar ejecución a sus Tasks y prerrequisitos explícitamente autorizados; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests, ni indirectamente mediante hooks. Review requiere gates reales; Done requiere aceptación explícita. Implement de SPEC completa requiere todas sus US requeridas Done.
+MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar READY global vigente y IMPLEMENT AUTHORIZATION humana explícita, vigente y persistida para la US y sus prerrequisitos autorizados. Dependency ≠ Blocker: dependencias conocidas se resuelven por orden técnico, sin inventar alcance. Autorización ≠ inicio: mover READY → IN PROGRESS solo al comenzar realmente IMPLEMENT. EPIC, BACKLOG y tarjetas técnicas no son ejecutables; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests ni indirectamente mediante hooks. Implementación completa habilita CODE REVIEW con report completo (incluidos tests), no DONE: CODE REVIEW y TESTING son gates humanos separados. CONVERGE final y FEATURE COMPLETION AUTHORIZATION corresponden a cierre de Feature, fuera de esta ejecución. Invalidar gates solo por impacto sobre alcance evaluado, conservando aprobaciones no afectadas.
 
 ```text
 $ARGUMENTS
@@ -214,6 +214,6 @@ Report final status with summary of completed work.
 ## Done When
 
 - [ ] Tasks del alcance de la US realmente completadas y verificadas marcadas `[X]`; ejecución/verificación pendiente permanece explícita, sin marcar trabajo ajeno
-- [ ] Implementación del alcance validada contra SPEC/plan, con gates reales y evidencia/pending de tests explícitos; lista para Review, no Done automático
+- [ ] Implementación del alcance validada contra SPEC/plan; Code Review Report completo y checklist humano; lista para CODE REVIEW, sin aprobar gates ni DONE automáticamente. Tests pendientes explícitos no equivalen a TESTING aprobado.
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with summary of completed work

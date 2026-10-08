@@ -225,10 +225,12 @@ Task: "Create [Entity2] model in src/models/[entity2].py"
 ### Incremental Delivery
 
 1. Complete Setup + Foundational → Foundation ready
-2. User Story 1 → gates permitidos → Review → aceptación explícita → Done
-3. User Story 2 → gates permitidos → Review → aceptación explícita → Done
-4. User Story 3 → gates permitidos → Review → aceptación explícita → Done
+2. US1 autorizada → IMPLEMENT efectivo → CODE REVIEW humano → TESTING humano → DONE
+3. US2 autorizada → IMPLEMENT efectivo → CODE REVIEW humano → TESTING humano → DONE
+4. US3 autorizada → IMPLEMENT efectivo → CODE REVIEW humano → TESTING humano → DONE
 5. Each story adds value without breaking previous stories
+
+READY y IMPLEMENT AUTHORIZATION no implican inicio. Gates humanos no son Tasks técnicas. Todas las US requeridas DONE y trabajo necesario completo → Feature TESTING/CONVERGE → FEATURE COMPLETION AUTHORIZATION humana → Feature DONE. Build/entrega no acreditan TESTING; tests aplicables pendientes impiden DONE.
 
 ### Parallel Team Strategy
 

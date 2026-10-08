@@ -42,6 +42,128 @@ de lifecycle verificable conforme a Constitution 5.0.0 y al workflow SDD vigente
 
 ## Tablero y fuentes
 
+#### Estado vigente — US01–US06 en TESTING
+
+CODE REVIEW de US01–US06 aprobado por humano tras revisar el checklist completo, con evidencia
+`[SDD GATE] CODE REVIEW / APPROVED` persistida y verificada en cada US. US01–US06 movidas de
+CODE REVIEW a TESTING con lectura posterior verificada. TESTING = `PENDING HUMAN VALIDATION`: los
+tests backend y los builds permitidos los ejecuta el usuario; el agente no ejecutó ninguno y el
+build histórico no valida el diff actual. Ninguna US es DONE todavía, por lo que la Feature
+permanece IN PROGRESS. Release 2 (V6: T039/T040/T052) sigue sin autorizar ni iniciar, y el gate
+T028 (despliegue con solo V5, sincronización y verificación de IDs/conteos/asociaciones/evidencia/
+marcador) continúa pendiente del usuario. Un cambio de código o tests que afecte el alcance aprobado
+invalida CODE REVIEW y TESTING según impacto.
+
+### Antecedente — cierre técnico de Release 1 completo; US01–US06 en CODE REVIEW
+
+Todas las tasks técnicas autorizadas (T001–T038, T041–T051) están implementadas como fuentes y
+marcadas `[x]`; T039/T040/T052 siguen pendientes por pertenecer a V6. Code Review Report entregado
+en sesión para US01–US06, cubriendo implementación y tests. US01–US06 movidas de IN PROGRESS a
+CODE REVIEW con lectura posterior verificada; Feature permanece IN PROGRESS. Sin tests, builds ni
+migraciones ejecutados y sin iniciar V6. Evidencia de avance persistida como comentario en la
+tarjeta Feature y en cada US. TESTING y DONE requieren aprobación humana explícita; el gate de
+Release 1 (despliegue con solo V5, sincronización y verificación) sigue pendiente del usuario.
+
+### Antecedente — B-V5-05 resuelto; IMPLEMENT Release 1 continúa
+
+Decisión humana: dateOfBirth y nationality se consolidan por atributo e independientemente del
+estado obligatorio; sin valor válido no hay valor nuevo, con valor único se usa, y con valores
+válidos incompatibles el Player existente conserva su persistido y el nuevo persiste null. El
+conflicto no genera INVALID_SUBJECT_DATA, no congela ni descarta al Player, no impide consolidar
+el otro atributo y no bloquea el enriquecimiento; sin selección por orden/externalId. Se registra
+como PLAYER_OPTIONAL_CONFLICT con causas CONFLICTING_DATE_OF_BIRTH/CONFLICTING_NATIONALITY.
+ANALYZE posterior read-only PASS WITH NON-BLOCKING; READY recuperado; Status Ready for
+implementation; Feature y US01–US06 IN PROGRESS. Autorizaciones preservadas sin ampliación
+material. B-V5-01–05 resueltos; el estado pendiente de B-V5-05 más abajo es antecedente.
+Sin CODE REVIEW/TESTING/DONE aprobados, sin V6, sin tests/builds/migraciones ejecutados.
+Sincronización de este evento y avance pendiente de lectura/escritura/verificación en Feature y
+seis US.
+
+### Antecedente — B-V5-05 pendiente
+
+STOP IMPLEMENT por decisión de opcionales válidos incompatibles entre referencias distintas
+del mismo Player, con Team/name/position coherentes. SPEC-002 RF-018 impide descartar solo por
+opcionales; B-V5-03/B-V5-04/ranking no definen su consolidación. No inventar prioridad por
+orden, preservación por campo ni extender protección integral. Evidencia y avance en
+specs/007-team-league-domain/tasks.md; Status Draft, READY NO, Feature/US01–US06 IN PROGRESS.
+Autorizaciones preservadas; sin CODE REVIEW/TESTING/DONE aprobados, ni tests/build/migraciones
+ejecutados, ni V6. B-V5-01–04 resueltos; estados READY recuperado siguientes son históricos.
+Sincronización de B-V5-05 completada: lectura previa, comentario nuevo y lectura posterior
+verificaron persistencia en Feature y seis US con listas IN PROGRESS intactas; Trello SYNCED.
+La sincronización anterior quedó registrada como antecedente: lectura previa,
+comentario nuevo y lectura posterior verificaron persistencia y listas IN PROGRESS intactas.
+comentario nuevo y lectura posterior verificaron persistencia y listas IN PROGRESS intactas.
+Trello SYNCED; no miembros, historial ni gates alterados.
+
+### Estado vigente — B-V5-04 y selección canónica resueltos
+
+Decisión humana incorporada: comparación por normalización existente separada de presentación;
+ranking de originales equivalentes por diacríticos/casing natural/desempate lexicográfico;
+existente conserva texto persistido equivalente y GET no normaliza. B-V5-01–04 resueltos.
+ANALYZE posterior read-only PASS WITH NON-BLOCKING, READY recuperado; autorizaciones preservadas
+sin ampliación material. Feature/US01–US06 IN PROGRESS; Status Ready for implementation.
+Resolución y avance de implementación persistidos y verificados en Feature y seis US.
+Detalle de código/cobertura fuente en tasks.md; sin ejecución tests/builds/migración, V6 o gates
+humanos aprobados. Bloqueos de las secciones anteriores/siguientes son antecedentes superados.
+
+### Estado vigente — B-V5-03 resuelto; B-V5-04 pendiente
+
+Decisión humana B-V5-03 incorporada en SPEC-007 y diseño/contrato/quickstart/tasks: contradicciones
+de Team/name/position por propietario en una foto → INVALID_SUBJECT_DATA y conservación integral,
+independiente del orden; referencias coherentes son válidas, fotos posteriores pueden procesar.
+Normalización estricta existente para comparación, sin normas nuevas. Cobertura de nueve
+escenarios y equivalencias planificada en tasks existentes, no tests nuevos ejecutados/escritos.
+ANALYZE posterior read-only BLOCKED por B-V5-04: no se define forma textual persistida/GET para
+name/position equivalentes con representaciones originales distintas. No elegir por orden ni
+guardar automáticamente clave de comparación. READY NO, SDD CLARIFY, Feature/US IN PROGRESS.
+B-V5-01/B-V5-02/B-V5-03 resueltos; autorizaciones preservadas, evaluar solo impacto de la decisión
+futura. Sin producto nuevo, tests/builds/migraciones ni V6/gates aprobados en esta continuación.
+
+### Estado vigente — B-V5-03 pendiente
+
+Tras aceptación humana de B-V5-02 se conservaron las autorizaciones de implementación V5 y se
+retomó revisión de cierre. Nuevo hallazgo funcional: referencias distintas del mismo Player con
+Team coherente pero name/position obligatorios contradictorios no tienen política de consolidación
+entre propietarios definida; el Service actual sobrescribe por orden. B-V5-03 HIGH, STOP IMPLEMENT
+por decisión funcional nueva, READY global NO. Status de spec vuelve a Draft por esta aclaración
+pendiente, según specs/README.md; el estado anterior Ready for implementation fue válido antes
+del hallazgo. B-V5-01/B-V5-02 siguen resueltos. Feature/US IN PROGRESS; autorizaciones preservadas
+hasta evaluar impacto de la decisión futura. Sin tests/builds/migraciones, sin V6 ni gates nuevos.
+
+### Estado vigente — resolución B-V5-02 (2026-10-07)
+
+Decisión humana incorporada a SPEC-007: múltiples referencias válidas del mismo Player con Teams
+válidos contradictorios en una foto → INVALID_SUBJECT_DATA, protección del estado/asociación/espejo
+y conservación de todas las referencias; independiente del orden y limitado a esa foto. Otros
+Players continúan y una foto posterior coherente procesa normalmente. B-V5-01 preservado.
+ANALYZE posterior read-only: PASS WITH NON-BLOCKING (Status editorial LOW), READY recuperado,
+autorizaciones US01–US06 preservadas por ausencia de ampliación material. Feature/US IN PROGRESS.
+Resolución registrada y leída posteriormente en Feature y las seis US; bloqueos anteriores son
+antecedentes, no estado vigente. Sin gates de review/testing/cierre aprobados ni V6.
+Retrabajo puntual y cobertura fuente en tasks.md; no tests/builds/migraciones ejecutados.
+
+### Resolución funcional posterior — B-V5-01 / B-V5-02
+
+Decisión humana: conservar todas las referencias legacy válidas de Player. B-V5-01 resuelto;
+artefactos corregidos, UNIQUE(player_id,provider) y rechazo productivo por proveedor retirados,
+regresiones fuente adaptadas sin ejecución. UNIQUE(provider,external_id) se preserva para todos;
+unicidad propietario/proveedor solo para Team/League. Sin ampliación material de US por B-V5-01.
+El PASS WITH NON-BLOCKING inicial no habilita continuación tras descubrir B-V5-02: falta política
+para referencias distintas del mismo Player que llegan con Team/datos contradictorios en la misma
+foto. ANALYZE vigente BLOCKED; READY global pendiente. El blocker anterior queda como historia,
+no como decisión abierta. Feature/US IN PROGRESS, autorizaciones preservadas, sin gates aprobados.
+
+### Actualización operacional SPEC-007 — continuación IMPLEMENT, 2026-10-07
+
+El registro histórico anterior se conserva. El ANALYZE posterior y las autorizaciones V5 fueron
+persistidos en Trello; no sustituyen gates humanos. Durante esta continuación US02–US06 comenzaron
+comportamiento propio y pasaron READY → IN PROGRESS; US01 y la Feature permanecen IN PROGRESS.
+IMPLEMENT detenido por B-V5-01, descrito en [tasks.md](007-team-league-domain/tasks.md): política de
+conservación de múltiples referencias legacy del mismo proveedor frente a la nueva unicidad por
+propietario. No se conoce la existencia de esos datos en una DB real: hallazgo estático del contrato
+de transición. Preparación global pendiente de resolver y reevaluar; autorizaciones históricas
+preservadas, sin aprobar CODE REVIEW/TESTING, completar Feature ni iniciar V6.
+
 - [Football Market](https://trello.com/b/LdQo0xDW/football-market), ID `6abc6f718adba84bb0f09184`.
 - Reglas de sincronización: [Constitución §8](../.specify/memory/constitution.md#8-trazabilidad-y-sincronización-con-trello).
 - Fuentes académicas complementarias: [enunciado](../tp/enunciado.md) y [entregas](../tp/entregas.md).
@@ -81,12 +203,12 @@ Las 25 historias se corresponden con los títulos, prioridades y escenarios de l
 | [006](006-player-images/spec.md) | US02 — Resolver identidad y enriquecer imágenes manualmente | [Trello](https://trello.com/c/J2g08Tw5) | Backlog |
 | [006](006-player-images/spec.md) | US03 — Reintentar sin perder resultados | [Trello](https://trello.com/c/yjs63hrK) | Backlog |
 | [006](006-player-images/spec.md) | US04 — Consultar la auditoría de imágenes | [Trello](https://trello.com/c/wuVsZbX8) | Backlog |
-| [007](007-team-league-domain/spec.md) | US01 — Reconocer al equipo y a la liga del jugador | [Trello](https://trello.com/c/FWEz7xjP) | Backlog |
-| [007](007-team-league-domain/spec.md) | US02 — Sincronizar el catálogo reconociendo ligas y equipos | [Trello](https://trello.com/c/Q2Yg1P1l) | Backlog |
-| [007](007-team-league-domain/spec.md) | US03 — Conservar la identidad del equipo ante cambios del proveedor | [Trello](https://trello.com/c/k7iw3LKH) | Backlog |
-| [007](007-team-league-domain/spec.md) | US04 — Resolver la identidad externa del equipo sin bloquear el catálogo | [Trello](https://trello.com/c/rHQkeh3k) | Backlog |
-| [007](007-team-league-domain/spec.md) | US05 — Mantener en el catálogo a los equipos y jugadores que lo abandonan | [Trello](https://trello.com/c/6n04meCE) | Backlog |
-| [007](007-team-league-domain/spec.md) | US06 — Migrar el catálogo existente sin perder jugadores | [Trello](https://trello.com/c/94ktF8ch) | Backlog |
+| [007](007-team-league-domain/spec.md) | US01 — Reconocer al equipo y a la liga del jugador | [Trello](https://trello.com/c/FWEz7xjP) | IN PROGRESS; READY recuperado |
+| [007](007-team-league-domain/spec.md) | US02 — Sincronizar el catálogo reconociendo ligas y equipos | [Trello](https://trello.com/c/Q2Yg1P1l) | IN PROGRESS; READY recuperado |
+| [007](007-team-league-domain/spec.md) | US03 — Conservar la identidad del equipo ante cambios del proveedor | [Trello](https://trello.com/c/k7iw3LKH) | IN PROGRESS; READY recuperado |
+| [007](007-team-league-domain/spec.md) | US04 — Resolver la identidad externa del equipo sin bloquear el catálogo | [Trello](https://trello.com/c/rHQkeh3k) | IN PROGRESS; READY recuperado |
+| [007](007-team-league-domain/spec.md) | US05 — Mantener en el catálogo a los equipos y jugadores que lo abandonan | [Trello](https://trello.com/c/6n04meCE) | IN PROGRESS; READY recuperado |
+| [007](007-team-league-domain/spec.md) | US06 — Migrar el catálogo existente sin perder jugadores | [Trello](https://trello.com/c/94ktF8ch) | IN PROGRESS; READY recuperado |
 
 **Done heredado:** el usuario autorizó reorganizar las tarjetas conservando sus estados. Las cinco tarjetas agrupadas de 001–005 estaban en Done; se repartieron en sus 15 historias conservando ese seguimiento y sin una validación nueva. No se cambió el `Status` de las specs ni se cerraron hallazgos técnicos. Las US de 006 y 007 quedan en Backlog y sin asignación de sprint confirmada.
 

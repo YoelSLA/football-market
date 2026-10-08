@@ -2,9 +2,9 @@ schema_version: "1.0"
 workflow:
   id: "speckit"
   name: "Full SDD Cycle"
-  version: "2.0.0"
+  version: "3.0.0"
   author: "GitHub"
-  description: "SDD de ocho fases con gates humanos; Implement limitado a una US Ready autorizada y Converge solo tras cierre agregado de SPEC"
+  description: "SDD asistido: READY global, autorización de US, CODE REVIEW/TESTING humanos y autorización final de Feature tras CONVERGE"
 
 # Orquestación asistida, no desatendida. Los gates exigen evidencia del
 # docs/development/sdd-workflow.md; approve sin evidencia no completa fases.
@@ -111,7 +111,13 @@ steps:
 
   - id: ready-gate
     type: gate
-    message: "MUST acreditar Analyze OK vigente y US {{ inputs.user_story }} formal, elegible, autorizada y en Ready. Si user_story está vacío, no existe o hay bloqueantes, reject; continuar en encargos separados sin inventar IDs."
+    message: "MUST acreditar preparación global y Analyze vigente sin blockers de especificación/planificación/consistencia. Dependency ≠ Blocker. READY no autoriza IMPLEMENT. Si falta preparación, reject."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: implementation-authorization
+    type: gate
+    message: "Usuario debe autorizar explícitamente US {{ inputs.user_story }} real y prerrequisitos seleccionados; persistir IMPLEMENT AUTHORIZATION en su tarjeta. Si US vacía/inexistente o evidencia no persistida, reject. Autorización no inicia IMPLEMENT: US permanece READY hasta inicio efectivo."
     options: [approve, reject]
     on_reject: abort
 
@@ -121,9 +127,21 @@ steps:
     input:
       args: "Implementar únicamente {{ inputs.user_story }} y prerrequisitos explícitamente autorizados, alcance {{ inputs.scope }}. Seguir workflow local; no ejecutar tests."
 
+  - id: code-review
+    type: gate
+    message: "Presentar Code Review Report completo de US {{ inputs.user_story }}, incluidos tests. Requiere aprobación humana inequívoca del checklist completo y evidencia persistida; agente no aprueba. Rechazo: abortar y corregir en encargo separado, luego nuevo review."
+    options: [approve, reject]
+    on_reject: abort
+
+  - id: testing
+    type: gate
+    message: "Presentar Testing Report. Usuario revisa cobertura/tests, los ejecuta y confirma resultado satisfactorio, o valida explícitamente N/A justificado; persistir evidencia antes de US DONE. Agente no ejecuta tests. Si bloqueado/pendiente, reject y reanudar en encargo separado."
+    options: [approve, reject]
+    on_reject: abort
+
   - id: spec-implemented-gate
     type: gate
-    message: "MUST acreditar todas las US requeridas Done por aceptación explícita, trabajo transversal completo e Implement de SPEC satisfactorio. Si quedan US o revisión pendiente, reject; continuar en encargos separados."
+    message: "MUST acreditar todas las US requeridas DONE por CODE REVIEW/TESTING humanos vigentes y persistidos, trabajo necesario completo. Si quedan US, reject y continuar en encargos separados. Feature pasa TESTING final; no DONE."
     options: [approve, reject]
     on_reject: abort
 
@@ -133,8 +151,8 @@ steps:
     input:
       args: "{{ inputs.spec }}"
 
-  - id: final-consistency-gate
+  - id: feature-completion-authorization
     type: gate
-    message: "MUST acreditar Converge limpio, revisión complementaria de trazabilidad/documentación/evidencia y aceptación de feature. El gate no mueve Trello ni acredita tests pendientes."
+    message: "CONVERGE exitoso y revisión complementaria preparan cierre, no autorizan DONE. Usuario debe dar FEATURE COMPLETION AUTHORIZATION explícita referida a Feature/resultado evaluado; persistirla antes de Approved/Feature DONE. El gate no escribe Trello por sí mismo ni acredita tests pendientes. Invalidaciones solo por impacto."
     options: [approve, reject]
     on_reject: abort

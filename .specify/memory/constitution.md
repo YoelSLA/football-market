@@ -1,10 +1,11 @@
 <!--
 Sync Impact Report — Enmienda 2026-10-07
-Versión: 4.1.0 → 5.0.0 (MAJOR: redefinición incompatible del seguimiento previo a SPEC).
-Principios modificados: §1 autoridad operativa; §8 unidades, lifecycle y requisitos futuros;
-§9 explicita el versionado semántico ya definido por el comando local de enmienda.
-Sin secciones eliminadas. Dependencias: AGENTS, workflow SDD, comandos, templates y YAML.
-Migración operativa de claves heredadas: pendiente de tarea posterior autorizada; sin cambios en Trello.
+Versión: 5.0.0 → 6.0.0 (MAJOR: condiciones obligatorias de autorización, gates y cierre redefinidas).
+Principios modificados: §6 distingue entrega técnica de DONE; §8 consolida lifecycle y evidencia.
+Sin secciones eliminadas. Dependencias actualizadas: workflow SDD, implement, plantilla tasks,
+workflow YAML, estados de specs y skills sdd-orchestration/trello-traceability.
+AGENTS y comandos analyze/converge conservan prohibición de tests y contratos de lectura/append-only.
+Sin cambios en Trello, código, specs funcionales ni tasks.md; H1–H4 y tests de SPEC-007 fuera de alcance.
 -->
 # Constitución de Football Market
 
@@ -58,6 +59,8 @@ El único control ejecutable por el agente es el build sin tests del área cuyo 
 
 Se puede entregar con el build aprobado y los tests del backend explícitamente pendientes del usuario. Un fallo preexistente verificablemente ajeno al cambio no bloquea la entrega, pero debe reportarse. SonarQube, Quality Gates y otros controles opcionales quedan a cargo del usuario y no condicionan la finalización. El cambio debe dejar coherentes todos sus elementos afectados; toda ampliación del alcance requiere justificación explícita.
 
+La entrega técnica y un build satisfactorio no acreditan CODE REVIEW, TESTING ni aceptación final de Feature. Los tests aplicables pendientes impiden superar TESTING y alcanzar DONE bajo el workflow vigente. La no aplicabilidad de tests automatizados requiere justificación y validación humana explícita. Se conserva la prohibición de ejecución directa e indirecta por el agente.
+
 ## 7. Nombres de ramas y trazabilidad
 
 Esta convención es normativa y obligatoria. Aplica a toda rama creada en el repositorio, con independencia de quién la cree.
@@ -105,7 +108,13 @@ El tablero de seguimiento es [Football Market](https://trello.com/b/LdQo0xDW/foo
 ### Unidad de seguimiento y numeración
 
 - La trazabilidad sigue `EPIC → SPEC → User Story → Task → Code`. Cada SPEC real se asocia a una épica `[EPIC] SPEC-<spec-id> - <nombre>`. La épica es contexto y agregación, no unidad ejecutable.
-- El lifecycle obligatorio es `Specify → Clarify → Plan → Checklists → Tasks → Analyze → Implement → Converge`; se registra en el checklist `SDD Lifecycle` de la épica. Una fase requiere evidencia explícita de cumplimiento, no mera existencia de artefactos. Analyze satisfactorio habilita las US elegibles en Ready; Implement de la SPEC requiere todas sus US necesarias terminadas y Converge satisfactorio precede al cierre de la épica. El protocolo y los gates se detallan en el workflow SDD; no modifican la política de verificación de §6.
+- Las operaciones de Spec Kit son Specify, Clarify, Plan, Checklist, Tasks, Analyze, Implement y Converge. El checklist `SDD Lifecycle` registra esas operaciones con evidencia explícita, no mera existencia de artefactos; no sustituye gates humanos. Las columnas operacionales únicas son `BACKLOG → SPECIFYING → READY → IN PROGRESS → CODE REVIEW → TESTING → DONE`.
+- `sdd-orchestration` coordina y decide preparación, transiciones, dependencias e invalidaciones, subordinado a Constitution y workflow normativo. `trello-traceability` sincroniza y persiste evidencia; no aprueba, invalida ni deriva gates por sí misma.
+- READY es preparación global de Feature válida y sin blockers de especificación, planificación o consistencia. `Dependency ≠ Blocker`: dependencias técnicas conocidas y correctamente identificadas no impiden READY si se resuelven mediante orden técnico y autorizaciones. READY no autoriza implementar; IMPLEMENT AUTHORIZATION humana explícita selecciona US y prerrequisitos compartidos. `IMPLEMENT AUTHORIZATION ≠ inicio de IMPLEMENT`: una US autorizada permanece READY hasta el inicio efectivo.
+- Cada US recorre IMPLEMENT → CODE REVIEW humano → TESTING humano → DONE. Completar tareas no aprueba gates. Feature IN PROGRESS significa que existe al menos una US cuyo IMPLEMENT comenzó y la Feature todavía no cumple las condiciones para TESTING final; CODE REVIEW y TESTING de sus US conservan su significado propio.
+- Todas las US requeridas DONE y trabajo técnico necesario completo habilitan Feature TESTING para CONVERGE final. CONVERGE satisfactorio prepara el cierre, no lo autoriza: Feature DONE requiere FEATURE COMPLETION AUTHORIZATION humana explícita, vigente y persistida.
+- Decisiones e invalidaciones se persisten como comentarios estructurados `[SDD GATE]`, conservando historial. Evidencia obligatoria no persistida impide la transición dependiente. Invalidar solo por impacto sobre el alcance evaluado: código/tests que afecten ese alcance invalidan gates correspondientes; cambios sin impacto conservan aprobaciones. No resetear toda la Feature.
+- SPEC-001–005 conservan DONE histórico bajo el workflow anterior, sin gates retroactivos ni evidencia fabricada. Una reapertura material aplica el workflow vigente al alcance afectado.
 
 - Cada user story de una spec tiene una tarjeta propia, no una tarjeta que agrupe todas las historias bajo una sola US. El título usa `SPEC-<spec-id> | US<nn> - <título de la historia>`; por ejemplo, `SPEC-007 | US01 - Reconocer al equipo y a la liga del jugador`.
 - `<spec-id>` es el identificador de una spec existente. `US<nn>` corresponde al número local de la historia dentro de esa spec, con al menos dos dígitos. La numeración de US empieza en cada spec; `SPEC-001 | US01` y `SPEC-007 | US01` son claves diferentes.
@@ -133,4 +142,4 @@ Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible.
 
 Las enmiendas usan versionado semántico: MAJOR para eliminación o redefinición incompatible de gobernanza/principios; MINOR para principios nuevos o ampliación material compatible; PATCH para aclaraciones sin cambio semántico. Deben justificar el incremento, registrar impacto y dependencias, conservar la fecha de ratificación y actualizar la fecha de última enmienda.
 
-**Versión**: 5.0.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-07
+**Versión**: 6.0.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-07
