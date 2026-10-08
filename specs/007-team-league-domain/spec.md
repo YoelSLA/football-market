@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-02
 
-**Status**: Ready for planning
+**Status**: Ready for implementation
 
 <!-- Estados y criterios de transición: ../../specs/README.md. -->
 
@@ -12,7 +12,33 @@
 
 ## Clarifications
 
-Las decisiones de migración, transacciones, revisión, entrega y alcance visual se consolidan en la Session 2026-10-06. No quedan aclaraciones funcionales pendientes; la clasificación visual no exige continuidad histórica ante renombrados.
+### Session 2026-10-07 — B-V5-05 opcionales entre referencias distintas
+
+- Valor obligatorio y valor opcional se consolidan por separado. Un conflicto entre valores opcionales válidos de referencias distintas nunca convierte al Player completo en INVALID_SUBJECT_DATA: Team/name/position siguen rigiendo B-V5-03.
+- `dateOfBirth` y `nationality` se evalúan por separado sobre el conjunto completo de observaciones válidas del mismo Player. Sin valor válido ninguno no hay valor nuevo: el Player existente conserva el persistido y el nuevo persiste null. Con un único valor válido ese se usa, y un ausente o inválido nunca compite contra uno válido. Con el mismo valor válido repetido se usa ese valor.
+- Si hay dos o más valores válidos incompatibles, el conflicto es del atributo opcional: el Player existente conserva su valor persistido y el nuevo persiste null para ese atributo, sin elegir por orden, first/last wins, externalId ni orden de colección. El conflicto se registra y reconcilia con el mecanismo de casos ya definido, sin congelar ni descartar al Player.
+- Cada atributo se resuelve con independencia: un conflicto en uno no impide consolidar el otro. El resultado persiste exactamente ese estado y GET lo expone sin normalizar. El enriquecimiento independiente de Team no se ve afectado y B-V5-05 no introduce prioridades entre proveedores.
+
+### Session 2026-10-07 — B-V5-04 y selección canónica
+
+- Valor semántico y presentación son responsabilidades distintas: normalización estricta existente solo compara; persistencia y GET conservan texto original. Un Player existente conserva name/position persistidos cuando son equivalentes a los entrantes; no se reemplazan por una forma cosméticamente mejor. GET devuelve exactamente esos valores persistidos, sin normalizar al leer.
+- Sin representación persistida equivalente, las observaciones semánticamente coherentes seleccionan una representación original por ranking determinista: primero mayor preservación de letras con diacríticos, luego casing natural frente a todo mayúsculas/minúsculas, finalmente comparación lexicográfica del texto original. La elección se aplica al conjunto completo de representaciones equivalentes y es independiente del orden. Una representación única se conserva exactamente. Position usa el mismo mecanismo sin introducir equivalencias nuevas. La selección nunca resuelve contradicciones semánticas, que siguen B-V5-03 y protegen integralmente al Player.
+- B-V5-04 y su subdecisión de alta quedan resueltos. Las aclaraciones pendientes anteriores son antecedentes reemplazados por esta decisión humana.
+
+### Session 2026-10-07 — B-V5-03
+
+- Q: ¿Qué ocurre si distintas referencias válidas del mismo Player informan name o position incompatibles en la misma foto, incluso con Team coherente? → A: La contradicción del estado del sujeto (Team, name o position) produce INVALID_SUBJECT_DATA para el Player completo. Conservar asociación, actividad, referencias, name, position y espejo legacy; no actualizar parcialmente, transferir, retirar ni reactivar. Otros Players válidos continúan. La protección solo corresponde a esa foto; una posterior coherente permite procesamiento normal sin bloqueo por el caso histórico. Múltiples referencias coherentes no son un error. Para detectar contradicciones textuales se reutilizan trim, colapso de espacios, comparación independiente de mayúsculas y diacríticos ya definidos por SPEC-007, sin reglas nuevas, aliases ni fuzzy. Team se compara por identidad interna resuelta.
+- Antecedente B-V5-04 resuelto por la sesión posterior: conservar representación persistida equivalente; sin ella, ranking determinista de originales. No seleccionar por orden ni utilizar la clave de comparación como presentación.
+
+### Session 2026-10-07 — B-V5-02
+
+- Q: ¿Qué ocurre si referencias válidas distintas del mismo Player resuelven Teams válidos diferentes en una misma foto? → A: El sujeto Player es inconsistente para esa sincronización: `INVALID_SUBJECT_DATA`. Conserva todas sus referencias, asociación, actividad y datos persistidos derivados de la asociación; no se transfiere, retira ni reactiva ni recibe fallback. No se elige una observación por orden o identificador. Los demás Players válidos continúan. La protección se calcula nuevamente por foto: una foto posterior coherente permite procesamiento normal, aunque permanezca el caso histórico sin cierre automático. Referencias que resuelven al mismo Team se procesan normalmente según las reglas existentes.
+
+### Session 2026-10-07 — B-V5-01
+
+- Q: ¿V5 puede rechazar o reducir múltiples referencias legacy válidas del mismo proveedor para un Player? → A: No. Debe conservar todas, sin selección, eliminación, sobrescritura ni regularización externa previa. Player conserva la cardinalidad de SPEC-002: varias referencias por proveedor con identidades externas distintas. Team y League mantienen una por proveedor. Para los tres tipos, una identidad `(provider, externalId)` pertenece a un único propietario del mismo tipo; esta unicidad de identidad no limita cuántas identidades puede conservar un Player.
+
+Las decisiones de migración, transacciones, revisión, entrega y alcance visual se consolidan en la Session 2026-10-06. La clasificación visual no exige continuidad histórica ante renombrados. Las sesiones posteriores registran las aclaraciones sobre múltiples referencias y sus decisiones pendientes.
 
 ### Session 2026-10-06
 
@@ -85,6 +111,9 @@ Como usuario autenticado, quiero que la sincronización del catálogo reconozca 
 4. **Given** un equipo recibido cuya liga no puede resolverse, **When** se procesa la sincronización, **Then** el equipo no se incorpora ni se actualiza y el caso queda registrado.
 5. **Given** las mismas ligas y equipos informados en sincronizaciones sucesivas, **When** se procesa cada sincronización, **Then** el catálogo conserva una única identidad interna por liga y por equipo, sin duplicados.
 6. **Given** un jugador existente válido, **When** se procesa la sincronización, **Then** se reconoce por su referencia externa y conserva su identidad interna, asociándose al equipo actual reconocido por su propia referencia; una transferencia no exige conservar el equipo anterior.
+7. **Given** varias referencias válidas de un mismo Player que resuelven al mismo Team, **When** se aplica la foto, **Then** se procesa normalmente y conserva todas las referencias.
+8. **Given** varias referencias válidas del mismo Player que resuelven Teams válidos distintos, **When** se aplica la foto en cualquier orden de referencias, **Then** se registra `INVALID_SUBJECT_DATA` para ese Player y se conservan su asociación, actividad, referencias y datos persistidos derivados de la asociación, sin transferencia, retirada ni reactivación; los demás Players válidos se procesan normalmente.
+9. **Given** un Player con ese caso histórico, **When** una foto posterior produce una asociación coherente, **Then** se procesa normalmente conforme a las reglas existentes; la existencia del caso no impone invalidez permanente.
 
 ---
 
@@ -153,6 +182,8 @@ Como usuario del catálogo, quiero que los jugadores existentes queden asociados
 
 ## Edge Cases
 
+- Referencias distintas de un mismo Player con Teams válidos contradictorios en la misma foto: invalidez del sujeto `INVALID_SUBJECT_DATA`, no de toda la foto; protección de asociación/actividad/datos derivados y conservación de todas las referencias, independiente del orden. Una foto posterior coherente elimina la protección de esa ejecución, no el caso histórico. Si aún no tenía Team, permanece sin él y sin fallback, con evidencia original para la transición.
+
 - Un equipo cambia de nombre en el proveedor: se conserva su identidad interna y se actualiza el nombre; los jugadores asociados no cambian de equipo.
 - Una liga cambia de nombre en el proveedor: se conserva su identidad interna y se actualiza el nombre.
 - Un equipo cambia de liga entre dos de las ligas cubiertas: conserva su identidad interna, cambia su liga actual y sus jugadores permanecen asociados a él.
@@ -188,7 +219,7 @@ Como usuario del catálogo, quiero que los jugadores existentes queden asociados
 - **RF-007**: Cada `Team` pertenece actualmente a una única `League`. Si en el futuro se requiere pertenecer a varias simultáneas, esa posibilidad queda fuera del alcance de esta feature.
 - **RF-008**: Temporadas, historial por temporadas e historial de ascensos y descensos no forman parte del modelo ni del comportamiento de esta feature.
 - **RF-009**: Si un `Team` cambia actualmente de liga, debe conservar su identidad interna y actualizar su liga actual. Los `Player` asociados conservan su asociación al mismo `Team`.
-- **RF-010**: `Player`, `Team` y `League` deben poder conservar referencias externas independientes, una por proveedor, con el identificador que ese proveedor les asigna. La referencia externa no forma parte de la identidad interna de la entidad.
+- **RF-010**: `Player`, `Team` y `League` conservan referencias externas independientes de su identidad interna. `Player` puede conservar varias referencias de un mismo proveedor si sus identificadores externos son distintos, manteniendo la cardinalidad de SPEC-002 y todas las referencias legacy válidas. `Team` y `League` conservan como máximo una referencia por proveedor. Para los tres tipos se exige RF-012: una misma identidad concreta de proveedor no puede pertenecer a múltiples propietarios del mismo tipo. No se limita a una referencia por proveedor para Player ni se eliminan, seleccionan o sobrescriben referencias históricas para migrarlo.
 - **RF-011**: Para `Team` y `League`, la referencia externa `FOOTBALL_DATA` es la referencia de origen requerida para toda entidad incorporada mediante la sincronización del catálogo. Una entidad incorporada por esa vía nace junto con esa referencia.
 - **RF-012**: Una referencia externa, identificada por la combinación de proveedor e identificador externo, debe identificar de forma unívoca a una sola entidad interna del mismo tipo. Ningún identificador externo puede sustituir al identificador interno de FootballMarket ni parte de la identidad pública de la entidad.
 - **RF-013**: Un cambio de nombre informado por un proveedor no crea una entidad nueva. El sistema debe conservar la identidad interna existente y actualizar el nombre actual de esa `Team` o `League`.
@@ -221,6 +252,10 @@ Como usuario del catálogo, quiero que los jugadores existentes queden asociados
 
 ### Key Entities
 
+B-V5-03 generaliza la protección RF-039/B-V5-02 al estado del Player: Team interno, name y position deben ser coherentes entre observaciones válidas del mismo propietario en una foto. Una incompatibilidad en cualquiera de esos atributos clasifica al sujeto completo una sola vez como INVALID_SUBJECT_DATA, independientemente del orden y del número de atributos contradictorios. Antes de comparar name/position aplicar únicamente la normalización estricta existente de SPEC-007; equivalentes no son conflictos. Conservar integralmente estado persistido, referencias y espejo, sin actualización parcial; otros Players continúan y una foto posterior coherente vuelve al procesamiento normal. La representación textual coherente sigue B-V5-04 y su ranking aprobado; no confundir clave de comparación con valor de presentación.
+
+B-V5-02 concreta RF-039: varias referencias válidas del mismo Player con Teams válidos distintos en una misma foto constituyen `INVALID_SUBJECT_DATA` del sujeto Player. Conservar referencias, asociación persistida (incluida ausencia transitoria), actividad y datos persistidos derivados; no transferir, retirar, reactivar ni elegir por orden o externalId. Registrar evidencia de las asociaciones contradictorias y continuar los demás Players válidos. La clasificación se recalcula por foto; referencias coherentes permiten procesamiento normal posterior y el caso histórico no lo bloquea. Referencias distintas que resuelven al mismo Team no son este conflicto. Un preexistente aún sin Team conserva evidencia original y queda pendiente conforme RF-018/RF-036, sin backfill por presencia inválida.
+
 - **Equipo (`Team`)**: organización deportiva del catálogo con identidad interna propia de FootballMarket, nombre actual, una `League` actual, referencias externas propias por proveedor y un indicador explícito de formar o no parte del catálogo vigente. Su identificador en fuentes externas no forma parte de su identidad.
 - **Liga (`League`)**: competición a la que pertenece un equipo, con identidad interna propia de FootballMarket, nombre actual y referencias externas propias por proveedor. No tiene temporada ni historial asociado en esta feature, ni indicador propio de formar parte del catálogo vigente.
 - **Jugador (`Player`)**: persona con identidad interna y un Team del que deriva su liga. Durante preparación puede estar aún sin asociación; al finalizar solo los casos permitidos pueden seguir sin ella, fuera del catálogo. Un caso sobre Player asociado no elimina asociación. No mantiene liga independiente ni texto como verdad tras transición.
@@ -252,6 +287,7 @@ Como usuario del catálogo, quiero que los jugadores existentes queden asociados
 - Cada equipo de las ligas consultadas pertenece a una única de esas ligas.
 - La información disponible del equipo es suficiente para intentar resolver su identidad TheSportsDB, aunque la resolución puede no ser posible o no ser confiable; esa resolución es siempre opcional para el catálogo.
 - Los textos legacy pueden estar desactualizados o ser ambiguos; no se presume que todo caso registrado sea resoluble manualmente.
+- V5 conserva todas las referencias legacy válidas de Player, incluso varias del mismo proveedor; no exige regularización externa previa por esa cardinalidad. La unicidad de identidad externa RF-012 ya exigida por SPEC-002 se mantiene.
 - Free/Premium y límites de TheSportsDB son dependencias operacionales. No se presume nivel de la clave ni garantía de completitud de searchteams.php; incapacidad de acreditarla produce abstención conforme a RF-021/RF-022.
 - La migración es una transición única; una vez completada, la operación del catálogo se apoya en la identidad interna de `Team` y `League`. Los casos pendientes que resten de esa transición no se resuelven dentro de esta feature.
 - Esta feature no redefine la identidad ni la semántica general de `Player` ni de `PlayerExternalReference` establecidas en `002-player-catalog`.

@@ -42,6 +42,8 @@ Fecha: 2026-10-06. Fuente funcional: [spec.md](spec.md), RF-001–RF-039. Estas 
 
 ## R7. Dos releases y compatibilidad
 
+- **Resolución B-V5-01 (2026-10-07):** conservar todas las referencias legacy válidas de Player, incluidas varias del mismo proveedor. Mantener unicidad por `(provider,external_id)`, no agregar `(player_id,provider)`. Esta última solo se exige a Team/League. No selección/eliminación/sobrescritura de referencias ni precondición de regularización externa. Se preserva la semántica de SPEC-002.
+
 - **Decisión:** A aprobada para reducir complejidad: Release 1 con V5 y código intermedio; usuario sincroniza y verifica; Release 2 con V6 y código final. No incluir V6 en Release 1.
 - **Razón:** decisión técnica, no exigencia de RF-011. Flyway aplica migraciones al arranque; no puede esperarse una sincronización HTTP entre V5 y V6 del mismo despliegue poblado.
 - **Convivencia:** legacy NOT NULL sigue válido. Nuevas altas reciben textos derivados de Team/League; asociados escriben espejo temporal, nunca criterio de identidad. No asociados preservan textos originales. Antes de sobrescribir texto para un caso se conserva evidencia original. GET nuevo usa solo asociaciones vigentes incluso en Release 1; antes del gate pueden faltar jugadores aún sin asociación.

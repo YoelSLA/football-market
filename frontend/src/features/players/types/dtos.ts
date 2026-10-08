@@ -1,8 +1,10 @@
 export interface PlayerResponseDTO {
 	id: number;
 	name: string;
-	team: string;
-	league: string;
+	teamId: number;
+	teamName: string;
+	leagueId: number;
+	leagueName: string;
 	position: string;
 	dateOfBirth: string | null;
 	nationality: string | null;

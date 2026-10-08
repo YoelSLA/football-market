@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
+import footballmarket.integrations.FootballDataIntegration.CompetitionSnapshot;
+import footballmarket.integrations.FootballDataIntegration.PlayerData;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
 import java.net.SocketTimeoutException;
 import java.time.Clock;
 import java.time.Duration;
@@ -55,7 +55,7 @@ class FootballDataIntegrationTest {
   }
 
   private void competition(String name) {
-    respond("/competitions/PL", "{\"name\":" + name + "}");
+    respond("/competitions/PL", "{\"id\":2001,\"name\":" + name + "}");
     respond("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}");
   }
 
@@ -73,7 +73,7 @@ class FootballDataIntegrationTest {
           "{\"name\":\"T\",\"squad\":[{\"id\":44,\"name\":\"N\",\"position\":\"P\",\"dateOfBirth\":"
               + jsonValue
               + "}]}");
-      PlayerSnapshot result = integration.fetchCompetition("PL");
+      CompetitionSnapshot result = integration.fetchCompetition("PL");
       assertThat(result.discardedInvalid()).isZero();
       assertThat(result.players())
           .singleElement()
@@ -95,7 +95,7 @@ class FootballDataIntegrationTest {
           "{\"name\":\"T\",\"squad\":[{\"id\":44,\"name\":\"N\",\"position\":\"P\",\"nationality\":"
               + jsonValue
               + "}]}");
-      PlayerSnapshot result = integration.fetchCompetition("PL");
+      CompetitionSnapshot result = integration.fetchCompetition("PL");
       assertThat(result.discardedInvalid()).isZero();
       assertThat(result.players().getFirst().nationality()).isNull();
       server.verify();
@@ -111,7 +111,7 @@ class FootballDataIntegrationTest {
           {"name":"T","squad":[{"id":44,"name":"N","position":"P",
           "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://unused.example/image"}]}
           """);
-      PlayerSnapshot result = integration.fetchCompetition("PL");
+      CompetitionSnapshot result = integration.fetchCompetition("PL");
       assertThat(result.players().getFirst().dateOfBirth()).isEqualTo(LocalDate.of(1990, 6, 20));
       assertThat(result.players().getFirst().nationality()).isEqualTo("Spain");
       server.verify();
@@ -126,16 +126,16 @@ class FootballDataIntegrationTest {
           """
           {"name":"Team","squad":[
           {"id":1,"name":"Name","position":"Forward"},
-          {"name":"Missing id","position":"Forward"},
+          {"id":4,"name":"Invalid name","position":" "},
           {"id":2,"name":" ","position":"Forward"},
-          {"id":3,"name":"Missing position"},null]}
+          {"id":3,"name":"Missing position"},{"id":5,"position":"Forward"}]}
           """);
       // Act
-      PlayerSnapshot result = integration.fetchCompetition("PL");
+      CompetitionSnapshot result = integration.fetchCompetition("PL");
       // Assert
       assertThat(result.obtained()).isEqualTo(5);
       assertThat(result.discardedInvalid()).isEqualTo(4);
-      assertThat(result.players()).extracting(PlayerCandidate::name).containsExactly("Name");
+      assertThat(result.players()).extracting(PlayerData::name).containsExactly("Name");
       assertThat(result.players().getFirst().externalId()).isEqualTo("1");
       assertThat(result.players().getFirst().league()).isEqualTo("League");
       assertThat(result.players().getFirst().team()).isEqualTo("Team");
@@ -168,6 +168,43 @@ class FootballDataIntegrationTest {
   @DisplayName("Validación de las respuestas del proveedor")
   class ResponseValidation {
     @ParameterizedTest
+    @DisplayName(
+        "Una identidad de jugador insuficiente invalida la foto completa, no es descarte individual")
+    @ValueSource(
+        strings = {
+          "null",
+          "{\"name\":\"Missing id\",\"position\":\"Forward\"}",
+          "{\"id\":0,\"name\":\"N\",\"position\":\"P\"}"
+        })
+    void insufficientIdentityRejectsSnapshot(String member) {
+      // Arrange
+      competition("\"League\"");
+      respond("/teams/10", "{\"name\":\"Team\",\"squad\":[" + member + "]}");
+
+      // Act / Assert
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class);
+
+      // Verify
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("La cantidad declarada detecta una lista de equipos truncada")
+    void truncatedTeamListRejectsSnapshot() {
+      // Arrange
+      respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
+      respond("/competitions/PL/teams", "{\"count\":2,\"teams\":[{\"id\":10}]}");
+
+      // Act / Assert
+      assertThatThrownBy(() -> integration.fetchCompetition("PL"))
+          .isInstanceOf(FootballDataUnavailableException.class);
+
+      // Verify
+      server.verify();
+    }
+
+    @ParameterizedTest
     @DisplayName("Rechaza plantillas incompletas o mal formadas")
     @ValueSource(strings = {"{}", "{\"squad\":null}", "{\"squad\":{}}", "not-json", "null"})
     void rechazaPlantillaIncompleta(String body) {
@@ -183,7 +220,7 @@ class FootballDataIntegrationTest {
     @ValueSource(
         strings = {"{}", "{\"teams\":null}", "{\"teams\":[{}]}", "{\"teams\":[null]}", "null"})
     void rechazaListaDeEquiposIncompleta(String body) {
-      respond("/competitions/PL", "{\"name\":\"League\"}");
+      respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
       respond("/competitions/PL/teams", body);
       assertThatThrownBy(() -> integration.fetchCompetition("PL"))
           .isInstanceOf(FootballDataUnavailableException.class);
@@ -209,7 +246,7 @@ class FootballDataIntegrationTest {
       server
           .expect(requestTo("https://provider.example/v4/competitions/PL"))
           .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
-      respond("/competitions/PL", "{\"name\":\"League\"}");
+      respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
       respond("/competitions/PL/teams", "{\"teams\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(60));
@@ -240,7 +277,7 @@ class FootballDataIntegrationTest {
       server
           .expect(requestTo("https://provider.example/v4/competitions/PL"))
           .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", retryAfter));
-      respond("/competitions/PL", "{\"name\":\"League\"}");
+      respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
       respond("/competitions/PL/teams", "{\"teams\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(seconds));

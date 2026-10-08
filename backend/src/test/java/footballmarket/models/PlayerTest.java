@@ -19,7 +19,9 @@ class PlayerTest {
     @DisplayName("Un jugador nuevo espera un identificador interno generado y comienza activo")
     void creaJugadorActivo() {
       // Act
-      Player player = new Player("Player", "Team", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Team", league, true);
+      Player player = new Player("Player", team, "Forward");
 
       // Assert
       assertThat(player.getId()).isNull();
@@ -47,12 +49,16 @@ class PlayerTest {
       Player player = new Player("Player", "Team", "League", "Forward");
 
       // Act
-      player.update("New name", "New team", "New league", "Goalkeeper");
+      League newLeague = new League("New league");
+      Team newTeam = new Team("New team", newLeague, true);
+      player.update("New name", newTeam, "Goalkeeper");
 
       // Assert
       assertThat(player.getName()).isEqualTo("New name");
-      assertThat(player.getTeam()).isEqualTo("New team");
-      assertThat(player.getLeague()).isEqualTo("New league");
+      assertThat(player.getTeam()).isSameAs(newTeam);
+      assertThat(player.getLeague()).isSameAs(newLeague);
+      assertThat(player.getLegacyTeam()).isEqualTo("New team");
+      assertThat(player.getLegacyLeague()).isEqualTo("New league");
       assertThat(player.getPosition()).isEqualTo("Goalkeeper");
       assertThat(player.getId()).isNull();
     }

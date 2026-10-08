@@ -1,6 +1,6 @@
 # Implementation Plan: Dominio de equipos y ligas
 
-**Branch actual**: `007-team-league-domain` | **Fecha**: 2026-10-06 | **Spec**: [spec.md](spec.md)
+**Branch actual**: `feat/007-team-league-domain` | **Fecha**: 2026-10-06 | **Spec**: [spec.md](spec.md)
 
 ## Summary
 
@@ -21,7 +21,7 @@ Evaluación inicial y posterior al diseño: responsabilidades existentes Control
 
 Transacciones y secretos respetan constitución; SQL humano usa mínimo privilegio. No claims de controles ejecutados. Scope incluye consumidores frontend, no spec 005. Complexity Tracking no justifica violaciones: decisiones técnicas abajo no son excepciones normativas.
 
-**Advertencia preexistente:** nombre actual de rama sin prefijo type no cumple §7; no renombrarla automáticamente ni crear otra spec. No es una decisión funcional pendiente de la feature. La revisión cruzada final satisface los gates de diseño y alcance; no acredita implementación ni ejecución de controles.
+La rama actual cumple Constitution §7. La revisión cruzada final satisface los gates de diseño y alcance; no acredita implementación ni ejecución de controles.
 
 ## Project Structure
 
@@ -59,6 +59,14 @@ Para sujetos identificables inválidos registrar categoría apropiada y protecci
 
 ### Commit principal
 
+Resolución B-V5-05: antes de mutar cada propietario, Service agrupa sus observaciones válidas y consolida name/position según B-V5-04 y, en paralelo e independientemente, dateOfBirth y nationality por atributo. Sin valor válido no se escribe nada nuevo; con valor único se usa; con valores incompatibles se conserva el persistido del Player existente o null en el nuevo y se registra el conflicto del atributo, sin clasificar INVALID_SUBJECT_DATA ni excluir el resto del Player. El caso se reconcilia con el sujeto interno al crear o actualizar. No altera Team/name/position, no agrega prioridades entre proveedores y no bloquea el enriquecimiento posterior.
+
+Resolución B-V5-04: separar selección pura de presentación en Model de la normalización semántica existente. Ranking de representaciones originales equivalentes: cantidad de letras que conservan diacríticos descendente, casing mixto frente a todo mayúsculas/minúsculas, desempate String.compareTo sobre texto original. No sintetizar texto ni normalizar presentación. Model Player conserva valores persistidos equivalentes en actualización; si cambia significado se usa la representación canónica de las observaciones válidas entrantes. Service clasifica todo propietario antes de actualizarlo y aplica la misma presentación canónica a sus observaciones coherentes. Consolidación de duplicados de una misma referencia conserva prioridad semántica configurada existente, pero reúne sus representaciones equivalentes para ranking; no descartar alternativas equivalentes antes de elegir presentación. B-V5-04 sustituye los pendientes anteriores, sin ampliar US, HTTP o Release 1.
+
+B-V5-03: extender clasificación previa por propietario a Team/name/position. Team se compara por identidad interna; name/position por la normalización estricta ya implementada en TeamNameNormalizer (trim, espacios, case independiente de locale y diacríticos), solo como clave de comparación. Cualquier atributo incompatible protege todo el Player; una clasificación/caso por sujeto y problema estable, con atributos contradictorios y observaciones canonizadas como evidencia. Ninguna actualización parcial ni escritura de name/position/asociación/active/espejo/referencias; otros sujetos continúan y protecciones son locales a la foto. B-V5-02 es el caso particular de Team contradictorio; su camino de un único Team solo es procesable si name/position también son coherentes. B-V5-04 y el ranking de presentación del párrafo anterior definen el camino coherente sin seleccionar por orden.
+
+B-V5-02: antes de mutar cualquier Player, agrupar observaciones procesables por propietario interno reconocido mediante sus referencias FOOTBALL_DATA y comparar identidades de Team resueltas, no nombres. Más de un Team válido para el mismo propietario excluye todas sus observaciones del procesamiento, registra INVALID_SUBJECT_DATA con causa estable CONFLICTING_PLAYER_TEAMS y protege al propietario de transferencias/retirada/reactivación/backfill y de escrituras del espejo legacy. Conservar referencias y estado previo; los demás sujetos continúan. Canonizar evidencia por referencia/Team para que el orden no cambie clasificación ni resultado; no usar ese orden para seleccionar Team. Grupo con un Team sigue procesamiento normal. Protección local al intento/foto, nunca consultada desde casos históricos para determinar elegibilidad futura.
+
 En un intento transaccional: resolver League/referencias; Team/referencias/liga; Player/referencias/equipo; backfill de ausentes sin asociación solo si transición no finalizada; casos/upsert; vigencia y actividad con protecciones; marcador de transición. Sin red.
 
 Team válido presente current=true; ausente no protegido current=false. Player válido presente activa según reglas normales; ausente se inactiva conforme catálogo existente salvo protección; Team retirado arrastra jugadores salvo Player protegido que debe conservar active. El GET excluye Team no vigente aunque Player protegido siga activo. Backfill no altera active por sí mismo.
@@ -79,6 +87,8 @@ Deduplicación por clave funcional UNIQUE descrita en data-model; reconcilia suj
 
 ### Dos releases
 
+B-V5-01: conservar la cardinalidad de referencias de Player de SPEC-002. V5 mantiene `UNIQUE(provider,external_id)` y no agrega `UNIQUE(player_id,provider)`; no filtra ni modifica filas históricas válidas. Team/League sí mantienen ambas unicidades: identidad externa y una referencia por propietario/proveedor. Adaptar únicamente el rechazo nuevo en Player, el DDL de V5 y sus regresiones; no cambiar identidad interna, resolución por referencia ni contratos HTTP. Esta corrección de compatibilidad no incorpora una US/capacidad nueva ni amplía el cierre V5 autorizado.
+
 Release 1 incluye solo V5 y mappings intermedios; legacy NOT NULL se rellena en altas con nombre de entidades. Asociado usa relación como verdad, espejo legacy solo compatibilidad; no asociado usa texto solo para backfill/evidencia. Capturar original antes de sobrescribirlo en casos. GET nuevo nunca cae a texto. Compatibilidad de binario previo debe comprobarse, no prometer rollback directo por cambio aditivo.
 
 Usuario obtiene foto/sincroniza/verifica invariantes y marcador. Release 2, solo después del gate, publica V6 y código sin mappings legacy. V6 transaccional valida cada asociación o caso permitido con evidencia y elimina columnas. Guardas y marcador no sustituyen gate operativo de conteos/identidades/backup. Forward-only después; sin DDL en caliente ni remoto desde Flyway.
@@ -88,6 +98,10 @@ Usuario obtiene foto/sincroniza/verifica invariantes y marcador. Release 2, solo
 GET según contracts/api.md; POST conserva cinco contadores de jugadores. Actualizar OpenAPI y fuentes REST Docs, no snippets generados. Adaptar DTO/modelo/mapper/tarjetas frontend sin modificar 005. Clasificación por leagueName con fallback neutral existente: rename desconocido puede cambiar el estilo, sin continuidad histórica garantizada, mapas por leagueId ni campo HTTP adicional. PlayerIdentityMatcher mantiene semántica de imágenes y lee Team.name; proteger selección de jugadores sin Team para no introducir null dereference.
 
 ## Estrategia de validación futura
+
+Para toda SPEC-007, cada comportamiento backend nuevo o modificado requiere tests automatizados suficientes conforme a Constitution y `docs/backend/testing.md`; no depende de una solicitud explícita de tests ni de TDD. El agente crea/modifica esos tests durante IMPLEMENT, mediante tareas de tests asociadas al comportamiento y fase correspondientes en `tasks.md`, reutilizando cobertura suficiente y sin tests artificiales. La revisión de código incluye tests; su revisión de cobertura y ejecución pertenecen al gate humano TESTING. El agente no ejecuta tests, directa ni indirectamente, ni builds cuando las normas lo prohíben. Esta corrección documental no ejecuta ninguno de esos controles.
+
+La autorización vigente abarca Release 1/V5: US01–US06 y sus tests T042–T051; T039/T040/T052 de Release 2 continúan excluidos hasta autorización posterior al gate humano. Foundation compartido tiene cobertura propia; no se asigna artificialmente a US01. Tests de consulta con datos controlados se ubican en Repository/Controller según la responsabilidad. Una prueba funcional de Service prepara y observa exclusivamente mediante APIs públicas productivas; su dependencia de sincronización está incluida en el cierre V5, sin acceso funcional directo a DB ni métodos productivos exclusivos para tests.
 
 | Responsabilidad | Cobertura prevista (no ejecutada) |
 |---|---|
@@ -109,4 +123,4 @@ No violaciones autorizadas. Dos releases: decisión técnica aprobada que reduce
 
 ## Revisión de coherencia final
 
-La alternativa C retira la garantía visual histórica: identidad estable y nombre actual permanecen; el frontend clasifica por nombre con neutral para desconocidos. Spec, research, modelo, contrato y quickstart no requieren mapas ni un campo de clasificación. CHK014/CHK022/CHK030 quedan satisfechos por el alcance explícito, no por una solución de reconstrucción histórica. No quedan decisiones funcionales abiertas para generar tasks; su generación y la implementación siguen pendientes.
+La alternativa C retira la garantía visual histórica: identidad estable y nombre actual permanecen; el frontend clasifica por nombre con neutral para desconocidos. Spec, research, modelo, contrato y quickstart no requieren mapas ni un campo de clasificación. CHK014/CHK022/CHK030 quedan satisfechos por el alcance explícito, no por una solución de reconstrucción histórica. Tasks generadas; implementación y validaciones humanas pendientes. La corrección de planificación de tests no resuelve H1–H4 ni modifica decisiones funcionales.

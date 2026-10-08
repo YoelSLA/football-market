@@ -9,9 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import footballmarket.config.SecurityConfig;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
+import footballmarket.models.League;
 import footballmarket.models.Player;
+import footballmarket.models.Team;
 import footballmarket.models.User;
-import footballmarket.models.enums.PlayerProvider;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.AuthenticationService;
@@ -192,12 +194,16 @@ class PlayerControllerTest {
     @Test
     @DisplayName("Serializa opcionales conocidos y no expone referencias externas")
     void devuelveOpcionalesConocidos() throws Exception {
-      Player player = new Player("Name", "Team", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Team", league, true);
+      ReflectionTestUtils.setField(league, "id", 12L);
+      ReflectionTestUtils.setField(team, "id", 41L);
+      Player player = new Player(" José Pérez ", team, "midfielder");
       ReflectionTestUtils.setField(player, "id", 7L);
       ReflectionTestUtils.setField(player, "imageUrl", "https://images.example/p.jpg");
       ReflectionTestUtils.setField(player, "fallbackImageUrl", "https://images.example/f.jpg");
       player.updateOptionalDetails(LocalDate.of(1990, 6, 20), "Spain");
-      player.addExternalReference(PlayerProvider.FOOTBALL_DATA, "44");
+      player.addExternalReference(ExternalProvider.FOOTBALL_DATA, "44");
       List<Player> players = List.of(player);
       Page<Player> page = new PageImpl<>(players, PageRequest.of(0, 20), 1);
       when(service.getActivePlayers(0, 20)).thenReturn(page);
@@ -207,7 +213,7 @@ class PlayerControllerTest {
               content()
                   .json(
                       """
-              {"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward",
+              {"content":[{"id":7,"name":" José Pérez ","teamId":41,"teamName":"Team","leagueId":12,"leagueName":"League","position":"midfielder",
                "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://images.example/p.jpg","fallbackImageUrl":"https://images.example/f.jpg"}],
               "page":0,"size":20,"totalElements":1,"totalPages":1}
               """,
@@ -219,8 +225,12 @@ class PlayerControllerTest {
                       fieldWithPath("content").description("Jugadores activos"),
                       fieldWithPath("content[].id").description("ID interno"),
                       fieldWithPath("content[].name").description("Nombre"),
-                      fieldWithPath("content[].team").description("Equipo"),
-                      fieldWithPath("content[].league").description("Liga"),
+                      fieldWithPath("content[].teamId").description("ID interno del equipo"),
+                      fieldWithPath("content[].teamName").description("Nombre actual del equipo"),
+                      fieldWithPath("content[].leagueId")
+                          .description("ID interno de la liga del equipo"),
+                      fieldWithPath("content[].leagueName")
+                          .description("Nombre actual de la liga del equipo"),
                       fieldWithPath("content[].position").description("Posición"),
                       fieldWithPath("content[].dateOfBirth").description("Fecha de nacimiento"),
                       fieldWithPath("content[].nationality").description("Nacionalidad"),
@@ -237,9 +247,13 @@ class PlayerControllerTest {
     @Test
     @DisplayName("Devuelve los campos exactos del catálogo y su paginación predeterminada")
     void devuelveCamposExactosYMetadatosPredeterminados() throws Exception {
-      Player player = new Player("Name", "Team", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Team", league, true);
+      ReflectionTestUtils.setField(league, "id", 12L);
+      ReflectionTestUtils.setField(team, "id", 41L);
+      Player player = new Player("Name", team, "Forward");
       ReflectionTestUtils.setField(player, "id", 7L);
-      player.addExternalReference(PlayerProvider.FOOTBALL_DATA, "44");
+      player.addExternalReference(ExternalProvider.FOOTBALL_DATA, "44");
       List<Player> players = List.of(player);
       Page<Player> page = new PageImpl<>(players, PageRequest.of(0, 20), 1);
       when(service.getActivePlayers(0, 20)).thenReturn(page);
@@ -250,7 +264,7 @@ class PlayerControllerTest {
               content()
                   .json(
                       """
-{"content":[{"id":7,"name":"Name","team":"Team","league":"League","position":"Forward","dateOfBirth":null,"nationality":null,"imageUrl":null,"fallbackImageUrl":null}],
+{"content":[{"id":7,"name":"Name","teamId":41,"teamName":"Team","leagueId":12,"leagueName":"League","position":"Forward","dateOfBirth":null,"nationality":null,"imageUrl":null,"fallbackImageUrl":null}],
 "page":0,"size":20,"totalElements":1,"totalPages":1}
 """,
                       org.springframework.test.json.JsonCompareMode.STRICT))
@@ -262,8 +276,12 @@ class PlayerControllerTest {
                       fieldWithPath("content[].id")
                           .description("Identificador interno de FootballMarket"),
                       fieldWithPath("content[].name").description("Nombre"),
-                      fieldWithPath("content[].team").description("Equipo"),
-                      fieldWithPath("content[].league").description("Liga"),
+                      fieldWithPath("content[].teamId").description("ID interno del equipo"),
+                      fieldWithPath("content[].teamName").description("Nombre actual del equipo"),
+                      fieldWithPath("content[].leagueId")
+                          .description("ID interno de la liga del equipo"),
+                      fieldWithPath("content[].leagueName")
+                          .description("Nombre actual de la liga del equipo"),
                       fieldWithPath("content[].position").description("Posición"),
                       fieldWithPath("content[].dateOfBirth")
                           .type(JsonFieldType.STRING)

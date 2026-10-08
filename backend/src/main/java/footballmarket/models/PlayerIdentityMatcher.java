@@ -35,13 +35,15 @@ public final class PlayerIdentityMatcher {
 
   /** Reutiliza las reglas fuertes para validar la identidad consultada por un ID ya conocido. */
   public boolean matches(Player player, Candidate candidate) {
-    if (candidate == null
+    if (player.getTeam() == null
+        || candidate == null
         || !"Soccer".equals(candidate.sport())
         || (!normalize(player.getName()).equals(normalize(candidate.name()))
             && !normalize(player.getName()).equals(normalize(candidate.alternateName())))) {
       return false;
     }
-    boolean sameTeam = normalizeTeam(player.getTeam()).equals(normalizeTeam(candidate.team()));
+    boolean sameTeam =
+        this.normalizeTeam(player.getTeam().getName()).equals(this.normalizeTeam(candidate.team()));
     boolean sameDate =
         player.getDateOfBirth() != null
             && candidate.dateOfBirth() != null

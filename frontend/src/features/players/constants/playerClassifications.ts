@@ -34,8 +34,8 @@ const neutralClassification: Classification = {
 	variant: "neutral",
 };
 
-export function getLeagueClassification(league: string): Classification {
-	return leagueClassifications[league] ?? neutralClassification;
+export function getLeagueClassification(leagueName: string): Classification {
+	return leagueClassifications[leagueName] ?? neutralClassification;
 }
 
 export function getPositionClassification(position: string): Classification {

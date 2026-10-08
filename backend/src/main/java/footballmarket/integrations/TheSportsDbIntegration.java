@@ -2,6 +2,7 @@ package footballmarket.integrations;
 
 import footballmarket.integrations.exceptions.InvalidTheSportsDbResponseException;
 import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
+import footballmarket.integrations.exceptions.TheSportsDbServerException;
 import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
 import java.net.URI;
 import java.time.Clock;
@@ -65,6 +66,68 @@ public class TheSportsDbIntegration {
   /** Consulta solo la referencia persistida, sin volver a resolver por nombre. */
   public List<PlayerData> lookup(String externalId) {
     return this.request("lookupplayer.php", "id", externalId, "players");
+  }
+
+  /** Contrato externo de equipos; no transporta ni solicita imágenes. */
+  public record TeamData(String externalId, String name, String sport) {}
+
+  /** Completitud acreditada por el contrato, nunca por cantidad recibida. */
+  public record TeamSearch(List<TeamData> candidates, boolean complete) {
+    public TeamSearch {
+      candidates = List.copyOf(candidates);
+    }
+  }
+
+  /** Una sola petición; searchteams.php no acredita completitud relevante. */
+  public TeamSearch searchTeams(String name) {
+    this.pacer.beforeRequest();
+    try {
+      Map<?, ?> body =
+          this.client
+              .get()
+              .uri(builder -> builder.path("/searchteams.php").queryParam("t", name).build())
+              .retrieve()
+              .onStatus(
+                  status -> status.value() == 429,
+                  (request, response) -> {
+                    Instant retryAt = this.retryAt(response.getHeaders().getFirst("Retry-After"));
+                    this.pacer.delayUntil(retryAt);
+                    throw new TheSportsDbRateLimitException(retryAt);
+                  })
+              .onStatus(
+                  status -> !status.is2xxSuccessful(),
+                  (request, response) -> {
+                    if (response.getStatusCode().is5xxServerError()) {
+                      throw new TheSportsDbServerException();
+                    }
+                    throw new InvalidTheSportsDbResponseException();
+                  })
+              .body(Map.class);
+      if (body == null || !body.containsKey("teams")) {
+        throw new InvalidTheSportsDbResponseException();
+      }
+      if (body.get("teams") == null) {
+        return new TeamSearch(List.of(), false);
+      }
+      if (!(body.get("teams") instanceof List<?> rows)) {
+        throw new InvalidTheSportsDbResponseException();
+      }
+      List<TeamData> candidates = new ArrayList<>();
+      for (Object row : rows) {
+        if (!(row instanceof Map<?, ?> fields)) {
+          throw new InvalidTheSportsDbResponseException();
+        }
+        String externalId = this.text(fields, "idTeam");
+        if (externalId == null || externalId.isBlank() || externalId.length() > 255) {
+          throw new InvalidTheSportsDbResponseException();
+        }
+        candidates.add(
+            new TeamData(externalId, this.text(fields, "strTeam"), this.text(fields, "strSport")));
+      }
+      return new TeamSearch(candidates, false);
+    } catch (RestClientException exception) {
+      throw new TheSportsDbUnavailableException();
+    }
   }
 
   private List<PlayerData> request(String endpoint, String parameter, String value, String root) {

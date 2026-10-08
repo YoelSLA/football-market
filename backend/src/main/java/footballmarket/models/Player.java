@@ -1,13 +1,16 @@
 package footballmarket.models;
 
-import footballmarket.models.enums.PlayerProvider;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -41,16 +44,20 @@ public class Player {
 
   @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
   @Getter(AccessLevel.NONE)
-  private List<PlayerExternalReference> externalReferences = new ArrayList<>();
+  private List<PlayerExternalReference> externalReferences;
 
   @Column(nullable = false)
   private String name;
 
-  @Column(nullable = false)
-  private String team;
+  @Column(name = "team", nullable = false)
+  private String legacyTeam;
 
-  @Column(nullable = false)
-  private String league;
+  @Column(name = "league", nullable = false)
+  private String legacyLeague;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "team_id")
+  private Team team;
 
   @Column(nullable = false)
   private String position;
@@ -58,7 +65,9 @@ public class Player {
   @Column(nullable = false)
   private boolean active;
 
-  protected Player() {}
+  protected Player() {
+    this.externalReferences = new ArrayList<>();
+  }
 
   /**
    * Crea un jugador con identidad interna pendiente de generación y ya activo.
@@ -73,6 +82,50 @@ public class Player {
   public Player(String name, String team, String league, String position) {
     this.update(name, team, league, position);
     this.activate();
+  }
+
+  /** Crea un jugador asociado; los textos legacy son solo un espejo de compatibilidad. */
+  public Player(String name, Team team, String position) {
+    this.update(name, team, position);
+    this.activate();
+  }
+
+  /** La liga se deriva exclusivamente del equipo, nunca del espejo legacy. */
+  public League getLeague() {
+    return this.team == null ? null : this.team.getLeague();
+  }
+
+  /** Actualiza datos válidos y asociación actual sin una liga independiente. */
+  public void update(String name, Team team, String position) {
+    requireText(name);
+    requireText(position);
+    if (team == null) {
+      throw new InvalidPlayerException("El jugador requiere un equipo resuelto");
+    }
+    if (this.name == null || !PlayerPresentation.equivalent(this.name, name)) {
+      this.name = name;
+    }
+    if (this.position == null || !PlayerPresentation.equivalent(this.position, position)) {
+      this.position = position;
+    }
+    this.associateTeam(team);
+  }
+
+  /** Asocia por identidad resuelta y actualiza el espejo temporal, sin modificar active. */
+  public void associateTeam(Team team) {
+    if (team == null) {
+      throw new InvalidPlayerException("La asociación requiere un equipo resuelto");
+    }
+    this.team = team;
+    this.refreshLegacyMirror();
+  }
+
+  /** Refleja renombrados de las entidades asociadas para convivencia con el binario previo. */
+  public void refreshLegacyMirror() {
+    if (this.team != null) {
+      this.legacyTeam = this.team.getName();
+      this.legacyLeague = this.team.getLeague().getName();
+    }
   }
 
   /**
@@ -90,7 +143,7 @@ public class Player {
    * @param provider proveedor que asignó el identificador
    * @param externalId identificador del jugador en ese proveedor
    */
-  public void addExternalReference(PlayerProvider provider, String externalId) {
+  public void addExternalReference(ExternalProvider provider, String externalId) {
     if (this.externalReferences.stream()
         .anyMatch(
             reference ->
@@ -146,8 +199,12 @@ public class Player {
     requireText(league);
     requireText(position);
     this.name = name;
-    this.team = team;
-    this.league = league;
+    if (this.team == null) {
+      this.legacyTeam = team;
+      this.legacyLeague = league;
+    } else {
+      this.refreshLegacyMirror();
+    }
     this.position = position;
   }
 

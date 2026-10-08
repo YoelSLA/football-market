@@ -9,6 +9,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import footballmarket.integrations.exceptions.InvalidTheSportsDbResponseException;
 import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
+import footballmarket.integrations.exceptions.TheSportsDbServerException;
 import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -19,6 +20,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -98,6 +101,96 @@ class TheSportsDbIntegrationTest {
       assertThat(candidates).hasSize(1);
       assertThat(candidates.getFirst().externalId()).isEqualTo("123");
       assertThat(candidates.getFirst().cutout()).isNull();
+      server.verify();
+    }
+
+    @Test
+    @DisplayName(
+        "La búsqueda de equipos adapta identidad, nombre y deporte sin acreditar completitud")
+    void searchTeamsAdaptsCandidates() {
+      RestClient.Builder builder = RestClient.builder().baseUrl(BASE);
+      MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+      server
+          .expect(requestTo(BASE + "/searchteams.php?t=Team"))
+          .andRespond(
+              withSuccess(
+                  """
+              {"teams":[{"idTeam":"1","strTeam":"Team","strSport":"Soccer"},
+              {"idTeam":"2","strTeam":"Other","strSport":"Basketball"}]}
+              """,
+                  MediaType.APPLICATION_JSON));
+
+      TheSportsDbIntegration.TeamSearch search = createIntegration(builder).searchTeams("Team");
+
+      assertThat(search.complete()).isFalse();
+      assertThat(search.candidates())
+          .extracting(TheSportsDbIntegration.TeamData::externalId)
+          .containsExactly("1", "2");
+      assertThat(search.candidates().getFirst().sport()).isEqualTo("Soccer");
+      server.verify();
+    }
+
+    @Test
+    @DisplayName(
+        "Una raíz de equipos nula es una respuesta válida sin candidatos y sin completitud")
+    void searchTeamsWithoutResults() {
+      RestClient.Builder builder = RestClient.builder().baseUrl(BASE);
+      MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+      server
+          .expect(requestTo(BASE + "/searchteams.php?t=Team"))
+          .andRespond(withSuccess("{\"teams\":null}", MediaType.APPLICATION_JSON));
+
+      TheSportsDbIntegration.TeamSearch search = createIntegration(builder).searchTeams("Team");
+
+      assertThat(search.candidates()).isEmpty();
+      assertThat(search.complete()).isFalse();
+      server.verify();
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "{}",
+          "{\"teams\":{}}",
+          "{\"teams\":[{\"strTeam\":\"Team\"}]}",
+          "{\"teams\":[\"x\"]}"
+        })
+    @DisplayName("Una estructura de equipos inválida se traduce a respuesta inválida")
+    void searchTeamsRejectsInvalidStructure(String body) {
+      RestClient.Builder builder = RestClient.builder().baseUrl(BASE);
+      MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+      server
+          .expect(requestTo(BASE + "/searchteams.php?t=Team"))
+          .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
+      assertThatThrownBy(() -> createIntegration(builder).searchTeams("Team"))
+          .isInstanceOf(InvalidTheSportsDbResponseException.class);
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("Un 429 de búsqueda de equipos informa la espera sin filtrar la clave")
+    void searchTeamsPropagatesRateLimit() {
+      RestClient.Builder builder = RestClient.builder().baseUrl(BASE);
+      MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+      server
+          .expect(requestTo(BASE + "/searchteams.php?t=Team"))
+          .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", "30"));
+      assertThatThrownBy(() -> createIntegration(builder).searchTeams("Team"))
+          .isInstanceOf(TheSportsDbRateLimitException.class)
+          .hasMessageNotContaining("test-only-not-a-credential");
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("Un 5xx en búsqueda de equipos se distingue del 4xx permanente")
+    void searchTeamsRejectsServerError() {
+      RestClient.Builder builder = RestClient.builder().baseUrl(BASE);
+      MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+      server
+          .expect(requestTo(BASE + "/searchteams.php?t=Team"))
+          .andRespond(withStatus(HttpStatus.SERVICE_UNAVAILABLE));
+      assertThatThrownBy(() -> createIntegration(builder).searchTeams("Team"))
+          .isInstanceOf(TheSportsDbServerException.class);
       server.verify();
     }
 

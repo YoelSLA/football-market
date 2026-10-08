@@ -33,7 +33,7 @@ function PlayerPortrait({ player }: PlayerCardProps) {
 }
 
 export function PlayerCard({ player }: PlayerCardProps) {
-	const league = getLeagueClassification(player.league);
+	const league = getLeagueClassification(player.leagueName);
 	const position = getPositionClassification(player.position);
 
 	return (
@@ -52,7 +52,7 @@ export function PlayerCard({ player }: PlayerCardProps) {
 			<dl className={styles["player-card__details"]}>
 				<div className={styles["player-card__team"]}>
 					<dt>Equipo</dt>
-					<dd title={player.team}>{player.team}</dd>
+					<dd title={player.teamName}>{player.teamName}</dd>
 				</div>
 				{PLAYER_SAMPLE_STATISTIC_ITEMS.map((statistic) => (
 					<div key={statistic.key}>
@@ -65,7 +65,7 @@ export function PlayerCard({ player }: PlayerCardProps) {
 			<footer className={styles["player-card__classifications"]}>
 				<div>
 					{league.image && <img src={league.image} alt="" />}
-					<span>{player.league}</span>
+					<span>{player.leagueName}</span>
 				</div>
 				<div className={styles[`player-card__position--${position.variant}`]}>
 					{position.image && <img src={position.image} alt="" />}

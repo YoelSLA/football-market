@@ -14,9 +14,11 @@ import footballmarket.integrations.exceptions.InvalidTheSportsDbResponseExceptio
 import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
 import footballmarket.models.Player;
 import footballmarket.models.enums.PlayerImageSyncRunStatus;
+import footballmarket.models.records.LeagueCandidate;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerImageSyncSummary;
 import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.models.records.TeamCandidate;
 import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
 import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import footballmarket.support.ResetPlayerCatalogListener;
@@ -48,6 +50,28 @@ class PlayerImageSynchronizationServiceTest {
   @Autowired private PlayerCatalogService catalogService;
   @MockitoBean private TheSportsDbIntegration integration;
 
+  /** Foto de origen controlada para conservar los escenarios de imágenes con el contrato V5. */
+  private PlayerSnapshot snapshot(List<PlayerCandidate> observations, int obtained, int discarded) {
+    LeagueCandidate league = new LeagueCandidate("10", "League");
+    TeamCandidate team = new TeamCandidate("100", "Team", "10", true);
+    List<PlayerCandidate> candidates =
+        observations.stream()
+            .map(
+                candidate ->
+                    new PlayerCandidate(
+                        candidate.externalId(),
+                        candidate.name(),
+                        candidate.team(),
+                        candidate.league(),
+                        candidate.position(),
+                        candidate.dateOfBirth(),
+                        candidate.nationality(),
+                        "100"))
+            .toList();
+    return new PlayerSnapshot(
+        candidates, obtained, discarded, List.of(league), List.of(team), List.of());
+  }
+
   @Nested
   @DisplayName("Sincronización manual de imágenes")
   class ManualSynchronization {
@@ -56,7 +80,7 @@ class PlayerImageSynchronizationServiceTest {
     void persistsIdentityWithoutImage() {
       PlayerCandidate candidate =
           new PlayerCandidate("a", "Name", "Team", "League", "Forward", null, null);
-      PlayerSnapshot snapshot = new PlayerSnapshot(List.of(candidate), 1, 0);
+      PlayerSnapshot snapshot = snapshot(List.of(candidate), 1, 0);
       catalogService.applySynchronization(snapshot);
       PlayerData result =
           new PlayerData("123", "Name", null, "Team", "Soccer", null, null, null, null);
@@ -76,7 +100,7 @@ class PlayerImageSynchronizationServiceTest {
     void persistsLocalImage() {
       PlayerCandidate candidate =
           new PlayerCandidate("b", "Name", "Team", "League", "Forward", null, null);
-      PlayerSnapshot snapshot = new PlayerSnapshot(List.of(candidate), 1, 0);
+      PlayerSnapshot snapshot = snapshot(List.of(candidate), 1, 0);
       catalogService.applySynchronization(snapshot);
       PlayerData result =
           new PlayerData(
@@ -105,7 +129,7 @@ class PlayerImageSynchronizationServiceTest {
     void skipsRecentNotFound() {
       PlayerCandidate candidate =
           new PlayerCandidate("c", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       when(integration.search("Name")).thenReturn(List.of());
       synchronizationService.synchronize(false);
 
@@ -124,8 +148,8 @@ class PlayerImageSynchronizationServiceTest {
           new PlayerCandidate("d", "Active", "Team", "League", "Forward", null, null);
       PlayerCandidate inactive =
           new PlayerCandidate("e", "Inactive", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(active, inactive), 2, 0));
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(active), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(active, inactive), 2, 0));
+      catalogService.applySynchronization(snapshot(List.of(active), 1, 0));
       when(integration.search("Active")).thenReturn(List.of());
 
       PlayerImageSyncSummary result = synchronizationService.synchronize(true);
@@ -140,7 +164,7 @@ class PlayerImageSynchronizationServiceTest {
     void neverRematchesPersistedIdentity() {
       PlayerCandidate candidate =
           new PlayerCandidate("f", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData photo =
           new PlayerData(
               "123",
@@ -179,7 +203,7 @@ class PlayerImageSynchronizationServiceTest {
     void emptyLookupPreservesImage() {
       PlayerCandidate candidate =
           new PlayerCandidate("g", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData photo =
           new PlayerData(
               "123",
@@ -209,7 +233,7 @@ class PlayerImageSynchronizationServiceTest {
     void incompatibleIdentityIsIndividualFailure() {
       PlayerCandidate candidate =
           new PlayerCandidate("h", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData original =
           new PlayerData(
               "123",
@@ -251,7 +275,7 @@ class PlayerImageSynchronizationServiceTest {
       PlayerCandidate candidate =
           new PlayerCandidate(
               "h2", "Name", "Team", "League", "Forward", LocalDate.of(1990, 1, 1), "Spain");
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData initial =
           new PlayerData("123", "Name", null, "Team", "Soccer", null, null, null, null);
       when(integration.search("Name")).thenReturn(List.of(initial));
@@ -270,7 +294,7 @@ class PlayerImageSynchronizationServiceTest {
     void exhaustsDefaultRetries() {
       PlayerCandidate candidate =
           new PlayerCandidate("i", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       when(integration.search("Name")).thenThrow(new TheSportsDbUnavailableException());
 
       PlayerImageSyncSummary result = synchronizationService.synchronize(false);
@@ -285,7 +309,7 @@ class PlayerImageSynchronizationServiceTest {
     void retryableErrorEligibleAgain() {
       PlayerCandidate candidate =
           new PlayerCandidate("j", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData recovered =
           new PlayerData(
               "123",
@@ -317,7 +341,7 @@ class PlayerImageSynchronizationServiceTest {
     void permanentlyFailedOnlyWithForce() {
       PlayerCandidate candidate =
           new PlayerCandidate("k", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       when(integration.search("Name")).thenThrow(new InvalidTheSportsDbResponseException());
       PlayerImageSyncSummary failure = synchronizationService.synchronize(false);
       PlayerImageSyncSummary skipped = synchronizationService.synchronize(false);
@@ -334,7 +358,7 @@ class PlayerImageSynchronizationServiceTest {
     void rejectsConcurrentExecution() throws Exception {
       PlayerCandidate candidate =
           new PlayerCandidate("l", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       CountDownLatch started = new CountDownLatch(1);
       CountDownLatch release = new CountDownLatch(1);
       doAnswer(
@@ -368,7 +392,7 @@ class PlayerImageSynchronizationServiceTest {
           new PlayerCandidate("p", "First", "Team", "League", "Forward", null, null);
       PlayerCandidate second =
           new PlayerCandidate("q", "Second", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(first, second), 2, 0));
+      catalogService.applySynchronization(snapshot(List.of(first, second), 2, 0));
       PlayerData firstResult =
           new PlayerData("shared", "First", null, "Team", "Soccer", null, null, null, null);
       PlayerData secondResult =
@@ -389,7 +413,7 @@ class PlayerImageSynchronizationServiceTest {
     void finishesEvaluationDespiteDeactivation() {
       PlayerCandidate candidate =
           new PlayerCandidate("r", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData response =
           new PlayerData(
               "123",
@@ -403,7 +427,7 @@ class PlayerImageSynchronizationServiceTest {
               null);
       doAnswer(
               invocation -> {
-                catalogService.applySynchronization(new PlayerSnapshot(List.of(), 0, 0));
+                catalogService.applySynchronization(snapshot(List.of(), 0, 0));
                 return List.of(response);
               })
           .when(integration)
@@ -424,7 +448,7 @@ class PlayerImageSynchronizationServiceTest {
           new PlayerCandidate("s", "First", "Team", "League", "Forward", null, null);
       PlayerCandidate second =
           new PlayerCandidate("t", "Second", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(first, second), 2, 0));
+      catalogService.applySynchronization(snapshot(List.of(first, second), 2, 0));
       PlayerData photo =
           new PlayerData(
               "123",
@@ -451,7 +475,7 @@ class PlayerImageSynchronizationServiceTest {
     void transientFailurePreservesExistingImage() {
       PlayerCandidate candidate =
           new PlayerCandidate("m", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData initial =
           new PlayerData(
               "123",
@@ -481,7 +505,7 @@ class PlayerImageSynchronizationServiceTest {
     void invalidImageDoesNotBecomePermanentError() {
       PlayerCandidate candidate =
           new PlayerCandidate("n", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       PlayerData initial =
           new PlayerData(
               "123",
@@ -516,7 +540,7 @@ class PlayerImageSynchronizationServiceTest {
     void limitsRetries() {
       PlayerCandidate candidate =
           new PlayerCandidate("o", "Name", "Team", "League", "Forward", null, null);
-      catalogService.applySynchronization(new PlayerSnapshot(List.of(candidate), 1, 0));
+      catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
       when(integration.search("Name")).thenThrow(new TheSportsDbUnavailableException());
 
       PlayerImageSyncSummary result = synchronizationService.synchronize(false);

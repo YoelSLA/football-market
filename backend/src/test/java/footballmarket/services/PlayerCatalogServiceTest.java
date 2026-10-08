@@ -3,9 +3,11 @@ package footballmarket.services;
 import static org.assertj.core.api.Assertions.*;
 
 import footballmarket.models.Player;
+import footballmarket.models.records.LeagueCandidate;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
+import footballmarket.models.records.TeamCandidate;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -34,16 +36,57 @@ class PlayerCatalogServiceTest {
   @Autowired private PlayerCatalogService playerCatalogService;
 
   private PlayerCandidate candidate(String id, String name) {
-    return new PlayerCandidate(id, name, "Team", "League", "Forward", null, null);
+    return new PlayerCandidate(id, name, "Team", "League", "Forward", null, null, "100");
   }
 
   private PlayerSnapshot snapshot(PlayerCandidate... candidates) {
-    return new PlayerSnapshot(List.of(candidates), candidates.length, 0);
+    LeagueCandidate firstLeague = new LeagueCandidate("10", "League");
+    LeagueCandidate secondLeague = new LeagueCandidate("20", "New League");
+    TeamCandidate firstTeam = new TeamCandidate("100", "Team", "10", true);
+    TeamCandidate secondTeam = new TeamCandidate("200", "New Team", "20", true);
+    return new PlayerSnapshot(
+        List.of(candidates),
+        candidates.length,
+        0,
+        List.of(firstLeague, secondLeague),
+        List.of(firstTeam, secondTeam),
+        List.of());
   }
 
   @Nested
   @DisplayName("Sincronización del catálogo")
   class Synchronization {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+        "Un alta con observaciones equivalentes elige textos originales canónicos sin depender del orden")
+    void canonicalizeNewPlayerPresentation(boolean reverse) {
+      // Arrange
+      PlayerCandidate upper =
+          new PlayerCandidate(
+              "91020", "JOSE PEREZ", "Team", "League", "MIDFIELDER", null, null, "100");
+      PlayerCandidate natural =
+          new PlayerCandidate(
+              "91020", "José Pérez", "Team", "League", "Midfielder", null, null, "100");
+      PlayerSnapshot photo = reverse ? snapshot(natural, upper) : snapshot(upper, natural);
+
+      // Act
+      PlayerSynchronizationResult result = playerCatalogService.applySynchronization(photo);
+
+      // Assert
+      assertThat(result.created()).isEqualTo(1);
+      assertThat(result.discardedInvalid()).isZero();
+
+      // Verify
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              player -> {
+                assertThat(player.getName()).isEqualTo("José Pérez");
+                assertThat(player.getPosition()).isEqualTo("Midfielder");
+              });
+    }
+
     @Test
     @DisplayName("Crea un jugador con identidad interna y opcionales desconocidos")
     void creaJugadoresNuevos() {
@@ -73,7 +116,8 @@ class PlayerCatalogServiceTest {
       Long internalId =
           playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
       PlayerCandidate changed =
-          new PlayerCandidate("91002", "New", "New Team", "New League", "Goalkeeper", null, null);
+          new PlayerCandidate(
+              "91002", "New", "New Team", "New League", "Goalkeeper", null, null, "200");
       PlayerSynchronizationResult result =
           playerCatalogService.applySynchronization(snapshot(changed));
       assertThat(result.created()).isZero();
@@ -84,8 +128,8 @@ class PlayerCatalogServiceTest {
               local -> {
                 assertThat(local.getId()).isEqualTo(internalId);
                 assertThat(local.getName()).isEqualTo("New");
-                assertThat(local.getTeam()).isEqualTo("New Team");
-                assertThat(local.getLeague()).isEqualTo("New League");
+                assertThat(local.getTeam().getName()).isEqualTo("New Team");
+                assertThat(local.getLeague().getName()).isEqualTo("New League");
                 assertThat(local.getPosition()).isEqualTo("Goalkeeper");
               });
     }
@@ -141,7 +185,9 @@ class PlayerCatalogServiceTest {
     @DisplayName("Conserva los contadores de obtención y descarte de la fuente")
     void conservaLosContadoresOriginalesDelSnapshot() {
       PlayerCandidate player = candidate("91008", "Player");
-      PlayerSnapshot photo = new PlayerSnapshot(List.of(player), 2, 1);
+      PlayerSnapshot valid = snapshot(player);
+      PlayerSnapshot photo =
+          new PlayerSnapshot(List.of(player), 2, 1, valid.leagues(), valid.teams(), List.of());
       PlayerSynchronizationResult result = playerCatalogService.applySynchronization(photo);
       assertThat(result.obtained()).isEqualTo(2);
       assertThat(result.discardedInvalid()).isEqualTo(1);
@@ -153,7 +199,7 @@ class PlayerCatalogServiceTest {
     void resuelveJugadoresDuplicadosSinCrearDosRegistros() {
       PlayerCandidate first = candidate("91009", "First");
       PlayerCandidate duplicate =
-          new PlayerCandidate("91009", "Duplicate", "T", "Later", "P", null, null);
+          new PlayerCandidate("91009", "Duplicate", "T", "Later", "P", null, null, "200");
       PlayerSynchronizationResult result =
           playerCatalogService.applySynchronization(snapshot(first, duplicate));
       assertThat(result.created()).isEqualTo(1);
@@ -162,7 +208,7 @@ class PlayerCatalogServiceTest {
           .satisfies(
               local -> {
                 assertThat(local.getName()).isEqualTo("First");
-                assertThat(local.getLeague()).isEqualTo("League");
+                assertThat(local.getLeague().getName()).isEqualTo("League");
               });
     }
 
@@ -182,9 +228,11 @@ class PlayerCatalogServiceTest {
     @DisplayName("Los opcionales no informados no borran datos previamente conocidos")
     void conservaOpcionales(String nationality) {
       LocalDate birth = LocalDate.of(1990, 6, 20);
-      PlayerCandidate original = new PlayerCandidate("44", "N", "T", "L", "P", birth, "Spain");
+      PlayerCandidate original =
+          new PlayerCandidate("44", "N", "T", "L", "P", birth, "Spain", "100");
       playerCatalogService.applySynchronization(snapshot(original));
-      PlayerCandidate degraded = new PlayerCandidate("44", "N", "T", "L", "P", null, nationality);
+      PlayerCandidate degraded =
+          new PlayerCandidate("44", "N", "T", "L", "P", null, nationality, "100");
       playerCatalogService.applySynchronization(snapshot(degraded));
       assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
           .singleElement()
@@ -200,10 +248,11 @@ class PlayerCatalogServiceTest {
     @DisplayName("Un valor opcional válido reemplaza el valor previamente conocido")
     void actualizaOpcionalesValidos() {
       PlayerCandidate original =
-          new PlayerCandidate("44", "N", "T", "L", "P", LocalDate.of(1990, 1, 1), "Spain");
+          new PlayerCandidate("44", "N", "T", "L", "P", LocalDate.of(1990, 1, 1), "Spain", "100");
       playerCatalogService.applySynchronization(snapshot(original));
       PlayerCandidate changed =
-          new PlayerCandidate("44", "N", "T", "L", "P", LocalDate.of(1991, 1, 1), "Argentina");
+          new PlayerCandidate(
+              "44", "N", "T", "L", "P", LocalDate.of(1991, 1, 1), "Argentina", "100");
       playerCatalogService.applySynchronization(snapshot(changed));
       Player local = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst();
       assertThat(local.getDateOfBirth()).isEqualTo(changed.dateOfBirth());

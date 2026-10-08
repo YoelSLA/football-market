@@ -20,7 +20,9 @@ class PlayerIdentityMatcherTest {
     @Test
     @DisplayName("Admite nombre alternativo y sufijo de club cuando la fecha es opcional")
     void acceptsAlternateName() {
-      Player player = new Player("José-Pérez", "Atlético FC", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Atlético FC", league, true);
+      Player player = new Player("José-Pérez", team, "Forward");
       Candidate candidate = new Candidate("Other", "JOSE PEREZ", "Atletico", "Soccer", null, null);
       assertThat(matcher.matches(player, candidate)).isTrue();
     }
@@ -28,7 +30,9 @@ class PlayerIdentityMatcherTest {
     @Test
     @DisplayName("Descarta deporte ausente o distinto de Soccer")
     void requiresSoccer() {
-      Player player = new Player("Name", "Team", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Team", league, true);
+      Player player = new Player("Name", team, "Forward");
       Candidate noSport = new Candidate("Name", null, "Team", null, null, null);
       Candidate otherSport = new Candidate("Name", null, "Team", "Basketball", null, null);
       assertThat(matcher.matches(player, noSport)).isFalse();
@@ -38,7 +42,9 @@ class PlayerIdentityMatcherTest {
     @Test
     @DisplayName("Rechaza fecha contradictoria aun cuando coincide el club")
     void rejectsContradictoryDate() {
-      Player player = new Player("Name", "Team", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Team", league, true);
+      Player player = new Player("Name", team, "Forward");
       player.updateOptionalDetails(LocalDate.of(1990, 1, 1), "Spain");
       Candidate candidate =
           new Candidate("Name", null, "Team", "Soccer", LocalDate.of(1990, 1, 2), "España");
@@ -48,7 +54,9 @@ class PlayerIdentityMatcherTest {
     @Test
     @DisplayName("Equipo distinto exige fecha y nacionalidad exactas, con alias controlados")
     void acceptsDifferentTeamOnlyWithStrongIdentity() {
-      Player player = new Player("Name", "Old Club", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Old Club", league, true);
+      Player player = new Player("Name", team, "Forward");
       player.updateOptionalDetails(LocalDate.of(1990, 1, 1), "USA");
       Candidate valid =
           new Candidate(
@@ -61,12 +69,26 @@ class PlayerIdentityMatcherTest {
     @Test
     @DisplayName("No decide por primer candidato ni por relevancia cuando hay varios válidos")
     void requiresExactlyOneMatch() {
-      Player player = new Player("Name", "Team", "League", "Forward");
+      League league = new League("League");
+      Team team = new Team("Team", league, true);
+      Player player = new Player("Name", team, "Forward");
       Candidate first = new Candidate("Name", null, "Team", "Soccer", null, null);
       Candidate second = new Candidate("Name", null, "Team", "Soccer", null, null);
       assertThat(matcher.uniqueMatch(player, List.of())).isEmpty();
       assertThat(matcher.uniqueMatch(player, List.of(first))).contains(first);
       assertThat(matcher.uniqueMatch(player, List.of(first, second))).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Un jugador sin equipo asociado no obtiene coincidencia por textos legacy")
+    void ignoresUnassociatedPlayer() {
+      // Arrange
+      Player player = new Player("Name", "Team", "League", "Forward");
+      Candidate candidate = new Candidate("Name", null, "Team", "Soccer", null, null);
+
+      // Act / Assert
+      assertThat(matcher.matches(player, candidate)).isFalse();
+      assertThat(matcher.uniqueMatch(player, List.of(candidate))).isEmpty();
     }
   }
 }

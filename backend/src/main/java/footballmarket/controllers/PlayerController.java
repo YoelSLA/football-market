@@ -39,13 +39,13 @@ public class PlayerController {
   @Operation(
       summary = "Sincronizar jugadores",
       description =
-          "Sincronización manual exclusivamente con Football-Data.org de PL, BL1, PD, SA y FL1, sin body ni rol adicional. Resuelve por referencia externa y conserva la identidad interna. No obtiene imágenes. Ante 429 respeta Retry-After con hasta tres reintentos.")
+          "Sincronización manual de las competiciones configuradas en Football-Data.org (inicialmente PL, BL1, PD, SA y FL1), sin body ni rol adicional. Confirma ligas, equipos y jugadores en un único commit local; conserva identidades y protege presentes inválidos. Tras confirmar, intenta enriquecer referencias de equipos en TheSportsDB sin afectar los cinco contadores ni revertir el catálogo. No obtiene imágenes. Ante 429 de Football-Data respeta Retry-After con hasta tres reintentos.")
   @ApiResponse(responseCode = "200", description = "Foto completa aplicada al catálogo")
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
       responseCode = "502",
       description =
-          "Fallo del proveedor o de aplicación local; sin cambios parciales de la sincronización (FOOTBALL_DATA_UNAVAILABLE)",
+          "Foto del proveedor incompleta/no disponible o fallo técnico local; sin cambios parciales de la sincronización (FOOTBALL_DATA_UNAVAILABLE)",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   public ResponseEntity<PlayerSyncResponseDTO> synchronize() {
     return ResponseEntity.ok(
@@ -56,7 +56,7 @@ public class PlayerController {
   @Operation(
       summary = "Consultar jugadores activos",
       description =
-          "Consulta paginada exclusivamente local. Expone el ID interno de FootballMarket y dateOfBirth, nationality, imageUrl y fallbackImageUrl como valores nullable, sin referencias externas. Requiere JWT válido.")
+          "Consulta paginada exclusivamente local, ordenada por ID interno: solo jugadores activos asociados a Team vigente y League válida. Expone teamId/teamName y leagueId/leagueName derivados de las entidades internas, sin team/league legacy ni referencias externas. Name y position conservan exactamente la presentación persistida; dateOfBirth, nationality, imageUrl y fallbackImageUrl son nullable. Los casos históricos no excluyen por sí solos un jugador válido. Requiere JWT válido.")
   @ApiResponse(responseCode = "200", description = "Página de jugadores activos")
   @ApiResponse(
       responseCode = "400",

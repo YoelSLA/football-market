@@ -1,6 +1,6 @@
 package footballmarket.models;
 
-import footballmarket.models.enums.PlayerProvider;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,14 +41,14 @@ public class PlayerExternalReference {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, updatable = false, length = 64)
-  private PlayerProvider provider;
+  private ExternalProvider provider;
 
   @Column(name = "external_id", nullable = false, updatable = false)
   private String externalId;
 
   protected PlayerExternalReference() {}
 
-  PlayerExternalReference(Player player, PlayerProvider provider, String externalId) {
+  PlayerExternalReference(Player player, ExternalProvider provider, String externalId) {
     validate(player, provider, externalId);
 
     this.player = player;
@@ -57,7 +57,7 @@ public class PlayerExternalReference {
   }
 
   /** Válida los datos obligatorios de una referencia externa de jugador. */
-  private static void validate(Player player, PlayerProvider provider, String externalId) {
+  private static void validate(Player player, ExternalProvider provider, String externalId) {
     if (player == null
         || provider == null
         || externalId == null

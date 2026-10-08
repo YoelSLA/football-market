@@ -3,8 +3,6 @@ package footballmarket.integrations;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import footballmarket.integrations.exceptions.FootballDataRateLimitException;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -69,22 +67,28 @@ public class FootballDataIntegration {
    * @throws FootballDataUnavailableException si no es posible obtener completamente la información
    *     de la competición
    */
-  public PlayerSnapshot fetchCompetition(String code) {
+  public CompetitionSnapshot fetchCompetition(String code) {
     try {
       Competition competition = this.read("/competitions/{code}", Competition.class, code);
       Teams teams = this.read("/competitions/{code}/teams", Teams.class, code);
 
-      if (teams.teams() == null) {
+      if (competition.id() == null
+          || competition.id() <= 0
+          || teams.teams() == null
+          || (teams.count() != null && teams.count() != teams.teams().size())) {
         throw new FootballDataUnavailableException();
       }
 
-      List<PlayerCandidate> players = new ArrayList<>();
+      List<PlayerData> players = new ArrayList<>();
+      LeagueData league = new LeagueData(competition.id().toString(), competition.name());
+      List<TeamData> teamCandidates = new ArrayList<>();
+      List<InvalidPlayerData> invalidPlayers = new ArrayList<>();
 
       int obtained = 0;
       int discarded = 0;
 
       for (TeamReference reference : teams.teams()) {
-        if (reference == null || reference.id() == null) {
+        if (reference == null || reference.id() == null || reference.id() <= 0) {
           throw new FootballDataUnavailableException();
         }
 
@@ -93,32 +97,43 @@ public class FootballDataIntegration {
         if (team.squad() == null) {
           throw new FootballDataUnavailableException();
         }
+        TeamData teamCandidate =
+            new TeamData(reference.id().toString(), team.name(), competition.id().toString(), true);
+        teamCandidates.add(teamCandidate);
 
         for (SquadMember member : team.squad()) {
           obtained++;
+          if (member == null || member.id() == null || member.id() <= 0) {
+            throw new FootballDataUnavailableException();
+          }
 
           String missing = missingField(member, team.name(), competition.name());
           if (missing != null) {
             discarded++;
+            invalidPlayers.add(
+                new InvalidPlayerData(
+                    member.id().toString(), reference.id().toString(), team.name(), missing));
             LOG.warn("Jugador descartado: falta el campo obligatorio {}", missing);
             continue;
           }
 
-          PlayerCandidate player =
-              new PlayerCandidate(
+          PlayerData player =
+              new PlayerData(
                   member.id().toString(),
                   member.name(),
                   team.name(),
                   competition.name(),
                   member.position(),
                   optionalDate(member.dateOfBirth()),
-                  optionalText(member.nationality()));
+                  optionalText(member.nationality()),
+                  reference.id().toString());
 
           players.add(player);
         }
       }
 
-      return new PlayerSnapshot(players, obtained, discarded);
+      return new CompetitionSnapshot(
+          players, obtained, discarded, List.of(league), teamCandidates, invalidPlayers);
 
     } catch (RestClientException | FootballDataUnavailableException ex) {
       LOG.warn("Lectura del proveedor fallida: comunicación o estructura incompleta");
@@ -253,6 +268,44 @@ public class FootballDataIntegration {
     void await(Duration duration) throws InterruptedException;
   }
 
+  /** Datos externos de liga, sin entidad JPA ni identidad interna. */
+  public record LeagueData(String externalId, String name) {}
+
+  /** Contexto externo de equipo y disponibilidad del plantel. */
+  public record TeamData(
+      String externalId, String name, String leagueExternalId, boolean rosterKnown) {}
+
+  /** Registro externo válido con relación de origen explícita. */
+  public record PlayerData(
+      String externalId,
+      String name,
+      String team,
+      String league,
+      String position,
+      LocalDate dateOfBirth,
+      String nationality,
+      String teamExternalId) {}
+
+  /** Presencia externa inválida identificable, nunca ausencia. */
+  public record InvalidPlayerData(
+      String externalId, String teamExternalId, String teamName, String cause) {}
+
+  /** Respuestas requeridas completamente obtenidas antes de cualquier aplicación local. */
+  public record CompetitionSnapshot(
+      List<PlayerData> players,
+      int obtained,
+      int discardedInvalid,
+      List<LeagueData> leagues,
+      List<TeamData> teams,
+      List<InvalidPlayerData> invalidPlayers) {
+    public CompetitionSnapshot {
+      players = List.copyOf(players);
+      leagues = List.copyOf(leagues);
+      teams = List.copyOf(teams);
+      invalidPlayers = List.copyOf(invalidPlayers);
+    }
+  }
+
   /**
    * Determina si falta alguno de los campos obligatorios necesarios para crear un jugador.
    *
@@ -292,16 +345,16 @@ public class FootballDataIntegration {
    * @return {@code true} si la cadena no contiene un valor válido
    */
   private static boolean blank(String value) {
-    return value == null || value.isBlank();
+    return value == null || value.isBlank() || value.length() > 255;
   }
 
   /** Representa la información necesaria de una competición recibida desde Football-Data. */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  private record Competition(String name) {}
+  private record Competition(Long id, String name) {}
 
   /** Representa la colección de equipos pertenecientes a una competición. */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  private record Teams(List<TeamReference> teams) {}
+  private record Teams(Integer count, List<TeamReference> teams) {}
 
   /** Representa la referencia a un equipo devuelta en el listado de una competición. */
   @JsonIgnoreProperties(ignoreUnknown = true)

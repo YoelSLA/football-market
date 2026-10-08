@@ -2,6 +2,10 @@
 
 ## GET /api/players
 
+B-V5-05: dateOfBirth y nationality se exponen exactamente como quedaron persistidos tras la consolidación por atributo, incluido null cuando las referencias válidas entran en conflicto y no había valor previo. Sin campos nuevos, sin normalización y sin efecto sobre teamId/teamName/leagueId/leagueName.
+
+B-V5-04 resuelto: name/position exponen exactamente representación persistida; no normalización ni ranking en Mapper/GET. Actualizaciones equivalentes conservan texto anterior; alta o cambio semántico usan representación original canónica (diacríticos, casing natural, desempate lexicográfico), sin depender del orden. No campos nuevos. Esta decisión sustituye las menciones pendientes anteriores.
+
 Cambio deliberado RF-019/RF-028. JWT vigente; page=0 por defecto, page>=0; size=20 por defecto, 1..100. Orden existente por Player.id creciente.
 
 Solo Player activo con Team asociado current=true y League válida. Team/League se cargan dentro de consulta transaccional de lectura (entity graph/proyección), sin acceso remoto ni lazy loading fuera de contexto. Un caso registrado no genera error ni excluye por sí mismo un jugador válido.
@@ -38,5 +42,11 @@ Contadores siguen siendo de jugadores, no de Team/League: obtained integrantes r
 No se agrega contador de revisión ni se modifica DTO por RF-031. Enriquecimiento posterior TheSportsDB no cambia éxito confirmado, contadores ni errores del catálogo principal.
 
 ## Otras interfaces
+
+B-V5-03 mantiene HTTP y generaliza la protección de B-V5-02 a name/position incompatibles tras normalización estricta existente: el Player conserva integralmente datos persistidos y referencias, sin error global ni nuevos campos. Múltiples observaciones coherentes no son inválidas; casos históricos no bloquean futuras fotos coherentes. B-V5-04 resuelto determina la representación persistida descrita en GET; no seleccionar mediante orden de entrada ni convertir claves de comparación en presentación.
+
+B-V5-02 no agrega campos ni error global: observaciones de referencias distintas del mismo Player con Teams válidos contradictorios se descartan individualmente conforme discardedInvalid, sin created/updated ni markedInactive para ese Player. Se registra INVALID_SUBJECT_DATA y se conserva su estado/referencias; los demás Players continúan. La comparación se hace por propietario y Team, no por orden de referencias. La consolidación por una misma referencia del párrafo anterior no es una prioridad entre referencias distintas del mismo propietario. Un caso histórico no bloquea una foto coherente posterior.
+
+La resolución de B-V5-01 no modifica HTTP: Player puede conservar varias referencias internas del mismo proveedor con externalId distintos, pero ninguna se expone. Sigue vigente la unicidad de cada `(provider,externalId)` por tipo de entidad; la cardinalidad por propietario no es un campo ni una validación del contrato HTTP.
 
 No endpoint administrativo, frontend de revisión ni comando nuevo. SQL de revisión en [quickstart.md](../quickstart.md). Endpoints de imágenes conservan contrato/comportamiento; adaptaciones internas usan nombre de Team sin resolver/modificar imágenes en 007. OpenAPI y REST Docs deben reflejar únicamente los cambios de GET y aclaración de significado, no un campo adicional del resumen.

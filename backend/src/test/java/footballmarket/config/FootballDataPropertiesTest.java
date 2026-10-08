@@ -27,9 +27,10 @@ class FootballDataPropertiesTest {
   @DisplayName("Configuración de ligas al iniciar")
   class Competitions {
     @ParameterizedTest
-    @DisplayName("Inicia con las cinco ligas configuradas en el orden solicitado")
-    @ValueSource(strings = {"PL,BL1,PD,SA,FL1", "BL1,PL,PD,SA,FL1", "FL1,SA,PD,BL1,PL"})
-    void iniciaConLasCincoLigasConfiguradas(String competitions) {
+    @DisplayName("Inicia con cualquier lista no vacía de ligas únicas, conservando el orden")
+    @ValueSource(
+        strings = {"PL,BL1,PD,SA,FL1", "BL1,PL,PD,SA,FL1", "PL", "PL,CL", "PL,BL1,PD,SA,FL1,CL"})
+    void acceptsUniqueCompetitions(String competitions) {
       runner
           .withPropertyValues("football-data.competitions=" + competitions)
           .run(
@@ -41,16 +42,8 @@ class FootballDataPropertiesTest {
     }
 
     @ParameterizedTest
-    @DisplayName("Impide el arranque con ligas incompletas, duplicadas o desconocidas")
-    @ValueSource(
-        strings = {
-          "",
-          "PL,BL1,PD,SA",
-          "PL,BL1,PD,SA,FL1,CL",
-          "PL,BL1,PD,SA,FL1,FL1",
-          "PL,BL1,PD,SA,SA",
-          "PL,BL1,PD,SA,CL"
-        })
+    @DisplayName("Impide el arranque con una lista vacía o códigos duplicados")
+    @ValueSource(strings = {"", "PL,BL1,PD,SA,FL1,FL1", "PL,BL1,PD,SA,SA", "PL,PL"})
     void rechazaLigasInvalidasAlIniciar(String competitions) {
       runner
           .withPropertyValues("football-data.competitions=" + competitions)

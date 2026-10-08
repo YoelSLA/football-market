@@ -1,6 +1,6 @@
 # Validación y operación: Dominio de equipos y ligas
 
-Guía futura, no evidencia de ejecución. [Spec](spec.md), [modelo](data-model.md), [contratos](contracts/api.md). No tasks generado, tests/builds no ejecutados.
+Guía futura, no evidencia de ejecución. [Spec](spec.md), [modelo](data-model.md), [contratos](contracts/api.md). Tasks generadas; implementación y tests/builds pendientes, sin evidencia de ejecución.
 
 ## Preparación y dos releases
 
@@ -10,6 +10,8 @@ Java 21, Node >=24, PostgreSQL y configuración externa existente. Claves fuera 
 2. Release 1 contiene V5, nunca V6. Desplegar código intermedio con legacy NOT NULL/mappings descritos en modelo. Tras arranque, GET usa solo asociaciones válidas: puede haber menos jugadores hasta transición; no fallback visual por texto del DTO antiguo.
 3. Usuario invoca POST /api/players/sync con JWT. Foto incompleta o fallo técnico principal dejan estado previo. Verificar transición y SQL abajo. Repetir solo tras corregir causa si falla.
 4. Gate usuario: ningún Player perdido/duplicado, IDs preservados, asociaciones/referencias válidas, casos permitidos con evidencia, marcador completado. Verificar también nuevos Players legítimos: conteo mayor no demuestra por sí solo ausencia de pérdidas.
+
+B-V5-01: comparar todas las referencias de Player antes/después, incluidos sus IDs y propietarios; varias del mismo proveedor con externalId distintos son válidas y deben conservarse. V5 no añade UNIQUE(player_id,provider), no selecciona referencias ni exige regularización externa previa. Se mantiene UNIQUE(provider,external_id); Team/League sí tienen además unicidad por propietario/proveedor. Ninguna comprobación de conteos autoriza eliminar referencias.
 5. Antes de Release 2: detener instancias antiguas/escrituras/sincronizaciones; backup consistente inmediatamente previo a V6 y procedimiento de recuperación preparado; comprobar binario final sin mappings legacy. No considerar marcador aprobación humana automática.
 6. Release 2 publica V6 y código final. V6 valida condiciones dentro de transacción PostgreSQL y elimina columnas. Si falla guarda o DDL transaccional, esquema anterior intacto; no forzar historial Flyway. Mantener servicio final fuera de tráfico hasta migración/validación correctas.
 
@@ -46,8 +48,20 @@ SELECT id, category, cause_code, subject_type, subject_id,
        subject_provider, subject_external_id, evidence
 FROM pending_review_cases
 WHERE category IN ('PLAYER_TEAM_UNRESOLVED', 'TEAM_LEAGUE_UNRESOLVED',
-                   'EXTERNAL_IDENTITY_CONFLICT', 'INVALID_SUBJECT_DATA')
+                   'EXTERNAL_IDENTITY_CONFLICT', 'PLAYER_OPTIONAL_CONFLICT',
+                   'INVALID_SUBJECT_DATA')
 ORDER BY id;
+```
+
+Los conflictos opcionales de B-V5-05 se consultan por atributo y valores recibidos; no impiden el procesamiento del Player ni completan su asociación:
+
+```sql
+SELECT id, subject_id, cause_code,
+       evidence->>'attribute' AS attribute,
+       evidence->'receivedValues' AS received_values
+FROM pending_review_cases
+WHERE category = 'PLAYER_OPTIONAL_CONFLICT'
+ORDER BY last_detected_at DESC, id DESC;
 ```
 
 Revisar propietario actual/pretendido, relación recibida/previa y texto original según categoría. Primera/última detección no certifican que problema siga presente. Sin cierre automático/manual en esta feature. Una nueva detección del mismo problema actualiza fila; no crea historial de cada ejecución.
@@ -72,12 +86,28 @@ WHERE p.team_id IS NULL
     WHERE c.subject_type = 'PLAYER' AND c.subject_id = p.id
       AND c.category IN ('LEGACY_TEAM_ASSOCIATION', 'PLAYER_TEAM_UNRESOLVED')
       AND nullif(btrim(c.evidence->>'originalTeamName'), '') IS NOT NULL
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM pending_review_cases c
+    WHERE c.subject_type = 'PLAYER' AND c.subject_id = p.id
+      AND c.category = 'INVALID_SUBJECT_DATA'
+      AND c.cause_code IN ('CONFLICTING_PLAYER_TEAMS', 'CONFLICTING_PLAYER_STATE')
+      AND nullif(btrim(c.evidence->>'originalTeamName'), '') IS NOT NULL
+      AND jsonb_array_length(c.evidence->'observations') > 1
   );
 ```
 
 Últimas dos consultas deben no devolver filas. Revisar además identidad completa previa vs posterior, referencias FOOTBALL_DATA de Team/League, unicidad y evidencia candidatos. No eliminar textos solo por conteos o existencia de cualquier caso.
 
 ## Escenarios funcionales (usuario, fixtures para externos)
+
+**B-V5-05:** comprobar alta sin opcionales válidos; un valor válido frente a otro ausente o inválido; mismo valor válido repetido; valores incompatibles con Player nuevo (null) y existente (valor persistido); conflicto de un atributo con el otro coherente, en ambos sentidos; ausencia de INVALID_SUBJECT_DATA y procesamiento completo de Team/name/position; independencia del orden de referencias; GET idéntico al persistido; y foto posterior coherente que completa el opcional según las reglas existentes. Sustituye el pendiente B-V5-05 anterior.
+
+**B-V5-04 resuelto:** comprobar alta con una representación, José Pérez/JOSE PEREZ, casing mixto, varias formas equivalentes, permutaciones y desempate lexicográfico. El seleccionado pertenece a las observaciones originales. Tras persistir, fotos equivalentes conservan exactamente name/position anteriores, incluso si llega una forma de mayor calidad; GET los devuelve sin normalizar. Contradicciones semánticas siguen protegiendo según B-V5-03. Reemplaza pendientes B-V5-04 anteriores.
+
+**B-V5-03:** mismo propietario con Team/name/position coherentes procesa normalmente; name o position incompatibles después de normalización estricta existente protegen todo el Player como INVALID_SUBJECT_DATA. Conflictos simultáneos producen una clasificación consistente, sin actualización parcial. Verificar conservación integral, todas las referencias, orden invertido, otros Players procesados y posterior foto coherente. Las formas textuales equivalentes no son conflictos. Su representación persistida/GET sigue B-V5-04 y el ranking aprobado del escenario anterior; esta guía no acredita su ejecución.
+
+**B-V5-02:** preparar un Player con varias referencias FOOTBALL_DATA válidas. Mismo Team permite procesamiento normal; Teams válidos distintos conservan asociación/active/referencias/espejo y registran INVALID_SUBJECT_DATA/CONFLICTING_PLAYER_TEAMS, sin impedir a otros Players válidos. Repetir con referencias en orden inverso: mismo resultado/evidencia canónica. Foto posterior coherente procesa normalmente; el caso histórico no certifica invalidez vigente. Para preexistente aún sin Team conservar originalTeamName y observaciones como caso delimitado permitido, sin backfill.
 
 1. **Identidad/consulta:** dos sincronizaciones conservan IDs de Team/League; GET expone cuatro campos y no referencias/textos. Transferencia de Player cambia asociación por identidad; renombrado/liga de Team conserva ID (RF-001–RF-014/RF-019/RF-028/RF-029; SC-001–SC-006/SC-011).
 2. **Tres caminos:** presente válido contradice legacy y usa foto; ausente sin equipo recibe backfill exacto Arsenal/ARSENAL; Arsenal FC no coincide, cero/varios conservan evidencia; presente inválido mantiene team_id/active, sin fallback. Ningún Player perdido/duplicado; asociados previos no se remigran (RF-015–RF-018/RF-034/RF-036; SC-009/SC-010).
@@ -91,6 +121,15 @@ WHERE p.team_id IS NULL
 ## Dependencia operacional TheSportsDB
 
 [Documentación](https://www.thesportsdb.com/documentation): Free/Premium tienen límites diferentes; no suponer clave Premium ni completitud por devolver una fila. Mientras searchteams.php no acredite completitud relevante, resultado COMPLETENESS_UNPROVEN sin referencia. Es evaluación válida distinguida de NO_MATCH/AMBIGUOUS y no incumple RF-022. Un cambio de nivel sin nombre nuevo no habilita automáticamente reintento bajo RF-035; esa ampliación no se incluye.
+
+## Procedimiento operativo Release 1 (V5)
+
+1. Verificar binario final compatible: el despliegue de Release 1 incluye solo V5 y mappings intermedios. Comprobar que el binario arranca contra el esquema ya migrado antes de recibir tráfico; no prometer reversión directa por un cambio aditivo.
+2. Exclusión de escritores antiguos: detener instancias que no incluyan el modelo Team/League y ninguna sincronización ni job de imágenes concurrente antes de aplicar V5 y la primera foto.
+3. Backup consistente inmediato previo a aplicar V5, con punto de recuperación registrado y procedimiento de restauración aislado ensayado. Esta guía no declara backup realizado.
+4. Aplicación de V5: un único despliegue Flyway. Si falla, esquema anterior intacto por DDL transaccional de PostgreSQL; no forzar historial con repair a ciegas ni editar migraciones aplicadas.
+5. Primera sincronización completa y verificaciones del gate (marcador, asociaciones, casos, conteos e IDs) antes de considerar Release 1 confirmado.
+6. Cualquier fallo posterior es forward-only. No existe downgrade automático a binario previo ni restauración de textos eliminados en Release 2 sin backup explícito.
 
 ## Controles pendientes
 

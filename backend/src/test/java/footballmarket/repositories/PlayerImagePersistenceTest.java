@@ -9,10 +9,10 @@ import footballmarket.models.Player;
 import footballmarket.models.PlayerImageResolution;
 import footballmarket.models.PlayerImageSyncRun;
 import footballmarket.models.PlayerImageSyncRunItem;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.enums.PlayerImageResolutionStatus;
 import footballmarket.models.enums.PlayerImageSyncRunItemResult;
 import footballmarket.models.enums.PlayerImageSyncRunStatus;
-import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerImageSyncSummary;
 import footballmarket.services.PlayerImageAuditService;
 import footballmarket.services.PlayerImageRunRecoveryService;
@@ -92,7 +92,7 @@ class PlayerImagePersistenceTest {
           transaction.execute(
               status -> {
                 Player created = new Player("Name", "Team", "League", "Forward");
-                created.addExternalReference(PlayerProvider.THE_SPORTS_DB, "123");
+                created.addExternalReference(ExternalProvider.THE_SPORTS_DB, "123");
                 created.applyImages("https://thesportsdb.com/a", "https://thesportsdb.com/b");
                 players.saveAndFlush(created);
                 resolutions.saveAndFlush(new PlayerImageResolution(created));
@@ -151,7 +151,7 @@ class PlayerImagePersistenceTest {
           transaction.execute(
               status -> {
                 Player created = new Player("Name", "Team", "League", "Forward");
-                created.addExternalReference(PlayerProvider.THE_SPORTS_DB, "123");
+                created.addExternalReference(ExternalProvider.THE_SPORTS_DB, "123");
                 players.saveAndFlush(created);
                 PlayerImageResolution resolution = new PlayerImageResolution(created);
                 resolution.recordAttempt(PlayerImageResolutionStatus.NOT_FOUND, Instant.now());
@@ -165,7 +165,7 @@ class PlayerImagePersistenceTest {
                       .isEqualTo(PlayerImageResolutionStatus.NOT_FOUND));
       assertThat(players.findById(player.getId()))
           .hasValueSatisfying(saved -> assertThat(saved.getImageUrl()).isNull());
-      assertThat(references.findByProviderAndExternalId(PlayerProvider.THE_SPORTS_DB, "123"))
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.THE_SPORTS_DB, "123"))
           .hasValueSatisfying(
               reference -> assertThat(reference.getPlayer().getId()).isEqualTo(player.getId()));
     }
@@ -297,7 +297,7 @@ class PlayerImagePersistenceTest {
           transaction.execute(
               status -> {
                 Player created = new Player("Name", "Team", "League", "Forward");
-                created.addExternalReference(PlayerProvider.THE_SPORTS_DB, "123");
+                created.addExternalReference(ExternalProvider.THE_SPORTS_DB, "123");
                 created.applyImages("https://thesportsdb.com/photo", null);
                 players.saveAndFlush(created);
                 resolutions.saveAndFlush(new PlayerImageResolution(created));
@@ -332,7 +332,7 @@ class PlayerImagePersistenceTest {
       assertThat(runs.existsById(old.getId())).isFalse();
       assertThat(items.findByRunIdOrderByIdAsc(old.getId(), PageRequest.of(0, 20))).isEmpty();
       assertThat(resolutions.existsById(player.getId())).isTrue();
-      assertThat(references.findByProviderAndExternalId(PlayerProvider.THE_SPORTS_DB, "123"))
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.THE_SPORTS_DB, "123"))
           .isPresent();
       assertThat(players.findById(player.getId()))
           .hasValueSatisfying(

@@ -18,8 +18,10 @@ function isPlayerResponseDTO(value: unknown): value is PlayerResponseDTO {
 		isRecord(value) &&
 		isNonNegativeInteger(value.id) &&
 		typeof value.name === "string" &&
-		typeof value.team === "string" &&
-		typeof value.league === "string" &&
+		isNonNegativeInteger(value.teamId) &&
+		typeof value.teamName === "string" &&
+		isNonNegativeInteger(value.leagueId) &&
+		typeof value.leagueName === "string" &&
 		typeof value.position === "string" &&
 		(value.dateOfBirth === null || typeof value.dateOfBirth === "string") &&
 		(value.nationality === null || typeof value.nationality === "string") &&
@@ -67,8 +69,10 @@ export function toPlayer(dto: PlayerResponseDTO): Player {
 	return {
 		id: dto.id,
 		name: dto.name,
-		team: dto.team,
-		league: dto.league,
+		teamId: dto.teamId,
+		teamName: dto.teamName,
+		leagueId: dto.leagueId,
+		leagueName: dto.leagueName,
 		position: dto.position,
 		dateOfBirth: dto.dateOfBirth,
 		nationality: dto.nationality,

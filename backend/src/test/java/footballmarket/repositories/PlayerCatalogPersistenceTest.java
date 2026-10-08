@@ -3,10 +3,12 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.*;
 
 import footballmarket.models.Player;
-import footballmarket.models.enums.PlayerProvider;
+import footballmarket.models.enums.ExternalProvider;
+import footballmarket.models.records.LeagueCandidate;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
+import footballmarket.models.records.TeamCandidate;
 import footballmarket.services.PlayerCatalogService;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.support.PlayerReferenceReadGate;
@@ -66,16 +68,60 @@ class PlayerCatalogPersistenceTest {
   }
 
   private PlayerCandidate candidate(String id, String name) {
-    return new PlayerCandidate(id, name, "T", "L", "P", null, null);
+    return new PlayerCandidate(id, name, "T", "L", "P", null, null, "100");
   }
 
   private PlayerSnapshot snapshot(PlayerCandidate... candidates) {
-    return new PlayerSnapshot(List.of(candidates), candidates.length, 0);
+    LeagueCandidate league = new LeagueCandidate("10", "L");
+    TeamCandidate team = new TeamCandidate("100", "T", "10", true);
+    return new PlayerSnapshot(
+        List.of(candidates), candidates.length, 0, List.of(league), List.of(team), List.of());
   }
 
   @Nested
   @DisplayName("Persistencia del modelo vigente")
   class Persistence {
+    @Test
+    @DisplayName(
+        "La consulta carga equipo y liga fuera de transacción, filtra vigencia y no excluye por casos históricos")
+    void queryCurrentCatalogWithDetachedAssociations() {
+      // Arrange
+      jdbc.update("INSERT INTO leagues(id,name) VALUES (401,'League')");
+      jdbc.update(
+          "INSERT INTO teams(id,name,league_id,current) VALUES (501,'Current',401,true),(502,'Retired',401,false)");
+      jdbc.update(
+          "INSERT INTO players(id,name,team,league,position,active,team_id) VALUES "
+              + "(601,'First','Current','League','Forward',true,501),"
+              + "(602,'Inactive','Current','League','Forward',false,501),"
+              + "(603,'Retired','Retired','League','Forward',true,502),"
+              + "(604,'Unassociated','Original','League','Forward',true,NULL),"
+              + "(605,'Last','Current','League','Forward',true,501)");
+      jdbc.update(
+          "INSERT INTO pending_review_cases(category,cause_code,subject_type,subject_id,case_key,first_detected_at,last_detected_at,evidence) "
+              + "VALUES ('PLAYER_TEAM_UNRESOLVED','TEAM_UNRESOLVED','PLAYER',601,'historical',now(),now(),'{}'::jsonb)");
+
+      // Act
+      org.springframework.data.domain.Page<Player> first = catalog.getActivePlayers(0, 1);
+      org.springframework.data.domain.Page<Player> second = catalog.getActivePlayers(1, 1);
+      org.springframework.data.domain.Page<Player> beyond = catalog.getActivePlayers(2, 1);
+
+      // Assert / Verify: no transacción del test ni open-in-view para los objetos devueltos.
+      assertThat(first.getContent())
+          .singleElement()
+          .satisfies(
+              player -> {
+                assertThat(player.getId()).isEqualTo(601L);
+                assertThat(player.getTeam().getName()).isEqualTo("Current");
+                assertThat(player.getLeague().getName()).isEqualTo("League");
+              });
+      assertThat(first.getTotalElements()).isEqualTo(2);
+      assertThat(second.getContent()).extracting(Player::getId).containsExactly(605L);
+      assertThat(beyond.getContent()).isEmpty();
+      assertThat(beyond.getTotalElements()).isEqualTo(2);
+      jdbc.update("UPDATE players SET active=false");
+      assertThat(catalog.getActivePlayers(0, 20).getTotalElements()).isZero();
+    }
+
     @Test
     @DisplayName("Un error diferido al commit sin candidato atribuible es técnico y revierte todo")
     void revierteErrorSinCandidatoEnCommit() {
@@ -100,7 +146,7 @@ class PlayerCatalogPersistenceTest {
       catalog.applySynchronization(snapshot(input));
       assertThat(
               references.findByProviderAndExternalId(
-                  PlayerProvider.FOOTBALL_DATA, input.externalId()))
+                  ExternalProvider.FOOTBALL_DATA, input.externalId()))
           .hasValueSatisfying(
               reference -> {
                 assertThat(reference.getPlayer().getId()).isNotEqualTo(900000000000L);
@@ -116,7 +162,7 @@ class PlayerCatalogPersistenceTest {
       transaction.executeWithoutResult(
           status -> {
             Player local = new Player("Other origin", "T", "L", "P");
-            local.addExternalReference(PlayerProvider.THE_SPORTS_DB, "44");
+            local.addExternalReference(ExternalProvider.THE_SPORTS_DB, "44");
             players.saveAndFlush(local);
           });
       PlayerCandidate input = candidate("44", "Football player");
@@ -164,13 +210,13 @@ class PlayerCatalogPersistenceTest {
       catalog.applySynchronization(snapshot(first, second));
       Long originalId =
           references
-              .findByProviderAndExternalId(PlayerProvider.FOOTBALL_DATA, "race")
+              .findByProviderAndExternalId(ExternalProvider.FOOTBALL_DATA, "race")
               .orElseThrow()
               .getPlayer()
               .getId();
       Long otherId =
           references
-              .findByProviderAndExternalId(PlayerProvider.FOOTBALL_DATA, "other")
+              .findByProviderAndExternalId(ExternalProvider.FOOTBALL_DATA, "other")
               .orElseThrow()
               .getPlayer()
               .getId();
@@ -281,7 +327,7 @@ class PlayerCatalogPersistenceTest {
                     assertThat(player.getName()).isEqualTo("Concurrent owner");
                     assertThat(player.isActive()).isTrue();
                   });
-          assertThat(references.findByProviderAndExternalId(PlayerProvider.FOOTBALL_DATA, "race"))
+          assertThat(references.findByProviderAndExternalId(ExternalProvider.FOOTBALL_DATA, "race"))
               .hasValueSatisfying(
                   reference -> assertThat(reference.getPlayer().getId()).isEqualTo(owner));
           assertThat(
