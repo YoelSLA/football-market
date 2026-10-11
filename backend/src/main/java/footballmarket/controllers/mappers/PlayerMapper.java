@@ -24,8 +24,10 @@ public final class PlayerMapper {
     return new PlayerResponseDTO(
         player.getId(),
         player.getName(),
-        player.getTeam(),
-        player.getLeague(),
+        player.getTeam().getId(),
+        player.getTeam().getName(),
+        player.getLeague().getId(),
+        player.getLeague().getName(),
         player.getPosition(),
         player.getDateOfBirth(),
         player.getNationality(),

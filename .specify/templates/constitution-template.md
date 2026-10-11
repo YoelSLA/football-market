@@ -41,6 +41,12 @@
 <!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
 
 ## Governance
+
+<!-- Football Market: una enmienda MUST preservar estructura vigente y secciones ajenas.
+Versionado local: MAJOR para redefinición/eliminación incompatible; MINOR para ampliación
+compatible; PATCH para aclaraciones sin cambio semántico. Registrar impacto, conservar
+ratificación y actualizar última enmienda. Constitution gobierna el workflow SDD;
+esta plantilla no autoriza reescribir globalmente una constitución existente. -->
 <!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
 [GOVERNANCE_RULES]

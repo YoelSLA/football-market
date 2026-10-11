@@ -1,13 +1,16 @@
 package footballmarket.models;
 
-import footballmarket.models.enums.PlayerProvider;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -46,11 +49,9 @@ public class Player {
   @Column(nullable = false)
   private String name;
 
-  @Column(nullable = false)
-  private String team;
-
-  @Column(nullable = false)
-  private String league;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "team_id", nullable = false)
+  private Team team;
 
   @Column(nullable = false)
   private String position;
@@ -66,13 +67,41 @@ public class Player {
    * <p>La identidad en Football-Data.org se agrega por separado como referencia externa.
    *
    * @param name nombre del jugador
-   * @param team equipo según la fuente
-   * @param league liga según la fuente
+   * @param team equipo resuelto al que se asocia
    * @param position posición según la fuente
    */
-  public Player(String name, String team, String league, String position) {
-    this.update(name, team, league, position);
+  public Player(String name, Team team, String position) {
+    this.update(name, team, position);
     this.activate();
+  }
+
+  /** La liga se deriva exclusivamente del equipo asociado. */
+  public League getLeague() {
+    return this.team == null ? null : this.team.getLeague();
+  }
+
+  /** Actualiza datos válidos y asociación actual sin una liga independiente. */
+  public void update(String name, Team team, String position) {
+    requireText(name);
+    requireText(position);
+    if (team == null) {
+      throw new InvalidPlayerException("El jugador requiere un equipo resuelto");
+    }
+    if (this.name == null || !PlayerPresentation.equivalent(this.name, name)) {
+      this.name = name;
+    }
+    if (this.position == null || !PlayerPresentation.equivalent(this.position, position)) {
+      this.position = position;
+    }
+    this.associateTeam(team);
+  }
+
+  /** Asocia por identidad resuelta, sin modificar active. */
+  public void associateTeam(Team team) {
+    if (team == null) {
+      throw new InvalidPlayerException("La asociación requiere un equipo resuelto");
+    }
+    this.team = team;
   }
 
   /**
@@ -90,7 +119,7 @@ public class Player {
    * @param provider proveedor que asignó el identificador
    * @param externalId identificador del jugador en ese proveedor
    */
-  public void addExternalReference(PlayerProvider provider, String externalId) {
+  public void addExternalReference(ExternalProvider provider, String externalId) {
     if (this.externalReferences.stream()
         .anyMatch(
             reference ->
@@ -137,18 +166,6 @@ public class Player {
         this.fallbackImageUrl = thumbnail;
       }
     }
-  }
-
-  /** Válida todos los datos antes de modificar el estado del jugador. */
-  public void update(String name, String team, String league, String position) {
-    requireText(name);
-    requireText(team);
-    requireText(league);
-    requireText(position);
-    this.name = name;
-    this.team = team;
-    this.league = league;
-    this.position = position;
   }
 
   public void activate() {

@@ -17,7 +17,8 @@ public interface PlayerCatalogService {
    * las lecturas al proveedor. Cualquier otro error revierte la ejecución completa.
    *
    * @param playerSnapshot foto validada del proveedor
-   * @return resumen del intento confirmado
+   * @return resumen del intento confirmado; con todos los contadores a cero si la foto no permite
+   *     resolver una identidad requerida y por tanto no se aplica
    * @throws PlayerSynchronizationPersistenceException si la aplicación local falla por una causa
    *     técnica
    */

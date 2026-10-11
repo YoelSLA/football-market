@@ -18,15 +18,25 @@ public record PlayerResponseDTO(
             requiredMode = Schema.RequiredMode.REQUIRED)
         String name,
     @Schema(
-            description = "Equipo actual",
+            description = "Identificador interno del equipo actual",
+            example = "41",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+        Long teamId,
+    @Schema(
+            description = "Nombre actual del equipo asociado",
             example = "Real Betis Balompié",
             requiredMode = Schema.RequiredMode.REQUIRED)
-        String team,
+        String teamName,
     @Schema(
-            description = "Primera competición en el orden configurado",
+            description = "Identificador interno de la liga del equipo",
+            example = "12",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+        Long leagueId,
+    @Schema(
+            description = "Nombre actual de la liga del equipo",
             example = "Primera Division",
             requiredMode = Schema.RequiredMode.REQUIRED)
-        String league,
+        String leagueName,
     @Schema(
             description = "Posición del jugador",
             example = "Goalkeeper",

@@ -3,8 +3,6 @@ package footballmarket.integrations;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import footballmarket.integrations.exceptions.FootballDataRateLimitException;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -17,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -36,9 +36,27 @@ public class FootballDataIntegration {
   private static final int MAX_RETRIES = 3;
   private static final long DEFAULT_RETRY_SECONDS = 60;
 
+  /**
+   * Peticiones que el proveedor todavía puede servir en el minuto en curso por debajo de las cuales
+   * se espera a su reinicio en lugar de consumir el margen restante.
+   */
+  private static final int RESERVE_REQUESTS = 1;
+
+  private static final String AVAILABLE_REQUESTS_HEADER = "x-requests-available-minute";
+  private static final String COUNTER_RESET_HEADER = "X-RequestCounter-Reset";
+
   private final RestClient client;
   private final Clock clock;
   private final RetryWait retryWait;
+
+  /**
+   * Peticiones disponibles informadas por la última respuesta correcta, o {@code null} mientras el
+   * proveedor no haya comunicado su presupuesto. Solo alimenta la espera preventiva entre lecturas.
+   */
+  private Integer availableRequests;
+
+  /** Segundos hasta el reinicio de la ventana de peticiones informado por el proveedor. */
+  private long counterResetSeconds = DEFAULT_RETRY_SECONDS;
 
   /**
    * Crea la integración utilizando el cliente HTTP configurado para Football-Data.
@@ -69,22 +87,28 @@ public class FootballDataIntegration {
    * @throws FootballDataUnavailableException si no es posible obtener completamente la información
    *     de la competición
    */
-  public PlayerSnapshot fetchCompetition(String code) {
+  public CompetitionSnapshot fetchCompetition(String code) {
     try {
       Competition competition = this.read("/competitions/{code}", Competition.class, code);
       Teams teams = this.read("/competitions/{code}/teams", Teams.class, code);
 
-      if (teams.teams() == null) {
+      if (competition.id() == null
+          || competition.id() <= 0
+          || teams.teams() == null
+          || (teams.count() != null && teams.count() != teams.teams().size())) {
         throw new FootballDataUnavailableException();
       }
 
-      List<PlayerCandidate> players = new ArrayList<>();
+      List<PlayerData> players = new ArrayList<>();
+      LeagueData league = new LeagueData(competition.id().toString(), competition.name());
+      List<TeamData> teamCandidates = new ArrayList<>();
+      List<InvalidPlayerData> invalidPlayers = new ArrayList<>();
 
       int obtained = 0;
       int discarded = 0;
 
       for (TeamReference reference : teams.teams()) {
-        if (reference == null || reference.id() == null) {
+        if (reference == null || reference.id() == null || reference.id() <= 0) {
           throw new FootballDataUnavailableException();
         }
 
@@ -93,32 +117,43 @@ public class FootballDataIntegration {
         if (team.squad() == null) {
           throw new FootballDataUnavailableException();
         }
+        TeamData teamCandidate =
+            new TeamData(reference.id().toString(), team.name(), competition.id().toString(), true);
+        teamCandidates.add(teamCandidate);
 
         for (SquadMember member : team.squad()) {
           obtained++;
+          if (member == null || member.id() == null || member.id() <= 0) {
+            throw new FootballDataUnavailableException();
+          }
 
           String missing = missingField(member, team.name(), competition.name());
           if (missing != null) {
             discarded++;
+            invalidPlayers.add(
+                new InvalidPlayerData(
+                    member.id().toString(), reference.id().toString(), team.name(), missing));
             LOG.warn("Jugador descartado: falta el campo obligatorio {}", missing);
             continue;
           }
 
-          PlayerCandidate player =
-              new PlayerCandidate(
+          PlayerData player =
+              new PlayerData(
                   member.id().toString(),
                   member.name(),
                   team.name(),
                   competition.name(),
                   member.position(),
                   optionalDate(member.dateOfBirth()),
-                  optionalText(member.nationality()));
+                  optionalText(member.nationality()),
+                  reference.id().toString());
 
           players.add(player);
         }
       }
 
-      return new PlayerSnapshot(players, obtained, discarded);
+      return new CompetitionSnapshot(
+          players, obtained, discarded, List.of(league), teamCandidates, invalidPlayers);
 
     } catch (RestClientException | FootballDataUnavailableException ex) {
       LOG.warn("Lectura del proveedor fallida: comunicación o estructura incompleta");
@@ -129,9 +164,13 @@ public class FootballDataIntegration {
   /**
    * Realiza una petición GET a Football-Data y convierte la respuesta al tipo solicitado.
    *
+   * <p>Antes de emitir la lectura se respeta el presupuesto de peticiones informado por el
+   * proveedor, de modo que la espera ocurre de forma preventiva y no como reacción a un rechazo.
+   *
    * <p>Cuando la API responde con HTTP 429, la petición se reintenta respetando el valor del header
    * {@code Retry-After}. Si el header no está disponible o contiene un valor inválido, se utiliza
-   * un tiempo de espera predeterminado.
+   * un tiempo de espera predeterminado. Ese reintento permanece como red de seguridad para cuando
+   * el proveedor no informa su presupuesto.
    *
    * @param path ruta del recurso solicitado
    * @param type tipo esperado para el cuerpo de la respuesta
@@ -142,32 +181,36 @@ public class FootballDataIntegration {
    *     o se agotan los reintentos permitidos
    */
   private <T> T read(String path, Class<T> type, Object parameter) {
+    this.awaitAvailableBudget();
     for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        T body =
+        ResponseEntity<T> response =
             this.client
                 .get()
                 .uri(path, parameter)
                 .retrieve()
                 .onStatus(
                     status -> status.value() == HttpStatus.TOO_MANY_REQUESTS.value(),
-                    (request, response) -> {
+                    (request, resp) -> {
                       long retryAfterSeconds =
-                          this.parseRetryAfter(response.getHeaders().getFirst("Retry-After"));
+                          this.parseRetryAfter(resp.getHeaders().getFirst("Retry-After"));
 
                       throw new FootballDataRateLimitException(retryAfterSeconds);
                     })
                 .onStatus(
                     status -> !status.is2xxSuccessful(),
-                    (request, response) -> {
+                    (request, resp) -> {
                       throw new FootballDataUnavailableException();
                     })
-                .body(type);
+                .toEntity(type);
+
+        T body = response.getBody();
 
         if (body == null) {
           throw new FootballDataUnavailableException();
         }
 
+        this.recordBudget(response.getHeaders());
         return body;
 
       } catch (FootballDataRateLimitException ex) {
@@ -180,6 +223,67 @@ public class FootballDataIntegration {
     }
 
     throw new FootballDataUnavailableException();
+  }
+
+  /**
+   * Espera a la ventana de peticiones cuando el proveedor ya no alcanza a servir la foto completa.
+   *
+   * <p>La información de presupuesto es un control de transporte: no modifica la interpretación de
+   * las respuestas ni la decisión de aplicar o no la foto. Si el proveedor no informa el
+   * presupuesto se comporta como hasta ahora, delegando el control de ritmo al reintento ante HTTP
+   * 429.
+   *
+   * <p>La espera solo ocurre entre lecturas, nunca antes de la primera, de modo que una lectura
+   * aislada no queda penalizada por un presupuesto heredado de otra foto.
+   */
+  private void awaitAvailableBudget() {
+    if (this.availableRequests == null || this.availableRequests > RESERVE_REQUESTS) {
+      return;
+    }
+
+    this.waitBeforeRetry(this.counterResetSeconds);
+  }
+
+  /**
+   * Conserva el presupuesto de peticiones y el reinicio de ventana informados por el proveedor.
+   *
+   * <p>Valores ausentes o no numéricos se ignoran para preservar el comportamiento previo, en el
+   * que el ritmo solo reacciona al HTTP 429.
+   *
+   * @param headers encabezados de la última respuesta correcta del proveedor
+   */
+  private void recordBudget(HttpHeaders headers) {
+    String available = headers.getFirst(AVAILABLE_REQUESTS_HEADER);
+
+    if (available == null || available.isBlank()) {
+      return;
+    }
+
+    try {
+      this.availableRequests = Integer.valueOf(available.strip());
+      this.counterResetSeconds = this.parseCounterReset(headers.getFirst(COUNTER_RESET_HEADER));
+    } catch (NumberFormatException ex) {
+      // El proveedor no informa un presupuesto utilizable: se conserva el anterior.
+    }
+  }
+
+  /**
+   * Obtiene la cantidad de segundos indicada por el header de reinicio de la ventana de peticiones.
+   *
+   * @param counterReset valor recibido en el header de reinicio
+   * @return segundos a esperar; si el valor no es utilizable, la espera predeterminada
+   */
+  private long parseCounterReset(String counterReset) {
+    if (counterReset == null || counterReset.isBlank()) {
+      return DEFAULT_RETRY_SECONDS;
+    }
+
+    try {
+      long seconds = Long.parseLong(counterReset.strip());
+      return seconds >= 0 ? seconds : DEFAULT_RETRY_SECONDS;
+    } catch (NumberFormatException ex) {
+      return DEFAULT_RETRY_SECONDS;
+    }
   }
 
   /**
@@ -253,6 +357,44 @@ public class FootballDataIntegration {
     void await(Duration duration) throws InterruptedException;
   }
 
+  /** Datos externos de liga, sin entidad JPA ni identidad interna. */
+  public record LeagueData(String externalId, String name) {}
+
+  /** Contexto externo de equipo y disponibilidad del plantel. */
+  public record TeamData(
+      String externalId, String name, String leagueExternalId, boolean rosterKnown) {}
+
+  /** Registro externo válido con relación de origen explícita. */
+  public record PlayerData(
+      String externalId,
+      String name,
+      String team,
+      String league,
+      String position,
+      LocalDate dateOfBirth,
+      String nationality,
+      String teamExternalId) {}
+
+  /** Presencia externa inválida identificable, nunca ausencia. */
+  public record InvalidPlayerData(
+      String externalId, String teamExternalId, String teamName, String cause) {}
+
+  /** Respuestas requeridas completamente obtenidas antes de cualquier aplicación local. */
+  public record CompetitionSnapshot(
+      List<PlayerData> players,
+      int obtained,
+      int discardedInvalid,
+      List<LeagueData> leagues,
+      List<TeamData> teams,
+      List<InvalidPlayerData> invalidPlayers) {
+    public CompetitionSnapshot {
+      players = List.copyOf(players);
+      leagues = List.copyOf(leagues);
+      teams = List.copyOf(teams);
+      invalidPlayers = List.copyOf(invalidPlayers);
+    }
+  }
+
   /**
    * Determina si falta alguno de los campos obligatorios necesarios para crear un jugador.
    *
@@ -292,16 +434,16 @@ public class FootballDataIntegration {
    * @return {@code true} si la cadena no contiene un valor válido
    */
   private static boolean blank(String value) {
-    return value == null || value.isBlank();
+    return value == null || value.isBlank() || value.length() > 255;
   }
 
   /** Representa la información necesaria de una competición recibida desde Football-Data. */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  private record Competition(String name) {}
+  private record Competition(Long id, String name) {}
 
   /** Representa la colección de equipos pertenecientes a una competición. */
   @JsonIgnoreProperties(ignoreUnknown = true)
-  private record Teams(List<TeamReference> teams) {}
+  private record Teams(Integer count, List<TeamReference> teams) {}
 
   /** Representa la referencia a un equipo devuelta en el listado de una competición. */
   @JsonIgnoreProperties(ignoreUnknown = true)

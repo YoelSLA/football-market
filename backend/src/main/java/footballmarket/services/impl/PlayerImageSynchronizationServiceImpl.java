@@ -13,10 +13,10 @@ import footballmarket.models.PlayerIdentityMatcher.Candidate;
 import footballmarket.models.PlayerImageResolution;
 import footballmarket.models.PlayerImageSyncRun;
 import footballmarket.models.PlayerImageSyncRunItem;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.enums.PlayerImageResolutionStatus;
 import footballmarket.models.enums.PlayerImageSkipReason;
 import footballmarket.models.enums.PlayerImageSyncRunItemResult;
-import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerIdentityAliases;
 import footballmarket.models.records.PlayerImageSyncSummary;
 import footballmarket.repositories.PlayerExternalReferenceRepository;
@@ -230,9 +230,9 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
         player.getDateOfBirth(),
         player.getNationality());
 
-    if (!player.isActive()) {
+    if (!player.isActive() || player.getTeam() == null) {
 
-      LOG.info("Jugador inactivo, se omite: playerId={}", playerId);
+      LOG.info("Jugador inactivo o sin equipo asociado, se omite: playerId={}", playerId);
 
       return null;
     }
@@ -287,7 +287,7 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
     }
 
     Optional<PlayerExternalReference> reference =
-        this.references.findByPlayerIdAndProvider(playerId, PlayerProvider.THE_SPORTS_DB);
+        this.references.findByPlayerIdAndProvider(playerId, ExternalProvider.THE_SPORTS_DB);
 
     LOG.info(
         "Referencia TheSportsDB: playerId={}, existe={}, externalId={}",
@@ -619,7 +619,7 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
 
       Optional<PlayerExternalReference> owner =
           this.references.findByProviderAndExternalId(
-              PlayerProvider.THE_SPORTS_DB, match.externalId());
+              ExternalProvider.THE_SPORTS_DB, match.externalId());
 
       if (owner.isPresent() && !owner.get().getPlayer().getId().equals(player.getId())) {
 
@@ -647,7 +647,7 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
           player.getId(),
           match.externalId());
 
-      player.addExternalReference(PlayerProvider.THE_SPORTS_DB, match.externalId());
+      player.addExternalReference(ExternalProvider.THE_SPORTS_DB, match.externalId());
     }
 
     String previousImage = player.getImageUrl();

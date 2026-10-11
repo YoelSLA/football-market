@@ -6,13 +6,14 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 
 | Tarea | Contexto adicional |
 | --- | --- |
+| Specs, SDD, Trello, Git o implementación de features | El agente MUST leer y seguir el [workflow operativo SDD + Trello + Git](docs/development/sdd-workflow.md). |
 | Código, estructura o dependencias arquitectónicas | [Arquitectura común](docs/architecture.md): guía de lectura al inicio. |
 | Stack, tecnologías o dependencias de herramientas/librerías | [Tecnologías del backend](docs/backend/technologies.md) o [tecnologías del frontend](docs/frontend/technologies.md), según el área afectada. |
 | Área backend afectada | [Instrucciones del backend](backend/AGENTS.md) y el contexto que estas indiquen. |
 | Área frontend afectada | [Instrucciones del frontend](frontend/AGENTS.md) y el contexto que estas indiquen. |
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
 | Creación o nombre de una rama | [Constitución §7](.specify/memory/constitution.md): formato, tipos y reglas obligatorias. |
-| Paso de Spec Kit | Skill correspondiente en `.agents/skills/`; ejecutar solo el paso solicitado. |
+| Paso de Spec Kit | Definición del comando correspondiente en `.opencode/commands/`, subordinada al workflow SDD y Constitution; ejecutar solo el paso solicitado. |
 
 No cargar instrucciones ni documentación del backend para una tarea exclusivamente frontend ni viceversa. Una tarea que afecte ambas áreas debe consultar ambos archivos específicos.
 
@@ -27,7 +28,7 @@ No cargar instrucciones ni documentación del backend para una tarea exclusivame
 
 Una spec nueva se crea con el flujo normal, sin `--reuse`. Para retomar trabajo que pertenece a una spec existente, usar siempre `--reuse` con el `--short-name` de esa spec. **No provocar un identificador nuevo para continuar trabajo de una spec existente**: sin `--reuse` el flujo asigna el siguiente número y crea una spec distinta.
 
-- El flujo garantiza que exista la rama asociada. Es idempotente: si la rama ya existe localmente la reutiliza, si existe solo en remoto crea la rama local siguiendo la remota, y nunca genera ramas duplicadas ni sufijos adicionales.
+- El flujo intenta crear o reutilizar la rama asociada cuando el estado Git lo permite. Es idempotente: si la rama ya existe localmente la reutiliza, si existe solo en remoto crea la rama local siguiendo la remota, y nunca genera ramas duplicadas ni sufijos adicionales. Un fallo u omisión de ese paso no acredita que la rama esté disponible.
 - `--reuse` reutiliza el `spec-id`, el nombre de spec y el directorio existentes, y no sobrescribe `spec.md` ni los demás artefactos. Resuelve por coincidencia exacta del nombre de directorio o del scope; sin coincidencia o con varias, falla y las lista, sin elegir por su cuenta. Combinado con `--number`, desambigua o valida el identificador, y falla si contradice la spec encontrada.
 - `--reuse` es distinto de `--allow-existing-branch`: el primero localiza una spec existente por scope; el segundo solo permite que el flujo de creación caiga sobre un directorio ya existente.
 - Ninguno de los dos descarta, sobrescribe ni hace `stash` de cambios locales. Si hay cambios rastreados pendientes o `HEAD` está separado, el paso de rama se aborta con un mensaje y deja el estado de trabajo intacto; la spec se crea o se reutiliza igual.

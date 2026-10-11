@@ -5,14 +5,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import footballmarket.integrations.TheSportsDbIntegration;
+import footballmarket.models.League;
 import footballmarket.models.Player;
 import footballmarket.models.PlayerImageResolution;
 import footballmarket.models.PlayerImageSyncRun;
 import footballmarket.models.PlayerImageSyncRunItem;
+import footballmarket.models.Team;
+import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.enums.PlayerImageResolutionStatus;
 import footballmarket.models.enums.PlayerImageSyncRunItemResult;
 import footballmarket.models.enums.PlayerImageSyncRunStatus;
-import footballmarket.models.enums.PlayerProvider;
 import footballmarket.models.records.PlayerImageSyncSummary;
 import footballmarket.services.PlayerImageAuditService;
 import footballmarket.services.PlayerImageRunRecoveryService;
@@ -47,6 +49,8 @@ import org.springframework.transaction.support.TransactionTemplate;
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 class PlayerImagePersistenceTest {
   @Autowired private PlayerRepository players;
+  @Autowired private LeagueRepository leagues;
+  @Autowired private TeamRepository teams;
   @Autowired private PlayerExternalReferenceRepository references;
   @Autowired private PlayerImageResolutionRepository resolutions;
   @Autowired private PlayerImageSyncRunRepository runs;
@@ -67,13 +71,13 @@ class PlayerImagePersistenceTest {
       Player first =
           transaction.execute(
               status -> {
-                Player player = new Player("One", "Team", "League", "Forward");
+                Player player = new Player("One", persistTeam(), "Forward");
                 return players.saveAndFlush(player);
               });
       Player second =
           transaction.execute(
               status -> {
-                Player player = new Player("Two", "Team", "League", "Forward");
+                Player player = new Player("Two", persistTeam(), "Forward");
                 player.deactivate();
                 return players.saveAndFlush(player);
               });
@@ -91,8 +95,8 @@ class PlayerImagePersistenceTest {
       Player player =
           transaction.execute(
               status -> {
-                Player created = new Player("Name", "Team", "League", "Forward");
-                created.addExternalReference(PlayerProvider.THE_SPORTS_DB, "123");
+                Player created = new Player("Name", persistTeam(), "Forward");
+                created.addExternalReference(ExternalProvider.THE_SPORTS_DB, "123");
                 created.applyImages("https://thesportsdb.com/a", "https://thesportsdb.com/b");
                 players.saveAndFlush(created);
                 resolutions.saveAndFlush(new PlayerImageResolution(created));
@@ -117,7 +121,7 @@ class PlayerImagePersistenceTest {
       TransactionTemplate transaction = new TransactionTemplate(manager);
       Player player =
           transaction.execute(
-              status -> players.saveAndFlush(new Player("Name", "Team", "League", "Forward")));
+              status -> players.saveAndFlush(new Player("Name", persistTeam(), "Forward")));
       PlayerImageSyncRun run =
           transaction.execute(
               status ->
@@ -150,8 +154,8 @@ class PlayerImagePersistenceTest {
       Player player =
           transaction.execute(
               status -> {
-                Player created = new Player("Name", "Team", "League", "Forward");
-                created.addExternalReference(PlayerProvider.THE_SPORTS_DB, "123");
+                Player created = new Player("Name", persistTeam(), "Forward");
+                created.addExternalReference(ExternalProvider.THE_SPORTS_DB, "123");
                 players.saveAndFlush(created);
                 PlayerImageResolution resolution = new PlayerImageResolution(created);
                 resolution.recordAttempt(PlayerImageResolutionStatus.NOT_FOUND, Instant.now());
@@ -165,7 +169,7 @@ class PlayerImagePersistenceTest {
                       .isEqualTo(PlayerImageResolutionStatus.NOT_FOUND));
       assertThat(players.findById(player.getId()))
           .hasValueSatisfying(saved -> assertThat(saved.getImageUrl()).isNull());
-      assertThat(references.findByProviderAndExternalId(PlayerProvider.THE_SPORTS_DB, "123"))
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.THE_SPORTS_DB, "123"))
           .hasValueSatisfying(
               reference -> assertThat(reference.getPlayer().getId()).isEqualTo(player.getId()));
     }
@@ -176,7 +180,7 @@ class PlayerImagePersistenceTest {
       TransactionTemplate transaction = new TransactionTemplate(manager);
       Player player =
           transaction.execute(
-              status -> players.saveAndFlush(new Player("Name", "Team", "League", "Forward")));
+              status -> players.saveAndFlush(new Player("Name", persistTeam(), "Forward")));
       PlayerImageSyncRun run =
           transaction.execute(
               status ->
@@ -223,7 +227,7 @@ class PlayerImagePersistenceTest {
       TransactionTemplate transaction = new TransactionTemplate(manager);
       Player player =
           transaction.execute(
-              status -> players.saveAndFlush(new Player("Name", "Team", "League", "Forward")));
+              status -> players.saveAndFlush(new Player("Name", persistTeam(), "Forward")));
       assertThat(resolutions.findById(player.getId())).isEmpty();
       when(integration.search("Name")).thenReturn(List.of());
 
@@ -258,7 +262,7 @@ class PlayerImagePersistenceTest {
       Instant started = Instant.now().minusSeconds(60);
       Player player =
           transaction.execute(
-              status -> players.saveAndFlush(new Player("Name", "Team", "League", "Forward")));
+              status -> players.saveAndFlush(new Player("Name", persistTeam(), "Forward")));
       PlayerImageSyncRun first =
           transaction.execute(status -> runs.saveAndFlush(new PlayerImageSyncRun(false, started)));
       PlayerImageSyncRun second =
@@ -296,8 +300,8 @@ class PlayerImagePersistenceTest {
       Player player =
           transaction.execute(
               status -> {
-                Player created = new Player("Name", "Team", "League", "Forward");
-                created.addExternalReference(PlayerProvider.THE_SPORTS_DB, "123");
+                Player created = new Player("Name", persistTeam(), "Forward");
+                created.addExternalReference(ExternalProvider.THE_SPORTS_DB, "123");
                 created.applyImages("https://thesportsdb.com/photo", null);
                 players.saveAndFlush(created);
                 resolutions.saveAndFlush(new PlayerImageResolution(created));
@@ -332,7 +336,7 @@ class PlayerImagePersistenceTest {
       assertThat(runs.existsById(old.getId())).isFalse();
       assertThat(items.findByRunIdOrderByIdAsc(old.getId(), PageRequest.of(0, 20))).isEmpty();
       assertThat(resolutions.existsById(player.getId())).isTrue();
-      assertThat(references.findByProviderAndExternalId(PlayerProvider.THE_SPORTS_DB, "123"))
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.THE_SPORTS_DB, "123"))
           .isPresent();
       assertThat(players.findById(player.getId()))
           .hasValueSatisfying(
@@ -350,7 +354,7 @@ class PlayerImagePersistenceTest {
       Player first =
           transaction.execute(
               status -> {
-                Player created = new Player("First", "Team", "League", "Forward");
+                Player created = new Player("First", persistTeam(), "Forward");
                 created.applyImages("https://thesportsdb.com/photo", null);
                 players.saveAndFlush(created);
                 PlayerImageResolution resolution = new PlayerImageResolution(created);
@@ -362,7 +366,7 @@ class PlayerImagePersistenceTest {
           transaction.execute(
               status -> {
                 Player created =
-                    players.saveAndFlush(new Player("Second", "Team", "League", "Forward"));
+                    players.saveAndFlush(new Player("Second", persistTeam(), "Forward"));
                 PlayerImageResolution resolution = new PlayerImageResolution(created);
                 resolution.recordAttempt(PlayerImageResolutionStatus.RETRYABLE_ERROR, finished);
                 resolutions.saveAndFlush(resolution);
@@ -455,13 +459,13 @@ class PlayerImagePersistenceTest {
           transaction.execute(
               status -> {
                 Player created =
-                    players.saveAndFlush(new Player("First", "Team", "League", "Forward"));
+                    players.saveAndFlush(new Player("First", persistTeam(), "Forward"));
                 resolutions.saveAndFlush(new PlayerImageResolution(created));
                 return created;
               });
       Player second =
           transaction.execute(
-              status -> players.saveAndFlush(new Player("Second", "Team", "League", "Forward")));
+              status -> players.saveAndFlush(new Player("Second", persistTeam(), "Forward")));
       Long runId =
           transaction.execute(
               status -> {
@@ -494,5 +498,10 @@ class PlayerImagePersistenceTest {
                 assertThat(item.getFinishedAt()).isNull();
               });
     }
+  }
+
+  private Team persistTeam() {
+    League league = leagues.saveAndFlush(new League("League"));
+    return teams.saveAndFlush(new Team("Team", league, true));
   }
 }

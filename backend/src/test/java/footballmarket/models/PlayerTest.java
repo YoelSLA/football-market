@@ -12,6 +12,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class PlayerTest {
 
+  private static Team team() {
+    return new Team("Team", new League("League"), true);
+  }
+
   @Nested
   @DisplayName("Actualización y estado del jugador")
   class Lifecycle {
@@ -19,7 +23,7 @@ class PlayerTest {
     @DisplayName("Un jugador nuevo espera un identificador interno generado y comienza activo")
     void creaJugadorActivo() {
       // Act
-      Player player = new Player("Player", "Team", "League", "Forward");
+      Player player = new Player("Player", team(), "Forward");
 
       // Assert
       assertThat(player.getId()).isNull();
@@ -30,7 +34,7 @@ class PlayerTest {
     @DisplayName("Desactiva un jugador sin modificar su identificador")
     void desactivaJugador() {
       // Arrange
-      Player player = new Player("Player", "Team", "League", "Forward");
+      Player player = new Player("Player", team(), "Forward");
 
       // Act
       player.deactivate();
@@ -44,15 +48,17 @@ class PlayerTest {
     @DisplayName("Actualiza los datos del jugador sin cambiar su identificador")
     void actualizaJugador() {
       // Arrange
-      Player player = new Player("Player", "Team", "League", "Forward");
+      Player player = new Player("Player", team(), "Forward");
 
       // Act
-      player.update("New name", "New team", "New league", "Goalkeeper");
+      League newLeague = new League("New league");
+      Team newTeam = new Team("New team", newLeague, true);
+      player.update("New name", newTeam, "Goalkeeper");
 
       // Assert
       assertThat(player.getName()).isEqualTo("New name");
-      assertThat(player.getTeam()).isEqualTo("New team");
-      assertThat(player.getLeague()).isEqualTo("New league");
+      assertThat(player.getTeam()).isSameAs(newTeam);
+      assertThat(player.getLeague()).isSameAs(newLeague);
       assertThat(player.getPosition()).isEqualTo("Goalkeeper");
       assertThat(player.getId()).isNull();
     }
@@ -61,7 +67,7 @@ class PlayerTest {
     @DisplayName("Reactiva un jugador previamente inactivo")
     void reactivaJugador() {
       // Arrange
-      Player player = new Player("Player", "Team", "League", "Forward");
+      Player player = new Player("Player", team(), "Forward");
       player.deactivate();
 
       // Act
@@ -69,6 +75,17 @@ class PlayerTest {
 
       // Assert
       assertThat(player.isActive()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Rechaza asociar un jugador sin equipo resuelto")
+    void rechazaAsociacionAusente() {
+      // Arrange
+      Player player = new Player("Player", team(), "Forward");
+
+      // Act / Assert
+      assertThatThrownBy(() -> player.associateTeam(null))
+          .isInstanceOf(InvalidPlayerException.class);
     }
   }
 
@@ -78,7 +95,7 @@ class PlayerTest {
     @Test
     @DisplayName("Los datos opcionales ausentes conservan los valores conocidos")
     void conservaOpcionales() {
-      Player player = new Player("N", "T", "L", "P");
+      Player player = new Player("N", team(), "P");
       java.time.LocalDate birth = java.time.LocalDate.of(1990, 6, 20);
       player.updateOptionalDetails(birth, "Spain");
       player.updateOptionalDetails(null, " ");
@@ -92,25 +109,7 @@ class PlayerTest {
     @ValueSource(strings = {" ", "\t"})
     @DisplayName("Rechaza un nombre vacío o en blanco")
     void rechazaNombreInvalido(String invalid) {
-      assertThatThrownBy(() -> new Player(invalid, "T", "L", "P"))
-          .isInstanceOf(InvalidPlayerException.class);
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {" ", "\t"})
-    @DisplayName("Rechaza un equipo vacío o en blanco")
-    void rechazaEquipoInvalido(String invalid) {
-      assertThatThrownBy(() -> new Player("N", invalid, "L", "P"))
-          .isInstanceOf(InvalidPlayerException.class);
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @ValueSource(strings = {" ", "\t"})
-    @DisplayName("Rechaza una liga vacía o en blanco")
-    void rechazaLigaInvalida(String invalid) {
-      assertThatThrownBy(() -> new Player("N", "T", invalid, "P"))
+      assertThatThrownBy(() -> new Player(invalid, team(), "P"))
           .isInstanceOf(InvalidPlayerException.class);
     }
 
@@ -119,7 +118,7 @@ class PlayerTest {
     @ValueSource(strings = {" ", "\t"})
     @DisplayName("Rechaza una posición vacía o en blanco")
     void rechazaPosicionInvalida(String invalid) {
-      assertThatThrownBy(() -> new Player("N", "T", "L", invalid))
+      assertThatThrownBy(() -> new Player("N", team(), invalid))
           .isInstanceOf(InvalidPlayerException.class);
     }
 
@@ -129,10 +128,10 @@ class PlayerTest {
     @DisplayName("Una actualización inválida no modifica parcialmente al jugador")
     void conservaDatosTrasActualizacionInvalida(String invalid) {
       // Arrange
-      Player player = new Player("N", "T", "L", "P");
+      Player player = new Player("N", team(), "P");
 
       // Act / Assert
-      assertThatThrownBy(() -> player.update("Changed", "T", "L", invalid))
+      assertThatThrownBy(() -> player.update("Changed", team(), invalid))
           .isInstanceOf(InvalidPlayerException.class);
 
       // Verify

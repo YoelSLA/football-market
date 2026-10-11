@@ -811,9 +811,9 @@ if $JSON_MODE; then
         fi
     else
         if [ "$DRY_RUN" = true ]; then
-            printf '{"BRANCH_NAME":"%s","SPEC_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s","BRANCH_STATUS":"%s","DRY_RUN":true}\n' "$(json_escape "$BRANCH_NAME")" "$(json_escape "$SPEC_NAME")" "$(json_escape "$SPEC_FILE")" "$(json_escape "$FEATURE_NUM")" "$(json_escape "$BRANCH_STATUS")"
+            printf '{"BRANCH_NAME":"%s","SPEC_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s","BRANCH_STATUS":"%s","SPEC_ACTION":"%s","DRY_RUN":true}\n' "$(json_escape "$BRANCH_NAME")" "$(json_escape "$SPEC_NAME")" "$(json_escape "$SPEC_FILE")" "$(json_escape "$FEATURE_NUM")" "$(json_escape "$BRANCH_STATUS")" "$(json_escape "$SPEC_ACTION")"
         else
-            printf '{"BRANCH_NAME":"%s","SPEC_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s","BRANCH_STATUS":"%s"}\n' "$(json_escape "$BRANCH_NAME")" "$(json_escape "$SPEC_NAME")" "$(json_escape "$SPEC_FILE")" "$(json_escape "$FEATURE_NUM")" "$(json_escape "$BRANCH_STATUS")"
+            printf '{"BRANCH_NAME":"%s","SPEC_NAME":"%s","SPEC_FILE":"%s","FEATURE_NUM":"%s","BRANCH_STATUS":"%s","SPEC_ACTION":"%s"}\n' "$(json_escape "$BRANCH_NAME")" "$(json_escape "$SPEC_NAME")" "$(json_escape "$SPEC_FILE")" "$(json_escape "$FEATURE_NUM")" "$(json_escape "$BRANCH_STATUS")" "$(json_escape "$SPEC_ACTION")"
         fi
     fi
 else

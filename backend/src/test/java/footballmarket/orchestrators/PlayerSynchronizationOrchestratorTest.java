@@ -8,6 +8,7 @@ import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.services.FootballDataPlayerService;
 import footballmarket.services.PlayerCatalogService;
+import footballmarket.services.TeamEnrichmentService;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -23,8 +24,9 @@ import org.mockito.InOrder;
 class PlayerSynchronizationOrchestratorTest {
   private final FootballDataPlayerService source = mock(FootballDataPlayerService.class);
   private final PlayerCatalogService catalog = mock(PlayerCatalogService.class);
+  private final TeamEnrichmentService enrichment = mock(TeamEnrichmentService.class);
   private final PlayerSynchronizationOrchestrator orchestrator =
-      new PlayerSynchronizationOrchestrator(source, catalog);
+      new PlayerSynchronizationOrchestrator(source, catalog, enrichment);
 
   @Nested
   @DisplayName("Coordinación de la sincronización")
@@ -40,12 +42,11 @@ class PlayerSynchronizationOrchestratorTest {
           .isInstanceOf(FootballDataUnavailableException.class);
 
       // Verify
-      verifyNoInteractions(catalog);
+      verifyNoInteractions(catalog, enrichment);
     }
 
     @Test
-    @DisplayName(
-        "Obtiene únicamente la foto de Football-Data y la entrega sin consultas de enriquecimiento")
+    @DisplayName("Aplica la foto completa y solo después solicita enriquecimiento independiente")
     void aplicaElConjuntoCompletoUnaSolaVez() {
       // Arrange
       PlayerSnapshot snapshot = new PlayerSnapshot(List.of(), 0, 0);
@@ -57,11 +58,47 @@ class PlayerSynchronizationOrchestratorTest {
       assertThat(orchestrator.synchronize()).isSameAs(result);
 
       // Verify
-      InOrder order = inOrder(source, catalog);
+      InOrder order = inOrder(source, catalog, enrichment);
       order.verify(source).fetchSnapshot();
       order.verify(catalog).applySynchronization(snapshot);
+      order.verify(enrichment).enrichCurrentTeams();
       order.verifyNoMoreInteractions();
-      verifyNoMoreInteractions(source, catalog);
+      verifyNoMoreInteractions(source, catalog, enrichment);
+    }
+
+    @Test
+    @DisplayName("El fallo de enriquecimiento no altera el resultado principal confirmado")
+    void enrichmentFailurePreservesResult() {
+      // Arrange
+      PlayerSnapshot snapshot = new PlayerSnapshot(List.of(), 0, 0);
+      PlayerSynchronizationResult result = new PlayerSynchronizationResult(0, 0, 0, 0, 0);
+      when(source.fetchSnapshot()).thenReturn(snapshot);
+      when(catalog.applySynchronization(snapshot)).thenReturn(result);
+      doThrow(new FootballDataUnavailableException()).when(enrichment).enrichCurrentTeams();
+
+      // Act / Assert
+      assertThat(orchestrator.synchronize()).isSameAs(result);
+
+      // Verify
+      verify(catalog).applySynchronization(snapshot);
+      verify(enrichment).enrichCurrentTeams();
+    }
+
+    @Test
+    @DisplayName("El fallo de aplicación principal impide iniciar enriquecimiento")
+    void principalFailurePreventsEnrichment() {
+      // Arrange
+      PlayerSnapshot snapshot = new PlayerSnapshot(List.of(), 0, 0);
+      when(source.fetchSnapshot()).thenReturn(snapshot);
+      when(catalog.applySynchronization(snapshot))
+          .thenThrow(new FootballDataUnavailableException());
+
+      // Act / Assert
+      assertThatThrownBy(orchestrator::synchronize)
+          .isInstanceOf(FootballDataUnavailableException.class);
+
+      // Verify
+      verifyNoInteractions(enrichment);
     }
   }
 

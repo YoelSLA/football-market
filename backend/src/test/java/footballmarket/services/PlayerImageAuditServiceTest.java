@@ -8,10 +8,12 @@ import footballmarket.integrations.TheSportsDbIntegration;
 import footballmarket.models.enums.PlayerImageResolutionStatus;
 import footballmarket.models.enums.PlayerImageSyncRunItemResult;
 import footballmarket.models.enums.PlayerImageSyncRunStatus;
+import footballmarket.models.records.LeagueCandidate;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerImageSyncRunItemRecord;
 import footballmarket.models.records.PlayerImageSyncSummary;
 import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.models.records.TeamCandidate;
 import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -39,15 +41,29 @@ class PlayerImageAuditServiceTest {
   @Autowired private PlayerImageAuditService audit;
   @MockitoBean private TheSportsDbIntegration integration;
 
+  /**
+   * Foto con liga y equipo explícitos: desde V5 el jugador solo se crea si su equipo resuelve, y el
+   * enriquecimiento de imágenes omite los jugadores sin equipo resuelto.
+   */
+  private PlayerSnapshot photoWithTeam(String externalId, String name, boolean active) {
+    PlayerCandidate player =
+        new PlayerCandidate(externalId, name, "Team", "League", "Forward", null, null, "100");
+    return new PlayerSnapshot(
+        List.of(player),
+        1,
+        0,
+        List.of(new LeagueCandidate("10", "League")),
+        List.of(new TeamCandidate("100", "Team", "10", true)),
+        List.of());
+  }
+
   @Nested
   @DisplayName("Lectura de auditoría por Service")
   class Audit {
     @Test
     @DisplayName("Devuelve el resumen sin items y conserva la contabilidad del run")
     void readsSummaryWithoutEmbeddingItems() {
-      PlayerCandidate player =
-          new PlayerCandidate("one", "Name", "Team", "League", "Forward", null, null);
-      catalog.applySynchronization(new PlayerSnapshot(List.of(player), 1, 0));
+      catalog.applySynchronization(photoWithTeam("one", "Name", true));
       when(integration.search("Name")).thenReturn(List.of());
       PlayerImageSyncSummary finished = synchronization.synchronize(false);
 
@@ -76,9 +92,7 @@ class PlayerImageAuditServiceTest {
     @Test
     @DisplayName("Historial e items mantienen metadatos y defaults de página")
     void listsWithPagination() {
-      PlayerCandidate player =
-          new PlayerCandidate("two", "Name", "Team", "League", "Forward", null, null);
-      catalog.applySynchronization(new PlayerSnapshot(List.of(player), 1, 0));
+      catalog.applySynchronization(photoWithTeam("two", "Name", true));
       when(integration.search("Name")).thenReturn(List.of());
       PlayerImageSyncSummary run = synchronization.synchronize(false);
 

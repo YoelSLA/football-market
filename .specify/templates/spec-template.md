@@ -1,5 +1,10 @@
 # Feature Specification: [FEATURE NAME]
 
+<!-- MUST seguir Constitution y docs/development/sdd-workflow.md.
+Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
+manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,
+no de épicas REQ. La existencia de este archivo no completa Specify ni habilita Ready. -->
+
 **Feature Branch**: `[<type>/<spec-id>-<scope>]` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `<spec-id>-<scope>`, sin el prefijo de tipo. La convención de ramas es normativa; ver la constitución §7.
 
 **Created**: [DATE]

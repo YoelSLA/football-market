@@ -9,16 +9,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "football-data")
 public record FootballDataProperties(String apiKey, String baseUrl, List<String> competitions) {
 
-  private static final Set<String> REQUIRED_COMPETITIONS = Set.of("PL", "BL1", "PD", "SA", "FL1");
-
   /**
    * Construye la configuración de Football-Data validando las competiciones requeridas.
    *
-   * <p>La configuración debe contener exactamente las cinco ligas soportadas, sin exigir un orden
-   * específico. La lista recibida se copia defensivamente para evitar modificaciones externas.
+   * <p>La lista no vacía admite competiciones adicionales sin duplicados y conserva su orden.
    *
-   * @throws InvalidFootballDataConfigurationException si las competiciones configuradas no
-   *     coinciden con las requeridas
+   * @throws InvalidFootballDataConfigurationException si las competiciones son vacías, inválidas o
+   *     duplicadas
    */
   public FootballDataProperties {
     validateCompetitions(competitions);
@@ -26,18 +23,19 @@ public record FootballDataProperties(String apiKey, String baseUrl, List<String>
   }
 
   /**
-   * Válida que estén configuradas exactamente las competiciones soportadas por la aplicación.
+   * Valida que haya al menos una competición y que todos sus códigos sean únicos y no vacíos.
    *
    * @param competitions competiciones configuradas para consultar Football-Data
-   * @throws InvalidFootballDataConfigurationException si la lista es nula o las competiciones no
-   *     coinciden exactamente con las requeridas
+   * @throws InvalidFootballDataConfigurationException si la lista es nula, vacía o inválida
    */
   private static void validateCompetitions(List<String> competitions) {
     if (competitions == null
-        || competitions.size() != REQUIRED_COMPETITIONS.size()
-        || !Set.copyOf(competitions).equals(REQUIRED_COMPETITIONS)) {
+        || competitions.isEmpty()
+        || competitions.stream()
+            .anyMatch(code -> code == null || code.isBlank() || !code.equals(code.strip()))
+        || Set.copyOf(competitions).size() != competitions.size()) {
       throw new InvalidFootballDataConfigurationException(
-          "Debe configurar las cinco ligas PL,BL1,PD,SA,FL1, sin faltantes ni adicionales");
+          "Debe configurar al menos una competición, con códigos no vacíos y sin duplicados");
     }
   }
 
