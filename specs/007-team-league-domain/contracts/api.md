@@ -1,5 +1,9 @@
 # Contratos HTTP: Dominio de equipos y ligas
 
+## Vigencia — simplificación DEV 2026-10-10
+
+US06 y sus excepciones legacy se retiran conforme [spec.md](../spec.md). Todo Player persistido tiene Team obligatorio. Las reglas B-V5-01–05 siguientes siguen vigentes como cardinalidad/protección/presentación/opcionales, no como infraestructura canónica. No hay readiness, materialización, marcador ni releases. GET/POST y frontend conservan su contrato. Las menciones de un Player previo sin asociación quedan sustituidas por la obligatoriedad RF-004.
+
 ## GET /api/players
 
 B-V5-05: dateOfBirth y nationality se exponen exactamente como quedaron persistidos tras la consolidación por atributo, incluido null cuando las referencias válidas entran en conflicto y no había valor previo. Sin campos nuevos, sin normalización y sin efecto sobre teamId/teamName/leagueId/leagueName.
@@ -49,4 +53,4 @@ B-V5-02 no agrega campos ni error global: observaciones de referencias distintas
 
 La resolución de B-V5-01 no modifica HTTP: Player puede conservar varias referencias internas del mismo proveedor con externalId distintos, pero ninguna se expone. Sigue vigente la unicidad de cada `(provider,externalId)` por tipo de entidad; la cardinalidad por propietario no es un campo ni una validación del contrato HTTP.
 
-No endpoint administrativo, frontend de revisión ni comando nuevo. SQL de revisión en [quickstart.md](../quickstart.md). Endpoints de imágenes conservan contrato/comportamiento; adaptaciones internas usan nombre de Team sin resolver/modificar imágenes en 007. OpenAPI y REST Docs deben reflejar únicamente los cambios de GET y aclaración de significado, no un campo adicional del resumen.
+No endpoint administrativo, frontend de revisión ni comando nuevo. Los casos pendientes se consultan por SQL de solo lectura sobre `pending_review_cases`. Endpoints de imágenes conservan contrato/comportamiento; adaptaciones internas usan nombre de Team sin resolver/modificar imágenes en 007. OpenAPI y REST Docs deben reflejar únicamente los cambios de GET y aclaración de significado, no un campo adicional del resumen.

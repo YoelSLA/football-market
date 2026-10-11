@@ -7,6 +7,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,38 +21,101 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 class TeamLeagueMigrationTest {
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 
+  private void migrate(String schema, String target) {
+    Flyway.configure()
+        .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
+        .schemas(schema)
+        .defaultSchema(schema)
+        .target(target)
+        .load()
+        .migrate();
+  }
+
+  private Connection open(String schema) throws Exception {
+    Connection connection =
+        DriverManager.getConnection(
+            DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
+    connection.createStatement().execute("SET search_path TO " + schema);
+    return connection;
+  }
+
   @Nested
-  @DisplayName("Esquema aditivo y restricciones de Release 1")
-  class ReleaseOne {
+  @DisplayName("Esquema definitivo tras V5")
+  class FinalSchema {
     @Test
-    @DisplayName(
-        "V5 exige evidencia, claves únicas, fechas coherentes y referencias válidas de intentos y asociaciones")
-    void constrainCasesAndAttempts() throws Exception {
+    @DisplayName("La instalación limpia no expone textos legacy de equipo ni de liga")
+    void dropLegacyTexts() throws Exception {
       // Arrange
-      String schema = "v5_case_attempt_constraints";
-      Flyway.configure()
-          .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-          .schemas(schema)
-          .defaultSchema(schema)
-          .target("5")
-          .load()
-          .migrate();
-      try (Connection connection =
-              DriverManager.getConnection(
-                  DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
+      String schema = "v5_final_schema";
+      migrate(schema, "5");
+
+      // Act
+      try (Connection connection = open(schema);
           Statement statement = connection.createStatement()) {
-        statement.execute("SET search_path TO " + schema);
+        // Assert
+        try (ResultSet columns =
+            statement.executeQuery(
+                "SELECT column_name FROM information_schema.columns "
+                    + "WHERE table_schema = current_schema() AND table_name = 'players' "
+                    + "ORDER BY column_name")) {
+          List<String> names = new ArrayList<>();
+          while (columns.next()) {
+            names.add(columns.getString("column_name"));
+          }
+          assertThat(names).contains("team_id").doesNotContain("team", "league");
+        }
+
+        // Verify: la asociación es la única fuente y es obligatoria.
         statement.execute("INSERT INTO leagues(name) VALUES ('League')");
         statement.execute("INSERT INTO teams(name,league_id,current) VALUES ('Team',1,true)");
         statement.execute(
-            "INSERT INTO players(name,team,league,position,active,team_id) VALUES ('Player','Team','League','Forward',true,1)");
+            "INSERT INTO players(name,position,active,team_id) VALUES ('Associated','Forward',true,1)");
+        try (ResultSet rows =
+            statement.executeQuery(
+                "SELECT p.name,t.name AS team,l.name AS league FROM players p "
+                    + "JOIN teams t ON t.id=p.team_id JOIN leagues l ON l.id=t.league_id")) {
+          assertThat(rows.next()).isTrue();
+          assertThat(rows.getString("name")).isEqualTo("Associated");
+          assertThat(rows.getString("team")).isEqualTo("Team");
+          assertThat(rows.getString("league")).isEqualTo("League");
+          assertThat(rows.next()).isFalse();
+        }
+        assertThatThrownBy(() -> statement.execute("UPDATE players SET team_id=999"))
+            .isInstanceOf(SQLException.class)
+            .satisfies(
+                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23503"));
+        assertThatThrownBy(
+                () ->
+                    statement.execute(
+                        "INSERT INTO players(name,position,active) VALUES ('X','F',true)"))
+            .isInstanceOf(SQLException.class)
+            .satisfies(
+                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23502"));
+      }
+    }
+
+    @Test
+    @DisplayName(
+        "V5 exige evidencia, claves únicas, fechas coherentes y referencias válidas de casos y equipos")
+    void constrainCasesAndAttempts() throws Exception {
+      // Arrange
+      String schema = "v5_case_attempt_constraints";
+      migrate(schema, "5");
+
+      // Act
+      try (Connection connection = open(schema);
+          Statement statement = connection.createStatement()) {
+        statement.execute("INSERT INTO leagues(name) VALUES ('League')");
+        statement.execute("INSERT INTO teams(name,league_id,current) VALUES ('Team',1,true)");
+        statement.execute(
+            "INSERT INTO players(name,position,active,team_id) VALUES ('Player','Forward',true,1)");
         statement.execute(
             "INSERT INTO pending_review_cases(category,cause_code,subject_type,subject_id,case_key,first_detected_at,last_detected_at,evidence) "
-                + "VALUES ('LEGACY_TEAM_ASSOCIATION','NO_TEAM_MATCH','PLAYER',1,'stable-key','2026-10-01','2026-10-02','{\"originalTeamName\":\"Original\",\"candidates\":[]}'::jsonb)");
+                + "VALUES ('PLAYER_TEAM_UNRESOLVED','TEAM_UNRESOLVED','PLAYER',1,'stable-key','2026-10-01','2026-10-02','{\"receivedTeamName\":\"Original\",\"observations\":[]}'::jsonb)");
         statement.execute(
             "INSERT INTO team_resolution_attempts(team_id,last_call_at,last_call_name,technical_result) VALUES (1,'2026-10-01','Team','INVALID_RESPONSE')");
 
-        // Act / Assert
+        // Assert
         assertThatThrownBy(
                 () ->
                     statement.execute(
@@ -80,6 +145,14 @@ class TeamLeagueMigrationTest {
         assertThatThrownBy(
                 () ->
                     statement.execute(
+                        "INSERT INTO pending_review_cases(category,cause_code,subject_type,case_key,first_detected_at,last_detected_at,evidence) "
+                            + "VALUES ('LEGACY_TEAM_ASSOCIATION','NO_TEAM_MATCH','PLAYER','retired-key','2026-10-01','2026-10-02','{}'::jsonb)"))
+            .isInstanceOf(SQLException.class)
+            .satisfies(
+                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23514"));
+        assertThatThrownBy(
+                () ->
+                    statement.execute(
                         "INSERT INTO team_resolution_attempts(team_id,last_call_at,last_call_name) VALUES (999,now(),'Missing')"))
             .isInstanceOf(SQLException.class)
             .satisfies(
@@ -101,7 +174,7 @@ class TeamLeagueMigrationTest {
         }
         try (ResultSet row =
             statement.executeQuery(
-                "SELECT evidence->>'originalTeamName',jsonb_array_length(evidence->'candidates') FROM pending_review_cases")) {
+                "SELECT evidence->>'receivedTeamName',jsonb_array_length(evidence->'observations') FROM pending_review_cases")) {
           assertThat(row.next()).isTrue();
           assertThat(row.getString(1)).isEqualTo("Original");
           assertThat(row.getInt(2)).isZero();
@@ -111,24 +184,21 @@ class TeamLeagueMigrationTest {
 
     @Test
     @DisplayName(
-        "V5 conserva IDs, actividad, referencias y textos del catálogo V4 sin crear equipos por texto")
-    void preserveLegacyCatalog() throws Exception {
-      // Arrange: preparación técnica de una migración, no un caso funcional de Service.
-      String schema = "v5_legacy_preserved";
-      Flyway.configure()
-          .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-          .schemas(schema)
-          .defaultSchema(schema)
-          .target("4")
-          .load()
-          .migrate();
-      try (Connection connection =
-              DriverManager.getConnection(
-                  DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
+        "La instalación limpia conserva identidad, atributos y referencias, sin textos legacy")
+    void installCleanCatalog() throws Exception {
+      // Arrange: US06 retiró la migración del catálogo previo, de modo que V5 se aplica sobre una
+      // base sin jugadores. Las invariantes de identidad se comprueban sobre el catálogo
+      // resultante.
+      String schema = "v5_clean_install";
+      migrate(schema, "5");
+
+      // Act
+      try (Connection connection = open(schema);
           Statement statement = connection.createStatement()) {
-        statement.execute("SET search_path TO " + schema);
+        statement.execute("INSERT INTO leagues(name) VALUES ('League')");
+        statement.execute("INSERT INTO teams(name,league_id,current) VALUES ('Team A',1,true)");
         statement.execute(
-            "INSERT INTO players(name,team,league,position,active) VALUES ('Legacy','Texto original','Liga original','Forward',false)");
+            "INSERT INTO players(name,position,active,team_id) VALUES ('Player','Forward',false,1)");
         statement.execute(
             "UPDATE players SET date_of_birth='1990-06-20',nationality='Spain',image_url='https://images.example/main',fallback_image_url='https://images.example/secondary'");
         statement.execute(
@@ -137,32 +207,17 @@ class TeamLeagueMigrationTest {
             "INSERT INTO player_external_references(player_id,provider,external_id) SELECT id,'FOOTBALL_DATA','historical-player-source' FROM players");
         statement.execute(
             "INSERT INTO player_external_references(player_id,provider,external_id) SELECT id,'THE_SPORTS_DB','sports-source' FROM players");
-      }
 
-      // Act
-      Flyway.configure()
-          .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-          .schemas(schema)
-          .defaultSchema(schema)
-          .target("5")
-          .load()
-          .migrate();
-
-      // Assert
-      try (Connection connection =
-              DriverManager.getConnection(
-                  DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
-          Statement statement = connection.createStatement()) {
-        statement.execute("SET search_path TO " + schema);
+        // Assert
         try (ResultSet rows =
             statement.executeQuery(
-                "SELECT p.id,p.name,p.position,p.team,p.league,p.active,p.team_id,p.date_of_birth,p.nationality,p.image_url,p.fallback_image_url,r.id AS reference_id,r.provider,r.external_id FROM players p JOIN player_external_references r ON r.player_id=p.id ORDER BY r.id")) {
+                "SELECT p.id,p.name,p.position,p.active,p.team_id,p.date_of_birth,p.nationality,p.image_url,p.fallback_image_url,r.id AS reference_id,r.provider,r.external_id FROM players p JOIN player_external_references r ON r.player_id=p.id ORDER BY r.id")) {
           String[] externalIds = {"player-source", "historical-player-source", "sports-source"};
           String[] providers = {"FOOTBALL_DATA", "FOOTBALL_DATA", "THE_SPORTS_DB"};
           for (int index = 0; index < externalIds.length; index++) {
             assertThat(rows.next()).isTrue();
             assertThat(rows.getLong("id")).isEqualTo(1L);
-            assertThat(rows.getString("name")).isEqualTo("Legacy");
+            assertThat(rows.getString("name")).isEqualTo("Player");
             assertThat(rows.getString("position")).isEqualTo("Forward");
             assertThat(rows.getDate("date_of_birth").toLocalDate())
                 .isEqualTo(java.time.LocalDate.of(1990, 6, 20));
@@ -172,15 +227,22 @@ class TeamLeagueMigrationTest {
                 .isEqualTo("https://images.example/secondary");
             assertThat(rows.getLong("reference_id")).isEqualTo(index + 1L);
             assertThat(rows.getString("provider")).isEqualTo(providers[index]);
-            assertThat(rows.getString("team")).isEqualTo("Texto original");
-            assertThat(rows.getString("league")).isEqualTo("Liga original");
             assertThat(rows.getBoolean("active")).isFalse();
-            assertThat(rows.getObject("team_id")).isNull();
+            assertThat(rows.getObject("team_id")).isNotNull();
             assertThat(rows.getString("external_id")).isEqualTo(externalIds[index]);
           }
           assertThat(rows.next()).isFalse();
         }
-        // La cardinalidad por propietario sigue abierta después de V5, pero la identidad es única.
+        // La liga del Player se deriva del Team; no existe columna ni tabla de liga en Player.
+        try (ResultSet row =
+            statement.executeQuery(
+                "SELECT l.name FROM players p JOIN teams t ON t.id=p.team_id "
+                    + "JOIN leagues l ON l.id=t.league_id")) {
+          assertThat(row.next()).isTrue();
+          assertThat(row.getString(1)).isEqualTo("League");
+          assertThat(row.next()).isFalse();
+        }
+        // La cardinalidad por propietario sigue abierta, pero la identidad es única.
         statement.execute(
             "INSERT INTO player_external_references(player_id,provider,external_id) SELECT id,'FOOTBALL_DATA','additional-player-source' FROM players");
         assertThatThrownBy(
@@ -191,7 +253,7 @@ class TeamLeagueMigrationTest {
             .satisfies(
                 error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23505"));
         statement.execute(
-            "INSERT INTO players(name,team,league,position,active) VALUES ('Other owner','Otro equipo','Otra liga','Forward',true)");
+            "INSERT INTO players(name,position,active,team_id) VALUES ('Other owner','Forward',true,1)");
         assertThatThrownBy(
                 () ->
                     statement.execute(
@@ -199,27 +261,6 @@ class TeamLeagueMigrationTest {
             .isInstanceOf(SQLException.class)
             .satisfies(
                 error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23505"));
-        try (ResultSet rows =
-            statement.executeQuery(
-                "SELECT (SELECT count(*) FROM teams), (SELECT count(*) FROM leagues),completed_at FROM catalog_transition WHERE id=1")) {
-          assertThat(rows.next()).isTrue();
-          assertThat(rows.getInt(1)).isZero();
-          assertThat(rows.getInt(2)).isZero();
-          assertThat(rows.getObject(3)).isNull();
-          assertThat(rows.next()).isFalse();
-        }
-        assertThatThrownBy(() -> statement.execute("UPDATE players SET team=NULL"))
-            .isInstanceOf(SQLException.class)
-            .satisfies(
-                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23502"));
-        assertThatThrownBy(() -> statement.execute("UPDATE players SET league=NULL"))
-            .isInstanceOf(SQLException.class)
-            .satisfies(
-                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23502"));
-        assertThatThrownBy(() -> statement.execute("UPDATE players SET team_id=999"))
-            .isInstanceOf(SQLException.class)
-            .satisfies(
-                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23503"));
       }
     }
 
@@ -229,18 +270,11 @@ class TeamLeagueMigrationTest {
     void constrainExternalReferences() throws Exception {
       // Arrange
       String schema = "v5_reference_constraints";
-      Flyway.configure()
-          .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-          .schemas(schema)
-          .defaultSchema(schema)
-          .target("5")
-          .load()
-          .migrate();
-      try (Connection connection =
-              DriverManager.getConnection(
-                  DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
+      migrate(schema, "5");
+
+      // Act
+      try (Connection connection = open(schema);
           Statement statement = connection.createStatement()) {
-        statement.execute("SET search_path TO " + schema);
         statement.execute("INSERT INTO leagues(name) VALUES ('Primera'),('Segunda')");
         statement.execute(
             "INSERT INTO teams(name,league_id,current) VALUES ('Primero',1,true),('Segundo',2,false)");
@@ -249,7 +283,7 @@ class TeamLeagueMigrationTest {
         statement.execute(
             "INSERT INTO team_external_references(team_id,provider,external_id) VALUES (1,'FOOTBALL_DATA','team-source')");
 
-        // Act / Assert
+        // Assert
         assertThatThrownBy(
                 () ->
                     statement.execute(

@@ -12,13 +12,18 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class PlayerExternalReferenceTest {
+
+  private static Team team() {
+    return new Team("T", new League("L"), true);
+  }
+
   @Nested
   @DisplayName("Identidades externas del jugador")
   class References {
     @Test
     @DisplayName("El mismo identificador en dos proveedores no cambia la identidad interna")
     void distingueProveedoresSinDuplicarReferencia() {
-      Player player = new Player("N", "T", "L", "P");
+      Player player = new Player("N", team(), "P");
       player.addExternalReference(ExternalProvider.FOOTBALL_DATA, "44");
       player.addExternalReference(ExternalProvider.FOOTBALL_DATA, "44");
       player.addExternalReference(ExternalProvider.THE_SPORTS_DB, "44");
@@ -35,7 +40,7 @@ class PlayerExternalReferenceTest {
     @ValueSource(strings = {" ", "\t"})
     @DisplayName("Rechaza identidades externas vacías sin alterar las referencias")
     void rechazaIdentificadorInvalido(String externalId) {
-      Player player = new Player("N", "T", "L", "P");
+      Player player = new Player("N", team(), "P");
       assertThatThrownBy(
               () -> player.addExternalReference(ExternalProvider.FOOTBALL_DATA, externalId))
           .isInstanceOf(InvalidPlayerException.class);
@@ -45,7 +50,7 @@ class PlayerExternalReferenceTest {
     @Test
     @DisplayName("Rechaza una referencia sin proveedor o jugador")
     void requiereJugadorYProveedor() {
-      Player player = new Player("N", "T", "L", "P");
+      Player player = new Player("N", team(), "P");
       assertThatThrownBy(() -> player.addExternalReference(null, "44"))
           .isInstanceOf(InvalidPlayerException.class);
       assertThatThrownBy(

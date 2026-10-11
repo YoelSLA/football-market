@@ -10,31 +10,28 @@ import org.junit.jupiter.api.Test;
 
 class PlayerTeamAssociationTest {
   @Nested
-  @DisplayName("Asociación actual y compatibilidad legacy durante V5")
+  @DisplayName("Asociación vigente y derivación de liga")
   class Association {
     @Test
-    @DisplayName("El jugador legacy conserva textos y actividad hasta asociarse por identidad")
-    void associateLegacyPlayer() {
+    @DisplayName("Un jugador sin equipo no expone liga y admite asociarse por identidad")
+    void associateWithoutTeam() {
       // Arrange
-      Player player = new Player("Jugador", "Texto anterior", "Liga anterior", "Forward");
       League league = new League("Liga actual");
       Team team = new Team("Equipo actual", league, true);
+      Player player = new Player("Jugador", team, "Forward");
       player.deactivate();
-
-      // Assert
-      assertThat(player.getTeam()).isNull();
-      assertThat(player.getLeague()).isNull();
-      assertThat(player.getLegacyTeam()).isEqualTo("Texto anterior");
-      assertThat(player.getLegacyLeague()).isEqualTo("Liga anterior");
-
-      // Act
-      player.associateTeam(team);
 
       // Assert
       assertThat(player.getTeam()).isSameAs(team);
       assertThat(player.getLeague()).isSameAs(league);
-      assertThat(player.getLegacyTeam()).isEqualTo("Equipo actual");
-      assertThat(player.getLegacyLeague()).isEqualTo("Liga actual");
+
+      // Act
+      Team other = new Team("Otro equipo", new League("Otra liga"), true);
+      player.associateTeam(other);
+
+      // Assert
+      assertThat(player.getTeam()).isSameAs(other);
+      assertThat(player.getLeague()).isSameAs(other.getLeague());
       assertThat(player.isActive()).isFalse();
     }
 
@@ -57,8 +54,6 @@ class PlayerTeamAssociationTest {
       assertThat(player.getTeam()).isSameAs(secondTeam);
       assertThat(player.getLeague()).isSameAs(secondLeague);
       assertThat(player.getExternalReferences()).containsExactly(reference);
-      assertThat(player.getLegacyTeam()).isEqualTo("Segundo equipo");
-      assertThat(player.getLegacyLeague()).isEqualTo("Segunda liga");
     }
 
     @Test
@@ -88,13 +83,10 @@ class PlayerTeamAssociationTest {
 
       // Act
       team.update("Equipo actual", second);
-      player.refreshLegacyMirror();
 
       // Assert
       assertThat(player.getTeam()).isSameAs(team);
       assertThat(player.getLeague()).isSameAs(second);
-      assertThat(player.getLegacyTeam()).isEqualTo("Equipo actual");
-      assertThat(player.getLegacyLeague()).isEqualTo("Segunda liga");
     }
 
     @Test
@@ -102,7 +94,8 @@ class PlayerTeamAssociationTest {
         "Varias referencias del mismo proveedor se conservan sin sustitución ni duplicación")
     void preserveMultipleProviderReferences() {
       // Arrange
-      Player player = new Player("Jugador", "Equipo legacy", "Liga legacy", "Forward");
+      Player player =
+          new Player("Jugador", new Team("Equipo", new League("Liga"), true), "Forward");
       player.addExternalReference(ExternalProvider.FOOTBALL_DATA, "player-source");
 
       PlayerExternalReference original = player.getExternalReferences().getFirst();

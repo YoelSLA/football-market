@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -112,7 +113,17 @@ public class PendingReviewCase {
     this.evidence = Map.copyOf(evidence);
   }
 
-  /** Actualiza la observación conservando primera detección y texto original de transición. */
+  /**
+   * Registra una nueva detección del mismo caso conservando lo ya observado.
+   *
+   * <p>Los valores escalares ya registrados no se sobrescriben: son la evidencia original que
+   * explica qué recibió el catálogo la primera vez. Las listas se reemplazan por la última
+   * observación, porque describen el estado de la contradicción en la foto vigente.
+   *
+   * @param cause causa estable de esta detección
+   * @param detectedAt instante de esta detección, nunca anterior a la última
+   * @param evidence evidencia observada en esta detección
+   */
   public void observe(ReviewCause cause, Instant detectedAt, Map<String, Object> evidence) {
     if (cause == null
         || detectedAt == null
@@ -121,11 +132,14 @@ public class PendingReviewCase {
       throw new InvalidCatalogEntityException(
           "La observación no puede retroceder la fecha de detección");
     }
-    Map<String, Object> updated = new LinkedHashMap<>(evidence);
-    if (this.evidence.containsKey("originalTeamName")) {
-      updated.put("originalTeamName", this.evidence.get("originalTeamName"));
-    }
-    this.evidence = Map.copyOf(updated);
+    Map<String, Object> preserved = new LinkedHashMap<>(this.evidence);
+    evidence.forEach(
+        (key, value) -> {
+          if (!this.evidence.containsKey(key) || value instanceof List<?>) {
+            preserved.put(key, value);
+          }
+        });
+    this.evidence = Map.copyOf(preserved);
     this.causeCode = cause;
     this.lastDetectedAt = detectedAt;
   }

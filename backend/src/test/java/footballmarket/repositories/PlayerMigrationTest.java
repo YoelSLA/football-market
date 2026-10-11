@@ -46,6 +46,7 @@ class PlayerMigrationTest {
             .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
             .schemas(schema)
             .defaultSchema(schema)
+            .target("3")
             .load()
             .migrate();
 
@@ -122,6 +123,7 @@ class PlayerMigrationTest {
           .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
           .schemas(schema)
           .defaultSchema(schema)
+          .target("3")
           .load()
           .migrate();
       try (Connection connection =

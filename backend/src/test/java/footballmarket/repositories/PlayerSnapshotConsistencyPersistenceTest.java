@@ -29,9 +29,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 
 /**
- * Regresiones técnicas de conservación y atomicidad sobre cardinalidad legacy permitida por V4. SQL
- * prepara exclusivamente ese estado histórico y observa referencias/casos/espejo no expuestos por
- * APIs productivas; no se agrega una API de producto para fabricar referencias en tests.
+ * Regresiones técnicas de conservación y atomicidad cuando un jugador acumula varias referencias
+ * del mismo proveedor. SQL prepara exclusivamente ese estado y observa referencias y casos no
+ * expuestos por APIs productivas; no se agrega una API de producto para fabricar referencias en
+ * tests.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -46,7 +47,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
   private Long playerId;
 
   @BeforeEach
-  void prepareLegacyCardinality() {
+  void prepareMultipleReferences() {
     PlayerCandidate original = candidate("7001", "Original", "101");
     catalog.applySynchronization(snapshot(original));
     playerId = catalog.getActivePlayers(0, 20).getContent().getFirst().getId();
@@ -88,7 +89,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
 
   private Map<String, Object> persistedPlayer() {
     return jdbc.queryForMap(
-        "SELECT id,name,team_id,team,league,position,active,date_of_birth,nationality,image_url FROM players WHERE id = ?",
+        "SELECT id,name,team_id,position,active,date_of_birth,nationality,image_url FROM players WHERE id = ?",
         playerId);
   }
 
@@ -148,8 +149,8 @@ class PlayerSnapshotConsistencyPersistenceTest {
 
     @Test
     @DisplayName(
-        "El conflicto impide refrescar el espejo del Player aunque su Team o League cambien de nombre")
-    void preserveMirrorDuringRename() {
+        "El conflicto impide reasociar al Player aunque su Team o League cambien de nombre")
+    void preserveAssociationDuringRename() {
       // Arrange
       Map<String, Object> before = persistedPlayer();
       PlayerCandidate first = candidate("7001", "Changed A", "101");
@@ -290,12 +291,10 @@ class PlayerSnapshotConsistencyPersistenceTest {
     }
 
     @Test
-    @DisplayName(
-        "Un Player legacy sin Team conserva texto y actividad sin recibir backfill por el conflicto")
-    void preserveUnassociatedLegacyPlayer() {
-      // Arrange
-      jdbc.update("UPDATE players SET team_id = NULL WHERE id = ?", playerId);
-      jdbc.update("UPDATE catalog_transition SET completed_at = NULL WHERE id = 1");
+    @DisplayName("Un Player protegido por el conflicto conserva su asociación y no se reasocia")
+    void preserveAssociationDuringConflict() {
+      // Arrange: el Player ya está asociado; el conflicto solo debe impedir cambiar su equipo,
+      // su nombre y su actividad, sin elegir ningún Team de las observaciones contradictorias.
       Map<String, Object> before = persistedPlayer();
       List<Map<String, Object>> referencesBefore = persistedReferences();
       PlayerCandidate first = candidate("7001", "Changed A", "101");
@@ -313,16 +312,22 @@ class PlayerSnapshotConsistencyPersistenceTest {
       // Verify
       assertThat(persistedPlayer()).isEqualTo(before);
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
-      assertThat(catalog.getActivePlayers(0, 20)).isEmpty();
+      assertThat(catalog.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              player -> {
+                assertThat(player.getId()).isEqualTo(playerId);
+                assertThat(player.getName()).isEqualTo("Original");
+                assertThat(player.getTeam().getName()).isEqualTo("Team A");
+                assertThat(player.getLeague().getName()).isEqualTo("League");
+                assertThat(player.isActive()).isTrue();
+              });
       assertThat(
               jdbc.queryForObject(
-                  "SELECT evidence->>'originalTeamName' FROM pending_review_cases", String.class))
-          .isEqualTo("Team A");
-      assertThat(
-              jdbc.queryForObject(
-                  "SELECT completed_at IS NOT NULL FROM catalog_transition WHERE id = 1",
-                  Boolean.class))
-          .isTrue();
+                  "SELECT jsonb_array_length(evidence->'observations') FROM pending_review_cases "
+                      + "WHERE category='INVALID_SUBJECT_DATA'",
+                  Integer.class))
+          .isGreaterThan(1);
     }
 
     @Test
@@ -442,7 +447,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       PlayerCandidate second =
           optionalCandidate("7002", java.time.LocalDate.of(1999, 4, 10), "Uruguay");
       PlayerSnapshot photo = reverse ? snapshot(second, first) : snapshot(first, second);
-      Map<String, Object> referencesBefore = (Map<String, Object>) persistedReferences();
+      List<Map<String, Object>> referencesBefore = persistedReferences();
 
       // Act
       PlayerSynchronizationResult result = catalog.applySynchronization(photo);
@@ -465,7 +470,8 @@ class PlayerSnapshotConsistencyPersistenceTest {
               });
       assertThat(
               jdbc.queryForList(
-                  "SELECT cause_code,evidence->>'attribute' FROM pending_review_cases ORDER BY cause_code"))
+                  "SELECT cause_code,evidence->>'attribute' AS evidence FROM pending_review_cases "
+                      + "ORDER BY cause_code"))
           .containsExactlyInAnyOrder(
               Map.of("cause_code", "CONFLICTING_DATE_OF_BIRTH", "evidence", "dateOfBirth"),
               Map.of("cause_code", "CONFLICTING_NATIONALITY", "evidence", "nationality"));
@@ -604,7 +610,9 @@ class PlayerSnapshotConsistencyPersistenceTest {
                 assertThat(player.getTeam().getName()).isEqualTo("Team B");
                 assertThat(player.isActive()).isTrue();
               });
-      assertThat(persistedPlayer()).containsEntry("team", "Team B").containsEntry("active", true);
+      Map<String, Object> persisted = persistedPlayer();
+      assertThat(persisted).containsEntry("active", true);
+      assertThat(persisted.get("team_id")).isNotNull();
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
       assertThat(
               jdbc.queryForMap(

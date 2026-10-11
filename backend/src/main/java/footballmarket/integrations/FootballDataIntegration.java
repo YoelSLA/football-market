@@ -15,7 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -34,9 +36,27 @@ public class FootballDataIntegration {
   private static final int MAX_RETRIES = 3;
   private static final long DEFAULT_RETRY_SECONDS = 60;
 
+  /**
+   * Peticiones que el proveedor todavía puede servir en el minuto en curso por debajo de las cuales
+   * se espera a su reinicio en lugar de consumir el margen restante.
+   */
+  private static final int RESERVE_REQUESTS = 1;
+
+  private static final String AVAILABLE_REQUESTS_HEADER = "x-requests-available-minute";
+  private static final String COUNTER_RESET_HEADER = "X-RequestCounter-Reset";
+
   private final RestClient client;
   private final Clock clock;
   private final RetryWait retryWait;
+
+  /**
+   * Peticiones disponibles informadas por la última respuesta correcta, o {@code null} mientras el
+   * proveedor no haya comunicado su presupuesto. Solo alimenta la espera preventiva entre lecturas.
+   */
+  private Integer availableRequests;
+
+  /** Segundos hasta el reinicio de la ventana de peticiones informado por el proveedor. */
+  private long counterResetSeconds = DEFAULT_RETRY_SECONDS;
 
   /**
    * Crea la integración utilizando el cliente HTTP configurado para Football-Data.
@@ -144,9 +164,13 @@ public class FootballDataIntegration {
   /**
    * Realiza una petición GET a Football-Data y convierte la respuesta al tipo solicitado.
    *
+   * <p>Antes de emitir la lectura se respeta el presupuesto de peticiones informado por el
+   * proveedor, de modo que la espera ocurre de forma preventiva y no como reacción a un rechazo.
+   *
    * <p>Cuando la API responde con HTTP 429, la petición se reintenta respetando el valor del header
    * {@code Retry-After}. Si el header no está disponible o contiene un valor inválido, se utiliza
-   * un tiempo de espera predeterminado.
+   * un tiempo de espera predeterminado. Ese reintento permanece como red de seguridad para cuando
+   * el proveedor no informa su presupuesto.
    *
    * @param path ruta del recurso solicitado
    * @param type tipo esperado para el cuerpo de la respuesta
@@ -157,32 +181,36 @@ public class FootballDataIntegration {
    *     o se agotan los reintentos permitidos
    */
   private <T> T read(String path, Class<T> type, Object parameter) {
+    this.awaitAvailableBudget();
     for (int attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        T body =
+        ResponseEntity<T> response =
             this.client
                 .get()
                 .uri(path, parameter)
                 .retrieve()
                 .onStatus(
                     status -> status.value() == HttpStatus.TOO_MANY_REQUESTS.value(),
-                    (request, response) -> {
+                    (request, resp) -> {
                       long retryAfterSeconds =
-                          this.parseRetryAfter(response.getHeaders().getFirst("Retry-After"));
+                          this.parseRetryAfter(resp.getHeaders().getFirst("Retry-After"));
 
                       throw new FootballDataRateLimitException(retryAfterSeconds);
                     })
                 .onStatus(
                     status -> !status.is2xxSuccessful(),
-                    (request, response) -> {
+                    (request, resp) -> {
                       throw new FootballDataUnavailableException();
                     })
-                .body(type);
+                .toEntity(type);
+
+        T body = response.getBody();
 
         if (body == null) {
           throw new FootballDataUnavailableException();
         }
 
+        this.recordBudget(response.getHeaders());
         return body;
 
       } catch (FootballDataRateLimitException ex) {
@@ -195,6 +223,67 @@ public class FootballDataIntegration {
     }
 
     throw new FootballDataUnavailableException();
+  }
+
+  /**
+   * Espera a la ventana de peticiones cuando el proveedor ya no alcanza a servir la foto completa.
+   *
+   * <p>La información de presupuesto es un control de transporte: no modifica la interpretación de
+   * las respuestas ni la decisión de aplicar o no la foto. Si el proveedor no informa el
+   * presupuesto se comporta como hasta ahora, delegando el control de ritmo al reintento ante HTTP
+   * 429.
+   *
+   * <p>La espera solo ocurre entre lecturas, nunca antes de la primera, de modo que una lectura
+   * aislada no queda penalizada por un presupuesto heredado de otra foto.
+   */
+  private void awaitAvailableBudget() {
+    if (this.availableRequests == null || this.availableRequests > RESERVE_REQUESTS) {
+      return;
+    }
+
+    this.waitBeforeRetry(this.counterResetSeconds);
+  }
+
+  /**
+   * Conserva el presupuesto de peticiones y el reinicio de ventana informados por el proveedor.
+   *
+   * <p>Valores ausentes o no numéricos se ignoran para preservar el comportamiento previo, en el
+   * que el ritmo solo reacciona al HTTP 429.
+   *
+   * @param headers encabezados de la última respuesta correcta del proveedor
+   */
+  private void recordBudget(HttpHeaders headers) {
+    String available = headers.getFirst(AVAILABLE_REQUESTS_HEADER);
+
+    if (available == null || available.isBlank()) {
+      return;
+    }
+
+    try {
+      this.availableRequests = Integer.valueOf(available.strip());
+      this.counterResetSeconds = this.parseCounterReset(headers.getFirst(COUNTER_RESET_HEADER));
+    } catch (NumberFormatException ex) {
+      // El proveedor no informa un presupuesto utilizable: se conserva el anterior.
+    }
+  }
+
+  /**
+   * Obtiene la cantidad de segundos indicada por el header de reinicio de la ventana de peticiones.
+   *
+   * @param counterReset valor recibido en el header de reinicio
+   * @return segundos a esperar; si el valor no es utilizable, la espera predeterminada
+   */
+  private long parseCounterReset(String counterReset) {
+    if (counterReset == null || counterReset.isBlank()) {
+      return DEFAULT_RETRY_SECONDS;
+    }
+
+    try {
+      long seconds = Long.parseLong(counterReset.strip());
+      return seconds >= 0 ? seconds : DEFAULT_RETRY_SECONDS;
+    } catch (NumberFormatException ex) {
+      return DEFAULT_RETRY_SECONDS;
+    }
   }
 
   /**

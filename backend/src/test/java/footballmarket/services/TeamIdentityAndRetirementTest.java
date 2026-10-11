@@ -1,7 +1,6 @@
 package footballmarket.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import footballmarket.integrations.TheSportsDbIntegration;
 import footballmarket.models.Player;
@@ -60,7 +59,7 @@ class TeamIdentityAndRetirementTest {
     TeamCandidate second = new TeamCandidate("102", "Team B", "10", true);
     return new PlayerSnapshot(
         List.of(candidates),
-        candidates.length,
+        candidates.length + invalid.size(),
         invalid.size(),
         List.of(league),
         List.of(first, second),
@@ -156,6 +155,10 @@ class TeamIdentityAndRetirementTest {
     void keepCatalogWhenLeagueUnresolved() {
       // Arrange
       catalog.applySynchronization(snapshot(candidate("1", "Player", "101")));
+      Player previous = catalog.getActivePlayers(0, 20).getContent().getFirst();
+      Long previousPlayerId = previous.getId();
+      Long previousTeamId = previous.getTeam().getId();
+      Long previousLeagueId = previous.getLeague().getId();
 
       // Act
       PlayerSnapshot photo =
@@ -169,12 +172,19 @@ class TeamIdentityAndRetirementTest {
       PlayerSynchronizationResult result = catalog.applySynchronization(photo);
 
       // Assert
-      assertThat(result.markedInactive()).isZero();
+      assertThat(result).isEqualTo(new PlayerSynchronizationResult(0, 0, 0, 0, 0));
 
-      // Verify
+      // El catálogo previo permanece consultable; la atomicidad SQL se cubre en persistencia.
       assertThat(catalog.getActivePlayers(0, 20).getContent())
-          .extracting(Player::getTeam)
-          .hasSize(1);
+          .singleElement()
+          .satisfies(
+              player -> {
+                assertThat(player.getId()).isEqualTo(previousPlayerId);
+                assertThat(player.getName()).isEqualTo("Player");
+                assertThat(player.getTeam().getId()).isEqualTo(previousTeamId);
+                assertThat(player.getLeague().getId()).isEqualTo(previousLeagueId);
+                assertThat(player.isActive()).isTrue();
+              });
     }
   }
 
@@ -187,9 +197,13 @@ class TeamIdentityAndRetirementTest {
       // Arrange
       catalog.applySynchronization(snapshot(candidate("1", "Player", "101")));
       Long playerId = firstPlayerId();
+      LeagueCandidate league = new LeagueCandidate("10", "League");
+      TeamCandidate remaining = new TeamCandidate("102", "Team B", "10", true);
+      PlayerSnapshot absentTeam =
+          new PlayerSnapshot(List.of(), 0, 0, List.of(league), List.of(remaining), List.of());
 
       // Act
-      catalog.applySynchronization(snapshot());
+      catalog.applySynchronization(absentTeam);
 
       // Assert / Verify
       assertThat(catalog.getActivePlayers(0, 20)).isEmpty();
@@ -198,21 +212,6 @@ class TeamIdentityAndRetirementTest {
       assertThat(catalog.getActivePlayers(0, 20).getContent())
           .extracting(Player::getId)
           .containsExactly(playerId);
-    }
-
-    @Test
-    @DisplayName("Un equipo retirado y sus jugadores no aparecen aunque el jugador siga activo")
-    void excludeRetiredTeamFromCatalog() {
-      // Arrange
-      catalog.applySynchronization(snapshot(candidate("1", "Player", "101")));
-      when(integration.searchTeams("Team B"))
-          .thenReturn(new TheSportsDbIntegration.TeamSearch(List.of(), false));
-
-      // Act
-      catalog.applySynchronization(snapshot(candidate("1", "Player", "101")));
-
-      // Verify
-      assertThat(catalog.getActivePlayers(0, 20)).isEmpty();
     }
 
     @Test

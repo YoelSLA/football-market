@@ -1,4 +1,8 @@
--- Release 1: esquema aditivo. La retirada de textos requiere Release 2 y gate humano.
+-- Esquema definitivo de SPEC-007: Player -> Team -> League.
+-- Una instalación limpia no conserva textos legacy de equipo ni de liga: la liga se deriva de Team.
+ALTER TABLE players DROP COLUMN IF EXISTS "team";
+ALTER TABLE players DROP COLUMN IF EXISTS "league";
+
 CREATE SEQUENCE leagues_id_seq START WITH 1 INCREMENT BY 1;
 CREATE TABLE leagues (
     id BIGINT PRIMARY KEY DEFAULT nextval('leagues_id_seq'),
@@ -38,10 +42,9 @@ CREATE TABLE team_external_references (
 );
 ALTER SEQUENCE team_external_references_id_seq OWNED BY team_external_references.id;
 
-ALTER TABLE players ADD COLUMN team_id BIGINT REFERENCES teams(id);
+-- Todo Player persistido tiene exactamente un Team: la asociación es obligatoria.
+ALTER TABLE players ADD COLUMN team_id BIGINT NOT NULL REFERENCES teams(id);
 CREATE INDEX idx_players_team_id ON players(team_id);
--- Player conserva varias referencias legacy del mismo proveedor.
--- La UNIQUE(provider, external_id) de V3 ya impide compartir una identidad entre propietarios.
 
 CREATE SEQUENCE pending_review_cases_id_seq START WITH 1 INCREMENT BY 1;
 CREATE TABLE pending_review_cases (
@@ -59,9 +62,9 @@ CREATE TABLE pending_review_cases (
     CONSTRAINT uk_pending_review_cases_case_key UNIQUE (case_key),
     CONSTRAINT ck_pending_review_cases_dates CHECK (last_detected_at >= first_detected_at),
     CONSTRAINT ck_pending_review_cases_category CHECK (
-        category IN ('LEGACY_TEAM_ASSOCIATION', 'PLAYER_TEAM_UNRESOLVED',
-                     'TEAM_LEAGUE_UNRESOLVED', 'EXTERNAL_IDENTITY_CONFLICT',
-                     'PLAYER_OPTIONAL_CONFLICT', 'INVALID_SUBJECT_DATA')),
+        category IN ('PLAYER_TEAM_UNRESOLVED', 'TEAM_LEAGUE_UNRESOLVED',
+                     'EXTERNAL_IDENTITY_CONFLICT', 'PLAYER_OPTIONAL_CONFLICT',
+                     'INVALID_SUBJECT_DATA')),
     CONSTRAINT ck_pending_review_cases_external_subject CHECK (
         (subject_provider IS NULL AND subject_external_id IS NULL)
         OR (subject_provider IS NOT NULL AND subject_external_id IS NOT NULL
@@ -80,9 +83,3 @@ CREATE TABLE team_resolution_attempts (
     valid_result VARCHAR(64),
     retry_not_before TIMESTAMP WITH TIME ZONE
 );
-
-CREATE TABLE catalog_transition (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-    completed_at TIMESTAMP WITH TIME ZONE
-);
-INSERT INTO catalog_transition (id, completed_at) VALUES (1, NULL);

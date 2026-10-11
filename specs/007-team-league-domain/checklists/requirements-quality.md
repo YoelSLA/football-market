@@ -1,5 +1,7 @@
 # Calidad de requisitos Checklist: Dominio de equipos y ligas
 
+> **Cierre 2026-10-11.** US06 y la transición/reversibilidad legacy (CHK001–007) se retiraron por decisión humana del 2026-10-10. Sus marcas `[x]` **no** evaluan requisitos vigentes: se conservan únicamente como antecedente de la evaluación del 2026-10-06 y no gobiernan el estado actual. La nota original decía que CHK001–007 "se retiraron" manteniendo las marcas; se precisa aquí que además quedan **fuera del alcance**, por lo que no deben leerse como requisitos de calidad aprobados. El criterio vigente de revisión es [requirements-dev.md](requirements-dev.md).
+
 **Purpose**: Unit tests for requirements writing. Evalúa la calidad, claridad, consistencia y completitud de los requisitos de `007-team-league-domain` antes de generar tareas.
 **Created**: 2026-10-06
 **Feature**: [spec.md](../spec.md)
@@ -10,7 +12,7 @@
 
 ## Migración de datos e irreversibilidad
 
-- [x] CHK001 - ¿Está especificado el orden obligatorio entre la creación del esquema, la primera sincronización y la eliminación de las columnas de texto, de modo que un ejecutor no pueda aplicarlas en un orden distinto? [Claridad, Spec RF-017 / RF-036] — Plan/Modelo: releases separados, marcador y gate humano; quickstart §Preparación.
+- [x] CHK001 - ¿Está especificado el orden obligatorio entre la creación del esquema, la primera sincronización y la eliminación de las columnas de texto, de modo que un ejecutor no pueda aplicarlas en un orden distinto? [Claridad, Spec RF-017 / RF-036] — Plan/Modelo: releases separados, marcador y gate humano; quickstart §3.
 - [x] CHK002 - ¿Están definidos los requisitos que deben cumplirse para que una sincronización se considere completa y exitosa a efectos de ejecutar la transición? [Claridad, Spec RF-032 / RF-033] — RF-032/RF-037/RF-039 distinguen obtención completa, protección y commit.
 - [x] CHK003 - ¿Está especificado qué ocurre si la eliminación de las columnas de texto se intenta antes de que todos los jugadores tengan equipo o caso pendiente? [Completeness, Edge Case, Spec RF-036] — Guarda V6 falla sin eliminar; no basta cualquier caso.
 - [x] CHK004 - ¿Están definidos los requisitos ante una migración que falla a mitad de su ejecución, incluido si el catálogo queda inconsistente de forma recuperable? [Coverage, Exception Flow, Gap] — RF-037 rollback principal; modelo/quickstart exigen V6 transaccional y esquema intacto.

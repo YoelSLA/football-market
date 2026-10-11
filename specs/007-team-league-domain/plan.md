@@ -1,126 +1,41 @@
-# Implementation Plan: Dominio de equipos y ligas
+# Plan — SPEC-007 simplificada
 
-**Branch actual**: `feat/007-team-league-domain` | **Fecha**: 2026-10-06 | **Spec**: [spec.md](spec.md)
+Fuente: [spec.md](spec.md) y la decisión humana registrada allí y en [tasks.md](tasks.md). Solo DEV. Sin migración de datos legacy ni releases intermedios.
 
-## Summary
+## Arquitectura final
 
-Identidades internas Team/League, Player asociado a Team y liga derivada. Foto Football-Data completa antes de escritura; un único commit principal. Backfill solo para ausentes sin asociación, casos deduplicados consultables por SQL y enriquecimiento TheSportsDB independiente posterior. Dos releases con gate humano entre V5 y V6; no generar tasks en esta revisión.
+PlayerSynchronizationOrchestrator coordina opacamente fetch por FootballDataPlayerService, aplicación por PlayerCatalogService y enriquecimiento por TeamEnrichmentService. Fetch/red antes de escritura. PlayerCatalogService posee una transacción REQUIRES_NEW/READ COMMITTED por intento para League/Team/Player, referencias, casos y actividad/vigencia; replay acotado solo para conflicto UNIQUE reconocido, reconstruyendo entidades desde snapshot. No continuar una transacción fallida.
 
-## Technical Context
+TeamEnrichmentService consulta TheSportsDB después del commit principal y persiste intento/referencia/caso en una transacción corta independiente por Team. Mantener revalidación de nombre/referencia bajo bloqueo de Team y Retry-After. No coordinación distribuida.
 
-- **Lenguajes:** Java 21; TypeScript 7.0.2/React 19.3.0.
-- **Dependencias:** Spring Boot 4.1.1, Web/RestClient, JPA/Hibernate, Security, Flyway, PostgreSQL/pgJDBC, SpringDoc; frontend Vite y herramientas existentes. Sin dependencias nuevas.
-- **Plataforma:** backend Linux y SPA navegador.
-- **Persistencia:** PostgreSQL, Flyway y ddl-auto: validate; open-in-view desactivado.
-- **Verificación prevista:** categorías backend existentes, PostgreSQL Testcontainers y REST Docs a ejecutar por usuario; sin tests frontend. Esta tarea documental no ejecuta tests ni builds.
-- **Rendimiento/escala:** paginación existente size<=100; ligas configurables, sin asumir cinco; pacing TheSportsDB existente y Retry-After. Sin SLA nuevo.
+Model preserva invariantes, matching, ranking y consolidación; Repository accede a DB; Integration adapta proveedor. Service no llama Service. Interfaces/implementaciones existentes conservadas. No nuevos componentes por uniformidad.
 
-## Constitution Check
+## Persistencia
 
-Evaluación inicial y posterior al diseño: responsabilidades existentes Controller→Mapper→Service/Orchestrator, Model para invariantes/comparación, Repository para persistencia, Integration para contratos externos. DTO record, Mapper final/static, Service interfaz/implementación; no dependencias nuevas ni modificación normativa.
+Player.team obligatorio, Team.league obligatorio, League derivada. Nombres obligatorios, secuencias internas, referencias con identidad única y dueño inmutable. Team.current explícito. PendingReviewCase deduplicado con JSONB, sujeto/causa/fechas, sin status ni revisión. TeamResolutionAttempt distingue fallo técnico de evaluación válida.
 
-Transacciones y secretos respetan constitución; SQL humano usa mínimo privilegio. No claims de controles ejecutados. Scope incluye consumidores frontend, no spec 005. Complexity Tracking no justifica violaciones: decisiones técnicas abajo no son excepciones normativas.
+No CatalogTransition, current_revision_id, revisión/resultados/miembros canónicos, backfill, espejo ni serializador JSONB artesanal. Casos no gobiernan elegibilidad de fotos posteriores. No Player persistido sin Team; observación irresoluble de un sujeto nuevo solo genera caso externo.
 
-La rama actual cumple Constitution §7. La revisión cruzada final satisface los gates de diseño y alcance; no acredita implementación ni ejecución de controles.
+## Flyway limpio
 
-## Project Structure
+V1 usuarios; V2–V4 sin modificar (identidad de players, referencias, opcionales, imágenes); V5 crea el esquema definitivo y retira los textos legacy. Sin V5.1/V6. El binario nuevo no se ejecuta sobre el historial aplicado anterior: recrear la base DEV es un paso manual y autorizado por separado. No repair ni compatibilidad productiva inexistente.
 
-```text
-specs/007-team-league-domain/
-  spec.md research.md plan.md data-model.md quickstart.md
-  contracts/api.md checklists/requirements-quality.md
-backend/src/main/java/footballmarket/
-  models/ League Team Player y referencias externas
-          PendingReviewCase TeamResolutionAttempt TeamNameNormalizer
-          enums/ExternalProvider
-          records/ foto inmutable y resultados
-  repositories/ entidades, referencias, casos e intentos
-  services/ interfaces e impl de catálogo, transición y enriquecimiento
-  integrations/FootballDataIntegration TheSportsDbIntegration
-  orchestrators/PlayerSynchronizationOrchestrator
-  controllers/ DTO/Mapper/Controller existentes
-backend/src/main/resources/db/migration/
-  V5__create_team_league_domain.sql       # Release 1
-  V6__drop_player_team_league_text.sql   # solo Release 2
-frontend/src/features/players/
-  types/dtos.ts types/models.ts players.mapper.ts
-  components/PlayerCard/PlayerCard.tsx constants/playerClassifications.ts
-```
+## Contratos y consumidores
 
-No crear servicios por uniformidad. Orchestrator solo transporta resultados opacos entre Services; no inspecciona modelos, usa Repository ni decide elegibilidad. Coordinación de aplicación/transición corresponde al Service de catálogo; enriquecimiento independiente justifica Service propio. Los contratos internos necesarios se precisan en data-model.
+GET mantiene cuatro campos internos y filtro activo/current; POST mantiene cinco contadores. Frontend ya adaptado a teamName/leagueName, sin nuevo comportamiento visual. Mantener integridad y semántica de imágenes existentes; no borrarlas por retirar mecanismos 007.
 
-## Diseño principal
+## Secuencia
 
-### Obtención y validación
+1. Enmienda de spec/plan/research/modelo/tasks/contratos/checklist y trazabilidad.
+2. Análisis de coherencia del nuevo alcance, sin tests ni aprobación de gates.
+3. Retirar consumidores y componentes canónicos/legacy.
+4. Reorganizar DDL para instalación limpia; obligatoriedad Team en Model/JPA/SQL.
+5. Adaptar fixtures y tests, conservar regresiones de US01–US05 y 006.
+6. Build backend permitido sin tests cuando corresponda; tests exclusivamente por usuario.
+7. Recreación local solo con autorización específica; luego startup/sync/consulta por usuario.
 
-FootballDataIntegration adapta contratos externos (competición, lista de equipos, planteles), preserva identidades/contexto y anomalías. Service consolida records inmutables de presentes/procesables/protegidos antes de abrir escritura. Ninguna respuesta requerida faltante ni identidad insuficiente que comprometa presencia permite aplicar foto. Opcionales ausentes mantienen reglas existentes. Lista vacía solo es completa si es respuesta válida del contrato, no sustituto de payload faltante (RF-039).
+## Constitución y validación
 
-Para sujetos identificables inválidos registrar categoría apropiada y protección; para Team cuyo plantel no puede determinarse por invalidez individual proteger jugadores previos. Fallo de HTTP de plantel requerido invalida toda foto, no se confunde con invalidez individual. No inferir identidad por nombre.
+Sin modificación constitucional ni tecnológica. KISS/YAGNI, separación existente, DTO/Mapper/seguridad sin cambios de contrato. Pruebas Model puras; Service por APIs públicas con Spring/Repository/DB reales e Integration mock; queries/constraints/migraciones/concurrencia técnica en Repository con Testcontainers. No reflection de métodos privados como prueba de equivalencia SQL. No tests frontend.
 
-### Commit principal
-
-Resolución B-V5-05: antes de mutar cada propietario, Service agrupa sus observaciones válidas y consolida name/position según B-V5-04 y, en paralelo e independientemente, dateOfBirth y nationality por atributo. Sin valor válido no se escribe nada nuevo; con valor único se usa; con valores incompatibles se conserva el persistido del Player existente o null en el nuevo y se registra el conflicto del atributo, sin clasificar INVALID_SUBJECT_DATA ni excluir el resto del Player. El caso se reconcilia con el sujeto interno al crear o actualizar. No altera Team/name/position, no agrega prioridades entre proveedores y no bloquea el enriquecimiento posterior.
-
-Resolución B-V5-04: separar selección pura de presentación en Model de la normalización semántica existente. Ranking de representaciones originales equivalentes: cantidad de letras que conservan diacríticos descendente, casing mixto frente a todo mayúsculas/minúsculas, desempate String.compareTo sobre texto original. No sintetizar texto ni normalizar presentación. Model Player conserva valores persistidos equivalentes en actualización; si cambia significado se usa la representación canónica de las observaciones válidas entrantes. Service clasifica todo propietario antes de actualizarlo y aplica la misma presentación canónica a sus observaciones coherentes. Consolidación de duplicados de una misma referencia conserva prioridad semántica configurada existente, pero reúne sus representaciones equivalentes para ranking; no descartar alternativas equivalentes antes de elegir presentación. B-V5-04 sustituye los pendientes anteriores, sin ampliar US, HTTP o Release 1.
-
-B-V5-03: extender clasificación previa por propietario a Team/name/position. Team se compara por identidad interna; name/position por la normalización estricta ya implementada en TeamNameNormalizer (trim, espacios, case independiente de locale y diacríticos), solo como clave de comparación. Cualquier atributo incompatible protege todo el Player; una clasificación/caso por sujeto y problema estable, con atributos contradictorios y observaciones canonizadas como evidencia. Ninguna actualización parcial ni escritura de name/position/asociación/active/espejo/referencias; otros sujetos continúan y protecciones son locales a la foto. B-V5-02 es el caso particular de Team contradictorio; su camino de un único Team solo es procesable si name/position también son coherentes. B-V5-04 y el ranking de presentación del párrafo anterior definen el camino coherente sin seleccionar por orden.
-
-B-V5-02: antes de mutar cualquier Player, agrupar observaciones procesables por propietario interno reconocido mediante sus referencias FOOTBALL_DATA y comparar identidades de Team resueltas, no nombres. Más de un Team válido para el mismo propietario excluye todas sus observaciones del procesamiento, registra INVALID_SUBJECT_DATA con causa estable CONFLICTING_PLAYER_TEAMS y protege al propietario de transferencias/retirada/reactivación/backfill y de escrituras del espejo legacy. Conservar referencias y estado previo; los demás sujetos continúan. Canonizar evidencia por referencia/Team para que el orden no cambie clasificación ni resultado; no usar ese orden para seleccionar Team. Grupo con un Team sigue procesamiento normal. Protección local al intento/foto, nunca consultada desde casos históricos para determinar elegibilidad futura.
-
-En un intento transaccional: resolver League/referencias; Team/referencias/liga; Player/referencias/equipo; backfill de ausentes sin asociación solo si transición no finalizada; casos/upsert; vigencia y actividad con protecciones; marcador de transición. Sin red.
-
-Team válido presente current=true; ausente no protegido current=false. Player válido presente activa según reglas normales; ausente se inactiva conforme catálogo existente salvo protección; Team retirado arrastra jugadores salvo Player protegido que debe conservar active. El GET excluye Team no vigente aunque Player protegido siga activo. Backfill no altera active por sí mismo.
-
-Foto inmutable se reaplica solo ante conflicto de identidad reconocido: rollback completo, exclusión/protección nueva, caso registrado en intento válido. Clasificación por SQLSTATE 23505/tabla/constraint, no catch general. Contadores reiniciados por intento; commit final único, sin reutilizar entidades JPA fallidas. Otros fallos técnicos revierten y se propagan. Serialización existente por instancia se conserva; multinstancia exige coordinación antes de habilitarse, no se presume soporte nuevo.
-
-### TheSportsDB posterior
-
-Tras commit, Service selecciona Team vigente sin referencia y sin evaluación válida para nombre actual, respetando retry_not_before. Red fuera de escritura, una tentativa lógica, sin retry interno nuevo. Adaptador devuelve contrato propio de integración con candidatos y evidencia de completitud, no entidades ni DTO HTTP.
-
-Matcher puro filtra Soccer/nombre principal estricto y deduplica por id externo; duplicados contradictorios son respuesta inválida. Una coincidencia solo asigna con completitud acreditada. searchteams.php no tiene garantía acreditada en documentación revisada: resultado COMPLETENESS_UNPROVEN sin referencia. No inventar bandera de completitud a partir de Premium/cantidad de filas.
-
-Timeout/transporte/429/5xx/4xx inválido/estructura inválida registran fallo técnico sin consumir evaluación. Respuesta válida consume incluso si completitud no acreditada, cero o varios candidatos. Retry-After persiste espera. Por equipo, transacción corta revalida nombre y referencia, guarda intento + referencia/caso de conflicto juntos. Errores de enriquecimiento se diagnostican y no convierten principal confirmado en fallo. Fallo de escritura corta revierte solo ese resultado; otros equipos pueden quedar enriquecidos.
-
-### Casos y acceso
-
-Deduplicación por clave funcional UNIQUE descrita en data-model; reconcilia sujeto externo a interno sin duplicar. Primera fecha/original legacy inmutables; última fecha/evidencia actual cambian. Sin status ni cierre; una fila no certifica problema vigente. SQL autorizado es capacidad humana; repositorios son internos. Sin endpoint ni contador HTTP.
-
-### Dos releases
-
-B-V5-01: conservar la cardinalidad de referencias de Player de SPEC-002. V5 mantiene `UNIQUE(provider,external_id)` y no agrega `UNIQUE(player_id,provider)`; no filtra ni modifica filas históricas válidas. Team/League sí mantienen ambas unicidades: identidad externa y una referencia por propietario/proveedor. Adaptar únicamente el rechazo nuevo en Player, el DDL de V5 y sus regresiones; no cambiar identidad interna, resolución por referencia ni contratos HTTP. Esta corrección de compatibilidad no incorpora una US/capacidad nueva ni amplía el cierre V5 autorizado.
-
-Release 1 incluye solo V5 y mappings intermedios; legacy NOT NULL se rellena en altas con nombre de entidades. Asociado usa relación como verdad, espejo legacy solo compatibilidad; no asociado usa texto solo para backfill/evidencia. Capturar original antes de sobrescribirlo en casos. GET nuevo nunca cae a texto. Compatibilidad de binario previo debe comprobarse, no prometer rollback directo por cambio aditivo.
-
-Usuario obtiene foto/sincroniza/verifica invariantes y marcador. Release 2, solo después del gate, publica V6 y código sin mappings legacy. V6 transaccional valida cada asociación o caso permitido con evidencia y elimina columnas. Guardas y marcador no sustituyen gate operativo de conteos/identidades/backup. Forward-only después; sin DDL en caliente ni remoto desde Flyway.
-
-### HTTP y frontend
-
-GET según contracts/api.md; POST conserva cinco contadores de jugadores. Actualizar OpenAPI y fuentes REST Docs, no snippets generados. Adaptar DTO/modelo/mapper/tarjetas frontend sin modificar 005. Clasificación por leagueName con fallback neutral existente: rename desconocido puede cambiar el estilo, sin continuidad histórica garantizada, mapas por leagueId ni campo HTTP adicional. PlayerIdentityMatcher mantiene semántica de imágenes y lee Team.name; proteger selección de jugadores sin Team para no introducir null dereference.
-
-## Estrategia de validación futura
-
-Para toda SPEC-007, cada comportamiento backend nuevo o modificado requiere tests automatizados suficientes conforme a Constitution y `docs/backend/testing.md`; no depende de una solicitud explícita de tests ni de TDD. El agente crea/modifica esos tests durante IMPLEMENT, mediante tareas de tests asociadas al comportamiento y fase correspondientes en `tasks.md`, reutilizando cobertura suficiente y sin tests artificiales. La revisión de código incluye tests; su revisión de cobertura y ejecución pertenecen al gate humano TESTING. El agente no ejecuta tests, directa ni indirectamente, ni builds cuando las normas lo prohíben. Esta corrección documental no ejecuta ninguno de esos controles.
-
-La autorización vigente abarca Release 1/V5: US01–US06 y sus tests T042–T051; T039/T040/T052 de Release 2 continúan excluidos hasta autorización posterior al gate humano. Foundation compartido tiene cobertura propia; no se asigna artificialmente a US01. Tests de consulta con datos controlados se ubican en Repository/Controller según la responsabilidad. Una prueba funcional de Service prepara y observa exclusivamente mediante APIs públicas productivas; su dependencia de sincronización está incluida en el cierre V5, sin acceso funcional directo a DB ni métodos productivos exclusivos para tests.
-
-| Responsabilidad | Cobertura prevista (no ejecutada) |
-|---|---|
-| Model | RF-001–RF-013, normalización, dos identidades vs duplicados, vigencia y casos |
-| Integration | RF-021/RF-035/RF-039: campos, completos vs truncados/desconocidos, errores, Retry-After |
-| Service | RF-014–RF-018/RF-024–RF-027/RF-031–RF-039: tres caminos, transferencias, protecciones, idempotencia, único commit, enriquecimiento separado |
-| Persistencia | V5 con NOT NULL/altas, upsert casos, UNIQUE propietario/proveedor y proveedor/id, rollback principal y corto, marcador, guarda y rollback V6 |
-| HTTP | RF-019/RF-028/RF-029: cuatro campos obligatorios, ausencia team/league, filtro completo, página vacía, JWT/400 existentes, POST sin campos adicionales |
-| Operación | Gate entre releases, consultas SQL con rol limitado, backup/restauración y compatibility de binarios |
-| Frontend | Build/manual por usuario cuando exista implementación; no infraestructura ni tests nuevos |
-
-SC-001–SC-012 se cubren con consulta, identidad, transferencias, conflictos, ausencia/regreso, backfill y revisión. Referencias completas en quickstart. Tests reales y builds quedan pendientes de implementación/usuario.
-
-Pruebas Service con @SpringBootTest, perfil test, Service/Repository/DB reales e Integration sustituida: Arrange/Act/Assert funcionales solo mediante API pública de Service, sin acceso directo a Repository/SQL. Constraints, guardas y atomicidad técnica se verifican en categorías de persistencia apropiadas; SQL operativo de quickstart no habilita eludir esa frontera. Mapper se cubre por Controller, no suite dedicada. Providers controlados sin Internet; tiempo y concurrencia controlados.
-
-## Complexity Tracking
-
-No violaciones autorizadas. Dos releases: decisión técnica aprobada que reduce complejidad frente tabla transitoria. Normalizador propio: semántica estricta distinta del matcher de imágenes. ExternalProvider: claridad aprobada, no obligación funcional ni migración. Casos e intentos: estado mínimo necesario, sin ciclo de resolución artificial.
-
-## Revisión de coherencia final
-
-La alternativa C retira la garantía visual histórica: identidad estable y nombre actual permanecen; el frontend clasifica por nombre con neutral para desconocidos. Spec, research, modelo, contrato y quickstart no requieren mapas ni un campo de clasificación. CHK014/CHK022/CHK030 quedan satisfechos por el alcance explícito, no por una solución de reconstrucción histórica. Tasks generadas; implementación y validaciones humanas pendientes. La corrección de planificación de tests no resuelve H1–H4 ni modifica decisiones funcionales.
+Cobertura: identidad/rename/transferencia, asociaciones obligatorias, unicidad/cardinalidad, contradicciones y opcionales, foto incompleta/rollback, retirada/protección/regreso, TheSportsDB/elegibilidad/persistencia @MapsId, GET/POST, aislamiento de tests e instalación limpia V1–V5. Sin pruebas de mecanismos retirados ni gates operacionales legacy. Review/testing/cierre pendientes del humano.

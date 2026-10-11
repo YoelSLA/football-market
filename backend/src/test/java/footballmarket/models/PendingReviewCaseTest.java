@@ -24,31 +24,31 @@ class PendingReviewCaseTest {
       Instant first = Instant.parse("2026-10-01T00:00:00Z");
       Instant last = first.plusSeconds(60);
       Map<String, Object> original =
-          Map.of("originalTeamName", "Texto original", "candidates", java.util.List.of());
+          Map.of("receivedTeamName", "Texto original", "observations", java.util.List.of());
       PendingReviewCase review =
           new PendingReviewCase(
-              ReviewCategory.LEGACY_TEAM_ASSOCIATION,
-              ReviewCause.NO_TEAM_MATCH,
+              ReviewCategory.PLAYER_TEAM_UNRESOLVED,
+              ReviewCause.TEAM_UNRESOLVED,
               ReviewSubjectType.PLAYER,
               1L,
               null,
               null,
-              "LEGACY_TEAM_ASSOCIATION:PLAYER:1",
+              "PLAYER_TEAM_UNRESOLVED:PLAYER:1",
               first,
               original);
       Map<String, Object> observed =
-          Map.of("originalTeamName", "Texto cambiado", "candidates", java.util.List.of(2L, 3L));
+          Map.of("receivedTeamName", "Texto cambiado", "observations", java.util.List.of(2L, 3L));
 
       // Act
-      review.observe(ReviewCause.MULTIPLE_TEAM_MATCHES, last, observed);
+      review.observe(ReviewCause.MISSING_REQUIRED_DATA, last, observed);
 
       // Assert
       assertThat(review.getFirstDetectedAt()).isEqualTo(first);
       assertThat(review.getLastDetectedAt()).isEqualTo(last);
-      assertThat(review.getCauseCode()).isEqualTo(ReviewCause.MULTIPLE_TEAM_MATCHES);
+      assertThat(review.getCauseCode()).isEqualTo(ReviewCause.MISSING_REQUIRED_DATA);
       assertThat(review.getEvidence())
-          .containsEntry("originalTeamName", "Texto original")
-          .containsEntry("candidates", java.util.List.of(2L, 3L));
+          .containsEntry("receivedTeamName", "Texto original")
+          .containsEntry("observations", java.util.List.of(2L, 3L));
     }
 
     @Test
@@ -86,16 +86,16 @@ class PendingReviewCaseTest {
     void rejectOlderObservation() {
       // Arrange
       Instant detected = Instant.parse("2026-10-01T00:00:00Z");
-      Map<String, Object> evidence = Map.of("originalTeamName", "Original");
+      Map<String, Object> evidence = Map.of("receivedTeamName", "Original");
       PendingReviewCase review =
           new PendingReviewCase(
-              ReviewCategory.LEGACY_TEAM_ASSOCIATION,
-              ReviewCause.NO_TEAM_MATCH,
+              ReviewCategory.PLAYER_TEAM_UNRESOLVED,
+              ReviewCause.TEAM_UNRESOLVED,
               ReviewSubjectType.PLAYER,
               1L,
               null,
               null,
-              "LEGACY_TEAM_ASSOCIATION:PLAYER:1",
+              "PLAYER_TEAM_UNRESOLVED:PLAYER:1",
               detected,
               evidence);
 
@@ -103,11 +103,11 @@ class PendingReviewCaseTest {
       assertThatThrownBy(
               () ->
                   review.observe(
-                      ReviewCause.MULTIPLE_TEAM_MATCHES,
+                      ReviewCause.MISSING_REQUIRED_DATA,
                       detected.minusSeconds(1),
-                      Map.of("originalTeamName", "Cambio")))
+                      Map.of("receivedTeamName", "Cambio")))
           .isInstanceOf(InvalidCatalogEntityException.class);
-      assertThat(review.getCauseCode()).isEqualTo(ReviewCause.NO_TEAM_MATCH);
+      assertThat(review.getCauseCode()).isEqualTo(ReviewCause.TEAM_UNRESOLVED);
       assertThat(review.getEvidence()).isEqualTo(evidence);
       assertThat(review.getLastDetectedAt()).isEqualTo(detected);
     }

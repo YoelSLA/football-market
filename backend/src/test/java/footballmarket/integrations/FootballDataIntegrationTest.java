@@ -54,6 +54,17 @@ class FootballDataIntegrationTest {
         .andRespond(withSuccess(body, MediaType.APPLICATION_JSON));
   }
 
+  /** Responde informando el presupuesto de peticiones restante y el reinicio de su ventana. */
+  private void respondWithBudget(String path, String body, String available, String counterReset) {
+    server
+        .expect(requestTo("https://provider.example/v4" + path))
+        .andExpect(header("X-Auth-Token", "test-only"))
+        .andRespond(
+            withSuccess(body, MediaType.APPLICATION_JSON)
+                .header("x-requests-available-minute", available)
+                .header("X-RequestCounter-Reset", counterReset));
+  }
+
   private void competition(String name) {
     respond("/competitions/PL", "{\"id\":2001,\"name\":" + name + "}");
     respond("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}");
@@ -233,6 +244,97 @@ class FootballDataIntegrationTest {
       competition("\"League\"");
       respond("/teams/10", "{\"name\":\"Team\",\"squad\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      server.verify();
+    }
+  }
+
+  @Nested
+  @DisplayName("Ritmo de peticiones al proveedor")
+  class RatePacing {
+    @Test
+    @DisplayName("Espera a la ventana cuando el proveedor agota su presupuesto")
+    void esperaReinicioConPresupuestoAgotado() {
+      respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "1", "12");
+      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "1", "12");
+      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "1", "12");
+
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).containsExactly(Duration.ofSeconds(12), Duration.ofSeconds(12));
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("No espera cuando el proveedor todavía puede servir la lectura")
+    void noEsperaConPresupuestoDisponible() {
+      respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "9", "40");
+      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "8", "40");
+      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "7", "40");
+
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).isEmpty();
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("Conserva el margen de una petición y no espera por ella")
+    void conservaMargenSinAgotarPresupuesto() {
+      respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "2", "30");
+      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "1", "30");
+      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "1", "30");
+
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).containsExactly(Duration.ofSeconds(30));
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("La espera preventiva no se aplica antes de la primera lectura")
+    void noEsperaAntesDeLaPrimeraLectura() {
+      respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
+      respond("/competitions/PL/teams", "{\"teams\":[]}");
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).isEmpty();
+      server.verify();
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        delimiter = '|',
+        value = {"|60", "not-a-number|60", "-1|60"})
+    @DisplayName("Ante un reinicio no utilizable espera el tiempo predeterminado")
+    void esperaPredeterminadaAnteReinicioNoUtilizable(String counterReset, long seconds) {
+      respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "0", counterReset);
+      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "0", counterReset);
+      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "0", counterReset);
+
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).containsExactly(Duration.ofSeconds(seconds), Duration.ofSeconds(seconds));
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("Un presupuesto no numérico no altera el ritmo ni el resultado")
+    void ignoraPresupuestoNoNumerico() {
+      respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "many", "30");
+      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "many", "30");
+      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "many", "30");
+
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).isEmpty();
+      server.verify();
+    }
+
+    @Test
+    @DisplayName("Un presupuesto ausente conserva el control de ritmo por reintento")
+    void sinPresupuestoMantieneReintentoAnteLimite() {
+      server
+          .expect(requestTo("https://provider.example/v4/competitions/PL"))
+          .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", "2"));
+      respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
+      respond("/competitions/PL/teams", "{\"teams\":[]}");
+
+      assertThat(integration.fetchCompetition("PL").obtained()).isZero();
+      assertThat(waits).containsExactly(Duration.ofSeconds(2));
       server.verify();
     }
   }

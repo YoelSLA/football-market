@@ -47,7 +47,6 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@ExtendWith(OutputCaptureExtension.class)
 @Import({TestcontainersConfiguration.class, PlayerReferenceReadGate.class})
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
@@ -55,6 +54,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 class PlayerCatalogPersistenceTest {
   @Autowired private PlayerCatalogService catalog;
   @Autowired private PlayerRepository players;
+  @Autowired private TeamRepository teams;
   @Autowired private PlayerExternalReferenceRepository references;
   @Autowired private PlatformTransactionManager transactionManager;
   @Autowired private DataSource dataSource;
@@ -90,12 +90,11 @@ class PlayerCatalogPersistenceTest {
       jdbc.update(
           "INSERT INTO teams(id,name,league_id,current) VALUES (501,'Current',401,true),(502,'Retired',401,false)");
       jdbc.update(
-          "INSERT INTO players(id,name,team,league,position,active,team_id) VALUES "
-              + "(601,'First','Current','League','Forward',true,501),"
-              + "(602,'Inactive','Current','League','Forward',false,501),"
-              + "(603,'Retired','Retired','League','Forward',true,502),"
-              + "(604,'Unassociated','Original','League','Forward',true,NULL),"
-              + "(605,'Last','Current','League','Forward',true,501)");
+          "INSERT INTO players(id,name,position,active,team_id) VALUES "
+              + "(601,'First','Forward',true,501),"
+              + "(602,'Inactive','Forward',false,501),"
+              + "(603,'Retired','Forward',true,502),"
+              + "(605,'Last','Forward',true,501)");
       jdbc.update(
           "INSERT INTO pending_review_cases(category,cause_code,subject_type,subject_id,case_key,first_detected_at,last_detected_at,evidence) "
               + "VALUES ('PLAYER_TEAM_UNRESOLVED','TEAM_UNRESOLVED','PLAYER',601,'historical',now(),now(),'{}'::jsonb)");
@@ -158,15 +157,18 @@ class PlayerCatalogPersistenceTest {
     @Test
     @DisplayName("No inactiva jugadores sin referencia Football-Data ni cambia imágenes existentes")
     void protegeOtrosOrigenesEImagenes() {
+      PlayerCandidate input = candidate("44", "Football player");
+      catalog.applySynchronization(snapshot(input));
       TransactionTemplate transaction = new TransactionTemplate(transactionManager);
       transaction.executeWithoutResult(
           status -> {
-            Player local = new Player("Other origin", "T", "L", "P");
+            // Se asocia al equipo vigente de la foto: un equipo ausente se retira y su jugador
+            // deja de formar parte del catálogo consultado.
+            Long teamId = jdbc.queryForObject("SELECT id FROM teams WHERE name = 'T'", Long.class);
+            Player local = new Player("Other origin", teams.getReferenceById(teamId), "P");
             local.addExternalReference(ExternalProvider.THE_SPORTS_DB, "44");
             players.saveAndFlush(local);
           });
-      PlayerCandidate input = candidate("44", "Football player");
-      catalog.applySynchronization(snapshot(input));
       jdbc.update(
           "UPDATE players SET image_url='https://images.example/portrait.jpg' WHERE name='Football player'");
       catalog.applySynchronization(snapshot(input));
@@ -256,9 +258,14 @@ class PlayerCatalogPersistenceTest {
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     @DisplayName("Aísla la UNIQUE concurrente y preserva atomicidad si después ocurre otro fallo")
+    @ExtendWith(OutputCaptureExtension.class)
     void recuperaConflictoConcurrente(boolean technicalFailureAfterReplay, CapturedOutput output)
         throws Exception {
       // Arrange: la otra transacción conserva sin confirmar una referencia que la foto no ve.
+      jdbc.update("INSERT INTO leagues(name) VALUES ('Competing league')");
+      jdbc.update(
+          "INSERT INTO teams(name,league_id,current) SELECT 'Competing team', id, true FROM leagues "
+              + "WHERE name='Competing league'");
       jdbc.execute(
           """
           CREATE FUNCTION test_reference_gate() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -286,8 +293,9 @@ class PlayerCatalogPersistenceTest {
         try (ResultSet row =
             statement.executeQuery(
                 """
-            INSERT INTO players(name,team,league,position,active)
-            VALUES ('Concurrent owner','T','L','P',true) RETURNING id
+            INSERT INTO players(name,position,active,team_id)
+            SELECT 'Concurrent owner','P',true, id FROM teams WHERE name='Competing team'
+            RETURNING id
             """)) {
           row.next();
           owner = row.getLong(1);

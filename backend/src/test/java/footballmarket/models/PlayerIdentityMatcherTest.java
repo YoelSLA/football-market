@@ -1,8 +1,10 @@
 package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.models.PlayerIdentityMatcher.Candidate;
+import footballmarket.models.exceptions.InvalidPlayerException;
 import footballmarket.models.records.PlayerIdentityAliases;
 import java.time.LocalDate;
 import java.util.List;
@@ -80,15 +82,12 @@ class PlayerIdentityMatcherTest {
     }
 
     @Test
-    @DisplayName("Un jugador sin equipo asociado no obtiene coincidencia por textos legacy")
-    void ignoresUnassociatedPlayer() {
-      // Arrange
-      Player player = new Player("Name", "Team", "League", "Forward");
-      Candidate candidate = new Candidate("Name", null, "Team", "Soccer", null, null);
-
-      // Act / Assert
-      assertThat(matcher.matches(player, candidate)).isFalse();
-      assertThat(matcher.uniqueMatch(player, List.of(candidate))).isEmpty();
+    @DisplayName("Un jugador sin equipo resuelto no existe como Player y por tanto no coincide")
+    void refusesPlayerWithoutTeam() {
+      // Arrange / Act / Assert: el Player definitivo no admite equipo nulo, de modo que un jugador
+      // sin equipo resuelto no puede construirse y el matcher solo recibe jugadores asociados.
+      assertThatThrownBy(() -> new Player("Name", (Team) null, "Forward"))
+          .isInstanceOf(InvalidPlayerException.class);
     }
   }
 }

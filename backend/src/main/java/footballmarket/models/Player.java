@@ -44,19 +44,13 @@ public class Player {
 
   @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
   @Getter(AccessLevel.NONE)
-  private List<PlayerExternalReference> externalReferences;
+  private List<PlayerExternalReference> externalReferences = new ArrayList<>();
 
   @Column(nullable = false)
   private String name;
 
-  @Column(name = "team", nullable = false)
-  private String legacyTeam;
-
-  @Column(name = "league", nullable = false)
-  private String legacyLeague;
-
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "team_id")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "team_id", nullable = false)
   private Team team;
 
   @Column(nullable = false)
@@ -65,9 +59,7 @@ public class Player {
   @Column(nullable = false)
   private boolean active;
 
-  protected Player() {
-    this.externalReferences = new ArrayList<>();
-  }
+  protected Player() {}
 
   /**
    * Crea un jugador con identidad interna pendiente de generación y ya activo.
@@ -75,22 +67,15 @@ public class Player {
    * <p>La identidad en Football-Data.org se agrega por separado como referencia externa.
    *
    * @param name nombre del jugador
-   * @param team equipo según la fuente
-   * @param league liga según la fuente
+   * @param team equipo resuelto al que se asocia
    * @param position posición según la fuente
    */
-  public Player(String name, String team, String league, String position) {
-    this.update(name, team, league, position);
-    this.activate();
-  }
-
-  /** Crea un jugador asociado; los textos legacy son solo un espejo de compatibilidad. */
   public Player(String name, Team team, String position) {
     this.update(name, team, position);
     this.activate();
   }
 
-  /** La liga se deriva exclusivamente del equipo, nunca del espejo legacy. */
+  /** La liga se deriva exclusivamente del equipo asociado. */
   public League getLeague() {
     return this.team == null ? null : this.team.getLeague();
   }
@@ -111,21 +96,12 @@ public class Player {
     this.associateTeam(team);
   }
 
-  /** Asocia por identidad resuelta y actualiza el espejo temporal, sin modificar active. */
+  /** Asocia por identidad resuelta, sin modificar active. */
   public void associateTeam(Team team) {
     if (team == null) {
       throw new InvalidPlayerException("La asociación requiere un equipo resuelto");
     }
     this.team = team;
-    this.refreshLegacyMirror();
-  }
-
-  /** Refleja renombrados de las entidades asociadas para convivencia con el binario previo. */
-  public void refreshLegacyMirror() {
-    if (this.team != null) {
-      this.legacyTeam = this.team.getName();
-      this.legacyLeague = this.team.getLeague().getName();
-    }
   }
 
   /**
@@ -190,22 +166,6 @@ public class Player {
         this.fallbackImageUrl = thumbnail;
       }
     }
-  }
-
-  /** Válida todos los datos antes de modificar el estado del jugador. */
-  public void update(String name, String team, String league, String position) {
-    requireText(name);
-    requireText(team);
-    requireText(league);
-    requireText(position);
-    this.name = name;
-    if (this.team == null) {
-      this.legacyTeam = team;
-      this.legacyLeague = league;
-    } else {
-      this.refreshLegacyMirror();
-    }
-    this.position = position;
   }
 
   public void activate() {

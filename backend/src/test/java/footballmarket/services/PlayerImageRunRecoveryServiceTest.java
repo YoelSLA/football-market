@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.when;
 
 import footballmarket.integrations.TheSportsDbIntegration;
+import footballmarket.models.records.LeagueCandidate;
 import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.models.records.TeamCandidate;
 import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -35,6 +37,22 @@ class PlayerImageRunRecoveryServiceTest {
   @Autowired private PlayerImageSynchronizationService synchronization;
   @MockitoBean private TheSportsDbIntegration integration;
 
+  /**
+   * Foto con liga y equipo explícitos: desde V5 el jugador solo se crea si su equipo resuelve, y el
+   * enriquecimiento de imágenes omite los jugadores sin equipo resuelto.
+   */
+  private PlayerSnapshot photoWithTeam(String externalId, String name, boolean active) {
+    PlayerCandidate player =
+        new PlayerCandidate(externalId, name, "Team", "League", "Forward", null, null, "100");
+    return new PlayerSnapshot(
+        List.of(player),
+        1,
+        0,
+        List.of(new LeagueCandidate("10", "League")),
+        List.of(new TeamCandidate("100", "Team", "10", true)),
+        List.of());
+  }
+
   @Nested
   @DisplayName("Recuperación de ejecuciones anteriores")
   class Recovery {
@@ -54,9 +72,7 @@ class PlayerImageRunRecoveryServiceTest {
     @DisplayName("Con una ejecución abierta, recuperar dos veces concluye normalmente")
     void openRecoveryIsIdempotent() throws Exception {
       // Arrange: se abre un run a través de la API productiva, sin acceso a persistencia.
-      PlayerCandidate player =
-          new PlayerCandidate("one", "Name", "Team", "League", "Forward", null, null);
-      PlayerSnapshot snapshot = new PlayerSnapshot(List.of(player), 1, 0);
+      PlayerSnapshot snapshot = photoWithTeam("one", "Name", true);
       catalog.applySynchronization(snapshot);
       CountDownLatch entered = new CountDownLatch(1);
       CountDownLatch release = new CountDownLatch(1);

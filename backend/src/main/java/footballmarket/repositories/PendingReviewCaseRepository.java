@@ -2,7 +2,6 @@ package footballmarket.repositories;
 
 import footballmarket.models.PendingReviewCase;
 import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.enums.ReviewCategory;
 import footballmarket.models.enums.ReviewSubjectType;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +15,4 @@ public interface PendingReviewCaseRepository extends JpaRepository<PendingReview
 
   List<PendingReviewCase> findBySubjectTypeAndSubjectProviderAndSubjectExternalId(
       ReviewSubjectType subjectType, ExternalProvider provider, String externalId);
-
-  List<PendingReviewCase> findBySubjectTypeAndSubjectIdAndCategory(
-      ReviewSubjectType subjectType, Long subjectId, ReviewCategory category);
 }

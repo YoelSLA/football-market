@@ -12,15 +12,29 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.Instant;
 import lombok.Getter;
+import org.springframework.data.domain.Persistable;
 
-/** Separa última llamada técnica de última evaluación válida y espera del proveedor. */
+/**
+ * Separa última llamada técnica de última evaluación válida y espera del proveedor.
+ *
+ * <p>El identificador lo deriva la asociación {@code @MapsId} y no se genera por secuencia. Al
+ * declarar {@link Persistable}, Spring Data distingue la instancia nueva de la ya persistida y usa
+ * {@code persist} en lugar de {@code merge}, que fallaba con identificador nulo al confirmar una
+ * entidad que todavía no existía en base.
+ */
 @Entity
 @Table(name = "team_resolution_attempts")
 @Getter
-public class TeamResolutionAttempt {
+public class TeamResolutionAttempt implements Persistable<Long> {
+
+  @Transient private boolean pendingPersistence = true;
+
   @Id
   @Column(name = "team_id")
   private Long teamId;
@@ -109,5 +123,26 @@ public class TeamResolutionAttempt {
         || calledAt.isBefore(this.lastCallAt)) {
       throw new InvalidCatalogEntityException("La llamada requiere fecha y nombre válidos");
     }
+  }
+
+  /**
+   * Identificador derivado de la asociación, no de una columna generada.
+   *
+   * @return identificador interno del equipo asociado
+   */
+  @Override
+  public Long getId() {
+    return this.teamId;
+  }
+
+  @Override
+  public boolean isNew() {
+    return this.pendingPersistence;
+  }
+
+  @PrePersist
+  @PostLoad
+  void markPersisted() {
+    this.pendingPersistence = false;
   }
 }

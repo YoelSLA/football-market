@@ -49,6 +49,7 @@ class PlayerImageMigrationTest {
             .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
             .schemas(schema)
             .defaultSchema(schema)
+            .target("4")
             .load()
             .migrate();
         try (ResultSet result =
@@ -89,6 +90,7 @@ class PlayerImageMigrationTest {
           .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
           .schemas(schema)
           .defaultSchema(schema)
+          .target("4")
           .load()
           .migrate();
       try (Connection connection =

@@ -1,11 +1,16 @@
 <!--
-Sync Impact Report — Enmienda 2026-10-07
-Versión: 5.0.0 → 6.0.0 (MAJOR: condiciones obligatorias de autorización, gates y cierre redefinidas).
-Principios modificados: §6 distingue entrega técnica de DONE; §8 consolida lifecycle y evidencia.
-Sin secciones eliminadas. Dependencias actualizadas: workflow SDD, implement, plantilla tasks,
-workflow YAML, estados de specs y skills sdd-orchestration/trello-traceability.
-AGENTS y comandos analyze/converge conservan prohibición de tests y contratos de lectura/append-only.
-Sin cambios en Trello, código, specs funcionales ni tasks.md; H1–H4 y tests de SPEC-007 fuera de alcance.
+Sync Impact Report — Enmienda 2026-10-11
+Versión: 6.0.0 → 6.1.0 (MINOR: principio nuevo §2.1 sobre gestión de datos en desarrollo).
+Principios modificados: §2 incorpora la subsección 2.1; sin modificar ni eliminar reglas preexistentes.
+Dependencias actualizadas: ninguna. Los documentos normativos de §1 no requieren cambios: la
+regla se aplica a la base de datos de desarrollo y no altera arquitectura, contratos ni stack.
+Compatible con §2 (simplicidad y anti-sobreingeniería), §3, §4 (compatibilidad de contratos),
+§6 (restricciones de ejecución), §8 (autorizaciones humanas) y §9 (gobernanza).
+Ratificación: se conserva la fecha de ratificación de la norma base, 2026-08-31. La enmienda 6.1.0
+y el contenido de §2.1 fueron ratificados explícitamente por el usuario el 2026-10-11. La
+procedencia editorial previa queda como no determinada y no se atribuye autoría. Esta ratificación
+no modifica §6, §8 ni §9 ni autoriza por sí sola operaciones destructivas.
+Sin cambios en Trello, código, specs funcionales ni docs/.
 -->
 # Constitución de Football Market
 
@@ -26,6 +31,18 @@ Constitution tiene máxima jerarquía normativa. Los documentos normativos de á
 - Limitar los cambios a la tarea y a la coherencia de sus elementos afectados. Refactorizar solo con beneficio concreto, preservando comportamiento ajeno; revisar consumidores antes de eliminar o renombrar elementos.
 - Eliminar código muerto dentro del alcance. Mantener comentarios útiles y actualizados, sin repetir lo evidente.
 - Reportar violaciones o fallos preexistentes ajenos al cambio sin ocultarlos ni ampliar el alcance para corregirlos.
+
+### 2.1. Gestión de datos en desarrollo
+
+Mientras el proyecto no esté en producción, los datos de desarrollo son descartables y su conservación no es un requisito. Aplicar estos principios únicamente a la base de datos y al estado de desarrollo; no constituyen una excepción a §3, §4, §6 ni a las demás secciones.
+
+- Preferir el esquema y la representación de datos más simples que satisfagan los requisitos actuales. Se permite eliminar, recrear o reinicializar datos, tablas y estructuras de base de datos cuando eso simplifique la implementación.
+- No implementar migraciones, mecanismos de compatibilidad retroactiva, columnas o rutas de escritura preservadoras ni capas de traducción cuyo único propósito sea conservar datos o estructuras de desarrollo existentes.
+- No anticipar requisitos de producción no definidos. Un diseño correcto y coherente prevalece sobre la conservación de estructuras o registros preexistentes.
+- Esta permisividad se limita a los datos. No habilita alterar contratos, eliminar operaciones o respuestas documentadas ni evadir las reglas de compatibilidad de §4.
+- Toda operación destructiva —incluidas las que afecten la base de datos— respeta las restricciones de ejecución de §6 y las autorizaciones humanas exigidas por §8, y no se ejecuta por iniciativa propia del agente conforme a §9.
+
+Esta sección se revisa cuando el proyecto avance hacia producción y deje de ser aplicable sin una enmienda posterior.
 
 ## 3. Seguridad
 
@@ -142,4 +159,4 @@ Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible.
 
 Las enmiendas usan versionado semántico: MAJOR para eliminación o redefinición incompatible de gobernanza/principios; MINOR para principios nuevos o ampliación material compatible; PATCH para aclaraciones sin cambio semántico. Deben justificar el incremento, registrar impacto y dependencias, conservar la fecha de ratificación y actualizar la fecha de última enmienda.
 
-**Versión**: 6.0.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-07
+**Versión**: 6.1.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-11
