@@ -22,7 +22,8 @@ npm ci
 npm run dev
 ```
 
-Abrir la URL informada por Vite en un navegador de escritorio con viewport de al menos 1280×720. Iniciar sesión y navegar a `/players`.
+Abrir la URL informada por Vite en un navegador. Iniciar sesión y navegar a `/players`. Para revisar
+la composición responsive, repetir la validación a 1280, 768 y 360 píxeles de ancho.
 
 ## Escenarios de validación
 
@@ -36,16 +37,18 @@ Abrir la URL informada por Vite en un navegador de escritorio con viewport de al
 ### Tarjetas y composición
 
 1. Usar datos que cubran las cinco ligas y las cuatro posiciones documentadas.
-2. Confirmar un máximo de 12 tarjetas, cuatro columnas y hasta tres filas, sin desplazamiento horizontal a 1280×720.
-3. Verificar en cada tarjeta icono genérico, nombre, liga y posición, además de un bloque central con el equipo real, `24` partidos, `8` goles y `5` asistencias, cada atributo con su etiqueta.
-4. Confirmar recursos y color suave por liga, recurso por posición y texto accesible para ambas clasificaciones.
-5. Comprobar que los textos del equipo y de las estadísticas contrastan con el fondo, y que nombres largos no invaden estadísticas ni metadatos.
-6. Pasar el puntero sobre cada tarjeta y confirmar que `Activo` entra desde la izquierda sin desplazar la cuadrícula ni ocultar información esencial; al retirar el puntero debe ocultarse de nuevo.
+2. Confirmar un máximo de 12 tarjetas, cuatro columnas y hasta tres filas a 1280×720, y que la cuadrícula se reorganiza sin desplazamiento horizontal a 768 y 360 píxeles.
+3. Verificar en cada tarjeta el retrato o el icono genérico, el nombre, la liga y la posición, además de un bloque central con el equipo real y tres estadísticas etiquetadas como «Datos de demostración», cada atributo con su etiqueta.
+4. Comparar las estadísticas de dos jugadores distintos y confirmar que derivan de su identificador; abrir el detalle de uno de ellos y confirmar que coinciden exactamente con los de su tarjeta.
+5. Confirmar recursos y color suave por liga y su texto accesible; comprobar que la posición se identifica mediante una etiqueta textual visible, clara y legible sobre el fondo de cada liga.
+6. Comprobar que los textos del equipo y de las estadísticas contrastan con el fondo, y que nombres largos no invadan estadísticas ni metadatos.
+7. Pasar el puntero sobre cada tarjeta y confirmar que se eleva y refuerza su brillo sin desplazar la cuadrícula ni ocultar datos esenciales; al retirar el puntero recupera su posición. Confirmar además que `Activo` permanece visible sin hover.
+8. Confirmar el escudo del equipo y la bandera de nacionalidad; bloquear la red para comprobar que la bandera degrada a marcador de posición sin ocultar el dato textual.
 
 ### Paginación y concurrencia
 
 1. Preparar más de 12 jugadores y confirmar que aparece el paginador.
-2. Desde una página intermedia, verificar la actual, hasta tres anteriores, hasta tres posteriores y accesos a primera y última.
+2. Desde una página intermedia, verificar la actual, la anterior, la posterior y los accesos a primera y última; confirmar que las páginas omitidas se comunican con una elipsis y siguen siendo alcanzables.
 3. Confirmar que la página actual está identificada y que los destinos fuera de rango no son activables.
 4. Cambiar de página rápidamente varias veces y verificar que solo la selección más reciente determina las tarjetas finales.
 5. Reducir el catálogo de modo que la página seleccionada deje de existir; confirmar que se consulta y muestra la última página válida.

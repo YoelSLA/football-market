@@ -49,15 +49,22 @@ Representa exactamente un elemento de la respuesta de `GET /api/players`.
 
 ### PlayerSampleStatistics
 
-Datos numéricos de presentación comunes a todas las tarjetas, definidos como constantes y no como respuesta remota. Se muestran en el mismo bloque central que el equipo real de `Player`, pero este no forma parte de `PlayerSampleStatistics`.
+Datos numéricos de presentación de las tarjetas, derivados de forma determinista del identificador
+del jugador y no como respuesta remota. Se muestran en el mismo bloque central que el equipo real de
+`Player`, pero este no forma parte de `PlayerSampleStatistics`.
 
 | Campo | Tipo | Reglas |
 | --- | --- | --- |
-| `matches` | `number` | Valor fijo `24`, mostrado con la etiqueta `Partidos`. |
-| `goals` | `number` | Valor fijo `8`, mostrado con la etiqueta `Goles`. |
-| `assists` | `number` | Valor fijo `5`, mostrado con la etiqueta `Asistencias`. |
+| `matches` | `number` | **Derivado de forma determinista del `id` del jugador**, mostrado con la etiqueta `Partidos`. |
+| `goals` | `number` | **Derivado de forma determinista del `id` del jugador**, mostrado con la etiqueta `Goles`. |
+| `assists` | `number` | **Derivado de forma determinista del `id` del jugador**, mostrado con la etiqueta `Asistencias`. |
 
-Los valores deberán ser iguales en todas las tarjetas. No se persistirán ni enviarán al backend. El equipo se mostrará con su propia etiqueta y, junto con las estadísticas, usará texto con contraste suficiente respecto del fondo de la tarjeta.
+**Revisión 2026-10-13**: estos valores dejaron de ser constantes comunes `24`/`8`/`5` y pasaron a
+producirse con el mismo generador determinista que usa el detalle del jugador, etiquetados como
+«Datos de demostración». La fuente sigue siendo de presentación: no se persisten ni se envían al
+backend, y el equipo se muestra con su propia etiqueta y contraste suficiente respecto del fondo.
+El concepto completo, incluidas la temporada y la invariante `matches = 0`, se define en
+`../009-player-detail/data-model.md` (`PlayerSampleSeason`).
 
 ### PlayersPageState
 
@@ -95,20 +102,22 @@ Los estados remotos `loading`, `error`, `empty` y `populated` derivan de TanStac
 
 - Solo existe cuando `totalPages > 1`.
 - La interfaz muestra numeración desde uno aunque el Model conserve índice desde cero.
-- Expone la actual, hasta tres anteriores, hasta tres posteriores y accesos a primera y última.
+- Expone la actual, la anterior, la posterior y accesos a primera y última. **Revisión 2026-10-13**: la ventana de tres anteriores y tres posteriores queda sustituida por la ventana vigente ±1, con elipsis cuando existen páginas omitidas y listado completo cuando el rango es pequeño. La implementación es el componente compartido `shared/components/Pagination`, componible desde `app/layouts/PaginatedPageLayout`.
 - Primera/última y cualquier destino fuera de `[0, totalPages - 1]` no son activables.
 
 ### Tarjeta
 
 - Estado base: toda la información esencial permanece visible.
-- Hover: el indicador `Activo` entra desde el borde izquierdo sin reflujo ni ocultación esencial.
-- Fin de hover: el indicador vuelve a su posición oculta.
-- No se define transición por click, foco o touch porque el alcance es exclusivamente escritorio y hover.
+- Hover: la tarjeta se eleva y su brillo se refuerza, sin reflujo ni ocultación esencial. **Sustitución aprobada el 2026-10-13** (SPEC-005 FR-010): el indicador lateral que entraba desde el borde izquierdo queda derogado.
+- El estado `Activo` permanece visible de forma permanente, con o sin hover, conforme a FR-011.
+- Fin de hover: la tarjeta recupera su posición y brillo originales.
+- Con el alcance responsive del 2026-10-13, la tarjeta debe ser utilizable también con teclado y en pantallas táctiles, sin depender del hover para la información esencial.
 
 ## Validaciones y fallbacks
 
 - `Premier League`, `Bundesliga`, `Primera Division`, `Serie A` y `Ligue 1` tienen recurso y color suave propios.
-- `Goalkeeper`, `Defence`, `Midfield` y `Offence` tienen recurso propio.
-- Todo valor no reconocido conserva su texto y usa representación neutra.
+- `Goalkeeper`, `Defence`, `Midfield` y `Offence` se identifican mediante una etiqueta textual visible y accesible. **Sustitución aprobada el 2026-10-13** (SPEC-005 FR-009): el recurso gráfico de posición queda derogado y el texto es el mecanismo único.
+- `Premier League`, `Bundesliga`, `Primera Division`, `Serie A` y `Ligue 1` conservan su recurso gráfico; la posición ya no consume recurso gráfico alguno.
+- El escudo del equipo se resuelve desde un registro local importado en build; la bandera de nacionalidad, desde un servicio externo. Ambos son adornos con marcador de posición accesible y no forman parte del modelo.
 - Imagen y color complementan, pero nunca sustituyen, los textos de liga, posición y estado.
 - Los controles admiten interacción, pero sus valores no pueden modificar contenido, query key, parámetros, orden o página.
