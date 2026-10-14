@@ -24,8 +24,11 @@ export function useRegisterPage() {
 				failure,
 				"No pudimos crear la cuenta. Vuelve a intentarlo.",
 			);
-			if (getErrorCode(failure) === AUTH_ERROR_CODES.EMAIL_ALREADY_REGISTERED) {
+			const code = getErrorCode(failure);
+			if (code === AUTH_ERROR_CODES.EMAIL_ALREADY_REGISTERED) {
 				form.setError("email", { message });
+			} else if (code === AUTH_ERROR_CODES.USERNAME_ALREADY_TAKEN) {
+				form.setError("username", { message });
 			} else {
 				setError(message);
 			}
