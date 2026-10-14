@@ -58,14 +58,16 @@ Para materializar o retomar una SPEC se usa el mecanismo real del repositorio:
 .specify/scripts/bash/create-new-feature.sh --json --reuse --short-name '<directorio-o-scope-existente>' '<trabajo autorizado>'
 ```
 
-- **Reanudar trabajo de una SPEC existente siempre con `--reuse`**, para no crear una identidad nueva. Sin `--reuse` el flujo asigna el siguiente número y crea otra spec.
+- **Reanudar trabajo de una SPEC existente siempre con `--reuse`**, para no crear una identidad nueva. Sin `--reuse` el flujo crea otra spec y, por defecto, asigna el siguiente número; la asignación explícita excepcional no autoriza duplicar una SPEC existente.
 - `--reuse` reutiliza `spec-id`, nombre y directorio; no sobrescribe `spec.md` ni los demás artefactos. Resuelve por coincidencia exacta; sin coincidencia o con varias, falla y las lista.
-- `--number` solo desambigua o valida identidad existente; falla si contradice la spec encontrada.
+- Con `--reuse`, `--number` desambigua o valida la identidad existente; falla si contradice la spec encontrada. Para una SPEC nueva, MAY utilizarse `--number` únicamente bajo la excepción de trabajo paralelo de Constitution §8, manteniendo la numeración automática como procedimiento predeterminado.
 - `--allow-existing-branch` **no** sustituye `--reuse`: el primero permite que la creación caiga sobre un directorio existente.
 - Ninguno descarta, sobrescribe ni hace `stash`. Con cambios rastreados pendientes o `HEAD` separado, el paso de rama se aborta y la spec se crea o reutiliza igual.
 - Leer `SPEC_ACTION` y `BRANCH_STATUS` para comprobar el resultado, además de `SPEC_NAME`, `SPEC_FILE`, `FEATURE_NUM` y `BRANCH_NAME`. **No asumir** que la rama está disponible por el texto.
 - Verificar el directorio efectivo por `SPECIFY_FEATURE_DIRECTORY` / `.specify/feature.json` y overrides de entorno antes de editar.
-- No predecir ni reservar números de SPEC.
+- No predecir, reservar ni asignar números fuera de la excepción de Constitution §8. Esta exige distribución previa documentada de funcionalidades entre integrantes que trabajan en paralelo y registro trazable del número, funcionalidad, responsable y motivo antes de crear la SPEC. Al materializarla, referenciar el registro y mantener trazabilidad con requisito, rama y seguimiento.
+- Antes de toda creación, verificar colisiones con specs locales, remotas accesibles y asignaciones conocidas por el equipo; registrar fuentes y resultado. Si no pueden descartarse, detenerse y solicitar confirmación. No reutilizar identificadores asignados a otras funcionalidades. Si el script ajusta el número explícito, reportarlo antes de continuar la redacción: no acredita la asignación acordada.
+- Una asignación explícita no acredita existencia, fases, gates, aprobación, implementación o integración. Una carpeta provisional o `spec.md` vacío no acredita una SPEC validada ni es requisito para asignar otra identidad. La excepción no permite sobrescribir specs, renumerarlas unilateralmente, omitir sincronización o gates ni afectar cambios locales preexistentes.
 
 ## READY
 
@@ -77,12 +79,13 @@ Condiciones:
 - ANALYZE vigente sin blockers.
 - Ambigüedades funcionales relevantes resueltas.
 - Criterios de aceptación cubiertos por tareas.
+- Sincronización de tarjetas US completada en este cierre: exactamente una tarjeta por US formal de `spec.md`, creada o reutilizada, con claves canónicas, vínculo con la épica, referencias a `spec.md` y `tasks.md`, columna `READY` salvo estado previo válido, índice `specs/trello.md` actualizado y evidencia persistida en la épica. Si falla o queda incompleta, READY no se declara completado.
 
 **Un blocker en cualquier US impide READY global.**
 
 **Dependency ≠ Blocker:** dependencias técnicas conocidas, identificadas y resolubles mediante orden técnico y autorizaciones no impiden READY.
 
-Efecto: la Feature y las US válidas alcanzan `READY`.
+Efecto: la Feature y las US válidas alcanzan `READY`. Las tarjetas US **no** se crean durante SPECIFYING: su alta o reutilización es parte de este cierre y se delega en `trello-traceability`.
 
 **READY no autoriza implementar.** Requiere autorización humana explícita.
 

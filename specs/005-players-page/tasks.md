@@ -15,6 +15,13 @@ description: "Tareas de implementación de la página de catálogo de jugadores"
 
 ## Format: `[ID] [P?] [Story] Description`
 
+- **[ID]**: `T001`…`T032`. Los identificadores son **locales a esta SPEC**: un `Txxx` desnudo de este
+  archivo se lee siempre como `SPEC-005/Txxx`. Cuando un documento de cualquier SPEC cite una Task
+  externa, debe usar el identificador completo `SPEC-XXX/TYYY`; por ejemplo `SPEC-009/T006` (migración
+  del valor compartido de estadísticas), `SPEC-009/T036` (build sin tests), `SPEC-009/T037` (suite
+  backend y escenarios manuales) o `SPEC-009/T047` (verificación visual del distintivo de posición y
+  del efecto de elevación).
+
 - **[P]**: Puede ejecutarse en paralelo porque afecta archivos distintos y no depende de una tarea incompleta.
 - **[Story]**: Historia de usuario a la que pertenece la tarea (`US1`, `US2`, `US3`, `US4`).
 - Cada descripción incluye rutas exactas de archivos.
@@ -47,11 +54,23 @@ description: "Tareas de implementación de la página de catálogo de jugadores"
 
 **Goal**: Mostrar la primera página privada del catálogo con hasta 12 tarjetas y feedback de carga, error y vacío.
 
-**Independent Test**: Iniciar sesión, abrir `/players` con jugadores y comprobar hasta 12 tarjetas con nombre, icono genérico, un bloque central con el equipo real, `24` partidos, `8` goles y `5` asistencias, además de liga y posición; abrir la misma URL sin sesión y comprobar la redirección a `/login`.
+**Independent Test**: Iniciar sesión, abrir `/players` con jugadores y comprobar hasta 12 tarjetas con nombre, icono genérico, un bloque central con el equipo real, las estadísticas de demostración vigentes y la liga y la posición; abrir la misma URL sin sesión y comprobar la redirección a `/login`.
+
+**Independent Test — redacción original de 2026-09-28, derogada el 2026-10-13**: la prueba independiente de
+esta fase citaba `24` partidos, `8` goles y `5` asistencias. Los valores son ahora deterministas por
+identificador de jugador y están etiquetados como demostración (FR-005); se conservan aquí solo como
+antecedente.
 
 ### Implementation for User Story 1
 
 - [X] T007 [P] [US1] Definir las estadísticas comunes `24` partidos, `8` goles y `5` asistencias con sus etiquetas en `frontend/src/features/players/constants/playerSampleStatistics.ts` y exportarlas desde `frontend/src/features/players/constants/index.ts`
+
+**Nota de reconciliación documental — 2026-10-13**: la redacción de T007 corresponde a la ejecución de la
+fase original. Los valores fijos `24`/`8`/`5` quedaron **derogados** por FR-005 y fueron sustituidos por
+el generador determinista compartido con el detalle en `SPEC-009/T006`, conservando las etiquetas
+Partidos, Goles y Asistencias. El archivo vigente es
+`frontend/src/features/players/constants/playerSampleStatistics.ts`. No se reescribe la tarea ejecutada:
+se identifica el alcance derogado.
 - [X] T008 [US1] Crear la tarjeta base con icono genérico, nombre largo contenido, un bloque central con el equipo real y las tres estadísticas etiquetadas, y liga y posición textuales; asegurar que los textos contrasten con el fondo en `frontend/src/features/players/components/PlayerCard/PlayerCard.tsx`, `frontend/src/features/players/components/PlayerCard/PlayerCard.module.scss` y `frontend/src/features/players/components/PlayerCard/index.ts`
 - [X] T009 [US1] Crear la página con consulta inicial, cuadrícula de cuatro columnas, máximo 12 tarjetas y estados accesibles de carga, error con reintento y catálogo vacío en `frontend/src/features/players/pages/PlayersPage/PlayersPage.tsx`, `frontend/src/features/players/pages/PlayersPage/PlayersPage.module.scss` y `frontend/src/features/players/pages/PlayersPage/index.ts`
 - [X] T010 [US1] Exponer `PlayerCard` y `PlayersPage` mediante `frontend/src/features/players/components/index.ts`, `frontend/src/features/players/pages/index.ts` y `frontend/src/features/players/index.ts`, y sustituir la ruta provisional por `/players` dentro del `AuthGuard` privado en `frontend/src/app/router/AppRouter.tsx`
@@ -64,11 +83,20 @@ description: "Tareas de implementación de la página de catálogo de jugadores"
 
 **Goal**: Recorrer el catálogo mediante una ventana paginada y conservar como resultado final la selección más reciente.
 
-**Independent Test**: Con al menos ocho páginas, navegar a primera, última y páginas de la ventana de tres anteriores/posteriores; verificar límites, selección actual, cambios rápidos y corrección a la última página válida cuando disminuye el total.
+**Independent Test**: Con al menos ocho páginas, navegar a primera, última y páginas de la ventana vigente (actual, anterior y posterior, con elipsis); verificar límites, selección actual, cambios rápidos y corrección a la última página válida cuando disminuye el total.
+
+**Independent Test — redacción original, derogada el 2026-10-13**: la prueba citaba la ventana de tres
+anteriores y tres posteriores. FR-014 la sustituye por la ventana vigente con elipsis; se conserva aquí
+solo como antecedente.
 
 ### Implementation for User Story 2
 
 - [X] T011 [P] [US2] Implementar el cálculo puro de destinos visibles con página actual, hasta tres anteriores/posteriores y extremos sin duplicados en `frontend/src/features/players/utils/getVisiblePlayerPages.ts` y exportarlo desde `frontend/src/features/players/utils/index.ts`
+
+**Nota de reconciliación documental — 2026-10-13**: la ventana de tres anteriores y tres posteriores de
+T011 quedó **derogada** por FR-014. El cálculo vigente del componente compartido
+`shared/components/Pagination` expone la página actual, la anterior y la posterior, los extremos y la
+elipsis. Se conserva la redacción original como antecedente de la tarea ejecutada.
 - [X] T012 [P] [US2] Crear el paginador accesible con numeración visual desde uno, estado actual y controles primera/última deshabilitados en límites en `frontend/src/features/players/components/PlayersPagination/PlayersPagination.tsx`, `frontend/src/features/players/components/PlayersPagination/PlayersPagination.module.scss` y `frontend/src/features/players/components/PlayersPagination/index.ts`
 - [X] T013 [US2] Crear el Page Hook que coordina `selectedPage`, la query y la corrección a `totalPages - 1` para selecciones que dejan de existir en `frontend/src/features/players/hooks/pages/usePlayersPage.ts`, exportándolo desde `frontend/src/features/players/hooks/pages/index.ts` y `frontend/src/features/players/hooks/index.ts`
 - [X] T014 [US2] Integrar `usePlayersPage` y `PlayersPagination` en `frontend/src/features/players/pages/PlayersPage/PlayersPage.tsx`, actualizar sus estilos en `frontend/src/features/players/pages/PlayersPage/PlayersPage.module.scss` y exportar el componente desde `frontend/src/features/players/components/index.ts`
@@ -81,7 +109,12 @@ description: "Tareas de implementación de la página de catálogo de jugadores"
 
 **Goal**: Diferenciar liga, posición y estado activo mediante recursos visuales, colores suaves y texto accesible.
 
-**Independent Test**: Revisar tarjetas de las cinco ligas y cuatro posiciones conocidas, además de valores desconocidos, y comprobar recursos, texto, contraste, fallback neutro y entrada lateral de `Activo` solo durante hover.
+**Independent Test**: Revisar tarjetas de las cinco ligas y cuatro posiciones conocidas, además de valores desconocidos, y comprobar recursos, texto, contraste y fallback neutro.
+
+**Independent Test — redacción original, derogada el 2026-10-13**: la prueba comprobaba además la entrada
+lateral de `Activo` solo durante hover. FR-010 la sustituye por elevación y refuerzo de brillo, y el
+estado `Activo` permanece visible de forma permanente por FR-011. La prueba vigente añade el recorrido con
+teclado y en pantalla táctil (T031 y `SPEC-009/T047`).
 
 ### Implementation for User Story 3
 
@@ -115,6 +148,16 @@ description: "Tareas de implementación de la página de catálogo de jugadores"
 - [X] T020 Revisar semántica, foco visible, `aria-busy`, `role="status"`, `role="alert"`, textos alternativos y ausencia de scroll horizontal a 1280x720 en `frontend/src/features/players/pages/PlayersPage/PlayersPage.tsx`, `frontend/src/features/players/pages/PlayersPage/PlayersPage.module.scss`, `frontend/src/features/players/components/PlayerCard/PlayerCard.tsx`, `frontend/src/features/players/components/PlayerCatalogControls/PlayerCatalogControls.tsx` y `frontend/src/features/players/components/PlayersPagination/PlayersPagination.tsx`
 - [ ] T021 Ejecutar manualmente los escenarios de acceso, tarjetas, paginación, controles, estados y fallbacks descritos en `specs/005-players-page/quickstart.md`
 - [ ] T022 Ejecutar `npm run build` desde `frontend/` usando el script definido en `frontend/package.json` y confirmar que no se generaron cambios versionables en `frontend/dist/` ni archivos `frontend/*.tsbuildinfo`
+
+  **Evidencia 2026-10-13 (ejecución del agente, salida verificable)**: `npm run build` → EXIT=0,
+  `✓ built in 2.16s`. `frontend/dist/` está cubierto por `frontend/.gitignore` y no produce cambios
+  versionables. **Pendiente**: `frontend/tsconfig.tsbuildinfo` está versionado y el build lo modifica, de
+  modo que el criterio «no se generaron cambios versionables en `frontend/*.tsbuildinfo`» **no se cumple**.
+  T022 permanece `[ ]` hasta que el responsable decida si restaura ese archivo y deja de versionarse.
+  Nota adicional: `npm run biome:check` falla en el estado actual del árbol, con desviaciones de formato en
+  `app/layouts/AppLayout`, `app/layouts/PageLayout`, `app/layouts/PaginatedPageLayout` y
+  `shared/components/Pagination`, más `assist/source/organizeImports` y formato en
+  `features/players/assets/teams/`.
 
 ---
 
@@ -236,3 +279,19 @@ Task paralela de otra historia: completar T015-T016 de clasificación visual sin
 - [X] T025 Reconocer `Primera División` en `frontend/src/features/players/constants/playerClassifications.ts` y `frontend/src/features/players/components/PlayerCatalogControls/PlayerCatalogControls.tsx`, conservando un alias explícito para `Primera Division` si ambos valores forman parte del contrato, para aplicar el recurso y color propios per FR-007/FR-008 y US3/AC1-2 (partial)
 - [X] T026 Coordinar en `frontend/src/features/players/hooks/pages/usePlayersPage.ts` y `frontend/src/features/players/pages/PlayersPage/PlayersPage.tsx` las tarjetas, el total y el paginador como un único estado de consulta, ocultando o deshabilitando navegación obsoleta durante carga o error per FR-016/FR-017 y SC-005/SC-008 (partial)
 - [X] T027 Hacer legibles los nombres largos en `frontend/src/features/players/components/PlayerCard/PlayerCard.tsx` y `frontend/src/features/players/components/PlayerCard/PlayerCard.module.scss` mediante ajuste controlado o una alternativa accesible por teclado, sin invadir estadísticas ni clasificaciones per Edge case: long names y T008 (partial)
+
+---
+
+## Phase 9: Sincronización documental posterior al rediseño (2026-10-13)
+
+**Purpose**: Registrar la decisión de producto que conserva el rediseño manual del frontend y
+alinear los artefactos de esta SPEC con la implementación real. No se modifica código.
+
+- [X] T028 Registrar en `specs/005-players-page/spec.md` la sesión de decisiones del 2026-10-13, los requisitos derogados con su reemplazo y los requisitos que siguen pendientes de verificación
+- [X] T029 Sustituir FR-005, FR-006, FR-014 y FR-020, e incorporar FR-021 y FR-022; actualizar US1, US2, SC-002, SC-003, SC-004 y añadir SC-009 y SC-010
+- [X] T030 Sincronizar `data-model.md`, `plan.md`, `research.md`, `contracts/players-catalog.md` y `quickstart.md` con el generador determinista compartido, la cuadrícula responsive, la paginación compartida y los recursos gráficos decorativos
+- [ ] T031 Verificar en el navegador el comportamiento responsive a 1280, 768 y 360 píxeles, los valores deterministas por jugador, la etiqueta de posición, el efecto de elevación y la degradación de la bandera nacional. **Pendiente**: requiere ejecución manual del usuario
+- [X] T032 Registrar la decisión humana del 2026-10-13 que sustituye FR-009 por una etiqueta textual de posición y FR-010 por el efecto de elevación y refuerzo de brillo, sin reintroducir los elementos visuales anteriores. Sustituciones, justificaciones y antecedentes documentados en `specs/005-players-page/spec.md`
+
+**Nota**: T031 y T032 permanecen abiertas. El rediseño conservado no cierra por sí mismo estos
+requisitos, y su cumplimiento no puede inferirse de la existencia del código.

@@ -19,7 +19,21 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 | Zustand | 5.0.15 | Store de sesión en `infrastructure/storage/useAuthStore`: estado de autenticación, inicio y cierre de sesión, conectado con la persistencia del token. |
 | React Hook Form y resolvers | React Hook Form 7.88.0; resolvers 5.9.1 | Estado y comportamiento de los formularios de login y registro mediante Form Hooks, con integración de schemas Zod. |
 | Zod | 4.6.5 | Schemas de validación de email, contraseña y confirmación de los formularios de autenticación. |
-| Sass | 1.104.1 | Compilación de los estilos SCSS globales y de los SCSS Modules colocalizados con Pages y Components. |
+| Sass | 1.104.1 | Compilación de los estilos SCSS globales y de los SCSS Modules colocalizados con Pages y Components, incluida la capa global `styles/base` y `styles/abstracts` (breakpoints, tokens y temas). |
 | Biome | 2.5.14 | Linting, formateo, organización de imports y controles recomendados sobre el frontend. |
+
+## Recursos gráficos y dependencias que no son paquetes
+
+Esta sección registra dependencias de recursos que no aparecen en `package.json` porque no son paquetes instalables. Constitution §4 exige que todo cambio del inventario tecnológico se refleje aquí en la misma tarea.
+
+| Recurso | Procedencia | Uso | Tolerancia a fallos |
+| --- | --- | --- | --- |
+| Escudos de equipos (`features/players/assets/teams/`) | **Local**. Importados en tiempo de build desde Wikimedia Commons mediante `frontend/scripts/import-team-logos.mjs`, que genera el registro de la feature y su documentación en `frontend/scripts/TEAM-LOGOS.md`. | Identificación visual del equipo en la tarjeta del catálogo y en el detalle. No se cargan en runtime. | Sin coincidencia por nombre normalizado, la tarjeta y el detalle muestran un marcador de posición accesible. |
+| Banderas de nacionalidad (`getNationalityFlag`) | **Servicio externo en runtime** (`flagcdn.com`). | Identificación visual de la nacionalidad en la tarjeta del catálogo. | Marcador de posición accesible cuando la bandera no carga; la nacionalidad nunca depende de la imagen para ser comprensible. |
+| Recursos de liga y posición, iconos genéricos y capturas de referencia | **Local**. `features/players/assets/` y `referencias-imagenes/`. | Identificación visual de liga y posición, retrato genérico y referencia de diseño. | Se conserva siempre la identificación textual del dato. |
+
+`getTeamLogo` resuelve exclusivamente por nombre normalizado y devuelve `null` ante colisiones o ausencias; los alias conocidos se aplican solo en la importación y nunca en tiempo de ejecución.
+
+El proyecto **no incorporate una librería de gráficos**: la evolución de cotizaciones se representa con SVG propio para evitar una dependencia adicional y conservar accesibilidad.
 
 El frontend no declara actualmente una librería ni infraestructura de testing propia.

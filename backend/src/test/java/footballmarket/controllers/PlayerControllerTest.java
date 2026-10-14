@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -18,6 +19,7 @@ import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.AuthenticationService;
 import footballmarket.services.PlayerCatalogService;
+import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -38,6 +40,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.restdocs.payload.JsonFieldType;
@@ -386,6 +389,202 @@ class PlayerControllerTest {
           .andExpect(content().string(""))
           .andDo(document("players-invalid-jwt"));
       verifyNoInteractions(service);
+    }
+  }
+
+  @Nested
+  @DisplayName("Consulta de un jugador individual")
+  class PlayerDetail {
+    @Test
+    @DisplayName("Devuelve la identidad exacta de un jugador visible")
+    void devuelveJugadorVisible() throws Exception {
+      when(service.getVisiblePlayerById(7821L)).thenReturn(visiblePlayer(7821L, "Joel Robles"));
+      mvc.perform(get("/api/players/{id}", 7821L).header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(
+              content()
+                  .json(
+                      """
+{"id":7821,"name":"Joel Robles","teamId":41,"teamName":"Real Betis Balompié","leagueId":12,"leagueName":"Primera Division","position":"Goalkeeper","dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://images.example/cutout.png","fallbackImageUrl":"https://images.example/thumb.png"}
+""",
+                      org.springframework.test.json.JsonCompareMode.STRICT));
+    }
+
+    @Test
+    @DisplayName("Serializa los opcionales nulos sin inventar valores")
+    void devuelveOpcionalesNulos() throws Exception {
+      when(service.getVisiblePlayerById(7L))
+          .thenReturn(visiblePlayerWithoutOptionals(7L, "Nombre"));
+      mvc.perform(get("/api/players/{id}", 7L).header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.dateOfBirth").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.nationality").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.imageUrl").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.fallbackImageUrl").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    @DisplayName("Responde 404 con el mismo cuerpo si el jugador no es visible")
+    void responde404SiNoEsVisible() throws Exception {
+      when(service.getVisiblePlayerById(999999L))
+          .thenThrow(new PlayerNotFoundException("No encontramos el jugador solicitado"));
+      mvc.perform(get("/api/players/{id}", 999999L).header("Authorization", authorization))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
+          .andExpect(jsonPath("$.status").value(404))
+          .andExpect(jsonPath("$.error").value("Not Found"))
+          .andExpect(jsonPath("$.code").value("PLAYER_NOT_FOUND"))
+          .andExpect(jsonPath("$.message").value("No encontramos el jugador solicitado"))
+          .andExpect(jsonPath("$.path").value("/api/players/999999"))
+          .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    @DisplayName("Rechaza un identificador con formato inválido antes de consultar")
+    void rechazaIdentificadorInvalido() throws Exception {
+      mvc.perform(get("/api/players/{id}", "abc").header("Authorization", authorization))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
+          .andExpect(jsonPath("$.status").value(400))
+          .andExpect(jsonPath("$.code").value("INVALID_PARAMETER_TYPE"))
+          .andExpect(jsonPath("$.path").value("/api/players/abc"))
+          .andExpect(jsonPath("$.timestamp").exists());
+      verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("Rechaza consultar un jugador sin token")
+    void rechazaDetalleSinToken() throws Exception {
+      mvc.perform(get("/api/players/{id}", 7821L))
+          .andExpect(status().isUnauthorized())
+          .andExpect(content().string(""));
+      verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("Rechaza consultar un jugador con un JWT inválido")
+    void rechazaDetalleConJwtInvalido() throws Exception {
+      mvc.perform(get("/api/players/{id}", 7821L).header("Authorization", "Bearer invalid"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(content().string(""));
+      verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("Documenta el contrato del endpoint individual con Spring REST Docs")
+    void documentaContratoDeJugadorVisible() throws Exception {
+      when(service.getVisiblePlayerById(7821L)).thenReturn(visiblePlayer(7821L, "Joel Robles"));
+      mvc.perform(
+              get("/api/players/{id}", 7821L)
+                  .header("Authorization", authorization)
+                  .accept(MediaType.APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andDo(
+              document(
+                  "player-detail",
+                  pathParameters(
+                      parameterWithName("id").description("Identificador interno del jugador")),
+                  responseFields(
+                      fieldWithPath("id").description("Identificador interno"),
+                      fieldWithPath("name").description("Nombre persistido"),
+                      fieldWithPath("teamId").description("ID interno del equipo actual"),
+                      fieldWithPath("teamName").description("Nombre actual del equipo"),
+                      fieldWithPath("leagueId").description("ID interno de la liga"),
+                      fieldWithPath("leagueName").description("Nombre actual de la liga"),
+                      fieldWithPath("position").description("Posición persistida"),
+                      fieldWithPath("dateOfBirth")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Fecha de nacimiento yyyy-MM-dd o null"),
+                      fieldWithPath("nationality")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Nacionalidad o null"),
+                      fieldWithPath("imageUrl")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Retrato principal o null"),
+                      fieldWithPath("fallbackImageUrl")
+                          .type(JsonFieldType.STRING)
+                          .optional()
+                          .description("Retrato alternativo o null"))));
+    }
+
+    @Test
+    @DisplayName("Documenta el error de jugador no encontrado con Spring REST Docs")
+    void documentaJugadorNoEncontrado() throws Exception {
+      when(service.getVisiblePlayerById(999999L))
+          .thenThrow(new PlayerNotFoundException("No encontramos el jugador solicitado"));
+      mvc.perform(get("/api/players/{id}", 999999L).header("Authorization", authorization))
+          .andExpect(status().isNotFound())
+          .andDo(
+              document(
+                  "player-detail-not-found",
+                  pathParameters(
+                      parameterWithName("id").description("Identificador interno consultado")),
+                  responseFields(
+                      fieldWithPath("timestamp").description("Fecha del error"),
+                      fieldWithPath("status").description("Código HTTP"),
+                      fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code")
+                          .description("Código estable: no distingue inactivo de inexistente"),
+                      fieldWithPath("message").description("Mensaje seguro"),
+                      fieldWithPath("path").description("Ruta solicitada"))));
+    }
+
+    @Test
+    @DisplayName("Documenta el identificador inválido con Spring REST Docs")
+    void documentaIdentificadorInvalido() throws Exception {
+      mvc.perform(get("/api/players/{id}", "abc").header("Authorization", authorization))
+          .andExpect(status().isBadRequest())
+          .andDo(
+              document(
+                  "player-detail-invalid-id",
+                  pathParameters(
+                      parameterWithName("id").description("Identificador con formato inválido")),
+                  responseFields(
+                      fieldWithPath("timestamp").description("Fecha del error"),
+                      fieldWithPath("status").description("Código HTTP"),
+                      fieldWithPath("error").description("Descripción HTTP"),
+                      fieldWithPath("code").description("Código estable del error"),
+                      fieldWithPath("message").description("Mensaje de validación"),
+                      fieldWithPath("path").description("Ruta solicitada"))));
+    }
+
+    @Test
+    @DisplayName("Documenta el acceso sin autorización con Spring REST Docs")
+    void documentaAccesoNoAutorizado() throws Exception {
+      mvc.perform(get("/api/players/{id}", 7821L))
+          .andExpect(status().isUnauthorized())
+          .andDo(
+              document(
+                  "player-detail-unauthorized",
+                  pathParameters(
+                      parameterWithName("id").description("Identificador interno consultado"))));
+    }
+
+    private Player visiblePlayer(long id, String name) {
+      League league = new League("Primera Division");
+      Team team = new Team("Real Betis Balompié", league, true);
+      ReflectionTestUtils.setField(league, "id", 12L);
+      ReflectionTestUtils.setField(team, "id", 41L);
+      Player player = new Player(name, team, "Goalkeeper");
+      ReflectionTestUtils.setField(player, "id", id);
+      ReflectionTestUtils.setField(player, "imageUrl", "https://images.example/cutout.png");
+      ReflectionTestUtils.setField(player, "fallbackImageUrl", "https://images.example/thumb.png");
+      player.updateOptionalDetails(LocalDate.of(1990, 6, 20), "Spain");
+      return player;
+    }
+
+    /** Jugador visible cuyos cuatro opcionales nunca fueron informados por la fuente. */
+    private Player visiblePlayerWithoutOptionals(long id, String name) {
+      League league = new League("Primera Division");
+      Team team = new Team("Real Betis Balompié", league, true);
+      ReflectionTestUtils.setField(league, "id", 12L);
+      ReflectionTestUtils.setField(team, "id", 41L);
+      Player player = new Player(name, team, "Goalkeeper");
+      ReflectionTestUtils.setField(player, "id", id);
+      return player;
     }
   }
 }

@@ -1,0 +1,85 @@
+@use "../../../styles/abstracts" as ds;
+
+.layout {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+
+  /* Escala de espaciado global: 8px entre bloques del layout. */
+  gap: ds.$space-2xs;
+
+  /* ================= HEADER ================= */
+
+  &__header {
+    flex-shrink: 0;
+  }
+
+  /* ================= CONTENT ================= */
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+
+    /* Unico contenedor con scroll vertical del diseno desktop. */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    scrollbar-width: thin;
+  }
+
+  /* ================= FOOTER ================= */
+
+  &__footer {
+    flex-shrink: 0;
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@include ds.down(ds.$bp-tablet) {
+  .layout {
+    gap: 10px;
+
+    /* En movil se permite el scroll natural del documento: nada se recorta. */
+    &__content {
+      overflow-y: visible;
+      overflow-x: visible;
+    }
+  }
+}
+
+/* ==========================================================
+   MODO COMPACTO — solo con viewport ancho y alto.
+   El footer se ancla a la banda inferior y el contenido reserva
+   exactamente esa banda: nunca se superpone a las tarjetas.
+   ========================================================== */
+
+@include ds.compact() {
+  .layout--floating {
+    position: relative;
+
+    &__footer {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 2;
+    }
+
+    /* Reserva de la banda: exactamente la altura de la capsula
+       (tokens/_layout.scss). El contenido nunca queda por debajo
+       de la paginacion. */
+    &__content {
+      padding-bottom: ds.$pagination-band;
+    }
+  }
+}

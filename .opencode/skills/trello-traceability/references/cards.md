@@ -20,7 +20,9 @@ Reglas de identificadores:
 - Dividir, fusionar o retirar historias conserva la trazabilidad de identificadores y tarjetas anteriores.
 - No inventar US ni Tasks, ni usar `REQ-* | USxx` o `REQ-* | TSKxx` como convención previa a la materialización de una SPEC.
 - Las US formales derivan **únicamente** de `spec.md` de una SPEC existente.
-- No predecir ni reservar números de SPEC.
+- La numeración automática es predeterminada; no predecir ni reservar números fuera de la excepción de trabajo paralelo de Constitución §8. Una asignación explícita requiere distribución previa documentada entre integrantes y registro trazable del número, funcionalidad, responsable y motivo; verificar colisiones locales, remotas accesibles y conocidas por el equipo, registrando fuentes y resultado, sin reutilizar identificadores de otras funcionalidades. Si no pueden descartarse colisiones, detenerse y solicitar confirmación.
+- Bajo esas condiciones puede utilizarse `--number` en el flujo real de Spec Kit; Trello no asigna identidades por sí mismo. Al materializar la SPEC, referenciar el registro y conservar trazabilidad con requisito, rama y seguimiento. Un ajuste automático del número debe reportarse antes de continuar la redacción y no acredita la asignación acordada.
+- El registro de asignación no constituye una SPEC ni permite anticipar tarjetas SPEC, US o Tasks formales: hasta su materialización se conserva la épica REQ. Una asignación explícita no acredita existencia, fases, gates, aprobación, implementación o integración; una carpeta provisional o `spec.md` vacío no acredita una SPEC validada ni es requisito para asignar otra identidad.
 
 ## EPIC
 
@@ -66,11 +68,13 @@ Opcional: resumen breve de comportamiento, rama, commit, PR, bloqueos.
 
 Reglas:
 
-- Se crean **durante `SPECIFYING`**, tan pronto como estén suficientemente identificadas.
-- Si en ese momento una US no es identificable con certeza, esperar a CLARIFY y crearla entonces.
+- Se crean o reutilizan **al cerrar `READY`**, después de superar el gate humano de `ANALYZE`, como parte de la sincronización obligatoria de ese cierre.
+- En `SPECIFYING` solo se crea o reutiliza la tarjeta de la épica o Feature. Las US se identifican, definen y refinan en `spec.md` sin exigir tarjeta propia en esa etapa.
+- Si en el cierre de `READY` una US no tiene equivalente inequívoco en `spec.md`, no se crea su tarjeta: se registra la discrepancia y READY no se declara completado.
 - **Nunca** crear una US operativa sin equivalente en la Spec.
-- En `SPECIFYING` pueden existir para dar visibilidad, pero no son ejecutables hasta que la Feature alcance `READY`.
+- Una US sin tarjeta creada, vinculada y sincronizada no puede comenzar IMPLEMENT.
 - Los criterios de aceptación detallados continúan viviendo en `spec.md`.
+- Las tarjetas US preexistentes de cualquier SPEC se conservan: la regla no elimina, duplica, mueve ni revierte tarjetas ni estados válidos.
 
 ## Tareas
 

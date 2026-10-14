@@ -9,6 +9,7 @@ import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.repositories.PlayerRepository;
 import footballmarket.services.PlayerCatalogService;
 import footballmarket.services.exceptions.IncompletePhotoException;
+import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.internal.LeagueResolution;
 import footballmarket.services.internal.PlayerApplication;
@@ -107,6 +108,13 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
   public Page<Player> getActivePlayers(int page, int size) {
     return this.players.findByActiveTrue(
         PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
+  }
+
+  @Override
+  public Player getVisiblePlayerById(long id) {
+    return this.players
+        .findVisibleById(id)
+        .orElseThrow(() -> new PlayerNotFoundException("No encontramos el jugador solicitado"));
   }
 
   /**

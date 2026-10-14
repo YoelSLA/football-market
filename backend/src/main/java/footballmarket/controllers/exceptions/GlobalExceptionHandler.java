@@ -11,6 +11,7 @@ import footballmarket.services.exceptions.PlayerImageResolutionPersistenceExcept
 import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
 import footballmarket.services.exceptions.PlayerImageSynchronizationException;
+import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -140,6 +141,12 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleInvalidCredentials(
       InvalidCredentialsException ex, HttpServletRequest request) {
     return buildResponse(ex.getMessage(), "INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED, request);
+  }
+
+  @ExceptionHandler(PlayerNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handlePlayerNotFound(
+      PlayerNotFoundException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "PLAYER_NOT_FOUND", HttpStatus.NOT_FOUND, request);
   }
 
   @ExceptionHandler(UserNotFoundException.class)

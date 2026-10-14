@@ -1,0 +1,259 @@
+// ============================================================
+// ROLES SEMANTICOS DE FOOTBALL MARKET
+// ============================================================
+//
+// Este archivo NO contiene valores cromaticos: solo REFERENCIA a
+// los primitivos de tokens/_colors.scss y les pone nombre segun la
+// funcion que cumplen en la interfaz.
+//
+// REGLA: los componentes consumen unicamente los roles de este
+// archivo. Asi un cambio de color se resuelve en un solo lugar y el
+// codigo del componente sigue describiendo interfaz, no pigmento.
+//
+// Al anadir un rol nuevo, debe existir un uso real que lo justifique.
+// No crear roles especulativos: son tan costosos de mantener como los
+// valores que reemplazan.
+
+@use "../tokens/colors" as c;
+
+// ============================================================
+// MARCA
+// ============================================================
+
+// Accion principal: botones y enlaces de la accion dominante.
+// Valores: c.$color-brand-primary
+$action-primary: c.$color-brand-primary;
+
+// Estado hover de la accion principal.
+$action-primary-hover: c.$color-brand-primary-hover;
+
+// Estado activo de la accion (paginacion).
+$action-active: c.$color-brand-secondary;
+
+// Elemento seleccionado dentro de un conjunto paginado.
+// Distinto de $action-active: $action-active es el hover del
+// elemento ya seleccionado.
+$action-selected: c.$color-brand-selected;
+
+// Enlace sobre superficie clara.
+$link: c.$color-brand-high-contrast;
+
+// Estado hover del enlace.
+// Restricciones: exclusivo de $link. No usarlo como fondo.
+$link-hover: c.$color-catalog-accent;
+
+// ============================================================
+// FOCO (accesibilidad)
+// ============================================================
+
+// Fondo de la marca grafica del AuthLayout.
+// Contraste: blanco sobre este color = 8.54:1 (AAA).
+// Restricciones: reservado a la marca grafica. No usarlo como
+// fondo de acciones: para eso esta $action-primary.
+$brand-mark-surface: c.$color-brand-alt;
+
+// Texto sobre superficies de marca.
+// Uso: PlayerOverview.
+// Contraste: 6.41:1 sobre $surface-overview-from.
+$text-on-brand-surface: c.$color-brand-text;
+
+// Anillo de foco para superficies oscuras (navbar, paginacion).
+// Eleccion CRITICA: sobre superficies claras este color no es
+// visible (1.80:1). Elegir siempre segun el fondo.
+$focus-ring-on-dark: c.$color-focus-dark;
+
+// Anillo de foco de las migas de pan.
+// Restricciones: NO unificar con $focus-ring-on-light: ambos
+// resuelven a colores distintos por decision de diseno.
+$focus-ring-breadcrumb: c.$color-brand-high-contrast;
+
+// Anillo de foco para superficies claras (regla global).
+// Supera el minimo de 3:1 para indicadores de foco. No usarlo como
+// texto: 3.47:1 no alcanza para texto normal.
+$focus-ring-on-light: c.$color-focus-light;
+
+// ============================================================
+// SUPERFICIES
+// ============================================================
+
+// Fondo de la barra de navegacion.
+// Uso: Navbar.
+// Contraste: con $focus-ring-on-dark = 8.73:1 (AAA).
+$surface-navbar: c.$color-neutral-900;
+
+// Fondo del shell de la aplicacion.
+$surface-app: c.$color-app-surface;
+
+// Fondo del catalogo de jugadores.
+$surface-catalog: c.$color-app-surface-catalog;
+
+// Fondo de la pantalla de autenticacion (shell de acceso).
+// Restricciones: resuelve el mismo color que $surface-catalog
+// porque ambos gradientes parten de el. Se mantienen roles
+// separados: si uno cambia, el otro no debe arrastrarlo.
+$surface-auth: c.$color-app-surface-catalog;
+
+// Tinte superior de los degradados de fondo.
+// Uso: AuthLayout.
+// RESTRICCION: decorativo. Sobre $surface-auth da 2.16:1:
+// nunca usar como texto ni como indicador.
+$surface-auth-accent: c.$color-catalog-accent;
+
+// Fondo de la pantalla de verificacion de sesion.
+// Contraste: texto #162240 sobre este fondo = 13.98:1 (AAA).
+$surface-session-checking: c.$color-neutral-025;
+
+// Tinte inicial del degradado de marca de PlayerOverview.
+// RESTRICCION: decorativo. No reutilizar el token de accion
+// activa aunque comparta valor: cumple otra funcion.
+$surface-overview-from: c.$color-brand-secondary;
+
+// Tinte final del degradado de marca de PlayerOverview.
+// RESTRICCION: decorativo, ver $surface-overview-from.
+$surface-overview-to: c.$color-brand-deep;
+
+// Fondo de la pagina de bienvenida.
+$surface-home: c.$color-app-surface-home;
+
+// Fondo de superficies oscuras compactas (paginacion).
+$surface-dark: c.$color-neutral-800;
+
+// Superficie elevada sobre fondo oscuro (botones de paginacion).
+$surface-raised: c.$color-neutral-700;
+
+// Superficie clara de tarjetas y paneles.
+$surface-card: c.$color-white;
+
+// Superficie clara de campos de formulario.
+$surface-field: c.$color-neutral-050;
+
+// Superficie de controles deshabilitados.
+// Uso: campos de formulario en estado deshabilitado.
+// Restricciones: identifica el estado, no un error. Un control
+// deshabilitado nunca debe comunicar error ni advertencia.
+$surface-disabled: c.$color-neutral-100;
+
+// Superficie de la accion secundaria (contraste con $action-primary).
+// Uso: botones secundarios sobre superficie clara.
+$surface-secondary-action: c.$color-secondary-action-surface;
+
+// Superficie de exito (badges).
+$surface-success: c.$color-success-surface;
+
+// ============================================================
+// BORDES
+// ============================================================
+
+// Borde de tarjetas y paneles claros.
+$border-card: c.$color-border-card;
+
+// Borde de campos de formulario.
+// Restriccion: los componentes de formulario comparten este valor.
+$border-field: c.$color-border-field;
+
+// Borde de controles de formulario.
+// Restriccion: #d4dae7 pertenece a Field y #bbc4d6 a los filtros;
+// se mantienen separados hasta que exista una decision de diseño
+// que los unifique.
+$border-input: c.$color-border-input;
+
+// Borde fuerte sobre superficies oscuras.
+$border-strong: c.$color-neutral-600;
+
+// Borde fuerte en estado hover.
+// Uso: hover de los botones de navegacion de paginacion.
+// Nota: comparte primitivo con $text-separator/#text-ellipsis, pero
+// cumple otra funcion: es un borde, no texto.
+$border-strong-hover: c.$color-neutral-500;
+
+// ============================================================
+// TEXTOS
+// ============================================================
+
+// Texto principal sobre superficies claras.
+$text-primary: c.$color-ink-primary;
+
+// Texto secundario.
+$text-secondary: c.$color-ink-muted;
+
+// Texto de etiquetas de formulario.
+$text-label: c.$color-ink-label;
+
+// Texto principal de las superficies de autenticacion.
+// Uso: HomePage, AuthLayout, SessionChecking y campos de formulario.
+// Restricciones: #162240 es mas oscuro que $text-primary; no
+// intercambiarlos: cada uno pertenece a su superficie.
+$text-on-auth: c.$color-ink-auth;
+
+// Texto de la accion secundaria.
+// Contraste: sobre $surface-secondary-action = 10.88:1 (AAA).
+$text-secondary-action: c.$color-ink-secondary-action;
+
+// Texto sobre superficies oscuras.
+$text-on-dark: c.$color-neutral-200;
+
+// Texto de baja presencia dentro de superficies oscuras.
+$text-on-dark-muted: c.$color-neutral-400;
+
+// Texto de los controles de paginacion sobre superficie oscura.
+// Contraste: sobre $surface-dark = 9.85:1 (AAA).
+$text-pagination: c.$color-neutral-300;
+
+// Separador entre elementos de una ruta de navegacion.
+// Contraste: sobre blanco = 4.76:1 (AA).
+$text-separator: c.$color-neutral-500;
+
+// Indicador de paginas omitidas (elipsis).
+// Contraste: sobre blanco = 4.76:1 (AA).
+$text-ellipsis: c.$color-neutral-500;
+
+// Texto de las migas de pan de la pagina de detalle.
+// Contraste: sobre blanco = 10.35:1 (AAA).
+$text-breadcrumb: c.$color-neutral-700;
+
+// Texto de máxima presencia: elemento actual de una ruta.
+$text-strong: c.$color-neutral-950;
+
+// Texto de interaccion sobre fondos oscuros (hover del logo).
+$text-on-dark-soft: c.$color-on-dark-soft;
+
+// Texto inverso sobre superficies de marca.
+$text-inverse: c.$color-white;
+
+// ============================================================
+// ESTADOS
+// ============================================================
+
+// Mensaje de exito.
+$state-success: c.$color-success;
+
+// Texto de exito sobre superficies suaves.
+// Uso: badges de exito sobre $surface-success.
+// Contraste: sobre $surface-success = 6.24:1 (AA) y sobre blanco
+// = 7.09:1 (AAA).
+$state-success-strong: c.$color-success-strong;
+
+// Borde de campo invalido.
+$state-error-border: c.$color-error-border;
+
+// Mensaje de error.
+// Contraste: sobre blanco = 7.22:1 (AAA).
+// Restricciones: NO usar para bordes; para eso existe
+// $state-error-border. Mezclarlos produce bordes invisibles.
+$state-error: c.$color-error;
+
+// Mensaje de advertencia.
+// Uso: reservado, ningun componente lo utiliza todavia.
+$state-warning: c.$color-warning;
+
+// Acento informativo.
+$state-info: c.$color-info;
+
+// ============================================================
+// NO DEFINIDO AQUI (a proposito)
+// ============================================================
+//
+// - Colores de identidad de las ligas: viven en PlayerCard.
+// - Textos de error y exito como roles propios: hoy cada componente
+//   los toma de $color-error / $color-success directamente; cuando se
+//   migren, este archivo es el lugar donde nace el rol.

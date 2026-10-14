@@ -1,3 +1,5 @@
+@use "../../styles/abstracts" as ds;
+
 .auth-form {
 	display: grid;
 	gap: .5rem;
@@ -16,14 +18,14 @@
 		border: 0;
 		border-radius: .5rem;
 		padding: .85rem 1rem;
-		background: #203ac5;
-		color: white;
+		background: ds.$action-primary;
+		color: ds.$text-inverse;
 		font-size: .9rem;
 		font-weight: 650;
 		transition: background .15s;
 
 		&:hover:not(:disabled) {
-			background: #172b99;
+			background: ds.$action-primary-hover;
 		}
 
 		&:disabled {
@@ -38,22 +40,22 @@
 	}
 
 	&__error {
-		color: #a32739;
+		color: ds.$state-error;
 	}
 
 	&__success {
-		color: #17613b;
+		color: ds.$state-success;
 	}
 
 	&__switch {
 		margin: .5rem 0 0;
 		text-align: center;
-		color: #657087;
+		color: ds.$text-secondary;
 		font-size: .8rem;
 	}
 
 	&__link {
-		color: #203ac5;
+		color: ds.$action-primary;
 		font-weight: 700;
 		text-decoration: underline;
 		text-underline-offset: .2em;

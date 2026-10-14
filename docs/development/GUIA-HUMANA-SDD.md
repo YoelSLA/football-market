@@ -88,13 +88,13 @@ El orquestador administra artefactos, dependencias, Trello y evidencias. **Vos t
 
 **👤 VOS:** Leés hallazgos; decidís sobre conflictos importantes y confirmás que el alcance está listo.
 
-**🤖 AGENTE:** Cruza spec, plan, tasks, checklists y Constitución; informa blockers y evidencia de READY.
+**🤖 AGENTE:** Cruza spec, plan, tasks, checklists y Constitución; informa blockers y evidencia de READY. Analyze es estrictamente de lectura: no crea tarjetas.
 
 **💬 Mensaje sugerido:**
 
 > Ejecutá ANALYZE. Informame blockers, hallazgos y si la Feature está READY.
 
-**✅ Para avanzar:** No quedan blockers; READY no significa permiso para implementar.
+**✅ Para avanzar:** No quedan blockers. Al cerrar READY, el agente crea o reutiliza las tarjetas de cada US y las vincula a la épica; READY no significa permiso para implementar.
 
 ### 8. Autorizá IMPLEMENT de las US seleccionadas
 
@@ -204,7 +204,7 @@ No vuelvas a aprobar automáticamente algo que ya tenga evidencia válida; tampo
 |---|---|
 | BACKLOG | Trabajo identificado, todavía no preparado. |
 | SPECIFYING | Definición y preparación SDD. |
-| READY | Preparado, pendiente de autorización para implementar. |
+| READY | Preparado, con tarjetas de US sincronizadas; pendiente de autorización para implementar. |
 | IN PROGRESS | Implementación o trabajo autorizado en curso. |
 | CODE REVIEW | Revisión humana del código por US. |
 | TESTING | Validación humana de pruebas por US. |

@@ -1,6 +1,6 @@
 import { http } from "@/infrastructure/http";
-import { toPlayersPage } from "./players.mapper";
-import type { PlayersPage } from "./types";
+import { toPlayerDetail, toPlayersPage } from "./players.mapper";
+import type { PlayerDetail, PlayersPage } from "./types";
 
 async function getPage(
 	page: number,
@@ -16,4 +16,13 @@ async function getPage(
 	return toPlayersPage(data, page, size);
 }
 
-export const playersService = { getPage };
+async function getById(id: number, signal: AbortSignal): Promise<PlayerDetail> {
+	const { data } = await http.get<unknown>(`/players/${id}`, {
+		authenticated: true,
+		signal,
+	});
+
+	return toPlayerDetail(data);
+}
+
+export const playersService = { getPage, getById };

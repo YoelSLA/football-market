@@ -55,8 +55,8 @@ BACKLOG → SPECIFYING → READY → IN PROGRESS → CODE REVIEW → TESTING →
 | Columna | Feature | User Story |
 | --- | --- | --- |
 | `BACKLOG` | Intención todavía no preparada. | Historia todavía no preparada. |
-| `SPECIFYING` | SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS o ANALYZE. | Preparación afectada pendiente. |
-| `READY` | Preparación validada; espera inicio autorizado. | Preparada; autorizada o no. |
+| `SPECIFYING` | SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS o ANALYZE. | Sin tarjeta propia todavía: se crean al cerrar `READY`. |
+| `READY` | Preparación validada; espera inicio autorizado. | Creada o reutilizada al cerrar READY; preparada, autorizada o no. |
 | `IN PROGRESS` | Al menos una US está en IMPLEMENT y la Feature aún no cumple condiciones para su TESTING final. | IMPLEMENT realmente iniciado. |
 | `CODE REVIEW` | **No corresponde al flujo normal de Feature.** | Revisión humana del código completo, incluidos tests. |
 | `TESTING` | CONVERGE final o autorización de cierre pendiente. | Revisión y ejecución humana de tests, o N/A validado. |
@@ -100,7 +100,7 @@ altera gates, Constitución ni workflow.
 
 Esta skill **debe**:
 
-- identificar y crear tarjetas con su clave canónica;
+- identificar y crear tarjetas con su clave canónica; las US se crean o reutilizan al cerrar `READY`, tras superar el gate humano de `ANALYZE`, como parte de la sincronización de ese cierre;
 - mantener las descripciones breves, vigentes y Uniformes según `card-format.md`;
 - relacionar EPIC, SPEC, US y tareas;
 - mover tarjetas según la transición decidida;
@@ -115,6 +115,7 @@ Esta skill **no debe**:
 - decidir ni derivar un gate a partir de la evidencia registrada;
 - interpretar un cambio de Trello como cambio del estado real del proyecto;
 - mover una US a `IN PROGRESS` solo por estar autorizada;
+- crear tarjetas US fuera del cierre de `READY`, duplicarlas, o mover, eliminar o revertir tarjetas US preexistentes;
 - saltar `CODE REVIEW` o `TESTING`;
 - marcar una US o Feature `DONE` por tareas completas, build, commit, PR o CONVERGE;
 - persistir evidencia humana inventada;

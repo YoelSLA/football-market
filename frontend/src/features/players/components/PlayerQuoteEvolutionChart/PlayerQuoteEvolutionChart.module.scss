@@ -1,0 +1,140 @@
+@use "../../../../styles/abstracts" as ds;
+
+.player-quote-chart {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #0f172a;
+  color: #e2e8f0;
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  details {
+    margin-top: 0.75rem;
+  }
+
+  summary {
+    color: #cbd5f5;
+    cursor: pointer;
+    font-size: 0.85rem;
+
+    &:hover {
+      color: #ffffff;
+    }
+
+    &:focus-visible {
+      border-radius: 4px;
+      outline: 2px solid #38bdf8;
+      outline-offset: 3px;
+    }
+  }
+
+  table {
+    display: block;
+    width: 100%;
+    max-height: 14rem;
+    margin-top: 0.5rem;
+    overflow-y: auto;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid rgb(148 163 184 / 25%);
+    text-align: left;
+  }
+}
+
+.player-quote-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 0.5rem;
+  overflow: visible;
+}
+
+.player-quote-chart__axisTitle {
+  fill: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.player-quote-chart__axisLabel {
+  fill: #94a3b8;
+  font-size: 10px;
+}
+
+@media (max-width: 600px) {
+  .player-quote-chart__tick--alternate {
+    display: none;
+  }
+}
+
+/* ==========================================================
+   MODO COMPACTO — el grafico se adapta a la altura de su fila.
+
+   Sin esto, height:auto + viewBox hace que la altura de la pagina
+   la imponga la RELACION DE ASPECTO del SVG (720:280), que en un
+   ancho de ~1200px produce ~470px de alto.
+
+   Aqui el panel se convierte en columna flexible y el SVG recibe
+   el alto restante. El viewBox NO se modifica: preserveAspectRatio
+   mantiene la proporcion dentro del espacio disponible, de modo que
+   el dibujo nunca se deforma ni se recorta (queda centrado, con
+   aire lateral si sobra ancho).
+   ========================================================== */
+
+@include ds.compact-detail() {
+  .player-quote-chart {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+    min-height: 0;
+
+    &__svg {
+      /* Flex, no alto fijo: absorbe el espacio sobrante del panel. */
+      flex: 1;
+      height: auto;
+      min-height: 0;
+
+      margin-top: ds.$space-3xs;
+    }
+  }
+}
+
+.player-quote-chart__caption {
+  padding-bottom: 0.25rem;
+  font-size: 0.8rem;
+  opacity: 0.75;
+  text-align: left;
+}
+
+.player-quote-chart__demo {
+  margin: 0.75rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .player-quote-chart table {
+    max-height: 10rem;
+  }
+}
