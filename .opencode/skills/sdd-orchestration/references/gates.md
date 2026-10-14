@@ -24,6 +24,7 @@ Antes de declarar READY:
 - Ambigüedades funcionales relevantes resueltas; criterios de aceptación cubiertos por tareas.
 - ANALYZE completado, vigente y sin blockers; hallazgos no bloqueantes comunicados.
 - Sin requisitos nuevos introducidos sin decisión humana.
+- Sincronización de tarjetas US completa y verificada por lectura posterior: una tarjeta por US formal de `spec.md`, sin duplicados, con asociación correcta a la épica, índice `specs/trello.md` sincronizado y evidencia registrada. Delegar su ejecución en `trello-traceability`; si falla, READY no se declara completado.
 
 READY no autoriza implementar. No pedir una confirmación humana adicional de READY: se presenta junto con la solicitud de autorización de IMPLEMENT.
 
@@ -47,8 +48,9 @@ Ejemplo suficiente:
 
 Reglas:
 
-- Persistir la evidencia **en cada US autorizada**, con su propio comentario.
+- Persistir la evidencia **en cada US autorizada**, con su propio comentario. Esa persistencia requiere que la tarjeta de la US exista, esté vinculada a la épica y sea coherente con `spec.md`.
 - **Autorización ≠ inicio:** la US autorizada permanece `READY` hasta que IMPLEMENT comience efectivamente.
+- Antes de iniciar IMPLEMENT de una US, comprobar que su tarjeta existe, está vinculada a la épica y la épica alcanzó READY con su sincronización completa.
 - Advertir antes de implementar una combinación inconsistente.
 - Una autorización puede recuperarse en otra sesión si la evidencia persistida es verificable y no fue invalidada por cambios materiales.
 - No pedir autorizaciones repetidas mientras sigan vigentes.

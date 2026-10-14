@@ -48,7 +48,7 @@ Ubicaciones transversales: CI en `.github/workflows/` y hooks en `.githooks/`. C
 
 El agente no ejecuta tests, directa ni indirectamente mediante builds, generadores o hooks, en ninguna tarea del repositorio.
 
-Los únicos controles ejecutables permitidos son los builds definidos por los `AGENTS.md` específicos de cada área, y únicamente cuando se haya modificado código de esa área.
+Los controles ejecutables permitidos son los builds definidos por los `AGENTS.md` específicos de cada área, únicamente cuando se haya modificado código de esa área y bajo sus condiciones existentes, y las validaciones controladas de infraestructura de desarrollo expresamente autorizadas conforme a Constitution §6. La excepción no habilita tests de aplicación, no amplía los builds permitidos, no habilita modificaciones funcionales, no concede permisos implícitos ni altera gates humanos.
 
 Para cambios exclusivamente documentales, revisar rutas, enlaces, comandos y coherencia; no ejecutar build. Las condiciones de entrega y los fallos preexistentes se rigen por la constitución.
 

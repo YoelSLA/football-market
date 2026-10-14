@@ -83,7 +83,7 @@ Esta skill **no decide** qué queda invalidado: refleja lo que decida `sdd-orche
 
 | Cambio | Efecto |
 | --- | --- |
-| `spec.md` cambia materialmente | Reflejar el retroceso indicado, incluido `SPECIFYING` si corresponde, en la Feature y US afectadas |
+| `spec.md` cambia materialmente | Reflejar el retroceso indicado en la Feature y US afectadas; una US nueva definida por ese cambio recibe su tarjeta al volver a cerrar READY, no antes |
 | `plan.md` o `tasks.md` cambian materialmente | Reflejar la re-evaluación de gates indicada |
 | La Constitución cambia y afecta a la Feature | Reflejar la invalidación de `READY` indicada |
 | Código o tests cambian con impacto en alcance aprobado | Reflejar la invalidación de CODE REVIEW y TESTING afectadas |
