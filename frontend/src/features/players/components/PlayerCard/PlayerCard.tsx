@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import genericPlayerImage from "../../assets/Player Generic-Icon.png";
 import {
+	DEMO_DATA_LABEL,
+	DEMO_MESSAGES,
 	getLeagueClassification,
-	getPositionClassification,
+	getPlayerSampleStatistics,
 	PLAYER_SAMPLE_STATISTIC_ITEMS,
-	PLAYER_SAMPLE_STATISTICS,
 } from "../../constants";
 import type { Player } from "../../types";
+import { getNationalityFlag, getTeamLogo } from "../../utils";
 import styles from "./PlayerCard.module.scss";
 
 interface PlayerCardProps {
@@ -25,6 +28,8 @@ function PlayerPortrait({ player }: PlayerCardProps) {
 			className={styles["player-card__portrait"]}
 			src={images[imageIndex]}
 			alt=""
+			loading="lazy"
+			decoding="async"
 			onError={() =>
 				setImageIndex((index) => Math.min(index + 1, images.length - 1))
 			}
@@ -32,46 +37,116 @@ function PlayerPortrait({ player }: PlayerCardProps) {
 	);
 }
 
+function NationalityFlag({ nationality }: { nationality: string | null }) {
+	const url = getNationalityFlag(nationality);
+	const [failed, setFailed] = useState(false);
+	return url && !failed ? (
+		<img
+			className={styles["player-card__flag"]}
+			src={url}
+			alt={nationality ?? ""}
+			loading="lazy"
+			onError={() => setFailed(true)}
+		/>
+	) : (
+		<span
+			className={styles["player-card__flag-placeholder"]}
+			role="img"
+			aria-label={
+				nationality
+					? `Bandera no disponible: ${nationality}`
+					: "Nacionalidad no disponible"
+			}
+			title={nationality ?? "Nacionalidad no disponible"}
+		>
+			—
+		</span>
+	);
+}
+
+function TeamBadge({ teamName }: { teamName: string }) {
+	const url = getTeamLogo(teamName);
+	const [failed, setFailed] = useState(false);
+	return url && !failed ? (
+		<img
+			className={styles["player-card__badge"]}
+			src={url}
+			alt={`Escudo de ${teamName}`}
+			loading="lazy"
+			decoding="async"
+			onError={() => setFailed(true)}
+		/>
+	) : (
+		<span
+			className={styles["player-card__badge-placeholder"]}
+			role="img"
+			aria-label={`Escudo no disponible: ${teamName}`}
+			title="Escudo no disponible"
+		>
+			◇
+		</span>
+	);
+}
+
 export function PlayerCard({ player }: PlayerCardProps) {
 	const league = getLeagueClassification(player.leagueName);
-	const position = getPositionClassification(player.position);
+	const sampleStatistics = getPlayerSampleStatistics(player.id);
 
 	return (
 		<article
 			className={`${styles["player-card"]} ${styles[`player-card--${league.variant}`]}`}
 		>
-			<span className={styles["player-card__status"]}>Activo</span>
-			<header className={styles["player-card__header"]}>
+			<div className={styles["player-card__visual"]}>
+				<div className={styles["player-card__identity"]}>
+					{player.position && (
+						<span className={styles["player-card__position"]}>
+							{player.position}
+						</span>
+					)}
+					<TeamBadge key={player.teamName} teamName={player.teamName} />
+					<NationalityFlag
+						key={player.nationality}
+						nationality={player.nationality}
+					/>
+				</div>
+				<span className={styles["player-card__brand"]}>FM</span>
 				<PlayerPortrait
 					key={`${player.id}:${player.imageUrl}:${player.fallbackImageUrl}`}
 					player={player}
 				/>
-				<h2>{player.name}</h2>
+			</div>
+			<header className={styles["player-card__header"]}>
+				<h2 className={styles["player-card__name"]}>
+					<Link
+						className={styles["player-card__link"]}
+						to={`/players/${player.id}`}
+						title={DEMO_MESSAGES.playerPortraitAlt.replace(
+							"{name}",
+							player.name,
+						)}
+					>
+						{player.name}
+					</Link>
+				</h2>
+				<p className={styles["player-card__team"]}>{player.teamName}</p>
+				<div className={styles["player-card__league"]}>
+					{league.image && <img src={league.image} alt="" />}
+					<span>{player.leagueName}</span>
+				</div>
 			</header>
 
 			<dl className={styles["player-card__details"]}>
-				<div className={styles["player-card__team"]}>
-					<dt>Equipo</dt>
-					<dd title={player.teamName}>{player.teamName}</dd>
-				</div>
 				{PLAYER_SAMPLE_STATISTIC_ITEMS.map((statistic) => (
 					<div key={statistic.key}>
 						<dt>{statistic.label}</dt>
-						<dd>{PLAYER_SAMPLE_STATISTICS[statistic.key]}</dd>
+						<dd>{sampleStatistics[statistic.key]}</dd>
 					</div>
 				))}
 			</dl>
 
-			<footer className={styles["player-card__classifications"]}>
-				<div>
-					{league.image && <img src={league.image} alt="" />}
-					<span>{player.leagueName}</span>
-				</div>
-				<div className={styles[`player-card__position--${position.variant}`]}>
-					{position.image && <img src={position.image} alt="" />}
-					<span>{player.position}</span>
-				</div>
-			</footer>
+			<p className={styles["player-card__demo-label"]}>
+				Activo · {DEMO_DATA_LABEL}
+			</p>
 		</article>
 	);
 }

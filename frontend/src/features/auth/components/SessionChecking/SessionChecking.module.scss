@@ -1,16 +1,18 @@
+@use "../../../../styles/abstracts" as ds;
+
 .session-checking {
 	min-height: 100svh;
 	display: grid;
 	place-items: center;
 	padding: 1.5rem;
-	background: #eef2f8;
-	color: #162240;
+	background: ds.$surface-session-checking;
+	color: ds.$text-on-auth;
 
 	&__card {
 		width: min(100%, 32rem);
 		padding: clamp(1.5rem, 5vw, 3rem);
 		border-radius: 1.5rem;
-		background: white;
+		background: ds.$surface-card;
 		box-shadow: 0 1rem 4rem #16224012;
 		display: grid;
 		gap: 1.5rem;
@@ -20,8 +22,8 @@
 		border: 0;
 		border-radius: .6rem;
 		padding: .9rem 1rem;
-		background: #203ac5;
-		color: white;
+		background: ds.$action-primary;
+		color: ds.$text-inverse;
 	}
 
 	&__brand {

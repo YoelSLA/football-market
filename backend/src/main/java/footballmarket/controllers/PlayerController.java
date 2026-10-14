@@ -1,6 +1,7 @@
 package footballmarket.controllers;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
+import footballmarket.controllers.dtos.responses.PlayerResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayerSyncResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
 import footballmarket.controllers.exceptions.InvalidPlayerPageException;
@@ -79,5 +80,27 @@ public class PlayerController {
     }
     return ResponseEntity.ok(
         PlayerMapper.toResponse(this.playerCatalogService.getActivePlayers(page, size)));
+  }
+
+  @GetMapping("/{id}")
+  @Operation(
+      summary = "Consultar un jugador visible",
+      description =
+          "Consulta individual exclusivamente local por identificador interno, con el mismo criterio de visibilidad del catálogo: solo jugadores activos asociados a Team vigente y League válida. Un identificador inexistente, inactivo o no visible responde 404 con el mismo cuerpo, sin revelar la existencia del jugador. Expone los mismos campos que el catálogo, con dateOfBirth, nationality, imageUrl y fallbackImageUrl nullable. Requiere JWT válido.")
+  @ApiResponse(responseCode = "200", description = "Jugador visible")
+  @ApiResponse(
+      responseCode = "400",
+      description = "Identificador con formato inválido (INVALID_PARAMETER_TYPE)",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+  @ApiResponse(
+      responseCode = "404",
+      description = "Jugador inexistente, inactivo o no visible (PLAYER_NOT_FOUND)",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  public ResponseEntity<PlayerResponseDTO> getPlayer(
+      @Parameter(description = "Identificador interno del jugador", required = true) @PathVariable
+          Long id) {
+    return ResponseEntity.ok(
+        PlayerMapper.toResponse(this.playerCatalogService.getVisiblePlayerById(id)));
   }
 }

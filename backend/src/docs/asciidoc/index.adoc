@@ -41,6 +41,32 @@ include::{snippets}/players-invalid-0-2147483648/http-response.adoc[]
 include::{snippets}/players-unauthorized/http-response.adoc[]
 include::{snippets}/players-invalid-jwt/http-response.adoc[]
 
+=== Consulta individual
+
+`GET /api/players/{id}` devuelve la identidad real de un jugador con el mismo criterio de
+visibilidad del catálogo: solo jugadores activos con equipo vigente y liga válida. Un `id`
+inexistente, inactivo o no visible responde el mismo `404` con el código `PLAYER_NOT_FOUND`,
+sin revelar la existencia del jugador. Un `id` con formato inválido responde `400` con
+`INVALID_PARAMETER_TYPE`. No se exponen estadísticas ni cotizaciones.
+
+include::{snippets}/player-detail/http-request.adoc[]
+include::{snippets}/player-detail/http-response.adoc[]
+include::{snippets}/player-detail/request-parameters.adoc[]
+include::{snippets}/player-detail/response-fields.adoc[]
+
+==== Jugador no encontrado
+
+include::{snippets}/player-detail-not-found/http-response.adoc[]
+include::{snippets}/player-detail-not-found/response-fields.adoc[]
+
+==== Identificador inválido
+
+include::{snippets}/player-detail-invalid-id/http-response.adoc[]
+
+==== Autenticación requerida
+
+include::{snippets}/player-detail-unauthorized/http-response.adoc[]
+
 === Sincronización manual
 
 `POST /api/players/sync` no recibe body. Primero obtiene Premier League (`PL`),

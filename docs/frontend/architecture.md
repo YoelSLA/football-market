@@ -144,13 +144,33 @@ La configuración global del router pertenece exclusivamente a `app/router`. Las
 
 Los providers globales deben configurarse y componerse desde `app`, incluidos TanStack Query, router, tema, store global y cualquier otro provider realmente global.
 
-La configuración actual define `/login` y `/register` como rutas públicas de autenticación y `/home` como ruta privada. `/` redirige a `/login`. El guard envía a `/login` a una identidad anónima que intenta acceder a una ruta privada y a `/home` a una identidad autenticada que intenta acceder a las rutas públicas de autenticación; mientras el estado sea `UNKNOWN` o `CHECKING`, muestra `SessionChecking`. `/players` es actualmente una ruta pública provisional con contenido inline, y la ruta comodín redirige a ella.
+La configuración actual define `/login` y `/register` como rutas públicas de autenticación, `/home` como ruta privada y `/players` y `/players/:id` como rutas privadas del catálogo y su detalle. `/` redirige a `/login`. El guard envía a `/login` a una identidad anónima que intenta acceder a una ruta privada y a `/home` a una identidad autenticada que intenta acceder a las rutas públicas de autenticación; mientras el estado sea `UNKNOWN` o `CHECKING`, muestra `SessionChecking`. La ruta comodín redirige a `/players`.
+
+La navegación global se compone exclusivamente desde `app/layouts/AppLayout`, que resuelve la identidad de sesión y el cierre de sesión ya existentes en `features/auth` mediante sus APIs públicas y los entrega al componente presentativo `shared/components/Navbar`. `Navbar` no depende de ninguna feature: recibe `userName` y `onLogout`, y obtiene la sección activa mediante `NavLink` sobre la lista declarativa `shared/components/Navbar/navItems.ts`. `AppLayout` envuelve **todas las rutas privadas** (`/home`, `/players`, `/players/:id`), por lo que la navegación es una capacidad transversal y no una consecuencia de una feature concreta.
+
+`app/layouts` contiene los siguientes layouts, todos globales o transversales:
+
+| Layout | Responsabilidad |
+| --- | --- |
+| `AuthLayout` | Composición visual de las páginas públicas de autenticación. |
+| `AuthGuard` | Guarda de rutas públicas y privadas según el estado de sesión, con `SessionChecking` mientras la sesión se resuelve. |
+| `PageLayout` | Contenedor de página con cabecera opcional, área de contenido y `aria-busy` durante la carga. |
+| `PaginatedPageLayout` | Especialización de `PageLayout` que compone `shared/components/Pagination` cuando existe paginación, reutilizando el componente compartido. |
+| `AppLayout` | Layout de las rutas privadas: navbar global y `Outlet`. |
+
+`shared/components` contiene los componentes reutilizables entre layouts y features: `Button`, `Field`, `Navbar` y `Pagination`. `Pagination` expone una ventana configurable mediante su propiedad `variant` y recibe `page`, `totalPages` y `onChange`; no conoce ninguna feature ni consulta datos.
+
+`src/styles` se organiza en dos capas globales: `styles/base/` con el reset y los estilos elementales, y `styles/abstracts/` con los símbolos compartidos —`breakpoints`, `tokens/` (colores, espaciado, layout) y `themes/`— que se consumen mediante `@use ".../styles/abstracts"`. `styles/index.scss` es el único punto de entrada global y delega el reset en `base/`. Los valores de presentación deben consumirse desde `abstracts`; escribir colores literales en los módulos de una página o componente es una divergencia pendiente de corrección, registrada en la sección de inconsistencias de `specs/005-players-page/spec.md`.
+
+Los recursos gráficos decorativos tienen dos procedencias y ambas deben documentarse: **recursos locales**, importados en tiempo de build y empaquetados por Vite, como los escudos de equipo en `features/players/assets/teams/` generados por `frontend/scripts/import-team-logos.mjs`; y **servicios externos** consultados en runtime, como las banderas de nacionalidad en `getNationalityFlag`. Los servicios externos exigen marcador de posición accesible y comportamiento tolerante a fallos conforme a `tp/enunciado.md` §8. Ninguno de los dos constituye un contrato de datos ni una ampliación de la API del backend.
 
 ### 1.13. Utils, constants y query keys
 
 `utils` contiene exclusivamente funciones auxiliares puras que no correspondan mejor a otro rol.
 
 No debe funcionar como contenedor residual. Las operaciones puras sobre los Models definidos como tipos en `types/models.ts` pueden ubicarse aquí cuando corresponda, separadas de las utilidades de procesamiento técnico según su responsabilidad. Los módulos externos a `utils/` las consumen mediante `utils/index.ts`.
+
+Las fuentes de datos simulados de una feature viven en `demo/`, con funciones puras deterministas que no dependen del reloj ni de generadores aleatorios, y se consumen desde la capa de hooks igual que cualquier otra lectura. Los datos simulados nunca se transportan por la API ni se persisten: su sustitución futura solo cambia esa capa.
 
 `constants` contiene constantes propias de la feature cuando exista una responsabilidad real. No deben extraerse valores allí únicamente para reducir el tamaño visual de otro archivo. Los endpoints y URLs de una feature pertenecen exclusivamente a sus Services y no deben centralizarse en `constants` ni en un catálogo global.
 

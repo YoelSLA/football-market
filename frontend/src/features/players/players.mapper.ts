@@ -1,5 +1,6 @@
 import type {
 	Player,
+	PlayerDetail,
 	PlayerResponseDTO,
 	PlayersPage,
 	PlayersPageResponseDTO,
@@ -80,6 +81,18 @@ export function toPlayer(dto: PlayerResponseDTO): Player {
 		fallbackImageUrl: dto.fallbackImageUrl,
 		active: true,
 	};
+}
+
+/**
+ * Convierte la respuesta individual del detalle. El endpoint solo devuelve jugadores
+ * visibles para el catálogo, por lo que `active` se fija en `true` sin transportarlo en la respuesta.
+ */
+export function toPlayerDetail(value: unknown): PlayerDetail {
+	if (!isPlayerResponseDTO(value)) {
+		throw new Error("La respuesta del detalle del jugador no es válida.");
+	}
+
+	return { ...toPlayer(value), active: true };
 }
 
 export function toPlayersPage(

@@ -3,6 +3,7 @@ package footballmarket.services;
 import footballmarket.models.Player;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
+import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import org.springframework.data.domain.Page;
 
@@ -32,4 +33,17 @@ public interface PlayerCatalogService {
    * @return página de jugadores activos
    */
   Page<Player> getActivePlayers(int page, int size);
+
+  /**
+   * Obtiene un jugador visible para el catálogo mediante su identificador interno.
+   *
+   * <p>Aplica el mismo criterio de visibilidad que el listado: jugador activo con equipo vigente y
+   * liga válida. Un jugador inexistente, inactivo o no visible produce la misma ausencia, sin
+   * revelar su existencia.
+   *
+   * @param id identificador interno del jugador
+   * @return jugador visible con equipo y liga cargados
+   * @throws PlayerNotFoundException si no hay un jugador visible con ese identificador
+   */
+  Player getVisiblePlayerById(long id);
 }

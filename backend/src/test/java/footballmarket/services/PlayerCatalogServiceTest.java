@@ -8,6 +8,7 @@ import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.models.records.TeamCandidate;
+import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -316,6 +317,57 @@ class PlayerCatalogServiceTest {
       assertThat(result.getSize()).isEqualTo(20);
       assertThat(result.getTotalElements()).isZero();
       assertThat(result.getTotalPages()).isZero();
+    }
+  }
+
+  @Nested
+  @DisplayName("Consulta individual de un jugador visible")
+  class PlayerDetail {
+    @Test
+    @DisplayName("Devuelve la identidad real con equipo y liga cargados")
+    void devuelveJugadorVisible() {
+      playerCatalogService.applySynchronization(snapshot(candidate("94001", "Joel Robles")));
+
+      Player player = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst();
+
+      Player found = playerCatalogService.getVisiblePlayerById(player.getId());
+
+      assertThat(found.getId()).isEqualTo(player.getId());
+      assertThat(found.getName()).isEqualTo("Joel Robles");
+      assertThat(found.getTeam()).isNotNull();
+      assertThat(found.getLeague()).isNotNull();
+      assertThat(found.getLeague().getId()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Un identificador inexistente produce la ausencia del jugador")
+    void fallaSiElJugadorNoExiste() {
+      playerCatalogService.applySynchronization(snapshot(candidate("94002", "Existente")));
+
+      Long id = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
+
+      assertThatExceptionOfType(PlayerNotFoundException.class)
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(id + 100_000L));
+    }
+
+    @Test
+    @DisplayName("Un jugador inactivo es indistinguible de uno inexistente")
+    void fallaSiElJugadorEstaInactivo() {
+      PlayerCandidate visible = candidate("94003", "Visible");
+      PlayerCandidate absent = candidate("94004", "Inactivo");
+      playerCatalogService.applySynchronization(snapshot(visible, absent));
+
+      Long inactiveId =
+          playerCatalogService.getActivePlayers(0, 100).getContent().stream()
+              .filter(player -> player.getName().equals("Inactivo"))
+              .map(Player::getId)
+              .findFirst()
+              .orElseThrow();
+
+      playerCatalogService.applySynchronization(snapshot(visible));
+
+      assertThatExceptionOfType(PlayerNotFoundException.class)
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(inactiveId));
     }
   }
 }
