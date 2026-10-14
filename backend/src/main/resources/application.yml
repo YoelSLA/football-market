@@ -34,6 +34,35 @@ the-sports-db:
   image-retry-days: ${THE_SPORTS_DB_IMAGE_RETRY_DAYS:30}
   audit-retention-days: ${THE_SPORTS_DB_AUDIT_RETENTION_DAYS:}
 
+# Monitoreo del backend con Spring Boot Actuator.
+# La exposición es restrictiva y explícita: nunca se usa el comodín `*`. El health check informa
+# únicamente el estado general, sin componentes ni detalles internos, y por eso es seguro
+# dejarlo accesible sin token. No se exponen `env`, `heapdump`, `threaddump`, `configprops`,
+# `beans` ni `shutdown` en ningún perfil.
+#
+# `info` queda accesible sin token para el diagnóstico local. Antes de cualquier despliegue
+# público debe restringirse: ver "PENDIENTE — Seguridad de Actuator" en docs/backend/technologies.md
+# y la deuda TD-001 en docs/TECHNICAL_DEBT.md.
+#
+# La lista de exposición se resuelve por entorno con un valor por defecto que NO incluye
+# `metrics`. Deliberadamente no se condiciona al perfil `dev`: ese perfil es el valor por defecto
+# de `spring.profiles.active` en este repositorio, de modo que atar la exposición a ese perfil
+# dejaría las métricas disponibles en cualquier entorno que no fije el perfil.
+#
+#   Habilitar métricas:  MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics
+#   Restablecer:        unset de la variable
+#
+# Solo `health`, `info` y `metrics` son endpoints de monitoreo previstos. Exponer cualquier otro
+# es una regresión de seguridad cubierta por TD-001.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "${MANAGEMENT_EXPOSED_ENDPOINTS:health,info}"
+  endpoint:
+    health:
+      show-details: never
+
 # Aprovisionamiento de la cuenta singular SUPERUSER, propietario inicial de los tokens.
 # Deshabilitado por defecto. Identidad y contraseña se proveen por el entorno de ejecución:
 # el repositorio no declara credenciales ni valores por defecto. Si se habilita sin completar la

@@ -29,6 +29,7 @@ dependencies {
 
     implementation(libs.jjwt.api)
     implementation(libs.springdoc.openapi)
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     developmentOnly("me.paulschwarz:springboot4-dotenv:5.1.0")
 
     implementation("org.flywaydb:flyway-database-postgresql")
