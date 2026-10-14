@@ -41,6 +41,7 @@ Una spec nueva se crea con el flujo normal, sin `--reuse`. Para retomar trabajo 
 - Resolver decisiones rutinarias con el contexto disponible; consultar si falta una decisión funcional que cambie el resultado esperado.
 - Mantener `tasks.md` cuando sea el seguimiento de la tarea. Marcar completado solo lo implementado y verificado; registrar las comprobaciones pendientes del usuario.
 - No editar salidas generadas; modificar sus fuentes. Las instrucciones de cada área identifican sus ubicaciones específicas. Revisar el diff después del build.
+- Cuando se identifique una deuda técnica real durante una implementación, revisión o refactorización, registrar su entrada en [deuda técnica](docs/TECHNICAL_DEBT.md) o actualizar la existente. No resolverla sin autorización ni declararla resuelta sin evidencia verificable.
 
 Ubicaciones transversales: CI en `.github/workflows/` y hooks en `.githooks/`. Consultar versiones y scripts efectivos en la configuración.
 

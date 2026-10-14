@@ -900,3 +900,12 @@ las clases de test y el contrato se sostiene en `specs/*/contracts/`, en las ano
 esas mismas pruebas.
 
 ---
+
+## Deuda técnica pendiente — Seguridad de Actuator (2026-10-14)
+
+El registro centralizado y único de deuda técnica del proyecto es
+[docs/TECHNICAL_DEBT.md](../docs/TECHNICAL_DEBT.md). La deuda sobre los endpoints de monitoreo de
+Spring Boot Actuator está registrada allí como **TD-001**, con prioridad alta y estado `Pendiente`.
+
+Esta anotación se conserva por trazabilidad del trabajo realizado en esta fecha; no debe
+actualizarse de forma independiente del registro.
