@@ -237,3 +237,18 @@ Preparación (T001–T004)
 4. Implementar US3: reintentos, clasificación de errores y control global de ritmo.
 5. Implementar US4: auditoría consultable y recuperación tras reinicio.
 6. Cerrar contratos y documentación, y entregar los controles al usuario.
+
+---
+
+## Retiro de herramientas de documentación (2026-10-14)
+
+**Decisión del proyecto.** Se retiraron del repositorio la colección Postman y las integraciones de
+Spring REST Docs y Asciidoctor.
+
+**Efecto sobre este archivo.** Ninguna tarea cambia de estado ni de texto. `T001`, `T031`, `T053`,
+`T063` y `T074` permanecen `[X]` con su redacción original, como registro histórico de lo ejecutado en
+su momento. `T074` referencia `backend/src/docs/asciidoc/index.adoc`, archivo eliminado con el retiro:
+su referencia describe un estado del proyecto ya superado y no habilita ninguna acción vigente.
+
+**Documentos actualizados.** Solo este registro. **Documentos conservados sin reescribir por contener
+decisiones o estados históricos:** `plan.md`, `research.md`, `spec.md`, `data-model.md` y `contracts/`.

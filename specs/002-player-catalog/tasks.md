@@ -201,3 +201,21 @@ Preparación (T001–T002)
 4. Desacoplar la identidad del jugador: modelo y esquema primero, después contrato y mapeo, luego la resolución por referencia externa en la sincronización, y finalmente la documentación y los tests.
 5. Aplicar el tratamiento de `429` con `Retry-After` y máximo de tres reintentos, y verificar que la feature no consulta proveedores distintos de Football-Data.org.
 6. Ejecutar controles, verificar OpenAPI y seguir la guía de validación. La ejecución de los tests queda a cargo del usuario.
+
+---
+
+## Retiro de herramientas de documentación (2026-10-14)
+
+**Decisión del proyecto.** Se retiraron del repositorio la colección Postman y las integraciones de
+Spring REST Docs y Asciidoctor.
+
+**Efecto sobre este archivo.** Ninguna tarea cambia de estado ni de texto. `T001`, `T008`, `T020`,
+`T034`, `T040`, `T057` y `T062` permanecen `[X]` con su redacción original, como registro histórico de
+lo ejecutado en su momento. `T034` y `T057` referencian `backend/src/docs/asciidoc/index.adoc`, archivo
+eliminado con el retiro: sus referencias describen un estado del proyecto ya superado y no habilitan
+ninguna acción vigente.
+
+**Documentos actualizados.** Solo este registro. **Documentos conservados sin reescribir por contener
+decisiones o estados históricos:** `plan.md`, `validation.md`, `research.md`, `spec.md`,
+`data-model.md` y `contracts/`. La exclusión de Postman declarada en el alcance de esta feature se
+mantiene: seguía vigente antes del retiro y no se ve afectada por él.

@@ -54,7 +54,6 @@ Después de registrarse e iniciar sesión, se puede consultar el catálogo. Para
 
 - [`backend/`](backend/): API REST con Spring Boot, PostgreSQL y Flyway.
 - [`frontend/`](frontend/): aplicación React, TypeScript y Vite.
-- [`postman/collections/`](postman/collections/): colección de peticiones HTTP.
 - [`docs/`](docs/): arquitectura, tecnologías y convenciones del proyecto.
 
 Las versiones y dependencias efectivas se consultan en [`backend/build.gradle.kts`](backend/build.gradle.kts), [`frontend/package.json`](frontend/package.json) y los respectivos archivos de configuración.

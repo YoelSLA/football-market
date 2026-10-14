@@ -21,13 +21,11 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | PostgreSQL | 18 en tests; no fijada para desarrollo y producción | Base de datos relacional. Testcontainers levanta la imagen `postgres:18`; el proyecto no fija actualmente la versión del servidor utilizada fuera de tests. |
 | pgJDBC | Gestionada por Spring Boot 4.1.1 | Driver JDBC y dependencia de compilación para clasificar errores de PostgreSQL por SQLSTATE, tabla y constraint estructurados, sin interpretar mensajes. |
 | Flyway | Gestionada por Spring Boot 4.1.1 | Aplicación de las migraciones SQL versionadas de usuarios y jugadores. |
-| SpringDoc OpenAPI | 2.8.13 | Generación de la especificación OpenAPI y UI a partir de los endpoints y sus anotaciones. |
+| SpringDoc OpenAPI | 2.8.13 | Documentación del contrato HTTP: generación de la especificación OpenAPI y UI a partir de los endpoints y sus anotaciones. |
 | Lombok | Gestionada por Spring Boot 4.1.1 | Generación en compilación de constructores, getters y constructores sin argumentos usados por componentes y Models. |
 | springboot4-dotenv | 5.1.0 | Carga de variables desde archivos `.env` exclusivamente durante desarrollo. |
 | Spring Boot Test, JUnit Jupiter, Mockito, AssertJ y MockMvc | Gestionadas por Spring Boot 4.1.1 | Pruebas unitarias, de Controller, seguridad, integración y recorridos E2E; mocks, assertions y ejercicio del contrato MVC. |
 | Testcontainers | Gestionada por Spring Boot 4.1.1 | Provisionamiento de PostgreSQL 18 aislado para las pruebas que requieren persistencia real. |
-| Spring REST Docs | Gestionada por Spring Boot 4.1.1 | Generación de snippets del contrato HTTP desde las pruebas de Controller. |
-| Asciidoctor Gradle Plugin | 4.0.5 | Conversión de la documentación AsciiDoc que incorpora los snippets de Spring REST Docs. |
 | Spotless | 7.2.1 | Formato y controles de estilo de Java y archivos auxiliares, con Google Java Format y orden de imports. |
 | SonarQube Gradle Plugin | 7.3.1.8318 | Análisis estático del backend ejecutado por el workflow dedicado. |
 | GitHub Actions | Servicio sin versión fijada; acciones referenciadas por commit | CI del backend con JDK 21, build y tests, y ejecución separada del análisis de SonarQube. |
