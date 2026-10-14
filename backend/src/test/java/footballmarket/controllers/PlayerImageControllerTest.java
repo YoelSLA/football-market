@@ -2,10 +2,6 @@ package footballmarket.controllers;
 
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -18,6 +14,7 @@ import footballmarket.models.User;
 import footballmarket.models.enums.PlayerImageResolutionStatus;
 import footballmarket.models.enums.PlayerImageSyncRunItemResult;
 import footballmarket.models.enums.PlayerImageSyncRunStatus;
+import footballmarket.models.enums.UserRole;
 import footballmarket.models.records.PlayerImageSyncCounters;
 import footballmarket.models.records.PlayerImageSyncRunItemRecord;
 import footballmarket.models.records.PlayerImageSyncSummary;
@@ -36,14 +33,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -54,7 +48,6 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest(PlayerImageController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
-@ExtendWith(RestDocumentationExtension.class)
 class PlayerImageControllerTest {
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;
@@ -66,14 +59,11 @@ class PlayerImageControllerTest {
   private String authorization;
 
   @BeforeEach
-  void setUp(RestDocumentationContextProvider documentation) {
+  void setUp() {
     when(authenticationService.getCurrentUser("images@example.com"))
-        .thenReturn(new User(1L, "images@example.com", "password123"));
-    mvc =
-        MockMvcBuilders.webAppContextSetup(context)
-            .addFilters(security)
-            .apply(documentationConfiguration(documentation))
-            .build();
+        .thenReturn(
+            new User(1L, "images.user", "images@example.com", "password123", UserRole.USER));
+    mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "
             + Jwts.builder()
@@ -104,34 +94,7 @@ class PlayerImageControllerTest {
                "retryableErrors":0,"failed":0,"conflicts":0,"skippedFound":0,
                "skippedRetryWindow":0,"skippedFailed":0,"interrupted":0}}
               """,
-                      org.springframework.test.json.JsonCompareMode.STRICT))
-          .andDo(
-              document(
-                  "player-images-sync",
-                  responseFields(
-                      fieldWithPath("id").description("Identificador interno del run"),
-                      fieldWithPath("status").description("Estado final de la ejecución"),
-                      fieldWithPath("force").description("Refresco forzado"),
-                      fieldWithPath("startedAt").description("Inicio UTC"),
-                      fieldWithPath("finishedAt").description("Fin UTC"),
-                      fieldWithPath("durationMillis").description("Duración en milisegundos"),
-                      fieldWithPath("failureReason").description("Motivo de fallo global o null"),
-                      fieldWithPath("counters").description("Resultados y omisiones"),
-                      fieldWithPath("counters.evaluated").description("Activos evaluados"),
-                      fieldWithPath("counters.processed")
-                          .description("Intentos reales de enriquecimiento"),
-                      fieldWithPath("counters.found").description("Jugadores con imagen"),
-                      fieldWithPath("counters.notFound").description("Ausencias funcionales"),
-                      fieldWithPath("counters.retryableErrors").description("Errores transitorios"),
-                      fieldWithPath("counters.failed").description("Fallos individuales"),
-                      fieldWithPath("counters.conflicts")
-                          .description("Conflictos, subconjunto de failed"),
-                      fieldWithPath("counters.skippedFound").description("Omitidos con imagen"),
-                      fieldWithPath("counters.skippedRetryWindow")
-                          .description("Omitidos por ventana"),
-                      fieldWithPath("counters.skippedFailed")
-                          .description("Omitidos por fallo anterior"),
-                      fieldWithPath("counters.interrupted").description("Items interrumpidos"))));
+                      org.springframework.test.json.JsonCompareMode.STRICT));
     }
 
     @Test
@@ -144,8 +107,7 @@ class PlayerImageControllerTest {
                   .header("Authorization", authorization))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.status").value("PARTIAL"))
-          .andExpect(jsonPath("$.counters.found").value(1))
-          .andDo(document("player-images-sync-partial"));
+          .andExpect(jsonPath("$.counters.found").value(1));
     }
 
     @Test
@@ -155,8 +117,7 @@ class PlayerImageControllerTest {
       mvc.perform(post("/api/players/images/sync").header("Authorization", authorization))
           .andExpect(status().isConflict())
           .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_IN_PROGRESS"))
-          .andExpect(jsonPath("$.path").value("/api/players/images/sync"))
-          .andDo(document("player-images-sync-conflict"));
+          .andExpect(jsonPath("$.path").value("/api/players/images/sync"));
     }
 
     @Test
@@ -164,8 +125,7 @@ class PlayerImageControllerTest {
     void rejectsAnonymousSync() throws Exception {
       mvc.perform(post("/api/players/images/sync"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("player-images-sync-unauthorized"));
+          .andExpect(content().string(""));
       verifyNoInteractions(synchronization);
     }
 
@@ -175,8 +135,7 @@ class PlayerImageControllerTest {
       when(synchronization.synchronize(false)).thenThrow(new PlayerImageSynchronizationException());
       mvc.perform(post("/api/players/images/sync").header("Authorization", authorization))
           .andExpect(status().isBadGateway())
-          .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_FAILED"))
-          .andDo(document("player-images-sync-global-failure"));
+          .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_FAILED"));
     }
 
     @Test
@@ -188,8 +147,7 @@ class PlayerImageControllerTest {
           .andExpect(status().isBadGateway())
           .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_FAILED"))
           .andExpect(
-              jsonPath("$.message").value("No se pudo iniciar la sincronización de imágenes"))
-          .andDo(document("player-images-sync-invalid-configuration"));
+              jsonPath("$.message").value("No se pudo iniciar la sincronización de imágenes"));
     }
   }
 
@@ -212,8 +170,7 @@ class PlayerImageControllerTest {
           .andExpect(jsonPath("$.size").value(20))
           .andExpect(jsonPath("$.totalElements").value(1))
           .andExpect(jsonPath("$.totalPages").value(1))
-          .andExpect(jsonPath("$.content[0].items").doesNotExist())
-          .andDo(document("player-images-runs"));
+          .andExpect(jsonPath("$.content[0].items").doesNotExist());
     }
 
     @Test
@@ -238,8 +195,7 @@ class PlayerImageControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(43))
           .andExpect(jsonPath("$.counters.found").value(1))
-          .andExpect(jsonPath("$.items").doesNotExist())
-          .andDo(document("player-images-run"));
+          .andExpect(jsonPath("$.items").doesNotExist());
     }
 
     @Test
@@ -268,8 +224,7 @@ class PlayerImageControllerTest {
           .andExpect(jsonPath("$.content[0].finalState").value("FOUND"))
           .andExpect(jsonPath("$.content[0].result").value("FOUND"))
           .andExpect(jsonPath("$.content[0].skipReason").value(org.hamcrest.Matchers.nullValue()))
-          .andExpect(jsonPath("$.totalElements").value(1))
-          .andDo(document("player-images-run-items"));
+          .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -280,8 +235,7 @@ class PlayerImageControllerTest {
                   .param("size", "101")
                   .header("Authorization", authorization))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_PLAYER_PAGE"))
-          .andDo(document("player-images-runs-invalid-page"));
+          .andExpect(jsonPath("$.code").value("INVALID_PLAYER_PAGE"));
       verifyNoInteractions(audit);
     }
 
@@ -305,8 +259,7 @@ class PlayerImageControllerTest {
                   .param("page", "-1")
                   .header("Authorization", authorization))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_PLAYER_PAGE"))
-          .andDo(document("player-images-run-items-invalid-page"));
+          .andExpect(jsonPath("$.code").value("INVALID_PLAYER_PAGE"));
       verifyNoInteractions(audit);
     }
 
@@ -316,8 +269,7 @@ class PlayerImageControllerTest {
       when(audit.getRun(999L)).thenThrow(new PlayerImageRunNotFoundException());
       mvc.perform(get("/api/players/images/sync-runs/999").header("Authorization", authorization))
           .andExpect(status().isNotFound())
-          .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_RUN_NOT_FOUND"))
-          .andDo(document("player-images-run-not-found"));
+          .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_RUN_NOT_FOUND"));
     }
 
     @Test
@@ -327,8 +279,7 @@ class PlayerImageControllerTest {
       mvc.perform(
               get("/api/players/images/sync-runs/999/items").header("Authorization", authorization))
           .andExpect(status().isNotFound())
-          .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_RUN_NOT_FOUND"))
-          .andDo(document("player-images-run-items-not-found"));
+          .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_RUN_NOT_FOUND"));
     }
 
     @Test
@@ -336,16 +287,13 @@ class PlayerImageControllerTest {
     void requiresJwt() throws Exception {
       mvc.perform(get("/api/players/images/sync-runs"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("player-images-runs-unauthorized"));
+          .andExpect(content().string(""));
       mvc.perform(get("/api/players/images/sync-runs/43"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("player-images-run-unauthorized"));
+          .andExpect(content().string(""));
       mvc.perform(get("/api/players/images/sync-runs/43/items"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("player-images-run-items-unauthorized"));
+          .andExpect(content().string(""));
       verifyNoInteractions(audit);
     }
   }

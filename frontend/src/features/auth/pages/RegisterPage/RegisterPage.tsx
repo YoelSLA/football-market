@@ -19,6 +19,14 @@ export function RegisterPage() {
 			>
 				<fieldset className={styles["auth-form__fields"]} disabled={isPending}>
 					<Field
+						id="register-username"
+						label="Tu nombre de usuario"
+						autoComplete="username"
+						required
+						{...form.register("username")}
+						error={form.formState.errors.username?.message}
+					/>
+					<Field
 						id="register-email"
 						label="Tu email"
 						type="email"

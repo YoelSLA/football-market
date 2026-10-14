@@ -7,7 +7,12 @@ import { registerSchema } from "../schemas";
 export function useRegisterForm() {
 	const form = useForm<RegisterForm>({
 		resolver: zodResolver(registerSchema),
-		defaultValues: { email: "", password: "", passwordConfirmation: "" },
+		defaultValues: {
+			username: "",
+			email: "",
+			password: "",
+			passwordConfirmation: "",
+		},
 	});
 	const submitting = useRef(false);
 	return {

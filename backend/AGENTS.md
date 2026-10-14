@@ -11,9 +11,9 @@ Este archivo complementa las instrucciones del `AGENTS.md` raíz. No duplica sus
 
 ## Antes y durante el cambio
 
-- Ante cambios HTTP, revisar Controller, DTO, seguridad, contrato, tests, OpenAPI y REST Docs.
+- Ante cambios HTTP, revisar Controller, DTO, seguridad, contrato, tests y anotaciones OpenAPI. El contrato funcional y normativo de la API de cada feature se define en `specs/*/contracts/`.
 - Ante cambios de persistencia, revisar Model, Repository, migraciones y validación del esquema.
-- Las migraciones están en `backend/src/main/resources/db/migration/` y REST Docs en `backend/src/docs/asciidoc/`.
+- Las migraciones están en `backend/src/main/resources/db/migration/`.
 - `backend/README.md` puede estar desactualizado.
 - `backend/build/` es la salida generada específica del backend alcanzada por la regla global.
 

@@ -65,15 +65,24 @@ Crear datos funcionales por el Service bajo prueba o auxiliares permitidos. Ning
 
 Verificar colaboradores invocados, datos transferidos, resultados propagados/compuestos y fallos que impiden invocaciones posteriores. Se permiten `verify(...)`, `verifyNoInteractions(...)` y orden cuando la coordinación lo requiera. No repetir lógica interna de Services.
 
-## 8. Controller y Spring REST Docs
+## 8. Controller y contrato HTTP
 
 Comprobar rutas, métodos, parámetros, path variables, bodies, DTO, serialización, status, estructura/contenido exactos del contrato, validaciones, errores, `GlobalExceptionHandler` y seguridad HTTP. No acceder directamente a Repository; DB solo con justificación excepcional. No repetir lógica del Service.
 
 Verificar rechazos de entradas inválidas y ausencia de interacción con Service/Orchestrator cuando aporte valor demostrar rechazo previo al caso de uso, como paginación inválida o JWT ausente/inválido.
 
-Todo endpoint y caso distinto de respuesta contractual debe quedar documentado por tests de Controller mediante Spring REST Docs: no hay subconjunto opcional. No duplicar snippets por ejecución parametrizada o pruebas internas cuando otro test documenta el mismo caso HTTP.
+Todo endpoint y cada caso distinto de respuesta contractual debe quedar cubierto por tests de Controller que afirmen el comportamiento observable: status, estructura y contenido exactos. No hay subconjunto opcional. No duplicar la afirmación de un mismo caso HTTP por ejecución parametrizada o por pruebas internas cuando otro test ya lo cubre.
 
-Primero afirmar status, estructura y contenido; REST Docs deriva del comportamiento verificado y no sustituye assertions. Mantener snippets y descripciones sincronizados con request, response, status y campos. Controller es su fuente principal; E2E no está obligado a duplicarlos.
+El contrato HTTP del backend se documenta y mantiene mediante cuatro fuentes que deben permanecer coherentes entre sí:
+
+- **Springdoc OpenAPI**, que genera la especificación y la UI a partir de los endpoints y sus anotaciones.
+- **Las anotaciones OpenAPI de Controllers y DTO**, que son la fuente de la especificación y deben reflejar propósito, ruta, parámetros, headers, autenticación, campos, validaciones, códigos y errores.
+- **Los contratos definidos en `specs/*/contracts/`**, que son la referencia funcional y normativa de la API de cada feature.
+- **Los tests funcionales de Controller**, que verifican que el comportamiento real coincide con ese contrato.
+
+La documentación OpenAPI no sustituye las assertions: primero se afirma status, estructura y contenido, y la anotación se mantiene sincronizada con lo verificado. Controller es su fuente principal; E2E no está obligado a duplicarla.
+
+Las anotaciones deben poder utilizarse sin credenciales reales, y sus ejemplos no sustituyen a los contratos de `specs/*/contracts/`: cuando un contrato normativo y un ejemplo diverjan, prevalece el contrato.
 
 ## 9. Integration externa
 

@@ -875,3 +875,37 @@ La reorganización incluye todas las tarjetas previamente activas del tablero y 
 La verificación final compara las 25 claves de US contra las specs locales y comprueba la unicidad y presencia de las claves de requisitos y tareas en el tablero. Los estados del índice deben actualizarse con el seguimiento posterior, no interpretarse como resultados de tests.
 
 **Operaciones pendientes de sincronización:** ninguna tras la comprobación de esta reorganización. Permanecen los pendientes funcionales, técnicos y de evaluación descritos arriba; no son fallos de conexión con Trello.
+
+---
+
+## Retiro de herramientas de documentación (2026-10-14)
+
+**Decisión del proyecto.** Se retiraron del repositorio la colección Postman y las integraciones de
+Spring REST Docs y Asciidoctor.
+
+**Efecto sobre este documento.** Ninguna tarjeta, clave de historia, clave de requisito, clave de
+tarea, prioridad ni registro de análisis cambia. El documento conserva su historial de planificación
+íntegro, incluidas las entradas que mencionan REST Docs al describir la separación de
+responsabilidades entre assertions y snippets dentro de una misma clase de test, y las que registran
+tareas de generación de documentación como tareas de Service.
+
+**Alcance practical.** Esas referencias describen decisiones y tareas de un estado del proyecto ya
+superado. No habilitan ninguna acción vigente sobre herramientas que ya no forman parte del
+repositorio. La cobertura funcional de las clases de Controller no se vio afectada: el retiro eliminó
+las integraciones que generaban documentación derivada de las aserciones, no las aserciones.
+
+**Trazabilidad preservada.** La separación de responsabilidades entre las aserciones de un test de
+Controller y la documentación derivada sigue siendo la práctica vigente: las aserciones permanecen en
+las clases de test y el contrato se sostiene en `specs/*/contracts/`, en las anotaciones OpenAPI y en
+esas mismas pruebas.
+
+---
+
+## Deuda técnica pendiente — Seguridad de Actuator (2026-10-14)
+
+El registro centralizado y único de deuda técnica del proyecto es
+[docs/TECHNICAL_DEBT.md](../docs/TECHNICAL_DEBT.md). La deuda sobre los endpoints de monitoreo de
+Spring Boot Actuator está registrada allí como **TD-001**, con prioridad alta y estado `Pendiente`.
+
+Esta anotación se conserva por trazabilidad del trabajo realizado en esta fecha; no debe
+actualizarse de forma independiente del registro.

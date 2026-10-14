@@ -16,7 +16,7 @@ export default function AppLayout() {
 
 	return (
 		<div className={styles.appLayout}>
-			<Navbar userName={currentUser.data?.email ?? null} onLogout={logout} />
+			<Navbar userName={currentUser.data?.username ?? null} onLogout={logout} />
 
 			<div className={styles.appLayout__content}>
 				<Outlet />

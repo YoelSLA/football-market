@@ -149,3 +149,17 @@ se utilizaron credenciales reales. El servidor temporal fue detenido.
   `id` interno de los jugadores existentes.
 - Verificar que un fallo de integridad ajeno a la invariante `(provider, external_id)`
   revierte la transacción y no se contabiliza como registro inválido.
+
+---
+
+## Retiro de herramientas de documentación (2026-10-14)
+
+**Decisión del proyecto.** Se retiraron del repositorio la colección Postman y las integraciones de
+Spring REST Docs y Asciidoctor.
+
+**Efecto sobre este documento.** El registro de validación y la tabla de comandos ejecutados se
+conservan sin alteración, como evidencia histórica de la implementación de esta feature. La entrada
+que documenta `gradlew.bat asciidoctor -x test --no-configuration-cache`, las referencias a los
+snippets generados desde las fuentes de Controller y la mención de que Postman salía del alcance de
+esta feature describen el estado del proyecto en el momento de esa validación. El comando `asciidoctor` ya
+no existe y esas referencias no habilitan ninguna acción vigente.

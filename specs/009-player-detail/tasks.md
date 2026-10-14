@@ -497,3 +497,20 @@ no muestra el recurso de posición ni el indicador lateral de tarjeta. SPEC-009 
 mantienen intacta la exigencia de nombre, equipo, liga, posición, nacionalidad y fecha de nacimiento,
 que el detalle sigue presentando como dato textual. No se detectan contradicciones entre ambas
 especificaciones.
+
+---
+
+## Retiro de herramientas de documentación (2026-10-14)
+
+**Decisión del proyecto.** Se retiraron del repositorio la colección Postman y las integraciones de
+Spring REST Docs y Asciidoctor.
+
+**Efecto sobre este archivo.** Ninguna tarea cambia de estado ni de texto. `T007` y `T008` permanecen
+`[x]` con su redacción original, como registro histórico de lo ejecutado en su momento: `T008` generó
+snippets de Spring REST Docs sobre los casos ya afirmados por `T007`, y ambos siguen siendo la
+cobertura funcional de la respuesta HTTP. La cobertura de aserciones no se vio afectada por el retiro;
+solo se retiraron las integraciones que generaban la documentación derivada de esas mismas aserciones.
+
+**Documentos actualizados.** Solo este registro. **Documentos conservados sin reescribir por contener
+decisiones o estados históricos:** `plan.md`, `research.md`, `spec.md`, `data-model.md` y
+`contracts/player-detail.md`. El contrato funcional del endpoint no se modificó.

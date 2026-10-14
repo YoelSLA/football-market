@@ -2,9 +2,6 @@ package footballmarket.controllers;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -15,6 +12,7 @@ import footballmarket.models.Player;
 import footballmarket.models.Team;
 import footballmarket.models.User;
 import footballmarket.models.enums.ExternalProvider;
+import footballmarket.models.enums.UserRole;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.AuthenticationService;
@@ -31,7 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +38,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.RestDocumentationContextProvider;
-import org.springframework.restdocs.RestDocumentationExtension;
-import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -55,7 +49,6 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest(PlayerController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
-@ExtendWith(RestDocumentationExtension.class)
 class PlayerControllerTest {
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;
@@ -67,14 +60,11 @@ class PlayerControllerTest {
   private String authorization;
 
   @BeforeEach
-  void setUp(RestDocumentationContextProvider documentation) {
+  void setUp() {
     when(authenticationService.getCurrentUser("catalog@example.com"))
-        .thenReturn(new User(1L, "catalog@example.com", "password123"));
-    mvc =
-        MockMvcBuilders.webAppContextSetup(context)
-            .addFilters(security)
-            .apply(documentationConfiguration(documentation))
-            .build();
+        .thenReturn(
+            new User(1L, "catalog.user", "catalog@example.com", "password123", UserRole.USER));
+    mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "
             + Jwts.builder()
@@ -98,17 +88,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
           .andExpect(
               jsonPath("$.message").value("No se pudo aplicar la sincronización del catálogo"))
-          .andExpect(jsonPath("$.path").value("/api/players/sync"))
-          .andDo(
-              document(
-                  "players-sync-persistence-error",
-                  responseFields(
-                      fieldWithPath("timestamp").description("Fecha del error"),
-                      fieldWithPath("status").description("Código HTTP"),
-                      fieldWithPath("error").description("Descripción HTTP"),
-                      fieldWithPath("code").description("Código estable del error"),
-                      fieldWithPath("message").description("Mensaje seguro"),
-                      fieldWithPath("path").description("Ruta solicitada"))));
+          .andExpect(jsonPath("$.path").value("/api/players/sync"));
     }
 
     @Test
@@ -124,22 +104,7 @@ class PlayerControllerTest {
                       """
 {"obtained":5,"created":1,"updated":2,"markedInactive":3,"discardedInvalid":1}
 """,
-                      org.springframework.test.json.JsonCompareMode.STRICT))
-          .andDo(
-              document(
-                  "players-sync",
-                  responseFields(
-                      fieldWithPath("obtained")
-                          .description("Registros leídos antes de validar y consolidar"),
-                      fieldWithPath("created")
-                          .description("Jugadores nuevos con su referencia externa"),
-                      fieldWithPath("updated")
-                          .description(
-                              "Jugadores resueltos por referencia, incluidas reactivaciones"),
-                      fieldWithPath("markedInactive").description("Transiciones a inactivo"),
-                      fieldWithPath("discardedInvalid")
-                          .description(
-                              "Registros descartados por obligatorios o conflictos de identidad"))));
+                      org.springframework.test.json.JsonCompareMode.STRICT));
       verify(orchestrator).synchronize();
     }
 
@@ -157,17 +122,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.path").value("/api/players/sync"))
           .andExpect(
               jsonPath("$.message")
-                  .value("No se pudo completar la lectura del proveedor de jugadores"))
-          .andDo(
-              document(
-                  "players-sync-unavailable",
-                  responseFields(
-                      fieldWithPath("timestamp").description("Fecha del error"),
-                      fieldWithPath("status").description("Código HTTP"),
-                      fieldWithPath("error").description("Descripción HTTP"),
-                      fieldWithPath("code").description("Código estable del error"),
-                      fieldWithPath("message").description("Mensaje seguro"),
-                      fieldWithPath("path").description("Ruta solicitada"))));
+                  .value("No se pudo completar la lectura del proveedor de jugadores"));
     }
 
     @Test
@@ -175,8 +130,7 @@ class PlayerControllerTest {
     void impideSincronizarSinAutorizacion() throws Exception {
       mvc.perform(post("/api/players/sync"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("players-sync-unauthorized"));
+          .andExpect(content().string(""));
       verifyNoInteractions(orchestrator, service);
     }
 
@@ -185,8 +139,7 @@ class PlayerControllerTest {
     void impideSincronizarConJwtInvalido() throws Exception {
       mvc.perform(post("/api/players/sync").header("Authorization", "Bearer invalid"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("players-sync-invalid-jwt"));
+          .andExpect(content().string(""));
       verifyNoInteractions(orchestrator, service);
     }
   }
@@ -220,31 +173,7 @@ class PlayerControllerTest {
                "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://images.example/p.jpg","fallbackImageUrl":"https://images.example/f.jpg"}],
               "page":0,"size":20,"totalElements":1,"totalPages":1}
               """,
-                      org.springframework.test.json.JsonCompareMode.STRICT))
-          .andDo(
-              document(
-                  "players-list-known-optionals",
-                  responseFields(
-                      fieldWithPath("content").description("Jugadores activos"),
-                      fieldWithPath("content[].id").description("ID interno"),
-                      fieldWithPath("content[].name").description("Nombre"),
-                      fieldWithPath("content[].teamId").description("ID interno del equipo"),
-                      fieldWithPath("content[].teamName").description("Nombre actual del equipo"),
-                      fieldWithPath("content[].leagueId")
-                          .description("ID interno de la liga del equipo"),
-                      fieldWithPath("content[].leagueName")
-                          .description("Nombre actual de la liga del equipo"),
-                      fieldWithPath("content[].position").description("Posición"),
-                      fieldWithPath("content[].dateOfBirth").description("Fecha de nacimiento"),
-                      fieldWithPath("content[].nationality").description("Nacionalidad"),
-                      fieldWithPath("content[].imageUrl")
-                          .description("Imagen conservada sin enriquecimiento"),
-                      fieldWithPath("content[].fallbackImageUrl")
-                          .description("Imagen alternativa conservada localmente"),
-                      fieldWithPath("page").description("Página"),
-                      fieldWithPath("size").description("Tamaño"),
-                      fieldWithPath("totalElements").description("Total"),
-                      fieldWithPath("totalPages").description("Páginas"))));
+                      org.springframework.test.json.JsonCompareMode.STRICT));
     }
 
     @Test
@@ -270,42 +199,7 @@ class PlayerControllerTest {
 {"content":[{"id":7,"name":"Name","teamId":41,"teamName":"Team","leagueId":12,"leagueName":"League","position":"Forward","dateOfBirth":null,"nationality":null,"imageUrl":null,"fallbackImageUrl":null}],
 "page":0,"size":20,"totalElements":1,"totalPages":1}
 """,
-                      org.springframework.test.json.JsonCompareMode.STRICT))
-          .andDo(
-              document(
-                  "players-list",
-                  responseFields(
-                      fieldWithPath("content").description("Jugadores activos de la página"),
-                      fieldWithPath("content[].id")
-                          .description("Identificador interno de FootballMarket"),
-                      fieldWithPath("content[].name").description("Nombre"),
-                      fieldWithPath("content[].teamId").description("ID interno del equipo"),
-                      fieldWithPath("content[].teamName").description("Nombre actual del equipo"),
-                      fieldWithPath("content[].leagueId")
-                          .description("ID interno de la liga del equipo"),
-                      fieldWithPath("content[].leagueName")
-                          .description("Nombre actual de la liga del equipo"),
-                      fieldWithPath("content[].position").description("Posición"),
-                      fieldWithPath("content[].dateOfBirth")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Fecha de nacimiento o null"),
-                      fieldWithPath("content[].nationality")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Nacionalidad o null"),
-                      fieldWithPath("content[].imageUrl")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Imagen principal o null"),
-                      fieldWithPath("content[].fallbackImageUrl")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Imagen alternativa o null"),
-                      fieldWithPath("page").description("Página desde cero"),
-                      fieldWithPath("size").description("Tamaño solicitado"),
-                      fieldWithPath("totalElements").description("Total de activos"),
-                      fieldWithPath("totalPages").description("Total de páginas"))));
+                      org.springframework.test.json.JsonCompareMode.STRICT));
     }
 
     @ParameterizedTest
@@ -324,16 +218,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.page").value(page))
           .andExpect(jsonPath("$.size").value(size))
           .andExpect(jsonPath("$.totalElements").value(0))
-          .andExpect(jsonPath("$.totalPages").value(0))
-          .andDo(
-              document(
-                  "players-empty-" + size,
-                  responseFields(
-                      fieldWithPath("content").description("Página vacía de jugadores activos"),
-                      fieldWithPath("page").description("Página solicitada"),
-                      fieldWithPath("size").description("Tamaño solicitado"),
-                      fieldWithPath("totalElements").description("Total de jugadores activos"),
-                      fieldWithPath("totalPages").description("Total de páginas"))));
+          .andExpect(jsonPath("$.totalPages").value(0));
     }
 
     @ParameterizedTest
@@ -357,17 +242,7 @@ class PlayerControllerTest {
                       page.equals("abc") || size.equals("2147483648")
                           ? "INVALID_PARAMETER_TYPE"
                           : "INVALID_PLAYER_PAGE"))
-          .andExpect(jsonPath("$.message").isNotEmpty())
-          .andDo(
-              document(
-                  "players-invalid-" + page + "-" + size,
-                  responseFields(
-                      fieldWithPath("timestamp").description("Fecha del error"),
-                      fieldWithPath("status").description("Código HTTP"),
-                      fieldWithPath("error").description("Descripción HTTP"),
-                      fieldWithPath("code").description("Código estable del error"),
-                      fieldWithPath("message").description("Mensaje de validación"),
-                      fieldWithPath("path").description("Ruta solicitada"))));
+          .andExpect(jsonPath("$.message").isNotEmpty());
       verifyNoInteractions(service);
     }
 
@@ -376,8 +251,7 @@ class PlayerControllerTest {
     void rechazaJwtAusente() throws Exception {
       mvc.perform(get("/api/players"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("players-unauthorized"));
+          .andExpect(content().string(""));
       verifyNoInteractions(service);
     }
 
@@ -386,8 +260,7 @@ class PlayerControllerTest {
     void rechazaJwtInvalido() throws Exception {
       mvc.perform(get("/api/players").header("Authorization", "Bearer invalid"))
           .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""))
-          .andDo(document("players-invalid-jwt"));
+          .andExpect(content().string(""));
       verifyNoInteractions(service);
     }
   }
@@ -478,36 +351,7 @@ class PlayerControllerTest {
               get("/api/players/{id}", 7821L)
                   .header("Authorization", authorization)
                   .accept(MediaType.APPLICATION_JSON))
-          .andExpect(status().isOk())
-          .andDo(
-              document(
-                  "player-detail",
-                  pathParameters(
-                      parameterWithName("id").description("Identificador interno del jugador")),
-                  responseFields(
-                      fieldWithPath("id").description("Identificador interno"),
-                      fieldWithPath("name").description("Nombre persistido"),
-                      fieldWithPath("teamId").description("ID interno del equipo actual"),
-                      fieldWithPath("teamName").description("Nombre actual del equipo"),
-                      fieldWithPath("leagueId").description("ID interno de la liga"),
-                      fieldWithPath("leagueName").description("Nombre actual de la liga"),
-                      fieldWithPath("position").description("Posición persistida"),
-                      fieldWithPath("dateOfBirth")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Fecha de nacimiento yyyy-MM-dd o null"),
-                      fieldWithPath("nationality")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Nacionalidad o null"),
-                      fieldWithPath("imageUrl")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Retrato principal o null"),
-                      fieldWithPath("fallbackImageUrl")
-                          .type(JsonFieldType.STRING)
-                          .optional()
-                          .description("Retrato alternativo o null"))));
+          .andExpect(status().isOk());
     }
 
     @Test
@@ -516,51 +360,20 @@ class PlayerControllerTest {
       when(service.getVisiblePlayerById(999999L))
           .thenThrow(new PlayerNotFoundException("No encontramos el jugador solicitado"));
       mvc.perform(get("/api/players/{id}", 999999L).header("Authorization", authorization))
-          .andExpect(status().isNotFound())
-          .andDo(
-              document(
-                  "player-detail-not-found",
-                  pathParameters(
-                      parameterWithName("id").description("Identificador interno consultado")),
-                  responseFields(
-                      fieldWithPath("timestamp").description("Fecha del error"),
-                      fieldWithPath("status").description("Código HTTP"),
-                      fieldWithPath("error").description("Descripción HTTP"),
-                      fieldWithPath("code")
-                          .description("Código estable: no distingue inactivo de inexistente"),
-                      fieldWithPath("message").description("Mensaje seguro"),
-                      fieldWithPath("path").description("Ruta solicitada"))));
+          .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("Documenta el identificador inválido con Spring REST Docs")
     void documentaIdentificadorInvalido() throws Exception {
       mvc.perform(get("/api/players/{id}", "abc").header("Authorization", authorization))
-          .andExpect(status().isBadRequest())
-          .andDo(
-              document(
-                  "player-detail-invalid-id",
-                  pathParameters(
-                      parameterWithName("id").description("Identificador con formato inválido")),
-                  responseFields(
-                      fieldWithPath("timestamp").description("Fecha del error"),
-                      fieldWithPath("status").description("Código HTTP"),
-                      fieldWithPath("error").description("Descripción HTTP"),
-                      fieldWithPath("code").description("Código estable del error"),
-                      fieldWithPath("message").description("Mensaje de validación"),
-                      fieldWithPath("path").description("Ruta solicitada"))));
+          .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("Documenta el acceso sin autorización con Spring REST Docs")
     void documentaAccesoNoAutorizado() throws Exception {
-      mvc.perform(get("/api/players/{id}", 7821L))
-          .andExpect(status().isUnauthorized())
-          .andDo(
-              document(
-                  "player-detail-unauthorized",
-                  pathParameters(
-                      parameterWithName("id").description("Identificador interno consultado"))));
+      mvc.perform(get("/api/players/{id}", 7821L)).andExpect(status().isUnauthorized());
     }
 
     private Player visiblePlayer(long id, String name) {

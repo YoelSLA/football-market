@@ -108,7 +108,7 @@ class JwtAuthenticationIntegrationTest {
     @Test
     @DisplayName("Un token deja de identificar al usuario después de eliminarlo")
     void recuperaUsuarioActualYRechazaSuTokenTrasEliminarlo() throws Exception {
-      User user = new User("persisted-jwt@test.com", "password123");
+      User user = new User("persisted.jwt", "persisted-jwt@test.com", "password123");
 
       authenticationService.register(user);
 
@@ -118,7 +118,9 @@ class JwtAuthenticationIntegrationTest {
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(user.getId()))
-          .andExpect(jsonPath("$.email").value(user.getEmail()));
+          .andExpect(jsonPath("$.username").value("persisted.jwt"))
+          .andExpect(jsonPath("$.email").value(user.getEmail()))
+          .andExpect(jsonPath("$.role").value("USER"));
 
       userRepository.delete(user);
       userRepository.flush();
@@ -171,14 +173,21 @@ class JwtAuthenticationIntegrationTest {
     @DisplayName("Permite acceder a la ruta protegida tras registrarse e iniciar sesión")
     void permiteAccesoConTokenValido() throws Exception {
       String email = "jwt-flow@test.com";
+      String username = "jwt.flow";
 
+      String registration =
+          "{\"username\":\""
+              + username
+              + "\",\"email\":\""
+              + email
+              + "\",\"password\":\"password123\"}";
       String credentials = "{\"email\":\"" + email + "\",\"password\":\"password123\"}";
 
       mockMvc
           .perform(
               post("/api/auth/register")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content(credentials))
+                  .content(registration))
           .andExpect(status().isCreated());
 
       String loginResponse =
