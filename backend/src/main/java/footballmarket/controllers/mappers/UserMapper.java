@@ -10,22 +10,26 @@ public final class UserMapper {
   private UserMapper() {}
 
   /**
-   * Expone exclusivamente la identidad actual del usuario persistido.
+   * Expone la identidad actual del usuario persistido.
    *
    * @param user usuario recuperado por el servicio
-   * @return identificador y email actuales
+   * @return identificador, nombre de usuario, email y rol actuales
    */
   public static CurrentUserResponseDTO toCurrentUserResponse(User user) {
-    return new CurrentUserResponseDTO(user.getId(), user.getEmail());
+    return new CurrentUserResponseDTO(
+        user.getId(), user.getUsername(), user.getEmail(), user.getRole());
   }
 
   /**
    * Convierte una solicitud de registro validada en un usuario.
    *
+   * <p>El rol no se toma de la solicitud: la construcción del usuario le asigna USER como
+   * invariante, de modo que el cliente no puede solicitar SUPERUSER desde el registro público.
+   *
    * @param request solicitud de registro validada
-   * @return usuario con los datos recibidos
+   * @return usuario con los datos recibidos y el rol USER
    */
   public static User toModel(RegisterRequestDTO request) {
-    return new User(request.email(), request.password());
+    return new User(request.username(), request.email(), request.password());
   }
 }

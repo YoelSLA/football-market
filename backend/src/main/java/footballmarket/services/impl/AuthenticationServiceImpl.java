@@ -7,6 +7,7 @@ import footballmarket.services.AuthenticationService;
 import footballmarket.services.exceptions.CurrentUserNotFoundException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
+import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,13 +36,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         .orElseThrow(CurrentUserNotFoundException::new);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * <p>El nombre de usuario llega ya normalizado a minúsculas por la invariante del modelo, por lo
+   * que la comprobación de duplicados es insensible a mayúsculas y minúsculas. El rol no se recibe
+   * del cliente: la asignación de USER es una invariante del modelo construida por el mapper.
+   */
   @Override
   public void register(User user) {
     String normalizedEmail = user.getEmail().toLowerCase(Locale.ROOT);
+    String normalizedUsername = user.getUsername().toLowerCase(Locale.ROOT);
 
     if (this.userRepository.existsByEmail(normalizedEmail)) {
       throw new EmailAlreadyRegisteredException("El email ya esta registrado.");
+    }
+
+    if (this.userRepository.existsByUsername(normalizedUsername)) {
+      throw new UsernameAlreadyRegisteredException("El nombre de usuario ya esta en uso.");
     }
 
     user.setEmail(normalizedEmail);

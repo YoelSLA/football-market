@@ -14,6 +14,7 @@ import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.exceptions.UserNotFoundException;
+import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
@@ -135,6 +136,12 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleEmailAlreadyRegistered(
       EmailAlreadyRegisteredException ex, HttpServletRequest request) {
     return buildResponse(ex.getMessage(), "EMAIL_ALREADY_REGISTERED", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(UsernameAlreadyRegisteredException.class)
+  public ResponseEntity<ErrorResponseDTO> handleUsernameAlreadyRegistered(
+      UsernameAlreadyRegisteredException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "USERNAME_ALREADY_TAKEN", HttpStatus.CONFLICT, request);
   }
 
   @ExceptionHandler(InvalidCredentialsException.class)

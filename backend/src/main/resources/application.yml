@@ -33,3 +33,14 @@ the-sports-db:
   max-retries: ${THE_SPORTS_DB_MAX_RETRIES:3}
   image-retry-days: ${THE_SPORTS_DB_IMAGE_RETRY_DAYS:30}
   audit-retention-days: ${THE_SPORTS_DB_AUDIT_RETENTION_DAYS:}
+
+# Aprovisionamiento de la cuenta singular SUPERUSER, propietario inicial de los tokens.
+# Deshabilitado por defecto. Identidad y contraseña se proveen por el entorno de ejecución:
+# el repositorio no declara credenciales ni valores por defecto. Si se habilita sin completar la
+# configuración, el arranque falla de forma explícita.
+footballmarket:
+  superuser:
+    enabled: ${SUPERUSER_ENABLED:false}
+    username: ${SUPERUSER_USERNAME:}
+    email: ${SUPERUSER_EMAIL:}
+    password: ${SUPERUSER_PASSWORD:}

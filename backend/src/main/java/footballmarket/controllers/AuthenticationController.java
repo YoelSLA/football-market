@@ -36,11 +36,14 @@ public class AuthenticationController {
    * Consulta la identidad actual del usuario de la sesión JWT validada.
    *
    * @param jwt principal autenticado por Spring Security
-   * @return identificador y email persistidos del usuario
+   * @return identificador, nombre de usuario, email y rol persistidos del usuario
    */
   @Operation(
       summary = "Consultar usuario actual",
-      description = "Recupera el id y email actuales del usuario persistido asociado a la sesión.")
+      description =
+          "Recupera el id, el nombre de usuario, el email y el rol actuales del usuario persistido"
+              + " asociado a la sesión. El rol es informativo: el backend evalúa toda autorización a"
+              + " partir del rol persistido.")
   @SecurityRequirement(name = "bearerAuth")
   @ApiResponse(responseCode = "200", description = "Identidad actual del usuario.")
   @ApiResponse(
@@ -56,15 +59,22 @@ public class AuthenticationController {
 
   @Operation(
       summary = "Registrar usuario",
-      description = "Registra un nuevo usuario en el sistema.")
+      description =
+          "Registra un nuevo usuario en el sistema con un nombre de usuario único y con el rol"
+              + " USER. El rol no se recibe del cliente y no puede solicitarse SUPERUSER desde este"
+              + " endpoint.")
   @ApiResponse(responseCode = "201", description = "Usuario registrado correctamente.")
   @ApiResponse(
       responseCode = "400",
-      description = "Los datos proporcionados no son válidos (INVALID_REQUEST).",
+      description =
+          "Los datos proporcionados no son válidos, por ejemplo un nombre de usuario vacío, fuera"
+              + " del rango de longitud o fuera del formato admitido (INVALID_REQUEST).",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(
       responseCode = "409",
-      description = "El email ya está registrado (EMAIL_ALREADY_REGISTERED).",
+      description =
+          "El email ya está registrado (EMAIL_ALREADY_REGISTERED) o el nombre de usuario ya está en"
+              + " uso (USERNAME_ALREADY_TAKEN).",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @PostMapping("/register")
   public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequestDTO request) {
@@ -76,7 +86,9 @@ public class AuthenticationController {
 
   @Operation(
       summary = "Iniciar sesión",
-      description = "Autentica al usuario y genera un token JWT.")
+      description =
+          "Autentica al usuario con su correo electrónico y su contraseña y genera un token JWT. El"
+              + " nombre de usuario no es una credencial.")
   @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso.")
   @ApiResponse(
       responseCode = "400",
