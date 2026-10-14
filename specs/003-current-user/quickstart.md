@@ -4,7 +4,7 @@
 
 - Java 21 y Docker disponibles.
 - Configuración de desarrollo existente del backend y PostgreSQL accesible para ejecución manual.
-- Colección Postman `postman/collections/34427701-ccc98ca8-26b8-4486-b6b4-d25e2ca21d44.json`.
+- Un cliente HTTP para ejecutar las solicitudes: `curl` o Swagger UI.
 
 El contrato completo está en `specs/003-current-user/contracts/api.md` y el modelo en `specs/003-current-user/data-model.md`.
 
@@ -22,12 +22,6 @@ Luego ejecutar los controles completos obligatorios:
 ./gradlew test spotlessJavaCheck
 ```
 
-Generar la documentación, lo que también ejecuta los tests requeridos por la tarea:
-
-```bash
-./gradlew asciidoctor
-```
-
 ## Validación ejecutada durante la implementación
 
 - Suite focalizada de autenticación, usuario actual, seguridad y E2E: aprobada.
@@ -37,10 +31,12 @@ Generar la documentación, lo que también ejecuta los tests requeridos por la t
   exitoso, credenciales inválidas y entrada inválida.
 - Verificados OpenAPI, los snippets `auth-me-success` y `auth-me-unauthorized`, y la solicitud Postman.
 
-La ejecución con la caché de configuración habilitada falla en la serialización de la tarea
-Asciidoctor con la configuración existente de Gradle 9.6.0 y el plugin 4.0.5. Para generar la
-documentación, usar `./gradlew asciidoctor --no-configuration-cache`. No se modificaron plugins
-ni configuración global del build.
+> **Nota de retiro 2026-10-14.** El registro anterior conserva los resultados de la implementación de
+> esta feature y queda como evidencia histórica: en ese momento la validación incluía la tarea
+> `asciidoctor`, la generación de snippets y la solicitud Postman, herramientas retiradas
+> posteriormente del proyecto. La ejecución con la caché de configuración habilitada fallaba en la
+> serialización de la tarea Asciidoctor con la configuración existente de Gradle 9.6.0 y el plugin
+> 4.0.5; esa limitación dejó de aplicar al retirarse el plugin y no requiere ninguna acción.
 
 ## Journey exitoso manual
 
@@ -51,14 +47,37 @@ ni configuración global del build.
    ./gradlew bootRun --args='--spring.profiles.active=dev'
    ```
 
-2. En la carpeta `Auth` de Postman, ejecutar `Register` con un email nuevo.
-3. Ejecutar `Login` con las mismas credenciales y guardar el token en `JWT_TOKEN`.
-4. Ejecutar `Current user`.
-5. Verificar `200 OK` y un JSON con exactamente `id` y `email`; el email debe coincidir con el usuario persistido.
+2. Registrar un usuario nuevo con un `username` y un email:
+
+   ```bash
+   curl -i -X POST "$BASE_URL/api/auth/register" \
+     -H 'Content-Type: application/json' \
+     -d '{"username":"juan.perez","email":"juan@example.com","password":"password123"}'
+   ```
+
+3. Iniciar sesión con las mismas credenciales y guardar el token:
+
+   ```bash
+   curl -i -X POST "$BASE_URL/api/auth/login" \
+     -H 'Content-Type: application/json' \
+     -d '{"email":"juan@example.com","password":"password123"}'
+   ```
+
+   Copiar el valor del campo `token` en la variable `JWT_TOKEN`.
+
+4. Consultar la identidad actual con ese token:
+
+   ```bash
+   curl -i "$BASE_URL/api/auth/me" -H "Authorization: Bearer $JWT_TOKEN"
+   ```
+
+5. Verificar `200 OK` y un JSON con exactamente `id`, `username`, `email` y `role`; el email y el `username` deben coincidir con los valores persistidos del usuario. El `id` es numérico y el `role` vale `USER` para una cuenta creada mediante el registro público.
+
+Alternativamente, los tres pasos se ejecutan desde Swagger UI en `http://localhost:8080/swagger-ui.html`.
 
 ## Escenarios de rechazo
 
-Ejecutar `Current user` en cada condición y verificar `401 Unauthorized` con body vacío:
+Ejecutar la misma solicitud `GET /api/auth/me` en cada condición y verificar `401 Unauthorized` con body vacío:
 
 - sin encabezado Authorization;
 - con un Bearer inválido o malformado;
@@ -76,5 +95,5 @@ El último caso debe validarse automatizadamente con persistencia controlada; no
 ## Documentación verificable
 
 - OpenAPI debe mostrar `/api/auth/me` como operación Bearer protegida, con respuestas `200` y `401`.
-- Spring REST Docs debe incluir el caso exitoso y cada variante contractual de rechazo sin documentar un body inexistente.
-- La colección Postman existente debe contener `Current user`; no debe crearse una colección nueva.
+- `AuthenticationControllerTest` debe afirmar el caso exitoso y cada variante contractual de rechazo, sin afirmar un body inexistente.
+- El contrato de `contracts/api.md` y el comportamiento HTTP de `GET /api/auth/me` deben coincidir en los cuatro campos de la respuesta.

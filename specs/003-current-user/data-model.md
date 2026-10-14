@@ -1,5 +1,9 @@
 # Data Model: Current Authenticated User
 
+> **Actualizado 2026-10-14** conforme a la ampliación de SPEC-001. Ver
+> [spec.md](spec.md) §Amendments. El modelo persiste, no se reescribe: las filas nuevas se
+> incorporan y las preexistentes conservan su definición.
+
 ## User
 
 Entidad persistida existente que representa una cuenta registrada.
@@ -8,6 +12,8 @@ Entidad persistida existente que representa una cuenta registrada.
 |---|---|---|
 | `id` | Entero de 64 bits | Identificador generado, único y no nulo para usuarios persistidos. |
 | `email` | Texto | Obligatorio, válido, único y normalizado según las reglas actuales de autenticación. Es la identidad referenciada por el `sub` del JWT. |
+| `username` | Texto | Obligatorio, único y normalizado a minúsculas. Es la identidad pública del usuario. |
+| `role` | Enumeración | Obligatorio. Valores permitidos: `USER` y `SUPERUSER`. `USER` es el rol del registro público; `SUPERUSER` es la cuenta singular del dominio de mercado. |
 | `password` | Texto protegido | Obligatorio y almacenado como hash. No participa en esta operación ni puede aparecer en la respuesta. |
 
 ### Relaciones
@@ -19,7 +25,8 @@ Entidad persistida existente que representa una cuenta registrada.
 
 - El email sujeto se normaliza con la misma regla utilizada por registro e inicio de sesión.
 - Debe existir exactamente un User para producir una respuesta exitosa.
-- Los valores devueltos de `id` y `email` proceden del User recuperado, no de claims adicionales.
+- Los valores devueltos de `id`, `username`, `email` y `role` proceden del User recuperado, no de claims adicionales.
+- `username` se devuelve tal como fue persistido, es decir, normalizado a minúsculas.
 - Si no existe el User, la sesión no es válida para esta operación y el resultado HTTP es `401` vacío.
 
 ### Transiciones
@@ -40,7 +47,7 @@ Concepto no persistido que representa una solicitud con JWT validado.
 
 1. **No autenticada**: token ausente, inválido, expirado o sin sujeto utilizable → `401` vacío.
 2. **Token válido sin User**: autenticidad criptográfica válida, pero identidad sin registro persistido → `401` vacío.
-3. **Autenticada con User**: token válido y User existente → `200` con `id` y `email`.
+3. **Autenticada con User**: token válido y User existente → `200` con `id`, `username`, `email` y `role`.
 
 ## Current User Response
 
@@ -49,9 +56,13 @@ Contrato de salida no persistido.
 | Campo | Tipo JSON | Fuente | Restricción |
 |---|---|---|---|
 | `id` | integer (`int64`) | `User.id` | Obligatorio. |
+| `username` | string | `User.username` | Obligatorio. Normalizado a minúsculas. |
 | `email` | string (`email`) | `User.email` | Obligatorio. |
+| `role` | string (enumeración) | `User.role` | Obligatorio. Valores `USER` y `SUPERUSER`. |
 
-No admite campos adicionales y nunca contiene password, token u otros datos del User.
+No admite campos adicionales y nunca contiene password, token u otros datos del User. El campo
+`role` es informativo para el cliente: no habilita ni sustituye ninguna autorización, que se evalúa
+en el backend.
 
 ## Impacto de persistencia
 
