@@ -413,9 +413,8 @@ class PlayerControllerTest {
     @Test
     @DisplayName("Serializa los opcionales nulos sin inventar valores")
     void devuelveOpcionalesNulos() throws Exception {
-      Player player = visiblePlayer(7L, "Nombre");
-      ReflectionTestUtils.setField(player, "dateOfBirth", null);
-      when(service.getVisiblePlayerById(7L)).thenReturn(player);
+      when(service.getVisiblePlayerById(7L))
+          .thenReturn(visiblePlayerWithoutOptionals(7L, "Nombre"));
       mvc.perform(get("/api/players/{id}", 7L).header("Authorization", authorization))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.dateOfBirth").value(org.hamcrest.Matchers.nullValue()))
@@ -574,6 +573,17 @@ class PlayerControllerTest {
       ReflectionTestUtils.setField(player, "imageUrl", "https://images.example/cutout.png");
       ReflectionTestUtils.setField(player, "fallbackImageUrl", "https://images.example/thumb.png");
       player.updateOptionalDetails(LocalDate.of(1990, 6, 20), "Spain");
+      return player;
+    }
+
+    /** Jugador visible cuyos cuatro opcionales nunca fueron informados por la fuente. */
+    private Player visiblePlayerWithoutOptionals(long id, String name) {
+      League league = new League("Primera Division");
+      Team team = new Team("Real Betis Balompié", league, true);
+      ReflectionTestUtils.setField(league, "id", 12L);
+      ReflectionTestUtils.setField(team, "id", 41L);
+      Player player = new Player(name, team, "Goalkeeper");
+      ReflectionTestUtils.setField(player, "id", id);
       return player;
     }
   }
