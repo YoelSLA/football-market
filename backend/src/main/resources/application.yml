@@ -73,3 +73,25 @@ footballmarket:
     username: ${SUPERUSER_USERNAME:}
     email: ${SUPERUSER_EMAIL:}
     password: ${SUPERUSER_PASSWORD:}
+
+whoscored:
+  base-url: ${WHOSCORED_BASE_URL:https://es.whoscored.com}
+  user-agent: ${WHOSCORED_USER_AGENT:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36}
+  page-size: ${WHOSCORED_PAGE_SIZE:100}
+  request-interval-ms: ${WHOSCORED_REQUEST_INTERVAL_MS:2500}
+  connect-timeout-ms: ${WHOSCORED_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${WHOSCORED_READ_TIMEOUT_MS:20000}
+  max-pages-per-league: ${WHOSCORED_MAX_PAGES_PER_LEAGUE:10000}
+  max-response-bytes: ${WHOSCORED_MAX_RESPONSE_BYTES:5242880}
+  competitions:
+    # league-id: PK de la liga local; tournament-id: competición equivalente en WhoScored.
+    - league-id: ${WHOSCORED_PREMIER_LEAGUE_ID:1}
+      tournament-id: 2
+    - league-id: ${WHOSCORED_BUNDESLIGA_ID:2}
+      tournament-id: 3
+    - league-id: ${WHOSCORED_LALIGA_ID:3}
+      tournament-id: 4
+    - league-id: ${WHOSCORED_SERIE_A_ID:4}
+      tournament-id: 5
+    - league-id: ${WHOSCORED_LIGUE_1_ID:5}
+      tournament-id: 22

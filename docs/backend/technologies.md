@@ -12,9 +12,9 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Gradle y Kotlin DSL | 9.6.0 (Wrapper) | Construcción, gestión de plugins y dependencias, ejecución de controles y empaquetado del backend mediante scripts Kotlin. |
 | Spring Dependency Management Plugin | 1.1.7 | Aplica la gestión de versiones de dependencias provista por Spring Boot. |
 | Spring Boot | 4.1.1 | Arranque, configuración y plataforma de versiones de la aplicación backend. |
-| Spring Web MVC y `RestClient` | Gestionada por Spring Boot 4.1.1 | Endpoints HTTP, serialización web y cliente HTTP utilizado para Football-Data.org y pruebas E2E. |
+| Spring Web MVC y `RestClient` | Gestionada por Spring Boot 4.1.1 | Endpoints HTTP, serialización web y clientes HTTP para Football-Data.org, TheSportsDB, identidad WhoScored y pruebas E2E. WhoScored usa cliente JDK dedicado sin redirecciones, timeouts y parsing JSON explícito independiente del MIME. |
 | Spring Data JPA | Gestionada por Spring Boot 4.1.1 | Repositories del catálogo de jugadores y usuarios, paginación y acceso a persistencia. Las conexiones utilizan el pool HikariCP, también gestionado por Spring Boot, con UTC configurado en desarrollo y testing. |
-| Hibernate ORM | Gestionada por Spring Boot 4.1.1 | Implementación JPA y validación del esquema de entidades contra la base migrada. |
+| Hibernate ORM | Gestionada por Spring Boot 4.1.1 | Implementación JPA y validación del esquema de entidades contra la base migrada; auditoría de identidad WhoScored con estructuras JSONB tipadas mediante soporte JDBC JSON. |
 | Spring Security y OAuth2 Resource Server | Gestionada por Spring Boot 4.1.1 | Cadena de seguridad, autenticación Bearer JWT, autorización de endpoints y conversión del principal persistido. |
 | JJWT | 0.13.0 | Generación y firma HS256 de tokens JWT utilizados por la autenticación. |
 | Jakarta Validation | Gestionada por Spring Boot 4.1.1 | Validación estructural de los DTO de entrada HTTP. |

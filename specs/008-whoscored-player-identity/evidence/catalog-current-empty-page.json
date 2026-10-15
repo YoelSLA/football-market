@@ -1,0 +1,24 @@
+{
+  "playerTableStats": [],
+  "paging": {
+    "currentPage": 159,
+    "totalPages": 158,
+    "resultsPerPage": 3,
+    "totalResults": 472,
+    "firstRecordIndex": 475,
+    "lastRecordIndex": 472
+  },
+  "statColumns": [
+    "apps",
+    "subOn",
+    "minsPlayed",
+    "goal",
+    "assistTotal",
+    "yellowCard",
+    "redCard",
+    "shotsPerGame",
+    "passSuccess",
+    "aerialWonPerGame",
+    "manOfTheMatch"
+  ]
+}

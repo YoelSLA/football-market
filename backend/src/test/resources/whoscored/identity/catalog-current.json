@@ -1,0 +1,8 @@
+{
+  "playerTableStats": [
+    {"playerId": 101, "name": "José Pérez", "teamId": 10, "teamName": "Real Madrid", "tournamentId": 4},
+    {"playerId": "00102", "name": "Alex Smith", "teamName": "Barcelona", "tournamentId": 4},
+    {"playerId": 103, "name": "Luis García", "teamId": 12, "teamName": "Atletico", "tournamentId": 4}
+  ],
+  "paging": {"currentPage": 1, "totalPages": 2, "resultsPerPage": 3, "totalResults": 4, "firstRecordIndex": 1, "lastRecordIndex": 3}
+}

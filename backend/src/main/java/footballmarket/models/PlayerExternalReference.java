@@ -49,11 +49,31 @@ public class PlayerExternalReference {
   protected PlayerExternalReference() {}
 
   PlayerExternalReference(Player player, ExternalProvider provider, String externalId) {
-    validate(player, provider, externalId);
+    String canonical = canonicalExternalId(provider, externalId);
+    validate(player, provider, canonical);
 
     this.player = player;
     this.provider = provider;
-    this.externalId = externalId;
+    this.externalId = canonical;
+  }
+
+  /** Canonicaliza exclusivamente la identidad decimal positiva de WhoScored. */
+  static String canonicalExternalId(ExternalProvider provider, String externalId) {
+    if (provider != ExternalProvider.WHOSCORED) {
+      return externalId;
+    }
+    try {
+      if (externalId == null || !externalId.matches("[0-9]+")) {
+        throw new InvalidPlayerException("El identificador WhoScored debe ser un entero positivo");
+      }
+      long value = Long.parseLong(externalId);
+      if (value < 1) {
+        throw new InvalidPlayerException("El identificador WhoScored debe ser un entero positivo");
+      }
+      return Long.toString(value);
+    } catch (NumberFormatException failure) {
+      throw new InvalidPlayerException("El identificador WhoScored está fuera de rango");
+    }
   }
 
   /** Válida los datos obligatorios de una referencia externa de jugador. */

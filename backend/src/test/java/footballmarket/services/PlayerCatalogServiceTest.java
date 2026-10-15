@@ -261,6 +261,30 @@ class PlayerCatalogServiceTest {
     }
 
     @Test
+    @DisplayName("Una resincronización idéntica no duplica, no descarta y no presenta de más")
+    void unaResincronizacionIdenticaNoAfectaLaPresentacion() {
+      // Arrange
+      PlayerCandidate player = candidate("91011", "Player");
+      playerCatalogService.applySynchronization(snapshot(player));
+
+      // Act
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(player));
+
+      // Assert
+      assertThat(result.created()).isZero();
+      assertThat(result.updated()).isEqualTo(1);
+      assertThat(result.discardedInvalid()).isZero();
+      assertThat(result.markedInactive()).isZero();
+
+      // Verify
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .extracting(Player::getName)
+          .containsExactly("Player");
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("Un fallo técnico revierte las escrituras previas sin convertirlas en descartes")
     void revierteAnteFalloTecnico() {
       PlayerCandidate existing = candidate("44", "Original");
