@@ -531,4 +531,30 @@ Hallazgos de `/speckit.converge` sobre el estado del código tras T001–T045. N
   `.\gradlew.bat test --tests "footballmarket.controllers.PlayerIdentityControllerTest"`.
 - Cambios locales previos preservados. Sin commits, push ni edición de salidas
   generadas. US02 mantiene CODE REVIEW y TESTING pendientes; FEATURE COMPLETION
-AUTHORIZATION: PENDING.
+  AUTHORIZATION: PENDING.
+
+### Cierre de la Feature - 2026-10-15
+
+- **Entrega**: `feat(identity)` en `feat/008-whoscored-player-identity`, rebasada sobre
+  `origin/dev` (`2b8ab7e`, PRs #11/#12/#13) y verificada por el usuario de punta a punta,
+  front y back, con la suite de tests ejecutada.
+- **Renumeración de migración**: la colisión de Flyway prevista en T009 se resolvió al
+  renombrar el archivo a `V9__create_player_identity_audit.sql`, ya que `dev` ocupa V6, V7 y
+  V8. El contenido de la migración no cambió, por lo que el checksum es el mismo; se
+  actualizó la referencia en [quickstart.md](quickstart.md). T009 y
+  [code-review-report-us01.md](code-review-report-us01.md) conservan el nombre original como
+  registro histórico de lo entregado en su momento.
+- **Contrato HTTP**: el PR #12 retiró Spring REST Docs y Asciidoctor, por lo que se descarta
+  el `index.adoc` y sus snippets. El contrato vigente queda en
+  [contracts/http.md](contracts/http.md) y en las anotaciones OpenAPI del controller.
+- **Adaptación a la API vigente**: `PlayerIdentityControllerTest` y `PlayerIdentityE2ETest`
+  se ajustaron a `User(id, username, email, password, role)` y a
+  `RegisterRequestDTO(username, email, password)`. Las assertions se conservan íntegras.
+- **CONVERGE final**: no ejecutado, por decisión humana explícita del 2026-10-15. La evidencia
+  revisada para el cierre es la fase de Convergence implementada (T051–T057), el build
+  `.\gradlew.bat build -x test` en verde y los resultados de tests aportados por el usuario.
+- **Verificación**: T001–T057 cerradas salvo T052, cancelada por contradicción con US1/AC6 y
+  registrada como tal. FEATURE COMPLETION AUTHORIZATION: **APPROVED** el 2026-10-15 por el
+  usuario, con carácter explícito y referido a esta Feature y a la evidencia evaluada.
+- Pendientes operativos: ninguno. `opencode.json` y `specs/trello.md` con cambios
+  locales quedan fuera del commit por decisión humana y siguen en `stash@{0}`.

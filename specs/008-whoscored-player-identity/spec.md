@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-13
 
-**Status**: Ready for implementation — Analyze vigente el 2026-10-14 sin CRITICAL ni HIGH; no autoriza IMPLEMENT, que requiere autorización humana por US
+**Status**: DONE - cerrada por autorización humana el 2026-10-15. US01 y US02 en DONE con CODE REVIEW y TESTING aprobados; Polish T046–T050 y remediaciones de Convergence T051–T057 entregadas. CONVERGE final no se ejecutó por decisión humana explícita; la evidencia revisada es la fase de Convergence ya implementada y los resultados de tests aportados por el usuario
 
 **Input**: Registrar la identidad externa de WhoScored de los jugadores persistidos en el catálogo local de las cinco ligas principales, reutilizando sus referencias externas. Descubrir el catálogo actual, resolver coincidencias, conservar pendientes y conflictos, ofrecer un pase histórico complementario y auditar ambas ejecuciones en la respuesta de las propias operaciones de ejecución. Sin interfaz de consulta de ejecuciones, cotizaciones, estadísticas de rendimiento ni programación periódica.
 
