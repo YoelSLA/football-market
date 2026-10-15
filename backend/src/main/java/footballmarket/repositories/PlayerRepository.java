@@ -1,11 +1,14 @@
 package footballmarket.repositories;
 
 import footballmarket.models.Player;
+import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -34,4 +37,20 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
   Optional<Player> findVisibleById(Long id);
 
   Optional<Player> findFirstByIdGreaterThanOrderByIdAsc(Long id);
+
+  /** Materializa el snapshot de las ligas seleccionadas, sin filtros de vigencia adicionales. */
+  @EntityGraph(attributePaths = {"team", "team.league", "externalReferences"})
+  @Query("select distinct p from Player p where p.team.league.id in :leagueIds order by p.id")
+  List<Player> findIdentitySnapshot(List<Long> leagueIds);
+
+  /** Materializa únicamente pendientes todavía existentes y sin ninguna identidad WhoScored. */
+  @EntityGraph(attributePaths = {"team", "team.league", "externalReferences"})
+  @Query(
+      "select distinct p from Player p where p.id in :playerIds and not exists (select r.id from PlayerExternalReference r where r.player = p and r.provider = footballmarket.models.enums.ExternalProvider.WHOSCORED) order by p.id")
+  List<Player> findHistoricalIdentitySnapshot(List<Long> playerIds);
+
+  /** Bloqueo breve de la identidad local, exclusivamente durante confirmación. */
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("select p from Player p where p.id = :id")
+  Optional<Player> lockIdentityById(Long id);
 }

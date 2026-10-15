@@ -37,3 +37,26 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF
+
+# Identidades sintéticas exclusivas de testing; cada suite funcional debe enlazar
+# los IDs devueltos por el catálogo aislado antes de iniciar la sincronización.
+whoscored:
+  base-url: https://provider.example
+  user-agent: identity-test-client
+  page-size: 3
+  request-interval-ms: 1
+  connect-timeout-ms: 5000
+  read-timeout-ms: 20000
+  max-pages-per-league: 10000
+  max-response-bytes: 5242880
+  competitions:
+    - league-id: 900001
+      tournament-id: 2
+    - league-id: 900002
+      tournament-id: 3
+    - league-id: 900003
+      tournament-id: 4
+    - league-id: 900004
+      tournament-id: 5
+    - league-id: 900005
+      tournament-id: 22

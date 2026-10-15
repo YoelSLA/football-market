@@ -5,5 +5,6 @@ package footballmarket.models.enums;
  */
 public enum ExternalProvider {
   FOOTBALL_DATA,
-  THE_SPORTS_DB
+  THE_SPORTS_DB,
+  WHOSCORED
 }

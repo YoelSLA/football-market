@@ -184,6 +184,46 @@ class PlayerCatalogPersistenceTest {
     }
 
     @Test
+    @DisplayName(
+        "La sincronización conserva identidades WhoScored y la multiplicidad de los demás proveedores")
+    void conservaIdentidadWhoScoredYOtrosProveedores() {
+      // Arrange
+      PlayerCandidate input = candidate("77", "Player with identities");
+      catalog.applySynchronization(snapshot(input));
+      Long playerId = jdbc.queryForObject("SELECT id FROM players", Long.class);
+      TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+      transaction.executeWithoutResult(
+          status -> {
+            Player local = players.findById(playerId).orElseThrow();
+            local.addExternalReference(ExternalProvider.THE_SPORTS_DB, "77");
+            local.addExternalReference(ExternalProvider.WHOSCORED, "00123");
+            players.saveAndFlush(local);
+          });
+
+      // Act
+      PlayerSynchronizationResult result = catalog.applySynchronization(snapshot(input));
+
+      // Assert
+      assertThat(result.updated()).isEqualTo(1);
+      assertThat(result.created()).isZero();
+
+      // Verify
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.WHOSCORED, "123"))
+          .hasValueSatisfying(
+              reference -> assertThat(reference.getPlayer().getId()).isEqualTo(playerId));
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.THE_SPORTS_DB, "77"))
+          .hasValueSatisfying(
+              reference -> assertThat(reference.getPlayer().getId()).isEqualTo(playerId));
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.FOOTBALL_DATA, "77"))
+          .hasValueSatisfying(
+              reference -> assertThat(reference.getPlayer().getId()).isEqualTo(playerId));
+      assertThat(jdbc.queryForObject("SELECT count(*) FROM players", Integer.class)).isEqualTo(1);
+      assertThat(
+              jdbc.queryForObject("SELECT count(*) FROM player_external_references", Integer.class))
+          .isEqualTo(3);
+    }
+
+    @Test
     @DisplayName("Una UNIQUE distinta es un fallo técnico y revierte toda la foto")
     void noDescartaOtraConstraint() {
       jdbc.execute("CREATE UNIQUE INDEX test_unique_player_name ON players(name)");

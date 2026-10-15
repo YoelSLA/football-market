@@ -120,14 +120,20 @@ public class Player {
    * @param externalId identificador del jugador en ese proveedor
    */
   public void addExternalReference(ExternalProvider provider, String externalId) {
+    PlayerExternalReference incoming = new PlayerExternalReference(this, provider, externalId);
     if (this.externalReferences.stream()
         .anyMatch(
             reference ->
                 reference.getProvider() == provider
-                    && reference.getExternalId().equals(externalId))) {
+                    && reference.getExternalId().equals(incoming.getExternalId()))) {
       return;
     }
-    this.externalReferences.add(new PlayerExternalReference(this, provider, externalId));
+    if (provider == ExternalProvider.WHOSCORED
+        && this.externalReferences.stream()
+            .anyMatch(reference -> reference.getProvider() == provider)) {
+      throw new InvalidPlayerException("El jugador ya tiene una identidad WhoScored");
+    }
+    this.externalReferences.add(incoming);
   }
 
   /**
