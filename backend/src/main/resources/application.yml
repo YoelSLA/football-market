@@ -74,6 +74,27 @@ footballmarket:
     email: ${SUPERUSER_EMAIL:}
     password: ${SUPERUSER_PASSWORD:}
 
+# Fuente de cotización del puerto Integration `QuoteSource`.
+#
+# REQ-S2-03, que entregara la fuente real sostenida por el repositorio canónico de cotizaciones, no
+# está implementado y su esquema pertenece a esa spec, no a SPEC-010. Mientras tanto, el simulador
+# cubre ese hueco en desarrollo y pruebas. Deshabilitado por defecto en la configuración base: la
+# habilitación es siempre explícita y nominal, nunca implícita.
+#
+# Sin fuente real y con el simulador deshabilitado, `BuyOrderServiceImpl` no puede construirse y la
+# aplicación no inicia. Ese es el comportamiento exigido por `specs/010-buy-tokens/contracts/quote-source.md`:
+# se prefiere un fallo de configuración explícito antes que un precio inventado o una degradación
+# silenciosa. El valor por defecto se mantiene en `false` para que ningún entorno arranque por
+# sorpresa con precios simulados.
+#
+#   Habilitar en desarrollo:  MARKET_QUOTE_SIMULATOR_ENABLED=true
+#   Precio por token:        MARKET_QUOTE_SIMULATOR_PRICE=100   (centésimas de crédito)
+market:
+  quote:
+    simulator:
+      enabled: ${MARKET_QUOTE_SIMULATOR_ENABLED:false}
+      price: ${MARKET_QUOTE_SIMULATOR_PRICE:100}
+
 whoscored:
   base-url: ${WHOSCORED_BASE_URL:https://es.whoscored.com}
   user-agent: ${WHOSCORED_USER_AGENT:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36}

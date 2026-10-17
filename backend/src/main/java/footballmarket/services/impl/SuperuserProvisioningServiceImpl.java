@@ -1,8 +1,12 @@
 package footballmarket.services.impl;
 
 import footballmarket.config.SuperuserProperties;
+import footballmarket.models.PlayerTokenEmission;
 import footballmarket.models.User;
+import footballmarket.models.UserCredit;
 import footballmarket.models.enums.UserRole;
+import footballmarket.repositories.PlayerTokenEmissionRepository;
+import footballmarket.repositories.UserCreditRepository;
 import footballmarket.repositories.UserRepository;
 import footballmarket.services.SuperuserProvisioningService;
 import footballmarket.services.exceptions.SuperuserProvisioningException;
@@ -26,24 +30,29 @@ import org.springframework.transaction.annotation.Transactional;
 public class SuperuserProvisioningServiceImpl implements SuperuserProvisioningService {
 
   private final UserRepository userRepository;
+  private final UserCreditRepository userCreditRepository;
+  private final PlayerTokenEmissionRepository emissions;
   private final PasswordEncoder passwordEncoder;
   private final SuperuserProperties properties;
 
   /**
    * {@inheritDoc}
    *
-   * <p>No hace nada cuando el aprovisionamiento está deshabilitado y no existe todavía un
-   * SUPERUSER, de modo que una instalación opta por crearlo de forma explícita.
+   * <p>Con configuración deshabilitada no crea un usuario: requiere un SUPERUSER existente y
+   * completa su mercado. Todas las ramas exitosas recuperan emisiones pendientes sin reponer stock.
    */
   @Override
   public User provisionSuperuser() {
     if (!this.properties.enabled()) {
-      return this.findSuperuser()
-          .orElseThrow(
-              () ->
-                  new SuperuserProvisioningException(
-                      "El aprovisionamiento del SUPERUSER está deshabilitado y todavía no existe"
-                          + " una cuenta con ese rol."));
+      User existing =
+          this.findSuperuser()
+              .orElseThrow(
+                  () ->
+                      new SuperuserProvisioningException(
+                          "El aprovisionamiento del SUPERUSER está deshabilitado y todavía no"
+                              + " existe una cuenta con ese rol."));
+      this.ensureMarketInitialized(existing.getId());
+      return existing;
     }
 
     String configuredEmail = this.properties.email().strip().toLowerCase(Locale.ROOT);
@@ -51,6 +60,7 @@ public class SuperuserProvisioningServiceImpl implements SuperuserProvisioningSe
 
     if (existingSuperuser.isPresent()) {
       this.ensureMatchesConfiguration(existingSuperuser.get(), configuredEmail);
+      this.ensureMarketInitialized(existingSuperuser.get().getId());
       return existingSuperuser.get();
     }
 
@@ -66,7 +76,44 @@ public class SuperuserProvisioningServiceImpl implements SuperuserProvisioningSe
 
     superuser.setPassword(this.passwordEncoder.encode(superuser.getPassword()));
 
-    return this.userRepository.save(superuser);
+    User provisioned = this.userRepository.save(superuser);
+    this.ensureMarketInitialized(provisioned.getId());
+
+    return provisioned;
+  }
+
+  /**
+   * Completa cuenta e inventario en la transacción de aprovisionamiento, sin reponer emisiones.
+   *
+   * <p>Las sincronizaciones normales deben comenzar después del aprovisionamiento. No coordina
+   * llamadas concurrentes al catálogo ni múltiples instancias. Cualquier fallo revierte también el
+   * usuario y la cuenta cuando son nuevos.
+   *
+   * @param userId identificador del propietario inicial
+   * @throws SuperuserProvisioningException si el inventario persistido es inconsistente
+   */
+  private void ensureMarketInitialized(Long userId) {
+    this.ensureCreditAccount(userId);
+    this.userCreditRepository.flush();
+    if (this.emissions.hasInconsistentInventory()) {
+      throw new SuperuserProvisioningException(
+          "El inventario de tokens es inconsistente. No se realiza reparación automática.");
+    }
+    this.emissions.recoverMissingEmissions(userId, PlayerTokenEmission.EMITTED_TOKENS);
+  }
+
+  /**
+   * Asegura la cuenta de créditos del superusuario con saldo cero.
+   *
+   * <p>El superusuario es el vendedor del mercado y no compra, de modo que su saldo inicial es
+   * cero. La creación es idempotente: si la cuenta ya existe no se sobrescribe ni se restaura.
+   *
+   * @param userId identificador del superusuario aprovisionado
+   */
+  private void ensureCreditAccount(Long userId) {
+    if (!this.userCreditRepository.existsById(userId)) {
+      this.userCreditRepository.save(UserCredit.forSuperuser(userId));
+    }
   }
 
   /** {@inheritDoc} */

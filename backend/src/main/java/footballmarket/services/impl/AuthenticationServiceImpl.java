@@ -1,6 +1,8 @@
 package footballmarket.services.impl;
 
 import footballmarket.models.User;
+import footballmarket.models.UserCredit;
+import footballmarket.repositories.UserCreditRepository;
 import footballmarket.repositories.UserRepository;
 import footballmarket.security.JWTProvider;
 import footballmarket.services.AuthenticationService;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthenticationServiceImpl implements AuthenticationService {
 
   private final UserRepository userRepository;
+  private final UserCreditRepository userCreditRepository;
   private final PasswordEncoder passwordEncoder;
   private final JWTProvider jwtProvider;
 
@@ -59,7 +62,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     user.setEmail(normalizedEmail);
     user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 
-    this.userRepository.save(user);
+    User registered = this.userRepository.save(user);
+
+    // El alta y su saldo inicial se confirman juntos: si no puede asignarse el saldo, no se
+    // confirma el alta. La inserción es idempotente y no sobrescribe un saldo existente.
+    if (!this.userCreditRepository.existsById(registered.getId())) {
+      this.userCreditRepository.save(UserCredit.forUser(registered.getId()));
+    }
   }
 
   /** {@inheritDoc} */
