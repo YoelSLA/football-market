@@ -1,5 +1,60 @@
 # Índice de trazabilidad con Trello
 
+## Cierre del gate READY — SPEC-010 — 2026-10-16
+
+### Gate ANALYZE
+
+Aprobado por humano y persistido como comentario `[SDD GATE]` en la épica `6abc70e769f28ac04d60fc20`.
+Resultado del reporte: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 2 (L1 y L2, editoriales, aceptados como no
+bloqueantes). Cobertura FR 23/23, AC 19/19, SC 9/9, verificaciones del contrato `QuoteSource` 6/6,
+violaciones de la Constitución 0, 63 tareas. No se requirió nueva ejecución de ANALYZE.
+
+### Sincronización de tarjetas US
+
+Realizada al cierre de READY, después de superar el gate humano de ANALYZE, conforme a Constitution §8 y
+`docs/development/sdd-workflow.md` §3.
+
+| Entidad | Clave canónica | ID | URL | Columna |
+| --- | --- | --- | --- | --- |
+| Épica | `[EPIC] SPEC-010 - Comprar tokens de un jugador` | `6abc70e769f28ac04d60fc20` | https://trello.com/c/aJe4VVNt | SPECIFYING → READY |
+| User Story | `SPEC-010 \| US01 - Comprar tokens de un jugador` | `6ad28f536e8c67a3713f8821` | https://trello.com/c/6rJMdQXf | READY |
+
+- US01 es la única US formal de `spec.md`. Antes de esta operación no existía tarjeta US para SPEC-010; se
+  verificó en las siete columnas antes de crear, sin duplicados.
+- Asociación con la épica por clave canónica y por referencia a la épica en la descripción de US01, que es
+  el mecanismo de asociación disponible: el conector de Trello del proyecto no expone enlaces entre tarjetas.
+- US01 incluye el checklist `Implementation Tasks` con las 45 tareas que `tasks.md` asigna a US01, todas
+  pendientes y sin duplicados. Las 18 tareas transversales (Setup, Foundational, Polish) permanecen en
+  `tasks.md` y no se convirtieron en tarjetas.
+- La épica no contiene subtareas técnicas ni checklist `Implementation Tasks`. Su checklist `SDD Lifecycle`
+  marca Specify, Clarify, Plan, Checklists, Tasks y Analyze; Implement y Converge siguen pendientes.
+
+### Gate READY
+
+Cerrado y persistido como comentario `[SDD GATE]` en la épica. Condiciones verificadas: artefactos
+existentes, evaluados y coherentes; ANALYZE vigente y aprobado sin blockers; sin requisitos nuevos sin
+decisión humana; sincronización de tarjetas US completa y verificada por lectura posterior.
+
+### Gates que siguen ausentes
+
+IMPLEMENT AUTHORIZATION, CODE REVIEW, TESTING, FEATURE COMPLETION AUTHORIZATION y Converge. READY no
+autoriza implementar. La US permanece en READY hasta el inicio efectivo de IMPLEMENT, que requiere
+autorización humana explícita y persistida por US.
+
+### Verificaciones posteriores a la escritura
+
+Épica en columna READY; US01 en columna READY; dos tarjetas de SPEC-010 en el tablero y ninguna más;
+clave única; 45 ítems de `Implementation Tasks` sin duplicados y sin ítems marcados; comentarios
+`[SDD GATE]` presentes en la épica.
+
+### Discrepancias y notas
+
+- `specs/010-buy-tokens/` permanece sin versionar: no hay commit al que referenciar el alcance evaluado.
+  La evidencia de los gates referencia el estado local de los artefactos.
+- L1 y L2 del último ANALYZE se aceptan sin corregir: L1 es representación resumida de los tests Model en
+  el árbol de `plan.md` y L2 es una fila no enumerada en la tabla de escenarios de contrato, ya cubierta
+  por T063.
+
 ## Regularización del estado SDD tras Code Review — SPEC-009 — 2026-10-13
 
 Operación autorizada de trazabilidad. Aplica el retorno a IMPLEMENT exigido por
@@ -833,7 +888,7 @@ Todos los requisitos específicos de la entrega tienen seguimiento. Los requisit
 | REQ-S2-03 \| US01 | Consultar la cotización actual del jugador | [Trello](https://trello.com/c/3UZQeRnF) | Cotización; enunciado §1.2 y §3.2 |
 | REQ-S2-04 \| US01 | Consultar la cotización a una fecha dada | [Trello](https://trello.com/c/b2JH99so) | Funcionalidad explícita del sprint |
 | REQ-S2-05 \| US01 | Consultar el historial de cotizaciones | [Trello](https://trello.com/c/LtLmpdrJ) | Soporte de cotización por fecha; enunciado §3.2 y §4 |
-| REQ-S2-06 \| US01 | Comprar tokens de un jugador | [Trello](https://trello.com/c/aJe4VVNt) | Compra/venta del sprint; enunciado §3.3 |
+| SPEC-010 (origen REQ-S2-06; antigua clave REQ-S2-06 \| US01) | Comprar tokens de un jugador | [Trello](https://trello.com/c/aJe4VVNt) | Épica `6abc70e769f28ac04d60fc20`, READY (SPECIFYING → READY el 2026-10-16); US01 creada en el cierre de READY: `SPEC-010 \| US01 - Comprar tokens de un jugador` `6ad28f536e8c67a3713f8821` — https://trello.com/c/6rJMdQXf, columna READY, con checklist `Implementation Tasks` de 45 tareas. `specs/010-buy-tokens/`: FR-001–FR-023, AC01–AC19, SC-001 y SC-008–SC-014 y SC-016, 77 tareas (T001–T077), todas marcadas `[X]` tras la validación humana del 2026-10-17. ANALYZE aprobado por humano sin hallazgos bloqueantes (CRITICAL 0, HIGH 0, MEDIUM 0, LOW 2 editoriales). Dependencia REQ-S2-03 no implementada, acotada al puerto Integration `QuoteSource` y explícitamente fuera del alcance de cierre. Code review exhaustivo H01–H11 **cerrado**: H01–H08 con remediación y evidencia de ejecución; H09 resuelto por enmienda normativa a `docs/backend/testing.md` 2.0.0, autorizada el 2026-10-17; H10 registrado como riesgo arquitectónico aceptado en `plan.md`; H11 desglosado en T070–T074. Verificación humana acumulada: `./gradlew test` BUILD SUCCESSFUL (5 min 33 s) con 646 tests, 0 failures, 0 errors y 0 skipped; `./gradlew spotlessCheck` BUILD SUCCESSFUL (2 s). Épica en **IN PROGRESS**; US01 en **DONE** con CODE REVIEW y TESTING APPROVED el 2026-10-17. CONVERGE final ejecutado y **no exitoso**: anexó T078 y T079, remediaciones documentales que bloquean FEATURE COMPLETION. **Pendiente**: resolver T078 y T079, reejecutar CONVERGE y luego FEATURE COMPLETION AUTHORIZATION, esta última ya otorgada por el usuario el 2026-10-17 y pendiente solo de verificarse tras un CONVERGE limpio. Ninguna tarjeta real de Trello fue modificada antes del 2026-10-17; en esa fecha se sincronizaron US01 (checklist de 45 a 58 ítems, descripción y cuatro comentarios de CODE REVIEW y tres de TESTING) y esta entrada del índice. |
 | REQ-S2-07 \| US01 | Vender tokens de un jugador | [Trello](https://trello.com/c/sZFzbryR) | Compra/venta del sprint; enunciado §3.3 |
 | REQ-S2-08 \| US01 | Consultar ranking según estrategia activa | [Trello](https://trello.com/c/ZGBTFbHZ) | Ranking explícito del sprint |
 | REQ-S2-09 \| US01 | Consultar portfolio personal | [Trello](https://trello.com/c/43T7hVOh) | Soporte del mercado; enunciado §3.4 |

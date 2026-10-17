@@ -53,6 +53,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | ID | Título | Área | Prioridad | Estado | Registrada |
 | --- | --- | --- | --- | --- | --- |
 | [TD-001](#td-001--protección-de-los-endpoints-de-monitoreo-de-spring-boot-actuator) | Protección de los endpoints de monitoreo de Spring Boot Actuator | Backend / Seguridad | Alta | Pendiente | 2026-10-14 16:29:48 |
+| [TD-002](#td-002--la-guardia-de-arranque-de-la-fuente-de-cotización-es-inalcanzable) | La guardia de arranque de la fuente de cotización es inalcanzable | Backend / Configuración | Media | Pendiente | 2026-10-16 20:07:06 |
 
 ## 6. Detalle de las deudas técnicas
 
@@ -123,8 +124,86 @@ Las alternativas a evaluar son:
 | 2026-10-14 16:29:48 | Registro inicial en `docs/TECHNICAL_DEBT.md`. La anotación previa existía en `specs/trello.md` y en `docs/backend/technologies.md`; la fecha de creación original de esas anotaciones no se conoce, por lo que se registra la de incorporación a este documento. |
 | 2026-10-14 16:52:29 | Actualización de la referencia al mecanismo de habilitación: `FOOTBALLMARKET_MONITORING_LOCAL_METRICS` se reemplaza por `MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics`. La corrección del arranque no altera el alcance, la prioridad ni el estado de la deuda, que continúa `Pendiente`. Sin cambios funcionales: la exposición sigue siendo abierta para las rutas de monitoreo. |
 
+### TD-002 — La guardia de arranque de la fuente de cotización es inalcanzable
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-002 |
+| **Fecha y hora de registro** | 2026-10-16 20:07:06 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Configuración |
+| **Fecha de resolución** | — |
+
+**Descripción.** `QuoteSimulationConfiguration` registra la guardia `quoteSourceAvailabilityGuard`
+como un `SmartInitializingSingleton` que lanza `MissingQuoteSourceException` cuando el contexto no
+contiene ningún `QuoteSource`. Ese callback se invoca al final de la inicialización de los singletons,
+es decir, **después** de que Spring haya instanciado los beans, por lo que nunca se alcanza cuando la
+ausencia de la fuente ya provocó un fallo anterior. `BuyOrderServiceImpl` es un `@Service` con
+inyección de constructor de `private final QuoteSource quotes;`, y su resolución falla durante la
+instanciación, en una fase anterior.
+
+La consecuencia observable es que el error de arranque real es
+`NoSuchBeanDefinitionException: No qualifying bean of type 'footballmarket.integrations.QuoteSource'`,
+y no `MissingQuoteSourceException`. Esta última solo se produce dentro de
+`QuoteSimulationConfigurationTest`, que usa `ApplicationContextRunner` y por tanto no registra
+`BuyOrderServiceImpl`.
+
+**Motivo del aplazamiento.** El contrato vigente no exige esa clase de excepción concreta.
+`specs/010-buy-tokens/contracts/quote-source.md` formula el requisito en tres lugares como «el
+arranque falla con un error de configuración explícito» y «la aplicación no inicia», sin nombrar
+`MissingQuoteSourceException` en ninguno de ellos. La única mención normativa del tipo está en
+`specs/010-buy-tokens/plan.md`, y es una justificación de clasificación —el fallo de arranque
+pertenece a la integración de cotización y no al negocio—, no una exigencia de comportamiento.
+
+El comportamiento exigido por el contrato se cumple: sin fuente válida la aplicación no inicia, y el
+mensaje identifica el tipo de bean ausente. Corregir el diagnóstico exigiría una decisión
+arquitectónica que el contrato no reclama.
+
+**Impacto técnico.** La guardia queda como código muerto en la aplicación real y
+`MissingQuoteSourceException` solo es observable en pruebas. El diagnóstico de un despliegue mal
+configurado es menos preciso de lo previsto, porque expone una excepción de cableado interna en lugar
+del error de configuración de dominio. No afecta la seguridad, la integridad de los datos ni ningún
+contrato HTTP, y no altera el fallo de arranque exigido.
+
+**Solución propuesta.** Evaluar, sin adoptar por defecto:
+
+- **Validador previo a la instanciación.** Reemplazar la guardia por un `BeanFactoryPostProcessor`
+  que compruebe si existe alguna definición de bean de tipo `QuoteSource`. Es la única variante que
+  produce el error de dominio previsto sin tocar la inyección obligatoria, pero inspecciona
+  definiciones de beans, lo que resulta frágil frente a `@Conditional` y no encaja con el uso de
+  `ApplicationContextRunner` de la prueba actual.
+- **Aceptar el diagnóstico actual y retirar la guardia.** Eliminar el `SmartInitializingSingleton` y
+  `MissingQuoteSourceException`, y documentar que el fallo de arranque se manifiesta como error de
+  cableado. Es la alternativa de menor complejidad y la que respeta literalmente el contrato.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta:
+
+1. Haber elegido y aplicado una de las alternativas evaluadas.
+2. Haber verificado en ejecución que, sin fuente real y con `market.quote.simulator.enabled=false`,
+   la aplicación no inicia.
+3. Mantener intacta la prioridad de la fuente real: con una fuente real registrada, el simulador no
+   se registra aunque su propiedad esté habilitada.
+4. No dejar código muerto en `QuoteSimulationConfiguration`.
+
+**Referencias.**
+
+- `backend/src/main/java/footballmarket/config/QuoteSimulationConfiguration.java`
+- `backend/src/main/java/footballmarket/services/impl/BuyOrderServiceImpl.java`
+- `backend/src/test/java/footballmarket/config/QuoteSimulationConfigurationTest.java`
+- `backend/src/test/resources/application-test.yml`
+- `specs/010-buy-tokens/contracts/quote-source.md`
+- `specs/010-buy-tokens/plan.md`
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-16 20:07:06 | Registro inicial. La limitación se detectó al corregir el arranque de los contextos de prueba de SPEC-010, tras retirar de `QuoteSimulationConfigurationTest` una `@Configuration` anidada que contaminaba el barrido de componentes y enmascaraba la ausencia de `QuoteSource`. Se verificó en los artefactos normativos que `MissingQuoteSourceException` no es un requisito contractual, por lo que se mantiene el comportamiento actual. Sin cambios funcionales. |
+
 ## 7. Historial de actualizaciones del registro
 
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 16:29:48 | Creación del registro centralizado con TD-001. Se consolidaron como entrada las referencias dispersas que existían en `specs/trello.md` y `docs/backend/technologies.md`, conservando la traza hacia ellas. |
+| 2026-10-16 20:07:06 | Alta de TD-002: la guardia de arranque de la fuente de cotización se registra después de la fase que ya falla, por lo que `MissingQuoteSourceException` es inalcanzable en la aplicación real. El contrato exige que la aplicación no inicie, sin nombrar esa excepción, de modo que el comportamiento se mantiene sin cambios y la limitación queda documentada. |
