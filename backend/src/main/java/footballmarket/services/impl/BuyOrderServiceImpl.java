@@ -1,0 +1,324 @@
+package footballmarket.services.impl;
+
+import footballmarket.integrations.QuoteSource;
+import footballmarket.models.MarketTransaction;
+import footballmarket.models.Player;
+import footballmarket.models.PlayerToken;
+import footballmarket.models.User;
+import footballmarket.models.UserCredit;
+import footballmarket.models.enums.UserRole;
+import footballmarket.models.exceptions.InsufficientUserCreditsException;
+import footballmarket.models.records.BuyOrderRequest;
+import footballmarket.models.records.CurrentQuote;
+import footballmarket.repositories.MarketTransactionRepository;
+import footballmarket.repositories.PlayerRepository;
+import footballmarket.repositories.PlayerTokenRepository;
+import footballmarket.repositories.UserCreditRepository;
+import footballmarket.repositories.UserRepository;
+import footballmarket.services.BuyOrderService;
+import footballmarket.services.exceptions.ArithmeticOverflowException;
+import footballmarket.services.exceptions.InsufficientCreditsException;
+import footballmarket.services.exceptions.InsufficientStockException;
+import footballmarket.services.exceptions.InvalidQuantityException;
+import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.PlayerNotFoundException;
+import footballmarket.services.exceptions.PlayerNotVisibleException;
+import footballmarket.services.exceptions.QuoteContractViolationException;
+import footballmarket.services.exceptions.QuoteUnavailableException;
+import footballmarket.services.exceptions.SellerUnavailableException;
+import footballmarket.services.exceptions.SuperuserCannotBuyException;
+import footballmarket.services.exceptions.UserNotFoundException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Implementación transaccional de la compra de tokens.
+ *
+ * <p>Ejecuta una única transacción de Spring que resuelve comprador, vendedor, elegibilidad,
+ * cotización, bloqueos, transferencias y auditoría. Cualquier excepción revierte la operación
+ * completa: no existen movimientos parciales ni registros de compras no confirmadas.
+ */
+@Service
+@Transactional
+@RequiredArgsConstructor
+public class BuyOrderServiceImpl implements BuyOrderService {
+
+  /**
+   * Mensaje del rechazo por jugador inexistente.
+   *
+   * <p>Coincide con el de {@link PlayerNotVisibleException}: la compra no promete ocultación
+   * absoluta de existencia, solo un código distinto para cada situación.
+   */
+  private static final String PLAYER_NOT_FOUND_MESSAGE = "No encontramos el jugador solicitado";
+
+  private final UserRepository users;
+  private final PlayerRepository players;
+  private final UserCreditRepository credits;
+  private final PlayerTokenRepository holdings;
+  private final MarketTransactionRepository transactions;
+  private final QuoteSource quotes;
+
+  /** {@inheritDoc} */
+  @Override
+  public MarketTransaction buy(String buyerEmail, BuyOrderRequest order) {
+
+    // 1. El comprador es el sujeto autenticado: la solicitud no puede elegir otra identidad.
+    User buyer = this.resolveBuyer(buyerEmail);
+
+    // 2. El rol se lee de la persistencia, no de los claims del token.
+    if (buyer.getRole() == UserRole.SUPERUSER) {
+      throw new SuperuserCannotBuyException();
+    }
+
+    // 3. La cantidad tiene un rango de negocio propio, distinto del del identificador.
+    if (order.quantity() < 1 || order.quantity() > 100) {
+      throw new InvalidQuantityException();
+    }
+
+    // 4. Existencia y visibilidad del jugador, antes de bloquear o mover ningún recurso.
+    Player player = this.resolvePlayer(order.playerId());
+
+    // 5. El vendedor debe ser identificable antes de iniciar la transferencia.
+    User seller = this.resolveSeller();
+
+    // 6. La cotización se lee una sola vez y ese precio viaja a toda la operación.
+    CurrentQuote quote = this.readQuote(player.getId());
+
+    // 7. El importe se calcula una única vez con aritmética exacta.
+    long totalAmount = this.calculateTotal(order.quantity(), quote.price());
+
+    // 8. Cuentas de comprador y vendedor bloqueadas en orden ascendente de user_id.
+    Map<Long, UserCredit> accounts = this.lockAccounts(buyer, seller);
+
+    // 9. Tenencias bloqueadas en orden ascendente de propietario.
+    Map<Long, PlayerToken> tokens = this.lockHoldings(player, buyer, seller);
+
+    // 10. Revalidación con los valores obtenidos bajo bloqueo.
+    this.revalidate(accounts, tokens, buyer, seller, totalAmount, order.quantity());
+
+    long buyerCreditsBefore = accounts.get(buyer.getId()).getAvailableCredits();
+    long sellerCreditsBefore = accounts.get(seller.getId()).getAvailableCredits();
+    int buyerTokensBefore = tokens.get(buyer.getId()).getQuantity();
+    int sellerTokensBefore = tokens.get(seller.getId()).getQuantity();
+
+    // 11. Transferencias simétricas de créditos y tokens.
+    this.transfer(accounts, tokens, buyer, seller, totalAmount, order.quantity());
+
+    // 12. Auditoría en la misma transacción, con los estados ya observados bajo bloqueo.
+    return this.record(
+        buyer,
+        seller,
+        player,
+        order.quantity(),
+        quote,
+        totalAmount,
+        buyerCreditsBefore,
+        accounts.get(buyer.getId()).getAvailableCredits(),
+        sellerCreditsBefore,
+        accounts.get(seller.getId()).getAvailableCredits(),
+        buyerTokensBefore,
+        tokens.get(buyer.getId()).getQuantity(),
+        sellerTokensBefore,
+        tokens.get(seller.getId()).getQuantity());
+  }
+
+  private User resolveBuyer(String buyerEmail) {
+    return this.users
+        .findByEmail(buyerEmail.toLowerCase(Locale.ROOT))
+        .orElseThrow(() -> new UserNotFoundException("El comprador de la sesión no existe."));
+  }
+
+  /**
+   * Resuelve el jugador solicitado distinguiendo su inexistencia de su falta de visibilidad.
+   *
+   * <p>Una consulta de visibilidad por sí sola devuelve vacío en ambos casos, de modo que la
+   * existencia se consulta primero y la visibilidad se comprueba solo cuando el jugador existe. Se
+   * reutiliza el predicado vigente del catálogo en lugar de duplicarlo.
+   *
+   * @param playerId identificador del jugador solicitado
+   * @return entidad del jugador visible
+   */
+  private Player resolvePlayer(Long playerId) {
+    if (playerId == null) {
+      throw new PlayerNotFoundException(PLAYER_NOT_FOUND_MESSAGE);
+    }
+
+    Player existing = this.players.findById(playerId).orElse(null);
+    if (existing == null) {
+      throw new PlayerNotFoundException(PLAYER_NOT_FOUND_MESSAGE);
+    }
+    if (this.players.findVisibleById(playerId).isEmpty()) {
+      throw new PlayerNotVisibleException();
+    }
+    return existing;
+  }
+
+  private User resolveSeller() {
+    return this.users.findByRole(UserRole.SUPERUSER).orElseThrow(SellerUnavailableException::new);
+  }
+
+  /**
+   * Lee la cotización y valida su contrato antes de cualquier cálculo.
+   *
+   * <p>El orden importa: primero la correspondencia del jugador y después la validez del precio, de
+   * modo que una cotización ajena no se evalúe como si fuera válida.
+   *
+   * @param playerId jugador solicitado
+   * @return instantánea de la cotización vigente
+   */
+  private CurrentQuote readQuote(Long playerId) {
+    CurrentQuote quote =
+        this.quotes.currentQuote(playerId).orElseThrow(QuoteUnavailableException::new);
+
+    if (!playerId.equals(quote.playerId())) {
+      throw new QuoteContractViolationException();
+    }
+    if (quote.price() <= 0) {
+      throw new InvalidQuotePriceException();
+    }
+    return quote;
+  }
+
+  private long calculateTotal(int quantity, long unitPrice) {
+    try {
+      return Math.multiplyExact((long) quantity, unitPrice);
+    } catch (ArithmeticException overflow) {
+      throw new ArithmeticOverflowException();
+    }
+  }
+
+  /**
+   * Bloquea las cuentas de comprador y vendedor en orden ascendente de identificador.
+   *
+   * <p>El orden se establece en la consulta y no en el orden de los argumentos, para que sea
+   * determinista con independencia de quién llega primero. Una cuenta ausente no se crea durante la
+   * compra: no está financiada.
+   *
+   * @return cuentas bloqueadas indexadas por identificador de usuario
+   */
+  private Map<Long, UserCredit> lockAccounts(User buyer, User seller) {
+    List<UserCredit> locked =
+        this.credits.lockAccountsInAscendingOrder(List.of(buyer.getId(), seller.getId()));
+
+    Map<Long, UserCredit> byUser =
+        locked.stream().collect(Collectors.toMap(UserCredit::getUserId, Function.identity()));
+
+    if (!byUser.containsKey(buyer.getId())) {
+      throw new InsufficientCreditsException();
+    }
+    if (!byUser.containsKey(seller.getId())) {
+      throw new SellerUnavailableException();
+    }
+    return byUser;
+  }
+
+  /**
+   * Inserta la primera tenencia del comprador si falta y bloquea ambas tenencias.
+   *
+   * <p>La inserción ignorando el conflicto serializa la creación concurrente de la primera
+   * tenencia. No sustituye al bloqueo de lectura: cuando la fila ya existe la operación se descarta
+   * y no bloquea esa fila, de modo que el bloqueo efectivo lo aporta la consulta siguiente.
+   *
+   * @return tenencias bloqueadas indexadas por propietario
+   */
+  private Map<Long, PlayerToken> lockHoldings(Player player, User buyer, User seller) {
+    this.holdings.insertHoldingIfAbsent(player.getId(), buyer.getId());
+
+    List<PlayerToken> locked =
+        this.holdings.lockHoldingsInAscendingOwnerOrder(
+            player.getId(), List.of(buyer.getId(), seller.getId()));
+
+    Map<Long, PlayerToken> byOwner =
+        locked.stream()
+            .collect(Collectors.toMap(token -> token.getOwner().getId(), Function.identity()));
+
+    if (!byOwner.containsKey(buyer.getId()) || !byOwner.containsKey(seller.getId())) {
+      throw new InsufficientStockException();
+    }
+    return byOwner;
+  }
+
+  /** Revalida saldo y stock exclusivamente con los valores obtenidos bajo bloqueo. */
+  private void revalidate(
+      Map<Long, UserCredit> accounts,
+      Map<Long, PlayerToken> tokens,
+      User buyer,
+      User seller,
+      long totalAmount,
+      int quantity) {
+
+    if (!accounts.get(buyer.getId()).covers(totalAmount)) {
+      throw new InsufficientCreditsException();
+    }
+    if (tokens.get(seller.getId()).getQuantity() < quantity) {
+      throw new InsufficientStockException();
+    }
+  }
+
+  /** Aplica las transferencias de créditos y tokens entre las dos partes. */
+  private void transfer(
+      Map<Long, UserCredit> accounts,
+      Map<Long, PlayerToken> tokens,
+      User buyer,
+      User seller,
+      long totalAmount,
+      int quantity) {
+
+    try {
+      accounts.get(buyer.getId()).debit(totalAmount);
+    } catch (InsufficientUserCreditsException insufficient) {
+      throw new InsufficientCreditsException();
+    }
+    try {
+      accounts.get(seller.getId()).credit(totalAmount);
+    } catch (ArithmeticException overflow) {
+      throw new ArithmeticOverflowException();
+    }
+    tokens.get(seller.getId()).transferTo(quantity, tokens.get(buyer.getId()));
+  }
+
+  private MarketTransaction record(
+      User buyer,
+      User seller,
+      Player player,
+      int quantity,
+      CurrentQuote quote,
+      long totalAmount,
+      long buyerCreditsBefore,
+      long buyerCreditsAfter,
+      long sellerCreditsBefore,
+      long sellerCreditsAfter,
+      int buyerTokensBefore,
+      int buyerTokensAfter,
+      int sellerTokensBefore,
+      int sellerTokensAfter) {
+
+    return this.transactions.save(
+        MarketTransaction.record(
+            buyer,
+            seller,
+            player,
+            quantity,
+            quote.price(),
+            totalAmount,
+            buyerCreditsBefore,
+            buyerCreditsAfter,
+            sellerCreditsBefore,
+            sellerCreditsAfter,
+            buyerTokensBefore,
+            buyerTokensAfter,
+            sellerTokensBefore,
+            sellerTokensAfter,
+            quote.calculatedAt(),
+            quote.strategyVersion(),
+            OffsetDateTime.now(ZoneOffset.UTC)));
+  }
+}
