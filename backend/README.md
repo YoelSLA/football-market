@@ -16,6 +16,12 @@ La aplicación estará compuesta por:
 - Frontend: aplicación web desarrollada con React y Vite.
 - Base de datos: PostgreSQL.
 
+## Migraciones de base de datos
+
+Para generar archivos SQL con timestamps UTC mediante Gradle, consultar la
+[guía de migraciones Flyway](../docs/development/flyway-migrations.md), con comandos
+para Linux y Windows y el procedimiento de integración de ramas paralelas.
+
 ## Estado del proyecto
 
 🚧 En desarrollo.
