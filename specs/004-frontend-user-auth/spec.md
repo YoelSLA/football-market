@@ -16,14 +16,15 @@ Como visitante, quiero registrarme para poder iniciar sesión con mi nueva cuent
 
 **Why this priority**: Permite incorporarse a la plataforma sin depender de una cuenta preexistente.
 
-**Independent Test**: Abrir `/register`, completar datos válidos y comprobar el regreso a `/login` con confirmación, sin sesión iniciada; repetir con email duplicado.
+**Independent Test**: Abrir `/register`, completar datos válidos y comprobar el regreso a `/login` con confirmación, sin sesión iniciada; repetir con email duplicado y con nombre de usuario duplicado.
 
 **Acceptance Scenarios**:
 
-1. **Given** un visitante en `/register`, **When** envía un email válido, una contraseña de al menos 8 caracteres y una confirmación coincidente, **Then** llega a `/login`, recibe confirmación de registro y puede iniciar sesión allí.
-2. **Given** un visitante en `/register`, **When** el email ya está registrado, **Then** permanece en la página y ve el mensaje devuelto por el servicio.
-3. **Given** un visitante en `/register`, **When** faltan campos, el email es inválido, la contraseña tiene menos de 8 caracteres o la confirmación no coincide, **Then** recibe feedback antes del envío.
-4. **Given** un visitante en `/register`, **When** usa el enlace para usuarios existentes, **Then** llega a `/login`.
+1. **Given** un visitante en `/register`, **When** envía un nombre de usuario válido, un email válido, una contraseña de al menos 8 caracteres y una confirmación coincidente, **Then** llega a `/login`, recibe confirmación de registro y puede iniciar sesión allí.
+2. **Given** un visitante en `/register`, **When** el email ya está registrado, **Then** permanece en la página y ve, bajo el campo de email, el mensaje devuelto por el servicio.
+3. **Given** un visitante en `/register`, **When** el nombre de usuario ya está en uso, **Then** permanece en la página y ve, bajo el campo de nombre de usuario, el mensaje devuelto por el servicio.
+4. **Given** un visitante en `/register`, **When** faltan campos, el nombre de usuario no cumple el formato admitido, el email es inválido, la contraseña tiene menos de 8 caracteres o la confirmación no coincide, **Then** recibe feedback antes del envío.
+5. **Given** un visitante en `/register`, **When** usa el enlace para usuarios existentes, **Then** llega a `/login`.
 
 ---
 
@@ -54,7 +55,7 @@ Como usuario autenticado, quiero mantener el acceso después de recargar la apli
 
 **Acceptance Scenarios**:
 
-1. **Given** un JWT persistido y no expirado asociado a un usuario existente, **When** se recarga la aplicación o se abre `/home`, **Then** se comprueba la sesión mediante `GET /api/auth/me` y, tras recibir `200` con `id` y `email`, el usuario conserva el acceso.
+1. **Given** un JWT persistido y no expirado asociado a un usuario existente, **When** se recarga la aplicación o se abre `/home`, **Then** se comprueba la sesión mediante `GET /api/auth/me` y, tras recibir `200` con `id`, `username`, `email` y `role`, el usuario conserva el acceso.
 2. **Given** ninguna sesión o una sesión expirada, **When** se intenta abrir `/home`, **Then** se llega a `/login` y el área privada no queda accesible.
 3. **Given** una sesión vigente, **When** se intenta abrir `/login` o `/register`, **Then** se llega a `/home`.
 4. **Given** una solicitud autenticada a un recurso protegido, **When** el servicio rechaza la autenticación con `401`, **Then** la sesión local se invalida y el usuario llega a `/login`.
@@ -99,7 +100,9 @@ Como visitante, quiero formularios claros y una presentación reconocible de Foo
 - Si hay un error inesperado o falla la comunicación, se muestra un mensaje comprensible y se permite reintentar manualmente sin alterar los datos escritos por el usuario.
 - Si la información de sesión persistida está ausente, dañada o no permite determinar una vigencia futura, se trata como sesión no autenticada.
 - Mientras se comprueba una sesión persistida mediante `/me`, no se muestra contenido privado ni se decide el destino de las rutas públicas como si el usuario ya estuviera autenticado o no autenticado.
-- Si `/me` devuelve `200`, la identidad actual procede de sus campos `id` y `email`; el frontend no presume que los datos actuales del usuario estén contenidos en el JWT.
+- Si `/me` devuelve `200`, la identidad actual procede de sus campos `id`, `username`, `email` y `role`; el frontend no presume que los datos actuales del usuario estén contenidos en el JWT.
+- El nombre de usuario que el visitante escribe en `/register` se envía tal como fue escrito, con su capitalización original; la normalización a minúsculas la realiza el backend y el frontend no la replica. La respuesta de `/me` expone siempre la forma normalizada.
+- El `role` recibido en `/me` se trata como información de la identidad actual. El frontend no habilita ni restringe capacidades por su cuenta, porque la autorización se evalúa en el backend.
 - La expiración mientras la aplicación está abierta elimina el acceso privado al volver a evaluar la sesión; cualquier `401` de un recurso protegido también la invalida.
 - Un `401` por credenciales erróneas en Login muestra el error de acceso y no implica una redirección adicional.
 
@@ -112,25 +115,25 @@ Como visitante, quiero formularios claros y una presentación reconocible de Foo
 - **FR-003**: Login MUST solicitar email y contraseña obligatorios, validar el formato del email antes de enviar y no exigir longitud mínima a la contraseña.
 - **FR-004**: Login MUST enviar únicamente `email` y `password` a `POST /api/auth/login`; ante `200` MUST tomar el `token` recibido, establecer una sesión persistente y dirigir al usuario a `/home`.
 - **FR-005**: Login MUST mostrar ante `401`, `400` y fallos inesperados o de comunicación un mensaje de error visible sin obstruir ni desplazar la página completa, que preserve la experiencia de uso y permita corregir o reintentar la operación sin alterar los datos escritos.
-- **FR-006**: Register MUST solicitar email, contraseña y confirmación obligatorios; MUST validar el formato del email, exigir al menos 8 caracteres a la contraseña y exigir confirmación coincidente antes de enviar.
-- **FR-007**: Register MUST enviar únicamente `email` y `password` a `POST /api/auth/register`; ante `201` sin contenido MUST dirigir al usuario a `/login` con confirmación visible de registro exitoso, sin autenticarlo automáticamente.
-- **FR-008**: Register MUST mostrar el mensaje devuelto por el servicio ante `409` por email registrado y, ante `400`, fallos inesperados o de comunicación, un mensaje de error visible sin obstruir ni desplazar la página completa, que preserve la experiencia de uso y permita corregir o reintentar la operación sin alterar los datos escritos.
+- **FR-006**: Register MUST solicitar nombre de usuario, email, contraseña y confirmación obligatorios; MUST validar que el nombre de usuario tenga entre 3 y 30 caracteres y esté formado únicamente por letras, números, punto, guion y guion bajo; MUST aceptar mayúsculas y minúsculas en ese campo; MUST validar el formato del email, exigir al menos 8 caracteres a la contraseña y exigir confirmación coincidente antes de enviar.
+- **FR-007**: Register MUST enviar únicamente `username`, `email` y `password` a `POST /api/auth/register`; ante `201` sin contenido MUST dirigir al usuario a `/login` con confirmación visible de registro exitoso, sin autenticarlo automáticamente.
+- **FR-008**: Register MUST mostrar el mensaje devuelto por el servicio bajo el campo correspondiente ante `409` por email registrado (`EMAIL_ALREADY_REGISTERED`) o por nombre de usuario en uso (`USERNAME_ALREADY_TAKEN`), y, ante `400`, fallos inesperados o de comunicación, un mensaje de error visible sin obstruir ni desplazar la página completa, que preserve la experiencia de uso y permita corregir o reintentar la operación sin alterar los datos escritos.
 - **FR-009**: Durante Login y Register MUST indicarse el progreso de la operación y evitar envíos simultáneos duplicados; al terminar MUST quedar claro si hubo éxito o error.
 - **FR-010**: La sesión MUST persistir entre recargas. Al iniciar o recargar, el estado de autenticación MUST comenzar en `unknown` hasta determinarlo. Una sesión ausente, expirada o ilegible MUST invalidarse localmente y conducir a `anonymous`; si existe un JWT persistido con expiración futura, la aplicación MUST pasar a `checking` y consultar `GET /api/auth/me` antes de confirmar que el usuario está autenticado. La consulta MUST realizarse antes de acceder o navegar a cualquier ruta o acción protegida.
-- **FR-011**: La consulta de `/me` y las demás solicitudes a recursos protegidos MUST presentar el JWT como `Authorization: Bearer <token>`. La respuesta `200` de `/me` MUST confirmar la sesión y aportar el `id` y `email` actuales del usuario. Un `401` de `/me` o de otra solicitud autenticada a un recurso protegido MUST invalidar la sesión local y dirigir a `/login`.
+- **FR-011**: La consulta de `/me` y las demás solicitudes a recursos protegidos MUST presentar el JWT como `Authorization: Bearer <token>`. La respuesta `200` de `/me` MUST confirmar la sesión y aportar el `id`, el `username` normalizado, el `email` actual y el `role` del usuario. Un `401` de `/me` o de otra solicitud autenticada a un recurso protegido MUST invalidar la sesión local y dirigir a `/login`.
 - **FR-012**: Mientras `/me` comprueba una sesión persistida, la aplicación MUST mantener un estado de verificación sin exponer `/home` ni aplicar redirecciones basadas en un estado de autenticación todavía indeterminado. Si falla la comunicación o surge un error inesperado, MUST informar del problema y permitir reintentar manualmente sin considerar validada la sesión ni invalidarla por ese error.
 - **FR-013**: `/home` MUST ser privada: visitantes sin sesión vigente MUST llegar a `/login`. Los usuarios autenticados que intenten abrir `/login` o `/register` MUST llegar a `/home`.
 - **FR-014**: `/home` MUST mostrar una confirmación de acceso correcto y una acción para cerrar sesión; MUST ser una página temporal sin funciones del mercado ni perfil de usuario.
 - **FR-015**: Cerrar sesión MUST invalidar la sesión local, dirigir a `/login` e impedir volver a `/home` hasta un nuevo inicio de sesión; no depende de una operación de logout del servicio.
 - **FR-016**: La aplicación MUST tratar al backend como autoridad final sobre la validez de la autenticación y MUST mantener fuera del frontend el secreto de firma de los JWT.
-- **FR-017**: La feature MUST limitarse a registro, login, persistencia e invalidación de sesión, protección de rutas y home temporal; recuperación de contraseña, verificación de email, proveedores externos, perfil y funciones del mercado quedan fuera de alcance.
+- **FR-017**: La feature MUST limitarse a registro, login, persistencia e invalidación de sesión, protección de rutas y home temporal; recuperación de contraseña, verificación de email, proveedores externos, perfil, modificación del nombre de usuario, funcionalidades de mercado y habilitaciones derivadas del rol quedan fuera de alcance.
 
 ### Key Entities
 
-- **Cuenta de usuario**: Identidad registrada mediante email y contraseña; el frontend no administra el perfil ni datos del mercado.
+- **Cuenta de usuario**: Identidad registrada mediante nombre de usuario, email y contraseña; el frontend no administra el perfil ni datos del mercado.
 - **Sesión**: Estado de acceso derivado del JWT recibido en Login, con vigencia declarada de 12 horas y expiración incluida en él; al restaurarse, requiere la confirmación de `/me` y puede estar en verificación, activa o invalidada.
-- **Usuario actual**: Identidad básica de la sesión confirmada por `/me`, compuesta por `id` y `email` obtenidos del estado actual del servicio.
-- **Datos de formulario**: Email y contraseña para Login; email, contraseña y confirmación para Register. La confirmación solo sirve para validar el formulario.
+- **Usuario actual**: Identidad de la sesión confirmada por `/me`, compuesta por `id`, `username`, `email` y `role` obtenidos del estado actual del servicio. El `role` se expone como dato informativo y no habilita capacidades en el frontend.
+- **Datos de formulario**: Email y contraseña para Login; nombre de usuario, email, contraseña y confirmación para Register. La confirmación solo sirve para validar el formulario.
 
 ## Clarificaciones
 
@@ -155,6 +158,48 @@ Como visitante, quiero formularios claros y una presentación reconocible de Foo
 
 ## Assumptions
 
-- El contrato existente de autenticación mantiene `POST /api/auth/login` con respuesta `200` y campo `token`, y `POST /api/auth/register` con respuesta `201` sin contenido. El error gestionado por registro expone un mensaje en la respuesta.
-- `GET /api/auth/me` está disponible para comprobar una sesión persistida y devuelve `200` con el `id` y `email` actuales del usuario; responde `401` sin cuerpo si la sesión no es válida o el usuario ya no existe. El home temporal solo necesita confirmar el acceso, sin incorporar un perfil.
+- El contrato existente de autenticación mantiene `POST /api/auth/login` con respuesta `200` y campo `token`, y `POST /api/auth/register` con respuesta `201` sin contenido. El error gestionado por registro expone un mensaje en la respuesta y un `code` estable por tipo de conflicto.
+- `GET /api/auth/me` está disponible para comprobar una sesión persistida y devuelve `200` con el `id`, el `username`, el `email` y el `role` actuales del usuario; responde `401` sin cuerpo si la sesión no es válida o el usuario ya no existe. El home temporal solo necesita confirmar el acceso, sin incorporar un perfil.
+- El backend es la autoridad sobre la normalización del nombre de usuario y sobre su unicidad sin distinguir mayúsculas de minúsculas. El frontend valida formato y longitud para dar feedback inmediato, sin replicar la normalización.
 - El comportamiento de la ruta inicial `/` y de rutas ajenas a `/login`, `/register` y `/home` pertenece al enrutamiento general y queda fuera del alcance de esta especificación.
+
+## Amendments
+
+### 2026-10-14 — `username` en el registro y `username`/`role` en el usuario actual
+
+**Qué cambió.** El formulario de registro incorpora un campo `username` obligatorio, y el frontend
+consume y expone los campos `username` y `role` que devuelve `GET /api/auth/me`. La barra de
+navegación identifica al usuario por su nombre de usuario en lugar de su email.
+
+**Por qué cambió.** La ampliación de SPEC-001 hizo obligatorio el nombre de usuario en el registro y
+amplió la respuesta de `/me`. El frontend dejó de ser compatible con ese contrato: enviaba un body
+de registro sin `username` y tipaba la identidad actual con solo `id` y `email`.
+
+**Qué contrato de SPEC-001 lo respalda.** `FR-013`, `FR-014`, `FR-015`, `FR-016` y `FR-018`, con el
+detalle en [contracts/api.md](../001-user-auth-registration/contracts/api.md). Los criterios
+`SC-007` y `SC-008` cubren el registro con nombre de usuario válido, su unicidad y el rechazo de
+duplicados por mayúsculas y minúsculas.
+
+**Documentos actualizados.** `spec.md` (escenario 3 nuevo de US1; `FR-006`, `FR-007`, `FR-008`,
+`FR-011`, `FR-017`, `Key Entities` y `Edge Cases`), `data-model.md`, `contracts/auth.http.md`,
+`quickstart.md` y `tasks.md`. `plan.md` y `research.md` conservan su redacción original como
+registro histórico del diseño.
+
+**Redacción anterior preservada.** El enunciado original de los requisitos afectados era: `FR-006`
+"Register MUST solicitar email, contraseña y confirmación obligatorios; MUST validar el formato del
+email, exigir al menos 8 caracteres a la contraseña y exigir confirmación coincidente antes de
+enviar"; `FR-007` "Register MUST enviar únicamente `email` y `password` a `POST /api/auth/register`";
+`FR-008` "Register MUST mostrar el mensaje devuelto por el servicio ante `409` por email registrado";
+`FR-011` "La respuesta `200` de `/me` MUST confirmar la sesión y aportar el `id` y `email` actuales
+del usuario". No se eliminó ningún requisito: los cuatro identificadores se conservan y su alcance
+se precisó.
+
+**Lo que no cambió.** `FR-001` a `FR-005` y `FR-009` a `FR-010`, y `FR-012` a `FR-016` permanecen
+idénticos. Login continúa usando exclusivamente email y contraseña, sin pedir nombre de usuario. No
+se modificó el manejo del JWT, la persistencia de la sesión, la protección de rutas, la gestión de
+errores ni el estado de verificación. No se agregó ninguna funcionalidad exclusiva de `SUPERUSER`.
+
+**Trazabilidad de la barra de navegación.** El componente `Navbar` y su API (`userName`, `onLogout`)
+se rigen por [docs/frontend/architecture.md](../../docs/frontend/architecture.md) §1.12, que esta
+actualización no modifica y con la que sigue siendo coherente. El cambio de SPEC-004 se limita a
+qué dato de la identidad actual entrega `AppLayout` a esa API.

@@ -16,7 +16,10 @@
 	"files": {
 		// Si Biome encuentra un tipo de archivo que no reconoce,
 		// no lo ignora silenciosamente.
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		// SVG externos: conservar bytes originales y hashes de procedencia.
+		// El importador valida su estructura y seguridad; el código propio sigue controlado.
+		"includes": ["**", "!!src/features/players/assets/teams/**/*.svg"]
 	},
 	// Configuración global del formatter.
 	"formatter": {

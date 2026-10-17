@@ -19,6 +19,13 @@ football-data:
   base-url: https://provider.example/v4
   competitions: PL,BL1,PD,SA,FL1
 
+the-sports-db:
+  api-key: test-only-not-a-credential
+  base-url: https://provider.example/api/v1/json
+  request-interval-ms: 2500
+  max-retries: 3
+  image-retry-days: 30
+
 jwt:
   secret: test-secret-key-for-football-market-2026
   expiration: 43200000
@@ -30,3 +37,44 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF
+
+# Fuente de cotización para el entorno de pruebas.
+#
+# `BuyOrderServiceImpl` es un `@Service` obligatorio en todo contexto completo y requiere un
+# `QuoteSource` por inyección de constructor. La fuente real de REQ-S2-03 todavía no existe, de
+# modo que sin esta habilitación explícita cada `@SpringBootTest` falla al arrancar con
+# `NoSuchBeanDefinitionException` antes incluso de ejecutar su primera prueba.
+#
+# El simulador se habilita aquí, y solo aquí: es el mecanismo previsto para los entornos de
+# desarrollo y prueba, y la habilitación sigue siendo explícita y nominal. La prioridad de una
+# fuente real se conserva intacta, porque `QuoteSimulationConfiguration` decide por presencia del
+# bean y no por esta propiedad. Las pruebas que fijan un precio propio lo sustituyen con
+# `@MockitoBean`.
+market:
+  quote:
+    simulator:
+      enabled: true
+      price: 100
+
+# Identidades sintéticas exclusivas de testing; cada suite funcional debe enlazar
+# los IDs devueltos por el catálogo aislado antes de iniciar la sincronización.
+whoscored:
+  base-url: https://provider.example
+  user-agent: identity-test-client
+  page-size: 3
+  request-interval-ms: 1
+  connect-timeout-ms: 5000
+  read-timeout-ms: 20000
+  max-pages-per-league: 10000
+  max-response-bytes: 5242880
+  competitions:
+    - league-id: 900001
+      tournament-id: 2
+    - league-id: 900002
+      tournament-id: 3
+    - league-id: 900003
+      tournament-id: 4
+    - league-id: 900004
+      tournament-id: 5
+    - league-id: 900005
+      tournament-id: 22

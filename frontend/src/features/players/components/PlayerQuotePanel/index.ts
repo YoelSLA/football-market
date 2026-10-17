@@ -1,0 +1,1 @@
+export { PlayerQuotePanel } from "./PlayerQuotePanel";

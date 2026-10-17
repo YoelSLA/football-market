@@ -40,6 +40,8 @@ Estas matrices tienen el alcance definido en la [arquitectura común](../archite
 
 Las reglas resolubles exclusivamente con información y comportamiento de dominio pertenecen a Model, incluso si involucran varios Model. Las que requieren Repository, Integration u otras capacidades externas al dominio pertenecen a Service.
 
+La pertenencia de esa lógica al rol Service se define por lo establecido en §1.1 y no por el uso de Repository: un componente forma parte del rol Service sin constituir un Service independiente cuando compone internamente un caso de uso, no expone interfaz de aplicación, no es consumido por otros Services y comparte el límite transaccional del Service que lo compone. Sus dependencias hacia Model, Repository e Integration son las del propio rol Service. El Service coordinador conserva la condición de §1.1 —interfaz e implementación separadas y consumidores dependientes de la interfaz— y es la fachada del caso de uso. Esta composición interna no habilita dependencias entre Services ni ciclos, no autoriza su reutilización transversal y no sustituye al Orchestrator cuando la coordinación corresponde a casos de uso independientes.
+
 ### 1.5. Model del backend
 
 Los Model deben preservar sus invariantes y encapsular su estado.

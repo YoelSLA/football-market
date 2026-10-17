@@ -1,5 +1,6 @@
 import type {
 	Player,
+	PlayerDetail,
 	PlayerResponseDTO,
 	PlayersPage,
 	PlayersPageResponseDTO,
@@ -18,9 +19,16 @@ function isPlayerResponseDTO(value: unknown): value is PlayerResponseDTO {
 		isRecord(value) &&
 		isNonNegativeInteger(value.id) &&
 		typeof value.name === "string" &&
-		typeof value.team === "string" &&
-		typeof value.league === "string" &&
-		typeof value.position === "string"
+		isNonNegativeInteger(value.teamId) &&
+		typeof value.teamName === "string" &&
+		isNonNegativeInteger(value.leagueId) &&
+		typeof value.leagueName === "string" &&
+		typeof value.position === "string" &&
+		(value.dateOfBirth === null || typeof value.dateOfBirth === "string") &&
+		(value.nationality === null || typeof value.nationality === "string") &&
+		(value.imageUrl === null || typeof value.imageUrl === "string") &&
+		(value.fallbackImageUrl === null ||
+			typeof value.fallbackImageUrl === "string")
 	);
 }
 
@@ -62,11 +70,29 @@ export function toPlayer(dto: PlayerResponseDTO): Player {
 	return {
 		id: dto.id,
 		name: dto.name,
-		team: dto.team,
-		league: dto.league,
+		teamId: dto.teamId,
+		teamName: dto.teamName,
+		leagueId: dto.leagueId,
+		leagueName: dto.leagueName,
 		position: dto.position,
+		dateOfBirth: dto.dateOfBirth,
+		nationality: dto.nationality,
+		imageUrl: dto.imageUrl,
+		fallbackImageUrl: dto.fallbackImageUrl,
 		active: true,
 	};
+}
+
+/**
+ * Convierte la respuesta individual del detalle. El endpoint solo devuelve jugadores
+ * visibles para el catálogo, por lo que `active` se fija en `true` sin transportarlo en la respuesta.
+ */
+export function toPlayerDetail(value: unknown): PlayerDetail {
+	if (!isPlayerResponseDTO(value)) {
+		throw new Error("La respuesta del detalle del jugador no es válida.");
+	}
+
+	return { ...toPlayer(value), active: true };
 }
 
 export function toPlayersPage(

@@ -1,0 +1,218 @@
+{
+	"note": "Recursos revisados y no publicados. Procedencia conservada; ver TEAM-LOGOS.md.",
+	"entries": [
+		{
+			"id": 6,
+			"name": "Liverpool FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Wordmark L.F.C.; no es el escudo del club (revisión del recurso)",
+			"consultedAt": "2026-10-13T17:44:12.767Z",
+			"file": "premier-league/liverpool-fc-6.png",
+			"commonsTitle": "File:Logo Liverpool FC (2024).png",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_Liverpool_FC_(2024).png",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/Logo_Liverpool_FC_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"author": "Liverpool FC",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://seeklogo.com/vector-logo/547647/liverpool-f-c\">https://seeklogo.com/vector-logo/547647/liverpool-f-c</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Logo_Liverpool_FC_(2024).png",
+			"restrictions": "trademarked",
+			"metadata": {
+				"DateTime": {
+					"value": "2024-11-27 22:26:50",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Logo Liverpool FC (2024)",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "Text logos|Liverpool FC|With trademark|PD textlogo",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo Liverpool FC (2024).",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2024-11-27",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://seeklogo.com/vector-logo/547647/liverpool-f-c\">https://seeklogo.com/vector-logo/547647/liverpool-f-c</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Liverpool FC",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"sha256": "04f88255cb186d6739bd7071d9502e4474450c3d819595bc5701055d5d953d8c",
+			"published": false
+		},
+		{
+			"id": 61,
+			"name": "AS Roma",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"file": "serie-a/as-roma-61.svg",
+			"entityId": "Q2739",
+			"commonsTitle": "File:AS ROMA Text Logo 2020 - 2021 .svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:AS_ROMA_Text_Logo_2020_-_2021_.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b9/AS_ROMA_Text_Logo_2020_-_2021_.svg",
+			"author": "Associazione Sportiva Roma S.p.A.",
+			"credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.footyheadlines.com/2020/09/all-new-as-roma-2020-branding-revealed.html\">All-New AS Roma 2020 Branding Revealed</a> <span style=\"font-size: 0.95em; font-weight: bold; color:#555; position: relative;\">(english)</span>. <i>footyheadlines.com</i> (<span class=\"mw-formatted-date\" title=\"2020-09-17\">September 17, 2020</span>).",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:AS_ROMA_Text_Logo_2020_-_2021_.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "2c7c80014f4318aeae52295360ad3ea9bcbad497218649db06eb817dd52a30da",
+			"metadata": {
+				"DateTime": {
+					"value": "2020-09-24 12:50:20",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "AS ROMA Text Logo 2020 - 2021 ",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG text logos|Red and yellow text logos|SVG logos of AS Roma",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Wordmark of A.S. Roma (2020–).",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "Summer 2020<div style=\"display: none;\">date QS:P,+2020-00-00T00:00:00Z/9,P4241,Q40720564</div>",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.footyheadlines.com/2020/09/all-new-as-roma-2020-branding-revealed.html\">All-New AS Roma 2020 Branding Revealed</a> <span style=\"font-size: 0.95em; font-weight: bold; color:#555; position: relative;\">(english)</span>. <i>footyheadlines.com</i> (<span class=\"mw-formatted-date\" title=\"2020-09-17\">September 17, 2020</span>).",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Associazione Sportiva Roma S.p.A.",
+					"source": "commons-desc-page"
+				},
+				"Permission": {
+					"value": "<i>This logo image consists only of simple geometric shapes or text. It <b>does not meet the <a href=\"//commons.wikimedia.org/wiki/Commons:Threshold_of_originality\" title=\"Commons:Threshold of originality\">threshold of originality</a></b> needed for copyright protection, and is therefore in the <b><a href=\"https://en.wikipedia.org/wiki/public_domain\" class=\"extiw\" title=\"w:public domain\">public domain</a></b>. Although it is free of copyright restrictions, this image may still be subject to <a href=\"//commons.wikimedia.org/wiki/Commons:Non-copyright_restrictions\" title=\"Commons:Non-copyright restrictions\">other restrictions</a>. See <a href=\"https://en.wikipedia.org/wiki/Wikipedia:Public_domain#Fonts_and_typefaces\" class=\"extiw\" title=\"w:Wikipedia:Public domain\">WP:PD § Fonts and typefaces</a> or <a href=\"//commons.wikimedia.org/wiki/Template_talk:PD-textlogo\" title=\"Template talk:PD-textlogo\">Template talk:PD-textlogo</a> for more information.</i>",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:01.380Z",
+			"aliases": [
+				"AS Roma",
+				"AS Rom",
+				"AS Rome",
+				"A.S. Roma",
+				"ASRoma",
+				"ASR",
+				"La Roma",
+				"Associazione Sportiva Roma",
+				"A.S.Roma",
+				"A.S.R",
+				"A.S.R 1927",
+				"Roma 1927",
+				"ASR 1927",
+				"A.S. Rome",
+				"ASRome",
+				"Associazione Sportiva Rome",
+				"The Wolfs",
+				"Rome Sport Association",
+				"A.S.Rome"
+			],
+			"reason": "Logo tipográfico, no escudo",
+			"published": false
+		}
+	]
+}

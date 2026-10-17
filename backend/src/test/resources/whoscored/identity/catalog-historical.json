@@ -1,0 +1,8 @@
+{
+  "playerTableStats": [
+    {"playerId": 101, "name": "José Pérez", "teamId": 10, "teamName": "Real Madrid", "tournamentId": 4, "seasonId": 1, "seasonName": "2024/2025"},
+    {"playerId": "00101", "name": "Jose Perez", "teamId": 13, "teamName": "Sevilla", "tournamentId": 4, "seasonId": 2, "seasonName": null},
+    {"playerId": 105, "name": "Juan Ruiz", "teamName": "Valencia", "tournamentId": 4}
+  ],
+  "paging": {"currentPage": 1, "totalPages": 1, "resultsPerPage": 3, "totalResults": 3, "firstRecordIndex": 1, "lastRecordIndex": 3}
+}

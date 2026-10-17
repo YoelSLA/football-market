@@ -34,6 +34,10 @@ description: Generate a custom checklist for the current feature based on user r
 
 ## User Input
 
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. El comando singular `speckit.checklist` sirve a la fase conceptual Checklists. Generación no equivale a evaluación ni aceptación; MUST registrar revisión de criterios aplicables antes de Tasks. MUST ejecutar solo el paso autorizado y MUST NOT ejecutar tests ni hooks incompatibles.
+
 ```text
 $ARGUMENTS
 ```

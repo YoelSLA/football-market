@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import footballmarket.models.exceptions.InvalidPlayerSnapshotException;
 import footballmarket.models.exceptions.InvalidPlayerSynchronizationResultException;
+import footballmarket.models.records.PlayerCandidate;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +21,7 @@ class PlayerSynchronizationResultTest {
   @DisplayName("Contadores de sincronización")
   class Counters {
     @ParameterizedTest
+    @DisplayName("Rechaza contadores negativos o superiores al total obtenido")
     @CsvSource({
       "-1,0,0,0,0",
       "1,-1,0,0,0",
@@ -37,28 +40,42 @@ class PlayerSynchronizationResultTest {
     }
 
     @Test
+    @DisplayName("Las inactivaciones son independientes de los registros obtenidos")
     void permiteRegistrosDuplicadosEInactivacionesIndependientes() {
-      assertThat(new PlayerSynchronizationResult(5, 1, 1, 10, 1).markedInactive()).isEqualTo(10);
+      PlayerSynchronizationResult result = new PlayerSynchronizationResult(5, 1, 1, 10, 1);
+      assertThat(result.markedInactive()).isEqualTo(10);
     }
   }
 
   @Nested
   @DisplayName("Consistencia del conjunto de jugadores")
   class Snapshot {
+    @ParameterizedTest
+    @CsvSource({"0,0", "1,1", "-1,0", "0,-1"})
+    @DisplayName("Rechaza contadores incompatibles con los jugadores del snapshot")
+    void rechazaContadoresInconsistentes(int obtained, int discarded) {
+      // Arrange
+      PlayerCandidate player = new PlayerCandidate("1", "N", "T", "L", "P", null, null);
+      List<PlayerCandidate> players = List.of(player);
+
+      // Act / Assert
+      assertThatThrownBy(() -> new PlayerSnapshot(players, obtained, discarded))
+          .isInstanceOf(InvalidPlayerSnapshotException.class);
+    }
+
     @Test
-    void rechazaContadoresInconsistentesYProtegeElConjuntoDeJugadores() {
-      Player player = new Player(1L, "N", "T", "L", "P");
-      assertThatThrownBy(() -> new PlayerSnapshot(List.of(player), 0, 0))
-          .isInstanceOf(InvalidPlayerSnapshotException.class);
-      assertThatThrownBy(() -> new PlayerSnapshot(List.of(), 0, 1))
-          .isInstanceOf(InvalidPlayerSnapshotException.class);
-      assertThatThrownBy(() -> new PlayerSnapshot(List.of(), -1, 0))
-          .isInstanceOf(InvalidPlayerSnapshotException.class);
-      assertThatThrownBy(() -> new PlayerSnapshot(List.of(), 0, -1))
-          .isInstanceOf(InvalidPlayerSnapshotException.class);
-      var mutable = new java.util.ArrayList<>(List.of(player));
-      var snapshot = new PlayerSnapshot(mutable, 1, 0);
+    @DisplayName("El snapshot protege sus jugadores de cambios en la lista original")
+    void copiaLaListaDeJugadores() {
+      // Arrange
+      PlayerCandidate player = new PlayerCandidate("1", "N", "T", "L", "P", null, null);
+      ArrayList<PlayerCandidate> mutable = new ArrayList<>();
+      mutable.add(player);
+
+      // Act
+      PlayerSnapshot snapshot = new PlayerSnapshot(mutable, 1, 0);
       mutable.clear();
+
+      // Assert
       assertThat(snapshot.players()).containsExactly(player);
     }
   }
