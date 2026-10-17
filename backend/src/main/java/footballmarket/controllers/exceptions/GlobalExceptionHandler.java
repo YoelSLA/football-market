@@ -15,6 +15,9 @@ import footballmarket.services.exceptions.InsufficientStockException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
 import footballmarket.services.exceptions.InvalidQuantityException;
 import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.PlayerIdentityRunNotFoundException;
+import footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException;
+import footballmarket.services.exceptions.PlayerIdentitySynchronizationException;
 import footballmarket.services.exceptions.PlayerImageResolutionPersistenceException;
 import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
@@ -39,6 +42,40 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(PlayerIdentitySynchronizationException.class)
+  public ResponseEntity<ErrorResponseDTO> handleIdentitySynchronization(
+      HttpServletRequest request) {
+    return this.buildResponse(
+        "No se pudo completar la sincronización de identidad WhoScored",
+        "PLAYER_IDENTITY_SYNC_FAILED",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
+
+  @ExceptionHandler(InvalidPlayerIdentityIdException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidIdentityId(
+      InvalidPlayerIdentityIdException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "INVALID_PLAYER_IDENTITY_ID", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(PlayerIdentityRunNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handleIdentityRunNotFound(
+      PlayerIdentityRunNotFoundException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "PLAYER_IDENTITY_RUN_NOT_FOUND", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(PlayerIdentitySourceNotEligibleException.class)
+  public ResponseEntity<ErrorResponseDTO> handleIdentitySourceNotEligible(
+      PlayerIdentitySourceNotEligibleException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(),
+        "PLAYER_IDENTITY_SOURCE_NOT_ELIGIBLE",
+        HttpStatus.CONFLICT,
+        request);
+  }
 
   @ExceptionHandler(PlayerImageRunNotFoundException.class)
   public ResponseEntity<ErrorResponseDTO> handleImageRunNotFound(
