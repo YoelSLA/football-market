@@ -3,6 +3,7 @@ package footballmarket.controllers.mappers;
 import footballmarket.controllers.dtos.requests.OrderBuyRequestDTO;
 import footballmarket.controllers.dtos.responses.OrderBuyResponseDTO;
 import footballmarket.models.MarketTransaction;
+import footballmarket.models.records.BuyListingRequest;
 import footballmarket.models.records.BuyOrderRequest;
 
 /**
@@ -25,6 +26,10 @@ public final class OrderMapper {
     return new BuyOrderRequest(request.playerId(), request.quantity());
   }
 
+  public static BuyListingRequest toBuyListingRequest(OrderBuyRequestDTO request) {
+    return new BuyListingRequest(request.listingId());
+  }
+
   /**
    * Expone el resultado de una compra confirmada.
    *
@@ -38,6 +43,7 @@ public final class OrderMapper {
         transaction.getQuantity(),
         transaction.getUnitPrice(),
         transaction.getTotalAmount(),
-        transaction.getExecutedAt());
+        transaction.getExecutedAt(),
+        transaction.getListing() == null ? null : transaction.getListing().getId());
   }
 }

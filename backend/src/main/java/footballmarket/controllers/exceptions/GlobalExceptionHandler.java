@@ -9,12 +9,17 @@ import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
 import footballmarket.models.exceptions.InsufficientPlayerTokensException;
 import footballmarket.models.exceptions.InsufficientUserCreditsException;
 import footballmarket.services.exceptions.ArithmeticOverflowException;
+import footballmarket.services.exceptions.CannotBuyOwnListingException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.services.exceptions.InsufficientCreditsException;
 import footballmarket.services.exceptions.InsufficientStockException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
+import footballmarket.services.exceptions.InvalidListingStatusException;
+import footballmarket.services.exceptions.InvalidOrderRequestException;
 import footballmarket.services.exceptions.InvalidQuantityException;
 import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.ListingNotAvailableException;
+import footballmarket.services.exceptions.ListingNotFoundException;
 import footballmarket.services.exceptions.PlayerIdentityRunNotFoundException;
 import footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException;
 import footballmarket.services.exceptions.PlayerIdentitySynchronizationException;
@@ -29,6 +34,7 @@ import footballmarket.services.exceptions.QuoteContractViolationException;
 import footballmarket.services.exceptions.QuoteUnavailableException;
 import footballmarket.services.exceptions.SellerUnavailableException;
 import footballmarket.services.exceptions.SuperuserCannotBuyException;
+import footballmarket.services.exceptions.SuperuserCannotSellException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +48,65 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+  public ResponseEntity<ErrorResponseDTO> handleAccessDenied(HttpServletRequest request) {
+    return this.buildResponse(
+        "No tenés permiso para realizar esta operación.",
+        "ACCESS_DENIED",
+        HttpStatus.FORBIDDEN,
+        request);
+  }
+
+  /**
+   * Traduce fallos de persistencia o transacción sin exponer el detalle interno de la operación.
+   */
+  @ExceptionHandler({
+    org.springframework.dao.DataAccessException.class,
+    org.springframework.transaction.TransactionException.class,
+    footballmarket.models.exceptions.InvalidTokenListingException.class
+  })
+  public ResponseEntity<ErrorResponseDTO> handleMarketPersistenceFailure(
+      HttpServletRequest request) {
+    return this.buildResponse(
+        "No se pudo procesar la operación. Intentá nuevamente más tarde.",
+        "INTERNAL_ERROR",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
+
+  @ExceptionHandler(InvalidOrderRequestException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidOrder(
+      InvalidOrderRequestException ex, HttpServletRequest request) {
+    return this.buildResponse(ex.getMessage(), "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(SuperuserCannotSellException.class)
+  public ResponseEntity<ErrorResponseDTO> handleSuperuserCannotSell(
+      SuperuserCannotSellException ex, HttpServletRequest request) {
+    return this.buildResponse(
+        ex.getMessage(), "SUPERUSER_CANNOT_SELL", HttpStatus.FORBIDDEN, request);
+  }
+
+  @ExceptionHandler(CannotBuyOwnListingException.class)
+  public ResponseEntity<ErrorResponseDTO> handleOwnListing(
+      CannotBuyOwnListingException ex, HttpServletRequest request) {
+    return this.buildResponse(
+        ex.getMessage(), "CANNOT_BUY_OWN_LISTING", HttpStatus.FORBIDDEN, request);
+  }
+
+  @ExceptionHandler(ListingNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handleListingNotFound(
+      ListingNotFoundException ex, HttpServletRequest request) {
+    return this.buildResponse(ex.getMessage(), "LISTING_NOT_FOUND", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(ListingNotAvailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleListingNotAvailable(
+      ListingNotAvailableException ex, HttpServletRequest request) {
+    return this.buildResponse(
+        ex.getMessage(), "LISTING_NOT_AVAILABLE", HttpStatus.CONFLICT, request);
+  }
 
   @ExceptionHandler(PlayerIdentitySynchronizationException.class)
   public ResponseEntity<ErrorResponseDTO> handleIdentitySynchronization(
@@ -148,8 +213,10 @@ public class GlobalExceptionHandler {
     return buildResponse(ex.getMessage(), "INVALID_PLAYER_PAGE", HttpStatus.BAD_REQUEST, request);
   }
 
-  @ExceptionHandler(
-      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+  @ExceptionHandler({
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+    InvalidListingStatusException.class
+  })
   public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(HttpServletRequest request) {
     return buildResponse(
         "El parámetro de consulta no tiene un formato válido",
