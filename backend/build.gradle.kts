@@ -1,3 +1,11 @@
+import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
+
 plugins {
     java
     jacoco
@@ -10,6 +18,68 @@ plugins {
 
 group = "com.example"
 version = "0.0.1-SNAPSHOT"
+
+// Generación local únicamente: no ejecuta Flyway ni abre conexiones a la base.
+tasks.register("createMigration") {
+    val migrationDescription = providers.gradleProperty("migrationDescription")
+    val migrationDirectory = layout.projectDirectory.dir("src/main/resources/db/migration")
+    val migrationLock = layout.projectDirectory.file(".gradle/create-migration.lock")
+    group = "database"
+    description = "Crea una migración SQL con timestamp UTC y versión estrictamente creciente."
+    doLast {
+        val name = migrationDescription.orNull ?: throw GradleException(
+            "Indicá -PmigrationDescription=descripcion_en_ingles."
+        )
+        if (!Regex("[a-z][a-z0-9]*(?:_[a-z0-9]+)*").matches(name) || name.length > 100) {
+            throw GradleException(
+                "Descripción inválida: usá snake_case ASCII en minúsculas, empezando con letra, de hasta 100 caracteres."
+            )
+        }
+
+        val directory = migrationDirectory.asFile.toPath()
+        val lockPath = migrationLock.asFile.toPath()
+        Files.createDirectories(lockPath.parent)
+        FileChannel.open(lockPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { channel ->
+            channel.lock().use {
+                val pattern = Regex("V([0-9]+)__[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*\\.sql")
+                val formatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss")
+                    .withResolverStyle(ResolverStyle.STRICT)
+                val versions = mutableSetOf<java.math.BigInteger>()
+                Files.walk(directory).use { paths ->
+                    paths.filter { Files.isRegularFile(it) }.forEach { path ->
+                        val filename = path.fileName.toString()
+                        if (filename.startsWith("V")) {
+                            val match = pattern.matchEntire(filename)
+                                ?: throw GradleException("Nombre de migración inválido: $filename")
+                            val rawVersion = match.groupValues[1]
+                            if (rawVersion.length == 14) {
+                                try {
+                                    LocalDateTime.parse(rawVersion, formatter)
+                                } catch (exception: java.time.DateTimeException) {
+                                    throw GradleException("Timestamp inválido: $filename", exception)
+                                }
+                            }
+                            if (!versions.add(rawVersion.toBigInteger())) {
+                                throw GradleException("Versión de migración duplicada: $rawVersion")
+                            }
+                        }
+                    }
+                }
+                val timestamp = LocalDateTime.now(ZoneOffset.UTC).format(formatter)
+                val latest = versions.maxOrNull()
+                if (latest != null && timestamp.toBigInteger() <= latest) {
+                    throw GradleException(
+                        "El timestamp UTC $timestamp no supera la versión local $latest. " +
+                            "Esperá al próximo segundo o revisá el reloj y las migraciones integradas."
+                    )
+                }
+                val target = directory.resolve("V${timestamp}__${name}.sql")
+                Files.writeString(target, "-- $name\n", StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+                logger.lifecycle("Migración creada: $target")
+            }
+        }
+    }
+}
 
 java {
     toolchain {

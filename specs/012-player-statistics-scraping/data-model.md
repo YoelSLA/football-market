@@ -2,7 +2,7 @@
 
 > **Alineado con la implementación vigente (2026-10-18).** El modelo es aplanado: una fila por
 > jugador, campaña y canal con las 60 métricas en columnas. Describe lo que existe en
-> `V10__create_player_statistics.sql` más `V11__flatten_player_statistics.sql` y en las entidades
+> `V20261018191334__create_player_statistics.sql` más `V20261018191335__flatten_player_statistics.sql` y en las entidades
 > `PlayerStatisticsExtractionRun`, `PlayerStatisticsRunItem`, `PlayerStatistics` y
 > `ExtractionIncident`. No existen contextos, observaciones ni auditorías de contraste.
 
@@ -152,7 +152,7 @@ configuración `whoscored.competitions` (`1→2`, `2→3`, `3→4`, `4→5`, `5�
 coinciden, elige la de `seasonKey` numérico mayor. Sin coincidencia la fila se confirma como
 `NO_LEAGUE_CONTEXT` con el contexto nulo y todas las métricas nulas.
 
-El mismo mapeo queda congelado en el backfill de `V11__flatten_player_statistics.sql`; la
+El mismo mapeo queda congelado en el backfill de `V20261018191335__flatten_player_statistics.sql`; la
 selección en código lee la configuración, no la migración.
 
 ### Reconfirmación
@@ -211,7 +211,7 @@ vez el dato vigente de su campaña.
 
 El diseño inicial de esta spec era normalizado, con `player_performance_contexts`,
 `player_performance_metric_observations` y `player_metric_comparisons`, valores append-only por
-métrica y un contraste de auditoria entre canales. `V11__flatten_player_statistics.sql` creo la
+métrica y un contraste de auditoria entre canales. `V20261018191335__flatten_player_statistics.sql` creo la
 tabla aplanada, migro el historico existente y elimino las tres tablas y sus secuencias
 (`player_metric_comparisons_id_seq` queda huerfana). El contraste entre canales, la disponibilidad
 `NOT_DERIVABLE` y la precision observada por metrica no forman parte del modelo vigente; la perdida

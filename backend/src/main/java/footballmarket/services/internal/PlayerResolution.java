@@ -37,18 +37,21 @@ public class PlayerResolution {
   private final PlayerImageResolutionRepository images;
   private final PlayerObservationConsolidation consolidation;
   private final PendingReviewRecorder reviews;
+  private final PlayerTokenEmissionWriter emissions;
 
   public PlayerResolution(
       PlayerRepository players,
       PlayerExternalReferenceRepository references,
       PlayerImageResolutionRepository images,
       PlayerObservationConsolidation consolidation,
-      PendingReviewRecorder reviews) {
+      PendingReviewRecorder reviews,
+      PlayerTokenEmissionWriter emissions) {
     this.players = players;
     this.references = references;
     this.images = images;
     this.consolidation = consolidation;
     this.reviews = reviews;
+    this.emissions = emissions;
   }
 
   /**
@@ -107,13 +110,17 @@ public class PlayerResolution {
     return new PlayerApplication(created, updated, inactive, excludedPlayers.size());
   }
 
-  /** El alta nace con su referencia de Football-Data y su resolución de imagen pendiente. */
+  /**
+   * El alta nace con su referencia de Football-Data, su resolución de imagen pendiente y la emisión
+   * inicial de tokens a nombre del superusuario.
+   */
   private void create(PlayerCandidate candidate, Team team) {
     Player player = new Player(candidate.name(), team, candidate.position());
     player.addExternalReference(ExternalProvider.FOOTBALL_DATA, candidate.externalId());
     player.updateOptionalDetails(candidate.dateOfBirth(), candidate.nationality());
     this.players.save(player);
     this.images.save(new PlayerImageResolution(player));
+    this.emissions.emitFor(player);
     this.reviews.reconcile(ReviewSubjectType.PLAYER, candidate.externalId(), player.getId());
   }
 

@@ -129,14 +129,14 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 
 **Descripción.** SPEC-012 exigía contrastar por métrica compartida la coincidencia, el redondeo
 publicado o la discrepancia entre el scraping y la interfaz JSON (FR-044, FR-047, FR-048, SC-006 y
-SC-013). El modelo entregado no lo implementa: `V11__flatten_player_statistics.sql` elimina la tabla
+SC-013). El modelo entregado no lo implementa: `V20261018191335__flatten_player_statistics.sql` elimina la tabla
 `player_metric_comparisons` y no existen `MetricComparisonRule`, `MetricComparisonRecorder` ni sus
 tests. La alineación documental del 2026-10-18 retiró esos requisitos conservando sus identificadores
 y desmarcando las tareas T061, T062, T069 y T070.
 
 **Evidencia.**
 
-- `backend/src/main/resources/db/migration/V11__flatten_player_statistics.sql:384` - `DROP TABLE
+- `backend/src/main/resources/db/migration/V20261018191335__flatten_player_statistics.sql:384` - `DROP TABLE
   player_metric_comparisons`; la secuencia `player_metric_comparisons_id_seq` queda huérfana.
 - `backend/src/main/java/footballmarket/services/JsonStatisticsUpdateService.java:9` y
   `backend/src/main/java/footballmarket/services/impl/JsonStatisticsUpdateServiceImpl.java:28` -
@@ -168,7 +168,7 @@ resuelta por la alineación documental ni por build.
 
 - `specs/012-player-statistics-scraping/spec.md` (FR-044, FR-047, FR-048, SC-006, SC-013)
 - `specs/012-player-statistics-scraping/data-model.md`
-- `backend/src/main/resources/db/migration/V11__flatten_player_statistics.sql`
+- `backend/src/main/resources/db/migration/V20261018191335__flatten_player_statistics.sql`
 
 **Historial de cambios.**
 

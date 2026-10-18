@@ -762,7 +762,7 @@ este historial. No declarar SYNCED hasta completar la conciliación remota.
   (2) la cobertura efectiva es 45/57/42 y el canal JSON recorre quince combinaciones;
   (3) el contraste entre canales se retira porque no es un requisito según refleja la
   implementación; (4) la pérdida de disponibilidad y precisión por métrica se documenta tal cual.
-- Cambios: data-model.md reescrito sobre el modelo aplanado de V10 + V11
+- Cambios: data-model.md reescrito sobre el modelo aplanado de las dos migraciones de player_statistics
   (player_statistics_extraction_runs, player_statistics_run_items, player_statistics,
   player_statistics_incidents); contracts/http.md sin bloque comparisons;
   contracts/whoscored.md con 45 métricas y configuración vigente de cuatro workers y 1500 ms;
@@ -794,3 +794,19 @@ este historial. No declarar SYNCED hasta completar la conciliación remota.
   históricos conservan su contenido; solo se corrige el identificador de la feature.
 - Rama: renombrada a `feat/012-player-statistics-scraping` conforme a Constitution §7.
 - Sin cambios en código funcional, migraciones aplicadas, contratos ni configuración.
+## 2026-10-18 - Renombrado de migraciones por convencion de timestamps
+
+- Evento: aplicacion de docs/development/flyway-migrations.md al integrar origin/dev. No es
+  implementacion funcional ni gate.
+- Motivo: dev renombro V9__create_market_domain.sql a V10__create_market_domain.sql y sumo
+  V20261017233439__create_token_listings.sql y V20261017233445__add_listing_to_market_transactions.sql.
+  Nuestras migraciones V10__create_player_statistics.sql y V11__flatten_player_statistics.sql
+  colisionaban en version con el dominio de mercado.
+- Cambios: renombradas sin modificar su SQL a
+  V20261018191334__create_player_statistics.sql y
+  V20261018191335__flatten_player_statistics.sql, posteriores al maximo integrado. Se conserva
+  el orden entre ambas: la segunda depende de la primera. Referenciasactualizadas en
+  data-model.md, 	asks.md y docs/TECHNICAL_DEBT.md.
+- Base de datos: no se inspecciono ninguna. Si player_statistics ya estuviera aplicada en alguna
+  base, el responsable debe detener el despliegue y revisar lyway_schema_history antes de
+  aplicar, conforme a la seccion de remediacion de lyway-migrations.md.

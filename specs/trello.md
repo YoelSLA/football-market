@@ -1,5 +1,16 @@
 # Índice de trazabilidad con Trello
 
+## Integración de `origin/dev` en SPEC-012 — 2026-10-18
+
+TRELLO OUT OF SYNC — LOCAL CONTINGENCY. Se integró `origin/dev` (SPEC-010 `010-buy-tokens` y
+SPEC-011 `011-sell-player-tokens`) en la rama de scraping de estadísticas. Como `dev` ya ocupan
+los identificadores 010 y 011, esta feature se renumeró de SPEC-011 a SPEC-012, con su directorio
+`specs/012-player-statistics-scraping/` y su rama `feat/012-player-statistics-scraping`. Los
+registros históricos de ambas specs se conservan sin reescribir y conviven en este índice: las
+entradas posteriores a esta línea y hasta el cierre de SPEC-012 pertenecen a SPEC-012; las de
+cierre final de SPEC-011 y SPEC-010 pertenecen a esas features. No se modificó ningún estado
+remoto, ninguna tarjeta ni columna de Trello.
+
 ## IMPLEMENT AUTHORIZATION de US02 — 2026-10-16
 
 TRELLO OUT OF SYNC — LOCAL CONTINGENCY. El usuario autorizó implementar US02 (T045–T059 y
@@ -189,6 +200,333 @@ verifica por lectura posterior que no hay duplicados ni asociaciones erróneas y
 
 `T001`-`T030` son prerrequisitos compartidos y `T073`-`T078` trabajo transversal de la épica; no
 pertenecen a ninguna US.
+
+## SPEC-011 — Cierre final verificado (vigente)
+
+Spec Approved; épica `6ac59770f35fd9ebc1965264` y US01–US04 DONE. SDD Lifecycle 8/8;
+60/60 tareas. CONVERGE satisfactorio: `6ad50618cb24ab237df6d4fb`. Autorización humana final
+sobre ese resultado presentado: `[SDD GATE] FEATURE COMPLETION AUTHORIZATION APPROVED`,
+`6ad50693400c55a3098e9a48`, persistida y releída antes de la transición. CODE REVIEW y TESTING
+conservados. Limitaciones y evidencia: [convergence-report.md](011-sell-player-tokens/convergence-report.md).
+Sin pendientes de cierre SDD; no implica publicación Git ni despliegue. Registros inferiores históricos.
+
+## SPEC-011 — CONVERGE satisfactorio; gate final pendiente — 2026-10-18 (histórico)
+
+Reanudación autorizada mediante bash: prerrequisito exitoso, contexto correcto. CONVERGE estático
+sin hallazgos accionables nuevos, 60/60 tareas y 123/123 ítems documentales. Sin tests/Gradle
+ejecutados por agente; XML existentes 938 exitosos, cero fallidos/omitidos. US01–US04 permanecen
+DONE con CODE REVIEW y TESTING preservados (IDs en el registro siguiente).
+
+Épica TESTING; SDD Lifecycle **8/8**, incluido Converge. Evento persistido y leído:
+`6ad50618cb24ab237df6d4fb`. El fallo 126 anterior queda superado y conservado como historia.
+Reporte: [convergence-report.md](011-sell-player-tokens/convergence-report.md).
+La intención humana expresa de cierre condicionado se conserva; workflow §6 exige gate final
+referido al resultado presentado. No se inventa revisión de resultado futuro, ni se declara
+Feature DONE/Approved. No hay cambios funcionales o de tests. Registros inferiores históricos.
+
+## SPEC-011 — TESTING aprobado; CONVERGE bloqueado — 2026-10-18 (histórico)
+
+US01–US04 DONE, con CODE REVIEW histórico conservado y TESTING humano expreso persistido antes
+de la transición. Relectura posterior verificó DONE y checklists 13/13, 16/16, 8/8 y 5/5.
+
+| US | Comentario TESTING APPROVED |
+| --- | --- |
+| US01 | `6ad504a6778f973abdccdf39` |
+| US02 | `6ad504a69c13fc4402d6464d` |
+| US03 | `6ad504a660c466c04ce4c513` |
+| US04 | `6ad504a692e8416146c793b8` |
+
+Épica `6ac59770f35fd9ebc1965264` → TESTING para CONVERGE, no DONE. Evento de aceptación,
+transición y bloqueo: `6ad504e65e476bc89a276e68`. T058 y T060 completas: **60/60 tareas**.
+SDD Lifecycle: Implement completado; Converge pendiente. El script obligatorio falló con permiso
+denegado (126); no se declara diagnóstico satisfactorio ni autorización final vinculada a un
+resultado inexistente. [Reporte](011-sell-player-tokens/convergence-report.md).
+Equivalencias y límites: [quickstart.md](011-sell-player-tokens/quickstart.md).
+Los registros inferiores se conservan como historial, no estado actual.
+
+## SPEC-011 — Evidencia de TESTING consolidada; aprobación pendiente — 2026-10-18
+
+Estado histórico en esa consolidación: épica IN PROGRESS; US01–US04 en TESTING y CODE REVIEW conservado. Sin cambios
+de tarjetas en esta consolidación documental. El usuario informó suite completa satisfactoria;
+se corroboraron 159 XML y resumen HTML: **938 tests exitosos, cero fallidos y cero omitidos**.
+T060 completada con evidencia verificable; **59/60 tareas**, T058 pendiente.
+Detalle por clase/escenario, fingerprint de XML e historial de tres fallos temporales y su
+corrección: [testing-report.md](011-sell-player-tokens/testing-report.md).
+T060 es transversal y no se duplica en checklists de US. No se aprueba TESTING ni se habilita
+CONVERGE; la siguiente acción humana es completar/validar evidencia de quickstart y decidir
+TESTING por US. Los registros inferiores se conservan como historial.
+
+## SPEC-011 — CODE REVIEW aprobado; TESTING humano pendiente — 2026-10-18
+
+**Estado histórico en esa aprobación.** El usuario aceptó CR-01 (deserialización por modalidad), CR-02 (referencia
+histórica) y CR-03 (trazabilidad de métodos), tomó conocimiento de C1 revisado estáticamente sin
+desviaciones detectadas y aprobó expresamente CODE REVIEW de las cuatro US. Alcance: árbol local
+de `feat/011-sell-player-tokens`, con archivos no rastreados y sin commit de entrega.
+El snapshot backend y su definición están en
+[testing-report.md](011-sell-player-tokens/testing-report.md).
+
+| Historia | Estado Trello | Comentario CODE REVIEW APPROVED, Validated by: HUMAN |
+| --- | --- | --- |
+| [US01](https://trello.com/c/pnO4wkgD) | TESTING | `6ad461840f9a5f2a70933584` |
+| [US02](https://trello.com/c/81C31YiH) | TESTING | `6ad4618507c65ae21f8d6063` |
+| [US03](https://trello.com/c/5Z1kiSpv) | TESTING | `6ad461864a406a03abba5500` |
+| [US04](https://trello.com/c/kMOXpXzK) | TESTING | `6ad4618767a1754ee0dc681a` |
+
+Se verificó cada aprobación por lectura antes de mover su tarjeta. El workflow §7.8 permite
+CODE REVIEW aprobado/persistido → TESTING con Testing Report. La
+[épica](https://trello.com/c/sZFzbryR) permanece **IN PROGRESS**; evento de transición agregado
+`6ad461a9f43460c55318797b`. No se aprobaron TESTING, CONVERGE ni cierre.
+
+**Trello sync: SYNCED**: cinco tarjetas existentes verificadas; IDs, URL, comentarios y checklists
+conservados. No se eliminó ni sobrescribió evidencia de revisión. Los resultados PENDING anteriores
+siguen en el historial; las aprobaciones nuevas son exclusivamente de CODE REVIEW.
+
+**58/60 tareas**, con T058 y T060 sin marcar. Tests todavía **no compilados ni ejecutados**.
+El build histórico de 6 s es anterior a CR-01 y no se presenta como verificación de la corrección.
+En esta operación no se ejecutaron Gradle, tests, servicios ni Flyway, no se aplicaron migraciones
+y no hubo cambios funcionales ni Git mutante.
+
+Procedimiento reproducible, cobertura por US, riesgos, comandos personales y evidencias de T058/T060:
+[Testing Report](011-sell-player-tokens/testing-report.md), estado **PENDING HUMAN VALIDATION**.
+Siguiente acción: el usuario revisa pruebas/cobertura, ejecuta y aporta resultados; ninguna tarea
+ni gate se cierra automáticamente por esta transición.
+
+## SPEC-011 — Reanudación C1 y entrega a CODE REVIEW — 2026-10-18
+
+**Entrega previa, conservada como historial**; el estado vigente se registra en el apartado superior.
+Reanudación integral expresa de US01–US04/T001–T060 tras revisión humana de ANALYZE 7
+(0 CRITICAL/HIGH/MEDIUM, ocho LOW) y corrección editorial I4 sin cambiar el diseño.
+Permanecen siete LOW aceptados. Revalidación de READY persistida en la épica mediante comentario
+`6ad4573f7a92b419fe026b5d`; nuevas autorizaciones por US verificadas por lectura posterior.
+No se borró la invalidación por C1 ni ninguna aprobación anterior.
+
+C1 aplicado en código: única lectura temporal decisiva después de bloquear cuentas, publicación
+y ambas tenencias; bloqueos hasta commit/rollback. Regresiones T029/T031 y quickstart 9c A/B
+escritas con reloj controlado y observación de bloqueo PostgreSQL, **no compiladas ni ejecutadas**.
+Se revisaron las 34 tareas previas sin reiniciarlas: **58/60 realizadas**; T058/T060 pendientes
+de resultados del usuario. Los marcadores de tests acreditan escritura/revisión en fuente, no PASS.
+
+| Entidad | Tareas propias | Columna vigente | Evidencia CODE REVIEW pendiente |
+| --- | --- | --- | --- |
+| [Épica SPEC-011](https://trello.com/c/sZFzbryR) | Compartidas solo en tasks.md | IN PROGRESS | Entrega `6ad45d86681bd05a0dc61bd8` |
+| [US01](https://trello.com/c/pnO4wkgD) | 13/13 | CODE REVIEW | `6ad45d5d18e6daa524ad934e` |
+| [US02](https://trello.com/c/81C31YiH) | 16/16 | CODE REVIEW | `6ad45d66fbb991b74af76655` |
+| [US03](https://trello.com/c/5Z1kiSpv) | 8/8 | CODE REVIEW | `6ad45d6b6446254fdae214d3` |
+| [US04](https://trello.com/c/kMOXpXzK) | 5/5 | CODE REVIEW | `6ad45d70dd7b573255d9beb9` |
+
+Cuatro informes individuales, inventario completo de archivos y tests, decisiones, orden de lectura
+y checklists humanos: [implementation-review.md](011-sell-player-tokens/implementation-review.md).
+Las cuatro US entraron a CODE REVIEW; **ningún CODE REVIEW fue aprobado**, ni TESTING,
+CONVERGE o cierre. La Feature continúa IN PROGRESS. `SDD Lifecycle` Implement/Converge siguen
+pendientes por evidencia humana y cierre; no se marca el agregado solo por el build.
+
+Build final permitido desde backend: `./gradlew build -x test`, **BUILD SUCCESSFUL (6 s)**.
+Intentos anteriores fallaron por Spotless; formato corregido en fuentes. No compila ni ejecuta
+tests. Migraciones sin aplicar y sin modificaciones de bases; sin commits, push ni Git mutante.
+
+**Trello sync: SYNCED**. Verificadas individualmente las cinco tarjetas existentes, IDs/URL
+conservados, vínculos bidireccionales, cuatro checklists `Implementation Tasks` concordantes
+con tasks.md y comentarios PENDING sin validación humana fabricada. Sin tarjetas nuevas.
+Siguiente acción: revisión humana del informe/checklist por US; tras aprobación corresponde TESTING.
+
+## Cierre del gate READY — SPEC-011 — 2026-10-17
+
+### Revalidación previa a IMPLEMENT — ANALYZE 6
+
+Sexta auditoría revisada y aprobada por el usuario: CRITICAL 0, HIGH 0, MEDIUM 0, LOW 7;
+FR 33/33, SC 14/14, casos obligatorios 8/8, 60 tareas en siete fases y checklists 123/123.
+Evidencia añadida sin sobrescribir el historial: comentario `[SDD GATE] SPEC-011 — ANALYZE — ejecución 6`
+`6ad405d684064911470213de` en https://trello.com/c/sZFzbryR.
+FR-031 corregido (no `POST /api/listings`; creación solo por `POST /api/orders/sell`);
+I1 corregido (US03 → US04 secuencial). F1, E2, D2, D3 y D4 conservan su aceptación;
+I2 e I3 quedan aceptados como LOW no bloqueantes, no corregidos.
+I2 solo afecta referencias documentales: AC13 → T015, AC24 → T029, AC27 → T028,
+AC21 → T030/T009; los comportamientos tienen cobertura prevista, no son criterios sin tareas.
+Autorización de reanudación integral de US01–US04/T001–T060 persistida individualmente en cada US;
+sin autorización de CODE REVIEW, TESTING ni cierre. Los registros siguientes conservan el estado histórico.
+Checklist `SDD Lifecycle` regularizado: Specify, Clarify, Plan, Checklists, Tasks y Analyze completos;
+Implement y Converge pendientes. Se conserva abajo el registro histórico de su ausencia.
+
+### IMPLEMENT parcial — suspendido por C1
+
+La ejecución autorizada avanzó en orden US01 → US02 → US03 → US04, sin solapar US03/US04.
+Épica y cuatro US en IN PROGRESS; ninguna historia completa ni gate CODE REVIEW/TESTING aprobado.
+Estado de las 60 tareas: 34 marcadas `[X]` por trabajo escrito/revisado y build sin tests;
+26 pendientes, incluidas las de tests, cobertura, la publicación T020 y la compra T035.
+`tasks.md` detalla evidencia y limitaciones. Los cuatro checklists `Implementation Tasks` contienen
+exclusivamente las tareas de su US: US01 7/13, US02 7/16, US03 4/8 y US04 2/5; las 18 tareas
+compartidas conservan seguimiento único en `tasks.md`. `SDD Lifecycle` Implement sigue pendiente.
+
+**C1 — bloqueo de integridad detectado en revisión, no prueba ejecutada**: validar vencimiento antes
+de bloquear tenencias permite que otra publicación reserve los tokens después del vencimiento,
+mientras la compra previamente validada aún los puede transferir. Ejemplo: tenencia 20, publicación
+antigua de 5 validada antes de vencer, nueva reserva 20 tras el vencimiento; liquidar la antigua
+deja tenencia 15 y reserva 20, contra SC-002/FR-006/FR-021. El código parcial reproduce el orden
+del plan; no se considera validada esa compra ni se ha corregido unilateralmente el diseño.
+
+Se registró un nuevo comentario `[SDD GATE]` con `Gate: READY`, `Result: INVALIDATED` y motivo C1,
+sin atribuir validación humana a esta invalidación. La sexta auditoría y los gates anteriores
+permanecen íntegros como historial. La autorización integral humana conserva su alcance, pero su
+ejecución queda suspendida hasta decisión sobre diseño, nuevo Analyze y revalidación de READY.
+Propuesta no aplicada: tomar tenencias antes de la única validación temporal bajo bloqueo de la
+publicación, preservando el orden cuentas → publicación → tenencias; cubrir la carrera con regresión.
+
+Migraciones generadas, SQL escrito y no aplicado: `V20261017233439__create_token_listings.sql` y
+`V20261017233445__add_listing_to_market_transactions.sql`. No se modificó ninguna base.
+Build final `./gradlew build -x test`: BUILD SUCCESSFUL (5 s), incluida compilación productiva y
+Spotless. Ese grafo no compiló ni ejecutó tests. No hubo commits, push ni operaciones Git mutantes.
+
+### Gate ANALYZE
+
+Aprobado por humano y persistido como comentario `[SDD GATE] SPEC-011 — ANALYZE` en la épica
+`6ac59770f35fd9ebc1965264`. Resultado de la cuarta ejecución: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 5
+(F1, E2, D2, D3 y D4, aceptados como no bloqueantes). Cobertura FR 33/33, SC 14/14, casos límite
+OBLIGATORIOS 8/8, 60 tareas (T001–T060) en 7 fases, checklists 123/123, violaciones de la
+Constitución 0. D1 y E1 figuran resueltos y verificados en ejecuciones posteriores de ANALYZE.
+
+### Materialización de la épica
+
+La épica `[EPIC] REQ-S2-07 - Vender tokens de un jugador` se materializó como
+`[EPIC] SPEC-011 - Venta de tokens de jugadores` conforme a Constitution §8, que exige asociar la
+épica REQ a la clave `[EPIC] SPEC-<spec-id>` al materializarse la SPEC. Se conservaron ID
+(`6ac59770f35fd9ebc1965264`), URL (`https://trello.com/c/sZFzbryR`) e historial, con el mismo
+procedimiento aplicado a SPEC-010. La operación fue autorizada expresamente por el usuario el
+2026-10-17; PROMPT015 por sí solo no la cubría.
+
+### Sincronización de tarjetas US
+
+Realizada al cierre de READY, después de superar el gate humano de ANALYZE, conforme a Constitution §8
+y `docs/development/sdd-workflow.md` §3. Las cuatro US formales de `spec.md` no tenían tarjeta; se
+verificó en las siete columnas antes de crear, sin coincidencias ni duplicados.
+
+| Entidad | Clave canónica | ID | URL | Columna |
+| --- | --- | --- | --- | --- |
+| Épica | `[EPIC] SPEC-011 - Venta de tokens de jugadores` | `6ac59770f35fd9ebc1965264` | https://trello.com/c/sZFzbryR | SPECIFYING → READY |
+| User Story | `SPEC-011 \| US01 - Publicar una venta de tokens` | `6ad3fdde83f4903d1450ecaf` | https://trello.com/c/pnO4wkgD | READY |
+| User Story | `SPEC-011 \| US02 - Comprar la publicación de otro usuario` | `6ad3fddf98f839f4bb2c7161` | https://trello.com/c/81C31YiH | READY |
+| User Story | `SPEC-011 \| US03 - Consultar las publicaciones disponibles` | `6ad3fddf8a60884769a32edc` | https://trello.com/c/5Z1kiSpv | READY |
+| User Story | `SPEC-011 \| US04 - Cancelar mi publicación` | `6ad3fde0715309a36072352e` | https://trello.com/c/kMOXpXzK | READY |
+
+- Asociación con la épica por clave canónica y por referencia a la épica en la descripción de cada US,
+  que es el mecanismo de asociación disponible: el conector de Trello del proyecto no expone enlaces
+  entre tarjetas.
+- Dependencias registradas sin añadir ninguna no documentada: US02 depende de US01 y US04 depende de
+  US03, conforme a `tasks.md`.
+- Las US permanecen en READY, estado previo a IMPLEMENT. No se creó tarjeta TSK por tarea técnica: las
+  60 tareas viven en `tasks.md` conforme a Constitution §8.
+
+### Gate READY
+
+Cerrado y persistido como comentario `[SDD GATE] SPEC-011 — READY` en la épica, con la evidencia de
+sincronización que exige `docs/development/sdd-workflow.md` §3. Condiciones verificadas: artefactos
+existentes, evaluados y coherentes; ANALYZE vigente y aprobado sin blockers; sin requisitos nuevos sin
+decisión humana; sincronización de tarjetas US completa y verificada por lectura posterior — cinco
+tarjetas de SPEC-011 en el tablero, épica más cuatro US, sin duplicados.
+
+### Sincronización final de la épica — PROMPT 016 — 2026-10-17
+
+Discrepancia detectada tras el cierre: la épica conservaba en su información visible el estado de
+épica de requisito. **RESUELTA — PROMPT 016.**
+
+| Elemento | Antes | Después | Resultado |
+| --- | --- | --- | --- |
+| Columna | SPECIFYING | READY | Movida; ID, URL e historial conservados |
+| Etiquetas | Backend, Pendiente de spec, Sprint 2 | Backend, Sprint 2 | Retirada `Pendiente de spec` por contradecir el estado |
+| Descripción | `Spec: PENDIENTE`, `Backlog; Épica pendiente de especificación` | `Spec: SPEC-011` con ruta y rama; alcance y dependencias actualizados; referencias a `spec.md`, `tasks.md` e índice | Corregidos solo campos objetivamente desactualizados |
+| Evidencia | 1 comentario (ANALYZE) | 2 comentarios: ANALYZE y READY | Evidencia de sincronización añadida, sin duplicar ni sobrescribir |
+
+- El movimiento a READY responde a `docs/development/sdd-workflow.md` §3, que exige comprobar antes
+  de IMPLEMENT que «la épica alcanzó READY», y al precedente de SPEC-010, cerrada en la misma
+  transición. READY se representa mediante la columna; la descripción no declara estados del workflow.
+- Se conservaron sin eliminar la referencia de origen a REQ-S2-07, las fuentes `tp/enunciado.md` y
+  `tp/entregas.md`, la entrega Sprint 2 y el contexto funcional. 1.798 caracteres, dentro del máximo
+  de 1.800 de `card-format.md`.
+- La etiqueta retirada no se eliminó del tablero ni se modificó su definición global, y no se creó
+  ninguna etiqueta nueva. No existe etiqueta READY en el tablero y la Constitución no la exige.
+
+### Gates que siguen ausentes
+
+IMPLEMENT AUTHORIZATION, CODE REVIEW, TESTING, FEATURE COMPLETION AUTHORIZATION y Converge. READY no
+autoriza implementar. Cada US permanece en READY hasta el inicio efectivo de IMPLEMENT, que requiere
+autorización humana explícita y persistida por US.
+
+### Verificaciones posteriores a la escritura
+
+Épica en columna READY con ID `6ac59770f35fd9ebc1965264` y URL https://trello.com/c/sZFzbryR; US01–US04
+en columna READY sin modificación alguna; cinco tarjetas de SPEC-011 en total; claves únicas; dos
+comentarios `[SDD GATE]` distintos en la épica y ninguno duplicado; evidencia de ANALYZE verificada
+íntegra tras la escritura.
+
+### Discrepancias y notas
+
+- `specs/011-sell-player-tokens/` permanece sin versionar: no hay commit al que referenciar el alcance
+  evaluado. La evidencia de los gates referencia el estado local de los artefactos.
+- La descripción y las etiquetas de la épica conservaron el texto de cuando era épica REQ
+  («Spec: PENDIENTE», «Backlog; Épica pendiente de especificación», etiqueta `Pendiente de spec`) al
+  cerrar READY en PROMPT015, porque ese prompt no las autorizaba. **Resuelto en PROMPT016**: la épica
+  se movió a READY, se retiró la etiqueta `Pendiente de spec` y se corrigieron los campos
+  desactualizados conservando origen, fuentes y contexto funcional. El registro del estado anterior se
+  conserva arriba como evidencia histórica.
+- La épica no tiene checklist `SDD Lifecycle`, que Constitution §8 prevé para registrar las
+  operaciones de Spec Kit con evidencia explícita y que SPEC-010 sí tiene. Su creación no estaba
+  autorizada en PROMPT016 y queda pendiente de un paso autorizado.
+- F1, E2, D2, D3 y D4 se aceptan sin corregir como riesgo residual LOW no bloqueante. Su aceptación no
+  equivale a resolución.
+
+## Cierre del gate READY — SPEC-010 — 2026-10-16
+
+### Gate ANALYZE
+
+Aprobado por humano y persistido como comentario `[SDD GATE]` en la épica `6abc70e769f28ac04d60fc20`.
+Resultado del reporte: CRITICAL 0 · HIGH 0 · MEDIUM 0 · LOW 2 (L1 y L2, editoriales, aceptados como no
+bloqueantes). Cobertura FR 23/23, AC 19/19, SC 9/9, verificaciones del contrato `QuoteSource` 6/6,
+violaciones de la Constitución 0, 63 tareas. No se requirió nueva ejecución de ANALYZE.
+
+### Sincronización de tarjetas US
+
+Realizada al cierre de READY, después de superar el gate humano de ANALYZE, conforme a Constitution §8 y
+`docs/development/sdd-workflow.md` §3.
+
+| Entidad | Clave canónica | ID | URL | Columna |
+| --- | --- | --- | --- | --- |
+| Épica | `[EPIC] SPEC-010 - Comprar tokens de un jugador` | `6abc70e769f28ac04d60fc20` | https://trello.com/c/aJe4VVNt | SPECIFYING → READY |
+| User Story | `SPEC-010 \| US01 - Comprar tokens de un jugador` | `6ad28f536e8c67a3713f8821` | https://trello.com/c/6rJMdQXf | READY |
+
+- US01 es la única US formal de `spec.md`. Antes de esta operación no existía tarjeta US para SPEC-010; se
+  verificó en las siete columnas antes de crear, sin duplicados.
+- Asociación con la épica por clave canónica y por referencia a la épica en la descripción de US01, que es
+  el mecanismo de asociación disponible: el conector de Trello del proyecto no expone enlaces entre tarjetas.
+- US01 incluye el checklist `Implementation Tasks` con las 45 tareas que `tasks.md` asigna a US01, todas
+  pendientes y sin duplicados. Las 18 tareas transversales (Setup, Foundational, Polish) permanecen en
+  `tasks.md` y no se convirtieron en tarjetas.
+- La épica no contiene subtareas técnicas ni checklist `Implementation Tasks`. Su checklist `SDD Lifecycle`
+  marca Specify, Clarify, Plan, Checklists, Tasks y Analyze; Implement y Converge siguen pendientes.
+
+### Gate READY
+
+Cerrado y persistido como comentario `[SDD GATE]` en la épica. Condiciones verificadas: artefactos
+existentes, evaluados y coherentes; ANALYZE vigente y aprobado sin blockers; sin requisitos nuevos sin
+decisión humana; sincronización de tarjetas US completa y verificada por lectura posterior.
+
+### Gates que siguen ausentes
+
+IMPLEMENT AUTHORIZATION, CODE REVIEW, TESTING, FEATURE COMPLETION AUTHORIZATION y Converge. READY no
+autoriza implementar. La US permanece en READY hasta el inicio efectivo de IMPLEMENT, que requiere
+autorización humana explícita y persistida por US.
+
+### Verificaciones posteriores a la escritura
+
+Épica en columna READY; US01 en columna READY; dos tarjetas de SPEC-010 en el tablero y ninguna más;
+clave única; 45 ítems de `Implementation Tasks` sin duplicados y sin ítems marcados; comentarios
+`[SDD GATE]` presentes en la épica.
+
+### Discrepancias y notas
+
+- `specs/010-buy-tokens/` permanece sin versionar: no hay commit al que referenciar el alcance evaluado.
+  La evidencia de los gates referencia el estado local de los artefactos.
+- L1 y L2 del último ANALYZE se aceptan sin corregir: L1 es representación resumida de los tests Model en
+  el árbol de `plan.md` y L2 es una fila no enumerada en la tabla de escenarios de contrato, ya cubierta
+  por T063.
 
 ## Regularización del estado SDD tras Code Review — SPEC-009 — 2026-10-13
 
@@ -1023,7 +1361,7 @@ Todos los requisitos específicos de la entrega tienen seguimiento. Los requisit
 | REQ-S2-03 \| US01 | Consultar la cotización actual del jugador | [Trello](https://trello.com/c/3UZQeRnF) | Cotización; enunciado §1.2 y §3.2 |
 | REQ-S2-04 \| US01 | Consultar la cotización a una fecha dada | [Trello](https://trello.com/c/b2JH99so) | Funcionalidad explícita del sprint |
 | REQ-S2-05 \| US01 | Consultar el historial de cotizaciones | [Trello](https://trello.com/c/LtLmpdrJ) | Soporte de cotización por fecha; enunciado §3.2 y §4 |
-| REQ-S2-06 \| US01 | Comprar tokens de un jugador | [Trello](https://trello.com/c/aJe4VVNt) | Compra/venta del sprint; enunciado §3.3 |
+| SPEC-010 (origen REQ-S2-06; antigua clave REQ-S2-06 \| US01) | Comprar tokens de un jugador | [Trello](https://trello.com/c/aJe4VVNt) | Épica `6abc70e769f28ac04d60fc20`, READY (SPECIFYING → READY el 2026-10-16); US01 creada en el cierre de READY: `SPEC-010 \| US01 - Comprar tokens de un jugador` `6ad28f536e8c67a3713f8821` — https://trello.com/c/6rJMdQXf, columna READY, con checklist `Implementation Tasks` de 45 tareas. `specs/010-buy-tokens/`: FR-001–FR-023, AC01–AC19, SC-001 y SC-008–SC-014 y SC-016, 77 tareas (T001–T077), todas marcadas `[X]` tras la validación humana del 2026-10-17. ANALYZE aprobado por humano sin hallazgos bloqueantes (CRITICAL 0, HIGH 0, MEDIUM 0, LOW 2 editoriales). Dependencia REQ-S2-03 no implementada, acotada al puerto Integration `QuoteSource` y explícitamente fuera del alcance de cierre. Code review exhaustivo H01–H11 **cerrado**: H01–H08 con remediación y evidencia de ejecución; H09 resuelto por enmienda normativa a `docs/backend/testing.md` 2.0.0, autorizada el 2026-10-17; H10 registrado como riesgo arquitectónico aceptado en `plan.md`; H11 desglosado en T070–T074. Verificación humana acumulada: `./gradlew test` BUILD SUCCESSFUL (5 min 33 s) con 646 tests, 0 failures, 0 errors y 0 skipped; `./gradlew spotlessCheck` BUILD SUCCESSFUL (2 s). Épica en **IN PROGRESS**; US01 en **DONE** con CODE REVIEW y TESTING APPROVED el 2026-10-17. CONVERGE final ejecutado y **no exitoso**: anexó T078 y T079, remediaciones documentales que bloquean FEATURE COMPLETION. **Pendiente**: resolver T078 y T079, reejecutar CONVERGE y luego FEATURE COMPLETION AUTHORIZATION, esta última ya otorgada por el usuario el 2026-10-17 y pendiente solo de verificarse tras un CONVERGE limpio. Ninguna tarjeta real de Trello fue modificada antes del 2026-10-17; en esa fecha se sincronizaron US01 (checklist de 45 a 58 ítems, descripción y cuatro comentarios de CODE REVIEW y tres de TESTING) y esta entrada del índice. |
 | REQ-S2-07 \| US01 | Vender tokens de un jugador | [Trello](https://trello.com/c/sZFzbryR) | Compra/venta del sprint; enunciado §3.3 |
 | REQ-S2-08 \| US01 | Consultar ranking según estrategia activa | [Trello](https://trello.com/c/ZGBTFbHZ) | Ranking explícito del sprint |
 | REQ-S2-09 \| US01 | Consultar portfolio personal | [Trello](https://trello.com/c/43T7hVOh) | Soporte del mercado; enunciado §3.4 |

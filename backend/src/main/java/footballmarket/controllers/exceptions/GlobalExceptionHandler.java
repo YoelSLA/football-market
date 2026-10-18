@@ -1,13 +1,26 @@
 package footballmarket.controllers.exceptions;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
+import footballmarket.exceptions.FootballMarketException;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
 import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
 import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
 import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
+import footballmarket.models.exceptions.InsufficientPlayerTokensException;
+import footballmarket.models.exceptions.InsufficientUserCreditsException;
+import footballmarket.services.exceptions.ArithmeticOverflowException;
+import footballmarket.services.exceptions.CannotBuyOwnListingException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
+import footballmarket.services.exceptions.InsufficientCreditsException;
+import footballmarket.services.exceptions.InsufficientStockException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
+import footballmarket.services.exceptions.InvalidListingStatusException;
+import footballmarket.services.exceptions.InvalidOrderRequestException;
+import footballmarket.services.exceptions.InvalidQuantityException;
+import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.ListingNotAvailableException;
+import footballmarket.services.exceptions.ListingNotFoundException;
 import footballmarket.services.exceptions.PlayerIdentityRunNotFoundException;
 import footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException;
 import footballmarket.services.exceptions.PlayerIdentitySynchronizationException;
@@ -16,9 +29,15 @@ import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
 import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
+import footballmarket.services.exceptions.PlayerNotVisibleException;
 import footballmarket.services.exceptions.PlayerStatisticsSyncInProgressException;
 import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
+import footballmarket.services.exceptions.QuoteContractViolationException;
+import footballmarket.services.exceptions.QuoteUnavailableException;
+import footballmarket.services.exceptions.SellerUnavailableException;
+import footballmarket.services.exceptions.SuperuserCannotBuyException;
+import footballmarket.services.exceptions.SuperuserCannotSellException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,7 +82,8 @@ public class GlobalExceptionHandler {
       HttpServletRequest request) {
     if (!request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")
         && !request.getRequestURI().equals("/api/players/statistics/whoscored/sync/json")) {
-      throw exception;
+      return this.buildResponse(
+          "Solicitud inválida", "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
     }
     String code = "INVALID_REQUEST";
     String message = "El cuerpo de la solicitud está ausente o no es JSON válido";
@@ -109,6 +129,32 @@ public class GlobalExceptionHandler {
         request);
   }
 
+  @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+  public ResponseEntity<ErrorResponseDTO> handleAccessDenied(HttpServletRequest request) {
+    return this.buildResponse(
+        "No tenés permiso para realizar esta operación.",
+        "ACCESS_DENIED",
+        HttpStatus.FORBIDDEN,
+        request);
+  }
+
+  /**
+   * Traduce fallos de persistencia o transacción sin exponer el detalle interno de la operación.
+   */
+  @ExceptionHandler({
+    org.springframework.dao.DataAccessException.class,
+    org.springframework.transaction.TransactionException.class,
+    footballmarket.models.exceptions.InvalidTokenListingException.class
+  })
+  public ResponseEntity<ErrorResponseDTO> handleMarketPersistenceFailure(
+      HttpServletRequest request) {
+    return this.buildResponse(
+        "No se pudo procesar la operación. Intentá nuevamente más tarde.",
+        "INTERNAL_ERROR",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
+
   @ExceptionHandler(HeadedBrowserUnavailableException.class)
   public ResponseEntity<ErrorResponseDTO> handleHeadedBrowserUnavailable(
       HeadedBrowserUnavailableException exception, HttpServletRequest request) {
@@ -117,6 +163,39 @@ public class GlobalExceptionHandler {
         "HEADED_BROWSER_UNAVAILABLE",
         HttpStatus.SERVICE_UNAVAILABLE,
         request);
+  }
+
+  @ExceptionHandler(InvalidOrderRequestException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidOrder(
+      InvalidOrderRequestException ex, HttpServletRequest request) {
+    return this.buildResponse(ex.getMessage(), "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(SuperuserCannotSellException.class)
+  public ResponseEntity<ErrorResponseDTO> handleSuperuserCannotSell(
+      SuperuserCannotSellException ex, HttpServletRequest request) {
+    return this.buildResponse(
+        ex.getMessage(), "SUPERUSER_CANNOT_SELL", HttpStatus.FORBIDDEN, request);
+  }
+
+  @ExceptionHandler(CannotBuyOwnListingException.class)
+  public ResponseEntity<ErrorResponseDTO> handleOwnListing(
+      CannotBuyOwnListingException ex, HttpServletRequest request) {
+    return this.buildResponse(
+        ex.getMessage(), "CANNOT_BUY_OWN_LISTING", HttpStatus.FORBIDDEN, request);
+  }
+
+  @ExceptionHandler(ListingNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handleListingNotFound(
+      ListingNotFoundException ex, HttpServletRequest request) {
+    return this.buildResponse(ex.getMessage(), "LISTING_NOT_FOUND", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(ListingNotAvailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleListingNotAvailable(
+      ListingNotAvailableException ex, HttpServletRequest request) {
+    return this.buildResponse(
+        ex.getMessage(), "LISTING_NOT_AVAILABLE", HttpStatus.CONFLICT, request);
   }
 
   @ExceptionHandler(PlayerIdentitySynchronizationException.class)
@@ -224,12 +303,15 @@ public class GlobalExceptionHandler {
     return buildResponse(ex.getMessage(), "INVALID_PLAYER_PAGE", HttpStatus.BAD_REQUEST, request);
   }
 
-  @ExceptionHandler(
-      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+  @ExceptionHandler({
+    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+    InvalidListingStatusException.class
+  })
   public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(
       org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
       HttpServletRequest request) {
-    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")
+        && exception != null) {
       String code =
           "source".equals(exception.getName())
               ? "INVALID_STATISTICS_SOURCE"
@@ -309,5 +391,81 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleUserNotFound(
       UserNotFoundException ex, HttpServletRequest request) {
     return buildResponse(ex.getMessage(), "USER_NOT_FOUND", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(SuperuserCannotBuyException.class)
+  public ResponseEntity<ErrorResponseDTO> handleSuperuserCannotBuy(
+      SuperuserCannotBuyException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "SUPERUSER_CANNOT_BUY", HttpStatus.FORBIDDEN, request);
+  }
+
+  @ExceptionHandler(PlayerNotVisibleException.class)
+  public ResponseEntity<ErrorResponseDTO> handlePlayerNotVisible(
+      PlayerNotVisibleException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "PLAYER_NOT_VISIBLE", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(InvalidQuantityException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidQuantity(
+      InvalidQuantityException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INVALID_QUANTITY", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(InvalidQuotePriceException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidQuotePrice(
+      InvalidQuotePriceException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INVALID_QUOTE_PRICE", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(QuoteUnavailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleQuoteUnavailable(
+      QuoteUnavailableException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "QUOTE_UNAVAILABLE", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(InsufficientStockException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInsufficientStock(
+      InsufficientStockException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INSUFFICIENT_STOCK", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(InsufficientCreditsException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInsufficientCredits(
+      InsufficientCreditsException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INSUFFICIENT_CREDITS", HttpStatus.CONFLICT, request);
+  }
+
+  /**
+   * Las excepciones de dominio del mercado se traducen al mismo rechazo público que sus
+   * equivalentes de aplicación, de modo que el contrato HTTP no dependa de qué capa produjo el
+   * rechazo.
+   */
+  @ExceptionHandler(InsufficientUserCreditsException.class)
+  public ResponseEntity<ErrorResponseDTO> handleDomainInsufficientCredits(
+      InsufficientUserCreditsException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INSUFFICIENT_CREDITS", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(InsufficientPlayerTokensException.class)
+  public ResponseEntity<ErrorResponseDTO> handleDomainInsufficientStock(
+      InsufficientPlayerTokensException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INSUFFICIENT_STOCK", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler({
+    QuoteContractViolationException.class,
+    SellerUnavailableException.class,
+    ArithmeticOverflowException.class
+  })
+  public ResponseEntity<ErrorResponseDTO> handleInternalOrderFailure(
+      FootballMarketException ex, HttpServletRequest request) {
+    // El detalle técnico no se expone en la respuesta: la causa queda para los registros de la
+    // aplicación y el análisis de fallos, no en este cuerpo. La respuesta pública es genérica y no
+    // expone excepciones, trazas ni identificadores técnicos.
+    return buildResponse(
+        "No se pudo procesar la compra. Intentá nuevamente más tarde.",
+        "INTERNAL_ERROR",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
   }
 }

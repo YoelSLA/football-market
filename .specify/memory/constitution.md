@@ -1,4 +1,47 @@
 <!--
+Sync Impact Report — Enmienda 2026-10-15
+Versión: 8.0.0 → 8.1.0 (MINOR: nuevo principio §2.2 sobre proporcionalidad del alcance y
+gestión de casos límite; amplía §2 sin modificar ni eliminar ninguna regla preexistente).
+Sección añadida: §2.2 Proporcionalidad del alcance y gestión de casos límite, con las reglas de
+alcance mínimo suficiente, clasificación OBLIGATORIO/RECOMENDADO/OPCIONAL, evaluación de
+aplicabilidad, documentación de lo no obligatorio, criterios de bloqueo, autoridad del equipo,
+aplicación a CHECKLIST y TASKS y simplicidad.
+Principios modificados: §2 Calidad y alcance; única modificación una remisión a §2.2 en su
+primera regla, sin alterar su contenido normativo. Ninguna sección renumerada.
+Secciones eliminadas: ninguna.
+Regla adoptada: las SPEC se dimensionan al alcance del enunciado del TP y de las entregas. Los casos
+límite se clasifican antes de convertirse en requisitos; solo los OBLIGATORIOS bloquean el avance
+a Tasks y las mejoras RECOMENDADAS u OPCIONALES se documentan como observaciones, riesgos
+conocidos o mejoras futuras, sin entrar por sí solas en requisitos funcionales, criterios de
+aceptación ni tareas obligatorias. Los agentes recomiendan soluciones y no amplían unilateralmente
+el alcance aprobado.
+Compatible con §2 (simplicidad y anti-sobreingeniería), §2.1, §3 (las garantías de seguridad,
+integridad y consistencia se preservan y no se reducen por proporcionalidad), §4 (no altera la
+exigencia de actualizar en el mismo cambio Spec, implementación, tests, contratos y documentación),
+§6 (no habilita controles ejecutables, no reduce la prohibición de tests y los tests aplicables
+pendientes siguen impidiendo US o Feature DONE), §7 (sin cambios), §8 (los blockers continúan
+exigiendo requisitos obligatorios, contradicciones relevantes o riesgos críticos, conforme al
+workflow SDD; las dependencias resolubles no son blockers) y §9 (no habilita reinterpretar la
+norma; toda ampliación de alcance requiere decisión humana explícita).
+Ratificación: se conserva la fecha de ratificación de la norma base, 2026-08-31. El contenido de
+§2.2 fue ratificado explícitamente por el usuario el 2026-10-15.
+Autorización: solicitud explícita del usuario el 2026-10-15.
+Dependencias y sincronización: conforme al Scope Guard de speckit.constitution, esta enmienda
+escribe únicamente la Constitución. Quedan pendientes de sincronización documental subordinada a
+§2.2, sin aplicar en este trabajo:
+- docs/development/sdd-workflow.md §1 (vocabulario normativo) y §6 (SPECIFY, CLARIFY, PLAN,
+  CHECKLIST, TASKS, ANALYZE y bloqueos de READY).
+- .opencode/commands/speckit.specify.md, speckit.clarify.md, speckit.plan.md,
+  speckit.checklist.md y speckit.tasks.md.
+- .opencode/skills/sdd-orchestration/references/workflow.md y gates.md.
+La Constitución es la fuente de verdad; ante contradicción aplicar §1 y §9, sin asumir que esta
+sincronización ya ocurrió.
+Sin cambios en scripts, plantillas versionadas, código, specs funcionales, Trello, ramas ni
+estados SDD. Ninguna SPEC se modifica ni se revisa en esta etapa: SPEC-010 conserva su estado, su
+alcance y sus decisiones pendientes en el equipo. Sin gates humanos aprobados por esta enmienda y
+sin operaciones Git de escritura.
+-->
+<!--
 Sync Impact Report — Enmienda 2026-10-14
 Versión: 7.1.0 → 8.0.0 (MAJOR: redefine la exclusividad de controles ejecutables de §6
 con una excepción acotada para infraestructura de desarrollo).
@@ -103,7 +146,7 @@ Constitution tiene máxima jerarquía normativa. Los documentos normativos de á
 
 ## 2. Calidad y alcance
 
-- Preferir la solución válida más simple, con responsabilidades coherentes y detalles encapsulados mediante contratos. No crear capas, interfaces, dependencias o abstracciones por costumbre o necesidades hipotéticas; una duplicación no exige por sí sola abstraer.
+- Preferir la solución válida más simple, con responsabilidades coherentes y detalles encapsulados mediante contratos. No crear capas, interfaces, dependencias o abstracciones por costumbre o necesidades hipotéticas; una duplicación no exige por sí sola abstraer. La proporción entre alcance y complejidad, y el tratamiento de casos límite, se rigen por [§2.2](#22-proporcionalidad-del-alcance-y-casos-límite).
 - No agregar dependencias si las capacidades existentes bastan. Las tecnologías nuevas requieren justificación técnica y aprobación; las versiones administradas por Spring Boot no se sobrescriben sin necesidad justificada.
 - Limitar los cambios a la tarea y a la coherencia de sus elementos afectados. Refactorizar solo con beneficio concreto, preservando comportamiento ajeno; revisar consumidores antes de eliminar o renombrar elementos.
 - Eliminar código muerto dentro del alcance. Mantener comentarios útiles y actualizados, sin repetir lo evidente.
@@ -120,6 +163,19 @@ Mientras el proyecto no esté en producción, los datos de desarrollo son descar
 - Toda operación destructiva —incluidas las que afecten la base de datos— respeta las restricciones de ejecución de §6 y las autorizaciones humanas exigidas por §8, y no se ejecuta por iniciativa propia del agente conforme a §9.
 
 Esta sección se revisa cuando el proyecto avance hacia producción y deje de ser aplicable sin una enmienda posterior.
+
+### 2.2. Proporcionalidad del alcance y casos límite
+
+Esta sección gobierna el alcance de las SPEC, no la calidad de su implementación. Obliga a no ampliar lo aprobado y a no bloquear por mejoras no obligatorias; no habilita reducir la cobertura de un requisito obligatorio ni degradar las garantías esenciales de §3, §4 y §6.
+
+- **Alcance mínimo suficiente.** Cada SPEC se concentra en implementar correctamente la funcionalidad solicitada. No agregar requisitos por constituir buenas prácticas generales ni porque un escenario sea técnicamente posible.
+- **Clasificación.** Todo caso límite identificado se clasifica antes de incorporarse a la SPEC como OBLIGATORIO —exigido por el [enunciado del TP](../../tp/enunciado.md) o las entregas, aprobado explícitamente por el equipo, o necesario para preservar una garantía esencial—, RECOMENDADO —mejora razonable de robustez, mantenibilidad o experiencia de uso, sujeta a evaluación— u OPCIONAL —escenario excepcional, hipotético o de baja relevancia práctica cuya implementación no resulta indispensable—. Un caso sin clasificar no es requisito.
+- **Evaluación de aplicabilidad.** Antes de elevar un caso límite a OBLIGATORIO, evaluar si puede ocurrir en los flujos reales de la aplicación, si puede reproducirse o verificarse razonablemente, su probabilidad e impacto, su relación con los requisitos originales, la complejidad de implementarlo y si existe una solución más sencilla que lo resuelva. La dificultad de reproducción no justifica descartar ni posponer riesgos críticos de seguridad o integridad.
+- **Documentación de lo no obligatorio.** Los casos RECOMENDADO y OPCIONAL se registran, cuando aportan valor, como observaciones, riesgos conocidos o mejoras futuras en los artefactos de la SPEC. No se incorporan por sí solos a requisitos funcionales, criterios de aceptación ni tareas obligatorias.
+- **Criterios de bloqueo.** Una SPEC no queda bloqueada para avanzar a Tasks por mejoras RECOMENDADAS u OPCIONALES pendientes. Bloquean únicamente requisitos obligatorios incumplidos o no verificables, contradicciones relevantes, riesgos críticos e invariantes esenciales comprometidas, conforme a §8 y al workflow SDD. El análisis distingue de forma explícita bloqueos de especificación, dependencias de implementación y mejoras futuras no bloqueantes.
+- **Autoridad del equipo.** Los agentes identifican problemas y proponen soluciones; no convierten unilateralmente una recomendación en requisito obligatorio ni amplían el alcance aprobado. Toda decisión relevante de alcance requiere aprobación del equipo y queda registrada en el artefacto afectado, conforme a §9.
+- **Aplicación a CHECKLIST y TASKS.** Los checklists evalúan la calidad de los requisitos obligatorios, no exigen exhaustividad ilimitada y no registran como FAIL bloqueante una observación opcional no implementada. TASKS genera tareas obligatorias para los requisitos aprobados y separa de forma visible cualquier mejora opcional, sin convertirla en tarea bloqueante.
+- **Simplicidad.** Entre alternativas técnicamente válidas, elegir la más sencilla que satisfaga los requisitos obligatorios y preserve las garantías esenciales de §3, §4 y §6.
 
 ## 3. Seguridad
 
@@ -286,5 +342,6 @@ Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution ni los
 Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible. Si los documentos, la Spec y el código no resuelven una decisión normativa relevante, solicitar aclaración sin inventar reglas o excepciones.
 
 Las enmiendas usan versionado semántico: MAJOR para eliminación o redefinición incompatible de gobernanza/principios; MINOR para principios nuevos o ampliación material compatible; PATCH para aclaraciones sin cambio semántico. Deben justificar el incremento, registrar impacto y dependencias, conservar la fecha de ratificación y actualizar la fecha de última enmienda.
+
 
 **Versión**: 8.1.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-16

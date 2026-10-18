@@ -1,3 +1,32 @@
+<!--
+Sync Impact Report — Enmienda 2026-10-17
+Versión: (sin versionado previo) → 2.0.0. MAJOR: amplía de forma material el alcance de la
+prohibición de acceso a la persistencia en los tests de categoría Service, acotando la exclusividad
+de §5 y §6 con una excepción explícita y delimitada.
+Documento modificado: únicamente este archivo.
+Secciones modificadas: §5, §6 y §16. Secciones eliminadas: ninguna. Principios renumerados: ninguno.
+Regla adoptada: un test de categoría Service puede preparar sus precondiciones persistentes en
+Arrange mediante un helper compartido que acceda a repositorios, siempre que ese acceso no alcance
+Act, Assert ni Verify, que el helper no ejecute la operación de negocio bajo prueba y que no contenga
+assertions funcionales. La prohibición se mantiene íntegra para Verify y para las demás categorías.
+Motivo: `MarketTestData` prepara compradores, catálogo, inventario y saldos por repositorio. La
+regla anterior lo declaraba no conforme sin ofrecer una vía alternativa, porque §5 solo admite
+Services auxiliares y el dominio de mercado no expone ninguno para aprovisionar inventario. La
+excepción cierra ese hueco y, al limitarse a Arrange y prohibir assertions en el helper, impide que
+se use para eludir la frontera que §5 protege.
+Compatibilidad: §2 y §2.2 (no amplía el alcance funcional de ninguna SPEC), §3 y §4 (la excepción
+es de arquitectura de tests y no altera contratos ni garantías de integridad), §6 (no habilita
+controles ejecutables ni reduce la prohibición de que el agente ejecute tests), §8 (la excepción
+requiere autorización humana expresa, otorgada el 2026-10-17) y §9 (enmienda solicitada y autorizada
+expresamente, con impacto y dependencias declarados aquí).
+Dependencias: en el mismo cambio se actualizan las referencias cruzadas de §5, §6 y §16 de este
+documento. No requieren cambios la Constitución §1 (ya declara este documento normativo con la misma
+obligatoriedad), `docs/development/sdd-workflow.md` §8, `AGENTS.md` y `backend/AGENTS.md` (remiten
+aquí sin describir la excepción), ni `specs/010-buy-tokens/plan.md`.
+Sin cambios en código, migraciones, contratos, Constitución, AGENTS.md ni tecnologías. No se
+ejecutaron tests ni builds: la verificación queda a cargo del usuario conforme a la Constitución §6.
+Autorización: solicitud explícita del usuario el 2026-10-17.
+-->
 # Testing del backend
 
 La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6 (Verificación); los comandos permitidos, en AGENTS.md.
@@ -46,6 +75,16 @@ Act y Assert funcionales utilizan exclusivamente la API pública productiva del 
 
 El test no declara, inyecta, accede, invoca, mockea ni verifica Repository, JPA/Hibernate, `EntityManager`, JDBC, SQL o DB directamente, tampoco para preparación, limpieza o assertions. Las fronteras y la excepción técnica están en §6.
 
+**Excepción de Arrange, desde la enmienda 2.0.0**: el test de categoría Service puede delegar la preparación de sus precondiciones persistentes en un helper compartido que acceda a repositorios, con estas condiciones acumulativas y todas obligatorias:
+
+- El acceso a la persistencia ocurre exclusivamente en `Arrange`; `Act` y `Assert` usan solo las APIs públicas productivas del Service bajo prueba.
+- El helper no ejecuta la operación de negocio que constituye el comportamiento bajo prueba ni ninguna de sus partes.
+- El helper no contiene assertions funcionales: afirma únicamente lo que necesita para preparar su siguiente precondición.
+- La excepción no habilita usar repositorios para verificar resultados, ni para limpiar estado en `Verify`, ni para observar credenciales, tenencias o auditoría.
+- El test no inyecta ni accede al repositorio por sí mismo: el helper encapsulates el acceso.
+
+Esta excepción no altera §2 (la categoría sigue siendo Service), ni las reglas de Repository de §4, ni las de Security de §10, que conservan íntegra la prohibición de eludir su frontera. Un helper que prepare por repositorio puede ser usado por tests de cualquier categoría, pero solo la categoría Service se beneficia de esta excepción.
+
 Afirmar retorno y estado final observable por el Service: altas, cambios, reactivaciones, bajas, paginación, filtros, existencia, snapshots, entradas completas y consistencia posterior según el caso. Si su contrato no expone un detalle persistido, no eludir la frontera para observarlo ni agregar métodos productivos solo para tests. `verify(repository...)` está prohibido.
 
 Se pueden configurar mocks de Integration con `@MockitoBean`/`when(...)`, pero no invocarlos como Act ni probar su implementación: la ejecución funcional comienza en el Service; el protocolo se verifica en Integration.
@@ -57,7 +96,9 @@ Cada test parte de un estado conocido e independiente:
 - `Test/Helper → Service → Repository → DB` está permitido mediante APIs públicas productivas y respetando Arrange/Act/Assert de §5.
 - `Test/Helper → Repository/JPA/Hibernate/EntityManager/JDBC/SQL/DB` está prohibido si elude esa frontera.
 
-La infraestructura técnica puede acceder a la DB exclusivamente de testing para provisionamiento, aislamiento transaccional u otro aislamiento y restauración. No expone dependencias de persistencia al test o helper funcional ni habilita preparar datos funcionales o hacer assertions eludiendo Service.
+La infraestructura técnica puede acceder a la DB exclusivamente de testing para provisionamiento, aislamiento transaccional u otro aislamiento y restauración. No expone dependencias de persistencia al test ni habilita preparar datos funcionales o hacer assertions eludiendo Service.
+
+**Helper funcional de fixtures (enmienda 2.0.0)**: un componente de test compartido puede, además, preparar datos funcionales por repositorio **solo al servicio de la categoría Service y únicamente en `Arrange`**, conforme a las condiciones de la excepción de §5. Ese helper no se considera «infraestructura técnica» a los efectos del párrafo anterior y por eso sí puede exponer su acceso a la persistencia; lo que no puede es cruzar a `Act`, `Assert` o `Verify`, ejecutar el caso de uso bajo prueba ni afirmar resultados funcionales. El helper es reutilizable y su ubicación en `support` es la de §16.
 
 Crear datos funcionales por el Service bajo prueba o auxiliares permitidos. Ninguna estrategia puede afectar bases ajenas a testing ni justificar métodos productivos exclusivos para tests.
 
@@ -173,7 +214,7 @@ void creaJugadorNuevo() {
 }
 ```
 
-Helpers privados o compartidos no contienen assertions ni ocultan comportamiento o flujos de negocio. Respetan la frontera de su categoría, incluida §6 para persistencia de Service.
+Helpers privados o compartidos no contienen assertions funcionales ni ocultan comportamiento o flujos de negocio. Respetan la frontera de su categoría, incluida §6 para persistencia de Service y la excepción de Arrange de §5. Un helper que prepara por repositorio puede afirmar lo que necesita para completar su propia precondición —por ejemplo, localizar la fila que acaba de insertar—, y esa comprobación es preparación, no una assertion funcional.
 
 ## 17. Cambios y cobertura
 
@@ -184,3 +225,5 @@ Elegir el nivel más específico capaz de demostrar la responsabilidad (§2), si
 ## 18. Entrega
 
 Aplicar la constitución §6 (Verificación): el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
+
+**Versión**: 2.0.0 | **Última enmienda**: 2026-10-17 (excepción de Arrange para tests de categoría Service; ver el Sync Impact Report al inicio)
