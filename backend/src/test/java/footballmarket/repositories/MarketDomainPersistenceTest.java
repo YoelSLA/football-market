@@ -86,6 +86,8 @@ class MarketDomainPersistenceTest {
   }
 
   @Autowired private BuyOrderService buyOrderService;
+  @Autowired private footballmarket.services.TokenListingService listingService;
+  @Autowired private TokenListingRepository listings;
   @Autowired private AuthenticationService authenticationService;
   @Autowired private MarketTestData market;
   @Autowired private UserCreditRepository credits;
@@ -155,6 +157,142 @@ class MarketDomainPersistenceTest {
    */
   private Optional<PlayerToken> buyerHoldingOf(Player target) {
     return holdings.findByPlayerIdAndOwnerId(target.getId(), buyer.getId());
+  }
+
+  @Nested
+  @DisplayName("Liquidación secundaria y reversión durable")
+  class SecondarySettlement {
+    private User secondarySeller;
+    private footballmarket.models.TokenListing listing;
+
+    @BeforeEach
+    void prepareSecondaryListing() {
+      secondarySeller = market.registerBuyer();
+      buyOrderService.buy(secondarySeller.getEmail(), new BuyOrderRequest(player.getId(), 20));
+      listing =
+          listingService.publish(
+              secondarySeller.getEmail(),
+              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+    }
+
+    private Map<String, List<Map<String, Object>>> snapshot() {
+      return Map.of(
+          "credits",
+              jdbc()
+                  .queryForList(
+                      "select * from user_credits where user_id in (?, ?) order by user_id",
+                      buyer.getId(),
+                      secondarySeller.getId()),
+          "tokens",
+              jdbc()
+                  .queryForList(
+                      "select * from player_tokens where player_id = ? order by owner_user_id",
+                      player.getId()),
+          "audits",
+              jdbc()
+                  .queryForList(
+                      "select * from market_transactions where player_id = ? order by id",
+                      player.getId()),
+          "listing",
+              jdbc().queryForList("select * from token_listings where id = ?", listing.getId()));
+    }
+
+    @Test
+    @DisplayName(
+        "La compra secundaria conserva créditos y tokens y deja una única auditoría referenciada")
+    void conservaRecursos() {
+      // Arrange
+      long buyerBefore = creditOf(buyer);
+      long sellerBefore = creditOf(secondarySeller);
+      // Act
+      MarketTransaction result =
+          buyOrderService.buyListing(
+              buyer.getEmail(),
+              new footballmarket.models.records.BuyListingRequest(listing.getId()));
+      // Assert
+      assertThat(result.getListing().getId()).isEqualTo(listing.getId());
+      // Verify
+      assertThat(creditOf(buyer)).isEqualTo(buyerBefore - 500);
+      assertThat(creditOf(secondarySeller)).isEqualTo(sellerBefore + 500);
+      assertThat(creditOf(buyer) + creditOf(secondarySeller)).isEqualTo(buyerBefore + sellerBefore);
+      assertThat(holdingOf(player, buyer)).isEqualTo(5);
+      assertThat(holdingOf(player, secondarySeller)).isEqualTo(15);
+      assertThat(totalHeld(player)).isEqualTo(100);
+      assertThat(listings.findById(listing.getId()).orElseThrow().getStatus().name())
+          .isEqualTo("SOLD");
+      assertThat(
+              jdbc()
+                  .queryForObject(
+                      "select count(*) from market_transactions where listing_id = ?",
+                      Long.class,
+                      listing.getId()))
+          .isEqualTo(1);
+      assertThat(
+              jdbc()
+                  .queryForObject(
+                      "select count(*) from market_transactions where player_id = ? and listing_id is null",
+                      Long.class,
+                      player.getId()))
+          .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName(
+        "Un rechazo real de PostgreSQL al insertar auditoría revierte saldos, tenencias y SOLD")
+    void revierteFalloDeAuditoria() {
+      // Arrange
+      Map<String, List<Map<String, Object>>> before = snapshot();
+      String constraint = "reject_secondary_" + listing.getId();
+      jdbc()
+          .execute(
+              "alter table market_transactions add constraint "
+                  + constraint
+                  + " check (listing_id is distinct from "
+                  + listing.getId()
+                  + ") not valid");
+      try {
+        // Act
+        Throwable failure =
+            org.assertj.core.api.Assertions.catchThrowable(
+                () ->
+                    buyOrderService.buyListing(
+                        buyer.getEmail(),
+                        new footballmarket.models.records.BuyListingRequest(listing.getId())));
+        // Assert
+        assertThat(failure).isNotNull();
+        boolean checkViolation = false;
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+          if (cause instanceof SQLException sql && "23514".equals(sql.getSQLState())) {
+            checkViolation = true;
+          }
+        }
+        assertThat(checkViolation).isTrue();
+        // Verify
+        assertThat(snapshot()).isEqualTo(before);
+      } finally {
+        jdbc().execute("alter table market_transactions drop constraint " + constraint);
+      }
+    }
+
+    @Test
+    @DisplayName(
+        "Comprar un jugador desactivado responde como publicación inexistente y no altera estado durable")
+    void ocultaJugadorNoVisible() {
+      // Arrange
+      jdbc().update("update players set active = false where id = ?", player.getId());
+      Map<String, List<Map<String, Object>>> before = snapshot();
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  buyOrderService.buyListing(
+                      buyer.getEmail(),
+                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
+          .isInstanceOf(footballmarket.services.exceptions.ListingNotFoundException.class);
+      // Verify
+      assertThat(snapshot()).isEqualTo(before);
+      assertThat(listingService.detail(secondarySeller.getEmail(), listing.getId()).listingId())
+          .isEqualTo(listing.getId());
+    }
   }
 
   private long totalHeld(Player target) {
