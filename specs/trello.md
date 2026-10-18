@@ -1,3 +1,25 @@
+<!--
+ARCHIVO HISTÓRICO CONGELADO — no se mantiene ni se actualiza.
+
+Este archivo fue el índice bidireccional de trazabilidad con el tablero Trello del proyecto. Ese
+tablero fue retirado como sistema de seguimiento operativo. El contenido de abajo se conserva
+íntegro porque documenta decisiones, autorizaciones y evidencias ya producidas: cada una conserva
+su validez como evidencia de lo que se registró entonces, y ninguna se reescribe ni se
+reinterpreta.
+
+Lo que sigue describe el estado del tablero en el momento en que se registró. No constituye un
+índice vigente, no describe el estado actual de ninguna funcionalidad y sus enlaces a documentos o
+anclas que han cambiado describen aquel momento, no el actual.
+
+El seguimiento operativo vigente es GitHub Issues con GitHub Projects, con una Issue por
+funcionalidad. Está descrito en `docs/development/sdd-workflow.md`. **No se ha configurado el
+tablero de Projects ni se ha migrado ninguna funcionalidad**; hasta que eso ocurra, no se afirma
+sincronización de ninguna funcionalidad.
+
+El historial completo de las enmiendas de la Constitución está en
+`.specify/memory/history/constitution-changelog.md`.
+-->
+# Índice de trazabilidad con Trello
 # Índice de trazabilidad con Trello
 
 ## Cierre del gate READY — SPEC-010 — 2026-10-16

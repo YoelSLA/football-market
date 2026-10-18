@@ -6,13 +6,13 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 
 | Tarea | Contexto adicional |
 | --- | --- |
-| Specs, SDD, Trello, Git o implementación de features | El agente MUST leer y seguir el [workflow operativo SDD + Trello + Git](docs/development/sdd-workflow.md). |
+| Specs, SDD, Git o implementación de features | El agente MUST leer y seguir el [workflow operativo SDD + Git](docs/development/sdd-workflow.md) y las [convenciones de Git](docs/development/git-workflow.md). |
 | Código, estructura o dependencias arquitectónicas | [Arquitectura común](docs/architecture.md): guía de lectura al inicio. |
 | Stack, tecnologías o dependencias de herramientas/librerías | [Tecnologías del backend](docs/backend/technologies.md) o [tecnologías del frontend](docs/frontend/technologies.md), según el área afectada. |
 | Área backend afectada | [Instrucciones del backend](backend/AGENTS.md) y el contexto que estas indiquen. |
 | Área frontend afectada | [Instrucciones del frontend](frontend/AGENTS.md) y el contexto que estas indiquen. |
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
-| Creación o nombre de una rama | [Constitución §7](.specify/memory/constitution.md): formato, tipos y reglas obligatorias. |
+| Creación o nombre de una rama | [Convenciones de Git](docs/development/git-workflow.md): formato, tipos y reglas obligatorias. |
 | Paso de Spec Kit | Definición del comando correspondiente en `.opencode/commands/`, subordinada al workflow SDD y Constitution; ejecutar solo el paso solicitado. |
 
 No cargar instrucciones ni documentación del backend para una tarea exclusivamente frontend ni viceversa. Una tarea que afecte ambas áreas debe consultar ambos archivos específicos.
@@ -49,7 +49,7 @@ Ubicaciones transversales: CI en `.github/workflows/` y hooks en `.githooks/`. C
 
 El agente no ejecuta tests, directa ni indirectamente mediante builds, generadores o hooks, en ninguna tarea del repositorio.
 
-Los controles ejecutables permitidos son los builds definidos por los `AGENTS.md` específicos de cada área, únicamente cuando se haya modificado código de esa área y bajo sus condiciones existentes, y las validaciones controladas de infraestructura de desarrollo expresamente autorizadas conforme a Constitution §6. La excepción no habilita tests de aplicación, no amplía los builds permitidos, no habilita modificaciones funcionales, no concede permisos implícitos ni altera gates humanos.
+Los controles ejecutables permitidos son los builds definidos por los `AGENTS.md` específicos de cada área, únicamente cuando se haya modificado código de esa área y bajo sus condiciones existentes, y las validaciones controladas de infraestructura de desarrollo expresamente autorizadas conforme a la sección de verificación y testing de la Constitución. La excepción no habilita tests de aplicación, no amplía los builds permitidos, no habilita modificaciones funcionales, no concede permisos implícitos ni altera gates humanos.
 
 Para cambios exclusivamente documentales, revisar rutas, enlaces, comandos y coherencia; no ejecutar build. Las condiciones de entrega y los fallos preexistentes se rigen por la constitución.
 

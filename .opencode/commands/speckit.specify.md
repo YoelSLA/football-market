@@ -11,7 +11,7 @@ handoffs:
 
 ## Reglas locales obligatorias
 
-MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo la fase autorizada; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. MUST registrar evidencia de fase sin inferir aceptación por existencia de archivos. Trello solo se modifica con autorización operativa.
+MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo la fase autorizada; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. MUST registrar evidencia de fase sin inferir aceptación por existencia de archivos. El seguimiento operativo solo se modifica con autorización operativa.
 
 ```text
 $ARGUMENTS

@@ -1,66 +1,74 @@
-# Gates — autorizaciones, reviews y cierre
+# Autorizaciones humanas — implementación, revisión, testing y cierre
 
 ## Autoridad y evidencia
 
-Las autorizaciones humanas son **explícitas, específicas para la entidad evaluada y vinculadas al alcance revisado**.
+Las autorizaciones humanas son **explícitas, específicas para el alcance evaluado y vinculadas a lo revisado**.
 
 No son autorizaciones válidas:
 
 - `ok`, `dale`, `seguí` u otra expresión ambigua;
-- una tarjeta en un estado concreto;
+- una tarjeta o registro en un estado concreto;
 - un build exitoso, un commit, un PR o `tasks.md` completo;
-- un resumen consolidado que no identifique la US o Feature aprobados.
+- un resumen consolidado que no identifique el alcance aprobado.
 
-Una respuesta puede aprobar **varias US en un solo mensaje**, pero **cada US conserva su propia evidencia**. Un resumen consolidado ayuda a revisar; no sustituye el gate individual.
+Una respuesta puede aprobar **varios alcances en un solo mensaje**, siempre que identifique cuáles. La evidencia debe permitir saber quién autorizó, qué autorizó y con qué evidencia se compara.
 
-Persistir la evidencia mediante `trello-traceability`. Si no puede verificarse la evidencia obligatoria, no declarar la transición completada.
+## Registro de la autorización
 
-## Gate READY
+La autorización MUST ser explícita, verificable y persistente en un soporte del proyecto. **No se prescribe formato canónico ni sistema específico**: el agente elige el soporte disponible y explícito —hilo del registro de seguimiento, Pull Request, sección del reporte correspondiente o el propio artefacto—.
 
-Antes de declarar READY:
+- La evidencia ya persistida bajo el régimen anterior **puede reutilizarse** cuando sea suficiente para acreditar una autorización vigente. No se exige reemitirla ni duplicarla.
+- Las invalidaciones se registran como eventos nuevos, con motivo y alcance, sin borrar evidencia histórica y **sin atribuirse a una aprobación humana**.
+- Si la evidencia obligatoria no puede persistirse o verificarse, **no declarar la transición completada**.
+- Un sistema de seguimiento inaccesible no habilita la transición dependiente, ni autoriza a afirmar que se sincronizó, ni habilita descartar cambios locales.
+
+Las autorizaciones se consolidan **por alcance explícito**. Las User Stories se revisan y verifican en conjunto, con cobertura trazable desde `spec.md` hacia `tasks.md`; **no** son unidades de autorización ni requieren autorización propia.
+
+## Preparación completa — no es un gate
+
+No existe un gate READY. Antes de solicitar autorización de implementación, verificar:
 
 - Feature identificada sin ambigüedad y Constitución consultada.
 - `spec.md`, `plan.md`, `tasks.md` y checklists aplicables existen, están evaluados y son coherentes.
 - Ambigüedades funcionales relevantes resueltas; criterios de aceptación cubiertos por tareas.
 - ANALYZE completado, vigente y sin blockers; hallazgos no bloqueantes comunicados.
 - Sin requisitos nuevos introducidos sin decisión humana.
-- Sincronización de tarjetas US completa y verificada por lectura posterior: una tarjeta por US formal de `spec.md`, sin duplicados, con asociación correcta a la épica, índice `specs/trello.md` sincronizado y evidencia registrada. Delegar su ejecución en `trello-traceability`; si falla, READY no se declara completado.
 
-READY no autoriza implementar. No pedir una confirmación humana adicional de READY: se presenta junto con la solicitud de autorización de IMPLEMENT.
+La autorización de implementación se presenta junto con esta comprobación, en una sola solicitud. No se pide una confirmación humana adicional de "READY".
 
-Si no se cumple, detener o regresar a la fase afectada conforme a [`recovery.md`](recovery.md).
+Si no se cumplen, detener o regresar a la fase afectada conforme a [`recovery.md`](recovery.md).
 
-## Gate IMPLEMENT AUTHORIZATION
+## Autorización IMPLEMENT
 
 Presentar en una sola pantalla:
 
 - Feature e identificador.
-- US disponibles con dependencias e independencia entre ellas.
-- Prerrequisitos compartidos y a quién habilitan.
+- Alcance propuesto a implementar y sus límites.
+- Dependencias e independencia entre las partes del alcance.
+- Prerrequisitos compartidos y a qué habilitan.
 - Resumen de plan, tareas relevantes y resultado de ANALYZE.
 - Riesgos conocidos.
 
-El usuario elige **qué US y prerrequisitos autoriza**. El agente decide el orden técnico.
+El usuario autoriza **el alcance**. El agente decide el orden técnico.
 
 Ejemplo suficiente:
 
-> Autorizo IMPLEMENT de US1, US2 y US3 de SPEC-014, con los prerrequisitos compartidos identificados. No autorizo cambios de alcance.
+> Autorizo IMPLEMENT del alcance de SPEC-014 descrito arriba, con los prerrequisitos compartidos identificados. No autorizo cambios de alcance.
 
 Reglas:
 
-- Persistir la evidencia **en cada US autorizada**, con su propio comentario. Esa persistencia requiere que la tarjeta de la US exista, esté vinculada a la épica y sea coherente con `spec.md`.
-- **Autorización ≠ inicio:** la US autorizada permanece `READY` hasta que IMPLEMENT comience efectivamente.
-- Antes de iniciar IMPLEMENT de una US, comprobar que su tarjeta existe, está vinculada a la épica y la épica alcanzó READY con su sincronización completa.
 - Advertir antes de implementar una combinación inconsistente.
+- **Autorización ≠ inicio:** habilita el trabajo, que comienza cuando la implementación empieza efectivamente.
+- Registrar la autorización con su alcance, conforme a la sección anterior.
 - Una autorización puede recuperarse en otra sesión si la evidencia persistida es verificable y no fue invalidada por cambios materiales.
 - No pedir autorizaciones repetidas mientras sigan vigentes.
-- Si la autorización cubre trabajo que un cambio de alcance posterior deja fuera, solicitar autorización nueva solo para lo afectado.
+- Si la autorización cubre trabajo que un cambio de alcance posterior deja fuera, solicitar autorización nueva **solo para lo afectado**.
 
-## Gate CODE REVIEW
+## Autorización CODE REVIEW
 
-**Es un gate humano por US.** El agente **no** puede aprobarlo.
+**Es una autorización humana. El agente no puede aprobarla.**
 
-Al completar la implementación de una US, la US entra a `CODE REVIEW` y el agente entrega un **Code Review Report** completo con:
+Al completar la implementación del alcance autorizado, se entrega un **Code Review Report** completo con:
 
 1. resumen de lo implementado;
 2. cómo funciona;
@@ -72,7 +80,7 @@ Al completar la implementación de una US, la US entra a `CODE REVIEW` y el agen
 8. orden recomendado de revisión;
 9. checklist humano obligatorio.
 
-El report cubre **todo** el código de la US, **incluidos los tests**. Puede acompañarse de un resumen consolidado para facilitar la revisión, sin sustituir el report individual ni su checklist.
+El report cubre **todo** el código del alcance, **incluidos los tests**. Puede acompañarse de un resumen consolidado para facilitar la revisión, sin sustituir el report ni su checklist.
 
 Checklist mínimo:
 
@@ -84,13 +92,13 @@ Checklist mínimo:
 [ ] Apruebo avanzar a TESTING.
 ```
 
-**Rechazo:** persistir `Result: REJECTED`, devolver la US a `IN PROGRESS`, corregir y emitir un **nuevo** Code Review Report. Nunca saltar la segunda revisión.
+**Rechazo:** registrar el rechazo, volver a implementación de lo afectado, corregir y emitir un **nuevo** Code Review Report. Nunca saltar la segunda revisión.
 
-## Gate TESTING
+## Autorización TESTING
 
-**Es un gate humano por US, separado del Code Review.** Revisar y aprobar código no sustituye revisar y aprobar pruebas.
+**Es una autorización humana, separada del Code Review.** Revisar y aprobar código no sustituye revisar y aprobar pruebas.
 
-Al pasar la US a `TESTING`, el agente entrega un **Testing Report** con:
+Se entrega un **Testing Report** con:
 
 1. tests creados;
 2. tests modificados;
@@ -103,7 +111,7 @@ Al pasar la US a `TESTING`, el agente entrega un **Testing Report** con:
 9. qué debería revisar el usuario;
 10. orden recomendado de revisión;
 11. comandos exactos que el usuario debe ejecutar;
-12. estado: `PENDING HUMAN VALIDATION`.
+12. estado: pendiente de validación humana.
 
 El usuario revisa cobertura, **ejecuta los tests personalmente** y confirma el resultado. No es obligatorio pegar toda la salida cuando pasan; sí solicitarla cuando fallan.
 
@@ -111,43 +119,33 @@ El agente **nunca** ejecuta tests, ni directa ni indirectamente, ni presenta tes
 
 ### TESTING N/A
 
-`TESTING` sigue siendo gate universal. Si no hay tests automatizados razonablemente aplicables:
+`TESTING` sigue siendo autorización universal. Si no hay tests automatizados razonablemente aplicables:
 
 - **no crear tests artificiales** de poco valor;
-- justificar `Automated tests: N/A` con el motivo;
+- justificar la no aplicabilidad con el motivo;
 - obtener **validación humana explícita** de esa justificación.
 
-N/A no es ausencia de implementación ni gate omitido.
+N/A no es ausencia de implementación ni autorización omitida.
 
 ### Fallos en TESTING
 
 Clasificar primero la causa:
 
-| Causa | Transición |
+| Causa | Respuesta |
 | --- | --- |
-| Requiere cambiar código de producción o de pruebas | `TESTING → IN PROGRESS`, corregir, y recorrer otra vez CODE REVIEW y TESTING |
-| Problema externo sin cambio de código | La US **permanece** en `TESTING`, con bloqueo registrado |
-| Dependencia pendiente | La US permanece en `TESTING`, con bloqueo por dependencia |
+| Requiere cambiar código de producción o de pruebas | Volver a implementación, corregir, y recorrer CODE REVIEW y TESTING de nuevo |
+| Problema externo sin cambio de código | El trabajo **permanece** en revisión, con bloqueo registrado |
+| Dependencia pendiente | El trabajo permanece en revisión, con bloqueo por dependencia |
 
-Una US puede entrar a `CODE REVIEW` aunque no pueda probarse end-to-end por una dependencia. Al resolverse la dependencia sin cambios de código, no se repite CODE REVIEW.
+Se puede solicitar CODE REVIEW aunque el alcance no pueda probarse end-to-end por una dependencia. Al resolverse la dependencia sin cambios de código, no se repite CODE REVIEW.
 
-El vocabulario de bloqueo es fijo: `Status: BLOCKED` con `Reason`, o `Status: BLOCKED BY DEPENDENCY` con `Blocked by`. No crear estados nuevos por causa.
+El vocabulario de bloqueo es fijo: `BLOCKED` con `Reason`, o `BLOCKED BY DEPENDENCY` con `Blocked by`. No crear estados nuevos por causa.
 
-## Definición de DONE de una US
+## CONVERGE
 
-Solo con:
+CONVERGE **no es una autorización humana** y no requiere aprobación previa: se ejecuta cuando se cumplen sus prerrequisitos.
 
-1. Implementación completa de su alcance, con evidencia consistente.
-2. CODE REVIEW aprobado por humano, vigente y persistido.
-3. TESTING aprobado por humano, o N/A validado explícitamente, vigente y persistido.
-
-La regla `tasks.md complete = Feature DONE` queda reemplazada por esta definición. Con aprobación humana explícita, la transición a `DONE` es mecánica.
-
-## Gate CONVERGE
-
-CONVERGE **no es un gate humano** y no requiere autorización previa: se ejecuta automáticamente cuando se cumplen sus prerrequisitos.
-
-**Prerrequisitos:** todas las US requeridas `DONE` y trabajo técnico necesario completo. No ejecutarlo antes; el comando lo exige y su escritura es append-only sobre `tasks.md`.
+**Prerrequisito:** trabajo técnico necesario completo. No ejecutarlo antes; el comando lo exige y su escritura es append-only sobre `tasks.md`.
 
 Naturaleza:
 
@@ -159,7 +157,7 @@ Naturaleza:
 
 Si faltan tareas necesarias, el agente propone el plan acotado y **espera autorización específica** antes de implementar. Detalles del ciclo en [`recovery.md`](recovery.md).
 
-Con CONVERGE satisfactorio, entregar el **reporte integral de Feature**:
+Con CONVERGE satisfactorio, entregar el **reporte integral de la funcionalidad**:
 
 - Feature, alcance y US implementadas, con relación a los criterios de aceptación.
 - Cambios de código y archivos relevantes, decisiones y riesgos técnicos.
@@ -167,25 +165,25 @@ Con CONVERGE satisfactorio, entregar el **reporte integral de Feature**:
 - Evidencia de CONVERGE y limitaciones conocidas.
 - Solicitud de revisión y confirmación humana de resultados de tests ya aportados.
 
-## Gate FEATURE COMPLETION AUTHORIZATION
+## Autorización FEATURE COMPLETION
 
-Es **independiente** del Code Review integral y de CONVERGE. CONVERGE exitoso no autoriza el cierre: la Feature permanece en `TESTING`.
+Es **independiente** del Code Review integral y de CONVERGE. CONVERGE exitoso no autoriza el cierre.
 
-Condiciones acumulativas para `DONE` de Feature:
+Condiciones acumulativas:
 
-1. Todas las US requeridas y tareas obligatorias implementadas, con evidencia consistente.
-2. Todas las US requeridas en `DONE` con sus gates vigentes.
+1. Todo el trabajo técnico necesario implementado, con evidencia consistente.
+2. Todas las US requeridas implementadas y revisadas, con sus autorizaciones vigentes.
 3. CONVERGE final satisfactorio y vigente respecto del código y artefactos revisados.
 4. Reporte integral disponible y revisión humana de la implementación realizada.
 5. Resultados de tests aportados por el usuario, o excepción validada que la Constitución permita.
 6. FEATURE COMPLETION AUTHORIZATION humana explícita, referida a la Feature y al resultado evaluado, vigente y persistida.
-7. Transiciones de Trello verificadas tras la persistencia.
+7. Estado de seguimiento verificado por lectura tras la persistencia.
 
 Ejemplo suficiente:
 
 > Revisé la evidencia y CONVERGE de SPEC-014. Autorizo explícitamente el cierre de la Feature SPEC-014.
 
-Solo tras verificar la persistencia se actualiza `Status: Approved` en la spec y la Feature a `DONE`.
+Solo tras verificar la persistencia se actualiza `Status: Approved` en la spec y el registro de seguimiento a `Done`.
 
 ## Invalidación por impacto
 
@@ -193,14 +191,18 @@ Solo tras verificar la persistencia se actualiza `Status: Approved` en la spec y
 
 | Cambio | Efecto |
 | --- | --- |
-| `spec.md` cambia | Revisar plan → revisar o regenerar tasks → ANALYZE; recuperar READY |
+| `spec.md` cambia | Revisar plan → revisar o regenerar tasks → ANALYZE |
 | `plan.md` cambia | Revisar o regenerar tasks → ANALYZE |
 | `tasks.md` cambia materialmente | ANALYZE |
 | Código cambia con impacto en alcance aprobado | CODE REVIEW afectado queda invalidado |
 | Tests cambian con impacto en alcance aprobado | CODE REVIEW y TESTING afectados quedan invalidados |
 | Requisitos cambian | Evaluar US y artefactos afectados; invalidar solo el estado downstream afectado |
-| Constitución cambia | Si no afecta la Feature, continuar; si la afecta, invalidar READY y actualizar |
+| Constitución cambia | Si no afecta la Feature, continuar; si la afecta, actualizar y volver a evaluar |
 
-Preservar aprobaciones de las US no afectadas. Registrar la invalidación como evento nuevo con `Reason`, **sin atribuirla a una aprobación humana ficticia** y sin borrar la evidencia histórica.
+Preservar las autorizaciones no afectadas. Registrar la invalidación como evento nuevo con su motivo, **sin atribuirla a una aprobación humana ficticia** y sin borrar la evidencia histórica.
 
-Cambios editoriales inocuos no invalidan automáticamente un gate. Toda modificación relevante invalida la revisión final anterior: preparar reporte actualizado y obtener nueva aprobación.
+Cambios editoriales inocuos no invalidan automáticamente una autorización. Toda modificación relevante invalida la revisión final anterior: preparar reporte actualizado y obtener nueva aprobación.
+
+## Disposición transitoria
+
+El tablero anterior fue retirado y GitHub Projects aún no está configurado. Mientras tanto, las autorizaciones de las funcionalidades en curso se rigen por su estado real y por la evidencia ya persistida, que conserva su validez y **puede acreditar** la autorización vigente. No se exige reemitirla ni duplicarla, y no se afirma sincronización de ninguna funcionalidad sin verificarla.

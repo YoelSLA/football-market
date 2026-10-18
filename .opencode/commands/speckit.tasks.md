@@ -11,7 +11,7 @@ handoffs:
 
 ## Reglas locales obligatorias
 
-MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Tasks autorizado, tras Checklists evaluados; luego corresponde Analyze, no implementación automática. MUST preservar IDs y avance existente al reanudar. Las Tasks se registran en `tasks.md`, no se convierten automáticamente en tarjetas. MUST NOT ejecutar tests ni hooks incompatibles.
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Tasks autorizado, tras Checklists evaluados; luego corresponde Analyze, no implementación automática. MUST preservar IDs y avance existente al reanudar. Las Tasks se registran exclusivamente en `tasks.md`; MUST NOT convertirse en Issues ni duplicar su estado en el seguimiento operativo. MUST NOT ejecutar tests ni hooks incompatibles.
 
 ```text
 $ARGUMENTS

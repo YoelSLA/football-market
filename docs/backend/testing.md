@@ -20,11 +20,11 @@ controles ejecutables ni reduce la prohibición de que el agente ejecute tests),
 requiere autorización humana expresa, otorgada el 2026-10-17) y §9 (enmienda solicitada y autorizada
 expresamente, con impacto y dependencias declarados aquí).
 Dependencias: en el mismo cambio se actualizan las referencias cruzadas de §5, §6 y §16 de este
-documento. No requieren cambios la Constitución §1 (ya declara este documento normativo con la misma
+documento. No requieren cambios la Constitución (ya declara este documento normativo con la misma
 obligatoriedad), `docs/development/sdd-workflow.md` §8, `AGENTS.md` y `backend/AGENTS.md` (remiten
 aquí sin describir la excepción), ni `specs/010-buy-tokens/plan.md`.
 Sin cambios en código, migraciones, contratos, Constitución, AGENTS.md ni tecnologías. No se
-ejecutaron tests ni builds: la verificación queda a cargo del usuario conforme a la Constitución §6.
+ejecutaron tests ni builds: la verificación queda a cargo del usuario conforme a la sección de verificación y testing de la Constitución.
 Autorización: solicitud explícita del usuario el 2026-10-17.
 -->
 # Testing del backend
