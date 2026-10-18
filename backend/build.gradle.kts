@@ -29,6 +29,7 @@ dependencies {
 
     implementation(libs.jjwt.api)
     implementation(libs.springdoc.openapi)
+    implementation(libs.playwright)
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     developmentOnly("me.paulschwarz:springboot4-dotenv:5.1.0")
 
@@ -121,6 +122,19 @@ spotless {
 
         endWithNewline()
     }
+}
+
+// ============================================================
+// CLIENTE OPERATIVO DE ESTADÍSTICAS
+// ============================================================
+
+// Invocación manual del cliente de scraping: sin arranque de Spring y sin opciones sensibles.
+// El JWT se obtiene de FOOTBALL_MARKET_TOKEN; clientArgs solo admite opciones no secretas.
+tasks.register<JavaExec>("statisticsSyncClient") {
+    group = "application"
+    description = "Ejecuta el cliente operativo de scraping de estadísticas WhoScored"
+    mainClass.set("footballmarket.tools.PlayerStatisticsSyncClient")
+    classpath = sourceSets["main"].runtimeClasspath
 }
 
 // ============================================================

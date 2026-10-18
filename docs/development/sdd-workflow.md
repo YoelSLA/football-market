@@ -68,6 +68,44 @@ habilitan; la épica no las contiene.
 Aplicación registrada: sincronización del 2026-10-13 sobre SPEC-005 y SPEC-009; resultado y evidencia en
 [`specs/trello.md`](../specs/trello.md#sincronización-sdd--trello-de-plantillas-épicas-y-user-stories--2026-10-13).
 
+### 3.2 Contingencia local para READY e IMPLEMENT AUTHORIZATION
+
+Conforme a Constitution §8, cuando Trello no sea accesible se permite sustituir temporalmente
+la sincronización remota y la persistencia de READY e IMPLEMENT AUTHORIZATION por evidencia
+local verificable. Esta sección prevalece sobre los requisitos de tarjeta y persistencia remota
+de §§3, 6 y 7 únicamente para cerrar READY e iniciar IMPLEMENT autorizado. No sustituye los
+demás gates ni permite omitir evaluaciones o bloqueantes.
+
+1. Registrar en `specs/trello.md` fecha, Feature, causa de indisponibilidad, último estado remoto
+   conocido (o desconocido), ruta del registro local y operaciones de sincronización pendientes.
+   Reportar `TRELLO OUT OF SYNC — LOCAL CONTINGENCY`; no atribuir columnas locales al tablero.
+2. Crear o continuar `specs/<spec-id>-<scope>/sdd-gates.md` sin borrar eventos previos. Cada evento
+   identifica fecha, Feature/US, Gate, Result, responsable, alcance y fuentes evaluadas (rutas,
+   report o diff local identificable), dependencias y siguiente acción. Para decisiones humanas
+   incluir `Validated by: HUMAN` y la cita o referencia inequívoca de la decisión real.
+3. Para READY, comprobar preparación global, checklists evaluados y Analyze vigente sin blockers;
+   registrar las fuentes y el resultado sin inferir aprobación por existencia de archivos.
+   Inventariar todas las US formales y su relación con la Feature y mantener sus estados locales.
+   Cumplidas estas condiciones, se permite actualizar `Status` conforme a `specs/README.md`.
+4. Para IMPLEMENT AUTHORIZATION, registrar un evento por US con la autorización humana explícita,
+   Tasks y prerrequisitos compartidos autorizados, dependencias y vigencia respecto al alcance
+   evaluado. Releer la evidencia escrita. Si falta evidencia local obligatoria, detener con
+   `GATE EVIDENCE NOT PERSISTED`; un mensaje de autorización no sustituye su registro.
+5. La US autorizada permanece READY hasta iniciar realmente IMPLEMENT. En ese momento registrar
+   la toma y el estado local IN PROGRESS, y actualizar el agregado local de Feature e índice.
+   Implementar solo el alcance autorizado y conservar las aprobaciones no afectadas.
+6. Al recuperarse Trello, releer las tarjetas y el tablero antes de escribir; completar el cierre
+   de sincronización, reutilizar identidades, trasladar eventos locales con procedencia y fecha
+   originales y verificar lectura posterior, unicidad, vínculos e índice. No duplicar eventos ya
+   trasladados ni borrar historial. No declarar SYNCED hasta completar las operaciones pendientes.
+
+La contingencia no aplica a la aprobación o persistencia sustitutiva de CODE REVIEW, TESTING o
+FEATURE COMPLETION AUTHORIZATION ni a sus transiciones. Se puede preparar el report de entrega,
+pero cualquier transición que exija evidencia remota fuera de esta excepción queda pendiente.
+Se conservan CONVERGE y todos sus prerrequisitos, la prohibición de tests por el agente y las
+condiciones de build. La enmienda del 2026-10-16 habilita este mecanismo; no acredita por sí misma
+READY, autorización de US, inicio, avance de Tasks ni sincronización de ninguna Feature.
+
 ## 4. Columnas y lifecycle
 
 Columnas únicas, en orden: **BACKLOG → SPECIFYING → READY → IN PROGRESS → CODE REVIEW → TESTING → DONE**. Comprobar tablero real; cambios estructurales requieren autorización. No usar Review ni crear CONVERGE.

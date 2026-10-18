@@ -2,6 +2,7 @@ package footballmarket.controllers.exceptions;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
+import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
 import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
 import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
 import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
@@ -15,6 +16,8 @@ import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
 import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
+import footballmarket.services.exceptions.PlayerStatisticsSyncInProgressException;
+import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
@@ -28,6 +31,93 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+  public ResponseEntity<ErrorResponseDTO> handleMissingParameter(
+      org.springframework.web.bind.MissingServletRequestParameterException exception,
+      HttpServletRequest request)
+      throws org.springframework.web.bind.MissingServletRequestParameterException {
+    if (!request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
+      throw exception;
+    }
+    boolean statisticsSource =
+        request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")
+            && "source".equals(exception.getParameterName());
+    return this.buildResponse(
+        "Falta un parámetro obligatorio",
+        statisticsSource ? "INVALID_STATISTICS_SOURCE" : "INVALID_PARAMETER_TYPE",
+        HttpStatus.BAD_REQUEST,
+        request);
+  }
+
+  @ExceptionHandler(InvalidStatisticsRequestException.class)
+  public ResponseEntity<ErrorResponseDTO> handleStatisticsRequest(
+      InvalidStatisticsRequestException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), exception.getCode(), HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleUnreadableBody(
+      org.springframework.http.converter.HttpMessageNotReadableException exception,
+      HttpServletRequest request) {
+    if (!request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")
+        && !request.getRequestURI().equals("/api/players/statistics/whoscored/sync/json")) {
+      throw exception;
+    }
+    String code = "INVALID_REQUEST";
+    String message = "El cuerpo de la solicitud está ausente o no es JSON válido";
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")) {
+      for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+        if (cause instanceof InvalidStatisticsRequestException invalid) {
+          return this.handleStatisticsRequest(invalid, request);
+        }
+        if (cause instanceof tools.jackson.databind.exc.MismatchedInputException mismatch) {
+          String field =
+              mismatch.getPath().isEmpty() ? null : mismatch.getPath().getFirst().getPropertyName();
+          if ("extractionDate".equals(field)) {
+            code = "INVALID_STATISTICS_EXTRACTION_DATE";
+            message = "La fecha de extracción debe tener formato ISO y no ser futura";
+          } else if ("maxPlayers".equals(field)) {
+            code = "INVALID_STATISTICS_MAX_PLAYERS";
+            message = "El máximo de jugadores debe ser un entero positivo de 32 bits";
+          }
+        }
+      }
+    }
+    return this.buildResponse(message, code, HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(PlayerStatisticsSyncInProgressException.class)
+  public ResponseEntity<ErrorResponseDTO> handleStatisticsSyncInProgress(
+      PlayerStatisticsSyncInProgressException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "PLAYER_STATISTICS_SYNC_IN_PROGRESS", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler({
+    PlayerStatisticsSynchronizationException.class,
+    StatisticsMappingException.class,
+    footballmarket.services.exceptions.PlayerStatisticsConfirmationException.class
+  })
+  public ResponseEntity<ErrorResponseDTO> handleStatisticsSynchronization(
+      footballmarket.exceptions.FootballMarketException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(),
+        "PLAYER_STATISTICS_SYNC_FAILED",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
+
+  @ExceptionHandler(HeadedBrowserUnavailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleHeadedBrowserUnavailable(
+      HeadedBrowserUnavailableException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(),
+        "HEADED_BROWSER_UNAVAILABLE",
+        HttpStatus.SERVICE_UNAVAILABLE,
+        request);
+  }
 
   @ExceptionHandler(PlayerIdentitySynchronizationException.class)
   public ResponseEntity<ErrorResponseDTO> handleIdentitySynchronization(
@@ -136,7 +226,17 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(
       org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
-  public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(HttpServletRequest request) {
+  public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(
+      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
+      HttpServletRequest request) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
+      String code =
+          "source".equals(exception.getName())
+              ? "INVALID_STATISTICS_SOURCE"
+              : "INVALID_STATISTICS_EXTRACTION_DATE";
+      return this.buildResponse(
+          "El filtro de cobertura no es válido", code, HttpStatus.BAD_REQUEST, request);
+    }
     return buildResponse(
         "El parámetro de consulta no tiene un formato válido",
         "INVALID_PARAMETER_TYPE",
@@ -160,6 +260,18 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponseDTO> handleValidation(
       MethodArgumentNotValidException ex, HttpServletRequest request) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")) {
+      org.springframework.validation.FieldError field = ex.getBindingResult().getFieldError();
+      if (field != null) {
+        String code =
+            "extractionDate".equals(field.getField())
+                ? "INVALID_STATISTICS_EXTRACTION_DATE"
+                : "maxPlayers".equals(field.getField())
+                    ? "INVALID_STATISTICS_MAX_PLAYERS"
+                    : "INVALID_REQUEST";
+        return this.buildResponse(field.getDefaultMessage(), code, HttpStatus.BAD_REQUEST, request);
+      }
+    }
     String message =
         ex.getBindingResult().getAllErrors().stream()
             .map(error -> error.getDefaultMessage())

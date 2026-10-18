@@ -44,6 +44,7 @@ class WhoScoredConfigurationTest {
       runner.run(
           context -> {
             assertThat(context).hasNotFailed().hasSingleBean(WhoScoredProperties.class);
+            assertThat(context).doesNotHaveBean(PlayerStatisticsProperties.class);
             assertThat(context.getBean("whoScoredRestClient")).isInstanceOf(RestClient.class);
             assertThat(context.getBean(WhoScoredProperties.class).competitions()).hasSize(5);
           });

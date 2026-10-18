@@ -24,7 +24,58 @@ public class WhoScoredRequestPacer {
   private final Waiter waiter;
   private final Clock clock;
   private long nextStart = Long.MIN_VALUE;
-  private long unavailableUntil = Long.MIN_VALUE;
+  private volatile long unavailableUntil = Long.MIN_VALUE;
+
+  /** Estado de pacing exclusivo de un worker y un canal, con vida limitada al lote. */
+  public static final class StatisticsWorker {
+    private final long intervalMs;
+    private long nextStart = Long.MIN_VALUE;
+
+    private StatisticsWorker(long intervalMs) {
+      this.intervalMs = intervalMs;
+    }
+  }
+
+  public StatisticsWorker statisticsWorker(long intervalMs) {
+    return new StatisticsWorker(intervalMs);
+  }
+
+  /** Permisos por worker: no mantiene el monitor global durante solicitudes estadísticas. */
+  public <T> T executeStatistics(
+      StatisticsWorker worker, java.time.Instant deadline, Supplier<T> request) {
+    synchronized (worker) {
+      try {
+        long now = this.milliseconds.getAsLong();
+        long start = Math.max(worker.nextStart, this.unavailableUntil);
+        while (start > now) {
+          long remaining =
+              deadline == null
+                  ? Long.MAX_VALUE
+                  : java.time.Duration.between(this.clock.instant(), deadline).toMillis();
+          if (remaining <= start - now) {
+            throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
+                "EXTRACTION_INTERRUPTED", null);
+          }
+          this.waiter.await(start - now);
+          now = this.milliseconds.getAsLong();
+          start = Math.max(worker.nextStart, this.unavailableUntil);
+        }
+        if (Thread.currentThread().isInterrupted()) {
+          throw new InterruptedException();
+        }
+        if (deadline != null && !this.clock.instant().isBefore(deadline)) {
+          throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
+              "EXTRACTION_INTERRUPTED", null);
+        }
+        worker.nextStart = now + worker.intervalMs;
+        return request.get();
+      } catch (InterruptedException failure) {
+        Thread.currentThread().interrupt();
+        throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
+            "EXTRACTION_INTERRUPTED", null);
+      }
+    }
+  }
 
   @Autowired
   public WhoScoredRequestPacer(WhoScoredProperties properties) {
