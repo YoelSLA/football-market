@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
@@ -73,7 +74,7 @@ public class PlayerStatisticsSynchronizationServiceImpl
       PlayerStatisticsExtractionService extraction,
       ExtractionBatchExecutor batches,
       ExtractionRunManager runs,
-      Clock clock,
+      @Qualifier("statisticsClock") Clock clock,
       JsonStatisticsUpdateService jsonUpdates,
       WhoScoredStatisticsIntegration jsonIntegration) {
     this.properties = properties;
