@@ -43,6 +43,10 @@ public class MarketTransaction {
   @JoinColumn(name = "player_id", nullable = false)
   private Player player;
 
+  @ManyToOne
+  @JoinColumn(name = "listing_id")
+  private TokenListing listing;
+
   @Column(nullable = false)
   private int quantity;
 
@@ -181,5 +185,48 @@ public class MarketTransaction {
         quoteCalculatedAt,
         quoteStrategyVersion,
         executedAt);
+  }
+
+  /** Registra una liquidación secundaria conservando la fábrica original de compra directa. */
+  public static MarketTransaction record(
+      User buyer,
+      User seller,
+      Player player,
+      int quantity,
+      long unitPrice,
+      long totalAmount,
+      long buyerCreditsBefore,
+      long buyerCreditsAfter,
+      long sellerCreditsBefore,
+      long sellerCreditsAfter,
+      int buyerTokensBefore,
+      int buyerTokensAfter,
+      int sellerTokensBefore,
+      int sellerTokensAfter,
+      OffsetDateTime quoteCalculatedAt,
+      String quoteStrategyVersion,
+      OffsetDateTime executedAt,
+      TokenListing listing) {
+    MarketTransaction transaction =
+        record(
+            buyer,
+            seller,
+            player,
+            quantity,
+            unitPrice,
+            totalAmount,
+            buyerCreditsBefore,
+            buyerCreditsAfter,
+            sellerCreditsBefore,
+            sellerCreditsAfter,
+            buyerTokensBefore,
+            buyerTokensAfter,
+            sellerTokensBefore,
+            sellerTokensAfter,
+            quoteCalculatedAt,
+            quoteStrategyVersion,
+            executedAt);
+    transaction.listing = listing;
+    return transaction;
   }
 }
