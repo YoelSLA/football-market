@@ -1,6 +1,7 @@
 package footballmarket.services;
 
 import footballmarket.models.MarketTransaction;
+import footballmarket.models.records.BuyListingRequest;
 import footballmarket.models.records.BuyOrderRequest;
 
 /**
@@ -23,4 +24,9 @@ public interface BuyOrderService {
    * @return registro financiero de la compra confirmada
    */
   MarketTransaction buy(String buyerEmail, BuyOrderRequest order);
+
+  /**
+   * Liquida una publicación completa una única vez, con el precio congelado y auditoría atómica.
+   */
+  MarketTransaction buyListing(String buyerEmail, BuyListingRequest order);
 }

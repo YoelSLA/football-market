@@ -90,6 +90,8 @@ footballmarket:
 #   Habilitar en desarrollo:  MARKET_QUOTE_SIMULATOR_ENABLED=true
 #   Precio por token:        MARKET_QUOTE_SIMULATOR_PRICE=100   (centésimas de crédito)
 market:
+  listing:
+    expiration-duration: ${MARKET_LISTING_EXPIRATION_DURATION:PT24H}
   quote:
     simulator:
       enabled: ${MARKET_QUOTE_SIMULATOR_ENABLED:false}
