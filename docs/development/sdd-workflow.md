@@ -27,6 +27,7 @@ Conforme al principio de trazabilidad y fuente de verdad, los artefactos SDD son
 
 Las autorizaciones humanas son explícitas y verificables, y se consolidan **por alcance explícito**, no por unidad de historia. Son cuatro, conforme a la sección de autorizaciones humanas del flujo de desarrollo de la Constitución:
 
+
 | Autorización | Habilita | No habilita |
 | --- | --- | --- |
 | IMPLEMENT AUTHORIZATION | Escribir código del alcance autorizado | El inicio por sí solo, CODE REVIEW, TESTING ni el cierre |

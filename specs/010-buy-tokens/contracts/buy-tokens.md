@@ -4,6 +4,17 @@ Endpoint: `POST /api/orders/buy`
 
 Permite a un usuario autenticado (role=USER) comprar tokens de un jugador contra el inventario inicial del superusuario.
 
+## Extensión compatible de SPEC-011
+
+Este documento conserva el contrato de la **modalidad directa**, sin `listingId`: `playerId` y
+`quantity` siguen siendo obligatorios y mantienen sus validaciones y errores. Si se informa un
+`listingId` no nulo, se selecciona la compra de una publicación completa, cuyos datos prevalecen
+sobre `playerId` y `quantity`; esa modalidad se rige por
+[el contrato de SPEC-011](../../011-sell-player-tokens/contracts/buy-listing.md).
+La respuesta añade una referencia opcional `listingId`, ausente en compras directas; los seis campos
+existentes conservan su significado. Una solicitud sin publicación ni datos completos de compra
+directa sigue rechazándose con `400 INVALID_REQUEST` antes de ejecutar el caso de uso.
+
 ---
 
 ## Request

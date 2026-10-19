@@ -4,23 +4,32 @@ import footballmarket.integrations.QuoteSource;
 import footballmarket.models.MarketTransaction;
 import footballmarket.models.Player;
 import footballmarket.models.PlayerToken;
+import footballmarket.models.TokenListing;
 import footballmarket.models.User;
 import footballmarket.models.UserCredit;
+import footballmarket.models.enums.TokenListingStatus;
 import footballmarket.models.enums.UserRole;
 import footballmarket.models.exceptions.InsufficientUserCreditsException;
+import footballmarket.models.records.BuyListingRequest;
 import footballmarket.models.records.BuyOrderRequest;
 import footballmarket.models.records.CurrentQuote;
+import footballmarket.models.records.ListingIdentity;
 import footballmarket.repositories.MarketTransactionRepository;
 import footballmarket.repositories.PlayerRepository;
 import footballmarket.repositories.PlayerTokenRepository;
+import footballmarket.repositories.TokenListingRepository;
 import footballmarket.repositories.UserCreditRepository;
 import footballmarket.repositories.UserRepository;
 import footballmarket.services.BuyOrderService;
 import footballmarket.services.exceptions.ArithmeticOverflowException;
+import footballmarket.services.exceptions.CannotBuyOwnListingException;
 import footballmarket.services.exceptions.InsufficientCreditsException;
 import footballmarket.services.exceptions.InsufficientStockException;
+import footballmarket.services.exceptions.InvalidOrderRequestException;
 import footballmarket.services.exceptions.InvalidQuantityException;
 import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.ListingNotAvailableException;
+import footballmarket.services.exceptions.ListingNotFoundException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerNotVisibleException;
 import footballmarket.services.exceptions.QuoteContractViolationException;
@@ -28,8 +37,10 @@ import footballmarket.services.exceptions.QuoteUnavailableException;
 import footballmarket.services.exceptions.SellerUnavailableException;
 import footballmarket.services.exceptions.SuperuserCannotBuyException;
 import footballmarket.services.exceptions.UserNotFoundException;
+import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,6 +76,97 @@ public class BuyOrderServiceImpl implements BuyOrderService {
   private final PlayerTokenRepository holdings;
   private final MarketTransactionRepository transactions;
   private final QuoteSource quotes;
+  private final TokenListingRepository listings;
+  private final Clock marketClock;
+
+  /** {@inheritDoc} */
+  @Override
+  public MarketTransaction buyListing(String buyerEmail, BuyListingRequest order) {
+    User buyer = this.resolveBuyer(buyerEmail);
+    if (buyer.getRole() == UserRole.SUPERUSER) {
+      throw new SuperuserCannotBuyException();
+    }
+    if (order == null || order.listingId() == null) {
+      throw new InvalidOrderRequestException();
+    }
+    ListingIdentity identity =
+        this.listings.readIdentity(order.listingId()).orElseThrow(ListingNotFoundException::new);
+    if (!identity.sellerId().equals(buyer.getId())
+        && this.players.findVisibleById(identity.playerId()).isEmpty()) {
+      throw new ListingNotFoundException();
+    }
+    if (identity.sellerId().equals(buyer.getId())) {
+      throw new CannotBuyOwnListingException();
+    }
+    // Identificadores ordenados en aplicación; cada consulta toma una sola cuenta por clave.
+    Map<Long, UserCredit> accounts = new HashMap<>();
+    for (Long userId : List.of(buyer.getId(), identity.sellerId()).stream().sorted().toList()) {
+      List<UserCredit> locked = this.credits.lockAccountsInAscendingOrder(List.of(userId));
+      if (locked.isEmpty()) {
+        throw new ListingNotAvailableException();
+      }
+      accounts.put(userId, locked.getFirst());
+    }
+    TokenListing listing =
+        this.listings.lockById(order.listingId()).orElseThrow(ListingNotFoundException::new);
+    if (!listing.getSeller().getId().equals(identity.sellerId())
+        || listing.getStatus() != TokenListingStatus.ACTIVE) {
+      throw new ListingNotAvailableException();
+    }
+    if (listing.getSeller().getId().equals(buyer.getId())) {
+      throw new CannotBuyOwnListingException();
+    }
+    if (this.players.findVisibleById(listing.getPlayer().getId()).isEmpty()) {
+      throw new ListingNotFoundException();
+    }
+    User seller = listing.getSeller();
+    this.holdings.insertHoldingIfAbsent(listing.getPlayer().getId(), buyer.getId());
+    Map<Long, PlayerToken> tokens = new HashMap<>();
+    for (Long userId : List.of(buyer.getId(), seller.getId()).stream().sorted().toList()) {
+      List<PlayerToken> locked =
+          this.holdings.lockHoldingsInAscendingOwnerOrder(
+              listing.getPlayer().getId(), List.of(userId));
+      if (locked.isEmpty()) {
+        throw new InsufficientStockException();
+      }
+      tokens.put(userId, locked.getFirst());
+    }
+    // C1: el reloj se consulta solo después de adquirir ambas tenencias. Una espera puede
+    // haber alcanzado expiresAt; nunca autorizar con un instante anterior a esa espera.
+    OffsetDateTime validatedAt = OffsetDateTime.now(this.marketClock);
+    if (!listing.isActiveAndValid(validatedAt)) {
+      throw new ListingNotAvailableException();
+    }
+    this.revalidate(
+        accounts, tokens, buyer, seller, listing.getTotalAmount(), listing.getQuantity());
+    long buyerBefore = accounts.get(buyer.getId()).getAvailableCredits();
+    long sellerBefore = accounts.get(seller.getId()).getAvailableCredits();
+    int buyerTokensBefore = tokens.get(buyer.getId()).getQuantity();
+    int sellerTokensBefore = tokens.get(seller.getId()).getQuantity();
+    this.transfer(accounts, tokens, buyer, seller, listing.getTotalAmount(), listing.getQuantity());
+    // Reutiliza el instante validado, aunque el reloj avance durante la liquidación.
+    listing.markSold(validatedAt);
+    return this.transactions.save(
+        MarketTransaction.record(
+            buyer,
+            seller,
+            listing.getPlayer(),
+            listing.getQuantity(),
+            listing.getUnitPrice(),
+            listing.getTotalAmount(),
+            buyerBefore,
+            accounts.get(buyer.getId()).getAvailableCredits(),
+            sellerBefore,
+            accounts.get(seller.getId()).getAvailableCredits(),
+            buyerTokensBefore,
+            tokens.get(buyer.getId()).getQuantity(),
+            sellerTokensBefore,
+            tokens.get(seller.getId()).getQuantity(),
+            listing.getQuoteCalculatedAt(),
+            listing.getQuoteStrategyVersion(),
+            validatedAt,
+            listing));
+  }
 
   /** {@inheritDoc} */
   @Override

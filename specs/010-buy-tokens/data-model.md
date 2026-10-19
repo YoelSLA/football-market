@@ -123,6 +123,14 @@ El registro sobrevive a la tenencia mutable: no depende de que la fila de invent
 
 ## market_transactions — Auditoría de compras
 
+### Extensión compatible de SPEC-011
+
+La migración de SPEC-011 añade `listing_id BIGINT NULL REFERENCES token_listings(id) ON DELETE NO ACTION`.
+Las compras directas conservan este campo en `NULL`; solo las compras de publicaciones lo informan.
+No cambian las restricciones, índices ni firmas existentes de compra directa, ni se introduce cascada.
+El esquema original siguiente documenta la creación en SPEC-010; la ampliación está detallada en
+[SPEC-011](../011-sell-player-tokens/data-model.md#cambios-en-market_transactions).
+
 ```sql
 CREATE TABLE market_transactions (
     id BIGSERIAL PRIMARY KEY,

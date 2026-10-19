@@ -54,6 +54,7 @@ class BuyOrderServiceTest {
   private static final long PRICE = 100L;
 
   @Autowired private BuyOrderService buyOrderService;
+  @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
   @MockitoBean private QuoteSource quotes;
 
@@ -103,6 +104,65 @@ class BuyOrderServiceTest {
 
   private MarketTransaction buy(int quantity) {
     return buyPlayer(player.getId(), quantity);
+  }
+
+  @Nested
+  @DisplayName("Compra de una publicación completa")
+  class SecondaryPurchase {
+    @Test
+    @DisplayName(
+        "La liquidación devuelve vendedor, publicación, precio congelado y estados financieros")
+    void liquidaPublicacion() {
+      // Arrange
+      buy(20);
+      footballmarket.models.TokenListing listing =
+          listingService.publish(
+              buyer.getEmail(),
+              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+      User consumer = market.registerBuyer();
+      givenQuote(Optional.of(price(900L)));
+      // Act
+      MarketTransaction result =
+          buyOrderService.buyListing(
+              consumer.getEmail(),
+              new footballmarket.models.records.BuyListingRequest(listing.getId()));
+      // Assert
+      assertThat(result.getListing().getId()).isEqualTo(listing.getId());
+      assertThat(result.getSeller().getId()).isEqualTo(buyer.getId());
+      assertThat(result.getUnitPrice()).isEqualTo(PRICE);
+      assertThat(result.getTotalAmount()).isEqualTo(500);
+      assertThat(result.getBuyerCreditsBefore() - result.getBuyerCreditsAfter()).isEqualTo(500);
+      assertThat(result.getSellerCreditsAfter() - result.getSellerCreditsBefore()).isEqualTo(500);
+      assertThat(result.getBuyerTokensAfter() - result.getBuyerTokensBefore()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("No permite que el vendedor compre su propia publicación")
+    void rechazaCompraPropia() {
+      // Arrange
+      buy(20);
+      footballmarket.models.TokenListing listing =
+          listingService.publish(
+              buyer.getEmail(),
+              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  buyOrderService.buyListing(
+                      buyer.getEmail(),
+                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
+          .isInstanceOf(footballmarket.services.exceptions.CannotBuyOwnListingException.class);
+    }
+
+    @Test
+    @DisplayName("La compra directa sigue sin referencia a una publicación")
+    void conservaCompraDirecta() {
+      // Act
+      MarketTransaction result = buy(5);
+      // Assert
+      assertThat(result.getListing()).isNull();
+      assertThat(result.getSeller().getId()).isEqualTo(superuser.getId());
+    }
   }
 
   private MarketTransaction buyPlayer(long playerId, int quantity) {

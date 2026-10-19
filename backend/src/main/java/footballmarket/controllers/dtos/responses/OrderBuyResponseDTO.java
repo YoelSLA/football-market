@@ -1,5 +1,6 @@
 package footballmarket.controllers.dtos.responses;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 
@@ -30,4 +31,18 @@ public record OrderBuyResponseDTO(
     @Schema(
             description = "Instante de confirmación de la operación.",
             example = "2026-10-14T10:30:00.123Z")
-        OffsetDateTime executedAt) {}
+        OffsetDateTime executedAt,
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+        @Schema(description = "Publicación liquidada; ausente en compras directas.")
+        Long listingId) {
+  /** Conserva la construcción de la respuesta directa sin referencia a publicación. */
+  public OrderBuyResponseDTO(
+      Long transactionId,
+      Long playerId,
+      Integer quantity,
+      Long unitPrice,
+      Long totalAmount,
+      OffsetDateTime executedAt) {
+    this(transactionId, playerId, quantity, unitPrice, totalAmount, executedAt, null);
+  }
+}

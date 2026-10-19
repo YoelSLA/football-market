@@ -13,3 +13,7 @@ target/
 Thumbs.db
 *.tmp
 *.swp
+
+# Capturas y artefactos de analisis de scraping (WhoScored)
+RecorridoHTML/
+*.har

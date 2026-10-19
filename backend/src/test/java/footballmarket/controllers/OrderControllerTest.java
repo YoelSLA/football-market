@@ -14,15 +14,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import footballmarket.config.SecurityConfig;
 import footballmarket.models.MarketTransaction;
 import footballmarket.models.TestFixtures;
+import footballmarket.models.TokenListing;
 import footballmarket.models.exceptions.InsufficientUserCreditsException;
+import footballmarket.models.records.BuyListingRequest;
 import footballmarket.models.records.BuyOrderRequest;
+import footballmarket.models.records.CurrentQuote;
 import footballmarket.services.AuthenticationService;
 import footballmarket.services.BuyOrderService;
 import footballmarket.services.exceptions.ArithmeticOverflowException;
+import footballmarket.services.exceptions.CannotBuyOwnListingException;
 import footballmarket.services.exceptions.InsufficientCreditsException;
 import footballmarket.services.exceptions.InsufficientStockException;
 import footballmarket.services.exceptions.InvalidQuantityException;
 import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.ListingNotAvailableException;
+import footballmarket.services.exceptions.ListingNotFoundException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerNotVisibleException;
 import footballmarket.services.exceptions.QuoteContractViolationException;
@@ -75,6 +81,7 @@ class OrderControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private BuyOrderService buyOrderService;
+  @MockitoBean private footballmarket.services.TokenListingService tokenListingService;
   @MockitoBean private AuthenticationService authenticationService;
 
   private MockMvc mvc;
@@ -121,6 +128,189 @@ class OrderControllerTest {
   }
 
   @Nested
+  @DisplayName("Compra secundaria por publicación")
+  class SecondaryPurchase {
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "{\"listingId\":25}",
+          "{\"listingId\":25,\"playerId\":999,\"quantity\":100,\"price\":1}",
+          "{\"listingId\":25,\"quantity\":2147483648}",
+          "{\"listingId\":25,\"quantity\":-2147483649}",
+          "{\"listingId\":25,\"quantity\":101}",
+          "{\"listingId\":25,\"quantity\":0}",
+          "{\"listingId\":25,\"quantity\":1.5}",
+          "{\"listingId\":25,\"quantity\":1e1}",
+          "{\"listingId\":25,\"quantity\":\"abc\"}",
+          "{\"listingId\":25,\"quantity\":\"10\"}",
+          "{\"listingId\":25,\"quantity\":true}",
+          "{\"listingId\":25,\"quantity\":[]}",
+          "{\"listingId\":25,\"quantity\":{}}",
+          "{\"listingId\":25,\"quantity\":null,\"playerId\":null}",
+          "{\"listingId\":25,\"playerId\":\"abc\"}",
+          "{\"listingId\":25,\"playerId\":9223372036854775808}",
+          "{\"listingId\":25,\"playerId\":{}}",
+          "{\"playerId\":[],\"quantity\":\"inválida\",\"listingId\":25}"
+        })
+    @DisplayName(
+        "listingId válido ignora jugador y cantidad incluso con tipos o representaciones inválidos")
+    void compraPublicacionCompleta(String body) throws Exception {
+      // Arrange
+      CurrentQuote quote = new CurrentQuote(PLAYER_ID, 100L, OffsetDateTime.now(), "v1");
+      TokenListing listing =
+          TokenListing.publish(
+              TestFixtures.user(3L),
+              TestFixtures.player(PLAYER_ID),
+              10,
+              quote,
+              OffsetDateTime.now(),
+              OffsetDateTime.now().plusDays(1));
+      ReflectionTestUtils.setField(listing, "id", 25L);
+      MarketTransaction recorded =
+          MarketTransaction.record(
+              TestFixtures.user(2L),
+              TestFixtures.user(3L),
+              TestFixtures.player(PLAYER_ID),
+              10,
+              100,
+              1000,
+              10000,
+              9000,
+              0,
+              1000,
+              0,
+              10,
+              20,
+              10,
+              quote.calculatedAt(),
+              "v1",
+              quote.calculatedAt(),
+              listing);
+      ReflectionTestUtils.setField(recorded, "id", TRANSACTION_ID);
+      when(buyOrderService.buyListing(anyString(), any())).thenReturn(recorded);
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/buy")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.length()").value(7))
+          .andExpect(jsonPath("$.listingId").value(25))
+          .andExpect(jsonPath("$.playerId").value(PLAYER_ID))
+          .andExpect(jsonPath("$.quantity").value(10))
+          .andExpect(jsonPath("$.unitPrice").value(100))
+          .andExpect(jsonPath("$.totalAmount").value(1000))
+          .andExpect(jsonPath("$.transactionId").value(TRANSACTION_ID))
+          .andExpect(jsonPath("$.executedAt").exists());
+      // Verify
+      verify(buyOrderService).buyListing(eq(BUYER_EMAIL), eq(new BuyListingRequest(25L)));
+      verify(buyOrderService, never()).buy(anyString(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "{}",
+          "{\"listingId\":null}",
+          "{\"listingId\":\"25\"}",
+          "{\"listingId\":25.0}",
+          "{\"listingId\":1e1}",
+          "{\"listingId\":true}",
+          "{\"listingId\":[]}",
+          "{\"listingId\":{}}",
+          "{\"listingId\":9223372036854775808}",
+          "{\"listingId\":\"25\",\"playerId\":7821,\"quantity\":10}",
+          "{\"listingId\":25.0,\"playerId\":7821,\"quantity\":10}",
+          "{\"listingId\":1e1,\"playerId\":7821,\"quantity\":10}",
+          "{\"listingId\":true,\"playerId\":7821,\"quantity\":10}",
+          "{\"listingId\":[],\"playerId\":7821,\"quantity\":10}",
+          "{\"listingId\":{},\"playerId\":7821,\"quantity\":10}",
+          "{\"listingId\":9223372036854775808,\"playerId\":7821,\"quantity\":10}"
+        })
+    @DisplayName("El identificador secundario exige un literal entero Long sin coerción")
+    void rechazaIdentificador(String body) throws Exception {
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/buy")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(body))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+      // Verify
+      verify(buyOrderService, never()).buyListing(anyString(), any());
+      verify(buyOrderService, never()).buy(anyString(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, Long.MIN_VALUE})
+    @DisplayName(
+        "Un listingId no positivo se resuelve como publicación inexistente, sin compra directa")
+    void noDerivaIdentificadorInexistente(long listingId) throws Exception {
+      // Arrange
+      when(buyOrderService.buyListing(anyString(), any()))
+          .thenThrow(new ListingNotFoundException());
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/buy")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"listingId\":" + listingId + ",\"playerId\":7821,\"quantity\":10}"))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.code").value("LISTING_NOT_FOUND"));
+      // Verify
+      verify(buyOrderService).buyListing(eq(BUYER_EMAIL), eq(new BuyListingRequest(listingId)));
+      verify(buyOrderService, never()).buy(anyString(), any());
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.MethodSource(
+        "footballmarket.controllers.OrderControllerTest#secondaryErrors")
+    @DisplayName("Los rechazos secundarios conservan status, código y no revelación")
+    void traduceRechazo(RuntimeException failure, int httpStatus, String code) throws Exception {
+      // Arrange
+      when(buyOrderService.buyListing(anyString(), any())).thenThrow(failure);
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/buy")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"listingId\":25}"))
+          .andExpect(status().is(httpStatus))
+          .andExpect(jsonPath("$.code").value(code))
+          .andExpect(jsonPath("$.status").value(httpStatus))
+          .andExpect(jsonPath("$.*").value(hasSize(6)))
+          .andExpect(jsonPath("$.path").value("/api/orders/buy"))
+          .andExpect(jsonPath("$.timestamp").exists())
+          .andExpect(jsonPath("$.message").isString())
+          .andExpect(jsonPath("$.error").isString());
+    }
+  }
+
+  static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> secondaryErrors() {
+    return java.util.stream.Stream.of(
+        org.junit.jupiter.params.provider.Arguments.of(
+            new SuperuserCannotBuyException(), 403, "SUPERUSER_CANNOT_BUY"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new CannotBuyOwnListingException(), 403, "CANNOT_BUY_OWN_LISTING"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new ListingNotFoundException(), 404, "LISTING_NOT_FOUND"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new ListingNotAvailableException(), 409, "LISTING_NOT_AVAILABLE"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new InsufficientCreditsException(), 409, "INSUFFICIENT_CREDITS"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new InsufficientStockException(), 409, "INSUFFICIENT_STOCK"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new org.springframework.dao.DataIntegrityViolationException("SQL privado"),
+            500,
+            "INTERNAL_ERROR"),
+        org.junit.jupiter.params.provider.Arguments.of(
+            new ArithmeticOverflowException(), 500, "INTERNAL_ERROR"));
+  }
+
+  @Nested
   @DisplayName("Compra confirmada")
   class SuccessfulPurchase {
     @Test
@@ -136,6 +326,8 @@ class OrderControllerTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(validBody()))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.length()").value(6))
+          .andExpect(jsonPath("$.listingId").doesNotExist())
           .andExpect(jsonPath("$.transactionId").value(TRANSACTION_ID))
           .andExpect(jsonPath("$.playerId").value(PLAYER_ID))
           .andExpect(jsonPath("$.quantity").value(10))
@@ -468,18 +660,21 @@ class OrderControllerTest {
       verify(buyOrderService, never()).buy(anyString(), any());
     }
 
-    @Test
-    @DisplayName("Un identificador no numérico responde 400 INVALID_REQUEST")
-    void identificadorNoNumericoRespondePeticionInvalida() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"\"abc\"", "true", "[]", "{}", "9223372036854775808"})
+    @DisplayName(
+        "Un playerId inválido en compra directa responde 400 sin invocar ninguna modalidad")
+    void identificadorNoNumericoRespondePeticionInvalida(String playerJson) throws Exception {
       // Act / Assert
       mvc.perform(
               post("/api/orders/buy")
                   .header("Authorization", authorization)
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"playerId\":\"abc\",\"quantity\":10}"))
+                  .content("{\"playerId\":" + playerJson + ",\"quantity\":10}"))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
       verify(buyOrderService, never()).buy(anyString(), any());
+      verify(buyOrderService, never()).buyListing(anyString(), any());
     }
 
     @Test
@@ -523,6 +718,7 @@ class OrderControllerTest {
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
       verify(buyOrderService, never()).buy(anyString(), any());
+      verify(buyOrderService, never()).buyListing(anyString(), any());
     }
 
     @ParameterizedTest
@@ -543,9 +739,14 @@ class OrderControllerTest {
       verify(buyOrderService).buy(eq(BUYER_EMAIL), eq(new BuyOrderRequest(PLAYER_ID, quantity)));
     }
 
-    @Test
-    @DisplayName("Una solicitud válida sí alcanza al Service")
-    void unaSolicitudValidaAlcanzaAlService() throws Exception {
+    @ParameterizedTest
+    @ValueSource(
+        strings = {
+          "{\"playerId\":7821,\"quantity\":10}",
+          "{\"playerId\":7821,\"quantity\":10,\"listingId\":null}"
+        })
+    @DisplayName("La compra directa válida conserva su modalidad con listingId ausente o nulo")
+    void unaSolicitudValidaAlcanzaAlService(String body) throws Exception {
       // Arrange
       when(buyOrderService.buy(anyString(), any())).thenReturn(transaction());
 
@@ -554,11 +755,12 @@ class OrderControllerTest {
               post("/api/orders/buy")
                   .header("Authorization", authorization)
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content(validBody()))
+                  .content(body))
           .andExpect(status().isOk());
 
       // Assert
-      verify(buyOrderService).buy(anyString(), any());
+      verify(buyOrderService).buy(eq(BUYER_EMAIL), eq(new BuyOrderRequest(PLAYER_ID, 10)));
+      verify(buyOrderService, never()).buyListing(anyString(), any());
     }
   }
 }

@@ -101,6 +101,13 @@ public class SecurityConfig {
                         "/actuator/metrics",
                         "/actuator/metrics/**")
                     .permitAll()
+                    // Estadísticas WhoScored: mismas condiciones que las sincronizaciones
+                    // del catálogo. El JWT protege la API propia y nunca se propaga al proveedor.
+                    .requestMatchers(
+                        "/api/players/statistics/whoscored/sync/scraping",
+                        "/api/players/statistics/whoscored/sync/json",
+                        "/api/players/statistics/whoscored/coverage")
+                    .authenticated()
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(

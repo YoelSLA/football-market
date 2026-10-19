@@ -1,4 +1,5 @@
 <!--
+
 Football Market Constitution — Constitution vigente.
 
 Las enmiendas y su historialSync Impact Report completo se conservan en
@@ -43,6 +44,7 @@ preserve las garantías de este documento.
 
 ### II. Proporcionalidad del alcance
 
+
 Dimensionar cada especificación al alcance solicitado. No agregar requisitos por constituir
 buenas prácticas generales ni porque un escenario sea técnicamente posible.
 
@@ -64,6 +66,7 @@ aplicación, si puede reproducirse o verificarse razonablemente, su probabilidad
 relación con los requisitos originales, la complejidad de implementarlo y si existe una solución
 más sencilla que lo resuelva. La dificultad de reproducción no justifica descartar ni posponer
 riesgos críticos de seguridad o integridad.
+
 
 Los agentes identifican problemas y proponen soluciones: no convierten unilateralmente una
 recomendación en requisito obligatorio ni amplían el alcance aprobado. Toda decisión relevante
@@ -304,5 +307,6 @@ de ratificación y actualiza la fecha de la última enmienda. Cada enmienda prod
 impacto que se conserva **íntegro** en
 [`.specify/memory/history/constitution-changelog.md`](history/constitution-changelog.md), junto
 a la Constitución y no dentro de ella.
+
 
 **Version**: 9.0.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-10-18
