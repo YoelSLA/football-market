@@ -1,0 +1,32 @@
+# Registro de asignaciones explícitas de SPEC
+
+Registro append-only de las asignaciones explícitas de identificador de SPEC.
+
+Existe para satisfacer la trazabilidad exigida por la Constitución §8 y por
+`docs/development/sdd-workflow.md` §5: la numeración automática es la predeterminada y toda
+numeración explícita requiere una distribución previa documentada de funcionalidades entre
+integrantes que trabajan en paralelo, junto con un **registro trazable del número, la
+funcionalidad, el responsable y el motivo**, registrado antes de crear la SPEC.
+
+Una fila se agrega al materializar una SPEC con identificador asignado explícitamente, antes de
+cualquier escritura sobre el issue de origen. El registro no sustituye los artefactos de la SPEC,
+sus gates SDD ni el estado de seguimiento en GitHub Issues y GitHub Projects.
+
+## Convenciones
+
+- **Identificador**: `SPEC-0XX`, con el mismo número que el de la carpeta de la spec.
+- **Funcionalidad**: nombre de la funcionalidad asignada, tal como figura en el issue de origen.
+- **Responsable**: responsable de la asignación, tomado de los asignados del issue de origen.
+- **Issue de origen**: issue de GitHub que motiva la asignación.
+- **Requisito**: clave `REQ-` rastreada en el issue de origen, cuando la correspondencia esté
+  confirmada.
+- **Rama**: rama asociada, con el formato `<type>/<spec-id>-<scope>`.
+- **Fecha**: fecha de la asignación.
+
+Las filas no se editan ni se eliminan. Una asignación que cambia de responsable o de funcionalidad
+se corrige con una fila nueva que la referencie.
+
+## Asignaciones
+
+| Identificador | Funcionalidad | Responsable | Issue de origen | Requisito | Rama | Fecha |
+| --- | --- | --- | --- | --- | --- | --- |

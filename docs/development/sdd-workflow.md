@@ -86,6 +86,23 @@ La numeración automática es predeterminada. Excepcionalmente, para una SPEC nu
 
 Al materializarse la SPEC, se crea o reutiliza su Issue de seguimiento con el título `[SPEC-0XX] <nombre>` y se referencia el requisito `REQ-` correspondiente, preservando el antecedente cuando la correspondencia esté confirmada. No inventar US ni Tasks, ni convertir ideas en unidades ejecutables.
 
+### 5.1 Inicio de un issue desde GitHub
+
+El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue en GitHub: verifica el issue y sus dependencias, materializa la SPEC, crea y publica la rama desde `origin/dev`, la vincula al issue, actualiza el seguimiento en GitHub Projects y deja el contexto preparado para el flujo SDD. Su definición es `.opencode/commands/start-issue.md`.
+
+Reglas de la operación:
+
+- El identificador de la SPEC lo provee la persona que invoca el comando. MUST NOT generarse, inferirse ni asignarse automáticamente; si falta, el comando se detiene y lo pide.
+- Antes de modificar el issue, MUST verificarse que el identificador no esté en uso, cruzando specs locales, ramas remotas, issues de GitHub e items del proyecto, y registrando el resultado de cada fuente. Ante cualquier coincidencia el comando se detiene y reporta; MUST NOT reasignarse ni corregirse el número.
+- MUST preservarse íntegramente el body del issue —incluidos RF, CA, dependencias y referencias—, los labels, el milestone, las asignaciones y las relaciones con otros issues. La conservación se verifica comparando el estado previo con el resultante, no se presume.
+- La rama se crea desde `origin/dev` y se publica; su referencia remota se vincula al issue en una sola operación.
+- El registro de seguimiento pasa a `In Progress` al crear y publicar la rama, que es el inicio del trabajo sobre el issue, conforme a §4.
+- Las issues `TSK-` no exigen identificador de SPEC y su título no se modifica; su rama sigue el formato `<type>/<scope>` de las convenciones de Git.
+- La asignación explícita de numeración se registra en `specs/assignments.md`, conforme a la Constitución §8, antes de crear la SPEC.
+- El comando MUST NOT implementar código funcional, redactar la especificación ni autorizar implementación. La continuación es SPECIFY.
+
+El título del registro de seguimiento que este comando establece es `SPEC-0XX | <nombre>`, con barra vertical, conforme a la práctica vigente del repositorio y a los registros existentes en GitHub Projects. La forma `[SPEC-0XX] <nombre>` del párrafo anterior de esta sección describe un antecedente no aplicado; la divergencia queda pendiente de corrección en el origen.
+
 ## 6. Protocolo de preparación e implementación
 
 Leer la definición del comando correspondiente y ejecutar solo la operación autorizada. Inspeccionar hooks; nunca activar ejecución directa o indirecta de tests.

@@ -14,6 +14,7 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
 | Creación o nombre de una rama | [Convenciones de Git](docs/development/git-workflow.md): formato, tipos y reglas obligatorias. |
 | Paso de Spec Kit | Definición del comando correspondiente en `.opencode/commands/`, subordinada al workflow SDD y Constitution; ejecutar solo el paso solicitado. |
+| Inicio de un issue | [Comando `/start-issue`](.opencode/commands/start-issue.md) y [§5.1 del workflow operativo SDD + Git](docs/development/sdd-workflow.md). |
 
 No cargar instrucciones ni documentación del backend para una tarea exclusivamente frontend ni viceversa. Una tarea que afecte ambas áreas debe consultar ambos archivos específicos.
 
@@ -23,6 +24,15 @@ No cargar instrucciones ni documentación del backend para una tarea exclusivame
 - Construir el nombre según las [convenciones de Git](docs/development/git-workflow.md): `<type>/<spec-id>-<scope>` cuando hay spec relacionada, `<type>/<scope>` cuando el cambio es pequeño, técnico o independiente. El `<scope>` va en `kebab-case`.
 - El nombre de la rama y el nombre del directorio de la spec son cosas distintas: el directorio usa solo `<spec-id>-<scope>`, sin el prefijo de tipo. Para derivar uno del otro, quitar el prefijo `<type>/`.
 - Cuando la tarea incluya el nombre de una rama, mantener la trazabilidad spec → rama → commits → Pull Request.
+
+### Inicio de un issue
+
+El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue: verificación del issue y sus dependencias, materialización de la SPEC con el identificador provisto, creación y publicación de la rama desde `origin/dev`, vinculación de la rama al issue, actualización del seguimiento en GitHub Projects y preparación del flujo SDD. La definición completa está en [`.opencode/commands/start-issue.md`](.opencode/commands/start-issue.md) y las reglas que lo gobiernan en [§5.1 del workflow SDD](docs/development/sdd-workflow.md).
+
+- El identificador de la SPEC lo provee siempre la persona que invoca el comando. Nunca se genera, infiere ni asigna automáticamente.
+- Antes de modificar el issue, el comando comprueba que el identificador no esté usado en specs locales, ramas remotas, issues de GitHub ni items del proyecto, y se detiene ante cualquier coincidencia.
+- El body —con sus RF, CA, dependencias y referencias—, los labels, el milestone, las asignaciones y las relaciones del issue se conservan íntegros y se verifican por comparación con el estado previo.
+- El comando no implementa código funcional, no redacta la especificación y no autoriza implementación: deja el contexto preparado y la continuación es `/speckit.specify`.
 
 ### Creación y reanudación de una spec
 
