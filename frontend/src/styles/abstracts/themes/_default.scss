@@ -221,6 +221,23 @@ $text-on-dark-soft: c.$color-on-dark-soft;
 $text-inverse: c.$color-white;
 
 // ============================================================
+// ACENTO DE NAVEGACION
+// ============================================================
+
+// Acento verde de los estados activos de la navegacion.
+// Uso: Navbar, seccion activa, pestana activa y marca grafica.
+// Contraste: sobre $surface-navbar = 9.07:1 (AAA).
+// Restricciones: es un acento de navegacion, no un color de marca
+// general. No usarlo como texto de parrafo.
+$accent-nav: c.$color-accent-green;
+
+// Fondo del estado activo de una seccion de navegacion.
+// Uso: Navbar, tarjeta de la seccion activa.
+// Restricciones: comunica estado activo. No es decorativo ni
+// identifica un error o una advertencia.
+$surface-nav-active: c.$color-accent-green-surface;
+
+// ============================================================
 // ESTADOS
 // ============================================================
 

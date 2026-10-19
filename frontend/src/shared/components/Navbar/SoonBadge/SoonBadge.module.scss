@@ -1,0 +1,12 @@
+@use "../../../../styles/abstracts" as ds;
+
+.soon-badge {
+	padding: 1px 4px;
+	border: 1px solid ds.$border-strong;
+	border-radius: 999px;
+	color: ds.$text-on-dark-muted;
+	font-size: 10px;
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+}

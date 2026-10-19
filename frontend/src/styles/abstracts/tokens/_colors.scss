@@ -230,6 +230,23 @@ $color-focus-light: #6484ec;
 // Contrasto: sobre #0f172a = 8.33:1 (AAA).
 $color-info: #38bdf8;
 
+// Verde de acento de la navegacion.
+// Funcion: estado activo de las secciones y pestañas del Navbar.
+// Uso: seccion activa, pestaña activa y marca grafica de marca.
+// Contraste: sobre #172338 = 9.07:1 (AAA).
+// RESTRICCIONES: es un acento de navegacion, no un color de marca
+// general. No usarlo para texto de parrafo ni para estados
+// deshabilitados: el contraste se agota en textos largos.
+$color-accent-green: #4ade80;
+
+// Verde profundo.
+// Funcion: fondo del estado activo de una seccion de navegacion.
+// Uso: tarjeta de la seccion activa del Navbar.
+// Contraste: #4ade80 sobre este color = 7.66:1 (AAA).
+// RESTRICCION: comunica estado activo. No es decorativo ni
+// identifica un error o una advertencia.
+$color-accent-green-surface: #14352a;
+
 // ============================================================
 // ESTADOS SEMANTICOS
 // ============================================================
