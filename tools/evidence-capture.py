@@ -2,7 +2,7 @@
 """Piloto de captura de historial de interacciones OpenCode -> Markdown.
 
 Fuente de verdad: base SQLite local de OpenCode (LECTURA ESTRICTAMENTE READ-ONLY).
-No escribe en la base, no invoca la CLI de OpenCode, no toca Trello ni el
+No escribe en la base, no invoca la CLI de OpenCode, no toca el sistema de
 workflow SDD, no modifica tareas, gates ni estados.
 
 Uso (solo lectura sobre la base; escritura limitada a las rutas del piloto):
@@ -738,7 +738,7 @@ def render_record(exchange, session, cls, state, tool_summary, full_path, full_s
     add(f"- Sesión: `{session['id']}` · Prompt: `{exchange['user_message_id']}` · "
         f"Mensajes de asistente: {', '.join('`'+a+'`' for a in a_ids) or '—'}")
     add("- No se ejecutó importación de sesiones ni se escribió en la base.")
-    add("- No se modificaron `tasks.md`, `specs/trello.md`, Trello, la Constitución ni "
+    add("- No se modificaron `tasks.md`, el seguimiento operativo, la Constitución ni "
         "el workflow SDD.")
     add("")
 
@@ -882,7 +882,7 @@ def deposit_full_copy(ex, body_parts):
 INDEX_HEADER = """# {title}
 
 > Índice generado por `tools/evidence-capture.py`. Es documental: **no** modifica
-> `tasks.md`, `specs/trello.md`, Trello, ni ningún estado o gate del workflow SDD.
+> `tasks.md`, el seguimiento operativo, ni ningún estado o gate del workflow SDD.
 
 | Intercambio | Fecha (UTC) | Sesión | Tarea(s) | Etapa SDD | Estado de captura | Clasificación | Gate humano | Registro |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |"""
