@@ -193,10 +193,6 @@ la SPEC ni los gates SDD.
 
 ## Notas de divergencia a reportar
 
-- `docs/development/sdd-workflow.md` §5 describe el título del registro de seguimiento como
-  `[SPEC-0XX] <nombre>`, con corchetes. La práctica vigente del repositorio y los registros existentes
-  en GitHub Projects usan `SPEC-0XX | <nombre>`, con barra vertical. Este comando sigue la práctica
-  vigente y deja constancia de la divergencia documental para su corrección en el origen.
 - `docs/development/sdd-workflow.md` §4 fija el paso a `In Progress` cuando el trabajo comienza. Este
   comando lo hace al crear y publicar la rama, que es el inicio del trabajo sobre el issue, y no en el
   momento de una autorización.

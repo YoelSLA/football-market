@@ -84,7 +84,7 @@ No ejecutar placeholders. Revisar scripts/hooks antes de usarlos. Reanudación u
 
 La numeración automática es predeterminada. Excepcionalmente, para una SPEC nueva MAY añadirse `--number <id-asignado>` cuando se cumplan las condiciones de asignación explícita de la Constitución: distribución previa documentada de funcionalidades entre integrantes que trabajan en paralelo y registro trazable del número, funcionalidad, responsable y motivo antes de crearla. Antes de toda creación MUST verificar colisiones con specs locales, remotas accesibles y asignaciones conocidas por el equipo, registrando fuentes y resultado; si no pueden descartarse, detenerse y solicitar confirmación. MUST NOT reutilizar identificadores asignados a otra funcionalidad. Si el script ajusta el número, reportarlo antes de continuar la redacción.
 
-Al materializarse la SPEC, se crea o reutiliza su Issue de seguimiento con el título `[SPEC-0XX] <nombre>` y se referencia el requisito `REQ-` correspondiente, preservando el antecedente cuando la correspondencia esté confirmada. No inventar US ni Tasks, ni convertir ideas en unidades ejecutables.
+Al materializarse la SPEC, se crea o reutiliza su Issue de seguimiento con el título `SPEC-0XX | Nombre de la funcionalidad` y se referencia el requisito `REQ-` correspondiente, preservando el antecedente cuando la correspondencia esté confirmada. No inventar US ni Tasks, ni convertir ideas en unidades ejecutables.
 
 ### 5.1 Inicio de un issue desde GitHub
 
@@ -101,7 +101,7 @@ Reglas de la operación:
 - La asignación explícita de numeración se registra en `specs/assignments.md`, conforme a la Constitución §8, antes de crear la SPEC.
 - El comando MUST NOT implementar código funcional, redactar la especificación ni autorizar implementación. La continuación es SPECIFY.
 
-El título del registro de seguimiento que este comando establece es `SPEC-0XX | <nombre>`, con barra vertical, conforme a la práctica vigente del repositorio y a los registros existentes en GitHub Projects. La forma `[SPEC-0XX] <nombre>` del párrafo anterior de esta sección describe un antecedente no aplicado; la divergencia queda pendiente de corrección en el origen.
+El título del registro de seguimiento que este comando establece es el formato de §5: `SPEC-0XX | Nombre de la funcionalidad`.
 
 ## 6. Protocolo de preparación e implementación
 
