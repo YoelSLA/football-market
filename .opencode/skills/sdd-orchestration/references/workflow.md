@@ -2,14 +2,14 @@
 
 ## Principios
 
-- La **fase SDD** es la operación actual; el **estado Trello** es el progreso observable. No confundirlos.
-- Las columnas, su orden y las claves de tarjeta están definidos en `trello-traceability`. Aquí no se enumeran.
-- `SPECIFYING` agrupa internamente SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS y ANALYZE; conservar la fase detallada aunque la columna las agrupe.
-- `TESTING` tiene doble semántica: para una **US**, validación humana de pruebas; para una **Feature**, CONVERGE final. La transición normal de la Feature **no** utiliza la columna `CODE REVIEW`, que es propia de US.
+- La **fase SDD** es la operación actual del ciclo de desarrollo; el **estado operativo de seguimiento** es el progreso observable en el sistema de seguimiento. No confundirlos.
+- Los estados de seguimiento son cuatro y están definidos en el workflow operativo: `Backlog → In Progress → In Review → Done`. Aquí no se inventan otros.
+- Conforme al principio de trazabilidad y fuente de verdad, los artefactos SDD son la fuente de verdad del estado SDD y el sistema de seguimiento es la fuente de verdad del estado operativo. **No hay precedencia universal** entre ambas: una columna no describe la fase SDD y un `Status` no describe el avance de seguimiento. Ante discrepancia, corregir el origen que la evidencia contradiga.
+- Las	User Stories viven en `spec.md` y las tareas `Txxx` exclusivamente en `tasks.md`. **Ninguna de las dos se replica en el seguimiento**, y ninguna es una entrada ejecutable por sí misma.
 
 ## Fases de preparación
 
-Cada operación se ejecuta mediante el comando local de `.opencode/commands/` correspondant. Ejecutar solo la fase autorizada.
+Cada operación se ejecuta mediante el comando local de `.opencode/commands/` correspondiente. Ejecutar solo la fase autorizada.
 
 | Fase | Operación | Condición para avanzar |
 | --- | --- | --- |
@@ -25,7 +25,8 @@ Reglas de fase:
 - **CLARIFY siempre es obligatorio** después de SPECIFY. Un escaneo sin ambigüedades puede cerrarlo con evidencia; omitir el escaneo no equivale a completarlo.
 - **CHECKLIST es obligatorio**: un checklist general de calidad de requisitos más los especializados aplicables (security, API, UX, data, authentication, authorization). El agente selecciona y **justifica** la selección.
 - Las checklists son propiedad del revisor: no marcar ítems para avanzar ni modificar sus marcadores.
-- **ANALYZE es read-only** y obligatorio antes de READY. Contradicciones normativas o funcionales, alcance no aprobado, cobertura insuficiente o criterio obligatorio no verificable son **blockers**. Los hallazgos editoriales sin impacto material se reportan y no impiden READY.
+- **ANALYZE es read-only** y obligatorio antes de solicitar autorización de implementación. Contradicciones normativas o funcionales, alcance no aprobado, cobertura insuficiente o criterio obligatorio no verificable son **blockers**. Los hallazgos editoriales sin impacto material se reportan y no impiden avanzar.
+- `Dependency ≠ Blocker`: dependencias técnicas conocidas, identificadas y resolubles mediante orden técnico y autorizaciones no son blockers, conforme a los principios de proporcionalidad del alcance y de trazabilidad.
 
 ### Corrección única fuera del comando
 
@@ -35,14 +36,14 @@ Prohibido el loop autónomo `analyze → fix → analyze → fix`; ese ciclo lo 
 
 ### Requisitos no ejecutables
 
-Una idea o requisito sin SPEC puede pre-clarificarse mínimamente antes de SPECIFY. **Nunca** dividir automáticamente una EPIC: proponer la división y esperar aprobación humana de los límites.
+Una idea o requisito sin SPEC puede pre-clarificarse mínimamente antes de SPECIFY. Dividir el alcance de una funcionalidad requiere **aprobación humana**: proponer la división y esperar confirmación de los límites. Una épica o un agrupamiento solo se crean cuando exista una necesidad real de coordinación.
 
 ## Identidad de la Feature
 
 Determinar la Feature antes de actuar:
 
 1. Identificar la rama activa.
-2. Identificar el directorio de spec y su artefactos.
+2. Identificar el directorio de spec y sus artefactos.
 3. Determinar la fase actual y detectar artefactos downstream posiblemente obsoletos.
 4. Si no hay identificación inequívoca, detenerse y preguntar. **Nunca** seleccionar una Feature dudosa en silencio.
 
@@ -60,52 +61,46 @@ Para materializar o retomar una SPEC se usa el mecanismo real del repositorio:
 
 - **Reanudar trabajo de una SPEC existente siempre con `--reuse`**, para no crear una identidad nueva. Sin `--reuse` el flujo crea otra spec y, por defecto, asigna el siguiente número; la asignación explícita excepcional no autoriza duplicar una SPEC existente.
 - `--reuse` reutiliza `spec-id`, nombre y directorio; no sobrescribe `spec.md` ni los demás artefactos. Resuelve por coincidencia exacta; sin coincidencia o con varias, falla y las lista.
-- Con `--reuse`, `--number` desambigua o valida la identidad existente; falla si contradice la spec encontrada. Para una SPEC nueva, MAY utilizarse `--number` únicamente bajo la excepción de trabajo paralelo de Constitution §8, manteniendo la numeración automática como procedimiento predeterminado.
+- Con `--reuse`, `--number` desambigua o valida la identidad existente; falla si contradice la spec encontrada. Para una SPEC nueva, MAY utilizarse `--number` únicamente bajo la excepción de trabajo paralelo de la Constitución, manteniendo la numeración automática como procedimiento predeterminado.
 - `--allow-existing-branch` **no** sustituye `--reuse`: el primero permite que la creación caiga sobre un directorio existente.
 - Ninguno descarta, sobrescribe ni hace `stash`. Con cambios rastreados pendientes o `HEAD` separado, el paso de rama se aborta y la spec se crea o reutiliza igual.
 - Leer `SPEC_ACTION` y `BRANCH_STATUS` para comprobar el resultado, además de `SPEC_NAME`, `SPEC_FILE`, `FEATURE_NUM` y `BRANCH_NAME`. **No asumir** que la rama está disponible por el texto.
 - Verificar el directorio efectivo por `SPECIFY_FEATURE_DIRECTORY` / `.specify/feature.json` y overrides de entorno antes de editar.
-- No predecir, reservar ni asignar números fuera de la excepción de Constitution §8. Esta exige distribución previa documentada de funcionalidades entre integrantes que trabajan en paralelo y registro trazable del número, funcionalidad, responsable y motivo antes de crear la SPEC. Al materializarla, referenciar el registro y mantener trazabilidad con requisito, rama y seguimiento.
-- Antes de toda creación, verificar colisiones con specs locales, remotas accesibles y asignaciones conocidas por el equipo; registrar fuentes y resultado. Si no pueden descartarse, detenerse y solicitar confirmación. No reutilizar identificadores asignados a otras funcionalidades. Si el script ajusta el número explícito, reportarlo antes de continuar la redacción: no acredita la asignación acordada.
-- Una asignación explícita no acredita existencia, fases, gates, aprobación, implementación o integración. Una carpeta provisional o `spec.md` vacío no acredita una SPEC validada ni es requisito para asignar otra identidad. La excepción no permite sobrescribir specs, renumerarlas unilateralmente, omitir sincronización o gates ni afectar cambios locales preexistentes.
+- No predecir, reservar ni asignar números fuera de esa excepción. Esta exige distribución previa documentada de funcionalidades entre integrantes que trabajan en paralelo y registro trazable del número, funcionalidad, responsable y motivo antes de crear la SPEC. Al materializarla, referenciar el registro y mantener trazabilidad con requisito, rama y seguimiento.
+- Antes de toda creación, verificar colisiones con specs locales, remotas accesibles y asignaciones conocidas del equipo; registrar fuentes y resultado. Si no pueden descartarse, detenerse y solicitar confirmación. No reutilizar identificadores asignados a otras funcionalidades. Si el script ajusta el número explícito, reportarlo antes de continuar la redacción: no acredita la asignación acordada.
+- Una asignación explícita no acredita existencia, fases, autorizaciones, implementación o integración. Una carpeta provisional o `spec.md` vacío no acredita una SPEC validada ni es requisito para asignar otra identidad. La excepción no permite sobrescribir specs, renumerarlas unilateralmente, omitir autorizaciones ni afectar cambios locales preexistentes.
 
-## READY
+Al materializarse la SPEC, se crea o reutiliza su registro de seguimiento con el título `[SPEC-0XX] <nombre>`, referenciando el requisito `REQ-` correspondiente y preservando el antecedente cuando la correspondencia esté confirmada. Ese registro **no** contiene tareas, criterios ni detalle técnico.
 
-`READY` es estado de **Feature**, no artefacto de Spec Kit, y no es una columna propia de Spec Kit.
+## Preparación completa
 
-Condiciones:
+**No existe un gate READY.** Lo que READY evaluaba se evalúa aquí y en ANALYZE:
 
-- Preparación global válida y coherente entre spec, plan, tasks y checklists.
-- ANALYZE vigente sin blockers.
+- Preparación global válida y coherente entre `spec.md`, `plan.md`, `tasks.md` y checklists.
+- ANALYZE vigente **sin blockers**.
 - Ambigüedades funcionales relevantes resueltas.
 - Criterios de aceptación cubiertos por tareas.
-- Sincronización de tarjetas US completada en este cierre: exactamente una tarjeta por US formal de `spec.md`, creada o reutilizada, con claves canónicas, vínculo con la épica, referencias a `spec.md` y `tasks.md`, columna `READY` salvo estado previo válido, índice `specs/trello.md` actualizado y evidencia persistida en la épica. Si falla o queda incompleta, READY no se declara completado.
+- Sin requisitos nuevos introducidos sin decisión humana.
 
-**Un blocker en cualquier US impide READY global.**
+Un blocker en cualquier US impide la preparación global, porque ninguna funcionalidad se implementa parcialmente sin cobertura completa de sus criterios.
 
-**Dependency ≠ Blocker:** dependencias técnicas conocidas, identificadas y resolubles mediante orden técnico y autorizaciones no impiden READY.
-
-Efecto: la Feature y las US válidas alcanzan `READY`. Las tarjetas US **no** se crean durante SPECIFYING: su alta o reutilización es parte de este cierre y se delega en `trello-traceability`.
-
-**READY no autoriza implementar.** Requiere autorización humana explícita.
+Cuando estas condiciones se cumplen, la preparación está completa y corresponde **solicitar la autorización de implementación**. No se pide una confirmación humana adicional de "READY", y no hay ninguna sincronización pendiente que la acompañe.
 
 ## IMPLEMENT
 
 Única fase que modifica product code. Nunca modificar requisitos silenciosamente porque el código existente los complique, y nunca inventar alcance.
 
 - Respetar `Constitution → spec.md → plan.md → tasks.md`.
-- El usuario elige **qué US y qué prerrequisitos compartidos** autoriza; el agente decide el **orden técnico** respetando dependencias.
-- Advertir antes de implementar una combinación inconsistente de US.
-- Si la combinación lo requiere, advertir qué prerrequisitos habilitan a cuáles.
+- El usuario autoriza el **alcance** a implementar; el agente decide el **orden técnico** respetando dependencias.
+- Advertir antes de implementar una combinación inconsistente de alcances o prerrequisitos.
 - Marcar una tarea solo con trabajo realizado y verificado; **escribir tests no acredita ejecutarlos**.
 - Registrar los pendientes de verificación humana sin darlos por cumplidos.
-- EPIC, `BACKLOG` y tarjetas técnicas no son entradas ejecutables. No consumir todas las tareas por defecto.
+- Un requisito sin SPEC, un registro en `Backlog` sin autorización y una tarea técnica aislada no son entradas ejecutables. No consumir todas las tareas por defecto.
 
 ### Durante la implementación
 
-- Una US pasa a `IN PROGRESS` **cuando su IMPLEMENT comienza**, no al autorizarla.
-- La Feature pasa a `IN PROGRESS` cuando comienza la primera US y permanece allí mientras sus US recorran sus gates.
-- Puede continuar con otras US autorizadas e independientes mientras una espera gate humano; **evaluar el impacto** del feedback de una US antes de continuar trabajo relacionado que dependa de ella.
+- El registro de seguimiento pasa a `In Progress` **cuando el trabajo comienza**, no al autorizarlo.
+- Puede continuarse con trabajo autorizado e independiente mientras una parte espera verificación humana; **evaluar el impacto** del feedback recibido antes de continuar trabajo relacionado que dependa de él.
 - El agente puede crear o modificar tests durante IMPLEMENT; su ejecución corresponde al usuario.
 - El frontend está **exento de testing**: no crear tests ni incorporar infraestructura para ellos.
 
@@ -113,38 +108,35 @@ Efecto: la Feature y las US válidas alcanzan `READY`. Las tarjetas US **no** se
 
 ```text
 STOP IMPLEMENT → resolver upstream → actualizar artefactos afectados
-→ ANALYZE → recuperar READY → continuar con autorizaciones vigentes
+→ ANALYZE → continuar con las autorizaciones vigentes
 ```
 
 Las autorizaciones no afectadas se conservan; las afectadas requieren nueva autorización. No parchear alrededor de una especificación incorrecta.
 
-## Recorrido de una US
+## Revisión y testing
 
-```text
-READY → IN PROGRESS → CODE REVIEW → TESTING → DONE
-```
+Cuando la implementación del alcance autorizado está completa, el registro de seguimiento pasa a `In Review` **pendiente de revisión integral**. Eso no implica que la revisión esté aprobada.
 
-Cada US recorre sus propios gates humanos. El detalle de condiciones y reports está en [`gates.md`](gates.md).
+- **CODE REVIEW** y **TESTING** son autorizaciones humanas separadas, sobre el alcance implementado completo, **incluidos los tests**. Revisar y aprobar código no sustituye revisar y aprobar pruebas.
+- Las condiciones, el contenido de los reports y el checklist obligatorio están en [`gates.md`](gates.md).
+- Los tests aplicables pendientes impiden el cierre, conforme a la sección de verificación y testing.
 
-Cuando una US termina su implementación pasa a `CODE REVIEW` **pendiente de revisión integral**; eso no implica aprobación individual de esa US. Las tareas transversales no mueven por sí solas todas las US a `IN PROGRESS`.
+## CONVERGE y cierre
 
-## CONVERGE y cierre de Feature
-
-- Cuando **todas las US requeridas están `DONE`** y el trabajo técnico necesario está completo, la Feature pasa a `TESTING`.
-- En ese momento corresponde ejecutar `/speckit.converge`. **No ejecutar CONVERGE antes**: es un prerrequisito del comando.
+- Cuando el trabajo técnico necesario está completo, corresponde ejecutar `/speckit.converge`. **No ejecutar CONVERGE antes**: es un prerrequisito del comando.
 - CONVERGE es diagnóstico y **append-only**: anexa remediaciones a `tasks.md` y no modifica código, tests ni otros documentos. Detalles en [`gates.md`](gates.md) y [`recovery.md`](recovery.md).
-- La corrección documental inequívoca ocurre **fuera del comando**, en operación separada, seguida de nueva ejecución. No repetir gates no afectados.
-- CONVERGE exitoso **prepara** el cierre, no lo autoriza: la Feature permanece `TESTING` hasta la autorización final.
-- La transición a `DONE` y el estado `Approved` de la spec exigen autorización final humana explícita, vigente y persistida.
+- La corrección documental inequívoca ocurre **fuera del comando**, en operación separada, seguida de nueva ejecución. No repetir autorizaciones no afectadas.
+- CONVERGE exitoso **prepara** el cierre, no lo autoriza.
+- La transición a `Done` y el estado `Approved` de `spec.md` exigen autorización final humana explícita, vigente y persistida.
 
 ## Git
 
-- Nombre de rama según Constitución §7: `<type>/<spec-id>-<scope>` con spec relacionada, `<type>/<scope>` independiente; el directorio de spec no lleva el prefijo `<type>/`.
+- Las convenciones de rama, commit y Pull Request están en `docs/development/git-workflow.md`, que es su fuente única.
 - Antes de crear una rama, determinar si el cambio pertenece a una spec existente. No asociar artificialmente ni crear spec nueva para un cambio ya asociado.
-- Mantener trazabilidad spec ↔ rama ↔ commits ↔ código ↔ Pull Request. No imponer rama por US ni commit por tarea.
+- Mantener trazabilidad spec ↔ User Stories ↔ tasks ↔ rama ↔ commits ↔ código ↔ Pull Request. No imponer rama por US ni commit por tarea.
 - Declara en el commit la SPEC, US o Tasks correspondientes y el alcance compartido, con hashes reales cuando existan.
-- No inventar URL ni hash de PR. La revisión del diff local basta para aprobar; aprobar el estado exacto no implica merge ni publicación.
-- No hacer commit, branch ni push sin encargo.
+- Vincular el Pull Request a la funcionalidad y a su registro de seguimiento. Vincularlo no acredita implementación, revisión ni cierre.
+- No inventar URL ni hash de Pull Request. No hacer commit, crear ramas ni push sin encargo.
 
 ## Verificación y entrega
 
@@ -158,3 +150,11 @@ El agente no ejecuta tests. El único control ejecutable permitido es el build *
 | Solo documentación | Coherencia, rutas, enlaces y diff; sin build |
 
 SonarQube, Quality Gates y otros controles opcionales quedan a cargo del usuario y no condicionan la finalización. Un fallo preexistente verificablemente ajeno al cambio se reporta y no bloquea la entrega.
+
+## Disposición transitoria
+
+Hasta que GitHub Projects esté configurado y las funcionalidades activas migradas:
+
+- El tablero anterior fue retirado. GitHub Projects aún no está configurado y ninguna funcionalidad ha sido migrada: no se afirma sincronización ni se declaran funcionalidades migradas sin verificarlas. La evidencia histórica existente se reutiliza cuando es suficiente para acreditar una autorización.
+- SPEC-009 y SPEC-010 conservan su estado real y **no se migran ni se modifican** en esta fase.
+- Ninguna instrucción de este archivo autoriza operaciones de escritura sobre el sistema de seguimiento sin autorización operativa explícita, y no presupone que GitHub Projects exista.

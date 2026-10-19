@@ -6,13 +6,13 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 
 | Tarea | Contexto adicional |
 | --- | --- |
-| Specs, SDD, Trello, Git o implementación de features | El agente MUST leer y seguir el [workflow operativo SDD + Trello + Git](docs/development/sdd-workflow.md). |
+| Specs, SDD, Git o implementación de features | El agente MUST leer y seguir el [workflow operativo SDD + Git](docs/development/sdd-workflow.md) y las [convenciones de Git](docs/development/git-workflow.md). |
 | Código, estructura o dependencias arquitectónicas | [Arquitectura común](docs/architecture.md): guía de lectura al inicio. |
 | Stack, tecnologías o dependencias de herramientas/librerías | [Tecnologías del backend](docs/backend/technologies.md) o [tecnologías del frontend](docs/frontend/technologies.md), según el área afectada. |
 | Área backend afectada | [Instrucciones del backend](backend/AGENTS.md) y el contexto que estas indiquen. |
 | Área frontend afectada | [Instrucciones del frontend](frontend/AGENTS.md) y el contexto que estas indiquen. |
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
-| Creación o nombre de una rama | [Constitución §7](.specify/memory/constitution.md): formato, tipos y reglas obligatorias. |
+| Creación o nombre de una rama | [Convenciones de Git](docs/development/git-workflow.md): formato, tipos y reglas obligatorias. |
 | Paso de Spec Kit | Definición del comando correspondiente en `.opencode/commands/`, subordinada al workflow SDD y Constitution; ejecutar solo el paso solicitado. |
 
 No cargar instrucciones ni documentación del backend para una tarea exclusivamente frontend ni viceversa. Una tarea que afecte ambas áreas debe consultar ambos archivos específicos.
@@ -20,7 +20,7 @@ No cargar instrucciones ni documentación del backend para una tarea exclusivame
 ## Ramas y Git
 
 - Antes de crear o proponer una rama, determinar si el cambio pertenece a una spec existente revisando las carpetas de `specs/`. Reutilizar su identificador cuando exista relación funcional clara; no crear una spec nueva para un cambio que ya se asocia a una existente, ni asociarlo artificialmente.
-- Construir el nombre según la constitución §7: `<type>/<spec-id>-<scope>` cuando hay spec relacionada, `<type>/<scope>` cuando el cambio es pequeño, técnico o independiente. El `<scope>` va en `kebab-case`.
+- Construir el nombre según las [convenciones de Git](docs/development/git-workflow.md): `<type>/<spec-id>-<scope>` cuando hay spec relacionada, `<type>/<scope>` cuando el cambio es pequeño, técnico o independiente. El `<scope>` va en `kebab-case`.
 - El nombre de la rama y el nombre del directorio de la spec son cosas distintas: el directorio usa solo `<spec-id>-<scope>`, sin el prefijo de tipo. Para derivar uno del otro, quitar el prefijo `<type>/`.
 - Cuando la tarea incluya el nombre de una rama, mantener la trazabilidad spec → rama → commits → Pull Request.
 
@@ -40,7 +40,7 @@ Una spec nueva se crea con el flujo normal, sin `--reuse`. Para retomar trabajo 
 - Buscar con `rg` / `rg --files` y leer implementación, consumidores, tests y configuración afectados antes de editar.
 - Resolver decisiones rutinarias con el contexto disponible; consultar si falta una decisión funcional que cambie el resultado esperado.
 - Mantener `tasks.md` cuando sea el seguimiento de la tarea. Marcar completado solo lo implementado y verificado; registrar las comprobaciones pendientes del usuario.
-- Si Trello no está disponible, aplicar exclusivamente la contingencia local de Constitution §8 y workflow SDD §3.2 para READY e IMPLEMENT AUTHORIZATION. Persistir y releer `sdd-gates.md` de la Feature, registrar pendientes en `specs/trello.md` y distinguir estados locales de columnas remotas. No extender la excepción a otros gates.
+- Mientras el sistema de seguimiento operativo no esté disponible, aplicar exclusivamente la contingencia local registrada en `docs/development/sdd-workflow.md` §12: persistir y releer `sdd-gates.md` de la Feature y distinguir los estados locales de los del seguimiento remoto. No extender la excepción a otros gates.
 - No editar salidas generadas; modificar sus fuentes. Las instrucciones de cada área identifican sus ubicaciones específicas. Revisar el diff después del build.
 - Cuando se identifique una deuda técnica real durante una implementación, revisión o refactorización, registrar su entrada en [deuda técnica](docs/TECHNICAL_DEBT.md) o actualizar la existente. No resolverla sin autorización ni declararla resuelta sin evidencia verificable.
 
@@ -50,7 +50,7 @@ Ubicaciones transversales: CI en `.github/workflows/` y hooks en `.githooks/`. C
 
 El agente no ejecuta tests, directa ni indirectamente mediante builds, generadores o hooks, en ninguna tarea del repositorio.
 
-Los controles ejecutables permitidos son los builds definidos por los `AGENTS.md` específicos de cada área, únicamente cuando se haya modificado código de esa área y bajo sus condiciones existentes, y las validaciones controladas de infraestructura de desarrollo expresamente autorizadas conforme a Constitution §6. La excepción no habilita tests de aplicación, no amplía los builds permitidos, no habilita modificaciones funcionales, no concede permisos implícitos ni altera gates humanos.
+Los controles ejecutables permitidos son los builds definidos por los `AGENTS.md` específicos de cada área, únicamente cuando se haya modificado código de esa área y bajo sus condiciones existentes, y las validaciones controladas de infraestructura de desarrollo expresamente autorizadas conforme a la sección de verificación y testing de la Constitución. La excepción no habilita tests de aplicación, no amplía los builds permitidos, no habilita modificaciones funcionales, no concede permisos implícitos ni altera gates humanos.
 
 Para cambios exclusivamente documentales, revisar rutas, enlaces, comandos y coherencia; no ejecutar build. Las condiciones de entrega y los fallos preexistentes se rigen por la constitución.
 

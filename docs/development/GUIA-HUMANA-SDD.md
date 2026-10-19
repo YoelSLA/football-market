@@ -4,9 +4,9 @@
 
 ## Flujo rápido
 
-**Preparar → revisar READY → autorizar US → implementar → revisar código → ejecutar tests → aprobar US → CONVERGE → autorizar cierre → DONE.**
+**Preparar → autorizar implementación → implementar → revisar código → ejecutar tests → CONVERGE → autorizar cierre → Done.**
 
-El orquestador administra artefactos, dependencias, Trello y evidencias. **Vos tomás las decisiones funcionales, autorizás el trabajo y ejecutás los tests.**
+El orquestador administra artefactos, dependencias, seguimiento y evidencias. **Vos tomás las decisiones funcionales, autorizás el trabajo y ejecutás los tests.**
 
 ## Paso a paso: responsabilidades separadas
 
@@ -84,17 +84,17 @@ El orquestador administra artefactos, dependencias, Trello y evidencias. **Vos t
 
 **✅ Para avanzar:** Las US y requisitos tienen tareas trazables.
 
-### 7. ANALYZE — Confirmá READY
+### 7. ANALYZE — Confirmá que la preparación está completa
 
 **👤 VOS:** Leés hallazgos; decidís sobre conflictos importantes y confirmás que el alcance está listo.
 
-**🤖 AGENTE:** Cruza spec, plan, tasks, checklists y Constitución; informa blockers y evidencia de READY. Analyze es estrictamente de lectura: no crea tarjetas.
+**🤖 AGENTE:** Cruza spec, plan, tasks, checklists y Constitución; informa blockers y hallazgos. Analyze es estrictamente de lectura y no escribe en el seguimiento.
 
 **💬 Mensaje sugerido:**
 
-> Ejecutá ANALYZE. Informame blockers, hallazgos y si la Feature está READY.
+> Ejecutá ANALYZE. Informame blockers, hallazgos y si la preparación está completa.
 
-**✅ Para avanzar:** No quedan blockers. Al cerrar READY, el agente crea o reutiliza las tarjetas de cada US y las vincula a la épica; READY no significa permiso para implementar.
+**✅ Para avanzar:** No quedan blockers. La preparación queda completa y corresponde pedir la autorización de implementación. No hay un gate READY aparte, y completarlo no significa permiso para implementar.
 
 ### 8. Autorizá IMPLEMENT de las US seleccionadas
 
@@ -148,7 +148,7 @@ El orquestador administra artefactos, dependencias, Trello y evidencias. **Vos t
 
 **👤 VOS:** Confirmás que todas las US requeridas tienen Code Review y Testing aprobados y no hay pendientes ocultos.
 
-**🤖 AGENTE:** Comprueba gates y evidencia; sincroniza los estados permitidos con Trello.
+**🤖 AGENTE:** Comprueba gates y evidencia; refleja los estados permitidos en el seguimiento operativo.
 
 **💬 Mensaje sugerido:**
 
@@ -184,7 +184,7 @@ El orquestador administra artefactos, dependencias, Trello y evidencias. **Vos t
 
 **👤 VOS:** Comprobás el estado final, reportes y diff; autorizás commits o push por separado si corresponde.
 
-**🤖 AGENTE:** Sincroniza documentación y Trello; entrega resumen de alcance, US, gates, CONVERGE y archivos cambiados.
+**🤖 AGENTE:** Sincroniza documentación y seguimiento; entrega resumen de alcance, US, gates, CONVERGE y archivos cambiados.
 
 **💬 Mensaje sugerido:**
 
@@ -196,21 +196,33 @@ El orquestador administra artefactos, dependencias, Trello y evidencias. **Vos t
 
 Decí: «Continuá la Feature 008. Reconstruí el estado desde los artefactos y la evidencia registrada. Antes de avanzar, indicame la próxima acción permitida y si existe alguna autorización pendiente».
 
-No vuelvas a aprobar automáticamente algo que ya tenga evidencia válida; tampoco supongas que una columna de Trello constituye una autorización.
+No vuelvas a aprobar automáticamente algo que ya tenga evidencia válida; tampoco supongas que una columna del seguimiento constituye una autorización.
 
-## Cómo leer Trello
+## Cómo leer el seguimiento operativo
 
-| Columna | Interpretación práctica |
+El seguimiento usa **GitHub Issues con GitHub Projects**, con una Issue por funcionalidad.
+
+| Estado | Interpretación práctica |
 |---|---|
-| BACKLOG | Trabajo identificado, todavía no preparado. |
-| SPECIFYING | Definición y preparación SDD. |
-| READY | Preparado, con tarjetas de US sincronizadas; pendiente de autorización para implementar. |
-| IN PROGRESS | Implementación o trabajo autorizado en curso. |
-| CODE REVIEW | Revisión humana del código por US. |
-| TESTING | Validación humana de pruebas por US. |
-| DONE | US aprobada o Feature cerrada con sus condiciones cumplidas. |
+| Backlog | Funcionalidad identificada, todavía sin trabajo autorizado. |
+| In Progress | Existe autorización de implementación vigente y el trabajo está en curso. |
+| In Review | Implementación completa; revisión humana de código, testing o cierre pendientes. |
+| Done | Implementación, revisión, testing y autorización de cierre, todo satisfecho. |
 
-**Nota:** el flujo normal de la Feature no necesariamente utiliza todas las columnas por las que pasa cada US. Seguí las transiciones definidas en [`sdd-workflow.md`](sdd-workflow.md), documento normativo subordinado a la Constitución.
+Ya **no existen** los estados `SPECIFYING` ni `READY`: la preparación ocurre dentro de la
+especificación y se lee leyéndola. Tampoco hay una tarjeta por User Story: las historias viven en
+`spec.md` y las tareas técnicas en `tasks.md`.
+
+**Pendiente:** el tablero de GitHub Projects aún no está configurado y ninguna funcionalidad ha
+sido migrada. Hasta entonces **no hay columna que leer**. Eso no te bloquea: podés seguir
+autorizando implementación, revisando código y validando tests con normalidad. Lo único que no
+existe por ahora es el registro del estado de seguimiento, y no se inventa ninguno.
+
+Tus autorizaciones, revisiones y resultados de testing anteriores **siguen siendo válidos** y no
+se vuelven a pedir por falta del tablero.
+
+Seguí las transiciones definidas en [`sdd-workflow.md`](sdd-workflow.md), documento normativo
+subordinado a la Constitución.
 
 ## Regla de oro
 

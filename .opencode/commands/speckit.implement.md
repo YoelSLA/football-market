@@ -1,12 +1,12 @@
 ---
-description: Implement the authorized Ready user story and its explicit prerequisites from tasks.md.
+description: Implementar el alcance autorizado de la funcionalidad y sus prerrequisitos explicitos desde tasks.md.
 ---
 
 ## User Input
 
 ## Reglas locales obligatorias
 
-MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar READY global vigente y IMPLEMENT AUTHORIZATION humana explícita, vigente y persistida para la US y sus prerrequisitos autorizados. Dependency ≠ Blocker: dependencias conocidas se resuelven por orden técnico, sin inventar alcance. Autorización ≠ inicio: mover READY → IN PROGRESS solo al comenzar realmente IMPLEMENT. EPIC, BACKLOG y tarjetas técnicas no son ejecutables; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests ni indirectamente mediante hooks. Implementación completa habilita CODE REVIEW con report completo (incluidos tests), no DONE: CODE REVIEW y TESTING son gates humanos separados. CONVERGE final y FEATURE COMPLETION AUTHORIZATION corresponden a cierre de Feature, fuera de esta ejecución. Invalidar gates solo por impacto sobre alcance evaluado, conservando aprobaciones no afectadas.
+MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar que la preparación está completa, ANALYZE vigente sin blockers, y que existe IMPLEMENT AUTHORIZATION humana explícita, vigente y persistida para el alcance y sus prerrequisitos autorizados. Dependency ≠ Blocker: dependencias conocidas se resuelven por orden técnico, sin inventar alcance. Autorización ≠ inicio: el registro de seguimiento pasa a In Progress solo cuando el trabajo comienza realmente. Un requisito sin spec, un registro en Backlog y una tarea técnica aislada no son entradas ejecutables; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests ni indirectamente mediante hooks. Implementación completa habilita CODE REVIEW con report completo (incluidos tests), no DONE: CODE REVIEW y TESTING son gates humanos separados. CONVERGE final y FEATURE COMPLETION AUTHORIZATION corresponden a cierre de Feature, fuera de esta ejecución. Invalidar gates solo por impacto sobre alcance evaluado, conservando aprobaciones no afectadas.
 
 ```text
 $ARGUMENTS
@@ -78,7 +78,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    - **If any checklist has unchecked items**:
      - Display the table with unchecked item counts
-     - **STOP** y reportar criterios pendientes al revisor. MUST NOT ofrecer una excepción genérica al Ready Gate. Solo reanudar con evaluación suficiente registrada, ausencia de bloqueantes y elegibilidad vigente conforme al workflow.
+     - **STOP** y reportar criterios pendientes al revisor. MUST NOT ofrecer una excepción genérica a esa condición. Solo reanudar con evaluación suficiente registrada, ausencia de bloqueantes y elegibilidad vigente conforme al workflow.
 
    - **If all checklists are checked**:
      - Display the table showing all checklists passed

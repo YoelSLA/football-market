@@ -10,7 +10,7 @@ workflow:
 # docs/development/sdd-workflow.md; approve sin evidencia no completa fases.
 # Una pasada Implement no cierra la SPEC: si quedan US, rechazar el gate final
 # y retomarlas con encargos separados; no repetir Specify creando otra identidad.
-# No escribe Trello por sí mismo ni autoriza sus operaciones; comandos sujetos a AGENTS.
+# No escribe en el sistema de seguimiento por sí mismo ni autoriza sus operaciones; comandos sujetos a AGENTS.
 
 requires:
   # 0.8.5 is the first release with engine-side resolution of the

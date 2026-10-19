@@ -24,7 +24,7 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 
 ## Recursos gráficos y dependencias que no son paquetes
 
-Esta sección registra dependencias de recursos que no aparecen en `package.json` porque no son paquetes instalables. Constitution §4 exige que todo cambio del inventario tecnológico se refleje aquí en la misma tarea.
+Esta sección registra dependencias de recursos que no aparecen en `package.json` porque no son paquetes instalables. El principio de coherencia de contratos de la Constitución exige que todo cambio del inventario tecnológico se refleje aquí en la misma tarea.
 
 | Recurso | Procedencia | Uso | Tolerancia a fallos |
 | --- | --- | --- | --- |
