@@ -59,6 +59,17 @@ market:
 # Identidades sintéticas exclusivas de testing; cada suite funcional debe enlazar
 # los IDs devueltos por el catálogo aislado antes de iniciar la sincronización.
 whoscored:
+  statistics:
+    scraping-workers: 4
+    json-workers: 3
+    request-interval-ms: 1
+    # El presupuesto del lote debe superar el ritmo por defecto de 60 s por jugador: si no, la
+    # capacidad calculada limita el lote a un jugador y las pruebas de poblacion fallan.
+    scraping-batch-timeout-ms: 1800000
+    navigation-timeout-ms: 1000
+    query-timeout-ms: 1000
+    filter-third-party-resources: false
+    headed: true
   base-url: https://provider.example
   user-agent: identity-test-client
   page-size: 3

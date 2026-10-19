@@ -70,8 +70,111 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-016](#td-016--artefacto-de-compilación-incremental-versionado-en-git) | Artefacto de compilación incremental versionado en Git | Frontend / Configuración | Baja | Pendiente | 2026-10-14 17:48:44 |
 | [TD-017](#td-017--conflicto-de-formato-entre-el-importador-de-escudos-y-biome) | Conflicto de formato entre el importador de escudos y Biome | Frontend / Herramientas | Baja | Pendiente | 2026-10-14 17:48:44 |
 | [TD-018](#td-018--colores-literales-en-los-módulos-de-estilo-de-componentes) | Colores literales en los módulos de estilo de componentes | Frontend / Convenciones | Baja | Pendiente | 2026-10-14 17:48:44 |
+| [TD-019](#td-019--precisión-del-rating-incompatible-con-el-diseño-de-persistencia-de-spec-011) | Precisión del rating incompatible con el diseño de persistencia de SPEC-012 | Backend / Datos | Alta | Pendiente | 2026-10-16 02:49:30 |
+| [TD-020](#td-020--contraste-entre-canales-retirado-en-spec-011) | Contraste entre canales retirado en SPEC-012 | Backend / Datos | Media | Pendiente | 2026-10-18 00:00:00 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-019 — Precisión del rating incompatible con el diseño de persistencia de SPEC-012
+
+- **Registrada**: 2026-10-16 02:49:30 (`America/Argentina/Buenos_Aires`), reloj del sistema.
+- **Estado**: Pendiente; **prioridad**: Alta; **área**: Backend / Datos.
+- **Evidencia**: `RecorridoHTML/PaginaPrincipal.txt`, línea 1219, publica en el bloque
+  estructurado `Rating: 6.9033333333333333`. La captura es local e ignorada; no se publica
+  su contenido completo ni se accede al proveedor para este hallazgo.
+- **Problema**: FR-029 de SPEC-012 exige conservar la precisión publicada sin redondeo,
+  mientras `specs/012-player-statistics-scraping/data-model.md` y `research.md` definen
+  NUMERIC(18,6). Aplicarlo redondearía un valor real. Rechazarlo por su precisión tampoco
+  implementaría el requisito. El conflicto está en el diseño, no en una migración desplegada.
+- **Motivo del aplazamiento**: requiere corrección de diseño autorizada y nuevo Analyze;
+  IMPLEMENT de US01 se suspende conforme al workflow. La migración y el modelo incompletos
+  creados en esta ejecución se retiraron antes de entrega; no se altera una migración existente.
+- **Criterio de cierre**: diseño y Tasks coherentes con FR-029, Analyze sin blocker de precisión,
+  almacenamiento e implementación que preserven el decimal publicado y tests backend que
+  demuestren ida/vuelta exacta del rating con PostgreSQL. Ejecución/evidencia de tests a cargo
+  del usuario; no declarar resuelta por build ni por corrección documental aislada.
+- **Historial**: 2026-10-16 02:49:30 — registrada durante IMPLEMENT autorizado de US01;
+  solución y validación pendientes. No autoriza ampliar alcance ni modificar FR-029.
+- **Actualización**: 2026-10-16 02:52:09 (`America/Argentina/Buenos_Aires`, reloj del sistema)
+  — el usuario autorizó la corrección documental mediante «lo autorizo» ante la propuesta
+  explícita de NUMERIC sin escala fija y sincronización de artefactos/Tasks conservando avance.
+  Diseño actualizado: `value`, `tolerance` y `difference` NUMERIC sin precisión/escala fijas;
+  BigDecimal desde el token original, sin conversión binaria; solo derivadas a seis decimales
+  HALF_UP. Se precisaron regresiones en Tasks existentes, sin implementarlas ni ejecutarlas.
+  Estado conservado `Pendiente`: faltan Analyze, implementación y evidencia de tests; no se
+  declara resuelta por esta edición. Autorización e historial en `sdd-gates.md` de SPEC-012.
+- **Avance de implementación — 2026-10-16**: V10 y los mappings JPA usan `numeric` sin
+  precisión/escala fijas. T032–T034 incorporan regresiones del rating exacto de 16 decimales,
+  derivadas de seis decimales, metadatos del esquema, rollback y persistencia histórica.
+  Las pruebas están escritas pero no ejecutadas por el agente. Se conserva `Pendiente`:
+  faltan la extracción del token original en el recorrido funcional y la evidencia humana
+  satisfactoria de ida/vuelta con PostgreSQL; el build no acredita estos resultados.
+- **Avance del recorrido — 2026-10-16**: `WhoScoredStructuredDataParser` incorpora lectura
+  decimal del HTML original, sin ejecución de JavaScript ni conversión binaria; su regresión
+  conserva `6.9033333333333333` y ceros finales publicados. La extracción y el ensamblado
+  están implementados; T036 y el cierre de US01 dependen de la infraestructura de US02
+  por decisión humana de mantener el diseño. TD-019 continúa pendiente de ejecución y
+  evidencia de los tests, no resuelta por existencia de código.
+
+### TD-020 — Contraste entre canales retirado en SPEC-012
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-020 |
+| **Fecha y hora de registro** | 2026-10-18 |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | - |
+
+**Descripción.** SPEC-012 exigía contrastar por métrica compartida la coincidencia, el redondeo
+publicado o la discrepancia entre el scraping y la interfaz JSON (FR-044, FR-047, FR-048, SC-006 y
+SC-013). El modelo entregado no lo implementa: `V20261018191335__flatten_player_statistics.sql` elimina la tabla
+`player_metric_comparisons` y no existen `MetricComparisonRule`, `MetricComparisonRecorder` ni sus
+tests. La alineación documental del 2026-10-18 retiró esos requisitos conservando sus identificadores
+y desmarcando las tareas T061, T062, T069 y T070.
+
+**Evidencia.**
+
+- `backend/src/main/resources/db/migration/V20261018191335__flatten_player_statistics.sql:384` - `DROP TABLE
+  player_metric_comparisons`; la secuencia `player_metric_comparisons_id_seq` queda huérfana.
+- `backend/src/main/java/footballmarket/services/JsonStatisticsUpdateService.java:9` y
+  `backend/src/main/java/footballmarket/services/impl/JsonStatisticsUpdateServiceImpl.java:28` -
+  el propio código declara que no consulta ni contrasta observaciones de otros canales.
+- `backend/src/main/java/footballmarket/models/records/PlayerStatisticsSyncCounters.java` - no
+  expone contadores de coincidencia, redondeo ni discrepancia.
+- `specs/012-player-statistics-scraping/tasks.md` - T061, T062, T069 y T070 estaban marcadas como
+  completadas sin artefacto correspondiente en el repositorio.
+
+**Causa técnica.** El diseño normalizado con observaciones y auditoría de contraste fue reemplazado
+por una fila aplanada por campaña y canal sin que la decisión quedara registrada como gate ni como
+tarea del workflow.
+
+**Impacto técnico.** Una divergencia de valor entre ambos canales de la misma métrica pasa
+desdetectada: solo se detecta comparando manualmente las dos filas de campaña del jugador. Se pierde
+también la distinción entre una métrica ausente por el proveedor y una derivada no derivable, que
+comparten columna nula.
+
+**Solución propuesta.** Si el contraste se considera necesario, reinstate el requisito mediante una
+spec que lo verifique y defina la forma de persistirlo sobre el modelo aplanado actual. Requiere
+autorización humana; esta entrada no autoriza cambios de código.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que exista una decisión humana
+explícita sobre el requisito y, si se mantiene, exista implementación y evidencia humana de tests
+que distingan coincidencia, redondeo publicado y discrepancia por métrica compartida. No se declara
+resuelta por la alineación documental ni por build.
+
+**Referencias.**
+
+- `specs/012-player-statistics-scraping/spec.md` (FR-044, FR-047, FR-048, SC-006, SC-013)
+- `specs/012-player-statistics-scraping/data-model.md`
+- `backend/src/main/resources/db/migration/V20261018191335__flatten_player_statistics.sql`
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-18 | Registro inicial tras la alineación documental de SPEC-012 autorizada por el usuario. No modifica código ni migraciones. |
 
 ### TD-001 — Protección de los endpoints de monitoreo de Spring Boot Actuator
 
@@ -1330,3 +1433,4 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 | --- | --- |
 | 2026-10-14 16:29:48 | Creación del registro centralizado con TD-001. Se consolidaron como entrada las referencias dispersas que existían en `specs/trello.md` y `docs/backend/technologies.md`, conservando la traza hacia ellas. |
 | 2026-10-14 17:48:44 | Incorporación de TD-002 a TD-018 tras auditoría técnica integral de solo lectura del 2026-10-14. Cuatro entradas de prioridad Alta (TD-002 a TD-005), nueve de prioridad Media (TD-006 a TD-014) y cuatro de prioridad Baja (TD-015 a TD-018). TD-001 no se modificó: su contenido se verificó contra el código y sigue siendo exacto. Se incorporaron además tres deudas ya declaradas en `specs/009-player-detail/tasks.md` que nunca se habían centralizado (TD-015, TD-016, TD-017) y una divergencia declarada en `docs/frontend/architecture.md:163` cuya ancla de trazabilidad ya no existía (TD-018). No se registraron los hallazgos descartados por no cumplir los criterios del §2 ni los clasificados como funcionalidad pendiente o mejora opcional. Ninguna entrada modifica código, migraciones, contratos ni otra documentación. |
+| 2026-10-18 | Incorporación de TD-020 tras la alineación documental de SPEC-012 autorizada por el usuario, que retiró el contraste entre canales, fijó la cobertura efectiva 45/57/42 y recorrió quince combinaciones JSON. No se modificó código, migraciones ni contratos; la entrada requiere decisión humana y evidencia de tests para cerrarse. |

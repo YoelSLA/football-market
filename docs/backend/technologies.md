@@ -9,6 +9,7 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Tecnología | Versión | Uso en el proyecto |
 | ---------- | ------- | ------------------ |
 | Java | 21 | Lenguaje y toolchain del backend; la CI configura JDK 21 con distribución Zulu. |
+| Microsoft Playwright para Java | 1.63.0 | Scraping de estadísticas WhoScored con Chromium visible (SPEC-012), contextos independientes por sección e inicialización bajo demanda, nunca durante el arranque de Spring. El lote cierra navegador y driver; la ejecución real y los tests permanecen sujetos a validación humana. |
 | Gradle y Kotlin DSL | 9.6.0 (Wrapper) | Construcción, gestión de plugins y dependencias, ejecución de controles y empaquetado del backend mediante scripts Kotlin. |
 | Spring Dependency Management Plugin | 1.1.7 | Aplica la gestión de versiones de dependencias provista por Spring Boot. |
 | Spring Boot | 4.1.1 | Arranque, configuración y plataforma de versiones de la aplicación backend. |

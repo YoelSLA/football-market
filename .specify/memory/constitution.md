@@ -119,6 +119,19 @@ procedencia editorial previa queda como no determinada y no se atribuye autoría
 no modifica §6, §8 ni §9 ni autoriza por sí sola operaciones destructivas.
 Sin cambios en Trello, código, specs funcionales ni docs/.
 -->
+<!--
+Sync Impact Report — Enmienda 2026-10-16
+Versión: 8.0.0 → 8.1.0 (MINOR: alternativa local acotada de persistencia en §8).
+Autorización humana: confirmación explícita del usuario el 2026-10-16 para modificar
+Constitution y workflow y permitir READY y IMPLEMENT AUTHORIZATION locales cuando
+Trello no esté disponible, con sincronización posterior obligatoria.
+Documentos sincronizados: docs/development/sdd-workflow.md y AGENTS.md.
+La excepción tiene precedencia sobre las exigencias de tarjeta y persistencia remota
+únicamente para READY e inicio de IMPLEMENT; no elimina la evaluación de preparación,
+autoriza implementación por sí misma ni altera CODE REVIEW, TESTING o cierre de Feature.
+Esta operación normativa no declara READY, no persiste autorizaciones de US ni inicia
+IMPLEMENT; no modifica artefactos funcionales, tarjetas, código o tareas.
+-->
 # Constitución de Football Market
 
 ## 1. Documentos normativos
@@ -294,6 +307,34 @@ El tablero de seguimiento es [Football Market](https://trello.com/b/LdQo0xDW/foo
 6. Verificar mediante lectura posterior que las claves sean únicas, las asociaciones apunten a specs reales, todas las US afectadas tengan tarjeta y los cambios estén reflejados en el índice. Informar por separado cambios del repositorio y del tablero.
 7. Si Trello no está disponible o faltan permisos, no afirmar que se sincronizó ni descartar cambios locales. Registrar en el índice las operaciones pendientes, informar el bloqueo y pedir al usuario que habilite el acceso o acuerde cómo completar la sincronización. La creación de la spec queda explícitamente pendiente de sincronización; al reanudar, comprobar lo ya aplicado antes de reintentar.
 
+### Contingencia temporal por indisponibilidad de Trello
+
+Cuando Trello no sea accesible, MAY completarse READY y persistirse IMPLEMENT AUTHORIZATION
+en el repositorio mediante el procedimiento de contingencia del workflow SDD. Esta excepción
+prevalece sobre los requisitos de sincronización remota, existencia de tarjetas US y persistencia
+en Trello de esta sección exclusivamente para esos dos gates y el inicio de IMPLEMENT autorizado.
+No permite ignorar la preparación global ni requisitos funcionales o normativos.
+
+- MUST registrar en `specs/trello.md` la indisponibilidad y el alcance de la contingencia. La
+  evidencia local por Feature se conserva en `specs/<spec-id>-<scope>/sdd-gates.md`, como eventos
+  append-only identificados por fecha, entidad, gate, resultado, responsable, fuentes y alcance
+  evaluado. No atribuir al usuario aprobaciones que no haya expresado.
+- READY local exige los mismos artefactos, checklists evaluados, Analyze vigente y ausencia de
+  blockers que READY ordinario. MUST identificar todas las US formales, su relación con la
+  Feature y el estado local de cada una; no inventar IDs o URLs de tarjetas.
+- IMPLEMENT AUTHORIZATION local MUST reproducir o referenciar inequívocamente la autorización
+  humana explícita, sus US y prerrequisitos compartidos. MUST comprobar su vigencia y releer
+  la evidencia persistida antes de iniciar. La autorización no equivale al inicio: registrar
+  por separado la toma y el estado local IN PROGRESS al comenzar realmente IMPLEMENT.
+- La contingencia termina cuando se restablece el acceso. MUST releer primero el tablero,
+  reutilizar o crear las tarjetas faltantes sin duplicar, trasladar las evidencias con su fecha
+  y procedencia originales, verificar por lectura posterior y actualizar el índice. Conservar
+  el historial local y marcar la sincronización efectivamente realizada; no fabricar acciones
+  remotas ni afirmar SYNCED mientras queden operaciones pendientes.
+- CODE REVIEW y TESTING humanos, sus evidencias y transiciones, CONVERGE y FEATURE COMPLETION
+  AUTHORIZATION conservan sus reglas ordinarias. Esta excepción no habilita su aprobación ni
+  persistencia sustitutiva, no ejecuta tests y no autoriza cambios de alcance.
+
 ## 9. Gobernanza
 
 Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution ni los documentos normativos aplicables para justificar o facilitar una implementación incompatible. Solo pueden modificarlos cuando el usuario solicite explícitamente una modificación normativa.
@@ -302,4 +343,5 @@ Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible.
 
 Las enmiendas usan versionado semántico: MAJOR para eliminación o redefinición incompatible de gobernanza/principios; MINOR para principios nuevos o ampliación material compatible; PATCH para aclaraciones sin cambio semántico. Deben justificar el incremento, registrar impacto y dependencias, conservar la fecha de ratificación y actualizar la fecha de última enmienda.
 
-**Versión**: 8.1.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-15
+
+**Versión**: 8.1.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-10-16

@@ -34,4 +34,9 @@ public interface PlayerExternalReferenceRepository
 
   Optional<PlayerExternalReference> findByPlayerIdAndProvider(
       Long playerId, ExternalProvider provider);
+
+  /** Población elegible: jugadores distintos con referencia confirmada de un proveedor. */
+  @Query(
+      "select count(distinct r.player.id) from PlayerExternalReference r where r.provider = :provider")
+  long countEligiblePlayers(@Param("provider") ExternalProvider provider);
 }

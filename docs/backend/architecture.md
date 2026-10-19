@@ -71,3 +71,55 @@ Toda comunicación externa pasa por Integration, que encapsula configuración, c
 Validar respuestas externas y distinguir errores técnicos de integración de errores de dominio. No inventar datos ni alterar silenciosamente el comportamiento ante fallos. Usar timeouts cuando la tecnología lo permita; retries solo con operación segura y límite explícito, nunca por defecto.
 
 Resolver indisponibilidad según requisitos funcionales; no introducir automáticamente cachés, degradaciones o alternativas sin justificación funcional o técnica. Aplican las reglas globales de seguridad de la constitución.
+
+## 3. Estadísticas de rendimiento de jugadores (SPEC-012)
+
+Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vive en
+`docs/backend/technologies.md` y no se repite aquí. El contrato funcional completo está en
+`specs/012-player-statistics-scraping/`.
+
+### 3.1. Capas
+
+- Controller: `PlayerStatisticsController` expone únicamente `POST /api/players/statistics/whoscored/sync/scraping`,
+  `POST /api/players/statistics/whoscored/sync/json` y `GET /api/players/statistics/whoscored/coverage`.
+  La ruta determina el canal; el body de scraping solo admite `extractionDate` y `maxPlayers`, y la
+  entrada JSON rechaza cualquier parámetro o cuerpo.
+- Services: `PlayerStatisticsSynchronizationService` es la fachada que abre y cierra la campaña;
+  `PlayerStatisticsExtractionService` ejecuta un jugador de scraping; `JsonStatisticsUpdateService`
+  ejecuta un jugador por JSON; `PlayerStatisticsCoverageService` responde la cobertura sin acceder
+  al proveedor. Los componentes internos de `services/internal/` resuelven selección, lotes,
+  ritmo, ensamblado y confirmación por jugador.
+- Model: `MetricCatalog` y `MetricDefinition` materializan el catálogo cerrado de 60 métricas con
+  cobertura 45/57/42 por canal; `MetricValueNormalizer` y `MetricDerivationApplier` encapsulan
+  normalización, alias y derivación por partido sin dependencias hacia fuera de Model.
+- Integrations: `WhoScoredStatisticsIntegration` consulta la interfaz JSON pública sobre el
+  `RestClient` seguro ya existente; `WhoScoredStatisticsScrapingIntegration` recorre la ficha
+  headed con Playwright. Ambas reutilizan `WhoScoredRequestPacer`, que no se duplica. El navegador se
+  inicializa de forma perezosa: el arranque de la aplicación no abre Chromium.
+- Persistencia: una fila `player_statistics` por jugador, fecha de campaña y canal, con las 60
+  métricas en columnas `NUMERIC` sin precisión ni escala fijas. `player_statistics_extraction_runs`,
+  `player_statistics_run_items` y `player_statistics_incidents` conservan la auditoría de la
+  campaña. Las entidades de contexto, observación y contraste por canal no forman parte del modelo
+  vigente.
+
+### 3.2. Contrato HTTP
+
+- `POST /sync/scraping` acepta `extractionDate` opcional no futura y `maxPlayers` entero positivo
+  opcional; el límite es global entre workers y el alcance temporal lo acota el ritmo de campaña.
+- `POST /sync/json` no admite query parameters ni body; fija la fecha UTC al iniciar y recorre
+  todos los pendientes de esa campaña sin corte temporal ni límite de cantidad.
+- Ambos devuelven el mismo resumen: identificación del run, estado, contadores de jugadores, de
+  métricas y de llamadas al proveedor, y `coverageComplete`. Las ausencias se informan solo como
+  conteo agregado.
+- `GET /coverage` exige `source` y admite `extractionDate` opcional; devuelve conteos por fecha y
+  canal, `systemicallyAbsentMetrics` y el último run. No accede al proveedor.
+- Errores controlados: `INVALID_STATISTICS_SOURCE`, `INVALID_STATISTICS_EXTRACTION_DATE`,
+  `INVALID_STATISTICS_MAX_PLAYERS`, `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
+  `PLAYER_STATISTICS_SYNC_FAILED` y `HEADED_BROWSER_UNAVAILABLE`, este último solo para scraping.
+
+### 3.3. Cliente operativo
+
+`tools/PlayerStatisticsSyncClient` es un cliente CLI de scraping ejecutado por el desarrollador,
+fuera del contexto Spring, con modos `batch` y `campaign`. No consulta WhoScored ni la
+persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
+por POST autenticado sin entrada.
