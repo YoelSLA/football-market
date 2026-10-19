@@ -303,15 +303,21 @@ public class GlobalExceptionHandler {
     return buildResponse(ex.getMessage(), "INVALID_PLAYER_PAGE", HttpStatus.BAD_REQUEST, request);
   }
 
-  @ExceptionHandler({
-    org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
-    InvalidListingStatusException.class
-  })
+  @ExceptionHandler(InvalidListingStatusException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidListingStatus(HttpServletRequest request) {
+    return this.buildResponse(
+        "El parámetro de consulta no tiene un formato válido",
+        "INVALID_PARAMETER_TYPE",
+        HttpStatus.BAD_REQUEST,
+        request);
+  }
+
+  @ExceptionHandler(
+      org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(
       org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
       HttpServletRequest request) {
-    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")
-        && exception != null) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
       String code =
           "source".equals(exception.getName())
               ? "INVALID_STATISTICS_SOURCE"
