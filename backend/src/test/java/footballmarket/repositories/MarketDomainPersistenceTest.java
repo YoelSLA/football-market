@@ -58,6 +58,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("integration")
 class MarketDomainPersistenceTest {
   private static final int QUANTITY = 10;
   private static final long PRICE = 100L;

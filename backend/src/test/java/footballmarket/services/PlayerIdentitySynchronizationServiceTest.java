@@ -42,6 +42,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerIdentitySynchronizationServiceTest {
   @Autowired private PlayerIdentitySynchronizationService service;
   @Autowired private IdentityCatalogueFixture fixture;

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Carreras reales en PostgreSQL, con liberación dentro de transacciones y sin esperas temporales.
  */
+@org.junit.jupiter.api.Tag("integration")
 class TokenListingConcurrencyTest extends ListingRepositorySupport {
   /** Señales de coordinación acotadas; nunca simulan el paso del tiempo de negocio. */
   private void awaitSignal(CountDownLatch signal) {

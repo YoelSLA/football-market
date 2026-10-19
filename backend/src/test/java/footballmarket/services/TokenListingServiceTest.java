@@ -35,6 +35,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("integration")
 class TokenListingServiceTest {
   @Nested
   @DisplayName("Cancelación por la API pública")

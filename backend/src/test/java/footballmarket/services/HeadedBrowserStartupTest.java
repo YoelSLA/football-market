@@ -16,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
+@org.junit.jupiter.api.Tag("integration")
 class HeadedBrowserStartupTest {
   @Autowired private PlayerStatisticsExtractionService extraction;
   @Autowired private PlayerCatalogService catalog;

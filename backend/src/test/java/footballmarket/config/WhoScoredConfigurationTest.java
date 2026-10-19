@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.web.client.RestClient;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class WhoScoredConfigurationTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()

@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /** Regresión de la comparación estricta de nombres usada por el dominio de equipos. */
+@org.junit.jupiter.api.Tag("unit")
 class TeamNameNormalizerTest {
   @Nested
   @DisplayName("Normalización estricta de nombres")

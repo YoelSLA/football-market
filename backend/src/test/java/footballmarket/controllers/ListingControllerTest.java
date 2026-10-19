@@ -46,6 +46,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest({OrderController.class, ListingController.class})
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class ListingControllerTest {
   @Nested
   @DisplayName("Cancelación HTTP")

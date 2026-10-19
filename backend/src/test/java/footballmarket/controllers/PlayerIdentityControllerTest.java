@@ -42,6 +42,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest(PlayerIdentityController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class PlayerIdentityControllerTest {
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;

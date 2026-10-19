@@ -35,6 +35,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerImageAuditServiceTest {
   @Autowired private PlayerCatalogService catalog;
   @Autowired private PlayerImageSynchronizationService synchronization;

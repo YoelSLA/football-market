@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class FootballDataPropertiesTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()

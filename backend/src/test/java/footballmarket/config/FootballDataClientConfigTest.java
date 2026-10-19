@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@org.junit.jupiter.api.Tag("unit")
 class FootballDataClientConfigTest {
 
   @Nested

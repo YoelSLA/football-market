@@ -52,6 +52,7 @@ import org.springframework.web.client.RestClient;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("e2e")
 class PlayerStatisticsCampaignClientE2ETest {
   private static final IdentityControlledProvider PROVIDER = startProvider();
   private static final String BASE_URL = "http://localhost";

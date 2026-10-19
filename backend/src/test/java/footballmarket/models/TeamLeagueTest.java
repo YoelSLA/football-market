@@ -11,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@org.junit.jupiter.api.Tag("unit")
 class TeamLeagueTest {
   @Nested
   @DisplayName("Identidad y cambios actuales de equipos y ligas")

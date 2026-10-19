@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+@org.junit.jupiter.api.Tag("unit")
 class PlayerIdentityAuditModelTest {
   private static final Instant START = Instant.parse("2026-10-14T12:00:00Z");
 

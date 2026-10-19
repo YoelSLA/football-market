@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /** La pérdida de visibilidad no borra ni cierra publicaciones ni las revela a terceros. */
+@org.junit.jupiter.api.Tag("integration")
 class TokenListingVisibilityPersistenceTest extends ListingRepositorySupport {
   @Nested
   @DisplayName("Pérdida de visibilidad posterior a publicar")

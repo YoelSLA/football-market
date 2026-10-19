@@ -24,6 +24,7 @@ import org.springframework.web.client.RestClient;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
+@org.junit.jupiter.api.Tag("e2e")
 class AuthenticationJourneyE2ETest {
 
   @LocalServerPort private int port;

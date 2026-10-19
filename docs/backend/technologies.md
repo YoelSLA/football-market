@@ -10,7 +10,7 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | ---------- | ------- | ------------------ |
 | Java | 21 | Lenguaje y toolchain del backend; la CI configura JDK 21 con distribución Zulu. |
 | Microsoft Playwright para Java | 1.63.0 | Scraping de estadísticas WhoScored con Chromium visible (SPEC-012), contextos independientes por sección e inicialización bajo demanda, nunca durante el arranque de Spring. El lote cierra navegador y driver; la ejecución real y los tests permanecen sujetos a validación humana. |
-| Gradle y Kotlin DSL | 9.6.0 (Wrapper) | Construcción, gestión de plugins y dependencias, ejecución de controles y empaquetado del backend mediante scripts Kotlin. |
+| Gradle y Kotlin DSL | 9.6.0 (Wrapper) | Construcción, dependencias y empaquetado; suites por tags, validación estática de clasificación y `fastTest` sin cobertura. Daemon, configuration cache y build cache locales; con `CI=true` los tests se ejecutan frescos sin deshabilitar la caché de compilación. |
 | Spring Dependency Management Plugin | 1.1.7 | Aplica la gestión de versiones de dependencias provista por Spring Boot. |
 | Spring Boot | 4.1.1 | Arranque, configuración y plataforma de versiones de la aplicación backend. |
 | Spring Web MVC y `RestClient` | Gestionada por Spring Boot 4.1.1 | Endpoints HTTP, serialización web y clientes HTTP para Football-Data.org, TheSportsDB, identidad WhoScored y pruebas E2E. WhoScored usa cliente JDK dedicado sin redirecciones, timeouts y parsing JSON explícito independiente del MIME. |
@@ -26,11 +26,12 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Spring Boot Actuator | Gestionada por Spring Boot 4.1.1 | Monitoreo del backend. La exposición por HTTP es restrictiva y explícita, nunca el comodín `*`. Ver §Monitoreo con Actuator. |
 | Lombok | Gestionada por Spring Boot 4.1.1 | Generación en compilación de constructores, getters y constructores sin argumentos usados por componentes y Models. |
 | springboot4-dotenv | 5.1.0 | Carga de variables desde archivos `.env` exclusivamente durante desarrollo. |
-| Spring Boot Test, JUnit Jupiter, Mockito, AssertJ y MockMvc | Gestionadas por Spring Boot 4.1.1 | Pruebas unitarias, de Controller, seguridad, integración y recorridos E2E; mocks, assertions y ejercicio del contrato MVC. |
+| Spring Boot Test, JUnit Jupiter, Mockito, AssertJ y MockMvc | Gestionadas por Spring Boot 4.1.1 | Pruebas de dominio, Controller, seguridad, integración y E2E; tags `unit`, `lightweight`, `integration` y `e2e` según dependencias reales, sin filtrar la tarea completa `test`. |
+| JaCoCo | Plugin incluido con Gradle; versión efectiva predeterminada del plugin | Instrumentación de la suite completa `test` y reportes XML/HTML para Sonar y consulta humana. Instrumentación deshabilitada en suites parciales y pre-push. |
 | Testcontainers | Gestionada por Spring Boot 4.1.1 | Provisionamiento de PostgreSQL 18 aislado para las pruebas que requieren persistencia real. |
 | Spotless | 7.2.1 | Formato y controles de estilo de Java y archivos auxiliares, con Google Java Format y orden de imports. |
 | SonarQube Gradle Plugin | 7.3.1.8318 | Análisis estático del backend ejecutado por el workflow dedicado. |
-| GitHub Actions | Servicio sin versión fijada; acciones referenciadas por commit | CI del backend con JDK 21, build y tests, y ejecución separada del análisis de SonarQube. |
+| GitHub Actions | Servicio sin versión fijada; acciones referenciadas por commit | CI con JDK 21, clasificación y suite completa; análisis Sonar separado con cobertura completa. Caché Gradle y publicación de reportes de tests/cobertura con `actions/upload-artifact`. |
 
 El catálogo contiene una entrada `springDotenv = "4.0.0"` asociada a `me.paulschwarz:spring-dotenv`, pero esa alias no es consumida por el build. La dependencia efectiva declarada es `me.paulschwarz:springboot4-dotenv:5.1.0`.
 

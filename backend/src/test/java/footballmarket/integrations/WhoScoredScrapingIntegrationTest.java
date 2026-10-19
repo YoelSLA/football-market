@@ -27,6 +27,7 @@ import org.mockito.MockedStatic;
  * seleccionada: un recorrido que leyera siempre la misma tabla no probaría que el desplegable se
  * usa como lo usa una persona.
  */
+@org.junit.jupiter.api.Tag("lightweight")
 class WhoScoredScrapingIntegrationTest {
   private static final String HTML =
       """

@@ -36,6 +36,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest(PlayerStatisticsContractFoundationTest.ContractFixture.class)
 @Import({SecurityConfig.class, PlayerStatisticsContractFoundationTest.ContractFixture.class})
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class PlayerStatisticsContractFoundationTest {
   private static final String BASE = "/api/players/statistics/whoscored";
   @Autowired private WebApplicationContext context;

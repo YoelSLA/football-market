@@ -47,6 +47,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerImagePersistenceTest {
   @Autowired private PlayerRepository players;
   @Autowired private LeagueRepository leagues;

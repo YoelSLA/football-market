@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class WhoScoredIntegrationTest {
   private HttpServer server;
   private WhoScoredIntegration integration;

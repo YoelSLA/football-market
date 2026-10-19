@@ -65,6 +65,7 @@ import org.springframework.web.client.RestClient;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("e2e")
 class PlayerStatisticsCrossChannelJourneyE2ETest {
   private static final IdentityControlledProvider PROVIDER = startProvider();
   private static final CampaignClock CLOCK =

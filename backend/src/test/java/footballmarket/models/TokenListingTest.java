@@ -14,6 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /** Invariantes puras de publicación, sin Spring ni persistencia. */
+@org.junit.jupiter.api.Tag("unit")
 class TokenListingTest {
   private static final OffsetDateTime NOW = OffsetDateTime.parse("2026-10-17T12:00:00Z");
 

@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
  * Reglas de dominio de la tenencia de tokens: no negatividad, mismo jugador y conservación del
  * total.
  */
+@org.junit.jupiter.api.Tag("unit")
 class PlayerTokenTest {
 
   private static final long PLAYER_ID = 7821L;

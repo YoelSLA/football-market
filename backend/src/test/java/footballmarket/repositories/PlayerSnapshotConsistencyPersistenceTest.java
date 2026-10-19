@@ -40,6 +40,7 @@ import org.springframework.test.context.TestExecutionListeners;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerSnapshotConsistencyPersistenceTest {
   @Autowired private PlayerCatalogService catalog;
   @Autowired private JdbcTemplate jdbc;

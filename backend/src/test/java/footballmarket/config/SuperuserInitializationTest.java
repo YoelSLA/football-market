@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource;
  * la validez de la configuración. El aprovisionamiento en sí, incluida la persistencia y el hasheo,
  * corresponde a la categoría Service.
  */
+@org.junit.jupiter.api.Tag("unit")
 class SuperuserInitializationTest {
 
   private static final String USERNAME = "market.owner";

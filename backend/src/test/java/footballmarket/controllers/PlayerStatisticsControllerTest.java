@@ -50,6 +50,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest(PlayerStatisticsController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class PlayerStatisticsControllerTest {
   private static final String BASE = "/api/players/statistics/whoscored";
   @Autowired private WebApplicationContext context;

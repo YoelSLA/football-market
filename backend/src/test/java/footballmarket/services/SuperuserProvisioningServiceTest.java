@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @Transactional
+@org.junit.jupiter.api.Tag("integration")
 class SuperuserProvisioningServiceTest {
 
   private static final String CONFIGURED_EMAIL = "owner@test.com";

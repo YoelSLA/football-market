@@ -36,6 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("integration")
 class TokenListingAuthorizationTest {
   private static final AtomicLong SEQUENCE = new AtomicLong();
   @Autowired private AuthenticationService authentication;

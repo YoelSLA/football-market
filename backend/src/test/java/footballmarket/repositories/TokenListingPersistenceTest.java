@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.dao.DataAccessException;
 
 /** Restricciones PostgreSQL y reservas observables desde la categoría Repository. */
+@org.junit.jupiter.api.Tag("integration")
 class TokenListingPersistenceTest extends ListingRepositorySupport {
   @Nested
   @DisplayName("Cancelación y liberación de reservas")

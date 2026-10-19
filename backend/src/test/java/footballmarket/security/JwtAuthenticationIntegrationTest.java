@@ -42,6 +42,7 @@ import tools.jackson.databind.ObjectMapper;
   TestcontainersConfiguration.class
 })
 @Transactional
+@org.junit.jupiter.api.Tag("integration")
 class JwtAuthenticationIntegrationTest {
 
   @Autowired private WebApplicationContext context;

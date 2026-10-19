@@ -57,6 +57,7 @@ import tools.jackson.databind.ObjectMapper;
 @WebMvcTest(AuthenticationController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class AuthenticationControllerTest {
 
   @Autowired private WebApplicationContext context;

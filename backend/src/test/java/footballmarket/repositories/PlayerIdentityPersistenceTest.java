@@ -41,6 +41,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
 @Transactional
+@org.junit.jupiter.api.Tag("integration")
 class PlayerIdentityPersistenceTest {
   @Autowired private LeagueRepository leagues;
   @Autowired private TeamRepository teams;

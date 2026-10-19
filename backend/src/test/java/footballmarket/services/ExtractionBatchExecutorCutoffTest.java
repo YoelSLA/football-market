@@ -53,6 +53,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class ExtractionBatchExecutorCutoffTest {
   @Autowired private PlayerStatisticsSynchronizationService service;
   @Autowired private ExtractionBatchExecutor executor;

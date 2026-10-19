@@ -50,6 +50,7 @@ import org.springframework.web.client.RestClient;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("e2e")
 class PlayerStatisticsSyncJourneyE2ETest {
   private static final IdentityControlledProvider PROVIDER = startProvider();
   @LocalServerPort private int port;

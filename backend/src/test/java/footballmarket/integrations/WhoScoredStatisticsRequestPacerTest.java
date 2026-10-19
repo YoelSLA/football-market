@@ -25,6 +25,7 @@ import org.springframework.web.client.RestClient;
  * <p>Usa el proveedor controlado de loopback y esperas sustituibles: nunca accede a Internet ni
  * depende de tiempos reales.
  */
+@org.junit.jupiter.api.Tag("unit")
 class WhoScoredStatisticsRequestPacerTest {
   private WhoScoredStatisticsProviderStub provider;
   private List<Long> waits;

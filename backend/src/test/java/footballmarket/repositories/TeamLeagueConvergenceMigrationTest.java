@@ -25,6 +25,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * migrada y comprueba que V8 la lleva al mismo estado final, preservando los jugadores existentes.
  */
 @Testcontainers
+@org.junit.jupiter.api.Tag("integration")
 class TeamLeagueConvergenceMigrationTest {
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 

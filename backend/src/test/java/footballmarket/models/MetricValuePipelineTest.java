@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
+@org.junit.jupiter.api.Tag("unit")
 class MetricValuePipelineTest {
   @Nested
   @DisplayName("Normalización decimal y ausencias")

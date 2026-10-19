@@ -35,6 +35,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerStatisticsCoverageTest {
   private static final LocalDate DATE = LocalDate.of(2026, 10, 15);
   private static final Instant NOW = Instant.parse("2026-10-15T12:00:00Z");

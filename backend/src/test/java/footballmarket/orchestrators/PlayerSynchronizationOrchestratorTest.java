@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
+@org.junit.jupiter.api.Tag("unit")
 class PlayerSynchronizationOrchestratorTest {
   private final FootballDataPlayerService source = mock(FootballDataPlayerService.class);
   private final PlayerCatalogService catalog = mock(PlayerCatalogService.class);

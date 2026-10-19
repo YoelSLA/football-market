@@ -7,6 +7,7 @@ import footballmarket.models.exceptions.InvalidPlayerException;
 import java.util.List;
 import org.junit.jupiter.api.*;
 
+@org.junit.jupiter.api.Tag("unit")
 class MetricCatalogTest {
   @Nested
   @DisplayName("Catálogo cerrado y cobertura")

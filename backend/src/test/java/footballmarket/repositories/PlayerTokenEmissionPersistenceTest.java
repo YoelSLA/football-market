@@ -50,6 +50,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerTokenEmissionPersistenceTest {
   private static final String EXTERNAL_ID = "h05-player";
   private static final long PRICE = 100L;

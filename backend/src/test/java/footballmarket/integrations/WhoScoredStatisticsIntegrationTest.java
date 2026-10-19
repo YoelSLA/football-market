@@ -33,6 +33,7 @@ import tools.jackson.databind.json.JsonMapper;
  * <p>Comprueba las quince combinaciones conocidas, la aceptación de JSON con MIME HTML y el rechazo
  * de cualquier forma o combinación especulativa. Nunca accede a WhoScored real.
  */
+@org.junit.jupiter.api.Tag("lightweight")
 class WhoScoredStatisticsIntegrationTest {
   private static final String PLAYER_ID = "1001";
 

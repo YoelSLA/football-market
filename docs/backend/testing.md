@@ -216,6 +216,82 @@ void creaJugadorNuevo() {
 
 Helpers privados o compartidos no contienen assertions funcionales ni ocultan comportamiento o flujos de negocio. Respetan la frontera de su categoría, incluida §6 para persistencia de Service y la excepción de Arrange de §5. Un helper que prepara por repositorio puede afirmar lo que necesita para completar su propia precondición —por ejemplo, localizar la fila que acaba de insertar—, y esa comprobación es preparación, no una assertion funcional.
 
+### Suites de ejecución y clasificación
+
+Las suites son perfiles de **ejecución Gradle**, no perfiles Spring nuevos ni categorías
+arquitectónicas. La categoría de §2 y sus dependencias obligatorias no cambian. Por ejemplo,
+un Service sigue probándose con Spring y PostgreSQL reales, y `integrations/` no implica
+automáticamente una prueba pesada.
+
+Cada clase contenedora concreta declara exactamente una `@Tag` JUnit literal: `unit`,
+`lightweight`, `integration` o `e2e`. El tag se aplica a todos sus grupos `@Nested`.
+No declarar tags en métodos, grupos anidados, helpers o clases base; no usar `@Tags`, constantes
+ni anotaciones compuestas para clasificar. Mantener una clase contenedora por archivo; usar
+el sufijo `Test` o `Tests`, también para tests que hereden métodos de prueba.
+
+| Tag | Dependencias reales | Ejemplos |
+| --- | --- | --- |
+| `unit` | Sin contexto Spring, DB ni servidor | Model, Orchestrator, pacers, parsing y componentes instanciados directamente. |
+| `lightweight` | Contexto reducido, slice MVC o proveedor controlado; sin PostgreSQL, Docker ni navegador real | Controller, `ApplicationContextRunner`, clientes con `MockRestServiceServer` o HTTP local y Playwright sustituido. |
+| `integration` | Contexto completo o PostgreSQL/Testcontainers | Service, persistencia, migraciones, seguridad completa y startup con DB. |
+| `e2e` | Journey desde HTTP con servidor completo | Tests de `e2e/`, conservando las reglas de §13. |
+
+`validateTestClassification` inspecciona fuentes Java sin cargar ni ejecutar clases. Detecta
+tests por el sufijo del archivo o por anotaciones estándar de JUnit, exige un tag explícito en
+la clase contenedora y rechaza tags múltiples, anidados o no literales. También rechaza
+referencias directas a infraestructura Spring completa/Testcontainers en las suites rápidas.
+No es un analizador transitivo de dependencias: revisar también helpers y herencia cuando se
+agreguen pruebas rápidas. La convención de nombres permite detectar pruebas heredadas sin tags.
+
+La validación es requisito de las suites parciales, `check` y Sonar. La tarea completa `test`
+**no filtra tags ni depende de esa validación**: los tests sin clasificar siguen incluidos.
+Un fallo de clasificación bloquea la validación rápida y el build de CI, no elimina tests.
+
+Comandos desde `backend/`, para ejecución humana:
+
+| Comando | Resultado |
+| --- | --- |
+| `./gradlew validateTestClassification` | Solo validación estática de clasificación. |
+| `./gradlew unitTest` | Solo unitarios, sin cobertura. |
+| `./gradlew lightweightTest` | Solo pruebas ligeras, sin cobertura. |
+| `./gradlew fastTest` | Agrega `unitTest` y `lightweightTest`, sin ejecutar `test`. |
+| `./gradlew integrationTest` | Solo integración, sin cobertura. |
+| `./gradlew e2eTest` | Solo E2E, sin cobertura. |
+| `./gradlew test` | Todos los tests y reporte JaCoCo completo. |
+| `./gradlew build` | Build, formato, clasificación y suite completa. |
+| `./gradlew sonar` | Clasificación, suite completa, cobertura y análisis Sonar. |
+
+Las suites parciales son disjuntas, tienen salidas propias y excluyen los otros tags de suite.
+La validación impide clasificaciones contradictorias. `fastTest` no es otra tarea `Test`:
+Gradle ejecuta cada dependencia una sola vez, incluso si se solicita también por nombre.
+No combinar `test` con suites parciales si se quiere evitar repetir pruebas deliberadamente.
+Todas las JVM de testing usan UTC.
+
+El pre-push delega la detección a `.githooks/backend-changes.sh`. Solo omite backend cuando
+todos los registros recibidos permiten demostrar que no hay cambios relevantes: frontend o
+documentación. Revisa los paths de cada commit del rango fast-forward, incluidos merges,
+renombres, eliminaciones y cambios luego revertidos. Referencias eliminadas no requieren
+pruebas. Ante referencias nuevas, force-push, objetos ausentes, nombres especiales, entrada
+inválida o errores, ejecuta `fastTest`. No hace fetch ni modifica el árbol local.
+
+El hook ejecuta Gradle una sola vez, desde `backend/`, con daemon y cachés existentes y sin
+JaCoCo. Valida el árbol local, que puede diferir de los commits enviados; CI es la validación
+del estado remoto. No acredita una suite completa ni reemplaza la aprobación humana.
+
+CI ejecuta `build` completo en PR hacia `dev` o `main` y pushes a `dev`; Sonar ejecuta la
+suite completa y su cobertura en pushes a `main`. Con `CI=true`, las tareas `Test` no usan
+resultados de build cache ni se omiten por `UP-TO-DATE`; compilación, dependencias y
+configuration cache mantienen sus optimizaciones. Ambos workflows publican reportes como
+artefactos incluso ante fallos. Exigir el check de CI antes de merge requiere configurar las
+protecciones de ramas en GitHub; los workflows por sí solos no las habilitan.
+
+Verificación humana pendiente tras cambios de infraestructura: ejecutar `fastTest` con Docker
+detenido y luego `test` con Docker disponible; comprobar suites disjuntas, ausencia de ejecución
+de integración/E2E y de JaCoCo en la rápida, y cobertura completa en CI/Sonar. Comprobar también
+el hook con cambios backend, solo documentación/frontend, múltiples commits/referencias,
+renombres, eliminaciones, ramas nuevas y force-push. La existencia de esta configuración no
+acredita esos resultados ni la aceptación académica del requisito de perfiles de testing.
+
 ## 17. Cambios y cobertura
 
 Todo comportamiento backend nuevo o modificado requiere tests automatizados suficientes; agregar regresión para defectos cuando sea razonable. Incluir pruebas para cambios de seguridad y contratos relevantes, capaces de detectar incompatibilidades.
@@ -226,4 +302,4 @@ Elegir el nivel más específico capaz de demostrar la responsabilidad (§2), si
 
 Aplicar la constitución §6 (Verificación): el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
 
-**Versión**: 2.0.0 | **Última enmienda**: 2026-10-17 (excepción de Arrange para tests de categoría Service; ver el Sync Impact Report al inicio)
+**Versión**: 2.1.0 | **Última enmienda**: 2026-10-19 (suites de ejecución y clasificación explícita autorizadas por el usuario; sin cambios en las fronteras funcionales de los tests)

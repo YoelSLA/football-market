@@ -48,6 +48,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerStatisticsSynchronizationServiceTest {
   @Autowired private PlayerStatisticsSynchronizationService service;
   @Autowired private PlayerStatisticsCoverageService coverage;

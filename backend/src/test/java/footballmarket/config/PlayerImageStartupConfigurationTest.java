@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class PlayerImageStartupConfigurationTest {
   @Nested
   @DisplayName("Disparador de recuperación al iniciar el contexto")

@@ -27,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class TheSportsDbIntegrationTest {
   private static final String BASE =
       "https://provider.example/api/v1/json/test-only-not-a-credential";

@@ -50,6 +50,7 @@ import org.springframework.util.PropertyPlaceholderHelper;
  * decide si un entorno de ejecución dispone o no de una fuente y, por tanto, si la aplicación
  * arranca.
  */
+@org.junit.jupiter.api.Tag("lightweight")
 class QuoteSimulationConfigurationTest {
 
   /**

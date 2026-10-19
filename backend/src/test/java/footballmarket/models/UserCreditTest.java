@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /** Reglas de dominio del saldo de créditos: centésimas, no negatividad y transferencias. */
+@org.junit.jupiter.api.Tag("unit")
 class UserCreditTest {
 
   private static final long BUYER_ID = 42L;

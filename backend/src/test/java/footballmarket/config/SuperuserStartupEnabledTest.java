@@ -32,6 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
     })
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("integration")
 class SuperuserStartupEnabledTest {
 
   private static final String CONFIGURED_EMAIL = "owner@test.com";

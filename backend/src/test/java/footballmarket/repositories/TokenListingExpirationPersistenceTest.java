@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /** Vencimiento determinista al validar la publicación bloqueada; no espera al reloj real. */
+@org.junit.jupiter.api.Tag("integration")
 class TokenListingExpirationPersistenceTest extends ListingRepositorySupport {
   @Nested
   @DisplayName("Instante decisivo bajo bloqueo")

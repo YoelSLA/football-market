@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /** Verifica equivalencia y selección de textos originales sin persistencia ni normalizar salida. */
+@org.junit.jupiter.api.Tag("unit")
 class PlayerPresentationTest {
   @Nested
   @DisplayName("Selección canónica de representaciones equivalentes")

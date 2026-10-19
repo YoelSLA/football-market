@@ -31,6 +31,7 @@ import org.springframework.test.context.TestExecutionListeners;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class TeamResolutionAttemptPersistenceTest {
   @Autowired private TeamRepository teams;
   @Autowired private LeagueRepository leagues;

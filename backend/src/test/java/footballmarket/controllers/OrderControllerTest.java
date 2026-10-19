@@ -71,6 +71,7 @@ import tools.jackson.databind.ObjectMapper;
 @WebMvcTest(OrderController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class OrderControllerTest {
   private static final String BUYER_EMAIL = "buyer@example.com";
   private static final Long PLAYER_ID = 7821L;

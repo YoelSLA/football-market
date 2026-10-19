@@ -51,6 +51,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class JsonStatisticsUpdateServiceTest {
   private static final Instant NOW = Instant.parse("2026-10-15T12:00:00Z");
 

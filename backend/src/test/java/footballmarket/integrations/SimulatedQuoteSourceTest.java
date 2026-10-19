@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
  * <p>Prueba pura de una Integration autocontenida: no usa Spring, ni base de datos, ni el perfil
  * {@code test}, conforme a {@code docs/backend/testing.md} §2 y §12.
  */
+@org.junit.jupiter.api.Tag("unit")
 class SimulatedQuoteSourceTest {
 
   private static final Long PLAYER_ID = 7821L;

@@ -49,6 +49,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerStatisticsExtractionServiceTest {
   private static final LocalDate DATE = LocalDate.of(2026, 10, 15);
   @Autowired private PlayerStatisticsExtractionService extraction;

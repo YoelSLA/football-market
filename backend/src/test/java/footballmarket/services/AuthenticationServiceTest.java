@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @Transactional
+@org.junit.jupiter.api.Tag("integration")
 class AuthenticationServiceTest {
 
   @Autowired private AuthenticationService authenticationService;
