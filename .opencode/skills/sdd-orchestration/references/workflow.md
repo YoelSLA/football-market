@@ -70,7 +70,7 @@ Para materializar o retomar una SPEC se usa el mecanismo real del repositorio:
 - Antes de toda creación, verificar colisiones con specs locales, remotas accesibles y asignaciones conocidas del equipo; registrar fuentes y resultado. Si no pueden descartarse, detenerse y solicitar confirmación. No reutilizar identificadores asignados a otras funcionalidades. Si el script ajusta el número explícito, reportarlo antes de continuar la redacción: no acredita la asignación acordada.
 - Una asignación explícita no acredita existencia, fases, autorizaciones, implementación o integración. Una carpeta provisional o `spec.md` vacío no acredita una SPEC validada ni es requisito para asignar otra identidad. La excepción no permite sobrescribir specs, renumerarlas unilateralmente, omitir autorizaciones ni afectar cambios locales preexistentes.
 
-Al materializarse la SPEC, se crea o reutiliza su registro de seguimiento con el título `[SPEC-0XX] <nombre>`, referenciando el requisito `REQ-` correspondiente y preservando el antecedente cuando la correspondencia esté confirmada. Ese registro **no** contiene tareas, criterios ni detalle técnico.
+Al materializarse la SPEC, se crea o reutiliza su registro de seguimiento con el título `SPEC-0XX | Nombre de la funcionalidad`, referenciando el requisito `REQ-` correspondiente y preservando el antecedente cuando la correspondencia esté confirmada. Ese registro **no** contiene tareas, criterios ni detalle técnico.
 
 ## Preparación completa
 
