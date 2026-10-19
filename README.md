@@ -55,6 +55,7 @@ Después de registrarse e iniciar sesión, se puede consultar el catálogo. Para
 - [`backend/`](backend/): API REST con Spring Boot, PostgreSQL y Flyway.
 - [`frontend/`](frontend/): aplicación React, TypeScript y Vite.
 - [`docs/`](docs/): arquitectura, tecnologías y convenciones del proyecto.
+- [`docs/development/opencode-guide.md`](docs/development/opencode-guide.md): guía de uso de OpenCode, sus comandos y el flujo de trabajo SDD.
 - [`docs/TECHNICAL_DEBT.md`](docs/TECHNICAL_DEBT.md): registro centralizado de deuda técnica.
 
 Las versiones y dependencias efectivas se consultan en [`backend/build.gradle.kts`](backend/build.gradle.kts), [`frontend/package.json`](frontend/package.json) y los respectivos archivos de configuración.

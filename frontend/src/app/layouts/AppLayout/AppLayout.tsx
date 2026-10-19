@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 
+import { NAV_SECTIONS, resolveActiveNavigation } from "@/app/navigation";
 import { useCurrentUserQuery, useLogout } from "@/features/auth";
 import { useAuthStore } from "@/infrastructure/storage";
 import { Navbar } from "@/shared/components";
@@ -16,7 +17,13 @@ export default function AppLayout() {
 
 	return (
 		<div className={styles.appLayout}>
-			<Navbar userName={currentUser.data?.username ?? null} onLogout={logout} />
+			<Navbar
+				sections={NAV_SECTIONS}
+				location={location}
+				resolveActiveNavigation={resolveActiveNavigation}
+				userName={currentUser.data?.username ?? null}
+				onLogout={logout}
+			/>
 
 			<div className={styles.appLayout__content}>
 				<Outlet />

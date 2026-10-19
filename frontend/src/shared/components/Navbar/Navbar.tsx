@@ -1,87 +1,101 @@
-import { useId, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, type Location, NavLink } from "react-router-dom";
 import { Button } from "../Button";
 import styles from "./Navbar.module.scss";
-import { NAV_ITEMS } from "./navItems";
+import { NavIcon } from "./NavIcon";
+import { SoonBadge } from "./SoonBadge";
+import { TabLink } from "./TabLink";
+import type { NavigationResolver, NavSection } from "./types";
+import { disabledSectionClasses, sectionClasses } from "./utils";
 
 interface Props {
+	sections: NavSection[];
+	location: Pick<Location, "pathname">;
+	resolveActiveNavigation: NavigationResolver;
 	userName: string | null;
 	onLogout: () => void;
 }
 
-export default function Navbar({ userName, onLogout }: Props) {
-	const [menuOpen, setMenuOpen] = useState(false);
-	const menuId = useId();
-
+/** Compone la navegación y deriva su estado mediante el resolver de app. */
+export default function Navbar({
+	sections,
+	location,
+	resolveActiveNavigation,
+	userName,
+	onLogout,
+}: Props) {
+	const active = resolveActiveNavigation(sections, location.pathname);
+	const activeSection = sections.find(
+		(section) => section.key === active.sectionKey,
+	);
 	const userInitial = userName?.trim().charAt(0).toUpperCase() || "U";
 
 	return (
-		<header className={styles.appHeader}>
-			{/* LEFT: Logo */}
-			<div className={styles.appHeader__left}>
-				<Link to="/home" className={styles.appHeader__logo}>
-					Football Market
+		<header className={styles.navbar}>
+			<div className={styles.navbar__top}>
+				<Link to="/home" className={styles.navbar__brand}>
+					<NavIcon name="brand" />
+					<span>Football Market</span>
 				</Link>
-			</div>
-
-			{/* CENTER: Navegación */}
-			<nav
-				id={menuId}
-				className={[
-					styles.appHeader__nav,
-					menuOpen && styles.appHeader__navOpen,
-				]
-					.filter(Boolean)
-					.join(" ")}
-				aria-label="Navegación principal"
-			>
-				{NAV_ITEMS.map(({ key, to, label }) => (
-					<NavLink
-						key={key}
-						to={to}
-						end={key === "home"}
-						className={({ isActive }) =>
-							[styles.appHeader__link, isActive && styles.appHeader__linkActive]
-								.filter(Boolean)
-								.join(" ")
-						}
-						onClick={() => setMenuOpen(false)}
-					>
-						{label}
-					</NavLink>
-				))}
-
-				<Button className={styles.appHeader__mobileLogout} onClick={onLogout}>
-					Cerrar sesión
-				</Button>
-			</nav>
-
-			{/* RIGHT: Usuario y acciones */}
-			<div className={styles.appHeader__right}>
-				<div className={styles.appHeader__user}>
-					<div className={styles.appHeader__avatar} aria-hidden="true">
+				<nav className={styles.navbar__sections} aria-label="Secciones">
+					<ul className={styles["navbar__section-list"]}>
+						{sections.map((section) => (
+							<li key={section.key} className={styles["navbar__section-item"]}>
+								{section.path ? (
+									<NavLink
+										to={section.path}
+										className={sectionClasses(
+											section.key === active.sectionKey,
+										)}
+										aria-current={
+											section.key === active.sectionKey ? "page" : undefined
+										}
+									>
+										<NavIcon name={section.icon} />
+										<span>{section.label}</span>
+									</NavLink>
+								) : (
+									<span
+										className={disabledSectionClasses()}
+										aria-disabled="true"
+									>
+										<NavIcon name={section.icon} />
+										<span>{section.label}</span>
+										<SoonBadge />
+									</span>
+								)}
+							</li>
+						))}
+					</ul>
+				</nav>
+				<div className={styles.navbar__account}>
+					<span className={styles.navbar__avatar} aria-hidden="true">
 						{userInitial}
-					</div>
-
-					<span className={styles.appHeader__userName}>
-						{userName || "Usuario"}
 					</span>
+					<span
+						className={styles["navbar__user-name"]}
+						title={userName ?? undefined}
+					>
+						{userName}
+					</span>
+					<Button className={styles.navbar__logout} onClick={onLogout}>
+						Cerrar sesión
+					</Button>
 				</div>
-
-				<Button className={styles.appHeader__logout} onClick={onLogout}>
-					Cerrar sesión
-				</Button>
-
-				<Button
-					className={styles.appHeader__toggle}
-					aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
-					aria-expanded={menuOpen}
-					aria-controls={menuId}
-					onClick={() => setMenuOpen((value) => !value)}
-				>
-					{menuOpen ? "✕" : "☰"}
-				</Button>
 			</div>
+			{activeSection && activeSection.tabs.length > 0 && (
+				<nav
+					className={styles.navbar__tabs}
+					aria-label={`Opciones de ${activeSection.label}`}
+				>
+					<ul className={styles["navbar__tab-list"]}>
+						{activeSection.tabs.map((tab) => (
+							<li key={tab.key} className={styles["navbar__tab-item"]}>
+								<TabLink tab={tab} active={tab.key === active.tabKey} />
+							</li>
+						))}
+					</ul>
+				</nav>
+			)}
 		</header>
 	);
 }

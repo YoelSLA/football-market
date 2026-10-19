@@ -12,6 +12,7 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 | npm | No fijada; lockfile v3 | Gestión de dependencias y scripts del frontend mediante `package.json` y `package-lock.json`. |
 | TypeScript | 7.0.2 | Tipado estricto del código React; comprueba el proyecto sin emitir JavaScript antes del build de Vite. |
 | React y React DOM | 19.3.0 | Renderizado de la aplicación y composición de la UI en el navegador. |
+| Lucide React | 1.59.0 | Iconos de navegación mediante imports nominales. `NavIcon` centraliza el mapeo de secciones, el tamaño y la semántica decorativa; los iconos heredan `currentColor`. Sustituye los SVG manuales del Navbar. |
 | Vite y plugin React | Vite 8.3.0; plugin React 6.1.1 | Servidor de desarrollo, preview y generación del build, con procesamiento de JSX/TSX y transformaciones de React mediante su plugin. |
 | TanStack Query | 5.103.1 | Configuración global del estado remoto, caché y políticas de queries; base para queries, mutations e invalidaciones de features. |
 | React Router DOM | 7.18.4 | Router del navegador, asociación de rutas globales y redirecciones de la aplicación. |
