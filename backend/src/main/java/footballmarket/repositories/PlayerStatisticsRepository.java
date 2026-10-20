@@ -28,4 +28,17 @@ public interface PlayerStatisticsRepository extends JpaRepository<PlayerStatisti
   /** Solo métricas y contexto: evita cargar el jugador para el cálculo de cobertura. */
   @Query("select s from PlayerStatistics s where s.extractionDate = :date and s.source = :source")
   List<PlayerStatistics> findMetricsByCampaign(LocalDate date, MetricSource source);
+
+  @Query(
+      "select s from PlayerStatistics s join fetch s.player p join fetch p.team t join fetch t.league where s.extractionDate = :date and s.source = :source order by p.id")
+  List<PlayerStatistics> findValuationCampaign(LocalDate date, MetricSource source);
+
+  /** Filas de la fecha cuyos jugadores tienen item COMPLETED en esa campaña. */
+  @Query(
+      "select count(distinct s.player.id) from PlayerStatistics s"
+          + " where s.extractionDate = :date and s.source = :source"
+          + " and exists (select i.id from PlayerStatisticsRunItem i where i.player = s.player"
+          + " and i.extractionDate = :date and i.source = :source"
+          + " and i.result = footballmarket.models.enums.PlayerExtractionResult.COMPLETED)")
+  long countValuationRowsWithCompletedItem(LocalDate date, MetricSource source);
 }

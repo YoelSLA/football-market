@@ -4,6 +4,7 @@ import footballmarket.models.PlayerStatisticsRunItem;
 import footballmarket.models.enums.MetricSource;
 import footballmarket.models.enums.PlayerExtractionResult;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,4 +46,18 @@ public interface PlayerStatisticsRunItemRepository
           + " where i.extractionDate = :date and i.source = :source and i.result <>"
           + " footballmarket.models.enums.PlayerExtractionResult.COMPLETED")
   long countDistinctPlayersWithoutConfirmation(LocalDate date, MetricSource source);
+
+  /** Identificadores de la población elegible del catálogo, en orden estable. */
+  @Query(
+      "select p.id from Player p where exists (select r.id from PlayerExternalReference r"
+          + " where r.player = p and r.provider = footballmarket.models.enums.ExternalProvider.WHOSCORED)"
+          + " order by p.id")
+  List<Long> findEligiblePlayerIds();
+
+  /** Jugadores distintos cuyos items caen en cualquiera de los resultados indicados. */
+  @Query(
+      "select count(distinct i.player.id) from PlayerStatisticsRunItem i"
+          + " where i.extractionDate = :date and i.source = :source and i.result in :results")
+  long countDistinctPlayersByResults(
+      LocalDate date, MetricSource source, Collection<PlayerExtractionResult> results);
 }

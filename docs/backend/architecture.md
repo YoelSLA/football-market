@@ -123,3 +123,29 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 fuera del contexto Spring, con modos `batch` y `campaign`. No consulta WhoScored ni la
 persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
 por POST autenticado sin entrada.
+
+## 4. Valoraciones estadísticas de jugadores (SPEC-013)
+
+- Controller: `ValuationController` expone únicamente `POST /api/valuations/evaluate`, sin body,
+  query ni selección de jugador o estrategia. Conserva la autenticación Bearer y devuelve un
+  resumen agregado.
+- Service: `ValuationEvaluationService` es la fachada del recorrido poblacional. Los componentes
+  internos seleccionan la última campaña JSON confirmada, preparan poblaciones y publican cada par
+  de resultados en una transacción independiente, permitiendo continuar ante fallos individuales.
+- Snapshot: una campaña JSON está confirmada cuando su run está terminado (`COMPLETED` o `PARTIAL`),
+  ningún item quedó en fallo estructural (`INCOMPLETE`, `INTERRUPTED`, `BLOCKED`,
+  `STRUCTURE_CHANGED`) y todo item `COMPLETED` tiene su fila JSON de esa fecha. Los items sin datos
+  del proveedor y los fallos de un jugador concreto no invalidan la campaña: esos jugadores quedan
+  sin snapshot y se excluyen como `MISSING_OR_UNCONFIRMED_SNAPSHOT`.
+- Model: `ValuationMetricAssembler` y `ValuationMetricPipeline` resuelven fallback, derivaciones,
+  imputaciones, percentiles, confianza y precisión. `PositionalValuationCalculator` y
+  `AttributeValuationCalculator` contienen las fórmulas versionadas de las dos estrategias.
+  `GeneralPosition` traduce la posición persistida por el catálogo (`Goalkeeper`, `Defence`,
+  `Midfield`, `Offence` y sus equivalentes en inglés) al conjunto cerrado de cuatro posiciones
+  generales.
+- Persistencia: `player_positional_valuations` y `player_attribute_valuations` mantienen una fila
+  por jugador, fecha, estrategia y versión, con componentes reconstruibles e índices de fecha,
+  resultado y jugador/fecha. Ambas filas se publican o retiran juntas. La republicación materializa
+  el borrado previo antes del insert para respetar la unicidad por jugador, fecha y estrategia.
+- Límites: el caso de uso solo lee estadísticas locales de SPEC-012. No extrae datos, programa
+  ejecuciones, expone lecturas, elige estrategia activa ni convierte scores en cotizaciones.

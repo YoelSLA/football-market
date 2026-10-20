@@ -1,6 +1,14 @@
 server:
   port: 8080
 
+valuation:
+  minimum-minutes:
+    field: ${VALUATION_MINIMUM_MINUTES_FIELD:270}
+    goalkeeper: ${VALUATION_MINIMUM_MINUTES_GOALKEEPER:540}
+  performance-maximum-impact: ${VALUATION_PERFORMANCE_MAXIMUM_IMPACT:0.10}
+  discipline-maximum-impact: ${VALUATION_DISCIPLINE_MAXIMUM_IMPACT:0.05}
+  attribute-penalty-maximum-impact: ${VALUATION_ATTRIBUTE_PENALTY_MAXIMUM_IMPACT:0.10}
+
 spring:
   profiles:
     active: dev
