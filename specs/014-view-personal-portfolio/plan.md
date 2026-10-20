@@ -135,7 +135,7 @@ backend/src/main/java/footballmarket/
 │       └── PortfolioMapper.java                    # NUEVO: vista de dominio -> DTOs
 ├── models/
 │   ├── records/
-│   │   └── PortfolioView.java                      # NUEVO: vista de la consulta
+│   │   └── PortfolioView.java                      # NUEVO: vista de la consulta (con el record de posición anidado)
 │   └── exceptions/
 │       └── PortfolioIntegrityException.java        # NUEVO: divergencia entre tenencia y reconstrucción
 ├── services/
