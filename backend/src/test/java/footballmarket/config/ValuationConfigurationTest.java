@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class ValuationConfigurationTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()

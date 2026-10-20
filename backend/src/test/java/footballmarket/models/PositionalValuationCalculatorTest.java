@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+@org.junit.jupiter.api.Tag("unit")
 class PositionalValuationCalculatorTest {
   @Nested
   @DisplayName("Fórmula posicional de arquero")

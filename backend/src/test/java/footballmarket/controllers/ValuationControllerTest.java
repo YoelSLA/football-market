@@ -39,6 +39,7 @@ import org.springframework.web.context.WebApplicationContext;
 @WebMvcTest(ValuationController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
+@org.junit.jupiter.api.Tag("lightweight")
 class ValuationControllerTest {
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;

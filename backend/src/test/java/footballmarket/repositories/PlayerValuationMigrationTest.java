@@ -13,6 +13,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @Testcontainers
+@org.junit.jupiter.api.Tag("integration")
 class PlayerValuationMigrationTest {
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 
