@@ -94,6 +94,20 @@ spec_name_from_branch() {
     printf '%s' "$branch"
 }
 
+# Extract the numeric spec id from a spec name or spec directory name.
+# Sequential specs are named "<digits>-<scope>" and timestamp-based ones
+# carry a two-part numeric prefix; in both cases the id is the leading
+# numeric group. Prints the id and returns 0, or prints nothing and
+# returns 1 when the name carries no numeric id.
+spec_id_from_spec_name() {
+    local name="$1"
+    if [[ "$name" =~ ^([0-9]+)- ]]; then
+        printf '%s' "${BASH_REMATCH[1]}"
+        return 0
+    fi
+    return 1
+}
+
 # Get current feature name from explicit state only.
 # Returns the feature identifier or empty string if none is set.
 # Feature state is set by SPECIFY_FEATURE (from create-new-feature or
@@ -204,7 +218,8 @@ get_feature_paths() {
     #   2. .specify/feature.json "feature_directory" key (persisted by specify command)
     #   3. SPECIFY_FEATURE holding a bare spec name — resolve under specs/ after
     #      stripping any branch type prefix, since the branch name is not the
-    #      spec directory name.
+    #      spec directory name. When the exact directory does not exist, fall
+    #      back to the numeric spec id and accept it only on a unique match.
     #   4. Error — no feature context available
     local feature_dir
     if [[ -n "${SPECIFY_FEATURE_DIRECTORY:-}" ]]; then
@@ -234,6 +249,33 @@ get_feature_paths() {
         local spec_name
         spec_name=$(spec_name_from_branch "$SPECIFY_FEATURE")
         feature_dir="$repo_root/specs/$spec_name"
+        if [[ ! -d "$feature_dir" ]]; then
+            # The scope of a branch may also differ from the scope of the
+            # spec directory it publishes, for example when the branch name
+            # is already bound to an open pull request and cannot be
+            # renamed. Fall back to the numeric spec id and accept it only
+            # when it identifies exactly one directory.
+            local spec_id
+            spec_id=$(spec_id_from_spec_name "$spec_name") || spec_id=""
+            if [[ -n "$spec_id" ]]; then
+                local -a spec_candidates=()
+                local spec_candidate
+                for spec_candidate in "$repo_root"/specs/"$spec_id"-*/; do
+                    [[ -d "$spec_candidate" ]] && spec_candidates+=("${spec_candidate%/}")
+                done
+                if [[ ${#spec_candidates[@]} -eq 1 ]]; then
+                    feature_dir="${spec_candidates[0]}"
+                elif [[ ${#spec_candidates[@]} -gt 1 ]]; then
+                    echo "ERROR: Ambiguous feature directory for '$SPECIFY_FEATURE'." >&2
+                    echo "The spec id '$spec_id' matches more than one directory:" >&2
+                    for spec_candidate in "${spec_candidates[@]}"; do
+                        echo "  - ${spec_candidate#"$repo_root"/}" >&2
+                    done
+                    echo "Set SPECIFY_FEATURE_DIRECTORY to select one explicitly." >&2
+                    return 1
+                fi
+            fi
+        fi
         if [[ ! -d "$feature_dir" ]]; then
             echo "ERROR: Feature directory not found for '$SPECIFY_FEATURE': $feature_dir" >&2
             return 1
