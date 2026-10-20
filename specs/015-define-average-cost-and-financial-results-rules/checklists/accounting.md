@@ -68,7 +68,8 @@ residuo, resultados, ciclo de tenencia, emisión inicial) y **contrato con los c
 
 - [x] CHK031 ¿La regla contable está expresada sin alterar el comportamiento observable ni el contrato público de SPEC-010 y SPEC-011? [Consistency, Spec §FR-030]
 - [x] CHK032 ¿La unificación de la fuente del reloj queda especificada con su efecto exacto sobre el dato ya registrado? [Consistency, Spec §FR-019, CL-12]
-- [x] CHK033 ¿Es explícito que el puerto de cotización no se modifica y qué fuente de valoración se consume en su lugar? [Consistency, Spec §FR-029, Research R-07]
+- [x] CHK033 ¿Está documentada la extensión aditiva `currentQuotes(Set<Long>)`, sin fallback N+1 y conservando `currentQuote(Long)` para SPEC-010/011, junto con sus ausencias, fallos y compatibilidad con SPEC-014? [Consistency, Spec §FR-027, FR-030, Research R-07, R-17, Contract §2.1]
+  <!-- Reevaluado 2026-10-20 por autorización expresa del usuario: satisfecho por Research R-07/R-17 y Contract §2.1; método individual conservado, default masivo no soportado explícito, lote sin consultas individuales y semántica de ausencias/fallos definida. No acredita implementación ni ejecución de pruebas. -->
 - [x] CHK034 ¿Las cifras que consume SPEC-014 están definidas con su carácter autoritativo o derivado, sin ambigüedad sobre cuál rige? [Completeness, Contract §3]
 - [x] CHK035 ¿La frontera entre las reglas contables de SPEC-015 y las reglas de presentación de SPEC-014 está declarada sin solapamientos ni huecos? [Consistency, Contract §3.1, §3.2]
 

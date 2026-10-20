@@ -51,7 +51,7 @@ Model, en una clase contenedora con etiqueta `unit` y grupos `@Nested`.
 | --- | --- | --- |
 | Dos compras a precios distintos | El precio medio derivado es 125 centésimas y el costo de adquisición, 2500 | AC01, AC02 |
 | Venta parcial | El resultado realizado es 375, el costo de adquisición pasa a 1875 y la cantidad abierta a 15 | AC03 |
-| Liquidación total | El costo de adquisición llega exactamente a 0 y el resultado realizado se conserva | AC04 |
+| Liquidación total | El costo de adquisición llega exactamente a 0, el resultado realizado se conserva y `averageUnitPrice` es `Long` nulo, sin división ni promedio cero inventado | AC04, B-02 |
 | Reapertura tras liquidación | La compra posterior inicia un costo nuevo y el resultado realizado acumulado no se reinicia | AC05 |
 | Publicación no ejecutada | No altera cantidad abierta, costo ni resultado | AC06 |
 | Compra como comprador y como vendedor | Cada parte recibe solo su imputación; ninguna operación se contabiliza dos veces | AC07, AC08 |
@@ -61,7 +61,7 @@ Model, en una clase contenedora con etiqueta `unit` y grupos `@Nested`.
 | Liquidación tras el residuo | El costo llega a 0 y el resultado realizado acumulado es 149 | AC22 |
 | Venta por debajo del costo | El resultado realizado es negativo y conserva su signo | AC15 |
 | Posición sin cotización | El resultado no realizado y el total quedan sin definir; el realizado se conserva | AC12 |
-| Porcentaje global | Dos decimales; nulo con denominador cero | CL-08 |
+| Porcentaje global | Multiplicación exacta por 100 antes de dividir y redondear con HALF_UP a escala 2: resultado 1 e histórico 3 producen 33,33 %; nulo con denominador cero o cotización necesaria ausente | CL-08, B-01 |
 | Reproducibilidad | Dos cálculos sobre el mismo estado de datos devuelven el mismo resultado | AC18 |
 | Ciclo de tenencia | `openedAt` es el inicio del ciclo vigente; una compra adicional no lo altera; una liquidación lo cierra y una compra posterior abre un ciclo nuevo | AC04, AC05, R-18 |
 | Recuentos por rol | Cada operación confirmada cuenta una vez por rol; la emisión no cuenta como compra ni como venta | R-18, AC36 de SPEC-014 |
@@ -108,7 +108,11 @@ Ejecutar `./gradlew integrationTest`.
 | Cantidad o importe no positivos en una operación | El cálculo falla con la excepción de integridad | R-16 |
 | Comprador y vendedor idénticos | El cálculo falla con la excepción de integridad | FR-003, R-16 |
 | Cantidad emitida distinta de la constante | El cálculo falla con la excepción de integridad | R-16 |
-| Número de consultas | El cálculo resuelve un número constante de consultas, independiente de la cantidad de posiciones | FR-027, R-17 |
+| Número de consultas | Dos consultas contables y como máximo una adquisición masiva para todas las posiciones abiertas; ninguna lectura individual de cotización | FR-027, R-17 |
+| Lote sin N+1 | La implementación masiva no invoca `currentQuote` ni realiza E/S individual; el simulador construye directamente el mapa en memoria | R-07, contrato §2.1 |
+| Compatibilidad individual | Las pruebas existentes de compra, publicación y selección de la fuente mantienen su conducta con `currentQuote(Long)` | SPEC-010/011, R-07 |
+| Fuente sin capacidad masiva | El default rechaza explícitamente el lote con `QuoteBatchUnavailableException`; no devuelve ausencias ni activa un respaldo | R-07, contrato §2.1 |
+| Vacíos, ausencias y fallos del lote | Conjunto vacío sin adquisición; mapa parcial por ausencia de datos preserva nulos; error técnico aborta toda la respuesta; claves ajenas o snapshots incoherentes no son ausencias | FR-013, FR-014, R-07 |
 
 ### 3.5 Regresión de la unificación del reloj
 

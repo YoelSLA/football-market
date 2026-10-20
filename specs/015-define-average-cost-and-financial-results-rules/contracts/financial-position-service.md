@@ -66,7 +66,41 @@ public interface FinancialPositionService {
 | Fallo técnico de cotizaciones | El método **falla** y propaga el error; no devuelve datos financieros parciales, tampoco el resultado realizado (FR-014, CL-15) |
 | Integridad | Si los datos no permiten reconstruir una posición de forma consistente, el método falla con la excepción de integridad del dominio (FR-025) |
 | Coherencia precio-instante | `currentUnitPrice` y `quoteCalculatedAt` provienen de la **misma** cotización; sin cotización ambos son nulos. El contrato no exige modificar el puerto `QuoteSource` |
-| Eficiencia | El número de consultas no crece con la cantidad de posiciones: dos consultas de conjunto y una adquisición de cotizaciones por jugador distinto, concentrada en un punto sustituible por una llamada masiva (R-17) |
+| Eficiencia | Dos consultas contables de conjunto y como máximo una adquisición masiva real mediante `currentQuotes`, independientemente del número de posiciones. Sin lecturas individuales por jugador, tampoco dentro de la implementación del lote (R-17) |
+
+### 2.1 Extensión masiva compatible de QuoteSource
+
+Contrato de la operación interna adicional:
+
+```text
+Map<Long, CurrentQuote> currentQuotes(Set<Long> playerIds)
+```
+
+- Conservar sin cambios `Optional<CurrentQuote> currentQuote(Long playerId)`, que siguen
+  consumiendo las compras y las publicaciones de SPEC-010/011.
+- El método adicional es default para mantener compatibilidad de fuente y binaria con
+  implementaciones existentes. Por defecto lanza `QuoteBatchUnavailableException`, una
+  `IntegrationException`: no soportar el lote es fallo técnico, no ausencia de cotizaciones.
+- Ninguna implementación puede construir el lote llamando a `currentQuote` ni hacer consultas
+  individuales por jugador. Una fuente persistida resuelve el conjunto con una consulta agrupada;
+  el simulador construye el mapa directamente en memoria, sin E/S, con un instante común.
+- Entrada: conjunto no nulo de identificadores no nulos; el Service lo obtiene de las posiciones
+  abiertas, sin duplicados. Si está vacío, el Service omite la llamada; la implementación masiva
+  del simulador devuelve un mapa vacío sin consultar fuentes.
+- Salida: mapa no nulo de snapshots `CurrentQuote` existentes, con claves del conjunto solicitado
+  y `snapshot.playerId` igual a su clave. Una clave omitida significa que ese jugador no tiene
+  cotización; no se usan valores nulos dentro del mapa ni se inventan precios.
+- Cada snapshot conserva el precio y `calculatedAt` de la misma cotización. No se exige que
+  las cotizaciones reales de jugadores distintos tengan la misma fecha de cálculo.
+- Un error técnico aborta todo el lote; no se devuelve un mapa parcial como si fueran ausencias.
+  Un mapa estructuralmente inválido se trata como incumplimiento de contrato, no como ausencia.
+- SPEC-014 sigue consumiendo `positionsOf` y la agregación de Model; no accede al puerto ni
+  reinterpreta operaciones. Se mantiene `REPEATABLE READ`; esa instantánea cubre las lecturas
+  locales participantes, no promete consistencia distribuida con un proveedor externo.
+
+Esta extensión pertenece al alcance autorizado de SPEC-015. No introduce rutas HTTP ni modifica
+las otras SPEC. Las implementaciones que solo soportan lectura individual conservan su operación
+anterior, pero necesitan soporte masivo explícito antes de servir la valoración de portfolios.
 
 ---
 
@@ -79,7 +113,7 @@ Tipo de Model inmutable. El consumidor **no** recalcula ninguna de sus cifras.
 | `playerId` | `Long` | Jugador de la posición | Posición por jugador |
 | `openQuantity` | `int` | Tokens abiertos poseídos | Cantidad poseída de la posición |
 | `acquisitionCost` | `long` | **Costo de adquisición autoritativo**, en centésimas | Costo de adquisición de la posición (FR-013 de SPEC-014) |
-| `averageUnitPrice` | `long` | Precio medio **derivado** de `acquisitionCost` y `openQuantity` | Precio promedio de compra (RF-03 del issue #20) |
+| `averageUnitPrice` | `Long` nullable | Precio medio **derivado** de `acquisitionCost` y `openQuantity`; `null` cuando `openQuantity = 0`, sin dividir ni sustituir por cero | Precio promedio de compra (RF-03 del issue #20) |
 | `totalPaid` | `long` | Costo pagado histórico acumulado, en centésimas | Denominador del porcentaje global (CL-08) |
 | `realizedProfitLoss` | `long` | Resultado realizado acumulado, en centésimas | Resultado realizado de la posición |
 | `currentUnitPrice` | `Long` | Cotización vigente por token; nula si no hay cotización | `currentUnitPrice` de SPEC-014 |
@@ -119,6 +153,10 @@ procedentes del mismo recorrido de la historia confirmada y de la misma instant�
 6. **El denominador del porcentaje es `historicalCost`**, el costo pagado histórico acumulado, no
    `investedCost` —el costo de adquisición de las posiciones abiertas—, que es un importe distinto
    (CL-08, FR-027 de SPEC-014, AC31 de SPEC-014).
+   `profitLossPercentage` se representa como `BigDecimal` nullable a escala 2 y se calcula como
+   `HALF_UP_2(100 × totalProfitLoss / historicalCost)`: primero la multiplicación exacta por 100,
+   después la división con HALF_UP a dos decimales. No se redondea el cociente antes de convertirlo
+   a puntos porcentuales: para resultado 1 y costo histórico 3, corresponde `33,33 %`, no `33,00 %`.
 7. **Un valor indefinido se propaga como indefinido**: `unrealizedProfitLoss`, `totalProfitLoss` y
    `profitLossPercentage` son nulos si alguna posición abierta carece de cotización, y
    `valuationComplete` es `false` en ese caso. Ningún consumidor sustituye un nulo por cero.
@@ -176,9 +214,9 @@ a SPEC-014 (riesgo RA-7 del plan).
 ## 6. Compatibilidad y evolución
 
 - El contrato es **estable**: SPEC-014 consume la interfaz, no su implementación.
-- La forma de obtener las cotizaciones es **interna** del componente: cuando REQ-S2-03 aporte el
-  repositorio canónico, la adquisición puede pasar de por jugador a masiva **sin cambiar este
-  contrato** ni el código del consumidor (R-07).
+- La adquisición masiva es **interna** del componente y obligatoria desde esta feature: cuando
+  REQ-S2-03 aporte su repositorio canónico deberá implementar el lote sin N+1, manteniendo la
+  interfaz `positionsOf` y el código consumidor de SPEC-014 sin cambios (R-07).
 - El componente no depende de una implementación concreta de cotizaciones: consume el puerto
   `QuoteSource` ya vigente (G-3).
 - No se agregan nuevas figuras contables sin actualizar antes `spec.md`: el contrato refleja la

@@ -1,6 +1,7 @@
 package footballmarket.repositories;
 
 import footballmarket.models.PlayerTokenEmission;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +11,19 @@ import org.springframework.stereotype.Repository;
 /** Acceso a las emisiones iniciales de tokens por jugador. */
 @Repository
 public interface PlayerTokenEmissionRepository extends JpaRepository<PlayerTokenEmission, Long> {
+
+  /**
+   * Carga las emisiones de un propietario.
+   *
+   * <p>La asociación con el propietario es {@code EAGER} por el mapeo de JPA y se recupera en la
+   * misma sentencia, para no pagar una consulta por emisión; el plegado solo necesita su
+   * identificador.
+   *
+   * @param userId propietario cuyas emisiones se recuperan
+   * @return emisiones del propietario
+   */
+  @Query("select e from PlayerTokenEmission e join fetch e.owner where e.owner.id = :userId")
+  List<PlayerTokenEmission> findFinancialEmissions(@Param("userId") Long userId);
 
   /** Detecta inventario sin emisión o una emisión sin tenencia de su propietario inicial. */
   @Query(

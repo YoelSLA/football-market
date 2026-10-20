@@ -67,6 +67,10 @@ ejecuta ni una prueba sin su autorización.
 dos métodos de repositorio nuevos, una línea de código modificada en el servicio de compra, una
 migración de índice y las pruebas de las categorías Model, Repository y Service.
 
+La corrección autorizada del acceso masivo añade la extensión de `QuoteSource`, su implementación
+en el simulador, una excepción de integración y las pruebas de Integration correspondientes.
+No añade un caso de uso, endpoint ni motor de cotizaciones nuevo.
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -141,8 +145,15 @@ docs/backend/architecture.md                   # MODIFICADO: §1.3 y nuevo §5 c
 ```
 
 **Sin cambios**: frontend, `controllers/`, `controllers/dtos/`, `controllers/mappers/`,
-`integrations/QuoteSource`, `services/exceptions/` (la jerarquía de errores se reutiliza), y los
+el método individual de `integrations/QuoteSource`, `services/exceptions/`, y los
 contratos públicos de SPEC-010 y SPEC-011.
+
+**Extensión autorizada del puerto interno:** añadir `QuoteSource.currentQuotes(Set<Long>)`
+compatible con implementaciones existentes mediante un método default que rechaza explícitamente
+la capacidad masiva no soportada; no itera sobre el método individual. Se adaptará
+`SimulatedQuoteSource` para construir el lote en memoria y se añadirá
+`integrations/exceptions/QuoteBatchUnavailableException.java` (`IntegrationException`). Sin fuente
+persistida nueva, endpoints ni modificaciones de otras SPEC. Detalle en el contrato §2.1.
 
 **Structure Decision**: se conserva la estructura física existente del backend, que refleja los roles
 arquitectónicos (`docs/architecture.md` §2.1). No se crean paquetes nuevos: los tres componentes nuevos
@@ -195,7 +206,8 @@ Ciclo de vida de una posición, con `C` = costo de adquisición autoritativo, `q
 
 - **Costo de adquisición autoritativo**: `C` es la cifra que consume SPEC-014 (FR-006, CL-11).
 - **Precio medio derivado**: `round(C / q)` con HALF_UP, solo informativo; nunca se recalcula `C`
-  a partir de él (FR-031, R-12).
+  a partir de él (FR-031, R-12). Se expone como `Long` nullable: con cantidad abierta cero,
+  `averageUnitPrice = null`, sin dividir ni inventar un promedio cero.
 - **Cierre y reapertura**: la liquidación deja `C = 0` exacto y la compra posterior inicia un
   promedio nuevo, sin reiniciar el resultado realizado acumulado (FR-009, FR-010).
 - **Tokens emitidos**: aportan costo cero y, si coexistieran con tokens adquiridos comercialmente,
@@ -232,7 +244,7 @@ Las fórmulas completas, con ejemplos numéricos verificados, están en
 | Valor actual | `cantidad abierta × cotización vigente` | Sin cotización vigente |
 | Resultado no realizado | `valor actual − costo de adquisición` | Sin cotización vigente |
 | Resultado total | `realizado + no realizado` | Sin cotización vigente; en posición cerrada es el realizado acumulado (FR-032, CL-14) |
-| Porcentaje global de resultado | `(Σ realizado + Σ no realizado) / historicalCost`, en puntos porcentuales con dos decimales, donde `historicalCost` es el costo pagado histórico acumulado | Denominador cero o alguna posición abierta sin cotización (CL-08) |
+| Porcentaje global de resultado | `HALF_UP_2(100 × (Σ realizado + Σ no realizado) / historicalCost)`, como `BigDecimal` nullable a escala 2; multiplicar por 100 antes de dividir y redondear, sin redondeo intermedio (1/3 = 33,33 %) | Denominador cero o alguna posición abierta sin cotización (CL-08) |
 
 La agregación contable del usuario —`historicalCost`, `investedCost`, `currentValue`,
 `realizedProfitLoss`, `unrealizedProfitLoss`, `totalProfitLoss`, `profitLossPercentage` y
@@ -299,13 +311,13 @@ imposible**. El cálculo nunca devuelve una posición ni un resultado con cifras
 
 ### 7. Integración con el mercado
 
-Componentes existentes que se reutilizan sin modificación:
+Componentes existentes reutilizados y extensión autorizada:
 
 | Componente | Uso en SPEC-015 |
 | --- | --- |
 | `MarketTransaction` | Fuente de las operaciones confirmadas: comprador, vendedor, jugador, cantidad, importe e instante de confirmación |
 | `PlayerTokenEmission` | Fuente de la cantidad emitida de costo cero |
-| `QuoteSource` / `CurrentQuote` | Fuente de la cotización vigente, sin atarse a su implementación |
+| `QuoteSource` / `CurrentQuote` | Fuente de cotizaciones: extensión masiva aditiva del puerto, conservando el método individual y el snapshot existente |
 | `MarketTransactionRepository`, `PlayerTokenEmissionRepository` | Acceso a las operaciones y emisiones, con dos consultas de conjunto nuevas |
 | `GlobalExceptionHandler` | **No se toca**: SPEC-015 no expone endpoint; el mapeo HTTP de sus excepciones corresponde a SPEC-014 (R-09) |
 | `MarketTimeConfiguration` | Reloj `marketClock` que la compra directa pasa a usar |
@@ -328,12 +340,13 @@ porcentajes por posición, paginación, filtros y orden.
 | --- | --- | --- | --- |
 | 1 | Operaciones del usuario como comprador **o** vendedor, ordenadas por `(executed_at, id)` | 1 por usuario | Índices existentes `idx_market_transactions_buyer` y `idx_market_transactions_seller`; recorrido inverso para orden ascendente |
 | 2 | Emisiones del propietario | 1 por usuario | **Índice nuevo** `player_token_emissions (owner_user_id)` (R-14) |
-| 3 | Cotización vigente | 1 por **jugador distinto** | Puerto `QuoteSource`; adquisición concentrada en un punto sustituible por una llamada masiva (R-07) |
+| 3 | Cotizaciones vigentes de posiciones abiertas | Un lote para el conjunto distinto de jugadores, omitido si es vacío | `QuoteSource.currentQuotes(Set<Long>)`, sin consultas individuales ni fallback (R-07) |
 
-**El número de consultas no crece con la cantidad de posiciones.** El Service **determina primero el
-conjunto distinto de jugadores** a partir de operaciones y emisiones y solo después adquiere las
-cotizaciones de ese conjunto, de modo que la adquisición queda aislada y puede pasar de N llamadas a
-una cuando exista el repositorio canónico de REQ-S2-03, sin cambiar el contrato (R-17).
+**El número de consultas no crece con la cantidad de posiciones.** El Service reconstruye las
+posiciones y solicita las cotizaciones de los jugadores con posición abierta en un único lote.
+El simulador produce el mapa sin E/S; una fuente persistida deberá resolver el conjunto con una
+consulta agrupada. Se prohíbe simular el lote mediante llamadas individuales. La garantía es dos
+consultas contables más como máximo una adquisición masiva, no tiempo ni memoria constantes.
 
 **Orden por jugador.** El orden contable es relevante **por jugador**, que es la granularidad de las
 posiciones; no hace falta un orden global entre jugadores distintos. Las consultas de operaciones y
@@ -369,6 +382,8 @@ Detalle en [`research.md`](research.md) R-13 y en [`quickstart.md`](quickstart.m
 | Model (hechos) | Recuentos por rol: la emisión no cuenta como compra ni como venta | `unit` |
 | Model (cotización) | Precio e instante de la misma cotización; ambos nulos sin cotización | `unit` |
 | Model (agregación) | Agregación sobre el conjunto completo: denominador histórico, nulos por posición sin cotización y porcentaje global | `unit` |
+| Integration | Lote del simulador sin delegación individual ni E/S; default no soportado, conjuntos vacíos/múltiples y compatibilidad del método individual | `unit` |
+| Repository (eficiencia) | Carga de las relaciones utilizadas en el plegado sin consultas JPA ocultas por posición | `integration` |
 
 No hay pruebas de Controller: la feature no expone endpoint y la categoría no aplica.
 
@@ -377,14 +392,14 @@ No hay pruebas de Controller: la feature no expone endpoint y la categoría no a
 | Riesgo | Descripción | Mitigación |
 | --- | --- | --- |
 | **RA-1 Matriz de dependencias** | La relación Service → Service entre SPEC-015 y SPEC-014 no figura en la matriz de `docs/backend/architecture.md` §1.3, aunque el código de SPEC-012 ya la práctica | Documentar la relación en §1.3 y en un nuevo §5 de la arquitectura del backend, siguiendo el precedente de §3 y §4. **Requiere validación humana en la revisión del plan** |
-| **RA-2 Fuente de cotizaciones por jugador** | El puerto vigente solo permite consultar un jugador por vez, mientras SPEC-014 AC35 exige un acceso agregado a cotizaciones | El Service encapsula la adquisición; el contrato no cambia cuando REQ-S2-03 aporte el repositorio canónico. El coste actual es nulo con el simulador de precio constante |
+| **RA-2 Compatibilidad de fuentes** | Una implementación existente puede carecer de lectura masiva | El método individual se conserva; el default masivo falla explícitamente, sin fallback N+1 ni cotizaciones inventadas. El simulador tendrá soporte masivo y las fuentes reales deberán incorporarlo |
 | **RA-3 Divergencia de `executed_at` entre vías** | Mientras la unificación no se aplique, el instante de confirmación de la compra directa no es controlable en pruebas | La unificación es parte del alcance (R-05) y tiene regresión propia |
 | **RA-4 Precisión de SPEC-014** | El texto de CL-03 de SPEC-014 afirma que las ventas no modifican el precio medio restante; con el residuo retenido eso solo es exacto en aritmética fraccionaria | Corregir en el origen, en la especificación de SPEC-014, que pertenece a otra feature y otra rama (R-12) |
 | **RA-5 Divergencia entre reconstruido y tenencias** | La cantidad abierta se deriva de operaciones y emisión; un estado de tenencias inconsistente produciría una divergencia que este cálculo no detecta | Fuera del alcance de SPEC-015: el cálculo no observa `player_tokens`. Bajo una instantánea única (RA-6) la cantidad reconstruida y la de `player_tokens` son comparables, de modo que SPEC-014 puede contrastarlas; se registra la observación en `data-model.md` |
 | **RA-6 Coherencia entre lecturas concurrentes** | Con `READ COMMITTED`, operaciones y emisiones podrían leerse de instantáneas distintas y la reconstrucción no correspondería a ningún estado válido | El cálculo se ejecuta en una transacción de solo lectura `REPEATABLE READ` (R-15). **Requisito de integración**: SPEC-014 debe declarar su consulta de portfolio con el mismo aislamiento para que la respuesta completa sea coherente (AC34 de SPEC-014) |
 | **RA-7 Excepciones sin mapeo HTTP** | `GlobalExceptionHandler` no tiene manejador genérico de `FootballMarketException` | SPEC-015 no expone endpoint y no toca el manejador; el mapeo de sus excepciones es tarea de SPEC-014 (R-09) |
 | **RA-8 Volumen de la reconstrucción** | El plegado es lineal sobre las operaciones del usuario | El coste es proporcional al historial del usuario y no al número de posiciones; sin consultas por posición (R-17) |
-| **RA-9 Acceso a cotizaciones por jugador** | El único acceso que crece con la cantidad de posiciones es el de cotizaciones, por la granularidad del puerto vigente | Adquisición concentrada y sustituible por una llamada masiva cuando exista REQ-S2-03, sin cambio de contrato (R-07, R-17) |
+| **RA-9 N+1 oculto en el lote** | Una implementación podría recorrer jugadores y consultar cada uno | El contrato prohíbe esa delegación; pruebas del simulador y del consumidor documentarán lote único y ausencia de llamadas individuales. Una futura fuente persistida necesitará prueba de consultas reales |
 | **RA-10 Tamaño del catálogo emitido** | La posición del superusuario abarca un jugador por cada emisión, es decir, el tamaño del catálogo | La cantidad de posiciones es acotada y la paginación es responsabilidad de SPEC-014; el cálculo no añade una API paginada prematura (R-17) |
 | **RA-11 Hechos derivados y su regla nominal** | `openedAt`, `closedAt`, `lastTransactionAt` y los recuentos por rol son hechos expuestos por SPEC-015 cuya regla de presentación nominal vive en SPEC-014 (FR-030, FR-031) | Se exponen **hechos**, no reglas de presentación; el contrato delimita expresamente qué pertenece a cada feature. Si SPEC-014 cambiara su definición, el Model debe alinearse: acoplamiento declarado y acotado |
 | **RA-12 Agregación aplicada sobre un subconjunto** | Un consumidor podría aplicar la agregación sobre una página y obtener un porcentaje incoherente | El contrato exige la aplicación sobre el **conjunto completo** y prohíbe el cálculo sobre posiciones paginadas (R-19); las pruebas de Model cubren la agregación sobre el conjunto completo |
@@ -405,6 +420,10 @@ sustituida por el simulador). SPEC-014 es consumidor, no dependencia.
 | `backend/src/main/java/footballmarket/repositories/MarketTransactionRepository.java` | Modificado | Una consulta de conjunto por usuario, ordenada |
 | `backend/src/main/java/footballmarket/repositories/PlayerTokenEmissionRepository.java` | Modificado | Una consulta de emisiones por propietario |
 | `backend/src/main/java/footballmarket/services/impl/BuyOrderServiceImpl.java` | Modificado | Una línea: `executed_at` de la compra directa desde `marketClock` |
+| `backend/src/main/java/footballmarket/integrations/QuoteSource.java` | Modificado | Método masivo aditivo default, sin cambiar `currentQuote(Long)` ni delegar N lecturas |
+| `backend/src/main/java/footballmarket/integrations/SimulatedQuoteSource.java` | Modificado | Mapa masivo en memoria con un instante común y sin E/S por jugador |
+| `backend/src/main/java/footballmarket/integrations/exceptions/QuoteBatchUnavailableException.java` | Nuevo | Rechazo explícito de capacidad masiva ausente o fallo técnico del lote; `IntegrationException` |
+| `backend/src/test/java/footballmarket/integrations/SimulatedQuoteSourceTest.java` | Modificado | Lotes vacíos/múltiples, snapshot coherente, ausencia de delegación individual y compatibilidad del método existente |
 | `backend/src/main/resources/db/migration/V<n>__index_player_token_emissions_owner.sql` | Nuevo | Índice `(owner_user_id)` |
 | `docs/backend/architecture.md` | Modificado | §1.3 y nuevo §5 con los componentes de SPEC-015 y la relación autorizada |
 | `backend/src/test/java/footballmarket/models/PlayerFinancialPositionTest.java` | Nuevo | Categoría Model |
@@ -413,8 +432,9 @@ sustituida por el simulador). SPEC-014 es consumidor, no dependencia.
 | `backend/src/test/java/footballmarket/repositories/FinancialPositionPersistenceTest.java` | Nuevo | Categoría Repository |
 | `backend/src/test/java/footballmarket/services/BuyOrderServiceTest.java` | Modificado | Regresión de la unificación del reloj |
 
-No se modifican el frontend, los controllers, los DTO, los mappers, el puerto `QuoteSource` ni los
-contratos públicos de SPEC-010 y SPEC-011.
+No se modifican el frontend, los controllers, los DTO, los mappers ni los contratos HTTP de
+SPEC-010/011. Su método individual de cotizaciones sigue intacto. La extensión interna aditiva
+se documenta exclusivamente en SPEC-015; no se editan las especificaciones de otros equipos.
 
 ## Complexity Tracking
 
@@ -432,7 +452,7 @@ exige.
 | AC01…AC22 | Cubren el comportamiento verificable de las historias 1, 2 y 3; los casos AC16–AC20 (trazabilidad, determinismo, orden y conservación) tienen regresión propia en las categorías Model y Repository |
 | CL-01…CL-16 | Sin modificar: el plan implementa la especificación tal como está |
 | FR-025 (integridad) | Excepción de integridad del dominio; sin datos financieros incorrectos |
-| FR-027 (sin accesos por posición) | Dos consultas de conjunto más las cotizaciones encapsuladas |
+| FR-027 (sin accesos por posición) | Dos consultas de conjunto más como máximo una adquisición masiva real de cotizaciones, sin iteración sobre lecturas individuales |
 | FR-028 (reutilizable) | Service independiente con interfaz, documentado en `contracts/` |
 | FR-029 (sin comisiones) | El modelo no contempla comisiones, impuestos ni spreads |
 | CL-08 (porcentaje global) | La agregación contable del `FinancialPositionCalculator` lo calcula sobre el conjunto completo, con el denominador histórico y la semántica de indefinidos (R-19) |

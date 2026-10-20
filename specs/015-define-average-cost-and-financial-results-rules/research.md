@@ -74,9 +74,13 @@ además la única compatible con el registro append-only que SPEC-010 y SPEC-011
 
 ## R-03 — Aritmética monetaria y precisión
 
-**Decisión**: los importes son `long` en centésimas de crédito; el único cálculo no entero —la
-atribución proporcional del costo de una venta— se resuelve con `BigDecimal` **en el interior del
-Model**, con escala explícita y `RoundingMode.HALF_UP`; el resultado vuelve a `long`.
+**Decisión**: los importes son `long` en centésimas de crédito. La atribución proporcional del costo
+de una venta y el precio medio se calculan con `BigDecimal` **en el interior del Model**, con escala
+explícita y `RoundingMode.HALF_UP`; sus valores definidos se expresan como enteros en centésimas.
+El precio medio expuesto es `Long` nullable: con cantidad abierta cero es `null`. El porcentaje
+global no es un importe monetario: se expresa como `BigDecimal` nullable a escala 2 y se calcula
+como `HALF_UP_2(100 × totalProfitLoss / historicalCost)`. Multiplicar por 100 precede al redondeo,
+sin redondeo intermedio; el caso resultado 1 e histórico 3 corresponde a `33,33 %`.
 
 Fórmula de atribución, con `C` = costo de adquisición vigente, `q` = cantidad abierta previa y
 `qv` = cantidad vendida:
@@ -169,27 +173,43 @@ del superusuario existe sin operaciones.
 
 ## R-07 — Fuente de la valoración
 
-**Decisión**: el Service consume el puerto `QuoteSource` ya existente, **por jugador**. La ausencia
-de cotización deja el resultado no realizado y el total **sin definir**; un fallo técnico de la
-fuente se propaga sin convertirlo en datos.
+**Decisión vigente tras la autorización del acceso masivo**: ampliar `QuoteSource` con
+`Map<Long, CurrentQuote> currentQuotes(Set<Long> playerIds)` y conservar íntegramente
+`Optional<CurrentQuote> currentQuote(Long playerId)`. El Service reconstruye las posiciones y
+solicita las cotizaciones de los jugadores distintos con posición abierta en una sola llamada
+masiva, sin fallback a llamadas individuales. La ausencia de una clave representa cotización
+ausente; un fallo técnico aborta el lote, sin convertirlo en ausencias.
 
 **Fundamento**: G-3 y CL-05 fijan que el valor actual proviene de la cotización vigente que expone el
 backend sin atarse a una implementación concreta, y FR-013, FR-014, CL-14 y CL-15 fijan la
 distinción entre ausencia y fallo. El puerto actual (`integrations/QuoteSource.java:13-22`) solo
 expresa ausencia mediante `Optional` vacío y no tiene canal de fallo técnico declarado: el plan
 define la traducción de un fallo no controlado de la fuente a una excepción de la jerarquía del
-proyecto, sin modificar la firma del puerto.
+proyecto. La firma y la conducta del método individual no cambian; la extensión masiva queda
+documentada en el contrato de SPEC-015, sin editar artefactos de otras SPEC.
 
-**Limitación registrada**: el acceso a cotizaciones es por jugador, y el puerto vigente solo lo
-permite así. Con el simulador —única implementación actual, de precio constante— el coste es
-irrelevante. Cuando REQ-S2-03 aporte el repositorio canónico, el Service puede cambiar su
-adquisición interna **sin alterar su contrato**, y SPEC-014 no se ve afectado. La alternativa de
-extender el puerto con un método masivo tocaría el contrato documentado en
-`specs/010-buy-tokens/contracts/quote-source.md`, que SPEC-015 no puede modificar.
+**Compatibilidad**: el método masivo será `default` para que las implementaciones existentes del
+puerto sigan siendo compatibles a nivel de fuente y binario. Su implementación por defecto
+rechazará explícitamente el acceso masivo mediante `QuoteBatchUnavailableException`, heredera de
+`IntegrationException`; nunca recorrerá los identificadores llamando a `currentQuote`. Una fuente
+que solo implemente lectura individual podrá seguir atendiendo SPEC-010/011, pero deberá
+implementar lectura masiva antes de atender SPEC-015/014. Ese rechazo no significa cotizaciones
+ausentes y no autoriza activar el simulador como respaldo.
+
+`SimulatedQuoteSource` implementará el lote construyendo el mapa en memoria con un único instante
+de cálculo, sin E/S ni llamadas individuales. La futura fuente persistida deberá obtener el
+conjunto en una consulta agrupada, sin búsquedas por jugador. La extensión no incluye crear esa
+fuente ni el motor de cotizaciones. Las pruebas de compatibilidad abarcarán la fuente alternativa
+de `QuoteSimulationConfigurationTest` y el método individual ya utilizado por el mercado.
 
 **Alternativas descartadas**:
 
-- **Extender `QuoteSource` con un método masivo**: altera un contrato documentado de otra SPEC.
+- **Dos consultas contables más N lecturas individuales**: descartado tras la autorización del
+  acceso masivo; no satisface FR-027 ni SPEC-014 AC35. La prohibición anterior de extender el puerto
+  queda sustituida por la autorización explícita de una extensión aditiva, sin alterar el método
+  individual ni las otras SPEC.
+- **Método masivo abstracto obligatorio**: rompe la compilación de implementaciones existentes.
+- **Método masivo default que itera sobre el individual**: preserva la firma, pero oculta N+1.
 - **Valorar en el consumidor**: traslada la regla de ausencia y de fallo a SPEC-014, con riesgo de
   dos implementaciones divergentes.
 - **Tratar la ausencia como cero**: contradice FR-004, FR-013 y CL-05.
@@ -204,7 +224,7 @@ extender el puerto con un método masivo tocaría el contrato documentado en
 | --- | --- | --- |
 | Operaciones del usuario como comprador o vendedor, ordenadas por `(executed_at, id)` | `market_transactions` | 1 por usuario |
 | Emisiones del usuario | `player_token_emissions` | 1 por usuario |
-| Cotización vigente | puerto `QuoteSource` | 1 por jugador |
+| Cotizaciones vigentes de posiciones abiertas | `QuoteSource.currentQuotes(Set<Long>)` | Un lote por usuario; ningún acceso individual por jugador |
 
 **Fundamento**: FR-027 exige que el cálculo se resuelva sobre el conjunto completo de operaciones del
 usuario sin un acceso individual por posición, y SPEC-014 AC35 exige lo mismo para el portfolio. La
@@ -413,19 +433,18 @@ con la cantidad de posiciones:
 | --- | --- | --- |
 | 1 | Operaciones del usuario (comprador o vendedor) | 1 por usuario |
 | 2 | Emisiones del propietario | 1 por usuario |
-| 3 | Cotizaciones del **conjunto distinto de jugadores** | 1 acceso por jugador distinto |
+| 3 | Cotizaciones del **conjunto distinto de jugadores con posición abierta** | Un acceso masivo, sin consultas individuales |
 
-El Service **determina primero el conjunto distinto de jugadores** a partir de operaciones y
-emisiones, y solo después adquiere las cotizaciones de ese conjunto. Así, la adquisición queda
-concentrada en un punto que una fuente masiva puede sustituir por una sola llamada sin cambiar el
-contrato.
+El Service reconstruye primero las posiciones y obtiene el conjunto distinto de jugadores con
+cantidad abierta positiva. Si el conjunto es vacío, omite la adquisición. En otro caso invoca una
+sola vez `currentQuotes`. Una respuesta con claves ajenas, snapshots nulos o identificadores que
+no correspondan a su clave es un incumplimiento del contrato, no una cotización ausente.
 
 **Fundamento**: FR-027 y AC35 de SPEC-014 exigen que el cálculo no resuelva una consulta por
-posición. Las consultas de datos contables ya son agregadas. El **único acceso que crece con la
-cantidad de jugadores es el de cotizaciones**, y es consecuencia de la granularidad del puerto
-`QuoteSource` vigente, no del cálculo: hoy la única implementación es un simulador de precio
-constante, sin coste de E/S, y cuando REQ-S2-03 aporte el repositorio canónico el acceso puede pasar
-a ser masivo **sin que cambie el contrato del componente** (R-07).
+posición, incluidas las cotizaciones. Se realizan dos consultas contables y como máximo una
+adquisición masiva: el simulador no hace E/S y una fuente persistida deberá resolver el lote con
+una consulta de conjunto. Esta garantía no significa tiempo ni memoria constantes: reconstruir
+el historial y construir el mapa requiere procesamiento proporcional a su volumen.
 
 El índice sobre `player_token_emissions (owner_user_id)` (R-14) es el único índice nuevo. No se
 añaden índices sobre `market_transactions`: los índices por comprador y por vendedor ya existen y
@@ -439,8 +458,7 @@ reconstrucción no necesita un orden global entre jugadores distintos.
   consulta; añadirlo es complejidad sin medición que lo justifique.
 - **API paginada del Service**: ningún consumidor la pide y SPEC-014 necesita el conjunto completo
   para su resumen global; sería superficie de API prematura.
-- **Precalcular cada posición con su cotización dentro del bucle**: mantiene el mismo número de
-  accesos y dificulta sustituirlos por una llamada masiva.
+- **Método de lote que delegue una lectura por jugador**: mantiene N+1 y contradice FR-027 y AC35.
 
 ---
 
@@ -493,7 +511,7 @@ completo de posiciones calculadas** que devuelve la agregación contable del usu
 | `realizedProfitLoss` | Σ del resultado realizado | Nunca |
 | `unrealizedProfitLoss` | Σ del resultado no realizado | Alguna posición abierta sin cotización |
 | `totalProfitLoss` | Σ del resultado realizado + Σ del resultado no realizado | Alguna posición abierta sin cotización |
-| `profitLossPercentage` | `(realizado + no realizado) / historicalCost`, en puntos porcentuales con dos decimales | Denominador cero o alguna posición abierta sin cotización |
+| `profitLossPercentage` | `HALF_UP_2(100 × (realizado + no realizado) / historicalCost)`, como `BigDecimal` nullable a escala 2, sin redondeo intermedio | Denominador cero o alguna posición abierta sin cotización |
 | `valuationComplete` | `false` si alguna posición abierta carece de cotización | — |
 
 **La interfaz del Service no cambia**: `positionsOf` sigue devolviendo las posiciones, y la agregación

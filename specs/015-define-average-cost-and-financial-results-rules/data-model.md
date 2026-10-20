@@ -48,6 +48,19 @@ recorrerlos en sentido inverso para la ordenación ascendente.
 
 Ninguna consulta se resuelve por posición.
 
+### 1.4 Adquisición masiva de cotizaciones
+
+Una vez reconstruidas las posiciones se forma el conjunto distinto de jugadores con cantidad
+abierta positiva. El Service usa `QuoteSource.currentQuotes(Set<Long>)` una sola vez, o ninguna
+si el conjunto es vacío. El resultado es un mapa de `CurrentQuote` existente: una clave omitida
+representa cotización ausente; precio e instante se toman del mismo snapshot.
+
+No se añade tabla ni tipo de cotización nuevo. El simulador construye el lote en memoria y la
+fuente persistida futura deberá resolverlo en una consulta agrupada, nunca una por jugador.
+`currentQuote(Long)` se conserva para las operaciones existentes. El contrato y sus fallos se
+definen en `contracts/financial-position-service.md` §2.1. Se mantiene la transacción local
+`REPEATABLE READ`; un proveedor externo no participa automáticamente en su instantánea.
+
 ---
 
 ## 2. Tipos de dominio nuevos (Model)
@@ -87,7 +100,7 @@ Cifras derivadas:
 
 | Cifra | Identificador | Fórmula | Indefinida cuando |
 | --- | --- | --- | --- |
-| Precio medio de adquisición | `averageUnitPrice` | `round(C / q)` con HALF_UP | `q = 0` |
+| Precio medio de adquisición | `averageUnitPrice` (`Long` nullable) | `round(C / q)` con HALF_UP | `q = 0`: `null`, sin división ni sustitución por cero |
 | Valor actual | `currentValue` | `q × precio` | Sin cotización |
 | Resultado no realizado | `unrealizedProfitLoss` | `valor actual − C` | Sin cotización |
 | Resultado total | `totalProfitLoss` | `realizado + no realizado` | Sin cotización; con `q = 0` es el realizado acumulado (FR-032) |
@@ -207,13 +220,21 @@ precio medio = HALF_UP( C / q )              → entero en centésimas, informat
 cálculo de `C'`: la atribución usa `C × qv / q`, no `precio medio × qv`. Esa diferencia es
 precisamente el residuo retenido (CL-11, AC21).
 
+El resultado expuesto es `Long`: si `q = 0`, `averageUnitPrice = null`. El costo remanente de
+la posición cerrada sigue siendo cero y el resultado realizado acumulado se conserva; ninguno
+de esos dos importes se vuelve nulo por la ausencia de promedio.
+
 ### 3.4 Porcentaje global de resultado
 
 ```text
-profitLossPercentage = HALF_UP_2( (Σ realizado + Σ no realizado) / Σ totalPaid ) × 100
+profitLossPercentage = HALF_UP_2( 100 × (Σ realizado + Σ no realizado) / Σ totalPaid )
 ```
 
 - Puntos porcentuales con dos decimales (CL-08, SPEC-014 FR-027 y AC31).
+- Multiplicar el numerador por 100 antes de dividir; aplicar HALF_UP una sola vez al resultado
+  en puntos porcentuales, a escala 2, sin redondear previamente el cociente. En Java corresponde
+  a multiplicación decimal exacta seguida de división a escala 2 con `RoundingMode.HALF_UP`.
+  El porcentaje es `BigDecimal` nullable, no un importe monetario entero.
 - **Nulo** si `Σ totalPaid = 0` o si alguna posición abierta carece de cotización.
 - El denominador es el **costo histórico total adquirido**: la suma de `totalPaid` de todas las
   posiciones del usuario, incluidas las de posiciones ya cerradas y reabiertas. No es el costo de
@@ -231,7 +252,7 @@ currentValue          = Σ valor actual                     → indefinido si al
 realizedProfitLoss    = Σ resultado realizado
 unrealizedProfitLoss  = Σ resultado no realizado            → indefinido si alguna posición abierta no tiene cotización
 totalProfitLoss       = realizedProfitLoss + unrealizedProfitLoss → indefinido si alguna posición abierta no tiene cotización
-profitLossPercentage  = HALF_UP_2( totalProfitLoss / historicalCost ) × 100
+profitLossPercentage  = HALF_UP_2( 100 × totalProfitLoss / historicalCost )
                          → indefinido si historicalCost = 0 o si alguna posición abierta no tiene cotización
 valuationComplete     = false si alguna posición abierta no tiene cotización
 ```
@@ -244,6 +265,10 @@ y nunca con cero (FR-013, CL-05, CL-14).
 Los porcentajes **por posición** —rendimiento no realizado y peso en el portfolio— **no** pertenecen a
 esta agregación: sus fórmulas están definidas por SPEC-014 (FR-028 y FR-029) y se calculan con las
 cifras por posición que este documento define.
+
+**Contraste aritmético documental:** con `totalProfitLoss = 1` e `historicalCost = 3`, la operación
+es `HALF_UP_2(100 / 3) = 33,33 %`. Redondear primero `1 / 3` a `0,33` y luego multiplicar por
+100 daría `33,00 %`, que no es la regla aprobada. Este contraste no constituye ejecución de tests.
 
 ### 3.6 Ejemplos verificados
 
