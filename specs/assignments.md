@@ -30,3 +30,4 @@ se corrige con una fila nueva que la referencie.
 
 | Identificador | Funcionalidad | Responsable | Issue de origen | Requisito | Rama | Fecha |
 | --- | --- | --- | --- | --- | --- | --- |
+| SPEC-015 | Definir reglas contables de costo promedio y resultados financieros | YoelSLA | https://github.com/YoelSLA/football-market/issues/63 | REQ-S2-20 | feat/015-define-average-cost-and-financial-results-rules | 2026-10-19 |
