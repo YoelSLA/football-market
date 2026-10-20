@@ -30,3 +30,4 @@ se corrige con una fila nueva que la referencie.
 
 | Identificador | Funcionalidad | Responsable | Issue de origen | Requisito | Rama | Fecha |
 | --- | --- | --- | --- | --- | --- | --- |
+| SPEC-014 | Consultar portfolio personal | YoelSLA | #20 | REQ-S2-09 | feat/014-consultar-portfolio-personal | 2026-10-19 |
