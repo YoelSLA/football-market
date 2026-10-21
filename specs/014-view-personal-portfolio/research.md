@@ -120,6 +120,7 @@ se informarían nulos sin inventar datos.
 | --- | --- | --- |
 | `currentUnitPrice`, `priceUpdatedAt` | Valor de la cotización vigente, o nulo si no hay | **Nulo** |
 | `currentValue`, `unrealizedProfitLoss` | Valor o nulo si no hay cotización | **Nulo** |
+| `averageUnitPrice` | Precio medio derivado de la cantidad abierta | **Nulo**: la cantidad abierta es cero |
 | `totalProfitLoss` | Realizado más no realizado, o nulo si no hay cotización | **Resultado realizado acumulado** |
 | `unrealizedProfitLossPercentage`, `portfolioWeightPercentage` | Valor o nulo según la regla | **Nulo** |
 | `valuationStatus` | `VALUED` o `UNVALUED` | `NOT_APPLICABLE` |
@@ -261,10 +262,13 @@ ventaja: todo lo que no es contable —contrato HTTP, forma de la respuesta, lec
 reservas, datos del jugador, orden, paginación y porcentajes por posición— se puede diseñar e
 implementar sin la dependencia.
 
-**Riesgo y mitigación**: los artefactos de plan de SPEC-015 no están publicados, de modo que su
-contrato puede cambiar. Por eso esta feature consume **capacidades** (cifras por posición,
-agregados, hechos del ciclo, recuentos por rol e instante de la cotización) y no firmas concretas, y
-el contrato se revisa al integrarse.
+**Estado verificado**: los artefactos de diseño de SPEC-015 están publicados y su implementación
+integrada en `dev`, de modo que el contrato ya no es provisional: la interfaz `positionsOf`, la
+agregación `FinancialPositionCalculator.aggregate` y los hechos por posición existen con la forma
+consumida aquí. Esta feature sigue consumiendo **capacidades** y no firmas concretas, y el
+componente contable obtiene las cotizaciones **en lote** mediante `QuoteSource.currentQuotes`, por lo
+que el acceso a cotizaciones no crece con la cantidad de jugadores distintos ni se ejecuta en esta
+feature.
 
 **Alternativas descartadas**:
 
@@ -276,16 +280,16 @@ el contrato se revisa al integrarse.
 
 ## R-11 — Dependencia de la matriz de dependencias de la arquitectura
 
-**Decisión**: esta feature **no introduce** por su cuenta la relación Service → Service: la declara
-como **dependencia documental** de la actualización que SPEC-015 ejecuta en su fase de
-implementación.
+**Decisión**: esta feature **no introduce** por su cuenta la relación Service → Service: la consume
+como dependencia ya autorizada, documentada por SPEC-015 en `docs/backend/architecture.md` §1.3 y §5 e
+integrada en `dev`.
 
-**Fundamento**: `docs/backend/architecture.md` §1.3 enumera las dependencias permitidas y no incluye
-Service → Service. El plan de SPEC-015 registra esa relación, la documenta en un apartado propio de la
-arquitectura y deja constancia de que su edición se realiza en IMPLEMENT, con la aprobación humana
-registrada (RA-1 de SPEC-015, `research.md` R-01). El `Constitution Check` de esta feature la declara
-como PASS condicionado, no como PASS absoluto: si la relación no llegara a documentarse, el diseño
-consumiría un componente de otra feature por una vía no contemplada en la matriz.
+**Fundamento**: la matriz de dependencias de la arquitectura enumera hoy Service → Service de forma acotada
+—*«otro Service exclusivamente para la integración de portfolio descrita en §5»*— y §5 documenta los
+componentes contables, su contrato y la exigencia de `REPEATABLE READ` en el consumidor. La aprobación
+humana de esa actualización quedó registrada en SPEC-015 (RA-1 de SPEC-015, `research.md` R-01) y su
+edición está integrada en `dev`. El `Constitution Check` de esta feature puede por ello declararse PASS
+absoluto: el diseño consume un componente de otra feature por una vía ya contemplada en la matriz.
 
 **Alternativas descartadas**:
 
@@ -367,14 +371,14 @@ No queda ningún `NEEDS CLARIFICATION` sin resolver. Las decisiones R-01 a R-15 
 modifica el alcance aprobado en `spec.md`, ninguna altera un requisito, un criterio de aceptación ni
 una aclaración, y ninguna exige modificar otra SPEC.
 
-Tres puntos requieren atención humana en la revisión del plan, por ser decisiones que tocan
-documentación o coordinación entre features:
+Los tres puntos que esta feature había dejado abiertos en la revisión del plan están resueltos y
+verificados:
 
-1. **R-11**: la relación Service → Service depende de la actualización de
-   `docs/backend/architecture.md` que SPEC-015 ejecuta en su fase de implementación. El
-   `Constitution Check` de esta feature la registra como PASS condicionado.
-2. **R-10**: el contrato del componente contable todavía no está publicado; se consume por
-   capacidades y se revisa al integrarse.
-3. **R-09**: el 503 por fallo técnico de cotizaciones requiere que ese fallo sea distinguible; si
-   SPEC-015 mantiene una excepción de integración genérica, esta feature traduce
-   `IntegrationException` a 503, lo que es coherente porque es la única integración de la consulta.
+1. **R-11**: la relación Service → Service está documentada en `docs/backend/architecture.md` §1.3 y §5 e
+   integrada en `dev`. El `Constitution Check` de esta feature la registra como PASS.
+2. **R-10**: el contrato del componente contable está publicado e integrado; su interfaz y su agregación
+   coinciden con lo previsto. Se sigue consumiendo por capacidades y no por firmas.
+3. **R-09**: el 503 por fallo técnico de cotizaciones lo provoca la excepción de integración específica
+   que propaga el componente contable —`QuoteBatchUnavailableException`—, de modo que esta feature no
+   necesita un handler genérico de `IntegrationException` ni altera el tratamiento de las integraciones de
+   otras features.

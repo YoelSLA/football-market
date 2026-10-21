@@ -143,7 +143,9 @@ significado están en [`../data-model.md`](../data-model.md) §3.2.
 - Una posición **abierta sin cotización vigente** conserva cantidad, reserva, disponibilidad y
   resultado realizado, y sus campos dependientes de cotización son **nulos**.
 - Una posición **cerrada** no tiene valor actual ni resultado no realizado: esos campos son nulos y su
-  resultado total es el resultado realizado acumulado.
+  resultado total es el resultado realizado acumulado. El **precio medio de adquisición** es un dato
+  derivado de la cantidad abierta: es **nulo** en una posición cerrada, porque no hay cantidad abierta
+  que lo defina, y nunca se sustituye por cero.
 - `lastTransactionAt` es nulo cuando la posición no tiene ninguna operación confirmada.
 - `openedAt` es el inicio del ciclo de tenencia vigente: las compras adicionales no lo alteran y una
   liquidación completa seguida de una compra inicia un ciclo nuevo. `closedAt` es la venta que llevó la
@@ -240,8 +242,7 @@ devuelve el mismo resultado para el mismo estado de datos.
 - Modelo de datos: [`../data-model.md`](../data-model.md)
 - Decisiones de diseño: [`../research.md`](../research.md)
 - Contrato de errores del proyecto: `docs/backend/architecture.md` §1.7
-- Contrato del componente contable consumido —**provisional**: sus artefactos de diseño no están
-  publicados todavía y su contrato puede cambiar antes de integrarse. Esta feature consume
-  **capacidades** (cifras por posición, agregados contables, hechos del ciclo de tenencia, recuentos
-  por rol e instante de la cotización), no firmas concretas; el contrato se revisa al integrarse:
+- Contrato del componente contable consumido: su implementación está integrada en `dev`. Esta feature
+  consume **capacidades** (cifras por posición, agregados contables, hechos del ciclo de tenencia,
+  recuentos por rol e instante de la cotización), no firmas concretas:
   `specs/015-define-average-cost-and-financial-results-rules/contracts/financial-position-service.md`

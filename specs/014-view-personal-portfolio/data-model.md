@@ -112,7 +112,7 @@ incluye los ciclos cerrados. Son importes distintos y esta feature no los confun
 | `reservedQuantity` | `int` | Publicaciones del propietario activas y vigentes | Nunca |
 | `availableQuantity` | `int` | `quantity − reservedQuantity` | Nunca |
 | `acquisitionCost` | `long` | Componente contable | Nunca |
-| `averageUnitPrice` | `long` | Componente contable | Posición sin cantidad abierta |
+| `averageUnitPrice` | `Long` | Componente contable, precio medio derivado del costo de adquisición y la cantidad abierta | Posición cerrada, sin cantidad abierta |
 | `currentUnitPrice` | `Long` | Componente contable | Sin cotización, o posición cerrada |
 | `priceUpdatedAt` | `OffsetDateTime` | Componente contable | Ídem |
 | `currentValue` | `Long` | Componente contable | Sin cotización, o posición cerrada |

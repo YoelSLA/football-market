@@ -18,7 +18,7 @@ description: "Task list template for feature implementation"
 
 - **[P]**: Can run in parallel (different files, no dependencies)
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
-- **[BLOQUEADA: SPEC-015]**: Tarea cuya ejecución depende de que el componente contable de SPEC-015 exista. No se puede cerrar con un doble: el comportamiento contable solo se acredita con el componente real.
+- **[BLOQUEADA: SPEC-015]**: Tarea cuya ejecución depende de que el componente contable de SPEC-015 exista. No se puede cerrar con un doble: el comportamiento contable solo se acredita con el componente real. Ninguna tarea lo lleva hoy: el componente está implementado e integrado en `dev`.
 
 ## Path Conventions
 
@@ -37,7 +37,7 @@ description: "Task list template for feature implementation"
 - [ ] T003 [P] Verificar si `FinancialPositionService` de SPEC-015 está integrado y disponible en `backend/src/main/java/footballmarket/services/FinancialPositionService.java`; si no lo está, dejar constancia del bloqueo en `specs/014-view-personal-portfolio/tasks.md` y no simular ni sustituir el componente contable
 - [ ] T004 [P] Verificar si `docs/backend/architecture.md` §1.3 documenta ya la relación Service → Service que habilita el consumo del componente contable; si no lo está, registrar la dependencia en `specs/014-view-personal-portfolio/tasks.md` sin modificar ese documento, que corresponde a SPEC-015
 - [ ] T005 [P] Revisar `git status --short` y preservar los cambios locales ajenos antes de escribir
-- [ ] T006 [P] Verificar que la fuente de cotizaciones vigente es la del mercado y que `QuoteSource` y `CurrentQuote` se consumen sin modificación en `backend/src/main/java/footballmarket/integrations/QuoteSource.java`
+- [ ] T006 [P] Verificar que la fuente de cotizaciones vigente es la del mercado y que `QuoteSource` y `CurrentQuote` se consumen sin modificación en `backend/src/main/java/footballmarket/integrations/QuoteSource.java`, que llega ya extendido por SPEC-015 con la adquisición en lote `currentQuotes(Set<Long>)`
 
 ---
 
@@ -73,7 +73,7 @@ description: "Task list template for feature implementation"
 > Escribir tests backend necesarios; resultados y ejecución quedan a cargo del usuario. MUST NOT ejecutar tests desde el agente.
 
 - [ ] T017 [P] [US1] Escribir tests de Repository en `backend/src/test/java/footballmarket/repositories/PortfolioPersistenceTest.java` con grupos `@Nested` que cubran la consulta de las tenencias del propietario, la agrupación de sus reservas vigentes excluyendo publicadas, canceladas, vendidas y vencidas, la lectura por lote de jugadores con su equipo incluyendo jugadores inactivos, y la presencia y uso del índice por propietario (SC-011, E16, E30, E31, E32, E33)
-- [ ] T018 [P] [US1] Escribir tests de Service en `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` con grupos `@Nested` que cubran la composición del portfolio, la identidad `quantity = reservedQuantity + availableQuantity`, la divergencia entre tenencia y reconstrucción con error de integridad, la ausencia de cotización con valoración incompleta y resultado realizado conservado, la propagación del fallo técnico de cotizaciones, el portfolio vacío con ceros, la coherencia de una respuesta bajo concurrencia y el valor reflejado de la cotización de la fuente, sin dependencia de un valor constante (SC-001, SC-002, SC-004, SC-012, E7, E8, E17, E18, E19, E24, E26, E29) [BLOQUEADA: SPEC-015 en los casos de cifras contables]
+- [ ] T018 [P] [US1] Escribir tests de Service en `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` con grupos `@Nested` que cubran la composición del portfolio, la identidad `quantity = reservedQuantity + availableQuantity`, la divergencia entre tenencia y reconstrucción con error de integridad, la ausencia de cotización con valoración incompleta y resultado realizado conservado, la propagación del fallo técnico de cotizaciones, el portfolio vacío con ceros, la coherencia de una respuesta bajo concurrencia y el valor reflejado de la cotización de la fuente, sin dependencia de un valor constante (SC-001, SC-002, SC-004, SC-012, E7, E8, E17, E18, E19, E24, E26, E29)
 - [ ] T019 [P] [US1] Escribir tests de Controller en `backend/src/test/java/footballmarket/controllers/PortfolioControllerTest.java` con `@Tag("lightweight")` que cubran la ruta, la autenticación con cadena de seguridad real, el 401 sin invocar el Service, la presencia de los tres objetos de nivel superior y de los campos que US1 entrega —identificación del jugador, estado, cantidades, cifras y resumen—, y el rechazo sin efectos ante parámetros inválidos (SC-009, E1, E2, E5, E6). La correspondencia completa con el contrato, incluidos los porcentajes por posición que expone US3, se verifica en T036
 
 ### Implementation for User Story 1
@@ -83,7 +83,7 @@ description: "Task list template for feature implementation"
 - [ ] T022 [P] [US1] Crear `PortfolioPaginationResponseDTO` en `backend/src/main/java/footballmarket/controllers/dtos/responses/PortfolioPaginationResponseDTO.java` con `page`, `size`, `totalElements` y `totalPages`
 - [ ] T023 [P] [US1] Crear `PortfolioResponseDTO` en `backend/src/main/java/footballmarket/controllers/dtos/responses/PortfolioResponseDTO.java` con `summary`, `positions` y `pagination` como objetos de nivel superior
 - [ ] T024 [P] [US1] Crear `PortfolioMapper` en `backend/src/main/java/footballmarket/controllers/mappers/PortfolioMapper.java` con la traducción de la vista de dominio a los DTOs, sin cálculos ni lógica de negocio, con constructor privado y métodos estáticos
-- [ ] T025 [US1] Implementar `PortfolioServiceImpl` en `backend/src/main/java/footballmarket/services/impl/PortfolioServiceImpl.java`: declarar la operación con `@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)`; obtener el conjunto completo de posiciones del componente contable y su agregación contable sobre ese conjunto completo; leer las tenencias y las reservas del usuario; cruzar ambas fuentes y detectar la divergencia; componer el resumen con los agregados y los conteos propios; paginar; y devolver la vista, sin recalcular ningún importe contable ni copiar regla alguna de REQ-S2-20 (AC07, AC08, AC12, AC14) [BLOQUEADA: SPEC-015]
+- [ ] T025 [US1] Implementar `PortfolioServiceImpl` en `backend/src/main/java/footballmarket/services/impl/PortfolioServiceImpl.java`: declarar la operación con `@Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)`; obtener el conjunto completo de posiciones del componente contable y su agregación contable sobre ese conjunto completo; leer las tenencias y las reservas del usuario; cruzar ambas fuentes y detectar la divergencia; componer el resumen con los agregados y los conteos propios; paginar; y devolver la vista, sin recalcular ningún importe contable ni copiar regla alguna de REQ-S2-20 (AC07, AC08, AC12, AC14)
 - [ ] T026 [US1] Exponer `GET /api/portfolio/me` en `backend/src/main/java/footballmarket/controllers/PortfolioController.java` con las anotaciones de OpenAPI de la ruta, sus parámetros `page` y `size`, sus respuestas y sus códigos de error, resolviendo la identidad desde el JWT y sin aceptar ningún identificador de usuario del cliente
 - [ ] T027 [US1] Verificar en `specs/014-view-personal-portfolio/contracts/portfolio-api.md` la correspondencia exacta campo por campo con la respuesta implementada y registrar el resultado; modificar el contrato solo si aparece una discrepancia real
 - [ ] T028 [US1] Verificar que la consulta no altera operaciones, tenencias, reservas, publicaciones, cotizaciones ni saldos, y que no expone posiciones, operaciones ni resultados de otro usuario, y que cada operación confirmada cuenta una sola vez por rol (SC-009, SC-010, E6, E32, E34, E35)
@@ -127,11 +127,11 @@ description: "Task list template for feature implementation"
 
 ### Implementation for User Story 3
 
-- [ ] T037 [US3] Implementar en `backend/src/main/java/footballmarket/services/impl/PortfolioServiceImpl.java` la normalización de las posiciones cerradas —cotización, instante de cotización, valor actual y resultado no realizado nulos, resultado total igual al realizado acumulado y estado de valoración `NOT_APPLICABLE`— y la propagación del nulo de `lastTransactionAt` cuando la posición no tiene operaciones confirmadas (FR-013, FR-020, FR-022, FR-030, research R-05)
+- [ ] T037 [US3] Implementar en `backend/src/main/java/footballmarket/services/impl/PortfolioServiceImpl.java` la normalización de las posiciones cerradas —cotización, instante de cotización, valor actual, resultado no realizado y precio medio de adquisición nulos, resultado total igual al realizado acumulado y estado de valoración `NOT_APPLICABLE`— y la propagación del nulo de `lastTransactionAt` cuando la posición no tiene operaciones confirmadas (FR-013, FR-020, FR-022, FR-030, research R-05)
 - [ ] T038 [US3] Implementar en `backend/src/main/java/footballmarket/services/impl/PortfolioServiceImpl.java` los porcentajes propios de la feature: el rendimiento no realizado de cada posición abierta respecto de su costo de adquisición y su peso porcentual sobre el valor total de todas las posiciones abiertas, con `HALF_UP` a dos decimales y nulos cuando su denominador es cero o el valor total no está disponible, sin recalcular ningún importe contable ni derivar el costo desde un precio medio redondeado (FR-028, FR-029, research R-03)
 - [ ] T039 [US3] Exponer en `backend/src/main/java/footballmarket/controllers/dtos/responses/PortfolioPositionResponseDTO.java` y en `backend/src/main/java/footballmarket/controllers/mappers/PortfolioMapper.java` los porcentajes por posición, con su tipo decimal de dos decimales y su nulabilidad
-- [ ] T040 [US3] Verificar en `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` que la emisión inicial de tokens del superusuario aparece como posición abierta con costo de adquisición cero, sin incremento de los contadores de compras y con participación en la valoración (SC-014, E20, AC36) [BLOQUEADA: SPEC-015]
-- [ ] T041 [US3] Verificar en `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` el caso del jugador que dejó de estar en el catálogo: la posición se conserva, su resultado financiero se preserva, los datos descriptivos irrecuperables se informan nulos y una inconsistencia que impida calcular el portfolio produce el error de integridad (FR-040, E24, E25, AC33) [BLOQUEADA: SPEC-015]
+- [ ] T040 [US3] Verificar en `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` que la emisión inicial de tokens del superusuario aparece como posición abierta con costo de adquisición cero, sin incremento de los contadores de compras y con participación en la valoración (SC-014, E20, AC36)
+- [ ] T041 [US3] Verificar en `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` el caso del jugador que dejó de estar en el catálogo: la posición se conserva, su resultado financiero se preserva, los datos descriptivos irrecuperables se informan nulos y una inconsistencia que impida calcular el portfolio produce el error de integridad (FR-040, E24, E25, AC33)
 
 **Checkpoint**: All user stories should now be independently functional
 
@@ -151,27 +151,19 @@ description: "Task list template for feature implementation"
 
 ---
 
-## Tareas bloqueadas por SPEC-015
+## Dependencias resueltas con SPEC-015
 
-Estas tareas no pueden cerrarse hasta que el componente contable de SPEC-015 exista. **No se sustituyen
-por un doble**: el comportamiento contable —costo de adquisición, resultados, porcentaje global,
-agregados, ciclo de tenencia, recuentos por rol e instante de la cotización— solo se acredita con el
-componente real. Son de ejecución secuencial, porque las pruebas de T018, T040 y T041 deben usar la
-implementación real del componente.
+El componente contable de SPEC-015 está implementado e integrado en `dev`, y la matriz de dependencias de
+la arquitectura ya documenta la relación Service → Service. **Ninguna tarea queda bloqueada.**
 
-| Tarea | Dependencia | Motivo |
+| Dependencia | Estado verificado | Tareas que la consumen |
 | --- | --- | --- |
-| T003 | — | Verificación previa: deja constancia del bloqueo si el componente no está integrado |
-| T018 | `FinancialPositionService` real | Los casos de cifras, ausencia de cotización y fallo técnico no se acreditan con un doble |
-| T025 | `FinancialPositionService` real | La composición consume el componente y su agregación contable |
-| T040 | `FinancialPositionService` real | La emisión inicial y la ausencia de costo de adquisición provienen del componente |
-| T041 | `FinancialPositionService` real | La reconstrucción contable de la posición es la que se contrasta con la tenencia |
-| T004 y T045 | Actualización de `docs/backend/architecture.md` de SPEC-015 | La relación Service → Service debe estar documentada antes de considerarla autorizada |
+| `FinancialPositionService` real | Implementado e integrado en `dev`; su interfaz `positionsOf` y la agregación `FinancialPositionCalculator.aggregate` coinciden con lo planificado | T018, T025, T040, T041 |
+| `docs/backend/architecture.md` §1.3 y §5 | Relación Service → Service autorizada para la integración de portfolio | T004, T045 |
 
-Mientras el bloqueo siga vigente, **son ejecutables** T001 a T017, T019 a T024, T026 a T039 y T042 a T048: toda la consulta, su forma, sus errores, su seguridad, el filtro, el orden, la paginación y
-los porcentajes propios no dependen del componente contable.
-
----
+Las tareas que consumen el componente **deben usar su implementación real**: el comportamiento contable —costo
+de adquisición, resultados, porcentaje global, agregados, ciclo de tenencia, recuentos por rol e instante de la
+cotización— no se acredita con un doble.
 
 ## Dependencies & Execution Order
 
@@ -268,6 +260,6 @@ With multiple developers:
 - Commit after each task or logical group
 - Stop at any checkpoint to validate story independently
 - Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
-- Las tareas marcadas `[BLOQUEADA: SPEC-015]` no se cierran con un doble del componente contable: el comportamiento contable se acredita con la implementación real
+- Las tareas que consumen el componente contable se cierran con su implementación real, nunca con un doble: el comportamiento contable se acredita con la implementación real
 - Las tres historias comparten `PortfolioServiceImpl`, `PortfolioPositionResponseDTO` y `PortfolioMapper`: sus tareas de implementación se ejecutan en secuencia, y solo los tests se escriben en paralelo
 - Ninguna tarea de esta feature modifica `specs/015-define-average-cost-and-financial-results-rules/`, `docs/backend/architecture.md` (salvo el apartado propio de T045) ni el worktree de SPEC-015

@@ -88,7 +88,7 @@ migración de índice y las pruebas de las categorías Repository, Service y Con
 | **§III Seguridad e integridad** | La consulta es de solo lectura y opera sobre el usuario de la sesión; no acepta identificador de usuario del cliente ni expone carteras ajenas (FR-002, FR-042, CL-30). No escribe operaciones, tenencias, reservas, publicaciones, cotizaciones ni saldos (FR-037) | PASS |
 | **§IV Coherencia de contratos** | No se modifica ningún contrato HTTP ajeno. El contrato del componente contable de SPEC-015 se consume tal como está; el contrato propio de esta feature queda en `contracts/portfolio-api.md` y en las anotaciones OpenAPI (FR-041) | PASS |
 | **§V Trazabilidad y fuente de verdad** | Cada cifra financiera tiene una única fuente: el componente contable de SPEC-015. Las tenencias y las reservas se leen del estado que las origina. No hay segunda fuente de verdad ni libro de costo en esta feature | PASS |
-| **Matriz de dependencias de la arquitectura** | El Service de esta feature consume el Service de SPEC-015: una relación **Service → Service** que la matriz de `docs/backend/architecture.md` §1.3 aún no enumera. SPEC-015 ya la registra y la documenta en su propio plan (`research.md` R-01, riesgo RA-1), con la aprobación humana de esa actualización registrada y su edición diferida a la fase de implementación. Esta feature **no introduce la relación por su cuenta ni la asume resuelta**: la declara como dependencia documental (R-11) | PASS **condicionado** — depende de la actualización de `docs/backend/architecture.md` que SPEC-015 ejecuta en su IMPLEMENT |
+| **Matriz de dependencias de la arquitectura** | El Service de esta feature consume el Service de SPEC-015: una relación **Service → Service** que `docs/backend/architecture.md` §1.3 ya enumera de forma acotada —*«otro Service exclusivamente para la integración de portfolio descrita en §5»*— y que §5 documenta con sus componentes. Esta feature **no introduce la relación por su cuenta**: la consume como dependencia ya autorizada (R-11) | PASS — la matriz y el apartado de SPEC-015 están integrados en `dev` |
 | **Flujo SDD §3 (autorizaciones)** | El plan no implementa, no habilita IMPLEMENT y no ejecuta pruebas; la autorización sigue siendo humana y explícita | PASS |
 | **Flujo SDD §6 (Protocolo)** | El plan no redacta la especificación ni las tareas; no se avanzan fases | PASS |
 | **AGENTS.md raíz (no tests)** | El plan describe pruebas; su ejecución y los resultados son del usuario | PASS |
@@ -165,7 +165,8 @@ backend/src/test/java/footballmarket/
                                                    # por el contrato HTTP (testing.md §2)
 ```
 
-**Sin cambios**: frontend, `integrations/QuoteSource`, los contratos públicos de SPEC-010 y SPEC-011,
+**Sin cambios**: frontend, `integrations/QuoteSource` —que llega ya extendido por SPEC-015 con la
+adquisición en lote y esta feature no lo modifica—, los contratos públicos de SPEC-010 y SPEC-011,
 y los componentes contables de SPEC-015, que esta feature consume sin modificar.
 
 **Structure Decision**: se conserva la estructura física existente del backend, que refleja los roles
@@ -337,14 +338,15 @@ Componentes nuevos: `PortfolioController`, sus DTOs, `PortfolioMapper`, `Portfol
 
 - La lectura de los **datos descriptivos** de los jugadores de la página se resuelve **por lote**, en
   una sola consulta, de modo que no crece con el tamaño de la página.
-- La **adquisición de cotizaciones** es el único acceso que crece con la cantidad de **jugadores
-  distintos** del portfolio, y ocurre **dentro del componente contable**, que la encapsula en un punto
-  sustituible por una llamada masiva cuando REQ-S2-03 aporte el repositorio canónico. No es una
-  consulta por posición y no se ejecuta en esta feature.
+- La **adquisición de cotizaciones** no se ejecuta en esta feature: ocurre **dentro del componente
+  contable**, que la resuelve **en lote** mediante `QuoteSource.currentQuotes`, de modo que tampoco
+  crece con la cantidad de jugadores distintos. No es una consulta por posición. Una fuente que no
+  admita la adquisición en lote no puede atender el portfolio, y esa limitación se propaga como
+  fallo técnico de cotizaciones (FR-023).
 
 El conteo total de consultas de esta feature es **constante** (cuatro: tenencias, reservas, jugadores
 de la página y el componente contable); el del componente contable es el que SPEC-015 define (dos
-consultas de conjunto y una adquisición por jugador distinto).
+consultas de conjunto y una adquisición de cotizaciones **en lote**).
 
 El índice sobre `token_listings (seller_user_id, player_id) WHERE status = 'ACTIVE'` **no se crea**:
 el índice vigente por vendedor cubre el filtro y la agrupación es un agregado sobre ese conjunto. Se
@@ -371,8 +373,8 @@ No hay pruebas de frontend: el frontend está exento de testing.
 
 | Riesgo | Descripción | Mitigación |
 | --- | --- | --- |
-| **RA-1 Dependencia contable no implementada** | Las cifras financieras las produce el componente de SPEC-015, que todavía no existe | Se consume por interfaz, con el contrato como frontera; la implementación de la parte financiera se secuencia después de SPEC-015. La consulta y su contrato no dependen de ella para diseñarse |
-| **RA-2 Contrato contable provisional** | Los artefactos de plan de SPEC-015 no están publicados y su contrato puede cambiar | Se consume por capacidades (FR-027, FR-028, FR-031, FR-032, FR-010 de SPEC-015), no por firmas; el contrato se revisa al integrarse |
+| **RA-1 Dependencia contable** | Las cifras financieras las produce el componente de SPEC-015, ya implementado e integrado en `dev` | Se consume por interfaz, con el contrato como frontera y sin fórmulas paralelas. La parte financiera es ejecutable y no depende de un doble |
+| **RA-2 Contrato contable** | El contrato de SPEC-015 ya está publicado e integrado; su interfaz y su agregación coinciden con lo previsto aquí | Se consume por capacidades (FR-027, FR-028, FR-031, FR-032, FR-010 de SPEC-015), no por firmas; cualquier cambio futuro vuelve a activar esta revisión |
 | **RA-3 Relación Service → Service fuera de la matriz** | La matriz de `docs/backend/architecture.md` §1.3 no enumera esa relación | SPEC-015 la documenta y registra la aprobación humana; esta feature la declara como dependencia documental y no la introduce por su cuenta (R-11) |
 | **RA-4 Mapeo HTTP de excepciones ajenas** | El manejador global no tiene un caso genérico de `FootballMarketException` | Esta feature mapea explícitamente las dos excepciones del componente contable, en el archivo compartido, de forma coordinada con SPEC-015, que no lo modifica (R-09) |
 | **RA-5 Divergencia entre fuentes de cantidad** | La cantidad reconstruida y la tenencia persistida podrían divergir | Se comparan bajo una misma instantánea y la divergencia produce error de integridad, nunca una elección silenciosa (R-04) |
@@ -380,7 +382,7 @@ No hay pruebas de frontend: el frontend está exento de testing.
 | **RA-7 Tamaño del conjunto de posiciones** | Para el superusuario, el conjunto coincide con el tamaño del catálogo emitido | La agregación y el filtrado son lineales sobre el conjunto recibido; el coste se mide y no se fijan latencias arbitrarias (R-15) |
 | **RA-8 Dos migraciones de índice en paralelo** | SPEC-015 añade `player_token_emissions (owner_user_id)` y esta feature `player_tokens (owner_user_id, player_id)` | Se usan marcas de tiempo distintas y se coordinate la aplicación de ambas; el conflicto de archivos de migración se resuelve al integrar (R-08) |
 | **RA-9 Divergencia de la regla de presentación nominal** | `openedAt`, `closedAt`, `lastTransactionAt` y los recuentos son hechos de SPEC-015 cuya forma nominal es de esta feature | Se consume el hecho sin reinterpretarlo; si esta feature cambiara su definición, el Model de SPEC-015 debe alinearse (R-05) |
-| **RA-10 Evolución de la fuente de cotizaciones** | El puerto vigente consulta un jugador por vez | El acceso a cotizaciones ocurre dentro del componente contable, no en esta feature: la sustitución por una fuente real no altera esta feature (R-15) |
+| **RA-10 Evolución de la fuente de cotizaciones** | El puerto vigente admite ya la adquisición en lote (`QuoteSource.currentQuotes`), incorporada por SPEC-015; una fuente que no la implemente rechaza esa capacidad | El acceso a cotizaciones ocurre dentro del componente contable y no se ejecuta en esta feature: la sustitución por la fuente real de REQ-S2-03 no altera su comportamiento mientras conserve la adquisición en lote (R-15) |
 
 Dependencias técnicas: SPEC-010 y SPEC-011 (dominio de mercado, tenencias, publicaciones y reservas),
 SPEC-015 (componente contable y reglas contables), REQ-S2-03 (fuente definitiva de cotizaciones, hoy
@@ -412,7 +414,8 @@ dependencia.
 | `backend/src/test/java/footballmarket/services/PortfolioServiceTest.java` | Nuevo | Categoría Service |
 | `backend/src/test/java/footballmarket/repositories/PortfolioPersistenceTest.java` | Nuevo | Categoría Repository |
 
-No se modifican el frontend, `integrations/QuoteSource`, los contratos públicos de SPEC-010 y
+No se modifican el frontend, `integrations/QuoteSource` —que llega ya extendido por SPEC-015 con la
+adquisición en lote—, los contratos públicos de SPEC-010 y
 SPEC-011 ni los componentes contables de SPEC-015. La actualización de `docs/backend/architecture.md`
 que documenta la relación Service → Service corresponde a SPEC-015 (R-11) y es dependencia de esta
 feature, no archivo suyo.
@@ -471,8 +474,8 @@ componentes que su propio contrato exige.
 
 - Rama: `feat/014-consultar-portfolio-personal`, publicada en `origin` con el commit `9335e75` y el
   Pull Request documental **#64** abierto hacia `dev`.
-- Los artefactos de este plan están **sin commitear**: el plan no hace commit ni push sin
-  autorización.
+- Los artefactos de esta feature están versionados en la rama `feat/014-consultar-portfolio-personal`, cuyo Pull
+  Request documental sigue abierto hacia `dev`. El plan no hace commit ni push sin autorización.
 - La especificación de esta feature fue corregida tras la revisión de compatibilidad con SPEC-015
   (precisión del precio medio, orden contable, propiedad de los porcentajes y exposición del precio
   medio) y esos cambios tampoco están commiteados.
