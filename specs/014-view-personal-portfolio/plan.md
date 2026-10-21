@@ -145,7 +145,10 @@ backend/src/main/java/footballmarket/
 ├── repositories/
 │   ├── PlayerTokenRepository.java                  # MODIFICADO: tenencias del propietario
 │   ├── TokenListingRepository.java                 # MODIFICADO: reservas del propietario agrupadas
-│   └── PlayerRepository.java                       # MODIFICADO: jugadores de la página por lote
+│   ├── PlayerRepository.java                       # MODIFICADO: jugadores de la página por lote
+│   └── projections/
+│       ├── HoldingQuantity.java                    # NUEVO: proyección de tenencias (playerId, quantity)
+│       └── ReservedQuantity.java                   # NUEVO: proyección de reservas (playerId, quantity)
 └── services/impl/FinancialPositionServiceImpl.java  # DE SPEC-015: componente contable consumido
 
 backend/src/main/resources/db/migration/
@@ -170,10 +173,14 @@ adquisición en lote y esta feature no lo modifica—, los contratos públicos d
 y los componentes contables de SPEC-015, que esta feature consume sin modificar.
 
 **Structure Decision**: se conserva la estructura física existente del backend, que refleja los roles
-arquitectónicos (`docs/backend/architecture.md` §2.1). No se crean paquetes nuevos: los componentes
-viven en los paquetes de su rol (`controllers`, `controllers.dtos.responses`, `controllers.mappers`,
-`controllers.exceptions`, `models.records`, `models.exceptions`, `services`, `services.impl`,
-`repositories`), igual que las demás features.
+arquitectónicos (`docs/backend/architecture.md` §2.1). Los componentes viven en los paquetes de su rol
+(`controllers`, `controllers.dtos.responses`, `controllers.mappers`, `controllers.exceptions`,
+`models.records`, `models.exceptions`, `services`, `services.impl`, `repositories`), igual que las
+demás features. La única excepción es el subpaquete `repositories.projections`, que aloja las
+proyecciones de consulta `HoldingQuantity` y `ReservedQuantity`: se extraen del repositorio que las
+produce para que el servicio y las pruebas las usen sin depender de la qualification anidada del
+repositorio, que era una referencia cruzada entre capas. Las proyecciones conservan su tipo, sus
+aliases de consulta (`playerId`, `quantity`) y su comportamiento.
 
 ## Diseño técnico
 
@@ -336,8 +343,11 @@ Componentes nuevos: `PortfolioController`, sus DTOs, `PortfolioMapper`, `Portfol
 
 **No hay ninguna consulta por posición** (FR-039, AC35). Dos precisiones sobre el conteo:
 
-- La lectura de los **datos descriptivos** de los jugadores de la página se resuelve **por lote**, en
-  una sola consulta, de modo que no crece con el tamaño de la página.
+- La lectura de los **datos descriptivos** de los jugadores se resuelve **por lote**, en una sola
+  consulta que cubre el **conjunto completo de posiciones** y no solo la página. El orden de
+  presentación compara los nombres de los jugadores de las posiciones cerradas, de modo que los
+  nombres deben conocerse antes de ordenar y antes de recortar la página. La consulta sigue siendo
+  única y de conjunto: no hay acceso por posición.
 - La **adquisición de cotizaciones** no se ejecuta en esta feature: ocurre **dentro del componente
   contable**, que la resuelve **en lote** mediante `QuoteSource.currentQuotes`, de modo que tampoco
   crece con la cantidad de jugadores distintos. No es una consulta por posición. Una fuente que no
@@ -345,8 +355,10 @@ Componentes nuevos: `PortfolioController`, sus DTOs, `PortfolioMapper`, `Portfol
   fallo técnico de cotizaciones (FR-023).
 
 El conteo total de consultas de esta feature es **constante** (cuatro: tenencias, reservas, jugadores
-de la página y el componente contable); el del componente contable es el que SPEC-015 define (dos
-consultas de conjunto y una adquisición de cotizaciones **en lote**).
+y el componente contable); el del componente contable es el que SPEC-015 define (dos consultas de
+conjunto y una adquisición de cotizaciones **en lote**). La consulta de tenencias **proyecta**
+identificador de jugador y cantidad: no materializa las tenencias ni sus jugadores, de modo que no
+abre un acceso por posición.
 
 El índice sobre `token_listings (seller_user_id, player_id) WHERE status = 'ACTIVE'` **no se crea**:
 el índice vigente por vendedor cubre el filtro y la agrupación es un agregado sobre ese conjunto. Se
@@ -408,6 +420,8 @@ dependencia.
 | `backend/src/main/java/footballmarket/repositories/PlayerTokenRepository.java` | Modificado | Consulta de tenencias del propietario |
 | `backend/src/main/java/footballmarket/repositories/TokenListingRepository.java` | Modificado | Consulta agrupada de reservas del propietario por jugador |
 | `backend/src/main/java/footballmarket/repositories/PlayerRepository.java` | Modificado | Lectura por lote de los jugadores de la página, con su equipo |
+| `backend/src/main/java/footballmarket/repositories/projections/HoldingQuantity.java` | Nuevo | Proyección de la cantidad poseída por jugador, sin materializar tenencias ni jugadores |
+| `backend/src/main/java/footballmarket/repositories/projections/ReservedQuantity.java` | Nuevo | Proyección de la cantidad reservada por jugador, sin materializar publicaciones |
 | `backend/src/main/java/footballmarket/controllers/exceptions/GlobalExceptionHandler.java` | Modificado | Mapeo de las excepciones propias y de las del componente contable |
 | `backend/src/main/resources/db/migration/V<n>__index_player_tokens_owner.sql` | Nuevo | Índice `(owner_user_id, player_id)` |
 | `backend/src/test/java/footballmarket/controllers/PortfolioControllerTest.java` | Nuevo | Categoría Controller |
