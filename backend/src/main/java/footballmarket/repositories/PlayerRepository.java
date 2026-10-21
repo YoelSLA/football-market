@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /** Consulta local del catálogo vigente con asociaciones disponibles al terminar la lectura. */
@@ -35,6 +36,19 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
       "select p from Player p join p.team t join t.league l"
           + " where p.id = :id and p.active = true and t.current = true")
   Optional<Player> findVisibleById(Long id);
+
+  /**
+   * Lectura por lote de los jugadores indicados, con su equipo disponible para la respuesta.
+   *
+   * <p>Una sola consulta para toda la página: el equipo se carga en la misma lectura, de modo que
+   * la presentación de las posiciones no abre una consulta por jugador. No filtra por visibilidad:
+   * un jugador inactivo permanece en el portfolio con sus datos descriptivos.
+   *
+   * @param playerIds identificadores de los jugadores de la página
+   * @return jugadores indicados con su equipo cargado
+   */
+  @Query("select p from Player p join fetch p.team t where p.id in :playerIds")
+  List<Player> findAllByIdInWithTeam(@Param("playerIds") List<Long> playerIds);
 
   Optional<Player> findFirstByIdGreaterThanOrderByIdAsc(Long id);
 

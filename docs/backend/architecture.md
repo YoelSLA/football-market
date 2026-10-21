@@ -170,3 +170,29 @@ por POST autenticado sin entrada.
 - Una clave omitida en el lote representa ausencia de cotización; un fallo técnico aborta la
   respuesta completa. Una fuente sin soporte masivo rechaza explícitamente esa capacidad.
   Los contratos HTTP y su traducción de errores pertenecen al consumidor, no a SPEC-015.
+
+## 6. Consulta de portfolio (SPEC-014)
+
+- `PortfolioService` y su implementación componen la consulta de solo lectura del portfolio
+  personal: consumen las posiciones y la agregación de SPEC-015, leen del estado de mercado las
+  cantidades poseídas y reservadas, y aplican filtro, orden y paginación. Es un Service con
+  interfaz e implementación separadas, en `footballmarket.services` y `footballmarket.services.impl`.
+- La respuesta expone tres objetos de nivel superior —`summary`, `positions` y `pagination`— con
+  DTOs `record` en `controllers.dtos.responses` y la traducción en `PortfolioMapper`, sin cálculos
+  ni reglas de negocio.
+- El Service consume la interfaz `FinancialPositionService` de SPEC-015, relación Service →
+  Service autorizada por RA-1 únicamente para esta integración. No reinterpreta operaciones ni
+  duplica fórmulas contables: los porcentajes por posición son los únicos que la feature calcula,
+  sobre las cifras que el componente le entrega.
+- La consulta es `@Transactional(readOnly = true, isolation = REPEATABLE_READ)` y mantiene ese
+  aislamiento en su transacción envolvente, como exige la sección 5 para el consumidor. No escribe
+  operaciones, tenencias, reservas, publicaciones, cotizaciones ni saldos.
+- Las lecturas de mercado son de conjunto: tenencias del propietario, reservas del propietario
+  agrupadas por jugador y jugadores de las posiciones en una sola lectura. No hay consulta por
+  posición. Las dos primeras lecturas se resuelven con proyecciones de consulta —`HoldingQuantity`
+  y `ReservedQuantity`, en `footballmarket.repositories.projections`— que proyectan identificador de
+  jugador y cantidad, sin materializar tenencias, publicaciones ni jugadores.
+- El cruce entre la cantidad poseída y la reconstruida detecta cualquier divergencia del estado
+  del mercado y se traduce en error de integridad, sin elegir una de las dos fuentes. Los errores
+  HTTP de esta feature —paginación, filtro, integridad e indisponibilidad de cotizaciones— se
+  traducen en `GlobalExceptionHandler`, que no tiene un caso genérico de `FootballMarketException`.

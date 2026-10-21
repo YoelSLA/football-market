@@ -5,10 +5,13 @@ import footballmarket.exceptions.FootballMarketException;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
 import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
+import footballmarket.integrations.exceptions.QuoteBatchUnavailableException;
 import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
 import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
+import footballmarket.models.exceptions.FinancialPositionIntegrityException;
 import footballmarket.models.exceptions.InsufficientPlayerTokensException;
 import footballmarket.models.exceptions.InsufficientUserCreditsException;
+import footballmarket.models.exceptions.PortfolioIntegrityException;
 import footballmarket.services.exceptions.ArithmeticOverflowException;
 import footballmarket.services.exceptions.CannotBuyOwnListingException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
@@ -335,6 +338,48 @@ public class GlobalExceptionHandler {
         "El parámetro de consulta no tiene un formato válido",
         "INVALID_PARAMETER_TYPE",
         HttpStatus.BAD_REQUEST,
+        request);
+  }
+
+  @ExceptionHandler(InvalidPortfolioPageException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidPortfolioPage(
+      InvalidPortfolioPageException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "INVALID_PARAMETER_TYPE", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(InvalidPortfolioStatusException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidPortfolioStatus(
+      InvalidPortfolioStatusException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "INVALID_PARAMETER_TYPE", HttpStatus.BAD_REQUEST, request);
+  }
+
+  /**
+   * Traduce la imposibilidad de reconstruir el portfolio sin exponer el detalle interno de la
+   * inconsistencia detectada.
+   */
+  @ExceptionHandler({PortfolioIntegrityException.class, FinancialPositionIntegrityException.class})
+  public ResponseEntity<ErrorResponseDTO> handlePortfolioIntegrityFailure(
+      FootballMarketException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        "No se pudo procesar la consulta del portfolio. Intentá nuevamente más tarde.",
+        "INTERNAL_ERROR",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
+
+  /**
+   * Traduce la indisponibilidad técnica de la fuente de cotizaciones, que impide valorar el
+   * portfolio completo. No se devuelven datos financieros parciales.
+   */
+  @ExceptionHandler(QuoteBatchUnavailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleQuoteBatchUnavailable(
+      QuoteBatchUnavailableException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        "La fuente de cotizaciones no está disponible en este momento.",
+        "QUOTE_SOURCE_UNAVAILABLE",
+        HttpStatus.SERVICE_UNAVAILABLE,
         request);
   }
 
