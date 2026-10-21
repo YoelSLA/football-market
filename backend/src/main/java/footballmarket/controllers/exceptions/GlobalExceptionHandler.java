@@ -40,6 +40,8 @@ import footballmarket.services.exceptions.SuperuserCannotBuyException;
 import footballmarket.services.exceptions.SuperuserCannotSellException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
+import footballmarket.services.exceptions.ValuationEvaluationException;
+import footballmarket.services.exceptions.ValuationSnapshotUnavailableException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import org.springframework.http.HttpStatus;
@@ -50,6 +52,30 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+  @ExceptionHandler(InvalidValuationRequestException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidValuationRequest(
+      InvalidValuationRequestException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(ValuationSnapshotUnavailableException.class)
+  public ResponseEntity<ErrorResponseDTO> handleValuationSnapshotUnavailable(
+      ValuationSnapshotUnavailableException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "VALUATION_SNAPSHOT_UNAVAILABLE", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(ValuationEvaluationException.class)
+  public ResponseEntity<ErrorResponseDTO> handleValuationEvaluation(
+      ValuationEvaluationException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(),
+        "VALUATION_EVALUATION_FAILED",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
 
   @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
   public ResponseEntity<ErrorResponseDTO> handleMissingParameter(

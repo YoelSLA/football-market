@@ -2,7 +2,7 @@
 
 ## Guía de lectura
 
-Consultar primero las [reglas arquitectónicas comunes](../architecture.md). Leer §1 y, para integraciones externas, §2. Las reglas de naming, formato y estilo de implementación están en [convenciones del backend](conventions.md); el stack, versiones y dependencias, en [tecnologías del backend](technologies.md). Consultar estos documentos según el área afectada.
+Consultar primero las [reglas arquitectónicas comunes](../architecture.md). Leer §1 y, para integraciones externas, §2. Las reglas de naming, formato y estilo de implementación están en [convenciones del backend](conventions.md); el stack, versiones y dependencias, en [tecnologías del backend](technologies.md); el modelo de datos persistido y su diagrama de entidades, en [modelo de datos del backend](data-model.md). Consultar estos documentos según el área afectada.
 
 ## 1. Arquitectura
 
@@ -29,7 +29,7 @@ DTO representa exclusivamente entrada/salida HTTP; Service, Model y Repository n
 | --- | --- |
 | Controller | DTO, Mapper, Service, Orchestrator. |
 | Orchestrator | Service, Model. |
-| Service | Model, Repository, Integration. |
+| Service | Model, Repository, Integration; otro Service exclusivamente para la integración de portfolio descrita en §5. |
 | Repository | Model. |
 
 DTO y Mapper se rigen por §1.2. Model no depende de Service, Repository ni Integration. Controller no depende de Model, Repository o Integration. La dependencia `Orchestrator → Model` se permite exclusivamente para transportar de forma opaca entre Services un Model producido por uno de ellos o para devolver un Model producido por un Service como resultado de la coordinación; no autoriza ninguna lógica sobre el Model. Orchestrator no depende de Repository, Integration ni otro Orchestrator. Integration solo puede ser consumida por Service entre los roles enumerados.
@@ -40,7 +40,7 @@ Estas matrices tienen el alcance definido en la [arquitectura común](../archite
 
 Las reglas resolubles exclusivamente con información y comportamiento de dominio pertenecen a Model, incluso si involucran varios Model. Las que requieren Repository, Integration u otras capacidades externas al dominio pertenecen a Service.
 
-La pertenencia de esa lógica al rol Service se define por lo establecido en §1.1 y no por el uso de Repository: un componente forma parte del rol Service sin constituir un Service independiente cuando compone internamente un caso de uso, no expone interfaz de aplicación, no es consumido por otros Services y comparte el límite transaccional del Service que lo compone. Sus dependencias hacia Model, Repository e Integration son las del propio rol Service. El Service coordinador conserva la condición de §1.1 —interfaz e implementación separadas y consumidores dependientes de la interfaz— y es la fachada del caso de uso. Esta composición interna no habilita dependencias entre Services ni ciclos, no autoriza su reutilización transversal y no sustituye al Orchestrator cuando la coordinación corresponde a casos de uso independientes.
+La pertenencia de esa lógica al rol Service se define por lo establecido en §1.1 y no por el uso de Repository: un componente forma parte del rol Service sin constituir un Service independiente cuando compone internamente un caso de uso, no expone interfaz de aplicación, no es consumido por otros Services y comparte el límite transaccional del Service que lo compone. Sus dependencias hacia Model, Repository e Integration son las del propio rol Service. El Service coordinador conserva la condición de §1.1 —interfaz e implementación separadas y consumidores dependientes de la interfaz— y es la fachada del caso de uso. Esta composición interna no habilita dependencias entre Services ni ciclos, no autoriza su reutilización transversal y no sustituye al Orchestrator cuando la coordinación corresponde a casos de uso independientes. La excepción autorizada de §5 corresponde a un Service independiente reutilizable, no a composición interna ni a una habilitación general de dependencias Service → Service.
 
 ### 1.5. Model del backend
 
@@ -123,3 +123,50 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 fuera del contexto Spring, con modos `batch` y `campaign`. No consulta WhoScored ni la
 persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
 por POST autenticado sin entrada.
+
+## 4. Valoraciones estadísticas de jugadores (SPEC-013)
+
+- Controller: `ValuationController` expone únicamente `POST /api/valuations/evaluate`, sin body,
+  query ni selección de jugador o estrategia. Conserva la autenticación Bearer y devuelve un
+  resumen agregado.
+- Service: `ValuationEvaluationService` es la fachada del recorrido poblacional. Los componentes
+  internos seleccionan la última campaña JSON confirmada, preparan poblaciones y publican cada par
+  de resultados en una transacción independiente, permitiendo continuar ante fallos individuales.
+- Snapshot: una campaña JSON está confirmada cuando su run está terminado (`COMPLETED` o `PARTIAL`),
+  ningún item quedó en fallo estructural (`INCOMPLETE`, `INTERRUPTED`, `BLOCKED`,
+  `STRUCTURE_CHANGED`) y todo item `COMPLETED` tiene su fila JSON de esa fecha. Los items sin datos
+  del proveedor y los fallos de un jugador concreto no invalidan la campaña: esos jugadores quedan
+  sin snapshot y se excluyen como `MISSING_OR_UNCONFIRMED_SNAPSHOT`.
+- Model: `ValuationMetricAssembler` y `ValuationMetricPipeline` resuelven fallback, derivaciones,
+  imputaciones, percentiles, confianza y precisión. `PositionalValuationCalculator` y
+  `AttributeValuationCalculator` contienen las fórmulas versionadas de las dos estrategias.
+  `GeneralPosition` traduce la posición persistida por el catálogo (`Goalkeeper`, `Defence`,
+  `Midfield`, `Offence` y sus equivalentes en inglés) al conjunto cerrado de cuatro posiciones
+  generales.
+- Persistencia: `player_positional_valuations` y `player_attribute_valuations` mantienen una fila
+  por jugador, fecha, estrategia y versión, con componentes reconstruibles e índices de fecha,
+  resultado y jugador/fecha. Ambas filas se publican o retiran juntas. La republicación materializa
+  el borrado previo antes del insert para respetar la unicidad por jugador, fecha y estrategia.
+- Límites: el caso de uso solo lee estadísticas locales de SPEC-012. No extrae datos, programa
+  ejecuciones, expone lecturas, elige estrategia activa ni convierte scores en cotizaciones.
+
+## 5. Contabilidad de posiciones (SPEC-015)
+
+- `PlayerFinancialPosition` conserva costo remanente autoritativo, promedio derivado nullable,
+  resultado realizado acumulado, hechos del ciclo, contadores por rol y snapshot de valoración.
+  `FinancialPositionCalculator` reconstruye el historial por instante e identidad y expone
+  `aggregate` sobre el conjunto completo, nunca sobre una página. Son Model puros sin E/S.
+- `FinancialPositionService` y su implementación cargan operaciones y emisiones en dos consultas
+  de conjunto; usan el lote `QuoteSource.currentQuotes` para posiciones abiertas, sin fallback
+  individual, endpoints ni tablas de costo persistidas. El método anterior `currentQuote(Long)`
+  sigue disponible para compras y publicaciones.
+- RA-1 autoriza específicamente al Service del portfolio de SPEC-014 a consumir la interfaz
+  `FinancialPositionService`. No se permiten ciclos ni llamadas inversas, ni se habilita
+  Service → Service para otras relaciones. El consumidor no reinterpreta operaciones ni duplica
+  fórmulas: utiliza las posiciones y la agregación de Model.
+- La lectura es `@Transactional(readOnly = true, isolation = REPEATABLE_READ)`. El consumidor
+  debe mantener ese aislamiento en su transacción envolvente; la propagación REQUIRED no lo
+  eleva automáticamente. La garantía local no implica una transacción distribuida con proveedores.
+- Una clave omitida en el lote representa ausencia de cotización; un fallo técnico aborta la
+  respuesta completa. Una fuente sin soporte masivo rechaza explícitamente esa capacidad.
+  Los contratos HTTP y su traducción de errores pertenecen al consumidor, no a SPEC-015.

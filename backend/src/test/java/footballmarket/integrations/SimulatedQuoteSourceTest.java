@@ -1,12 +1,17 @@
 package footballmarket.integrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.integrations.exceptions.QuoteBatchUnavailableException;
 import footballmarket.models.records.CurrentQuote;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,6 +26,60 @@ import org.junit.jupiter.api.Test;
 class SimulatedQuoteSourceTest {
 
   private static final Long PLAYER_ID = 7821L;
+
+  @Nested
+  @DisplayName("Cotizaciones masivas compatibles")
+  class BatchQuotes {
+    @Test
+    @DisplayName("Construye el lote con un instante común sin invocar la lectura individual")
+    void construyeLoteSinDelegar() {
+      // Arrange
+      Instant instant = Instant.parse("2026-10-20T12:00:00Z");
+      Clock clock = Clock.fixed(instant, ZoneOffset.UTC);
+      QuoteSource source =
+          new SimulatedQuoteSource(125L, clock) {
+            @Override
+            public Optional<CurrentQuote> currentQuote(Long playerId) {
+              throw new AssertionError("El lote no debe invocar currentQuote");
+            }
+          };
+
+      // Act
+      Map<Long, CurrentQuote> result = source.currentQuotes(Set.of(1L, 2L));
+
+      // Assert
+      assertThat(result).containsOnlyKeys(1L, 2L);
+      assertThat(result.get(1L).playerId()).isEqualTo(1L);
+      assertThat(result.get(2L).playerId()).isEqualTo(2L);
+      assertThat(result.values())
+          .allSatisfy(
+              quote -> {
+                assertThat(quote.price()).isEqualTo(125L);
+                assertThat(quote.calculatedAt()).isEqualTo(instant.atOffset(ZoneOffset.UTC));
+              });
+    }
+
+    @Test
+    @DisplayName("Un conjunto vacío no produce cotizaciones")
+    void aceptaConjuntoVacio() {
+      // Arrange
+      QuoteSource source = new SimulatedQuoteSource();
+      // Act / Assert
+      assertThat(source.currentQuotes(Set.of())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Una implementación antigua conserva la lectura individual y rechaza el lote")
+    void conservaCompatibilidadIndividual() {
+      // Arrange
+      CurrentQuote quote = new CurrentQuote(1L, 100L, OffsetDateTime.now(ZoneOffset.UTC), null);
+      QuoteSource legacy = playerId -> Optional.of(quote);
+      // Act / Assert
+      assertThat(legacy.currentQuote(1L)).contains(quote);
+      assertThatThrownBy(() -> legacy.currentQuotes(Set.of(1L)))
+          .isInstanceOf(QuoteBatchUnavailableException.class);
+    }
+  }
 
   @Nested
   @DisplayName("Cotización simulada")
