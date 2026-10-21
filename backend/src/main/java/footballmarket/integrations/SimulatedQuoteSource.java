@@ -4,7 +4,10 @@ import footballmarket.models.records.CurrentQuote;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Fuente de cotización simulada para desarrollo y pruebas.
@@ -57,5 +60,21 @@ public class SimulatedQuoteSource implements QuoteSource {
     OffsetDateTime calculatedAt = OffsetDateTime.now(this.clock.withZone(ZoneOffset.UTC));
     return Optional.of(
         new CurrentQuote(playerId, this.price, calculatedAt, SIMULATED_STRATEGY_VERSION));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Map<Long, CurrentQuote> currentQuotes(Set<Long> playerIds) {
+    if (playerIds.isEmpty()) {
+      return Map.of();
+    }
+    OffsetDateTime calculatedAt = OffsetDateTime.now(this.clock.withZone(ZoneOffset.UTC));
+    Map<Long, CurrentQuote> result = new HashMap<>();
+    for (Long playerId : playerIds) {
+      result.put(
+          playerId,
+          new CurrentQuote(playerId, this.price, calculatedAt, SIMULATED_STRATEGY_VERSION));
+    }
+    return Map.copyOf(result);
   }
 }

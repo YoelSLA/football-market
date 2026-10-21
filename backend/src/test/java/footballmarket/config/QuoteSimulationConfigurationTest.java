@@ -1,10 +1,12 @@
 package footballmarket.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.integrations.QuoteSource;
 import footballmarket.integrations.SimulatedQuoteSource;
 import footballmarket.integrations.exceptions.MissingQuoteSourceException;
+import footballmarket.integrations.exceptions.QuoteBatchUnavailableException;
 import footballmarket.models.records.CurrentQuote;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -105,6 +107,33 @@ class QuoteSimulationConfigurationTest {
   @TestConfiguration(proxyBeanMethods = false)
   @EnableAutoConfiguration
   static class DiscoveryConfiguration {}
+
+  @Nested
+  @DisplayName("Compatibilidad de la extensión masiva")
+  class BatchCompatibility {
+    @Test
+    @DisplayName(
+        "Una fuente que solo implementa la lectura individual rechaza el lote explícitamente")
+    void fuenteSinSoporteMasivoRechazaElLote() {
+      // Arrange
+      QuoteSource alternative = new AlternativeQuoteSource();
+      // Act / Assert
+      assertThat(alternative.currentQuote(1L)).isPresent();
+      assertThatThrownBy(() -> alternative.currentQuotes(java.util.Set.of(1L)))
+          .isInstanceOf(QuoteBatchUnavailableException.class);
+    }
+
+    @Test
+    @DisplayName("El simulador resuelve el lote sin delegar en la lectura individual")
+    void elSimuladorResuelveElLote() {
+      // Arrange
+      QuoteSource simulator = new SimulatedQuoteSource();
+      // Act
+      java.util.Map<Long, CurrentQuote> batch = simulator.currentQuotes(java.util.Set.of(1L, 2L));
+      // Assert
+      assertThat(batch).containsOnlyKeys(1L, 2L);
+    }
+  }
 
   @Nested
   @DisplayName("H07: precedencia contractual con ambos órdenes de configuraciones")
