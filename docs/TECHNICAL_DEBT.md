@@ -72,8 +72,110 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-018](#td-018--colores-literales-en-los-módulos-de-estilo-de-componentes) | Colores literales en los módulos de estilo de componentes | Frontend / Convenciones | Baja | Pendiente | 2026-10-14 17:48:44 |
 | [TD-019](#td-019--precisión-del-rating-incompatible-con-el-diseño-de-persistencia-de-spec-011) | Precisión del rating incompatible con el diseño de persistencia de SPEC-012 | Backend / Datos | Alta | Pendiente | 2026-10-16 02:49:30 |
 | [TD-020](#td-020--contraste-entre-canales-retirado-en-spec-011) | Contraste entre canales retirado en SPEC-012 | Backend / Datos | Media | Pendiente | 2026-10-18 00:00:00 |
+| [TD-021](#td-021--re-evaluación-con-una-campaña-de-métricas-ya-usada-reprecia-con-datos-estancados) | Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados | Backend / Datos | Media | Pendiente | 2026-10-21 16:20:55 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-021 — Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-021 |
+| **Fecha y hora de registro** | 2026-10-21 16:20:55 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | - |
+
+**Descripción.** Cuando la campaña JSON de métricas vigente no resulta utilizable, la capa de valuación
+reutiliza en silencio la campaña confirmada anterior y sella esas valuaciones con la fecha del día de
+la evaluación, no con la fecha de extracción de la campaña. El recálculo de ese día ve entonces una
+valuación posterior a la fecha de vigencia de referencia de cada jugador y vuelve a repreciar a todos
+con el mismo score, sobre métricas que no cambiaron. El tope de variación acota cada paso, pero no la
+cantidad de pasos: mientras la campaña siga sin ser utilizable, cada corrida semanal añade un paso al
+precio de todos los jugadores.
+
+No forma parte de esta deuda el comportamiento que el responsable del proyecto confirmó como deseado:
+un jugador cuyo item de campaña falló con `NO_DATA`, `NOT_FOUND` o `PROVIDER_ERROR` conserva su
+precio, no genera fila ese día y se reprecia cuando una campaña posterior aporte sus métricas.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/services/internal/ValuationSnapshotSelector.java:50-57` — itera
+  las fechas de campaña en orden descendente y devuelve la primera confirmada, de modo que una campaña
+  no utilizable se descarta y se reutiliza la anterior, sin señal alguna en la respuesta.
+- `backend/src/main/java/footballmarket/services/internal/ValuationSnapshotSelector.java:60-70` —
+  `isConfirmed` rechaza la campaña completa cuando un único item JSON queda `INCOMPLETE`,
+  `INTERRUPTED`, `BLOCKED` o `STRUCTURE_CHANGED`.
+- `backend/src/main/java/footballmarket/services/impl/ValuationEvaluationServiceImpl.java:52` —
+  `valuationDate` es la fecha UTC de la evaluación, con independencia de la fecha de extracción de la
+  campaña usada.
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java:48` — la fila se
+  escribe como `RECOMPUTED` cuando `valuationDate.isAfter(referenceDate)`, condición que satisface una
+  valuación re-sellada con el día en curso.
+- `backend/src/main/java/footballmarket/services/impl/JsonStatisticsUpdateServiceImpl.java:79` — un
+  jugador bloqueado por el proveedor queda registrado como `BLOCKED` en su campaña.
+- `backend/src/main/java/footballmarket/services/impl/PlayerStatisticsSynchronizationServiceImpl.java:58,188`
+  — `PROVIDER_BLOCKED` es un código de parada global del recorrido.
+- `backend/src/main/java/footballmarket/repositories/PositionalValuationRepository.java:20-23` y
+  `backend/src/main/java/footballmarket/repositories/AttributeValuationRepository.java:20-23` — la
+  resolución toma la valuación más reciente por `valuation_date`, de modo que la re-sellada prevalece
+  sobre la anterior.
+- `backend/src/main/java/footballmarket/controllers/dtos/responses/ValuationEvaluationResponseDTO.java` —
+  el resumen de la evaluación no expone la fecha de extracción de la campaña utilizada, por lo que la
+  reutilización de una campaña anterior no es observable por HTTP.
+
+**Causa técnica.** La frescura del dato se pierde en la frontera entre la capa de valuación y la de
+cotización: la fecha de valuación es el día de la evaluación y no la fecha de extracción de la campaña,
+de modo que "valuación nueva" es indistinguible de "el mismo dato evaluado otra vez". La información
+necesaria para distinguir ambos casos sí está persistida (`source_extraction_date` en
+`player_positional_valuations` y `player_attribute_valuations`) y no la usa la capa de cotización.
+
+**Impacto técnico.** El precio de todos los jugadores se desplaza sobre datos estancados, un paso
+acotado por campaña no utilizable (con los parámetros por defecto, hasta el `variationCap` del 10 % por
+paso), y los pasos se acumulan mientras la campaña siga sin ser utilizable; un jugador bloqueado de
+forma permanente mantiene su campaña inutilizable durante ese lapso. La traza en `player_quotes`
+muestra un `effective_date` que avanza sin que avance el `source_extraction_date` de las valuaciones, y
+`POST /api/valuations/evaluate` responde 200 sin indicar que reutilizó una campaña anterior. No afecta
+al congelamiento por jugador, que es el comportamiento aceptado.
+
+**Solución propuesta.** Aplicar la regla en el pipeline de la capa de valuación y no como un gate por
+jugador en la capa de cotización: no evaluar cuando la fecha de extracción de la campaña seleccionada no
+sea más reciente que la fecha de extracción de la última evaluación. La información ya existe, la
+frontera permanece limpia (el recálculo sigue sin enterarse de la frescura) y ningún jugador sano queda
+bloqueado cuando la campaña es nueva y solo está parcialmente cubierta. La misma regla puede aplicarse
+sin cambios de código: no evaluar ni recalcular mientras la campaña de la semana no esté confirmada, y
+relanzar la extracción (`POST /api/players/statistics/whoscored/sync/json` o `/sync/scraping` con el
+mismo `extractionDate` y `maxPlayers: 1`) hasta que la campaña esté sana o sea parcialmente utilizable.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Ninguna evaluación selle una valuación de una campaña ya usada por una evaluación anterior.
+2. La consulta de auditoría no muestre avance de `effective_date` en `player_quotes` sin avance
+   correlativo de `source_extraction_date` en las valuaciones.
+3. La regla operativa quede documentada en el quickstart de SPEC-016.
+4. Existan tests backend que demuestren el comportamiento con una campaña no utilizable y con una
+   campaña parcialmente cubierta.
+
+La ejecución y la evidencia de los tests quedan a cargo del usuario; no se declara resuelta por build ni
+por una corrección documental aislada.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-027, FR-060)
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md`
+- `backend/src/main/java/footballmarket/services/internal/ValuationSnapshotSelector.java`
+- `backend/src/main/java/footballmarket/services/impl/ValuationEvaluationServiceImpl.java`
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java`
+- `backend/src/main/java/footballmarket/models/QuoteAdjustment.java`
+- `backend/src/main/resources/db/migration/V20261019120000__create_player_valuations.sql`
+- `backend/src/main/resources/db/migration/V20261021042325__create_player_quotes.sql`
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 16:20:55 | Registro inicial tras la revisión funcional de SPEC-016, en la que el responsable del proyecto decidió no modificar el código y conservar el congelamiento por jugador. No se modificó código, migraciones ni contratos. |
 
 ### TD-019 — Precisión del rating incompatible con el diseño de persistencia de SPEC-012
 
@@ -1434,3 +1536,4 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 | 2026-10-14 16:29:48 | Creación del registro centralizado con TD-001. Se consolidaron como entrada las referencias dispersas que existían en `specs/trello.md` y `docs/backend/technologies.md`, conservando la traza hacia ellas. |
 | 2026-10-14 17:48:44 | Incorporación de TD-002 a TD-018 tras auditoría técnica integral de solo lectura del 2026-10-14. Cuatro entradas de prioridad Alta (TD-002 a TD-005), nueve de prioridad Media (TD-006 a TD-014) y cuatro de prioridad Baja (TD-015 a TD-018). TD-001 no se modificó: su contenido se verificó contra el código y sigue siendo exacto. Se incorporaron además tres deudas ya declaradas en `specs/009-player-detail/tasks.md` que nunca se habían centralizado (TD-015, TD-016, TD-017) y una divergencia declarada en `docs/frontend/architecture.md:163` cuya ancla de trazabilidad ya no existía (TD-018). No se registraron los hallazgos descartados por no cumplir los criterios del §2 ni los clasificados como funcionalidad pendiente o mejora opcional. Ninguna entrada modifica código, migraciones, contratos ni otra documentación. |
 | 2026-10-18 | Incorporación de TD-020 tras la alineación documental de SPEC-012 autorizada por el usuario, que retiró el contraste entre canales, fijó la cobertura efectiva 45/57/42 y recorrió quince combinaciones JSON. No se modificó código, migraciones ni contratos; la entrada requiere decisión humana y evidencia de tests para cerrarse. |
+| 2026-10-21 16:20:55 | Incorporación de TD-021 tras la revisión funcional de SPEC-016, en la que se verificó que la capa de valuación reutiliza en silencio la campaña de métricas anterior cuando la campaña vigente no está confirmada y sella esas valuaciones con el día de la evaluación, con lo que el recálculo reprecia a todos los jugadores sobre datos que no cambiaron. El responsable del proyecto decidió no modificar el código; la entrada registra el comportamiento real y su regla de resolución propuesta. No se modificó código, migraciones ni contratos. |

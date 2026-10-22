@@ -31,8 +31,11 @@ DTO representa exclusivamente entrada/salida HTTP; Service, Model y Repository n
 | Orchestrator | Service, Model. |
 | Service | Model, Repository, Integration. |
 | Repository | Model. |
+| Integration | Repository. |
 
 DTO y Mapper se rigen por §1.2. Model no depende de Service, Repository ni Integration. Controller no depende de Model, Repository o Integration. La dependencia `Orchestrator → Model` se permite exclusivamente para transportar de forma opaca entre Services un Model producido por uno de ellos o para devolver un Model producido por un Service como resultado de la coordinación; no autoriza ninguna lógica sobre el Model. Orchestrator no depende de Repository, Integration ni otro Orchestrator. Integration solo puede ser consumida por Service entre los roles enumerados.
+
+La dependencia `Integration → Repository` existe para los adaptadores de puerto que resuelven contra un repositorio canónico propio del sistema y no contra un proveedor externo. Es el caso de `RepositoryQuoteSource`, la fuente real del puerto `QuoteSource`, que lee el historial de cotizaciones en `player_quotes` y devuelve la fila vigente del jugador. No habilita que un Integration escriba en la persistencia, aplique lógica de negocio o resuelva casos de uso: el adaptador traduce el resultado de la consulta al contrato del puerto y nada más.
 
 Estas matrices tienen el alcance definido en la [arquitectura común](../architecture.md) §1: regulan relaciones entre roles arquitectónicos, no todos los tipos que un componente puede utilizar. Ante una decisión arquitectónica no definida por la documentación vigente, aplicar su regla de vacíos normativos y la gobernanza de la constitución antes de introducirla.
 

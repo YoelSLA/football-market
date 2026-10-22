@@ -38,23 +38,14 @@ logging:
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF
 
-# Fuente de cotización para el entorno de pruebas.
+# Cotización del mercado en el entorno de pruebas.
 #
-# `BuyOrderServiceImpl` es un `@Service` obligatorio en todo contexto completo y requiere un
-# `QuoteSource` por inyección de constructor. La fuente real de REQ-S2-03 todavía no existe, de
-# modo que sin esta habilitación explícita cada `@SpringBootTest` falla al arrancar con
-# `NoSuchBeanDefinitionException` antes incluso de ejecutar su primera prueba.
-#
-# El simulador se habilita aquí, y solo aquí: es el mecanismo previsto para los entornos de
-# desarrollo y prueba, y la habilitación sigue siendo explícita y nominal. La prioridad de una
-# fuente real se conserva intacta, porque `QuoteSimulationConfiguration` decide por presencia del
-# bean y no por esta propiedad. Las pruebas que fijan un precio propio lo sustituyen con
-# `@MockitoBean`.
-market:
-  quote:
-    simulator:
-      enabled: true
-      price: 100
+# `BuyOrderServiceImpl` y `TokenListingServiceImpl` son `@Service` obligatorios en todo contexto
+# completo y requieren un `QuoteSource` por inyección de constructor. La fuente real, sostenida por
+# el repositorio canónico de cotizaciones, es la única implementación del puerto y está disponible
+# en todo contexto, de modo que no hace falta habilitar ninguna fuente alternativa. Los parámetros
+# de variabilidad usan los valores por defecto de `QuoteProperties`. Las pruebas que fijan un precio
+# propio sustituyen la fuente con `@MockitoBean`.
 
 # Identidades sintéticas exclusivas de testing; cada suite funcional debe enlazar
 # los IDs devueltos por el catálogo aislado antes de iniciar la sincronización.

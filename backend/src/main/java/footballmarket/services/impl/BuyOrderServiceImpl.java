@@ -37,6 +37,7 @@ import footballmarket.services.exceptions.QuoteUnavailableException;
 import footballmarket.services.exceptions.SellerUnavailableException;
 import footballmarket.services.exceptions.SuperuserCannotBuyException;
 import footballmarket.services.exceptions.UserNotFoundException;
+import footballmarket.services.internal.MarketInitializationGuard;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -77,6 +78,7 @@ public class BuyOrderServiceImpl implements BuyOrderService {
   private final MarketTransactionRepository transactions;
   private final QuoteSource quotes;
   private final TokenListingRepository listings;
+  private final MarketInitializationGuard marketInitialization;
   private final Clock marketClock;
 
   /** {@inheritDoc} */
@@ -89,6 +91,9 @@ public class BuyOrderServiceImpl implements BuyOrderService {
     if (order == null || order.listingId() == null) {
       throw new InvalidOrderRequestException();
     }
+    // El mercado debe existir antes de operar: el rechazo ocurre antes de leer la publicación y
+    // antes de cualquier movimiento de recursos.
+    this.marketInitialization.requireInitialized();
     ListingIdentity identity =
         this.listings.readIdentity(order.listingId()).orElseThrow(ListingNotFoundException::new);
     if (!identity.sellerId().equals(buyer.getId())
@@ -191,19 +196,23 @@ public class BuyOrderServiceImpl implements BuyOrderService {
     // 5. El vendedor debe ser identificable antes de iniciar la transferencia.
     User seller = this.resolveSeller();
 
-    // 6. La cotización se lee una sola vez y ese precio viaja a toda la operación.
+    // 6. El mercado debe existir antes de operar: el rechazo ocurre antes de leer la cotización y
+    // antes de cualquier movimiento de recursos.
+    this.marketInitialization.requireInitialized();
+
+    // 7. La cotización se lee una sola vez y ese precio viaja a toda la operación.
     CurrentQuote quote = this.readQuote(player.getId());
 
-    // 7. El importe se calcula una única vez con aritmética exacta.
+    // 8. El importe se calcula una única vez con aritmética exacta.
     long totalAmount = this.calculateTotal(order.quantity(), quote.price());
 
-    // 8. Cuentas de comprador y vendedor bloqueadas en orden ascendente de user_id.
+    // 9. Cuentas de comprador y vendedor bloqueadas en orden ascendente de user_id.
     Map<Long, UserCredit> accounts = this.lockAccounts(buyer, seller);
 
-    // 9. Tenencias bloqueadas en orden ascendente de propietario.
+    // 10. Tenencias bloqueadas en orden ascendente de propietario.
     Map<Long, PlayerToken> tokens = this.lockHoldings(player, buyer, seller);
 
-    // 10. Revalidación con los valores obtenidos bajo bloqueo.
+    // 11. Revalidación con los valores obtenidos bajo bloqueo.
     this.revalidate(accounts, tokens, buyer, seller, totalAmount, order.quantity());
 
     long buyerCreditsBefore = accounts.get(buyer.getId()).getAvailableCredits();
@@ -211,10 +220,10 @@ public class BuyOrderServiceImpl implements BuyOrderService {
     int buyerTokensBefore = tokens.get(buyer.getId()).getQuantity();
     int sellerTokensBefore = tokens.get(seller.getId()).getQuantity();
 
-    // 11. Transferencias simétricas de créditos y tokens.
+    // 12. Transferencias simétricas de créditos y tokens.
     this.transfer(accounts, tokens, buyer, seller, totalAmount, order.quantity());
 
-    // 12. Auditoría en la misma transacción, con los estados ya observados bajo bloqueo.
+    // 13. Auditoría en la misma transacción, con los estados ya observados bajo bloqueo.
     return this.record(
         buyer,
         seller,

@@ -30,3 +30,5 @@ se corrige con una fila nueva que la referencie.
 
 | Identificador | Funcionalidad | Responsable | Issue de origen | Requisito | Rama | Fecha |
 | --- | --- | --- | --- | --- | --- | --- |
+| SPEC-016 | Ejecutar recálculo manual de cotizaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/39 | REQ-S2-11-A | feat/016-ejecutar-recalculo-manual-de-cotizaciones | 2026-10-20 |
+| SPEC-016 | Calcular y persistir la cotización de tokens de jugadores con historial trazable (corrige la fila anterior del 2026-10-20, que quedaba limitada al disparo manual del recálculo) | Vaqui26 | https://github.com/YoelSLA/football-market/issues/39 | REQ-S2-11-A, REQ-S2-03, REQ-S2-04, REQ-S2-05, REQ-S2-08 | feat/016-ejecutar-recalculo-manual-de-cotizaciones | 2026-10-20 |

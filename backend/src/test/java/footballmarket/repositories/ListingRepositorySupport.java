@@ -65,6 +65,7 @@ abstract class ListingRepositorySupport {
     User superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
     market.emitInitialTokens(player, superuser);
+    market.initializeMarket(player);
     buyService.buy(seller.getEmail(), new BuyOrderRequest(player.getId(), 20));
   }
 

@@ -41,4 +41,20 @@ public interface PlayerStatisticsRepository extends JpaRepository<PlayerStatisti
           + " and i.extractionDate = :date and i.source = :source"
           + " and i.result = footballmarket.models.enums.PlayerExtractionResult.COMPLETED)")
   long countValuationRowsWithCompletedItem(LocalDate date, MetricSource source);
+
+  /**
+   * Identificadores de los jugadores cotizables: los que tienen al menos una métrica informada en
+   * su último registro de métricas persistidas.
+   *
+   * <p>Un jugador sin métricas, o con un último registro sin ninguna métrica informada, no aparece:
+   * su condición de cotizable depende de las métricas persistidas y no de la cobertura de las
+   * valuaciones.
+   *
+   * @return identificadores de los jugadores cotizables
+   */
+  @Query(
+      "select distinct s.player.id from PlayerStatistics s where s.presentMetrics > 0"
+          + " and s.extractionDate = (select max(s2.extractionDate) from PlayerStatistics s2"
+          + " where s2.player.id = s.player.id)")
+  List<Long> findPricablePlayerIds();
 }

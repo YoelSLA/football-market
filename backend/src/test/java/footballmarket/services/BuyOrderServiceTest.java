@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.integrations.QuoteSource;
-import footballmarket.integrations.SimulatedQuoteSource;
 import footballmarket.models.MarketTransaction;
 import footballmarket.models.Player;
 import footballmarket.models.User;
@@ -15,6 +14,7 @@ import footballmarket.services.exceptions.ArithmeticOverflowException;
 import footballmarket.services.exceptions.InsufficientStockException;
 import footballmarket.services.exceptions.InvalidQuantityException;
 import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.MarketNotInitializedException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerNotVisibleException;
 import footballmarket.services.exceptions.QuoteContractViolationException;
@@ -57,6 +57,7 @@ class BuyOrderServiceTest {
   @Autowired private BuyOrderService buyOrderService;
   @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
+  @Autowired private QuoteRecalculationService recalculation;
   @MockitoBean private QuoteSource quotes;
 
   private User buyer;
@@ -69,6 +70,7 @@ class BuyOrderServiceTest {
     superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
     market.emitInitialTokens(player, superuser);
+    market.initializeMarket(player);
     givenQuote(Optional.of(price(PRICE)));
   }
 
@@ -420,20 +422,61 @@ class BuyOrderServiceTest {
   }
 
   @Nested
-  @DisplayName("Fuente simulada de referencia")
-  class SimulatedSource {
+  @DisplayName("Mercado sin inicializar")
+  class UninitializedMarket {
     @Test
-    @DisplayName("El simulador entrega una cotización utilizable para el jugador solicitado")
-    void elSimuladorEntregaUnaCotizacionUtilizable() {
+    @DisplayName("La compra directa se rechaza antes de leer la cotización")
+    void rechazaLaCompraDirecta() {
       // Arrange
-      SimulatedQuoteSource simulated = new SimulatedQuoteSource();
+      market.clearMarketInitialization();
+      org.mockito.Mockito.clearInvocations(quotes);
+
+      // Act / Assert
+      assertThatThrownBy(() -> buy(QUANTITY)).isInstanceOf(MarketNotInitializedException.class);
+      org.mockito.Mockito.verify(quotes, org.mockito.Mockito.never())
+          .currentQuote(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("La compra de una publicación se rechaza antes de leer la publicación")
+    void rechazaLaCompraDeUnaPublicacion() {
+      // Arrange: publicar exige que el vendedor tenga tenencias, de modo que el comprador compra
+      // antes de publicar sus tokens.
+      buy(QUANTITY);
+      footballmarket.models.TokenListing listing =
+          listingService.publish(
+              buyer.getEmail(),
+              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+      market.clearMarketInitialization();
+
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  buyOrderService.buyListing(
+                      buyer.getEmail(),
+                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
+          .isInstanceOf(MarketNotInitializedException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("Efectos del recálculo sobre el mercado")
+  class RecalculationEffects {
+    @Test
+    @DisplayName("Un recálculo posterior no altera los saldos ni las tenencias del comprador")
+    void elRecalculoNoAlteraSaldosNiTenencias() {
+      // Arrange
+      MarketTransaction first = buy(QUANTITY);
 
       // Act
-      CurrentQuote quote = simulated.currentQuote(player.getId()).orElseThrow();
+      footballmarket.models.QuoteExecution execution =
+          recalculation.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      MarketTransaction second = buy(1);
 
       // Assert
-      assertThat(quote.playerId()).isEqualTo(player.getId());
-      assertThat(quote.price()).isEqualTo(100L);
+      assertThat(execution).isNotNull();
+      assertThat(second.getBuyerCreditsBefore()).isEqualTo(first.getBuyerCreditsAfter());
+      assertThat(second.getBuyerTokensBefore()).isEqualTo(first.getBuyerTokensAfter());
     }
   }
 }
