@@ -22,6 +22,8 @@ import footballmarket.services.exceptions.QuoteUnavailableException;
 import footballmarket.services.exceptions.SuperuserCannotBuyException;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.TestcontainersConfiguration;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -44,6 +47,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
  * accede a la persistencia: el estado durable se comprueba en {@code MarketDomainPersistenceTest}.
  * El aprovisionamiento previo se delega en {@link MarketTestData}, conforme a {@code
  * docs/backend/testing.md} §5 y §6.
+ *
+ * <p>El reloj de mercado queda congelado para que la regresión de FR-019 pueda afirmar el instante
+ * de confirmación. Las expectativas heredadas se escribieron contra el reloj real: al ejecutar esta
+ * suite hay que confirmar que ninguna depende del instante actual.
  */
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)
@@ -60,12 +67,19 @@ class BuyOrderServiceTest {
   @Autowired private QuoteRecalculationService recalculation;
   @MockitoBean private QuoteSource quotes;
 
+  @MockitoBean
+  @Qualifier("marketClock")
+  private Clock marketClock;
+
   private User buyer;
   private User superuser;
   private Player player;
 
   @BeforeEach
   void arrange() {
+    org.mockito.Mockito.when(marketClock.getZone()).thenReturn(ZoneOffset.UTC);
+    org.mockito.Mockito.when(marketClock.instant())
+        .thenReturn(Instant.parse("2026-10-20T12:00:00Z"));
     buyer = market.registerBuyer();
     superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
@@ -107,6 +121,39 @@ class BuyOrderServiceTest {
 
   private MarketTransaction buy(int quantity) {
     return buyPlayer(player.getId(), quantity);
+  }
+
+  @Nested
+  @DisplayName("Reloj compartido de confirmación")
+  class ConfirmationClock {
+    @Test
+    @DisplayName("La compra directa registra exactamente el instante del reloj inyectado")
+    void fechaCompraDirectaConRelojDeMercado() {
+      // Arrange / Act
+      MarketTransaction transaction = buy(1);
+      // Assert
+      assertThat(transaction.getExecutedAt())
+          .isEqualTo(OffsetDateTime.parse("2026-10-20T12:00:00Z"));
+    }
+
+    @Test
+    @DisplayName("La liquidación de una publicación conserva el mismo instante validado")
+    void fechaLiquidacionConRelojValidado() {
+      // Arrange
+      buy(2);
+      User receiver = market.registerBuyer();
+      footballmarket.models.TokenListing listing =
+          listingService.publish(
+              buyer.getEmail(),
+              new footballmarket.models.records.SellOrderRequest(player.getId(), 1));
+      // Act
+      MarketTransaction transaction =
+          buyOrderService.buyListing(
+              receiver.getEmail(),
+              new footballmarket.models.records.BuyListingRequest(listing.getId()));
+      // Assert
+      assertThat(transaction.getExecutedAt()).isEqualTo(listing.getCreatedAt());
+    }
   }
 
   @Nested

@@ -30,5 +30,7 @@ se corrige con una fila nueva que la referencie.
 
 | Identificador | Funcionalidad | Responsable | Issue de origen | Requisito | Rama | Fecha |
 | --- | --- | --- | --- | --- | --- | --- |
+| SPEC-014 | Consultar portfolio personal | YoelSLA | #20 | REQ-S2-09 | feat/014-consultar-portfolio-personal | 2026-10-19 |
+| SPEC-015 | Definir reglas contables de costo promedio y resultados financieros | YoelSLA | https://github.com/YoelSLA/football-market/issues/63 | REQ-S2-20 | feat/015-define-average-cost-and-financial-results-rules | 2026-10-19 |
 | SPEC-016 | Ejecutar recálculo manual de cotizaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/39 | REQ-S2-11-A | feat/016-ejecutar-recalculo-manual-de-cotizaciones | 2026-10-20 |
 | SPEC-016 | Calcular y persistir la cotización de tokens de jugadores con historial trazable (corrige la fila anterior del 2026-10-20, que quedaba limitada al disparo manual del recálculo) | Vaqui26 | https://github.com/YoelSLA/football-market/issues/39 | REQ-S2-11-A, REQ-S2-03, REQ-S2-04, REQ-S2-05, REQ-S2-08 | feat/016-ejecutar-recalculo-manual-de-cotizaciones | 2026-10-20 |

@@ -40,7 +40,6 @@ import footballmarket.services.exceptions.UserNotFoundException;
 import footballmarket.services.internal.MarketInitializationGuard;
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -430,6 +429,6 @@ public class BuyOrderServiceImpl implements BuyOrderService {
             sellerTokensAfter,
             quote.calculatedAt(),
             quote.strategyVersion(),
-            OffsetDateTime.now(ZoneOffset.UTC)));
+            OffsetDateTime.now(this.marketClock)));
   }
 }

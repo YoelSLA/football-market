@@ -1,6 +1,7 @@
 package footballmarket.repositories;
 
 import footballmarket.models.PlayerToken;
+import footballmarket.repositories.projections.HoldingQuantity;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +44,22 @@ public interface PlayerTokenRepository extends JpaRepository<PlayerToken, Long> 
       nativeQuery = true)
   void insertHoldingIfAbsent(
       @Param("playerId") Long playerId, @Param("ownerUserId") Long ownerUserId);
+
+  /**
+   * Cantidad poseída por un propietario en cada uno de sus jugadores.
+   *
+   * <p>Una sola consulta de conjunto que proyecta identificador de jugador y cantidad: no
+   * materializa las tenencias ni sus jugadores, de modo que la consulta no abre un acceso por
+   * posición. El índice por propietario cubre el filtro y el orden por jugador entrega la lista ya
+   * ordenada para el cruce con la reconstrucción contable.
+   *
+   * @param ownerUserId propietario cuyas tenencias se consultan
+   * @return cantidades del propietario, ordenadas por identificador de jugador
+   */
+  @Query(
+      "select t.player.id as playerId, t.quantity as quantity from PlayerToken t"
+          + " where t.owner.id = :ownerUserId order by t.player.id asc")
+  List<HoldingQuantity> findHoldingsByOwner(@Param("ownerUserId") Long ownerUserId);
 
   /**
    * Bloquea las tenencias de los propietarios indicados sobre un jugador.
