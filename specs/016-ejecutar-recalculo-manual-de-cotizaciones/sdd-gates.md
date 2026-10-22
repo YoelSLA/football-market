@@ -473,3 +473,23 @@ funcionalidades migradas.
 ### Siguiente accion permitida
 
 - CODE REVIEW humano del alcance implementado (T001 a T050), con el informe de revision y la lista de verificaciones obligatorias.
+
+## CODE REVIEW - 2026-10-21 (informe completo entregado)
+
+- **Alcance revisado**: T001 a T050 de `tasks.md` (US1 a US5 y Polish), diff `origin/dev...HEAD` con 92 archivos, +7.406 / -869 lineas, sobre la rama `feat/016-ejecutar-recalculo-manual-de-cotizaciones`.
+- **Informe completo**: `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md`. Contiene resumen y funcionamiento, tabla de todos los archivos creados y modificados con tests incluidos (responsabilidad, cambio y razon), decisiones de diseno, hallazgos con severidad y evidencia por archivo y linea, matriz de cobertura de FR, revision de la suite de tests, orden de revision sugerido y checklist humano de verificacion.
+- **Control ejecutado**: `./gradlew build -x test` desde `backend/`: BUILD SUCCESSFUL, con compilacion productiva, Spotless y `validateTestClassification` ("Clasificacion valida: 121 clases de test"). No se ejecuto ningun test de aplicacion: la ejecucion queda a cargo del usuario.
+- **Hallazgos de mayor severidad**: CR-01 el ranking puede devolver dos filas del mismo jugador por falta de desempate determinista; CR-02 un jugador cotizable sin fila `INITIAL` falla en cada corrida de recalculo. Ambos quedan registrados como TD-022 y TD-023 y se submeten a decision humana.
+- **Deuda tecnica registrada en esta revision**: TD-022 a TD-029, con TD-011 actualizada por `InvalidQuoteException`. Ninguna entrada modifica codigo, migraciones ni contratos, y ninguna deuda se declara resuelta.
+- **Naturaleza**: operacion exclusivamente documental de revision. No se modifico codigo, migraciones, contratos HTTP ni tests, y no se marco ni desmarco ninguna tarea de `tasks.md`.
+- **Git**: commit y push de esta entrada y del informe a la rama actual, por encargo explicito del usuario ("dejar constancia de todo lo implementado en esta spec y subirlo en la rama actual").
+
+### Estado de autorizaciones
+
+- **CODE REVIEW**: informe entregado y persistido. **Pendiente de aprobacion humana del checklist de la seccion 10 del informe**; el agente no aprueba el gate.
+- **TESTING**: pendiente; los tests deben ejecutarlos el usuario. El build no acredita tests.
+- **CONVERGE y FEATURE COMPLETION**: pendientes y fuera de esta operacion.
+
+### Siguiente accion permitida
+
+- Aprobacion humana de CODE REVIEW con el checklist de la seccion 10 del informe y, tras ella, la fase de TESTING con ejecucion de tests a cargo del usuario.
