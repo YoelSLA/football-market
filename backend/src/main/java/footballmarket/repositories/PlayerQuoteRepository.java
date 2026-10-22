@@ -13,7 +13,8 @@ import org.springframework.data.repository.query.Param;
  *
  * <p>El orden de lectura vigente es {@code effective_date DESC, calculated_at DESC} y, a igualdad
  * de fecha de vigencia, prevalece la fila {@code RECOMPUTED} porque fue escrita después que la
- * arrastrada.
+ * arrastrada. El identificador de la fila cierra el orden como último criterio, de modo que la
+ * lectura sea total y una fila nunca dependa del orden arbitrario de PostgreSQL.
  */
 public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> {
 
@@ -27,7 +28,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
       "select q from PlayerQuote q where q.player.id = :playerId"
           + " order by q.effectiveDate desc,"
           + " case when q.origin = footballmarket.models.enums.QuoteOrigin.RECOMPUTED then 0 else 1 end,"
-          + " q.calculatedAt desc")
+          + " q.calculatedAt desc, q.id desc")
   List<PlayerQuote> findLatestByPlayerId(@Param("playerId") Long playerId);
 
   /**
@@ -40,7 +41,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
       "select q from PlayerQuote q where q.player.id = :playerId"
           + " order by q.effectiveDate desc,"
           + " case when q.origin = footballmarket.models.enums.QuoteOrigin.RECOMPUTED then 0 else 1 end,"
-          + " q.calculatedAt desc")
+          + " q.calculatedAt desc, q.id desc")
   List<PlayerQuote> findHistoryByPlayerId(@Param("playerId") Long playerId);
 
   /**
@@ -54,7 +55,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
       "select q from PlayerQuote q where q.player.id = :playerId and q.effectiveDate <= :date"
           + " order by q.effectiveDate desc,"
           + " case when q.origin = footballmarket.models.enums.QuoteOrigin.RECOMPUTED then 0 else 1 end,"
-          + " q.calculatedAt desc")
+          + " q.calculatedAt desc, q.id desc")
   List<PlayerQuote> findLatestByPlayerIdOnOrBefore(
       @Param("playerId") Long playerId, @Param("date") LocalDate date);
 
@@ -63,8 +64,10 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
    *
    * <p>Cada jugador aparece una sola vez, con la fila vigente según el mismo orden de lectura del
    * historial: fecha de vigencia descendente, prevalencia de la fila {@code RECOMPUTED} a igualdad
-   * de fecha y, en último término, instante de cálculo descendente. El ranking no recalcula
-   * precios.
+   * de fecha, instante de cálculo descendente y, en último término, identificador de la fila
+   * descendente. El desempate por identificador cierra el orden y garantiza una sola entrada por
+   * jugador incluso si dos filas coincidieran en fecha de vigencia e instante de cálculo. El
+   * ranking no recalcula precios.
    *
    * @param playerIds jugadores cotizables cuya cotización vigente se ordena
    * @return filas vigentes de los jugadores indicados, ordenadas por precio descendente
@@ -83,7 +86,8 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
           + " footballmarket.models.enums.QuoteOrigin.CARRIED_FORWARD)"
           + " and q.origin in (footballmarket.models.enums.QuoteOrigin.INITIAL,"
           + " footballmarket.models.enums.QuoteOrigin.CARRIED_FORWARD)))"
-          + " and q2.calculatedAt > q.calculatedAt)))))"
+          + " and (q2.calculatedAt > q.calculatedAt"
+          + " or (q2.calculatedAt = q.calculatedAt and q2.id > q.id)))))))"
           + " order by q.price desc, q.effectiveDate desc, q.player.id asc")
   List<PlayerQuote> findRanking(@Param("playerIds") List<Long> playerIds);
 
@@ -100,7 +104,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
       "select q.effectiveDate from PlayerQuote q where q.player.id = :playerId"
           + " and q.origin in (footballmarket.models.enums.QuoteOrigin.INITIAL,"
           + " footballmarket.models.enums.QuoteOrigin.RECOMPUTED)"
-          + " order by q.effectiveDate desc, q.calculatedAt desc")
+          + " order by q.effectiveDate desc, q.calculatedAt desc, q.id desc")
   List<LocalDate> findReferenceDatesByPlayerId(@Param("playerId") Long playerId);
 
   /**

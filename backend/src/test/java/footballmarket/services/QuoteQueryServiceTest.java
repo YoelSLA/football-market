@@ -267,6 +267,63 @@ class QuoteQueryServiceTest {
     }
   }
 
+  @Nested
+  @DisplayName("Desempate ante empate de fecha de vigencia e instante de cálculo")
+  class TieBreak {
+
+    /**
+     * El desempate entre dos filas del mismo jugador que coinciden en fecha de vigencia e instante
+     * de cálculo queda cerrado por el identificador de la fila, de modo que el jugador aparece una
+     * sola vez en el ranking y su cotización vigente es siempre la misma fila.
+     */
+    @Test
+    @DisplayName(
+        "Muestra una sola entrada por jugador cuando dos filas coinciden en fecha e instante")
+    void showsSingleEntryWhenRowsTie() {
+      // Arrange
+      catalogue.prepare();
+      Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+      LocalDate marketDate = LocalDate.of(2026, 10, 17);
+      Instant calculatedAt = Instant.parse("2026-10-17T09:00:00Z");
+      quoteData.prepareMetrics(player, marketDate);
+      quoteData.persistInitial(player, marketDate, calculatedAt);
+      quoteData.persistCarriedForward(player, marketDate, 100L, calculatedAt);
+
+      // Act
+      List<PlayerRankingEntry> ranking = queryService.findRanking();
+
+      // Assert
+      assertThat(ranking).extracting(PlayerRankingEntry::playerId).containsExactly(player.getId());
+      assertThat(ranking.getFirst().origin()).isEqualTo(QuoteOrigin.CARRIED_FORWARD);
+      assertThat(queryService.findCurrent(player.getId()).getOrigin())
+          .isEqualTo(QuoteOrigin.CARRIED_FORWARD);
+      assertThat(queryService.findHistory(player.getId())).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("Conserva una sola entrada por jugador cuando conviven los tres orígenes")
+    void showsSingleEntryWithEveryOrigin() {
+      // Arrange
+      catalogue.prepare();
+      Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+      LocalDate marketDate = LocalDate.of(2026, 10, 17);
+      quoteData.prepareMetrics(player, marketDate);
+      quoteData.persistInitial(player, marketDate, Instant.parse("2026-10-17T09:00:00Z"));
+      quoteData.persistCarriedForward(
+          player, LocalDate.of(2026, 10, 18), 100L, Instant.parse("2026-10-18T09:00:00Z"));
+      quoteData.persistRecomputed(
+          player, LocalDate.of(2026, 10, 19), 105L, Instant.parse("2026-10-19T09:00:00Z"));
+
+      // Act
+      List<PlayerRankingEntry> ranking = queryService.findRanking();
+
+      // Assert
+      assertThat(ranking).extracting(PlayerRankingEntry::playerId).containsExactly(player.getId());
+      assertThat(ranking.getFirst().origin()).isEqualTo(QuoteOrigin.RECOMPUTED);
+      assertThat(ranking.getFirst().price()).isEqualTo(105L);
+    }
+  }
+
   private Player prepareRecalculatedMarket() {
     catalogue.prepare();
     data.prepareConfirmedJsonCampaign(LocalDate.of(2026, 10, 18));
