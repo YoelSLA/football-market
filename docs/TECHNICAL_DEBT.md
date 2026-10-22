@@ -73,7 +73,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-019](#td-019--precisión-del-rating-incompatible-con-el-diseño-de-persistencia-de-spec-011) | Precisión del rating incompatible con el diseño de persistencia de SPEC-012 | Backend / Datos | Alta | Pendiente | 2026-10-16 02:49:30 |
 | [TD-020](#td-020--contraste-entre-canales-retirado-en-spec-011) | Contraste entre canales retirado en SPEC-012 | Backend / Datos | Media | Pendiente | 2026-10-18 00:00:00 |
 | [TD-021](#td-021--re-evaluación-con-una-campaña-de-métricas-ya-usada-reprecia-con-datos-estancados) | Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados | Backend / Datos | Media | Pendiente | 2026-10-21 16:20:55 |
-| [TD-022](#td-022--ranking-de-cotizaciones-sin-desempate-deterministica-un-jugador-puede-aparecer-dos-veces) | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Backend / Datos | Alta | Pendiente | 2026-10-21 22:20:53 |
+| [TD-022](#td-022--ranking-de-cotizaciones-sin-desempate-deterministica-un-jugador-puede-aparecer-dos-veces) | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-023](#td-023--jugador-cotizable-sin-fila-initial-falla-en-cada-corrida-de-recálculo) | Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-024](#td-024--cotizaciones-confirmadas-sin-resumen-de-ejecución-persistido) | Cotizaciones confirmadas sin resumen de ejecución persistido | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-025](#td-025--quote_executions-sin-estado-una-ejecución-en-curso-es-indistinguible-de-una-terminada) | `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
@@ -91,9 +91,19 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | **ID** | TD-022 |
 | **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
 | **Estado** | `Pendiente` |
-| **Prioridad** | Alta |
+| **Prioridad** | Media |
 | **Área afectada** | Backend / Datos |
 | **Fecha de resolución** | — |
+
+**Verificación en la base de desarrollo (2026-10-21).** El ranking ejecutado sobre la base de
+desarrollo con el predicado exacto de `findRanking` devuelve **1.860 filas para 1.860 jugadores
+distintos**: no hay duplicados en los datos actuales. La tabla contiene 1.860 filas `INITIAL` del
+2026-10-19, 1.860 filas `RECOMPUTED` del 2026-10-19 y 1.860 filas `RECOMPUTED` del 2026-10-20, es
+decir, tres filas de historial por jugador, de las cuales el ranking expone solo la vigente. El
+defecto es latente y no se manifiesta con estos datos: se reproduce únicamente cuando un mismo
+jugador tiene dos filas con la **misma fecha de vigencia y el mismo instante de cálculo**, con
+orígenes de la familia `INITIAL`/`CARRIED_FORWARD`, condición que solo se alcanza si el instante de
+la fila inicial coincide con el de una fila arrastrada.
 
 **Descripción.** Las consultas que resuelven la cotización vigente de cada jugador no tienen un
 desempate total. Ordenan por `effective_date`, origen y `calculated_at`, pero no por `id`, de modo
@@ -122,9 +132,11 @@ entrada por jugador cotizable.
 criterio total en el SQL: falta el identificador de la fila como último criterio de orden y como
 condición de exclusión en el ranking.
 
-**Impacto técnico.** El ranking puede mostrar al mismo jugador en dos posiciones, con precios
-distintos si las filas difieren. El mercado no se ve afectado porque la fuente real deduplica. El
-defecto es observable por HTTP y contradice FR-039.
+**Impacto técnico.** Con los datos actuales el ranking es correcto: una sola entrada por jugador,
+con su cotización vigente. El riesgo es latente: si un jugador llegara a tener dos filas de la misma
+fecha de vigencia y del mismo instante de cálculo, el ranking lo devolvería dos veces, contra
+FR-039. El mercado no se ve afectado porque la fuente real deduplica con `putIfAbsent`. El defecto
+es observable por HTTP y contradice FR-039 solo bajo esa condición de empate.
 
 **Solución propuesta.** Añadir `id` como criterio final de orden en las tres consultas y extender la
 condición de exclusión del ranking con `q2.id > q.id`, o reemplazar el `not exists` por un
@@ -133,7 +145,7 @@ condición de exclusión del ranking con `q2.id > q.id`, o reemplazar el `not ex
 **Criterios de resolución.** La deuda no se considera resuelta hasta que:
 
 1. Ninguna consulta de vigente, historial, fila por fecha ni ranking devuelva dos filas del mismo
-   jugador.
+   jugador, incluso ante empate de fecha de vigencia e instante de cálculo.
 2. Existan tests backend que cubran el empate de fecha e instante entre las filas `RECOMPUTED` y
    `CARRIED_FORWARD` y que afirmen una sola entrada por jugador en el ranking.
 
@@ -150,6 +162,7 @@ condición de exclusión del ranking con `q2.id > q.id`, o reemplazar el `not ex
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 22:20:53 | Verificación empírica en la base de desarrollo: el ranking devuelve 1.860 filas para 1.860 jugadores distintos, sin duplicados. El defecto se relega a latente y la prioridad baja de Alta a Media. Se documenta la condición exacta que lo reproduce y la prueba en transacción revertida. No se modificó código, migraciones ni contratos. |
 
 ### TD-023 — Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo
 

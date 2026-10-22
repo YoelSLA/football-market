@@ -265,7 +265,7 @@ consistente o riesgo de regresión; **Baja** = mantenibilidad y limpieza.
 
 | ID | Severidad | Hallazgo | Evidencia | Recomendación |
 | --- | --- | --- | --- | --- |
-| CR-01 | Alta | El ranking puede devolver **dos filas del mismo jugador**: el `not exists` de `findRanking` solo excluye la fila peor cuando hay empate strictamente mayor en `calculated_at`; con empate no excluye ninguna. La "última fila por jugador" tampoco tiene desempate total (`effective_date`, origen, `calculated_at`), por lo que la lectura vigente no es determinista. | `backend/.../repositories/PlayerQuoteRepository.java:26-31`, `:72-88` | Añadir desempate final por `id` en los tres `ORDER BY` y en la condición del `not exists`. Registrado como TD-022. |
+| CR-01 | Media | El ranking **no tiene desempate total**: ante empate de fecha de vigencia e instante de cálculo entre dos filas del mismo jugador, ambas entran y el jugador aparece dos veces. La "última fila por jugador" tiene el mismo hueco. **Verificado en la base de desarrollo: el ranking actual devuelve 1.860 filas para 1.860 jugadores distintos, sin duplicados**; el defecto es latente y solo se alcanza con dos filas de la misma fecha y el mismo instante (`INITIAL` y `CARRIED_FORWARD`). | `backend/.../repositories/PlayerQuoteRepository.java:26-31`, `:72-88` | Añadir desempate final por `id` en los tres `ORDER BY` y en la condición del `not exists`. Registrado como TD-022. |
 | CR-02 | Alta | Un **jugador cotizable sin fila `INITIAL`** (métricas obtenidas después de inicializar el mercado) provoca `NoSuchElementException` en `getFirst()`: se contabiliza como fallo permanente, nunca recibe precio y no aparece en el ranking, pese a ser cotizable (FR-001, FR-002, FR-034). | `backend/.../services/internal/QuotePlayerPublisher.java:44,47` | Tratar la ausencia de fila inicial como jugador no operable y no como fallo; o habilitar la idempotencia de la inicialización para completar filas `INITIAL` faltantes. Registrado como TD-023. |
 | CR-03 | Media | **Filas confirmadas sin resumen de corrida.** Las publicaciones por jugador se confirman en su propia transacción; si la transacción global revierte al final (fallo del `save` del resumen, timeout), quedan cotizaciones movidas sin `quote_executions` y la fecha queda libre para una segunda corrida (FR-061, SC-013). | `backend/.../services/internal/QuotePlayerPublisher.java:34`; `backend/.../services/impl/QuoteRecalculationServiceImpl.java:32` | Alinear el compromiso: o todo en una transacción, o un estado de corrida que distinga "en curso" de "terminada". Registrado como TD-024. |
 | CR-04 | Media | **`quote_executions` no es append-only ni tiene estado.** La fila se inserta como reserva con contadores en cero y `finished_at = started_at`, y se actualiza al final; un lector concurrente puede ver una ejecución aparentemente terminada y vacía. Contradice la calificación "append-only" de `data-model.md §2`. | `backend/.../services/impl/QuoteRecalculationServiceImpl.java:95-108,133-139`; `backend/.../models/QuoteExecution.java:157-176` | Añadir columna de estado o reservar la fila al final de forma transaccional. Registrado como TD-025. |
@@ -314,7 +314,7 @@ consistente o riesgo de regresión; **Baja** = mantenibilidad y limpieza.
 | Estrategia del operador | FR-017 a FR-020 | Cubierto |
 | Origen cerrado y trazabilidad | FR-021 a FR-030 | Cubierto; FR-029 con la salvedad de CR-13 (redondeo a 6 decimales en BD) |
 | Inicialización | FR-031 a FR-035 | Cubierto, con la salvedad de CR-09 |
-| Consultas y ranking | FR-036 a FR-040 | Cubierto; FR-039 con el defecto CR-01 |
+| Consultas y ranking | FR-036 a FR-040 | Cubierto; FR-039 verificado en la base de desarrollo (1.860 filas para 1.860 jugadores, sin duplicados), con el defecto latente de CR-01 |
 | Auditoría y fuente | FR-041 a FR-046 | Cubierto; FR-042 verificado por búsqueda de residuos |
 | Mercado y autorización | FR-047 a FR-059 | Cubierto; sin control de rol por diseño (FR-059), con CR-07 |
 | Corrida | FR-060 a FR-066 | Cubierto; FR-060/FR-061 con las salvedades CR-03, CR-04 y CR-05 |
@@ -347,7 +347,7 @@ de test" dentro del build permitido.
 
 | ID | Título | Prioridad |
 | --- | --- | --- |
-| TD-022 | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Alta |
+| TD-022 | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Media |
 | TD-023 | Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo | Media |
 | TD-024 | Cotizaciones confirmadas sin resumen de ejecución persistido | Media |
 | TD-025 | `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada | Media |
@@ -395,7 +395,7 @@ El usuario revisa y marca cada ítem. **El agente no aprueba este checklist.**
 - [ ] A5. La inicialización es idempotente en la misma fecha y rechaza cualquier otra fecha.
 - [ ] A6. La segunda corrida del mismo día se rechaza con 409 y no altera el resumen previo.
 - [ ] A7. Compra y publicación de venta se rechazan con 409 `MARKET_NOT_INITIALIZED` sin mover recursos.
-- [ ] A8. El ranking muestra una sola entrada por jugador (CR-01 pendiente de decisión).
+- [ ] A8. El ranking muestra una sola entrada por jugador (verificado en la base de desarrollo: 1.860 filas para 1.860 jugadores; queda el defecto latente CR-01).
 - [ ] A9. Un jugador con métricas posterior a la inicialización no falla en cada corrida (CR-02
       pendiente de decisión).
 
