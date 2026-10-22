@@ -265,7 +265,7 @@ consistente o riesgo de regresión; **Baja** = mantenibilidad y limpieza.
 
 | ID | Severidad | Hallazgo | Evidencia | Recomendación |
 | --- | --- | --- | --- | --- |
-| CR-01 | Media | El ranking **no tiene desempate total**: ante empate de fecha de vigencia e instante de cálculo entre dos filas del mismo jugador, ambas entran y el jugador aparece dos veces. La "última fila por jugador" tiene el mismo hueco. **Verificado en la base de desarrollo: el ranking actual devuelve 1.860 filas para 1.860 jugadores distintos, sin duplicados**; el defecto es latente y solo se alcanza con dos filas de la misma fecha y el mismo instante (`INITIAL` y `CARRIED_FORWARD`). | `backend/.../repositories/PlayerQuoteRepository.java:26-31`, `:72-88` | Añadir desempate final por `id` en los tres `ORDER BY` y en la condición del `not exists`. Registrado como TD-022. |
+| CR-01 | Media | **Corregido.** El ranking **no tenía desempate total**: ante empate de fecha de vigencia e instante de cálculo entre dos filas del mismo jugador, ambas entraban y el jugador aparecía dos veces. La "última fila por jugador" tenía el mismo hueco. **Verificado en la base de desarrollo: el ranking devolvía 1.860 filas para 1.860 jugadores distintos, sin duplicados**; el defecto era latente y solo se alcanzaba con dos filas de la misma fecha y el mismo instante (`INITIAL` y `CARRIED_FORWARD`). | `backend/.../repositories/PlayerQuoteRepository.java:26-31`, `:72-88` | **Aplicado** (T051): el identificador de la fila cierra el orden de las cuatro consultas de lectura y la condición de exclusión del ranking añade `q2.id > q.id`. Tests de empate escritos en T052. TD-022 queda `En curso` hasta la ejecución de los tests por el usuario. |
 | CR-02 | Alta | Un **jugador cotizable sin fila `INITIAL`** (métricas obtenidas después de inicializar el mercado) provoca `NoSuchElementException` en `getFirst()`: se contabiliza como fallo permanente, nunca recibe precio y no aparece en el ranking, pese a ser cotizable (FR-001, FR-002, FR-034). | `backend/.../services/internal/QuotePlayerPublisher.java:44,47` | Tratar la ausencia de fila inicial como jugador no operable y no como fallo; o habilitar la idempotencia de la inicialización para completar filas `INITIAL` faltantes. Registrado como TD-023. |
 | CR-03 | Media | **Filas confirmadas sin resumen de corrida.** Las publicaciones por jugador se confirman en su propia transacción; si la transacción global revierte al final (fallo del `save` del resumen, timeout), quedan cotizaciones movidas sin `quote_executions` y la fecha queda libre para una segunda corrida (FR-061, SC-013). | `backend/.../services/internal/QuotePlayerPublisher.java:34`; `backend/.../services/impl/QuoteRecalculationServiceImpl.java:32` | Alinear el compromiso: o todo en una transacción, o un estado de corrida que distinga "en curso" de "terminada". Registrado como TD-024. |
 | CR-04 | Media | **`quote_executions` no es append-only ni tiene estado.** La fila se inserta como reserva con contadores en cero y `finished_at = started_at`, y se actualiza al final; un lector concurrente puede ver una ejecución aparentemente terminada y vacía. Contradice la calificación "append-only" de `data-model.md §2`. | `backend/.../services/impl/QuoteRecalculationServiceImpl.java:95-108,133-139`; `backend/.../models/QuoteExecution.java:157-176` | Añadir columna de estado o reservar la fila al final de forma transaccional. Registrado como TD-025. |
@@ -284,7 +284,34 @@ consistente o riesgo de regresión; **Baja** = mantenibilidad y limpieza.
 | CR-17 | Baja | **Documentación residual de SPEC-010:** `specs/010-buy-tokens/contracts/quote-source.md` sigue describiendo el simulador como existente ("Ciclo de vida", "Selección de la fuente", "Simulador temporal"). | `specs/010-buy-tokens/contracts/quote-source.md` | Corrección documental mecánica, pendiente de autorización. |
 | CR-18 | Baja | **Residuo documental:** el `previous_price` de una fila arrastrada documenta el precio anterior a su propio reprecio, no al reprecio posterior (FR-026); el `CHECK` no ata `previous_price` al `price` en `CARRIED_FORWARD`. | `backend/.../models/PlayerQuote.java:161-169`; `backend/src/main/resources/db/migration/V20261021042325__create_player_quotes.sql:21` | Precisar la semántica en el modelo y en `data-model.md`. |
 
-### 5.1 Verificaciones sin hallazgo
+### 5.1 Corrección aplicada tras el code review (2026-10-21)
+
+**Decisión del responsable del proyecto:** corregir CR-01 con su test, conservar CR-02 como deuda
+registrada por ser un caso muy borde, y descartar CR-05 y CR-07 por no ser scenarios que ocurran.
+
+| Tarea | Alcance | Resultado |
+| --- | --- | --- |
+| T051 | `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java` | Las cuatro consultas de lectura (`findLatestByPlayerId`, `findHistoryByPlayerId`, `findLatestByPlayerIdOnOrBefore`, `findReferenceDatesByPlayerId`) cierran su orden con `q.id desc`. La condición de exclusión de `findRanking` añade `q2.id > q.id` cuando la fecha de vigencia y el instante de cálculo coinciden. Con esto el orden es total y el ranking devuelve **exactamente una fila por jugador**, con la fila más reciente (mayor identificador) como vigente. |
+| T052 | `backend/src/test/java/footballmarket/services/QuoteQueryServiceTest.java` | Nuevo grupo "Desempate ante empate de fecha de vigencia e instante de cálculo" con dos casos: dos filas del mismo jugador con la misma fecha y el mismo instante, y convivencia de los tres orígenes. Ambos afirman una sola entrada por jugador en el ranking y que la cotización vigente es la misma fila que el ranking expone. |
+| T053 | Este informe y `docs/TECHNICAL_DEBT.md` | Corrección registrada, verificación en la base de desarrollo incorporada y decisiones sobre CR-02, CR-05 y CR-07 reflejadas en el registro de deuda técnica. |
+| T054 | `backend/` | `./gradlew build -x test`: BUILD SUCCESSFUL. Los tests automatizados los ejecuta el usuario. |
+
+**Verificación en la base de desarrollo (2026-10-21).** Con el predicado exacto de `findRanking`
+sobre `football_market_dev`: **1.860 filas para 1.860 jugadores distintos**, todas con fecha de
+vigencia `2026-10-20` y origen `RECOMPUTED`. La tabla contiene tres filas de historial por jugador
+(1.860 `INITIAL` del 2026-10-19, 1.860 `RECOMPUTED` del 2026-10-19 y 1.860 `RECOMPUTED` del
+2026-10-20) y el ranking expone solo la vigente.
+
+**Decisiones sobre los hallazgos abiertos:**
+
+| Hallazgo | Decisión del responsable | Estado |
+| --- | --- | --- |
+| CR-01 | Corregir con test | **Aplicado**; TD-022 `En curso` |
+| CR-02 | Caso muy borde; se conserva como deuda registrada | TD-023 `Pendiente`, sin cambio de código |
+| CR-05 | No va a ocurrir; se ignora | TD-026 `Descartada` con la justificación registrada |
+| CR-07 | No va a ocurrir; se ignora | TD-028 `Descartada` con la justificación registrada |
+
+### 5.2 Verificaciones sin hallazgo
 
 - Migración `V20261021042325` **coincide línea a línea** con `data-model.md §1, §2, §5`: columnas, tipos,
   secuencias, `uq_player_quote`, los cinco `CHECK` de `player_quotes`, `uq_quote_executions_date`, los
@@ -347,13 +374,13 @@ de test" dentro del build permitido.
 
 | ID | Título | Prioridad |
 | --- | --- | --- |
-| TD-022 | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Media |
-| TD-023 | Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo | Media |
+| TD-022 | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Media — `En curso`, corrección aplicada (T051, T052) |
+| TD-023 | Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo | Media — se conserva como deuda (caso muy borde) |
 | TD-024 | Cotizaciones confirmadas sin resumen de ejecución persistido | Media |
 | TD-025 | `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada | Media |
-| TD-026 | Inicialización concurrente del mercado responde 500 en lugar de 409 | Media |
+| TD-026 | Inicialización concurrente del mercado responde 500 en lugar de 409 | Media — `Descartada` |
 | TD-027 | Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación | Media |
-| TD-028 | Operaciones de cotización del mercado sin control de rol | Media |
+| TD-028 | Operaciones de cotización del mercado sin control de rol | Media — `Descartada` |
 | TD-029 | Cobertura de tests incompleta para el recálculo de cotizaciones | Media |
 
 TD-011 se actualizó con `InvalidQuoteException` entre las excepciones propias sin manejador global.
@@ -418,13 +445,20 @@ El usuario revisa y marca cada ítem. **El agente no aprueba este checklist.**
 - [ ] D1. La suite nueva compila y pasa (`./gradlew test` o el comando que indique el quickstart).
 - [ ] D2. Los tests de persistencia corren contra PostgreSQL real, no embebido.
 - [ ] D3. Se decide si se amplía la suite con los casos de CR-10 antes de aprobar TESTING.
+- [ ] D4. Los dos casos de empate de fecha de vigencia e instante de cálculo (T052) pasan y confirman
+      una sola entrada por jugador en el ranking.
 
 ### E. Riesgo y deuda
 
-- [ ] E1. Se decide el tratamiento de CR-01 y CR-02 (corrección o registro como deuda aceptada).
-- [ ] E2. Se decide CR-09 (fecha de mercado futura) y CR-07 (control de rol).
-- [ ] E3. Se revisan las entradas TD-022 a TD-029 registradas en esta revisión.
-- [ ] E4. Se revisa el residuo documental de SPEC-010 (CR-17).
+- [ ] E1. CR-01: corrección aplicada y verificada en la base de desarrollo; queda pendiente la
+      ejecución de los tests de empate (T052) para cerrar TD-022.
+- [ ] E2. CR-02: conservado como deuda registrada (TD-023 `Pendiente`), por decisión del
+      responsable del proyecto.
+- [ ] E3. CR-05 y CR-07: descartados con la justificación registrada (TD-026 y TD-028
+      `Descartada`).
+- [ ] E4. Se decide CR-09 (fecha de mercado futura).
+- [ ] E5. Se revisan las entradas TD-022 a TD-029 registradas en esta revisión.
+- [ ] E6. Se revisa el residuo documental de SPEC-010 (CR-17).
 
 ### F. Git
 
@@ -436,10 +470,14 @@ El usuario revisa y marca cada ítem. **El agente no aprueba este checklist.**
 
 ## 11. Estado y siguiente acción
 
-- **CODE REVIEW**: informe entregado, **pendiente de aprobación humana del checklist de §10**.
-- **TESTING**: pendiente; los tests deben ejecutarlos el usuario. El build no acredita tests.
+- **CODE REVIEW**: informe entregado con la corrección de CR-01 aplicada, **pendiente de aprobación
+  humana del checklist de §10**.
+- **TESTING**: pendiente; los tests deben ejecutarlos el usuario. El build no acredita tests. La
+  suite de empate de T052 forma parte de esa ejecución.
 - **CONVERGE** y **FEATURE COMPLETION**: no habilitados.
-- **Deuda técnica**: TD-022 a TD-029 registradas; TD-011 actualizada. Ninguna deuda se declara
-  resuelta.
-- **Siguiente acción permitida**: aprobación humana de CODE REVIEW con el checklist de §10, y,
+- **Deuda técnica**: TD-022 `En curso` (corrección aplicada, pendiente la ejecución de los tests);
+  TD-023 `Pendiente` por decisión del responsable; TD-026 y TD-028 `Descartada` con la justificación
+  registrada; TD-024, TD-025, TD-027 y TD-029 `Pendiente`; TD-011 actualizada. Ninguna deuda se
+  declara resuelta.
+- **Siguiente acción permitida**: aprobación humana de CODE REVIEW con el checklist de §10 y,
   posteriormente, la fase de TESTING con la ejecución de tests a cargo del usuario.

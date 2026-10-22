@@ -73,13 +73,13 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-019](#td-019--precisión-del-rating-incompatible-con-el-diseño-de-persistencia-de-spec-011) | Precisión del rating incompatible con el diseño de persistencia de SPEC-012 | Backend / Datos | Alta | Pendiente | 2026-10-16 02:49:30 |
 | [TD-020](#td-020--contraste-entre-canales-retirado-en-spec-011) | Contraste entre canales retirado en SPEC-012 | Backend / Datos | Media | Pendiente | 2026-10-18 00:00:00 |
 | [TD-021](#td-021--re-evaluación-con-una-campaña-de-métricas-ya-usada-reprecia-con-datos-estancados) | Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados | Backend / Datos | Media | Pendiente | 2026-10-21 16:20:55 |
-| [TD-022](#td-022--ranking-de-cotizaciones-sin-desempate-deterministica-un-jugador-puede-aparecer-dos-veces) | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-022](#td-022--ranking-de-cotizaciones-sin-desempate-deterministica-un-jugador-puede-aparecer-dos-veces) | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Backend / Datos | Media | En curso | 2026-10-21 22:20:53 |
 | [TD-023](#td-023--jugador-cotizable-sin-fila-initial-falla-en-cada-corrida-de-recálculo) | Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-024](#td-024--cotizaciones-confirmadas-sin-resumen-de-ejecución-persistido) | Cotizaciones confirmadas sin resumen de ejecución persistido | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-025](#td-025--quote_executions-sin-estado-una-ejecución-en-curso-es-indistinguible-de-una-terminada) | `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
-| [TD-026](#td-026--inicialización-concurrente-del-mercado-responde-500-en-lugar-de-409) | Inicialización concurrente del mercado responde 500 en lugar de 409 | Backend / Contrato | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-026](#td-026--inicialización-concurrente-del-mercado-responde-500-en-lugar-de-409) | Inicialización concurrente del mercado responde 500 en lugar de 409 | Backend / Contrato | Media | Descartada | 2026-10-21 22:20:53 |
 | [TD-027](#td-027--índice-ausente-sobre-player_quotesorigin-en-el-camino-caliente-de-compra-y-publicación) | Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación | Backend / Rendimiento | Media | Pendiente | 2026-10-21 22:20:53 |
-| [TD-028](#td-028--operaciones-de-cotización-del-mercado-sin-control-de-rol) | Operaciones de cotización del mercado sin control de rol | Backend / Seguridad | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-028](#td-028--operaciones-de-cotización-del-mercado-sin-control-de-rol) | Operaciones de cotización del mercado sin control de rol | Backend / Seguridad | Media | Descartada | 2026-10-21 22:20:53 |
 | [TD-029](#td-029--cobertura-de-tests-incompleta-para-el-recálculo-de-cotizaciones) | Cobertura de tests incompleta para el recálculo de cotizaciones | Backend / Testing | Media | Pendiente | 2026-10-21 22:20:53 |
 
 ## 6. Detalle de las deudas técnicas
@@ -90,7 +90,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | --- | --- |
 | **ID** | TD-022 |
 | **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `En curso` |
 | **Prioridad** | Media |
 | **Área afectada** | Backend / Datos |
 | **Fecha de resolución** | — |
@@ -163,6 +163,7 @@ condición de exclusión del ranking con `q2.id > q.id`, o reemplazar el `not ex
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
 | 2026-10-21 22:20:53 | Verificación empírica en la base de desarrollo: el ranking devuelve 1.860 filas para 1.860 jugadores distintos, sin duplicados. El defecto se relega a latente y la prioridad baja de Alta a Media. Se documenta la condición exacta que lo reproduce y la prueba en transacción revertida. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Corrección aplicada por decisión del responsable del proyecto: el orden de lectura de `PlayerQuoteRepository` cierra con el identificador de la fila y la condición de exclusión del ranking añade `q2.id > q.id` ante empate de fecha de vigencia e instante de cálculo. Se escribieron los casos de empate en `QuoteQueryServiceTest`. El estado pasa a `En curso`: la corrección está implementada y compilada, pero la ejecución de los tests corresponde al usuario y la deuda no se declara resuelta sin esa evidencia. |
 
 ### TD-023 — Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo
 
@@ -225,6 +226,7 @@ cuando el jugador se vuelve cotizable.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Decisión del responsable del proyecto: se conserva como deuda registrada. El caso es muy borde —un jugador que obtiene métricas después de la inicialización del mercado— y no se modifica el código. La entrada permanece `Pendiente` con su evidencia, su causa y su regla de resolución propuesta. |
 
 ### TD-024 — Cotizaciones confirmadas sin resumen de ejecución persistido
 
@@ -354,10 +356,14 @@ mecanismo distinto, como una fila de reserva con marca temporal.
 | --- | --- |
 | **ID** | TD-026 |
 | **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `Descartada` |
 | **Prioridad** | Media |
 | **Área afectada** | Backend / Contrato |
-| **Fecha de resolución** | — |
+| **Fecha de resolución** | - |
+
+**Decision del responsable del proyecto.** La carrera de inicializacion concurrente se descarta: no
+ocurre en el uso previsto del mercado, donde la inicializacion se ejecuta una sola vez y de forma
+manual. La entrada se conserva con su evidencia por trazabilidad, y no se modifica el codigo.
 
 **Descripción.** El camino secuencial de la inicialización detecta el mercado ya inicializado y
 responde `409 MARKET_ALREADY_INITIALIZED`. Dos inicializaciones concurrentes con fechas distintas no
@@ -403,6 +409,7 @@ lugar del 409 documentado, y el error interno degrada el diagnóstico de la caus
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Descartada por decisión del responsable del proyecto: la inicialización se ejecuta una sola vez y de forma manual, de modo que la carrera no se considera alcanzable. Se conserva la entrada con su evidencia y no se modifica código, migraciones ni contratos. |
 
 ### TD-027 — Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación
 
@@ -468,10 +475,17 @@ historial de cotizaciones. No afecta la corrección funcional.
 | --- | --- |
 | **ID** | TD-028 |
 | **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `Descartada` |
 | **Prioridad** | Media |
 | **Área afectada** | Backend / Seguridad |
-| **Fecha de resolución** | — |
+| **Fecha de resolución** | - |
+
+**Decision del responsable del proyecto.** La ausencia de control de rol para inicializar el mercado
+y ejecutar recálculos se descarta: el acceso a esas operaciones es un uso interno y deliberado del
+equipo, y la spec no introduce roles nuevos (FR-059). La ausencia de autorizacion por rol del
+proyecto ya esta registrada en [TD-002](#td-002--autorización-por-rol-inexistente-prometida-en-el-contrato-público),
+que sigue vigente; esta entrada se conserva con su evidencia por trazabilidad y no se modifica el
+codigo.
 
 **Descripción.** La inicialización del mercado y el recálculo de cotizaciones son mutaciones globales
 del mercado: la primera fija la fecha de mercado y el ancla de precio de todo el catálogo, y la
@@ -521,6 +535,7 @@ incorporarse al modelo de autorización que TD-002 ya tiene pendiente.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Descartada por decisión del responsable del proyecto: el acceso a la inicialización y al recálculo es un uso interno y deliberado del equipo, y la spec no introduce roles nuevos (FR-059). La ausencia general de autorización por rol permanece registrada en TD-002. Se conserva la entrada con su evidencia y no se modifica código, migraciones ni contratos. |
 
 ### TD-029 — Cobertura de tests incompleta para el recálculo de cotizaciones
 
@@ -2058,3 +2073,4 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 | 2026-10-18 | Incorporación de TD-020 tras la alineación documental de SPEC-012 autorizada por el usuario, que retiró el contraste entre canales, fijó la cobertura efectiva 45/57/42 y recorrió quince combinaciones JSON. No se modificó código, migraciones ni contratos; la entrada requiere decisión humana y evidencia de tests para cerrarse. |
 | 2026-10-21 16:20:55 | Incorporación de TD-021 tras la revisión funcional de SPEC-016, en la que se verificó que la capa de valuación reutiliza en silencio la campaña de métricas anterior cuando la campaña vigente no está confirmada y sella esas valuaciones con el día de la evaluación, con lo que el recálculo reprecia a todos los jugadores sobre datos que no cambiaron. El responsable del proyecto decidió no modificar el código; la entrada registra el comportamiento real y su regla de resolución propuesta. No se modificó código, migraciones ni contratos. |
 | 2026-10-21 22:20:53 | Incorporación de TD-022 a TD-029 tras el code review de SPEC-016: una deuda de prioridad Alta (TD-022, ranking sin desempate determinista) y siete de prioridad Media (TD-023 a TD-029). TD-011 se actualizó con `InvalidQuoteException` entre las excepciones propias sin manejador global. El code review completo, con los hallazgos, el orden de revisión y el checklist humano, quedó registrado en `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md`. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Remediación del code review de SPEC-016 por decisión del responsable del proyecto: se cierra el desempate no determinista de la lectura de cotizaciones (CR-01, TD-022, T051 y T052) y se registran las decisiones sobre CR-02 (TD-023 se conserva como deuda), CR-05 (TD-026 descartada) y CR-07 (TD-028 descartada). TD-022 pasa a `En curso` porque la ejecución de los tests corresponde al usuario. Se modificó el repositorio de cotizaciones y la suite de pruebas de consultas; no se modificaron migraciones, contratos HTTP ni el esquema. |

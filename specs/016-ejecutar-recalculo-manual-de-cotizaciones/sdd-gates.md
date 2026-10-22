@@ -493,3 +493,23 @@ funcionalidades migradas.
 ### Siguiente accion permitida
 
 - Aprobacion humana de CODE REVIEW con el checklist de la seccion 10 del informe y, tras ella, la fase de TESTING con ejecucion de tests a cargo del usuario.
+
+## REMEDIACION CODE REVIEW - 2026-10-21 (CR-01 corregido; CR-02, CR-05 y CR-07 con decision)
+
+- **Decision humana registrada**: el usuario ordeno corregir CR-01 con su test, conservar CR-02 como deuda por ser un caso muy borde, y descartar CR-05 y CR-07 porque no van a ocurrir.
+- **Correccion de codigo (T051)**: `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java`. Las cuatro consultas de lectura (`findLatestByPlayerId`, `findHistoryByPlayerId`, `findLatestByPlayerIdOnOrBefore`, `findReferenceDatesByPlayerId`) cierran su orden con `q.id desc`. La condicion de exclusion de `findRanking` agrega `q2.id > q.id` ante empate de fecha de vigencia e instante de calculo. El orden de lectura pasa a ser total y el ranking devuelve exactamente una fila por jugador. No se modifico el esquema, las migraciones ni los contratos HTTP.
+- **Tests escritos (T052)**: `backend/src/test/java/footballmarket/services/QuoteQueryServiceTest.java` incorpora el grupo "Desempate ante empate de fecha de vigencia e instante de calculo" con dos casos: dos filas del mismo jugador con la misma fecha y el mismo instante, y convivencia de los tres origenes. Ambos afirman una sola entrada por jugador en el ranking y que la cotizacion vigente es la misma fila que el ranking expone. No fueron ejecutados por el agente.
+- **Verificacion en la base de desarrollo**: con el predicado exacto de `findRanking` sobre `football_market_dev`, 1.860 filas para 1.860 jugadores distintos antes y despues de la correccion. El escenario de empate reproducido en transaccion revertida devolvia 2 filas para un mismo jugador antes de la correccion y 0 duplicados despues.
+- **Documentacion actualizada (T053)**: `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (nueva seccion 5.1 con la correccion aplicada, la verificacion y las decisiones por hallazgo), `specs/016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md` (desempate total documentado) y `docs/TECHNICAL_DEBT.md` (TD-022 pasa a `En curso`; TD-023 se conserva como deuda; TD-026 y TD-028 pasan a `Descartada` con la justificacion del responsable).
+- **Control permitido (T054)**: `./gradlew build -x test` desde `backend/`: BUILD SUCCESSFUL, con compilacion productiva, Spotless y validacion estatica de clasificacion ("Clasificacion valida: 121 clases de test"). `./gradlew compileTestJava`: BUILD SUCCESSFUL; los tests nuevos compilan y no fueron ejecutados.
+- **Alcance**: T051 a T054 de la Phase 9 de `tasks.md`. No se modifico ningun otro requisito ni checklist del revisor.
+
+### Estado de autorizaciones
+
+- **CODE REVIEW**: informe actualizado con la correccion aplicada; sigue pendiente de aprobacion humana del checklist de la seccion 10 del informe.
+- **TESTING**: pendiente; los tests, incluidos los dos casos de empate, los ejecuta el usuario.
+- **CONVERGE y FEATURE COMPLETION**: pendientes y fuera de esta ejecucion.
+
+### Siguiente accion permitida
+
+- Aprobacion humana de CODE REVIEW y, tras ella, la fase de TESTING con ejecucion de tests a cargo del usuario.

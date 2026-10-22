@@ -190,6 +190,17 @@ contracts/quote-source.md, quickstart.md
 
 ---
 
+## Phase 9: Remediación del code review (CR-01)
+
+**Purpose**: Cerrar el desempate no determinista de la lectura de cotizaciones y registrar las decisiones del responsable sobre los hallazgos con decisión abierta.
+
+- [X] T051 Cerrar el orden de lectura en `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java`: agregar el identificador de la fila como último criterio en `findLatestByPlayerId`, `findHistoryByPlayerId`, `findLatestByPlayerIdOnOrBefore` y `findReferenceDatesByPlayerId`, y extender la condición de exclusión de `findRanking` con `q2.id > q.id` ante empate de fecha de vigencia e instante de cálculo (FR-037, FR-039, CR-01, TD-022)
+- [X] T052 Escribir en `backend/src/test/java/footballmarket/services/QuoteQueryServiceTest.java` los casos de empate: dos filas del mismo jugador con la misma fecha de vigencia y el mismo instante de cálculo, y convivencia de los tres orígenes; ambos deben afirmar una sola entrada por jugador en el ranking y la misma fila vigente en la consulta de cotización vigente (FR-039, CR-01)
+- [X] T053 Actualizar `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` con la corrección aplicada y la verificación en la base de desarrollo, y `docs/TECHNICAL_DEBT.md` con el estado de TD-022 y con la decisión del responsable sobre CR-02, CR-05 y CR-07
+- [X] T054 Ejecutar el control entregable permitido `./gradlew build -x test` desde `backend/` y reportar el resultado al usuario; los tests automatizados los ejecuta el usuario (Constitution, "Verificación y testing")
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies

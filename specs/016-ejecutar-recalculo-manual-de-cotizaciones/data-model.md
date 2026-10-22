@@ -53,7 +53,8 @@ Una fila es un punto de la serie de precios de un jugador.
   inmediatamente antes de escribir esa fila (FR-028).
 - **Regla de vigencia**: la cotización vigente de un jugador es su fila de `effective_date` máxima y,
   a igualdad de fecha, la fila `RECOMPUTED` (escrita después que la arrastrada). El orden de lectura
-  es `effective_date DESC, calculated_at DESC` (FR-026, FR-037).
+  es `effective_date DESC, calculated_at DESC`, cerrado por `id DESC` como último criterio para que
+  el orden sea total y una fila nunca dependa del orden arbitrario de la base (FR-026, FR-037).
 - **Fecha de vigencia de referencia**: la de la última fila `INITIAL` o `RECOMPUTED` del jugador.
   Las filas `CARRIED_FORWARD` no la modifican, de modo que una fila arrastrada nunca bloquea un
   reprecio posterior (FR-027).
@@ -126,10 +127,12 @@ Hay unicidad sobre `quote_date`: cada fecha de cotización admite como máximo u
 Consultas de lectura requeridas:
 
 - Cotización vigente: última fila por `player_id` ordenada por `effective_date DESC,
-  calculated_at DESC`; a igualdad de fecha prevalece la fila `RECOMPUTED` (FR-037).
-- Historial: todas las filas de un jugador ordenadas por `effective_date DESC, calculated_at DESC`.
+  calculated_at DESC, id DESC`; a igualdad de fecha prevalece la fila `RECOMPUTED` (FR-037).
+- Historial: todas las filas de un jugador ordenadas por `effective_date DESC, calculated_at DESC,
+  id DESC`.
 - Cotización a una fecha: última fila con `effective_date <= fecha`, con el mismo desempate.
-- Ranking: última fila por jugador reordenada por `price DESC`.
+- Ranking: última fila por jugador reordenada por `price DESC`; el desempate total garantiza una
+  sola entrada por jugador (FR-039).
 - Mercado inicializado: existencia de al menos una fila con `origin = 'INITIAL'`.
 - Población cotizable: `player_id` distintos de `player_statistics` (SPEC-012) cuyo último
   registro tenga al menos una métrica informada.
