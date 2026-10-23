@@ -81,6 +81,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-027](#td-027--índice-ausente-sobre-player_quotesorigin-en-el-camino-caliente-de-compra-y-publicación) | Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación | Backend / Rendimiento | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-028](#td-028--operaciones-de-cotización-del-mercado-sin-control-de-rol) | Operaciones de cotización del mercado sin control de rol | Backend / Seguridad | Media | Descartada | 2026-10-21 22:20:53 |
 | [TD-029](#td-029--cobertura-de-tests-incompleta-para-el-recálculo-de-cotizaciones) | Cobertura de tests incompleta para el recálculo de cotizaciones | Backend / Testing | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-030](#td-030--cobertura-de-tests-incompleta-para-el-ranking-por-score) | Cobertura de tests incompleta para el ranking por score | Backend / Testing | Media | En curso | 2026-10-23 19:39:54 |
 
 ## 6. Detalle de las deudas técnicas
 
@@ -600,6 +601,79 @@ cubran los comportamientos enumerados y el usuario los ejecute con resultado sat
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+
+### TD-030 — Cobertura de tests incompleta para el ranking por score
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-030 |
+| **Fecha y hora de registro** | 2026-10-23 19:39:54 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `En curso` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Testing |
+| **Fecha de resolución** | - |
+
+**Descripción.** La suite de SPEC-018 no verificaba el valor del score que expone el Service ni ejercitaba
+la rama `GENERAL_ATTRIBUTES` con entradas. Ningún test de Service afirmaba `ScoreRankingEntry::score`, de
+modo que una regresión que devolviera `rawGrl` en lugar de `finalGrl`, o que transformara el valor
+persistido, habría seguido en verde. La implementación productiva sí despacha `GENERAL_ATTRIBUTES` a
+`AttributeValuationRepository` y mapea `finalGrl`; el problema era de cobertura. **Remediación en curso:**
+se añadió `AttributeRanking.exposesAttributeFinalScore` y afirmaciones de score en el caso posicional;
+queda pendiente la ejecución por el usuario.
+
+**Evidencia (estado original).**
+
+- `backend/src/test/java/footballmarket/services/ScoreRankingQueryServiceTest.java:46-107` — los casos
+  con entradas afirmaban `playerId`, `position`, `valuationDate` y repetibilidad, pero no `score`; no
+  había ningún caso con ejecución `GENERAL_ATTRIBUTES` y valuaciones de atributos.
+- `backend/src/test/java/footballmarket/services/ScoreRankingQueryServiceTest.java:124-138` — el único
+  caso `GENERAL_ATTRIBUTES` tenía el ranking vacío, por lo que no recorría el mapeo de `finalGrl`.
+- `backend/src/test/java/footballmarket/repositories/ScoreRankingQueryTest.java:77-97` — el test de
+  atributos verifica la población y el jugador devuelto, pero no el valor del score.
+
+**Remediación aplicada (pendiente de ejecución).**
+
+- `ScoreRankingQueryServiceTest`: nuevo `@Nested AttributeRanking` con `exposesAttributeFinalScore`,
+  que persiste dos jugadores con score bruto distinto del final (0.990000 → 0.840000 y 0.800000 →
+  0.910000), ejecuta `GENERAL_ATTRIBUTES` y afirma estrategia, `quoteDate`, orden por score final,
+  posiciones 1..2, `score` y `valuationDate` de cada entrada.
+- `ScoreRankingQueryServiceTest.ordersEntriesAndAssignsPositions`: afirma ahora el score (0.800000) de
+  ambas entradas posicionales.
+- `ScoreRankingTestData`: sobrecarga de `prepareAttributePlayer` con bruto y final separados;
+  `attributeValuation` distingue ambos valores para que una regresión `finalGrl → rawGrl` falle.
+- Verificación permitida: `backend/gradlew.bat build -x test` → BUILD SUCCESSFUL, con Spotless y
+  `validateTestClassification` válidos. Este control no compila ni ejecuta los tests.
+
+**Causa técnica.** La suite se construyó a partir de los escenarios de aceptación y del orden, sin una
+revisión de qué valores y ramas del Service quedaban sin ejercitar.
+
+**Impacto técnico.** Una regresión en FR-004, FR-012 o SC-005 para el score expuesto —incluida la
+estrategia de atributos— no se detectaría con los tests actuales. La ejecución y la evidencia de los
+tests quedan a cargo del usuario.
+
+**Solución propuesta.** Añadir al test de Service un caso con ejecución `GENERAL_ATTRIBUTES` y
+valuaciones de atributos, afirmando `score` y `valuationDate` de cada entrada, y afirmar también el
+score de un caso posicional. Opcionalmente, discriminar la escala de seis decimales en el test de
+contrato (CR-05 del informe).
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que existan tests backend que
+cubran el valor del score en ambas estrategias y el usuario los ejecute con resultado satisfactorio.
+
+**Referencias.**
+
+- `specs/018-consultar-rankings-de-jugadores/spec.md` (FR-004, FR-012, SC-005)
+- `backend/src/test/java/footballmarket/services/ScoreRankingQueryServiceTest.java`
+- `backend/src/test/java/footballmarket/repositories/ScoreRankingQueryTest.java`
+- `backend/src/main/java/footballmarket/services/impl/ScoreRankingQueryServiceImpl.java`
+- `docs/backend/testing.md`
+- `specs/018-consultar-rankings-de-jugadores/code-review-report.md` (CR-01)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-23 19:39:54 | Registro inicial tras el code review de SPEC-018. No se modificó código, migraciones ni contratos. |
+| 2026-10-23 | Pasa a `En curso`: se añadió el test de Service de la rama `GENERAL_ATTRIBUTES` con score bruto distinto del final y las afirmaciones de score posicionales. Solo se cerrará con la ejecución satisfactoria del usuario. |
 
 ### TD-021 — Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados
 
