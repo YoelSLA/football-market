@@ -72,8 +72,19 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-018](#td-018--colores-literales-en-los-módulos-de-estilo-de-componentes) | Colores literales en los módulos de estilo de componentes | Frontend / Convenciones | Baja | Pendiente | 2026-10-14 17:48:44 |
 | [TD-019](#td-019--precisión-del-rating-incompatible-con-el-diseño-de-persistencia-de-spec-011) | Precisión del rating incompatible con el diseño de persistencia de SPEC-012 | Backend / Datos | Alta | Pendiente | 2026-10-16 02:49:30 |
 | [TD-020](#td-020--contraste-entre-canales-retirado-en-spec-011) | Contraste entre canales retirado en SPEC-012 | Backend / Datos | Media | Pendiente | 2026-10-18 00:00:00 |
+| [TD-021](#td-021--cobertura-parcial-del-control-de-imports-scss) | Cobertura parcial del control de imports SCSS | Frontend / Herramientas | Media | Pendiente | 2026-10-22 14:32:17 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-021 — Cobertura parcial del control de imports SCSS
+
+- **Registrada**: 2026-10-22 14:32:17 (`America/Argentina/Buenos_Aires`, reloj del sistema).
+- **Estado**: Pendiente; **prioridad**: Media; **área**: Frontend / Herramientas.
+- **Evidencia**: `frontend/scripts/scss-check-imports.js` utiliza un patrón con `^@use` sin modo multilinea. Solo inspecciona la posición inicial del texto y no todas las directivas. El mensaje de éxito no acredita la regla completa. Hallazgo por lectura, sin ejecución.
+- **Impacto**: un import relativo situado después de otra directiva o comentario puede pasar inadvertido.
+- **Solución propuesta**: lectura de directivas SCSS que distinga comentarios y strings, cubra el archivo completo y valide la forma canónica, sin agregar dependencias innecesarias. No aplicar detección React mediante regex.
+- **Criterio de cierre**: implementación revisada y evidencia aportada por el usuario de detección de directivas válidas e inválidas en distintas posiciones; respetar las restricciones de ejecución vigentes. No se declara resuelta por el build.
+- **Historial**: 2026-10-22 14:32:17 — registrada durante la reorganización global del frontend; no se amplía el alcance para resolverla.
 
 ### TD-019 — Precisión del rating incompatible con el diseño de persistencia de SPEC-012
 
@@ -1413,7 +1424,7 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 
 **Referencias.**
 
-- `docs/frontend/architecture.md`
+- [Artículo 36.º — Capas globales de estilos](frontend/architecture/presentation.md#articulo-36) y [antecedente de implementación](frontend/architecture/implementation.md#estilos-de-la-implementacion).
 - `frontend/src/styles/abstracts/tokens/_colors.scss`
 - `frontend/src/features/players/components/PlayerCard/PlayerCard.module.scss`
 - `frontend/src/features/players/pages/PlayersPage/PlayersPage.module.scss`
