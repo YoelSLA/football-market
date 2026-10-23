@@ -167,6 +167,9 @@ class PlayerTokenEmissionPersistenceTest {
       OffsetDateTime calculatedAt = OffsetDateTime.parse("2026-10-14T10:30:00Z");
       CurrentQuote quote = new CurrentQuote(playerId, PRICE, calculatedAt, "h05-strategy");
       when(quotes.currentQuote(playerId)).thenReturn(Optional.of(quote));
+      // El mercado debe existir: sin fila de origen INITIAL la compra se rechaza antes de leer la
+      // cotización.
+      market.initializeMarket(playerId);
       long buyerBefore =
           jdbc.queryForObject(
               "SELECT available_credits FROM user_credits WHERE user_id = ?",

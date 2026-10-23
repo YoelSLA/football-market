@@ -53,6 +53,9 @@ class BuyOrderAuthorizationTest {
     superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
     market.emitInitialTokens(player, superuser);
+    // El mercado debe estar inicializado: sin fila de origen INITIAL las operaciones de mercado
+    // se rechazan con MARKET_NOT_INITIALIZED antes de leer la cotización.
+    market.initializeMarket(player);
   }
 
   private String tokenFor(User user) {

@@ -15,15 +15,21 @@ import footballmarket.models.exceptions.PortfolioIntegrityException;
 import footballmarket.services.exceptions.ArithmeticOverflowException;
 import footballmarket.services.exceptions.CannotBuyOwnListingException;
 import footballmarket.services.exceptions.EmailAlreadyRegisteredException;
+import footballmarket.services.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.services.exceptions.InsufficientCreditsException;
 import footballmarket.services.exceptions.InsufficientStockException;
+import footballmarket.services.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.services.exceptions.InvalidCredentialsException;
 import footballmarket.services.exceptions.InvalidListingStatusException;
+import footballmarket.services.exceptions.InvalidMinPriceFloorException;
 import footballmarket.services.exceptions.InvalidOrderRequestException;
 import footballmarket.services.exceptions.InvalidQuantityException;
 import footballmarket.services.exceptions.InvalidQuotePriceException;
+import footballmarket.services.exceptions.InvalidVariationCapException;
 import footballmarket.services.exceptions.ListingNotAvailableException;
 import footballmarket.services.exceptions.ListingNotFoundException;
+import footballmarket.services.exceptions.MarketAlreadyInitializedException;
+import footballmarket.services.exceptions.MarketNotInitializedException;
 import footballmarket.services.exceptions.PlayerIdentityRunNotFoundException;
 import footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException;
 import footballmarket.services.exceptions.PlayerIdentitySynchronizationException;
@@ -37,10 +43,12 @@ import footballmarket.services.exceptions.PlayerStatisticsSyncInProgressExceptio
 import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.services.exceptions.QuoteContractViolationException;
+import footballmarket.services.exceptions.QuoteNotFoundException;
 import footballmarket.services.exceptions.QuoteUnavailableException;
 import footballmarket.services.exceptions.SellerUnavailableException;
 import footballmarket.services.exceptions.SuperuserCannotBuyException;
 import footballmarket.services.exceptions.SuperuserCannotSellException;
+import footballmarket.services.exceptions.UnknownQuoteStrategyException;
 import footballmarket.services.exceptions.UserNotFoundException;
 import footballmarket.services.exceptions.UsernameAlreadyRegisteredException;
 import footballmarket.services.exceptions.ValuationEvaluationException;
@@ -85,6 +93,10 @@ public class GlobalExceptionHandler {
       org.springframework.web.bind.MissingServletRequestParameterException exception,
       HttpServletRequest request)
       throws org.springframework.web.bind.MissingServletRequestParameterException {
+    if (request.getRequestURI().equals("/api/quotes/executions")) {
+      return this.buildResponse(
+          "Falta la fecha de cotización", "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
+    }
     if (!request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
       throw exception;
     }
@@ -396,6 +408,13 @@ public class GlobalExceptionHandler {
       return this.buildResponse(
           "El filtro de cobertura no es válido", code, HttpStatus.BAD_REQUEST, request);
     }
+    if (request.getRequestURI().equals("/api/quotes/executions")) {
+      return this.buildResponse(
+          "La fecha de cotización debe tener formato ISO",
+          "INVALID_REQUEST",
+          HttpStatus.BAD_REQUEST,
+          request);
+    }
     return buildResponse(
         "El parámetro de consulta no tiene un formato válido",
         "INVALID_PARAMETER_TYPE",
@@ -498,6 +517,58 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleQuoteUnavailable(
       QuoteUnavailableException ex, HttpServletRequest request) {
     return buildResponse(ex.getMessage(), "QUOTE_UNAVAILABLE", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(MarketNotInitializedException.class)
+  public ResponseEntity<ErrorResponseDTO> handleMarketNotInitialized(
+      MarketNotInitializedException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "MARKET_NOT_INITIALIZED", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(MarketAlreadyInitializedException.class)
+  public ResponseEntity<ErrorResponseDTO> handleMarketAlreadyInitialized(
+      MarketAlreadyInitializedException ex, HttpServletRequest request) {
+    return buildResponse(
+        ex.getMessage(), "MARKET_ALREADY_INITIALIZED", HttpStatus.CONFLICT, request);
+  }
+
+  @ExceptionHandler(InvalidAdjustmentFactorException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidAdjustmentFactor(
+      InvalidAdjustmentFactorException ex, HttpServletRequest request) {
+    return buildResponse(
+        ex.getMessage(), "INVALID_ADJUSTMENT_FACTOR", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(InvalidVariationCapException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidVariationCap(
+      InvalidVariationCapException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "INVALID_VARIATION_CAP", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(InvalidMinPriceFloorException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidMinPriceFloor(
+      InvalidMinPriceFloorException ex, HttpServletRequest request) {
+    return buildResponse(
+        ex.getMessage(), "INVALID_MIN_PRICE_FLOOR", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(UnknownQuoteStrategyException.class)
+  public ResponseEntity<ErrorResponseDTO> handleUnknownQuoteStrategy(
+      UnknownQuoteStrategyException ex, HttpServletRequest request) {
+    return buildResponse(
+        ex.getMessage(), "UNKNOWN_QUOTE_STRATEGY", HttpStatus.BAD_REQUEST, request);
+  }
+
+  @ExceptionHandler(QuoteNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handleQuoteNotFound(
+      QuoteNotFoundException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "QUOTE_NOT_FOUND", HttpStatus.NOT_FOUND, request);
+  }
+
+  @ExceptionHandler(ExecutionAlreadyExistsException.class)
+  public ResponseEntity<ErrorResponseDTO> handleExecutionAlreadyExists(
+      ExecutionAlreadyExistsException ex, HttpServletRequest request) {
+    return buildResponse(ex.getMessage(), "EXECUTION_ALREADY_EXISTS", HttpStatus.CONFLICT, request);
   }
 
   @ExceptionHandler(InsufficientStockException.class)

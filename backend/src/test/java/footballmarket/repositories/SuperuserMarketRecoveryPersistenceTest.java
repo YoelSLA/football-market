@@ -218,6 +218,9 @@ class SuperuserMarketRecoveryPersistenceTest {
           new CurrentQuote(
               playerId, 100L, OffsetDateTime.parse("2026-10-14T10:30:00Z"), "h06-strategy");
       when(quotes.currentQuote(playerId)).thenReturn(Optional.of(quote));
+      // El mercado debe existir: sin fila de origen INITIAL la compra se rechaza antes de leer la
+      // cotización.
+      market.initializeMarket(playerId);
       orders.buy(buyer.getEmail(), new BuyOrderRequest(playerId, bought));
       assertThat(quantity(playerId, owner.getId())).isEqualTo(100 - bought);
       assertThat(quantity(playerId, buyer.getId())).isEqualTo(bought);
