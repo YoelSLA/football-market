@@ -1,0 +1,227 @@
+@use "@/styles/abstracts" as ds;
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 12px;
+
+  border-radius: 12px;
+  background-color: ds.$surface-dark;
+
+  /* ================= NAVEGACIÓN ================= */
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+
+    border: 1px solid ds.$border-strong;
+    border-radius: 8px;
+
+    background-color: ds.$surface-raised;
+    color: ds.$text-inverse;
+
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1;
+
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      background-color: ds.$border-strong;
+      border-color: ds.$border-strong-hover;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &:focus-visible {
+      outline: 2px solid ds.$focus-ring-on-dark;
+      outline-offset: 2px;
+    }
+  }
+
+  /* ================= PÁGINAS ================= */
+
+  &__pages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-width: 0;
+  }
+
+  &__ellipsis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 18px;
+    height: 32px;
+
+    color: ds.$text-ellipsis;
+
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+
+    user-select: none;
+  }
+
+  &__page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
+
+    border: 1px solid transparent;
+    border-radius: 8px;
+
+    background-color: transparent;
+    color: ds.$text-pagination;
+
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+
+    &:hover:not(.pagination__page_active) {
+      background-color: ds.$surface-raised;
+      color: ds.$text-inverse;
+    }
+
+    &:focus-visible {
+      outline: 2px solid ds.$focus-ring-on-dark;
+      outline-offset: 2px;
+    }
+
+    /* Página seleccionada */
+    &_active {
+      background-color: ds.$action-selected;
+      border-color: ds.$action-selected;
+      color: ds.$text-inverse;
+      font-weight: 700;
+
+      &:hover {
+        background-color: ds.$action-active;
+        border-color: ds.$action-active;
+      }
+    }
+  }
+}
+
+/* ================= CAPSULA ================= */
+
+/* Version flotante centrada: sin barra de fondo de ancho completo.
+   La activa el layout que reserva su banda inferior, de modo que
+   nunca se superpone al contenido. */
+
+.pagination_capsule {
+  width: fit-content;
+  margin: 0 auto;
+  gap: 10px;
+
+  min-height: ds.$pagination-band;
+  padding: 4px 6px;
+
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 999px;
+
+  background-color: rgb(30 41 59 / 88%);
+  box-shadow: 0 0.5rem 1.25rem rgb(2 6 23 / 35%);
+
+  backdrop-filter: blur(6px);
+
+  .pagination__nav,
+  .pagination__page {
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+
+  .pagination__pages {
+    gap: 5px;
+  }
+
+  .pagination__ellipsis {
+    height: 32px;
+  }
+
+  .pagination__page {
+    font-size: 12.5px;
+  }
+}
+
+/* ================= TABLET ================= */
+
+@include ds.down(ds.$bp-tablet) {
+  .pagination {
+    gap: 12px;
+    min-height: 44px;
+    padding: 6px 8px;
+
+    &__nav,
+    &__page {
+      width: 32px;
+      height: 32px;
+      min-height: 32px;
+    }
+
+    &__pages {
+      gap: 4px;
+    }
+  }
+}
+
+/* ================= MÓVIL ================= */
+
+@include ds.down(ds.$bp-2xs) {
+  .pagination {
+    gap: 8px;
+    min-height: 42px;
+    padding: 6px;
+
+    &__nav,
+    &__page {
+      width: 30px;
+      height: 30px;
+      min-height: 30px;
+    }
+
+    &__pages {
+      gap: 3px;
+    }
+
+    &__page {
+      font-size: 12px;
+    }
+  }
+}

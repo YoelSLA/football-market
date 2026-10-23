@@ -1,0 +1,113 @@
+@baseUrl = http://localhost:8080/api/auth
+
+### ============================================================
+### REGISTER
+### ============================================================
+
+### Registrar usuario
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "Password123",
+  "passwordConfirmation": "Password123"
+}
+
+### Registrar usuario - Email ya registrado (409)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "Password123",
+  "passwordConfirmation": "Password123"
+}
+
+### Registrar usuario - Email inválido (400)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "email-invalido",
+  "password": "Password123",
+  "passwordConfirmation": "Password123"
+}
+
+### Registrar usuario - Campos vacíos (400)
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": "",
+  "passwordConfirmation": ""
+}
+
+
+### ============================================================
+### LOGIN
+### ============================================================
+
+### Login correcto
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "Password123"
+}
+
+> {%
+    client.global.set("auth_token", response.body.token);
+%}
+
+
+### Login - Credenciales incorrectas (401)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "usuario@email.com",
+  "password": "PasswordIncorrecta123"
+}
+
+
+### Login - Email inválido (400)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "email-invalido",
+  "password": "Password123"
+}
+
+### Login - Campos vacíos (400)
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": ""
+}
+
+
+### ============================================================
+### CURRENT USER
+### ============================================================
+
+### Obtener usuario autenticado
+GET {{baseUrl}}/me
+Authorization: Bearer {{auth_token}}
+Accept: application/json
+
+
+### Obtener usuario sin token (401)
+GET {{baseUrl}}/me
+Accept: application/json
+
+
+### Obtener usuario con token inválido (401)
+GET {{baseUrl}}/me
+Authorization: Bearer token-invalido
+Accept: application/json

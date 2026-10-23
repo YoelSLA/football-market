@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { playersQueryKeys } from "../../constants";
-import { playersService } from "../../players.service";
+import { playersQueryKeys } from "@/features/players/constants";
+import { playersService } from "@/features/players/players.service";
 
 export const PLAYERS_PAGE_SIZE = 12;
 

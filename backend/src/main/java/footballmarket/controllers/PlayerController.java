@@ -1,6 +1,7 @@
 package footballmarket.controllers;
 
 import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
+import footballmarket.controllers.dtos.responses.PlayerResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayerSyncResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
 import footballmarket.controllers.exceptions.InvalidPlayerPageException;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/** Contratos HTTP del catálogo local y su sincronización manual. */
 @RestController
 @RequestMapping("/api/players")
 @RequiredArgsConstructor
@@ -38,13 +40,13 @@ public class PlayerController {
   @Operation(
       summary = "Sincronizar jugadores",
       description =
-          "Sincronización manual sin body de Premier League (PL), Bundesliga (BL1), La Liga (PD), Serie A (SA) y Ligue 1 (FL1), sin exigir un orden. Disponible para cualquier usuario con JWT válido, sin rol adicional.")
+          "Sincronización manual de las competiciones configuradas en Football-Data.org (inicialmente PL, BL1, PD, SA y FL1), sin body ni rol adicional. Confirma ligas, equipos y jugadores en un único commit local; conserva identidades y protege presentes inválidos. Tras confirmar, intenta enriquecer referencias de equipos en TheSportsDB sin afectar los cinco contadores ni revertir el catálogo. No obtiene imágenes. Ante 429 de Football-Data respeta Retry-After con hasta tres reintentos.")
   @ApiResponse(responseCode = "200", description = "Foto completa aplicada al catálogo")
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
       responseCode = "502",
       description =
-          "No se completó la lectura del proveedor; catálogo sin cambios (FOOTBALL_DATA_UNAVAILABLE)",
+          "Foto del proveedor incompleta/no disponible o fallo técnico local; sin cambios parciales de la sincronización (FOOTBALL_DATA_UNAVAILABLE)",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   public ResponseEntity<PlayerSyncResponseDTO> synchronize() {
     return ResponseEntity.ok(
@@ -54,7 +56,8 @@ public class PlayerController {
   @GetMapping
   @Operation(
       summary = "Consultar jugadores activos",
-      description = "Consulta paginada exclusivamente local. Requiere JWT válido.")
+      description =
+          "Consulta paginada exclusivamente local, ordenada por ID interno: solo jugadores activos asociados a Team vigente y League válida. Expone teamId/teamName y leagueId/leagueName derivados de las entidades internas, sin team/league legacy ni referencias externas. Name y position conservan exactamente la presentación persistida; dateOfBirth, nationality, imageUrl y fallbackImageUrl son nullable. Los casos históricos no excluyen por sí solos un jugador válido. Requiere JWT válido.")
   @ApiResponse(responseCode = "200", description = "Página de jugadores activos")
   @ApiResponse(
       responseCode = "400",
@@ -77,5 +80,27 @@ public class PlayerController {
     }
     return ResponseEntity.ok(
         PlayerMapper.toResponse(this.playerCatalogService.getActivePlayers(page, size)));
+  }
+
+  @GetMapping("/{id}")
+  @Operation(
+      summary = "Consultar un jugador visible",
+      description =
+          "Consulta individual exclusivamente local por identificador interno, con el mismo criterio de visibilidad del catálogo: solo jugadores activos asociados a Team vigente y League válida. Un identificador inexistente, inactivo o no visible responde 404 con el mismo cuerpo, sin revelar la existencia del jugador. Expone los mismos campos que el catálogo, con dateOfBirth, nationality, imageUrl y fallbackImageUrl nullable. Requiere JWT válido.")
+  @ApiResponse(responseCode = "200", description = "Jugador visible")
+  @ApiResponse(
+      responseCode = "400",
+      description = "Identificador con formato inválido (INVALID_PARAMETER_TYPE)",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+  @ApiResponse(
+      responseCode = "404",
+      description = "Jugador inexistente, inactivo o no visible (PLAYER_NOT_FOUND)",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  public ResponseEntity<PlayerResponseDTO> getPlayer(
+      @Parameter(description = "Identificador interno del jugador", required = true) @PathVariable
+          Long id) {
+    return ResponseEntity.ok(
+        PlayerMapper.toResponse(this.playerCatalogService.getVisiblePlayerById(id)));
   }
 }

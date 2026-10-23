@@ -1,0 +1,13 @@
+.authLayout {
+  // 🏗️ LAYOUT
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+
+  // 📦 BOX MODEL
+  padding: 16px;
+
+  // 🎨 VISUAL
+  background-color: #f5f7fa;
+}

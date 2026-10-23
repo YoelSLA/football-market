@@ -8,6 +8,10 @@ handoffs:
 
 ## User Input
 
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Clarify autorizado; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. Una omisión de Clarify no completa la fase ni habilita Plan en el lifecycle normativo.
+
 ```text
 $ARGUMENTS
 ```
@@ -53,7 +57,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 Goal: Detect and reduce ambiguity or missing decision points in the active feature specification and record the clarifications directly in the spec file.
 
-Note: This clarification workflow is expected to run (and be completed) BEFORE invoking `/speckit.plan`. If the user explicitly states they are skipping clarification (e.g., exploratory spike), you may proceed, but must warn that downstream rework risk increases.
+Clarify MUST evaluarse antes de Plan. Un escaneo que no encuentre ambigüedades MAY cerrar la fase con evidencia; omitir el escaneo no equivale a completarla.
 
 Execution steps:
 

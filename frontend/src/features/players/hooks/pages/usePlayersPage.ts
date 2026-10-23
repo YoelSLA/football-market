@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { usePlayersQuery } from "@/features/players/hooks/queries";
 import { getErrorMessage } from "@/infrastructure/http";
-import { usePlayersQuery } from "../queries";
 
 export function usePlayersPage() {
 	const [selectedPage, setSelectedPage] = useState(0);

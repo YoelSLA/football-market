@@ -7,6 +7,7 @@ import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
 import footballmarket.controllers.dtos.responses.CurrentUserResponseDTO;
 import footballmarket.controllers.dtos.responses.LoginResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
+import footballmarket.models.enums.UserRole;
 import footballmarket.support.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +24,7 @@ import org.springframework.web.client.RestClient;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
+@org.junit.jupiter.api.Tag("e2e")
 class AuthenticationJourneyE2ETest {
 
   @LocalServerPort private int port;
@@ -38,10 +40,13 @@ class AuthenticationJourneyE2ETest {
   @DisplayName("Registro, inicio de sesión y acceso protegido")
   class AuthenticationJourney {
     @Test
+    @DisplayName("Se registra, inicia sesión y consulta identidad y catálogo con su token")
     void registraIniciaSesionYAccedeAlCatalogoProtegido() {
+      // Arrange
       RegisterRequestDTO registerRequest =
-          new RegisterRequestDTO("critical-journey@test.com", "password123");
+          new RegisterRequestDTO("critical.journey", "critical-journey@test.com", "password123");
 
+      // Act / Assert: pasos del mismo recorrido crítico
       ResponseEntity<Void> register =
           restClient
               .post()
@@ -79,7 +84,9 @@ class AuthenticationJourneyE2ETest {
       assertThat(current.getStatusCode()).isEqualTo(HttpStatus.OK);
       assertThat(current.getBody()).isNotNull();
       assertThat(current.getBody().id()).isPositive();
+      assertThat(current.getBody().username()).isEqualTo(registerRequest.username());
       assertThat(current.getBody().email()).isEqualTo(registerRequest.email());
+      assertThat(current.getBody().role()).isEqualTo(UserRole.USER);
 
       ResponseEntity<PlayersPageResponseDTO> catalog =
           restClient

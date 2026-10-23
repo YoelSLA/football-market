@@ -8,7 +8,9 @@
 
 ## Summary
 
-Crear la página privada `/players` para consultar en tarjetas el catálogo paginado existente, con 12 jugadores por página, navegación, estados de carga/error/vacío, controles de filtrado exclusivamente visuales y recursos gráficos accesibles para liga, posición y estado activo. Cada tarjeta mostrará un bloque central con el equipo real y los valores fijos de muestra `24` partidos, `8` goles y `5` asistencias. La implementación se encapsulará en una nueva feature frontend que consumirá la ruta relativa `GET /players` mediante Axios y TanStack Query; `VITE_API_URL` ya incluye `/api`, por lo que la URL HTTP efectiva será `GET /api/players`. Transformará DTO a Model, reutilizará el guard y el ciclo de sesión actuales y no modificará backend, persistencia ni dependencias.
+Crear la página privada `/players` para consultar en tarjetas el catálogo paginado existente, con 12 jugadores por página, navegación, estados de carga/error/vacío, controles de filtrado exclusivamente visuales y recursos gráficos accesibles para liga, posición y estado activo. La implementación se encapsulará en una feature frontend que consumirá la ruta relativa `GET /players` mediante Axios y TanStack Query; `VITE_API_URL` ya incluye `/api`, por lo que la URL HTTP efectiva será `GET /api/players`. Transformará DTO a Model, reutilizará el guard y el ciclo de sesión actuales y no modificará backend, persistencia ni dependencias.
+
+**Revisión 2026-10-13**: la decisión de producto conserva el rediseño manual del frontend y sustituye tres decisiones de este plan. (1) Las estadísticas de muestra dejan de ser valores fijos `24`/`8`/`5` y pasan a derivarse de forma determinista del identificador del jugador, compartidas con el detalle. (2) La página deja de ser exclusivamente de escritorio y se adapta a tablet y móvil. (3) El paginador propio de la feature se sustituye por el componente compartido `Pagination`, componido desde `app/layouts/PaginatedPageLayout`, con ventana ±1. Además, la navegación global pasa a componerse desde `app/layouts/AppLayout`. Ninguna de estas sustituciones modifica el backend, la persistencia ni el contrato HTTP del catálogo.
 
 ## Technical Context
 
@@ -20,13 +22,13 @@ Crear la página privada `/players` para consultar en tarjetas el catálogo pagi
 
 **Testing**: Sin infraestructura de tests frontend por norma del proyecto; validación manual descrita en `quickstart.md` y build permitido con `npm run build`
 
-**Target Platform**: Navegadores de escritorio con viewport mínimo de 1280×720
+**Target Platform**: Navegadores de escritorio, tablet y móvil; 1280×720 es la referencia de composición en cuatro columnas, no un mínimo exclusivo
 
 **Project Type**: Aplicación web con frontend React y backend Spring Boot existente
 
 **Performance Goals**: Mostrar feedback de catálogo vacío o error en menos de un segundo desde que se conoce el resultado y mantener transiciones visuales fluidas sin reflujo del catálogo
 
-**Constraints**: Página privada; 12 elementos por consulta; cuadrícula fija de cuatro columnas y hasta tres filas sin desplazamiento horizontal desde 1280×720; filtros sin efecto funcional; estado mediante hover únicamente; no permitir que respuestas anteriores sustituyan la selección más reciente; sin dependencias nuevas
+**Constraints**: Página privada; 12 elementos por consulta; cuadrícula de cuatro columnas y hasta tres filas desde 1280×720 que se reorganiza progresivamente hasta una columna, sin desplazamiento horizontal; filtros sin efecto funcional; no permitir que respuestas anteriores sustituyan la selección más reciente; sin dependencias de paquete nuevas; recursos gráficos decorativos con marcador de posición accesible
 
 **Scale/Scope**: Una ruta y una feature frontend; cinco ligas, cuatro posiciones, un único estado visible y paginación sobre cualquier cantidad de jugadores activos
 
@@ -49,7 +51,7 @@ No existen `NEEDS CLARIFICATION` ni violaciones que requieran excepción antes d
 
 - **Resultado**: PASS. `research.md`, `data-model.md`, `contracts/players-catalog.md` y `quickstart.md` mantienen el alcance exclusivamente frontend, no introducen dependencias, cambios backend ni acceso directo desde UI a HTTP o DTO.
 - **Seguridad y contrato**: PASS. El diseño conserva autenticación Bearer mediante infraestructura, tratamiento global del `401`, paginación desde cero y respuesta de error vigente sin inventar campos o endpoints.
-- **Accesibilidad y estados**: PASS. El diseño exige alternativas textuales, foco visible, semántica de estado/error y fallbacks neutros; el indicador hover no oculta datos esenciales.
+- **Accesibilidad y estados**: PASS. El diseño exige alternativas textuales, foco visible, semántica de estado/error y fallbacks neutros. Desde el 2026-10-13 la información esencial de la tarjeta no depende del hover: la posición se identifica por etiqueta textual (FR-009) y el hover solo eleva y refuerza el brillo (FR-010).
 - **Verificación**: PASS. La guía separa el build permitido de la validación manual y no atribuye cobertura de tests al build.
 
 ## Project Structure
@@ -72,23 +74,28 @@ specs/005-players-page/
 frontend/
 ├── src/
 │   ├── app/
-│   │   └── router/
-│   │       └── AppRouter.tsx
+│   │   ├── router/
+│   │   │   └── AppRouter.tsx
+│   │   └── layouts/                    # AppLayout con navbar y PaginatedPageLayout (2026-10-13)
+│   ├── shared/components/
+│   │   ├── Navbar/
+│   │   └── Pagination/
 │   └── features/
 │       └── players/
 │           ├── assets/
+│           │   └── teams/               # Escudos locales importados en build (2026-10-13)
 │           ├── components/
 │           │   ├── PlayerCard/
-│           │   ├── PlayerCatalogControls/
-│           │   └── PlayersPagination/
+│           │   └── PlayerCatalogControls/
 │           ├── constants/
+│           ├── demo/                    # Generador determinista compartido con el detalle (2026-10-13)
 │           ├── hooks/
 │           │   ├── pages/
 │           │   └── queries/
 │           ├── pages/
 │           │   └── PlayersPage/
 │           ├── types/
-│           ├── utils/
+│           ├── utils/                   # Resolución de escudo y bandera (2026-10-13)
 │           ├── players.mapper.ts
 │           ├── players.service.ts
 │           └── index.ts

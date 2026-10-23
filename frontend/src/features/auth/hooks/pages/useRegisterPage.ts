@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AUTH_ERROR_CODES } from "@/features/auth/constants";
+import { useRegisterForm } from "@/features/auth/form";
+import { useRegisterMutation } from "@/features/auth/hooks/mutations";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
-import { AUTH_ERROR_CODES } from "../../constants";
-import { useRegisterForm } from "../../form";
-import { useRegisterMutation } from "../mutations";
 
 export function useRegisterPage() {
 	const form = useRegisterForm();
@@ -24,8 +24,11 @@ export function useRegisterPage() {
 				failure,
 				"No pudimos crear la cuenta. Vuelve a intentarlo.",
 			);
-			if (getErrorCode(failure) === AUTH_ERROR_CODES.EMAIL_ALREADY_REGISTERED) {
+			const code = getErrorCode(failure);
+			if (code === AUTH_ERROR_CODES.EMAIL_ALREADY_REGISTERED) {
 				form.setError("email", { message });
+			} else if (code === AUTH_ERROR_CODES.USERNAME_ALREADY_TAKEN) {
+				form.setError("username", { message });
 			} else {
 				setError(message);
 			}

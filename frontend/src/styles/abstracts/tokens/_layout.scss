@@ -1,0 +1,9 @@
+/*
+ * Valores compartidos por mas de un archivo de estilos.
+ *
+ * Aqui viven unicamente los numeros que representan un contrato entre
+ * componentes: la banda inferior de la paginacion y su reserva deben
+ * coincidir para que la pagina flotante nunca se superponga.
+ */
+
+$pagination-band: 40px;

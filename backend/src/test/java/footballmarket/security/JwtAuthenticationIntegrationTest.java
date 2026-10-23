@@ -42,6 +42,7 @@ import tools.jackson.databind.ObjectMapper;
   TestcontainersConfiguration.class
 })
 @Transactional
+@org.junit.jupiter.api.Tag("integration")
 class JwtAuthenticationIntegrationTest {
 
   @Autowired private WebApplicationContext context;
@@ -86,6 +87,8 @@ class JwtAuthenticationIntegrationTest {
   class ApiDocumentation {
 
     @Test
+    @DisplayName(
+        "Documenta el acceso protegido a la identidad y el acceso público a registro y login")
     void documentaUsuarioActualProtegidoSinProtegerRegistroNiLogin() throws Exception {
       mockMvc
           .perform(get("/v3/api-docs"))
@@ -104,8 +107,9 @@ class JwtAuthenticationIntegrationTest {
   class PersistedIdentity {
 
     @Test
+    @DisplayName("Un token deja de identificar al usuario después de eliminarlo")
     void recuperaUsuarioActualYRechazaSuTokenTrasEliminarlo() throws Exception {
-      User user = new User("persisted-jwt@test.com", "password123");
+      User user = new User("persisted.jwt", "persisted-jwt@test.com", "password123");
 
       authenticationService.register(user);
 
@@ -115,7 +119,9 @@ class JwtAuthenticationIntegrationTest {
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.id").value(user.getId()))
-          .andExpect(jsonPath("$.email").value(user.getEmail()));
+          .andExpect(jsonPath("$.username").value("persisted.jwt"))
+          .andExpect(jsonPath("$.email").value(user.getEmail()))
+          .andExpect(jsonPath("$.role").value("USER"));
 
       userRepository.delete(user);
       userRepository.flush();
@@ -127,6 +133,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @ParameterizedTest
+    @DisplayName("Rechaza un JWT firmado cuyo sujeto no corresponde a un usuario persistido")
     @NullAndEmptySource
     @ValueSource(strings = {" ", "missing@test.com"})
     void rechazaJwtFirmadoSinIdentidadPersistida(String subject) throws Exception {
@@ -149,9 +156,14 @@ class JwtAuthenticationIntegrationTest {
   class ProtectedAccess {
 
     @Test
+    @DisplayName("Rechaza el acceso a la ruta protegida sin token")
     void rechazaAccesoSinToken() throws Exception {
       mockMvc.perform(get("/test/protected")).andExpect(status().isUnauthorized());
+    }
 
+    @Test
+    @DisplayName("Rechaza consultar el usuario actual sin token")
+    void rechazaConsultaActualSinToken() throws Exception {
       mockMvc
           .perform(get("/api/auth/me"))
           .andExpect(status().isUnauthorized())
@@ -159,16 +171,24 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("Permite acceder a la ruta protegida tras registrarse e iniciar sesión")
     void permiteAccesoConTokenValido() throws Exception {
       String email = "jwt-flow@test.com";
+      String username = "jwt.flow";
 
+      String registration =
+          "{\"username\":\""
+              + username
+              + "\",\"email\":\""
+              + email
+              + "\",\"password\":\"password123\"}";
       String credentials = "{\"email\":\"" + email + "\",\"password\":\"password123\"}";
 
       mockMvc
           .perform(
               post("/api/auth/register")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content(credentials))
+                  .content(registration))
           .andExpect(status().isCreated());
 
       String loginResponse =
@@ -191,6 +211,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("Rechaza un token con firma inválida en la ruta protegida")
     void rechazaTokenConFirmaInvalida() throws Exception {
       String token = jwtProvider.generateToken("user@test.com");
 
@@ -199,7 +220,13 @@ class JwtAuthenticationIntegrationTest {
       mockMvc
           .perform(get("/test/protected").header("Authorization", "Bearer " + invalidToken))
           .andExpect(status().isUnauthorized());
+    }
 
+    @Test
+    @DisplayName("Rechaza consultar el usuario actual con un token de firma inválida")
+    void rechazaConsultaActualConFirmaInvalida() throws Exception {
+      String token = jwtProvider.generateToken("user@test.com");
+      String invalidToken = token.substring(0, token.lastIndexOf('.') + 1) + "invalid-signature";
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + invalidToken))
           .andExpect(status().isUnauthorized())
@@ -207,6 +234,7 @@ class JwtAuthenticationIntegrationTest {
     }
 
     @Test
+    @DisplayName("Rechaza un token expirado en la ruta protegida")
     void rechazaTokenExpirado() throws Exception {
       Instant now = Instant.now();
 
@@ -221,7 +249,19 @@ class JwtAuthenticationIntegrationTest {
       mockMvc
           .perform(get("/test/protected").header("Authorization", "Bearer " + expiredToken))
           .andExpect(status().isUnauthorized());
+    }
 
+    @Test
+    @DisplayName("Rechaza consultar el usuario actual con un token expirado")
+    void rechazaConsultaActualConTokenExpirado() throws Exception {
+      Instant now = Instant.now();
+      String expiredToken =
+          Jwts.builder()
+              .subject("user@test.com")
+              .issuedAt(Date.from(now.minusSeconds(120)))
+              .expiration(Date.from(now.minusSeconds(60)))
+              .signWith(jwtSecretKey, Jwts.SIG.HS256)
+              .compact();
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + expiredToken))
           .andExpect(status().isUnauthorized())

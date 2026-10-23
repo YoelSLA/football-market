@@ -34,13 +34,17 @@
 
 ### Separar DTO, Model y datos de presentación
 
-- **Decision**: Modelar exactamente la respuesta HTTP en DTO, transformarla a `Player` y `PlayersPage`, e inferir `active: true` en el Mapper porque el catálogo solo devuelve activos. La tarjeta agrupará el equipo real del jugador con las estadísticas de presentación `24` partidos, `8` goles y `5` asistencias; solo las estadísticas y sus etiquetas serán constantes, no campos del DTO.
+- **Decision**: Modelar exactamente la respuesta HTTP en DTO, transformarla a `Player` y `PlayersPage`, e inferir `active: true` en el Mapper porque el catálogo solo devuelve activos. La tarjeta agrupa el equipo real del jugador con tres estadísticas de presentación etiquetadas como demostración; solo las estadísticas y sus etiquetas son datos de presentación, no campos del DTO.
+
+  **Revisión 2026-10-13**: esas estadísticas dejaron de ser constantes `24`/`8`/`5` y pasaron a derivarse de forma determinista del identificador del jugador mediante el generador compartido con el detalle. La decisión satisface el requisito de coherencia entre catálogo y detalle, pero obliga a revisar el supuesto de unicidad: dos jugadores pueden coincidir en una métrica concreta, aunque la combinación de sus valores tienda a diferir.
 - **Rationale**: Conserva el contrato real, hace explícito que el equipo procede del backend y que los valores numéricos son comunes a todas las tarjetas. Las etiquetas y el contraste de los textos respecto del fondo mantienen identificable cada atributo.
 - **Alternatives considered**: Reutilizar DTO como Model o añadir estadísticas al contrato. Ambas opciones contradicen la arquitectura o falsean el origen de los datos.
 
 ### Tratar liga y posición como valores abiertos con fallback
 
 - **Decision**: Conservar `league` y `position` como strings del backend y aplicar mappings visuales para las cinco ligas y cuatro posiciones conocidas; cualquier valor desconocido mantiene su texto y una apariencia neutra.
+
+  **Revisión 2026-10-13 — decisión reemplazada parcialmente**: la liga conserva su recurso gráfico y su texto, pero la posición pasa a identificarse únicamente mediante etiqueta textual (SPEC-005 FR-009). El valor persistido sigue siendo un string abierto y nunca se descarta: el texto es la representación completa y accesible.
 - **Rationale**: El contrato no define enums cerrados y la spec exige legibilidad cuando falta un recurso reconocido.
 - **Alternatives considered**: Cast directo a unions cerradas u ocultar datos desconocidos. Se descartan por inseguridad tipada y pérdida de información.
 
@@ -53,7 +57,11 @@
 ### Diseñar una cuadrícula exclusivamente de escritorio
 
 - **Decision**: Optimizar la composición para un viewport mínimo de 1280×720, con cuatro columnas, hasta tres filas, sin scroll horizontal y con truncado o ajuste seguro de nombres largos. No se diseñará navegación táctil ni layout móvil.
+
+  **Revisión 2026-10-13 — decisión reemplazada**: la página pasa a ser responsiva y se reorganiza desde cuatro columnas en escritorio hasta una columna en móvil, sin desplazamiento horizontal. Este cambio corrige una divergencia con `tp/enunciado.md` §11, que exige una aplicación web responsiva, y habilita además el uso de la navegación desplegable compartida.
 - **Rationale**: Es el alcance explícito de la spec. El indicador de estado se revelará solo con `hover`, sin desplazar la cuadrícula ni ocultar datos esenciales.
+
+  **Revisión 2026-10-13 — decisión reemplazada**: el hover produce únicamente un efecto de elevación y refuerzo de brillo (SPEC-005 FR-010). El indicador lateral quedó derogado porque no se ejecuta en pantallas táctiles, incoherente con el catálogo responsive, y porque el estado `Activo` ya es permanente por FR-011. Alternativas descartadas en su día y ahora reconsideradas: la activación por `focus` se mantiene válida para el recorrido por teclado.
 - **Alternatives considered**: Grid responsive móvil o activación por click/focus. Se descartan porque ampliarían plataformas e interacciones fuera del contrato acordado.
 
 ### No incorporar tests ni dependencias

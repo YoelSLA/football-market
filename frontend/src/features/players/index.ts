@@ -1,1 +1,1 @@
-export { PlayersPage } from "./pages";
+export { PlayerDetailPage, PlayersPage } from "./pages";

@@ -1,42 +1,180 @@
-.players-page {
-	min-width: 75rem;
-	min-height: 100vh;
-	display: grid;
-	grid-template-rows: auto auto 1fr auto;
-	gap: .75rem;
-	padding: 1rem 2rem;
-	background: radial-gradient(ellipse at 10% 0%, #354d9e, transparent 55%), #111b40;
-	color: #17213b;
+@use "@/styles/abstracts" as ds;
 
-	&__header {
-		display: flex;
-		align-items: end;
-		justify-content: space-between;
-		color: #fff;
+.playersPage {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 
-		p { color: #c9d3f4; font-size: .72rem; font-weight: 900; letter-spacing: .15em; }
-		h1 { font-size: 1.75rem; line-height: 1.1; }
-		span { padding: .4rem .75rem; border-radius: 2rem; background: #dce5ff; color: #243f9b; font-size: .78rem; font-weight: 800; }
-	}
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
 
-	&__grid {
-		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-		align-content: start;
-		gap: .8rem;
-	}
+  padding: ds.$space-sm ds.$space-md;
 
-	&__message {
-		align-self: center;
-		justify-self: center;
-		display: grid;
-		justify-items: center;
-		gap: .75rem;
-		padding: 1.5rem;
-		border-radius: 1rem;
-		background: #fff;
-		box-shadow: 0 .75rem 2rem rgb(17 31 67 / 8%);
+  background:
+    radial-gradient(ellipse at 10% 0%, #354d9e, transparent 55%),
+    #111b40;
 
-		button { padding: .6rem 1rem; border: 0; border-radius: .55rem; background: #243f9b; color: #fff; font-weight: 800; }
-	}
+  color: #17213b;
+
+  /* ================= TOOLBAR (ENCABEZADO + FILTROS) ================= */
+
+  &__toolbar {
+    display: grid;
+
+    gap: 1rem;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 0.75rem;
+
+    color: #ffffff;
+
+    h1 {
+      margin: 0;
+
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+
+    span {
+      padding: 0.4rem 0.8rem;
+
+      border-radius: 2rem;
+      background: #dce5ff;
+
+      color: #243f9b;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  }
+
+  /* ================= GRID ================= */
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-content: start;
+    gap: 0.75rem;
+    align-items: start;
+
+    flex: 1;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+
+    /* El scroll vertical vive en PageLayout: la grilla solo ocupa
+       el espacio disponible para evitar scrolls anidados. */
+    padding-right: 0.5rem;
+  }
+
+  /* ================= MENSAJES ================= */
+
+  &__message {
+    align-self: center;
+
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+
+    max-width: 100%;
+    padding: 1.5rem;
+
+    border-radius: 1rem;
+    background: #ffffff;
+
+    box-shadow: 0 0.75rem 2rem rgb(17 31 67 / 8%);
+  }
+}
+
+/* ================= TABLET ================= */
+
+@include ds.down(ds.$bp-grid-xl) {
+  .playersPage__grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@include ds.down(ds.$bp-grid-lg) {
+  .playersPage__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@include ds.down(ds.$bp-grid-md) {
+  .playersPage__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@include ds.down(ds.$bp-grid-sm) {
+  .playersPage {
+    &__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+/* ================= MOBILE ================= */
+
+@include ds.down(ds.$bp-mobile) {
+  .playersPage {
+    padding: 1rem;
+
+    &__heading {
+      align-items: flex-start;
+      flex-direction: column;
+
+      h1 {
+        font-size: 1.5rem;
+      }
+    }
+
+    &__grid {
+      gap: 1rem;
+
+      padding-right: 0;
+    }
+  }
+}
+
+@include ds.down(ds.$bp-xs) {
+  .playersPage__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================
+   MODO COMPACTO — solo cuando el viewport tiene altura de sobra
+   (desktop ancho). Bajo este umbral se conserva el diseno actual
+   y el scroll interno de PageLayout hace de fallback.
+   ========================================================== */
+
+@include ds.compact() {
+  .playersPage {
+    padding: ds.$space-2xs ds.$space-md;
+
+    /* Encabezado y filtros comparten una sola fila. */
+    &__toolbar {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      align-items: center;
+
+      gap: 1rem;
+    }
+
+    &__heading h1 {
+      font-size: 1.5rem;
+    }
+
+    &__grid {
+      gap: 0.5rem;
+
+      padding-right: 0.25rem;
+    }
+  }
 }

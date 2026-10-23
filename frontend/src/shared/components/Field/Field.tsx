@@ -2,15 +2,13 @@ import type { InputHTMLAttributes } from "react";
 
 import styles from "./Field.module.scss";
 
-export function Field({
-	label,
-	error,
-	...input
-}: InputHTMLAttributes<HTMLInputElement> & {
+interface Props extends InputHTMLAttributes<HTMLInputElement> {
 	id: string;
 	label: string;
 	error?: string;
-}) {
+}
+
+export default function Field({ label, error, ...input }: Props) {
 	return (
 		<div className={styles.field}>
 			<label className={styles.field__label} htmlFor={input.id}>

@@ -1,0 +1,24 @@
+@use "@/styles/abstracts" as ds;
+
+.navbarBrand {
+	justify-self: start;
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+	gap: ds.$space-xs;
+	color: ds.$text-inverse;
+	font-size: 18px;
+	font-weight: 700;
+	white-space: nowrap;
+	text-decoration: none;
+	transition: color 0.18s ease;
+
+	&:hover {
+		color: ds.$accent-finance-cyan;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-on-dark;
+		outline-offset: 3px;
+	}
+}

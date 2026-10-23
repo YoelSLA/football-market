@@ -2,16 +2,16 @@ import { useAuthStore } from "@/infrastructure/storage";
 
 import styles from "./SessionChecking.module.scss";
 
-export function SessionChecking() {
+export default function SessionChecking() {
 	const verificationError = useAuthStore((state) => state.verificationError);
 
 	return (
-		<main className={styles["session-checking"]}>
+		<main className={styles.sessionChecking}>
 			<section
-				className={styles["session-checking__card"]}
+				className={styles.sessionChecking__card}
 				aria-busy={!verificationError}
 			>
-				<p className={styles["session-checking__brand"]}>FOOTBALL MARKET</p>
+				<p className={styles.sessionChecking__brand}>FOOTBALL MARKET</p>
 
 				<h1>Comprobando tu sesión</h1>
 

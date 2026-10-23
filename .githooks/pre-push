@@ -1,23 +1,20 @@
 #!/bin/bash
 
-echo "🚀 Ejecutando validaciones antes del push..."
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root" || exit 1
 
-echo ""
-echo "🧪 Ejecutando tests del backend..."
-
-cd backend || {
-    echo "❌ No se encontró la carpeta backend."
-    echo "🚫 Push cancelado."
-    exit 1
-}
-
-if ! ./gradlew test --no-daemon; then
-    echo ""
-    echo "❌ Los tests del backend fallaron."
-    echo "🚫 Push cancelado."
-    exit 1
+bash "$root/.githooks/backend-changes.sh"
+classification_status=$?
+if [[ "$classification_status" == 1 ]]; then
+    echo "✅ Push sin cambios relevantes para backend: se omite fastTest."
+    exit 0
 fi
 
-echo ""
-echo "✅ Todas las validaciones pasaron."
-echo "🚀 Push permitido."
+echo "🧪 Cambios relevantes o detección incierta: ejecutando fastTest sin cobertura..."
+echo "ℹ️ Se valida el árbol local; CI verifica el código integrado."
+cd "$root/backend" || exit 1
+if ! ./gradlew fastTest; then
+    echo "❌ Falló la validación rápida del backend. Push cancelado."
+    exit 1
+fi
+echo "✅ Validación rápida satisfactoria. Push permitido."

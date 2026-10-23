@@ -218,3 +218,24 @@ T032 [US4] HomePage integration
 
 - [ ] T042 CRITICAL — Unificar la configuración y documentación de la base HTTP en `frontend/src/shared/http/index.ts`, `frontend/src/features/auth/services/AuthService.ts`, `frontend/.env` y `specs/004-frontend-user-auth/quickstart.md` para que login, registro y consulta de usuario resuelvan `/api/auth/*` tanto con la configuración documentada como al utilizar el mismo origen sin `VITE_API_URL`, sin omitir ni duplicar `/api` y conservando los endpoints de autenticación en su Service. Evidencia F1: la guía indica configurar solo el origen, el Service utiliza `/auth/*` y el cliente no aporta `/api` cuando falta la variable, aunque el `.env` actual sí incluye ese prefijo. Revisar estáticamente las URLs resultantes y ejecutar únicamente el build permitido si se modifica código frontend, per Constitución §4; FR-004, FR-007, FR-011; T009; plan: Fase 1, guía de validación (contradicts).
 - [ ] T043 Solicitar al usuario la validación manual pendiente de `specs/004-frontend-user-auth/quickstart.md` tras resolver T042 y registrar sus resultados por escenario, incluidos registro, login, restauración, errores, expiración, logout y revisión visual en escritorio/móvil; conservar explícitamente como pendientes los casos sin evidencia y no ejecutar ni crear tests frontend desde el agente. Evidencia F2: T040 y el registro de implementación declaran esa comprobación pendiente; esta tarea da seguimiento a T040 sin sustituirla ni acreditar su ejecución mediante el build, per T040; SC-001–SC-006; plan: Fase 1, guía de validación (partial).
+
+## Phase 10: `username` y `role` (2026-10-14)
+
+**Purpose**: Registrar la ampliación del frontend requerida por la ampliación de SPEC-001.
+
+**Alcance**: El código frontend ya fue adaptado en la rama `feat/001-user-roles-username` y validado por el usuario con `npm run build` y `npm run biome:check`. Esta fase documenta ese trabajo y sus verificaciones pendientes. No se modifica código en esta fase.
+
+**Estado de las tareas anteriores**: T001–T043 conservan su estado original. Ninguna tarea de esta fase se marca como completada sin evidencia.
+
+- [X] T044 Agregar el campo `username` al modelo de formulario de registro en `frontend/src/features/auth/types/models.ts`.
+- [X] T045 Incorporar `RegisterRequestDTO` y extender `CurrentUserDTO` con `username` y `role` en `frontend/src/features/auth/types/dtos.ts`.
+- [X] T046 Separar el mapper de registro del de login mediante `toRegisterRequestDTO` en `frontend/src/features/auth/auth.mapper.ts`, de modo que el login siga enviando únicamente `email` y `password`.
+- [X] T047 Validar `username` en `frontend/src/features/auth/form/schemas/registerSchema.ts` sin replicar la normalización a minúsculas del backend.
+- [X] T048 Interpretar `USERNAME_ALREADY_TAKEN` bajo el campo `username` en `frontend/src/features/auth/hooks/pages/useRegisterPage.ts`.
+- [X] T049 Exponer el campo en el formulario en `frontend/src/features/auth/pages/RegisterPage/RegisterPage.tsx`.
+- [X] T050 Entregar el `username` a la barra de navegación en `frontend/src/app/layouts/AppLayout/AppLayout.tsx`.
+- [X] T051 Verificar tipos con `npm run build` y estilo con `npm run biome:check`, ambos aprobados por el usuario el 2026-10-14.
+- [ ] T052 Verificar manualmente los escenarios de `username` de `quickstart.md`, incluidos el rechazo por duplicado, la normalización y la lectura desde `/me`. Sin acreditar en este repositorio.
+- [ ] T053 Confirmar que no se requieren tests de frontend, conforme a `frontend/AGENTS.md` y a las notas de este archivo. Sin acreditar en este repositorio.
+
+**Checkpoint**: el frontend es coherente con el contrato vigente y la documentación de esta spec fue actualizada. Permanece pendiente la verificación manual de T052.

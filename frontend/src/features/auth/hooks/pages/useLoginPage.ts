@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AUTH_ERROR_CODES } from "@/features/auth/constants";
+import { useLoginForm } from "@/features/auth/form";
+import { useLoginMutation } from "@/features/auth/hooks/mutations";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 import { useAuthStore } from "@/infrastructure/storage";
-import { AUTH_ERROR_CODES } from "../../constants";
-import { useLoginForm } from "../../form";
-import { useLoginMutation } from "../mutations";
 
 export function useLoginPage() {
 	const form = useLoginForm();

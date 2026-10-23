@@ -1,1 +1,0 @@
-export { AuthVisualPanel } from "./AuthVisualPanel";
