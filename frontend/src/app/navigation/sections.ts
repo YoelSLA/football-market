@@ -1,4 +1,5 @@
 import type { NavSection } from "@/shared/components";
+import { BarChart3, FileText, Package } from "@/shared/icons";
 
 /**
  * Secciones de la navegacion principal.
@@ -48,16 +49,34 @@ export const NAV_SECTIONS: NavSection[] = [
 		key: "portfolio",
 		label: "Cartera",
 		icon: "portfolio",
-		path: null,
+		path: "/portfolio",
 		tabs: [
-			{ key: "portfolio-overview", label: "Mi portfolio", path: null },
-			{ key: "portfolio-holdings", label: "Mis tenencias", path: null },
+			{
+				key: "portfolio-overview",
+				label: "Mi portfolio",
+				path: "/portfolio",
+				icon: BarChart3,
+			},
+			{
+				key: "portfolio-holdings",
+				label: "Mis tenencias",
+				path: "/portfolio/holdings",
+				icon: Package,
+			},
 			{
 				key: "portfolio-transactions",
+				icon: FileText,
+				badgeTone: "gold",
 				label: "Historial de transacciones",
 				path: null,
 			},
-			{ key: "portfolio-stats", label: "Estadísticas/gráficos", path: null },
+			{
+				key: "portfolio-stats",
+				label: "Estadísticas/gráficos",
+				path: null,
+				icon: BarChart3,
+				badgeTone: "violet",
+			},
 		],
 	},
 ];

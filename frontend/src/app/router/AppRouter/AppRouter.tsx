@@ -1,7 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AppLayout, AuthGuard } from "@/app/layouts";
 import { HomePage, LoginPage, RegisterPage } from "@/features/auth";
 import { PlayerDetailPage, PlayersPage } from "@/features/players";
-import { AppLayout, AuthGuard } from "@/app/layouts";
+import {
+	PortfolioHoldingsPage,
+	PortfolioSummaryPage,
+} from "@/features/portfolio";
 
 export default function AppRouter() {
 	return (
@@ -19,6 +23,11 @@ export default function AppRouter() {
 			<Route element={<AuthGuard privateRoute />}>
 				<Route element={<AppLayout />}>
 					<Route path="/home" element={<HomePage />} />
+					<Route path="/portfolio" element={<PortfolioSummaryPage />} />
+					<Route
+						path="/portfolio/holdings"
+						element={<PortfolioHoldingsPage />}
+					/>
 					<Route path="/players" element={<PlayersPage />} />
 					<Route path="/players/:id" element={<PlayerDetailPage />} />
 				</Route>

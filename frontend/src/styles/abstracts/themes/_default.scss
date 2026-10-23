@@ -263,6 +263,105 @@ $state-error: c.$color-error;
 // Uso: reservado, ningun componente lo utiliza todavia.
 $state-warning: c.$color-warning;
 
+// Roles de Cartera sobre superficies oscuras; no usar sobre fondos claros.
+$state-positive: c.$color-positive-on-dark;
+$state-negative: c.$color-negative-on-dark;
+$state-caution: c.$color-caution-on-dark;
+$state-error-on-dark: c.$color-error-on-dark;
+$border-surface-dark: c.$color-border-dark;
+
+// ============================================================
+// CARTERA — ROLES DE LA SECCION
+// ============================================================
+
+// Superficies de la seccion Cartera. Las reproduce la referencia
+// visual aprobada; no se reutilizan en otras areas.
+$surface-portfolio-page: c.$color-portfolio-page;
+$surface-portfolio-page-gradient-from: c.$color-portfolio-page-from;
+$surface-portfolio-page-gradient-to: c.$color-portfolio-page-to;
+$surface-portfolio-content: c.$color-portfolio-content;
+$surface-portfolio-panel: c.$color-portfolio-panel;
+$surface-portfolio-card-gradient-from: c.$color-portfolio-card-from;
+$surface-portfolio-card-gradient-to: c.$color-portfolio-card-to;
+$surface-portfolio-avatar: c.$color-portfolio-avatar;
+$surface-portfolio-tile: c.$color-portfolio-tile;
+$surface-portfolio-tile-soft: c.$color-portfolio-tile-soft;
+$surface-portfolio-open: c.$color-portfolio-open-surface;
+$surface-portfolio-closed: c.$color-portfolio-closed-surface;
+$surface-portfolio-filter-active: c.$color-portfolio-filter-active-surface;
+$surface-portfolio-filter: c.$color-portfolio-filter-surface;
+$surface-portfolio-pill: c.$color-portfolio-pill-surface;
+$surface-portfolio-soon: c.$color-portfolio-soon-surface;
+$surface-portfolio-action: c.$color-portfolio-action-surface;
+$surface-portfolio-pagination: c.$color-portfolio-pagination-surface;
+$surface-portfolio-pagination-active: c.$color-portfolio-pagination-active-surface;
+$surface-portfolio-track: c.$color-portfolio-track-surface;
+$surface-portfolio-track-fill: c.$color-portfolio-track-fill;
+$surface-portfolio-person-skin: c.$color-portfolio-person-skin;
+$surface-portfolio-person-shirt: c.$color-portfolio-person-shirt;
+
+// Bordes de la seccion Cartera.
+$border-portfolio-content: c.$color-portfolio-content-border;
+$border-portfolio-panel: c.$color-portfolio-panel-border;
+$border-portfolio-card: c.$color-portfolio-card-border;
+$border-portfolio-open: c.$color-portfolio-open-border;
+$border-portfolio-closed: c.$color-portfolio-closed-border;
+$border-portfolio-filter-active: c.$color-portfolio-filter-active-border;
+$border-portfolio-filter: c.$color-portfolio-filter-border;
+$border-portfolio-action: c.$color-portfolio-action-border;
+$border-portfolio-pagination: c.$color-portfolio-pagination-border;
+$border-portfolio-pagination-active: c.$color-portfolio-pagination-active-border;
+$border-portfolio-separator: c.$color-portfolio-separator;
+
+// Textos de la seccion Cartera.
+$text-portfolio-title: c.$color-portfolio-title;
+$text-portfolio-strong: c.$color-portfolio-strong;
+$text-portfolio-value: c.$color-portfolio-value;
+$text-portfolio-amount: c.$color-portfolio-amount;
+$text-portfolio-label: c.$color-portfolio-label;
+$text-portfolio-row-label: c.$color-portfolio-row-label;
+$text-portfolio-cell-label: c.$color-portfolio-cell-label;
+$text-portfolio-cell-sub: c.$color-portfolio-cell-sub;
+$text-portfolio-muted: c.$color-portfolio-muted;
+$text-portfolio-nav: c.$color-portfolio-nav;
+$text-portfolio-legend-title: c.$color-portfolio-legend-title;
+$text-portfolio-legend: c.$color-portfolio-legend;
+$text-portfolio-soon: c.$color-portfolio-soon;
+
+// Acentos y estados de la seccion Cartera.
+$accent-portfolio: c.$color-portfolio-accent;
+$accent-portfolio-link: c.$color-portfolio-link;
+$accent-portfolio-positive: c.$color-portfolio-positive;
+$accent-portfolio-open: c.$color-portfolio-open-text;
+$accent-portfolio-available: c.$color-portfolio-available;
+$accent-portfolio-total: c.$color-portfolio-total;
+$accent-portfolio-invested: c.$color-portfolio-invested;
+$accent-portfolio-current: c.$color-portfolio-current;
+$accent-portfolio-positions: c.$color-portfolio-positions;
+$accent-portfolio-filter-active: c.$color-portfolio-filter-active-text;
+$icon-portfolio-tokens: c.$color-portfolio-icon-tokens;
+$icon-portfolio-available: c.$color-portfolio-icon-available;
+$icon-portfolio-reserved: c.$color-portfolio-icon-reserved;
+$icon-portfolio-average: c.$color-portfolio-icon-average;
+$icon-portfolio-current: c.$color-portfolio-icon-current;
+$icon-portfolio-value: c.$color-portfolio-icon-value;
+$icon-portfolio-panel: c.$color-portfolio-icon-panel;
+$state-portfolio-negative: c.$color-portfolio-negative;
+$state-portfolio-closed: c.$color-portfolio-closed-text;
+$state-portfolio-no-quote: c.$color-portfolio-no-quote;
+$accent-portfolio-reserved: c.$color-portfolio-reserved;
+
+// Dashboard financiero y su variante de navegación. No sustituyen roles existentes.
+$surface-finance-base: c.$color-finance-base;
+$surface-finance-panel-from: c.$color-finance-panel-from;
+$surface-finance-panel-to: c.$color-finance-panel-to;
+$border-finance: c.$color-finance-border;
+$surface-finance-tile: c.$color-finance-tile;
+$accent-finance-cyan: c.$color-finance-cyan;
+$accent-finance-violet: c.$color-finance-violet;
+$accent-finance-green: c.$color-finance-green;
+$surface-finance-active: c.$color-finance-active;
+
 // Acento informativo.
 $state-info: c.$color-info;
 

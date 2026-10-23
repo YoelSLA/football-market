@@ -1,0 +1,66 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioDistribution {
+	min-width: 0;
+
+	h3 {
+		margin: 0 0 18px;
+		font-size: 16px;
+		font-weight: 500;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__track {
+		display: flex;
+		height: 21px;
+		border-radius: 999px;
+		background: ds.$surface-finance-tile;
+		box-shadow: inset 0 1px 2px rgba(ds.$surface-finance-base, 0.5);
+		overflow: hidden;
+	}
+
+	&__fill,
+	&__reserved {
+		flex-shrink: 0;
+		height: 100%;
+		background: linear-gradient(ds.$accent-finance-green, rgba(ds.$accent-finance-green, 0.85));
+	}
+
+	&__reserved {
+		background: linear-gradient(ds.$accent-finance-violet, rgba(ds.$accent-finance-violet, 0.85));
+	}
+
+	&__legend {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 18px ds.$space-sm;
+		margin: 18px 0 0;
+		padding: 0;
+		list-style: none;
+		font-size: 15px;
+		color: ds.$text-portfolio-cell-sub;
+
+		li {
+			display: flex;
+			align-items: center;
+			gap: ds.$space-2xs;
+			min-width: 0;
+			overflow-wrap: anywhere;
+		}
+
+	}
+
+	&__percentage {
+		&_available { color: ds.$accent-finance-green; }
+		&_reserved { color: ds.$accent-finance-violet; }
+	}
+
+	&__dot {
+		flex: 0 0 14px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		&_available { background: ds.$accent-finance-green; }
+		&_reserved { background: ds.$accent-finance-violet; }
+	}
+}

@@ -1,5 +1,4 @@
 import { type ReactNode, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { useCurrentUserQuery } from "@/features/auth";
 import { getErrorMessage } from "@/infrastructure/http";
 import {
@@ -12,10 +11,7 @@ interface Props {
 	children: ReactNode;
 }
 
-export default function SessionLifecycle({
-	children,
-}: Props) {
-	const location = useLocation();
+export default function SessionLifecycle({ children }: Props) {
 	const session = useAuthStore((state) => state.session);
 	const revision = useAuthStore((state) => state.revision);
 	const restoreSession = useAuthStore((state) => state.restoreSession);
@@ -23,11 +19,8 @@ export default function SessionLifecycle({
 	const confirmSession = useAuthStore((state) => state.confirmSession);
 	const checkSession = useAuthStore((state) => state.checkSession);
 	const failVerification = useAuthStore((state) => state.failVerification);
-	const currentUser = useCurrentUserQuery(
-		session !== null,
-		revision,
-		location.key,
-	);
+	const status = useAuthStore((state) => state.status);
+	const currentUser = useCurrentUserQuery(session !== null, revision);
 
 	useEffect(() => {
 		restoreSession();
@@ -63,8 +56,11 @@ export default function SessionLifecycle({
 			return;
 		}
 
+		// Only check session if not already authenticated (prevents flash on navigation)
 		if (currentUser.isFetching) {
-			checkSession(session);
+			if (status !== "authenticated") {
+				checkSession(session);
+			}
 			return;
 		}
 
@@ -89,6 +85,7 @@ export default function SessionLifecycle({
 		confirmSession,
 		failVerification,
 		endSession,
+		status,
 	]);
 
 	return children;

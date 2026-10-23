@@ -1,3 +1,4 @@
+import type { NavIconKey } from "@/shared/components/Navbar/types";
 import {
 	House,
 	type LucideIcon,
@@ -6,7 +7,6 @@ import {
 	UsersRound,
 	Wallet,
 } from "@/shared/icons";
-import type { NavIconKey } from "../types";
 import styles from "./NavIcon.module.scss";
 
 interface Props {
@@ -27,7 +27,7 @@ export default function NavIcon({ name, className }: Props) {
 	const Icon = NAV_ICONS[name];
 	return (
 		<Icon
-			className={className ? `${styles.icon} ${className}` : styles.icon}
+			className={[styles.icon, className].filter(Boolean).join(" ")}
 			strokeWidth={1.6}
 			aria-hidden="true"
 			focusable="false"

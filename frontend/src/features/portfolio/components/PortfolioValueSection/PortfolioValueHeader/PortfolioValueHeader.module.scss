@@ -1,0 +1,67 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioValueHeader {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 20px;
+
+	&__tile {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		border-radius: 9px;
+		background: ds.$surface-portfolio-tile-soft;
+		color: ds.$icon-portfolio-panel;
+	}
+
+	&__icon {
+		width: 20px;
+		height: 20px;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 17px;
+		font-weight: 700;
+		color: ds.$text-portfolio-title;
+	}
+
+	&__chevron {
+		flex-shrink: 0;
+		width: 20px;
+		height: 20px;
+		margin-left: auto;
+		color: ds.$icon-portfolio-panel;
+		opacity: 0.65;
+	}
+
+	&_prominent {
+		grid-column: 1 / -1;
+		min-width: 0;
+		gap: 18px;
+		margin-bottom: ds.$space-2xs;
+		padding-bottom: ds.$space-3xs;
+		border-bottom: 1px solid ds.$border-finance;
+
+		.portfolioValueHeader__tile {
+			flex-shrink: 0;
+			width: 48px;
+			height: 48px;
+			background: linear-gradient(135deg, ds.$surface-finance-tile, ds.$surface-finance-panel-from);
+			color: ds.$accent-finance-cyan;
+		}
+
+		.portfolioValueHeader__icon {
+			width: 28px;
+			height: 28px;
+		}
+
+		.portfolioValueHeader__title {
+			font-size: 20px;
+			line-height: 1.3;
+		}
+	}
+}

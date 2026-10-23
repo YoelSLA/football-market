@@ -1,3 +1,5 @@
+import type { LucideIcon } from "@/shared/icons";
+
 /**
  * Iconos disponibles para la navegacion.
  *
@@ -10,6 +12,9 @@ export type NavIconKey = "home" | "players" | "market" | "portfolio" | "brand";
  * Pestana interna de una seccion de la navegacion.
  */
 export interface NavTab {
+	/** Metadatos exclusivamente visuales para variantes de navegación. */
+	icon?: LucideIcon;
+	badgeTone?: "gold" | "violet";
 	/** Identificador estable de la pestana. */
 	key: string;
 	/** Etiqueta visible de la pestana. */

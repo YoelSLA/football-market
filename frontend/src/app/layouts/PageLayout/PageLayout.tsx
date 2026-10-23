@@ -18,7 +18,7 @@ export default function PageLayout({
 	return (
 		<section
 			className={
-				floatingFooter
+				floatingFooter && footer
 					? `${styles.layout} ${styles.layout_floating}`
 					: styles.layout
 			}

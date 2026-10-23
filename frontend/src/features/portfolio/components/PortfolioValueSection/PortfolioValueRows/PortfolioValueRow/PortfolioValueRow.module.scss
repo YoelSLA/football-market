@@ -1,0 +1,90 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioValueRow {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 0;
+
+	&__label {
+		font-size: 13px;
+		color: ds.$text-portfolio-row-label;
+	}
+
+	&__value {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 700;
+		color: ds.$text-portfolio-value;
+		text-align: right;
+	}
+
+	&_positive &__value {
+		color: ds.$accent-portfolio-total;
+	}
+
+	&_negative &__value {
+		color: ds.$state-portfolio-negative;
+	}
+
+	&__icon {
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		stroke-width: 2.25;
+		&_cyan { color: ds.$accent-finance-cyan; }
+		&_violet { color: ds.$accent-finance-violet; }
+		&_green { color: ds.$accent-finance-green; }
+		&_gold { color: ds.$state-caution; }
+	}
+
+	&__iconFrame {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 28px;
+		height: 28px;
+		border-radius: 6px;
+
+		&_tinted {
+			background: color-mix(in srgb, currentColor 14%, transparent);
+		}
+	}
+
+	&_prominent {
+		align-items: center;
+		min-width: 0;
+		padding: 6px 0;
+
+		.portfolioValueRow__label {
+			display: flex;
+			align-items: center;
+			gap: ds.$space-sm;
+			min-width: 0;
+			font-size: 16px;
+			line-height: 1.5;
+			color: ds.$text-portfolio-cell-sub;
+		}
+
+		.portfolioValueRow__value {
+			font-size: 16px;
+			min-width: 0;
+			overflow-wrap: anywhere;
+		}
+	}
+
+	&_prominent.portfolioValueRow_emphasis:not(.portfolioValueRow_negative) &__value {
+		color: ds.$accent-finance-green;
+	}
+
+	@include ds.down(ds.$bp-xs) {
+		&_prominent {
+			flex-wrap: wrap;
+
+			.portfolioValueRow__value {
+				margin-left: auto;
+			}
+		}
+	}
+}
