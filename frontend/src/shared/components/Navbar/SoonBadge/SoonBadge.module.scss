@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.soon-badge {
+.soonBadge {
 	padding: 1px 4px;
 	border: 1px solid ds.$border-strong;
 	border-radius: 999px;

@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.tab-link {
+.tabLink {
 	display: inline-flex;
 	align-items: center;
 	gap: ds.$space-2xs;
@@ -25,7 +25,7 @@
 		outline-offset: 2px;
 	}
 
-	&--active {
+	&_active {
 		border-bottom-color: ds.$accent-nav;
 		color: ds.$accent-nav;
 		font-weight: 700;
@@ -35,7 +35,7 @@
 		}
 	}
 
-	&--disabled {
+	&_disabled {
 		cursor: default;
 
 		&:hover {

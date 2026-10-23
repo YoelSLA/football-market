@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { SoonBadge } from "../SoonBadge";
+import SoonBadge from "../SoonBadge";
 import type { NavTab } from "../types";
 import styles from "./TabLink.module.scss";
 
@@ -9,11 +9,11 @@ interface Props {
 }
 
 /** Mantiene la misma etiqueta para destinos reales y opciones futuras. */
-export function TabLink({ tab, active }: Props) {
+export default function TabLink({ tab, active }: Props) {
 	const className = [
-		styles["tab-link"],
-		active ? styles["tab-link--active"] : "",
-		!tab.path ? styles["tab-link--disabled"] : "",
+		styles.tabLink,
+		active ? styles.tabLink_active : "",
+		!tab.path ? styles.tabLink_disabled : "",
 	]
 		.filter(Boolean)
 		.join(" ");

@@ -1,12 +1,12 @@
-import bundesligaImage from "../assets/Bundesliga-League.png";
-import defenceImage from "../assets/Defence-Player.png";
-import goalkeeperImage from "../assets/Goalkeeper-Player.png";
-import ligueOneImage from "../assets/Ligue 1-League.png";
-import midfieldImage from "../assets/Midfield-Player.png";
-import offenceImage from "../assets/Offence-Player.png";
-import premierLeagueImage from "../assets/Premier League-League.png";
-import primeraDivisionImage from "../assets/Primera Division-League.png";
-import serieAImage from "../assets/Serie A-League.png";
+import bundesligaImage from "@/features/players/assets/Bundesliga-League.png";
+import defenceImage from "@/features/players/assets/Defence-Player.png";
+import goalkeeperImage from "@/features/players/assets/Goalkeeper-Player.png";
+import ligueOneImage from "@/features/players/assets/Ligue 1-League.png";
+import midfieldImage from "@/features/players/assets/Midfield-Player.png";
+import offenceImage from "@/features/players/assets/Offence-Player.png";
+import premierLeagueImage from "@/features/players/assets/Premier League-League.png";
+import primeraDivisionImage from "@/features/players/assets/Primera Division-League.png";
+import serieAImage from "@/features/players/assets/Serie A-League.png";
 
 interface Classification {
 	image: string | null;

@@ -1,4 +1,4 @@
-import { getPlayerSampleSeason } from "../demo";
+import { getPlayerSampleSeason } from "@/features/players/demo";
 
 export const PLAYER_SAMPLE_STATISTIC_ITEMS = [
 	{ key: "matches", label: "Partidos" },

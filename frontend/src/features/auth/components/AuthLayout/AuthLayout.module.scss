@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.auth-layout {
+.authLayout {
 	min-height: 100svh;
 	display: grid;
 	place-items: center;
@@ -41,7 +41,7 @@
 		letter-spacing: -.03em;
 	}
 
-	&__brand-mark {
+	&__brandMark {
 		padding: .3rem .45rem;
 		border-radius: .35rem;
 		background: ds.$brand-mark-surface;
@@ -50,7 +50,7 @@
 		font-style: italic;
 	}
 
-	&__form-area {
+	&__formArea {
 		margin: auto 0;
 		padding-top: 3.5rem;
 	}
@@ -81,7 +81,7 @@
 			padding: 1.25rem;
 		}
 
-		&__form-area {
+		&__formArea {
 			padding-top: 2rem;
 		}
 	}

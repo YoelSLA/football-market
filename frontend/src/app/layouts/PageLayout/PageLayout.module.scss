@@ -1,4 +1,4 @@
-@use "../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
 .layout {
   display: flex;
@@ -64,10 +64,10 @@
    ========================================================== */
 
 @include ds.compact() {
-  .layout--floating {
+  .layout_floating {
     position: relative;
 
-    &__footer {
+    .layout__footer {
       position: absolute;
       right: 0;
       bottom: 0;
@@ -78,7 +78,7 @@
     /* Reserva de la banda: exactamente la altura de la capsula
        (tokens/_layout.scss). El contenido nunca queda por debajo
        de la paginacion. */
-    &__content {
+    .layout__content {
       padding-bottom: ds.$pagination-band;
     }
   }

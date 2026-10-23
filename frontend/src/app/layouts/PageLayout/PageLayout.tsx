@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import styles from "./PageLayout.module.scss";
 
-type Props = {
+interface Props {
 	children: ReactNode;
 	header?: ReactNode;
 	footer?: ReactNode;
 	/** Permite que el footer se incruste en la banda inferior sin superponerse. */
 	floatingFooter?: boolean;
-};
+}
 
 export default function PageLayout({
 	children,
@@ -19,7 +19,7 @@ export default function PageLayout({
 		<section
 			className={
 				floatingFooter
-					? `${styles.layout} ${styles["layout--floating"]}`
+					? `${styles.layout} ${styles.layout_floating}`
 					: styles.layout
 			}
 		>

@@ -1,9 +1,9 @@
 import { Link, type Location, NavLink } from "react-router-dom";
-import { Button } from "../Button";
+import Button from "@/shared/components/Button";
 import styles from "./Navbar.module.scss";
-import { NavIcon } from "./NavIcon";
-import { SoonBadge } from "./SoonBadge";
-import { TabLink } from "./TabLink";
+import NavIcon from "./NavIcon";
+import SoonBadge from "./SoonBadge";
+import TabLink from "./TabLink";
 import type { NavigationResolver, NavSection } from "./types";
 import { disabledSectionClasses, sectionClasses } from "./utils";
 
@@ -37,9 +37,9 @@ export default function Navbar({
 					<span>Football Market</span>
 				</Link>
 				<nav className={styles.navbar__sections} aria-label="Secciones">
-					<ul className={styles["navbar__section-list"]}>
+					<ul className={styles.navbar__sectionList}>
 						{sections.map((section) => (
-							<li key={section.key} className={styles["navbar__section-item"]}>
+							<li key={section.key} className={styles.navbar__sectionItem}>
 								{section.path ? (
 									<NavLink
 										to={section.path}
@@ -72,7 +72,7 @@ export default function Navbar({
 						{userInitial}
 					</span>
 					<span
-						className={styles["navbar__user-name"]}
+						className={styles.navbar__userName}
 						title={userName ?? undefined}
 					>
 						{userName}
@@ -87,9 +87,9 @@ export default function Navbar({
 					className={styles.navbar__tabs}
 					aria-label={`Opciones de ${activeSection.label}`}
 				>
-					<ul className={styles["navbar__tab-list"]}>
+					<ul className={styles.navbar__tabList}>
 						{activeSection.tabs.map((tab) => (
-							<li key={tab.key} className={styles["navbar__tab-item"]}>
+							<li key={tab.key} className={styles.navbar__tabItem}>
 								<TabLink tab={tab} active={tab.key === active.tabKey} />
 							</li>
 						))}

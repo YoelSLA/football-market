@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
+import PageLayout from "@/app/layouts/PageLayout";
 import { Pagination } from "@/shared/components";
-import PageLayout from "../PageLayout";
 
 interface Props {
 	children: ReactNode;

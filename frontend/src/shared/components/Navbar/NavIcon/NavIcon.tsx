@@ -5,7 +5,7 @@ import {
 	Trophy,
 	UsersRound,
 	Wallet,
-} from "lucide-react";
+} from "@/shared/icons";
 import type { NavIconKey } from "../types";
 import styles from "./NavIcon.module.scss";
 
@@ -23,7 +23,7 @@ const NAV_ICONS: Record<NavIconKey, LucideIcon> = {
 };
 
 /** Centraliza los iconos decorativos, que heredan el color de su etiqueta. */
-export function NavIcon({ name, className }: Props) {
+export default function NavIcon({ name, className }: Props) {
 	const Icon = NAV_ICONS[name];
 	return (
 		<Icon

@@ -1,4 +1,4 @@
-@use "../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
 .pagination {
   display: flex;
@@ -113,7 +113,7 @@
       border-color 0.2s ease,
       color 0.2s ease;
 
-    &:hover:not(.pagination__page--active) {
+    &:hover:not(.pagination__page_active) {
       background-color: ds.$surface-raised;
       color: ds.$text-inverse;
     }
@@ -124,7 +124,7 @@
     }
 
     /* Página seleccionada */
-    &--active {
+    &_active {
       background-color: ds.$action-selected;
       border-color: ds.$action-selected;
       color: ds.$text-inverse;
@@ -144,7 +144,7 @@
    La activa el layout que reserva su banda inferior, de modo que
    nunca se superpone al contenido. */
 
-.pagination--capsule {
+.pagination_capsule {
   width: fit-content;
   margin: 0 auto;
   gap: 10px;

@@ -10,7 +10,8 @@
 		"biome:check": "biome check .",
 		"biome:fix": "biome check . --write",
 		"biome:lint": "biome lint .",
-		"biome:format": "biome format . --write"
+		"biome:format": "biome format . --write",
+		"scss:check-imports": "node scripts/scss-check-imports.js"
 	},
 	"engines": {
 		"node": ">=24"

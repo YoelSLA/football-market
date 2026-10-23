@@ -1,4 +1,4 @@
-@use "../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
 .navbar {
 	box-sizing: border-box;
@@ -44,7 +44,7 @@
 		margin-inline: auto;
 	}
 
-	&__section-list {
+	&__sectionList {
 		display: flex;
 		gap: ds.$space-2xs;
 		margin: 0;
@@ -52,7 +52,7 @@
 		list-style: none;
 	}
 
-	&__section-item {
+	&__sectionItem {
 		display: flex;
 		min-width: 0;
 	}
@@ -87,7 +87,7 @@
 			outline-offset: 2px;
 		}
 
-		&--active {
+		&_active {
 			background-color: ds.$surface-nav-active;
 			border-color: ds.$accent-nav;
 			color: ds.$accent-nav;
@@ -99,7 +99,7 @@
 			}
 		}
 
-		&--disabled {
+		&_disabled {
 			color: ds.$text-on-dark-muted;
 			cursor: default;
 
@@ -131,7 +131,7 @@
 		font-weight: 700;
 	}
 
-	&__user-name {
+	&__userName {
 		max-width: 8rem;
 		overflow: hidden;
 		color: ds.$text-inverse;
@@ -169,7 +169,7 @@
 		border-top: 1px solid ds.$border-strong;
 	}
 
-	&__tab-list {
+	&__tabList {
 		display: flex;
 		gap: ds.$space-2xs;
 		margin: 0;
@@ -178,7 +178,7 @@
 		list-style: none;
 	}
 
-	&__tab-item {
+	&__tabItem {
 		display: flex;
 		flex-shrink: 0;
 	}
@@ -197,7 +197,7 @@
 			width: 100%;
 		}
 
-		&__section-list {
+		&__sectionList {
 			justify-content: center;
 		}
 	}
@@ -205,7 +205,7 @@
 	@include ds.down(ds.$bp-grid-sm) {
 		padding-inline: ds.$space-2xs;
 
-		&__section-list {
+		&__sectionList {
 			display: grid;
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
@@ -217,7 +217,7 @@
 			white-space: normal;
 		}
 
-		&__user-name {
+		&__userName {
 			max-width: 5rem;
 		}
 

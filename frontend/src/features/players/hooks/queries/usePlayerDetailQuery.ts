@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { playersQueryKeys } from "../../constants";
-import { playersService } from "../../players.service";
+import { playersQueryKeys } from "@/features/players/constants";
+import { playersService } from "@/features/players/players.service";
 
 /**
  * Identidad real del detalle. La clave incluye el identificador, de modo que las respuestas

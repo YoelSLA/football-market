@@ -1,4 +1,4 @@
-import { Button } from "../Button";
+import Button from "@/shared/components/Button";
 import styles from "./Pagination.module.scss";
 
 interface Props {
@@ -85,7 +85,7 @@ export default function Pagination({
 		<nav
 			className={
 				variant === "capsule"
-					? `${styles.pagination} ${styles["pagination--capsule"]}`
+					? `${styles.pagination} ${styles.pagination_capsule}`
 					: styles.pagination
 			}
 			aria-label="Paginación"
@@ -116,7 +116,7 @@ export default function Pagination({
 							type="button"
 							className={[
 								styles.pagination__page,
-								item.index === page && styles["pagination__page--active"],
+								item.index === page && styles.pagination__page_active,
 							]
 								.filter(Boolean)
 								.join(" ")}

@@ -1,2 +1,2 @@
-export { PlayerDetailPage } from "./PlayerDetailPage";
-export { PlayersPage } from "./PlayersPage";
+export { default as PlayerDetailPage } from "./PlayerDetailPage";
+export { default as PlayersPage } from "./PlayersPage";
