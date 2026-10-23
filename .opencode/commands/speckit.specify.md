@@ -65,6 +65,13 @@ Given that feature description, do this:
    - Create a 2-4 word short name that captures the essence of the feature
    - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
    - Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)
+   - Write the short name in **English**, in `kebab-case` and in ASCII, even when the feature
+     description is written in Spanish. The short name is the `<scope>` of the spec directory
+     (`<spec-id>-<short-name>`) and of the branch (`<type>/<spec-id>-<short-name>`), so it is a
+     technical identifier and not a summary of the description: express the same intent in English
+     instead of reusing the words of the original title. Example: "Visualizar portfolio personal" →
+     "view-personal-portfolio", never "visualizar-portfolio-personal". This follows
+     `docs/development/git-workflow.md`.
    - Keep it concise but descriptive enough to understand the feature at a glance
    - Examples:
      - "I want to add user authentication" → "user-auth"
@@ -75,7 +82,7 @@ Given that feature description, do this:
 2. **Mecanismo local de creación/reanudación**:
 
    MUST revisar specs existentes y estado/diff Git antes de asignar identidad.
-   - Nueva SPEC: ejecutar una sola vez `.specify/scripts/bash/create-new-feature.sh --json --short-name '<scope>' '<requisito autorizado>'`, con numeración automática predeterminada y sin `--timestamp` (configuración local secuencial). MAY añadir `--number <id-asignado>` únicamente bajo la excepción de trabajo paralelo de Constitution §8.
+   - Nueva SPEC: ejecutar una sola vez `.specify/scripts/bash/create-new-feature.sh --json --short-name '<scope>' '<requisito autorizado>'`, con `<scope>` en inglés, con numeración automática predeterminada y sin `--timestamp` (configuración local secuencial). MAY añadir `--number <id-asignado>` únicamente bajo la excepción de trabajo paralelo de Constitution §8.
    - Antes de la asignación explícita MUST existir una distribución previa documentada de funcionalidades entre integrantes que trabajan en paralelo y un registro trazable del número, funcionalidad, responsable y motivo. Antes de toda creación MUST verificar colisiones con specs locales, remotas accesibles y asignaciones conocidas por el equipo, registrando fuentes y resultado; si no pueden descartarse, detenerse y solicitar confirmación. MUST NOT reutilizar identificadores asignados a otras funcionalidades. Una carpeta provisional o `spec.md` vacío no acredita una SPEC validada ni es requisito para asignar otra identidad.
    - SPEC existente: usar `--reuse --short-name '<directorio-o-scope-existente>'`. Coincidencia exacta o inequívoca; con `--reuse`, `--number` valida/desambigua la identidad existente. MUST NOT crear otra SPEC para reanudar trabajo relacionado.
    - MUST sustituir placeholders por valores reales. El script controla numeración, carpeta, plantilla inicial, persistencia de selección y creación/reutilización de rama; MUST NOT repetirlos con mkdir/copia ni mediante un hook de creación alternativo.

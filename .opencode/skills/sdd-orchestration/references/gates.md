@@ -205,4 +205,4 @@ Cambios editoriales inocuos no invalidan automáticamente una autorización. Tod
 
 ## Disposición transitoria
 
-El tablero anterior fue retirado y GitHub Projects aún no está configurado. Mientras tanto, las autorizaciones de las funcionalidades en curso se rigen por su estado real y por la evidencia ya persistida, que conserva su validez y **puede acreditar** la autorización vigente. No se exige reemitirla ni duplicarla, y no se afirma sincronización de ninguna funcionalidad sin verificarla.
+El tablero anterior fue retirado y GitHub Projects está configurado (`Football Market — Development`); la migración está en curso y no es completa, así que la cobertura se verifica item por item. Las autorizaciones de las funcionalidades en curso se rigen por su estado real y por la evidencia ya persistida, que conserva su validez y **puede acreditar** la autorización vigente. No se exige reemitirla ni duplicarla, y no se afirma sincronización de ninguna funcionalidad sin verificarla.

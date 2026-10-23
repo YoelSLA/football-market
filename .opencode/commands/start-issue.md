@@ -24,6 +24,10 @@ MUST NOT reutilizar un identificador ya asignado a otra funcionalidad, ni acepta
 creación lo ajuste. Si el script devuelve un número distinto del pedido, el comando se detiene y
 reporta.
 
+MUST derivar o validar el scope de la SPEC en inglés, con independencia del idioma del issue de
+origen, conforme al `<scope>` en inglés de `docs/development/git-workflow.md` y al control de idioma
+de 0.7. Un scope en español es un incumplimiento de la convención, no una variante válida.
+
 MUST NOT modificar código funcional, tests, SPEC existentes, requerimientos, `tp/` ni `docs/`. Este
 comando prepara contexto operativo; no implementa.
 
@@ -96,11 +100,24 @@ git status --short
 
 **0.7 — Scope.** El scope forma parte de la identidad de la SPEC (`<num>-<scope>`) y de la rama
 (`<type>/<num>-<scope>`), por lo que su resolución es siempre explícita y auditable.
-- Si `$3` viene: se usa verbatim como scope, tras validar `^[a-z0-9]+(-[a-z0-9]+)*$`.
-- Si `$3` no viene: derivarlo del título del issue. Quitar el código de prefijo (`REQ-...`, `TSK-...`,
-  `SPEC-...`) y el separador `|`, conservar el resto literal, pasar a minúsculas, convertir toda
-  secuencia no alfanumérica en `-`, colapsar guiones repetidos y quitar guiones de los extremos.
-  Validar el resultado con la misma expresión.
+- El scope MUST estar en **inglés**, en `kebab-case` y en ASCII (`^[a-z0-9]+(-[a-z0-9]+)*$`), con
+  independencia del idioma del issue de origen. El scope es un identificador técnico de la spec y
+  de la rama, no un texto de negocio: los issues, los títulos y la documentación están en español,
+  pero el scope expresa en inglés la misma intención, conforme al `<scope>` en inglés de
+  `docs/development/git-workflow.md`.
+- Si `$3` viene: se usa verbatim como scope, tras validar `^[a-z0-9]+(-[a-z0-9]+)*$` y confirmar que
+  está en inglés.
+- Si `$3` no viene: derivarlo del título del issue **traduciendo primero la intención al inglés** y
+  después normalizando. Quitar el código de prefijo (`REQ-...`, `TSK-...`, `SPEC-...`) y el
+  separador `|`, expresar el resto en inglés, pasar a minúsculas, convertir toda secuencia no
+  alfanumérica en `-`, colapsar guiones repetidos y quitar guiones de los extremos. Validar el
+  resultado con la misma expresión.
+- **Control de idioma.** No es válido un scope con palabras del español. Se consideran señales de un
+  scope sin traducir, entre otras: `de`, `del`, `la`, `el`, `los`, `las`, `un`, `una`, `y`, `en`,
+  `para`, `con`, `por`, `al`, `se`, `su`, `sus`, `mis`, `más`, `ver`, `obtener`, `mostrar`,
+  `consultar`, `visualizar`, `crear`, `definir`, `datos`, `detalle`, `usuario`. Ante cualquiera de
+  ellas, el scope se corrige traduciéndolo al inglés antes de continuar. La lista es orientativa:
+  el criterio es que el scope describa la funcionalidad en inglés.
 - **Reportar siempre el scope resultante**, indicate si fue provisto o derivado. No se descarta un
   scope inválido sin avisar: se detiene y se pide uno válido.
 

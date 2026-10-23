@@ -86,6 +86,8 @@ La numeración automática es predeterminada. Excepcionalmente, para una SPEC nu
 
 Al materializarse la SPEC, se crea o reutiliza su Issue de seguimiento con el título `SPEC-0XX | Nombre de la funcionalidad` y se referencia el requisito `REQ-` correspondiente, preservando el antecedente cuando la correspondencia esté confirmada. No inventar US ni Tasks, ni convertir ideas en unidades ejecutables.
 
+El `<scope>` del directorio de la SPEC y el de su rama van en **inglés**, conforme a `docs/development/git-workflow.md`, con independencia del idioma del issue, del título de la funcionalidad o de la descripción de origen.
+
 ### 5.1 Inicio de un issue desde GitHub
 
 El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue en GitHub: verifica el issue y sus dependencias, materializa la SPEC, crea y publica la rama desde `origin/dev`, la vincula al issue, actualiza el seguimiento en GitHub Projects y deja el contexto preparado para el flujo SDD. Su definición es `.opencode/commands/start-issue.md`.
@@ -189,17 +191,22 @@ Hasta que esa sincronización se complete:
 
 ## 12. Estado del sistema de seguimiento
 
-**Configuración pendiente.** El sistema de seguimiento operativo del proyecto es GitHub Issues
-con GitHub Projects. **A la fecha de este documento el tablero de Projects no está configurado y
-ninguna funcionalidad ha sido migrada.** Hasta que se configure y se migren, no se afirma
-sincronización de ninguna funcionalidad y no se declaran funcionalidades migradas sin verificarlas.
+**Configuración efectiva.** El sistema de seguimiento operativo del proyecto es GitHub Issues con
+GitHub Projects. El tablero es `Football Market — Development` (proyecto de usuario `YoelSLA`,
+número 4) y está configurado y en uso. Este documento describe el estado observado; la
+configuración efectiva se verifica antes de cada operación y prevalece sobre lo aquí escrito.
 
-Mientras tanto:
+**Estado verificado el 2026-10-21.** 28 items en el tablero y 13 campos, con el campo `Status` y
+sus cuatro opciones canónicas `📋 BACKLOG`, `🔨 IN PROGRESS`, `🔍 IN REVIEW` y `✅ DONE`.
+Distribución observada: 12 items en `✅ DONE`, 14 en `📋 BACKLOG` y 2 en `🔨 IN PROGRESS`. El
+tablero sostiene **una Issue por funcionalidad**: 12 items con identificador `SPEC-0XX`, 1 item
+`TSK-` y 15 items `REQ-` de funcionalidades todavía no materializadas como SPEC.
 
-- La ausencia temporal del sistema de seguimiento **no invalida** autorizaciones vigentes, ni
-  artefactos SDD, ni revisiones, ni resultados de testing, ni informe de cierre. **Tampoco bloquea
-  el proceso SDD.** Ninguna fase queda detenida por no existir el tablero: se sigue trabajando
-  exactamente igual, y el estado de seguimiento simplemente no se registra hasta que exista.
+- La migración no es uniforme: hay specs materializadas sin item en el tablero y specs registradas
+  en el tablero cuyo artefacto local todavía no está en `dev`. La cobertura se verifica item por
+  item; no se presume ni se afirma sincronización de nada que no se haya observado.
+- Cada Issue migrada referencia sus artefactos SDD y refleja su estado real. Crear el item o
+  registrar un estado **no autoriza** implementar, revisar, validar tests ni cerrar.
 - Las funcionalidades en curso conservan su estado real y su evidencia histórica. La evidencia ya
   persistida mantiene su validez y puede acreditar autorizaciones conforme a §3.1; no se exige
   reemitirla ni duplicarla.
@@ -208,10 +215,6 @@ Mientras tanto:
 - Ninguna funcionalidad se considera cerrada por el solo hecho de escribir en el seguimiento.
 - El tablero anterior queda **retirado**: no se le crean, actualiza ni consulta entradas, y su
   evidencia se conserva únicamente como archivo histórico.
-
-Cuando el tablero exista, se crea **una Issue por funcionalidad** que referencia `spec.md`,
-`plan.md` y `tasks.md` sin replicar su contenido, y se refleja su estado real. Esa creación
-registra el estado; no lo autoriza ni lo habilita.
 
 [specs/trello.md](../../specs/trello.md) se conserva como **archivo histórico congelado**, sin
 mantenimiento. Sus secciones son evidencia y referencias históricas, no un índice vigente, y sus

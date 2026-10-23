@@ -153,8 +153,9 @@ SonarQube, Quality Gates y otros controles opcionales quedan a cargo del usuario
 
 ## Disposición transitoria
 
-Hasta que GitHub Projects esté configurado y las funcionalidades activas migradas:
+La migración al tablero de GitHub Projects está en curso y no es completa:
 
-- El tablero anterior fue retirado. GitHub Projects aún no está configurado y ninguna funcionalidad ha sido migrada: no se afirma sincronización ni se declaran funcionalidades migradas sin verificarlas. La evidencia histórica existente se reutiliza cuando es suficiente para acreditar una autorización.
+- El tablero anterior fue retirado. GitHub Projects está configurado (`Football Market — Development`) y las funcionalidades migradas tienen su estado real en el tablero: no se afirma sincronización ni se declaran funcionalidades migradas sin verificarlas. La evidencia histórica existente se reutiliza cuando es suficiente para acreditar una autorización.
+- La migración no es uniforme: hay funcionalidades sin item en el tablero y specs registradas en el tablero cuyo artefacto local todavía no está en `dev`. La cobertura se verifica item por item.
 - SPEC-009 y SPEC-010 conservan su estado real y **no se migran ni se modifican** en esta fase.
-- Ninguna instrucción de este archivo autoriza operaciones de escritura sobre el sistema de seguimiento sin autorización operativa explícita, y no presupone que GitHub Projects exista.
+- Ninguna instrucción de este archivo autoriza operaciones de escritura sobre el sistema de seguimiento sin autorización operativa explícita.
