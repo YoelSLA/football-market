@@ -1,10 +1,10 @@
-import { DEMO_QUOTE_DATES } from "../constants";
+import { DEMO_QUOTE_DATES } from "@/features/players/constants";
 import type {
 	TokenQuotePoint,
 	TokenQuoteSeries,
 	TokenQuoteSnapshot,
-} from "../types";
-import { demoHash } from "../utils";
+} from "@/features/players/types";
+import { demoHash } from "@/features/players/utils";
 
 const MIN_PRICE = 40;
 const MAX_PRICE = 180;

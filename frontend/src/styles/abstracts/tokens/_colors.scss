@@ -300,6 +300,19 @@ $color-error-border: #bd3743;
 // nunca se confunda con la identidad de PlayerCard.
 $color-warning: #b45309;
 
+// Estados de Cartera sobre superficies oscuras (#1e293b, #111b40, #0f172a).
+// No sustituyen los estados existentes diseñados para superficies claras.
+// Resultado positivo: contraste mínimo 8,40:1 sobre #1e293b.
+$color-positive-on-dark: #4ade80;
+// Pérdida financiera: contraste mínimo 5,29:1 sobre #1e293b.
+$color-negative-on-dark: #f87171;
+// Cotización ausente: contraste mínimo 8,76:1 sobre #1e293b.
+$color-caution-on-dark: #fbbf24;
+// Error técnico, no pérdida financiera: contraste mínimo 7,74:1.
+$color-error-on-dark: #fda4af;
+// Límite de superficie: 3,07:1 sobre tarjeta y 3,52:1 sobre fondo.
+$color-border-dark: #64748b;
+
 // ============================================================
 // GRISES DE BORDE
 // ============================================================
@@ -380,6 +393,177 @@ $color-card-text: #f2f5ff;
 $color-card-text-strong: #f4f6ff;
 
 // ============================================================
+// CARTERA — PALETA DE LAS REFERENCIAS VISUALES
+// ============================================================
+//
+// Esta seccion reproduce la paleta de las referencias de diseno de
+// la seccion Cartera (referencias-imagenes/01-mi-portfolio.png y
+// 02-mis-tenencias.svg). Cada valor conserva su funcion exacta:
+// los componentes de Cartera los consumen a traves de los roles
+// semanticos de themes/_default.scss y nunca directamente.
+//
+// Se mantienen como primitivos separados de la paleta general
+// porque cumplen una funcion visual propia y no deben mezclarse
+// con las superficies y estados del resto de la aplicacion.
+
+// --- Superficies ---
+
+// Fondo de la pantalla de resumen de portfolio.
+$color-portfolio-page: #1b2545;
+// Extremos del degradado vertical del fondo de la pantalla de tenencias.
+$color-portfolio-page-from: #101f37;
+$color-portfolio-page-to: #0c1930;
+// Panel contenedor del resumen.
+$color-portfolio-content: #1d2948;
+// Tarjetas de indicador y paneles del resumen.
+$color-portfolio-panel: #243354;
+// Extremos del degradado vertical de la tarjeta de posicion.
+$color-portfolio-card-from: #12243f;
+$color-portfolio-card-to: #101f39;
+// Fondo del avatar del jugador en la tarjeta de posicion.
+$color-portfolio-avatar: #3b5378;
+// Fondo del mosaico de icono del indicador del resumen.
+$color-portfolio-tile: #314563;
+// Fondo del mosaico de icono de los paneles del resumen.
+$color-portfolio-tile-soft: #304467;
+// Fondo de la etiqueta de posicion abierta.
+$color-portfolio-open-surface: #103c34;
+// Fondo de la etiqueta de posicion cerrada.
+$color-portfolio-closed-surface: #431f31;
+// Fondo del filtro de estado activo.
+$color-portfolio-filter-active-surface: #10382f;
+// Fondo del filtro de estado inactivo.
+$color-portfolio-filter-surface: #101f38;
+// Fondo de la pastilla con la cantidad de posiciones.
+$color-portfolio-pill-surface: #203553;
+// Fondo de la etiqueta de estado pendiente.
+$color-portfolio-soon-surface: #273c59;
+// Fondo de la accion principal de la seccion.
+$color-portfolio-action-surface: #144837;
+// Fondo de los controles de paginacion inactivos.
+$color-portfolio-pagination-surface: #13243e;
+// Fondo del control de paginacion activo.
+$color-portfolio-pagination-active-surface: #10382f;
+// Fondo de la barra de distribucion de tokens.
+$color-portfolio-track-surface: #445271;
+// Fondo del avatar generico de la persona, para el retrato de respaldo.
+$color-portfolio-person-skin: #d4bba6;
+$color-portfolio-person-shirt: #e18d55;
+
+// --- Bordes ---
+
+// Contorno del panel contenedor del resumen.
+$color-portfolio-content-border: #384b70;
+// Contorno de las tarjetas de indicador y de los paneles del resumen.
+$color-portfolio-panel-border: #40557c;
+// Contorno de la tarjeta de posicion.
+$color-portfolio-card-border: #2b4466;
+// Contorno de la etiqueta de posicion abierta.
+$color-portfolio-open-border: #0cce91;
+// Contorno de la etiqueta de posicion cerrada.
+$color-portfolio-closed-border: #ef526e;
+// Contorno del filtro de estado activo.
+$color-portfolio-filter-active-border: #10d995;
+// Contorno del filtro de estado inactivo.
+$color-portfolio-filter-border: #304768;
+// Contorno de la accion principal de la seccion.
+$color-portfolio-action-border: #35d48d;
+// Contorno de los controles de paginacion inactivos.
+$color-portfolio-pagination-border: #34516f;
+// Contorno del control de paginacion activo.
+$color-portfolio-pagination-active-border: #14d493;
+// Separador horizontal dentro de la tarjeta y de los paneles.
+$color-portfolio-separator: #283c5b;
+// Relleno de la barra de distribucion de tokens.
+$color-portfolio-track-fill: #41d69a;
+
+// --- Textos ---
+
+// Titulo principal de la seccion.
+$color-portfolio-title: #f2f6ff;
+// Texto de los titulos de tarjeta y de los valores destacados.
+$color-portfolio-strong: #eaf1ff;
+// Texto de los valores de las filas del resumen.
+$color-portfolio-value: #eef4ff;
+// Texto de los importes de la tarjeta de posicion.
+$color-portfolio-amount: #f4f7ff;
+// Etiqueta de los indicadores del resumen.
+$color-portfolio-label: #b7c5dc;
+// Etiqueta de las filas del resumen.
+$color-portfolio-row-label: #a9b8d4;
+// Etiqueta de las celdas de la tarjeta de posicion.
+$color-portfolio-cell-label: #b3c2d8;
+// Descripcion secundaria del jugador en la tarjeta de posicion.
+$color-portfolio-cell-sub: #b3c4dc;
+// Texto atenuado de las pestañas inactivas y de los textos auxiliares.
+$color-portfolio-muted: #9eafc9;
+// Texto de los elementos de la navegacion.
+$color-portfolio-nav: #c3d0e2;
+// Titulo de la leyenda de la distribucion de tokens.
+$color-portfolio-legend-title: #b6c5dd;
+// Texto de la leyenda y del pie de la distribucion de tokens.
+$color-portfolio-legend: #a7b6d0;
+// Texto de la etiqueta de estado pendiente.
+$color-portfolio-soon: #bdc9df;
+
+// --- Acentos y estados ---
+
+// Icono de la cabecera de la pantalla de tenencias.
+$color-portfolio-accent: #15e1a0;
+// Enlace de accion, como "Ver detalles".
+$color-portfolio-link: #22e8a8;
+// Resultado positivo de una posicion.
+$color-portfolio-positive: #22e2a2;
+// Texto de la etiqueta de posicion abierta.
+$color-portfolio-open-text: #1aeba5;
+// Leyenda de tokens disponibles.
+$color-portfolio-available: #67e3ae;
+// Resultado total del resumen.
+$color-portfolio-total: #45df9d;
+// Valor del capital invertido.
+$color-portfolio-invested: #c5a2ff;
+// Valor del valor actual del portfolio.
+$color-portfolio-current: #80c5ff;
+// Valor de la cantidad de posiciones.
+$color-portfolio-positions: #8ddcf0;
+// Filtro de estado activo.
+$color-portfolio-filter-active-text: #16eaa5;
+// Icono de tokens totales.
+$color-portfolio-icon-tokens: #51c4ff;
+// Icono de tokens disponibles.
+$color-portfolio-icon-available: #33d9b3;
+// Icono de tokens reservados.
+$color-portfolio-icon-reserved: #ffb75c;
+// Icono del precio promedio.
+$color-portfolio-icon-average: #ffc05c;
+// Icono del precio actual.
+$color-portfolio-icon-current: #b493ff;
+// Icono del valor actual.
+$color-portfolio-icon-value: #9a8dff;
+// Icono de los paneles del resumen.
+$color-portfolio-icon-panel: #7bc4ef;
+// Resultado negativo de una posicion.
+$color-portfolio-negative: #ff778b;
+// Texto de la etiqueta de posicion cerrada.
+$color-portfolio-closed-text: #ff7388;
+// Aviso de cotizacion ausente.
+$color-portfolio-no-quote: #ffcd55;
+// Leyenda de tokens reservados.
+$color-portfolio-reserved: #c4a5ff;
+
+// Superficies profundas y acentos del dashboard financiero (referencia PNG).
+// Separados de la paleta anterior para no alterar tenencias ni sus diálogos.
+$color-finance-base: #03172c;
+$color-finance-panel-from: #0c233e;
+$color-finance-panel-to: #071a30;
+$color-finance-border: #2b5378;
+$color-finance-tile: #123658;
+$color-finance-cyan: #0dbbfa;
+$color-finance-violet: #b363ff;
+$color-finance-green: #00dfa0;
+$color-finance-active: #00382e;
+
+// ============================================================
 // NO TOKENIZADO (a proposito)
 // ============================================================
 //
@@ -388,4 +572,4 @@ $color-card-text-strong: #f4f6ff;
 // - Sombras y superposiciones (rgb() con alfa): dependen del
 //   contexto, no de un color de marca.
 // - Degradados de AuthVisualPanel: composición especifica.
-// - Variables CSS ausentes: el proyecto no las usa.
+// - Variables CSS locales de variantes: su valor se deriva de estos roles en el componente.

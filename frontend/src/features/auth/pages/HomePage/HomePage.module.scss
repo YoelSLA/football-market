@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.home-page {
+.homePage {
 	/* Ocupa el alto disponible dentro de AppLayout en vez del viewport
 	   completo, para no quedar recortado por el Navbar. */
 	min-height: 100%;
@@ -40,7 +40,7 @@
 		gap: .75rem;
 	}
 
-	&__players-link,
+	&__playersLink,
 	&__logout {
 		padding: .85rem 1.5rem;
 		border: 0;
@@ -51,7 +51,7 @@
 		cursor: pointer;
 	}
 
-	&__players-link {
+	&__playersLink {
 		background: ds.$action-primary;
 		color: ds.$text-inverse;
 	}

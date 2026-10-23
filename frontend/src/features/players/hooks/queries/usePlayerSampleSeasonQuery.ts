@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { playersQueryKeys } from "../../constants";
-import { getPlayerSampleSeason } from "../../demo";
-import type { PlayerSampleSeason } from "../../types";
+import { playersQueryKeys } from "@/features/players/constants";
+import { getPlayerSampleSeason } from "@/features/players/demo";
+import type { PlayerSampleSeason } from "@/features/players/types";
 
 /**
  * Estadísticas de demostración de un jugador en la temporada fija. Solo se consultan

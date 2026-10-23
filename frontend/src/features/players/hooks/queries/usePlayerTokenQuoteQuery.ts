@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { playersQueryKeys } from "../../constants";
-import { getTokenQuoteSeries } from "../../demo";
-import type { TokenQuoteSeries } from "../../types";
+import { playersQueryKeys } from "@/features/players/constants";
+import { getTokenQuoteSeries } from "@/features/players/demo";
+import type { TokenQuoteSeries } from "@/features/players/types";
 
 /**
  * Cotización y evolución de demostración de un jugador. Solo se consultan cuando la

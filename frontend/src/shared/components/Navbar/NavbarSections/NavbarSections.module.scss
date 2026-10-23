@@ -1,0 +1,98 @@
+@use "@/styles/abstracts" as ds;
+
+.navbarSections {
+	grid-column: 2;
+	min-width: 0;
+	justify-self: center;
+}
+
+.navbarSectionList {
+	display: flex;
+	gap: ds.$space-xs;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.navbarSectionItem {
+	display: flex;
+	min-width: 0;
+}
+
+.navbarSection {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: ds.$space-xs;
+	min-height: 40px;
+	padding: ds.$space-3xs ds.$space-sm;
+	border: 1px solid ds.$border-finance;
+	border-radius: 10px;
+	background: linear-gradient(140deg, ds.$surface-finance-panel-to, ds.$surface-finance-base);
+	box-shadow: inset 0 0 0 1px rgba(ds.$accent-finance-cyan, 0.035);
+	font-size: 15px;
+	color: ds.$text-portfolio-nav;
+	font-weight: 500;
+	white-space: nowrap;
+	text-decoration: none;
+	transition:
+		background-color 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease;
+
+	&:hover {
+		background-color: ds.$surface-raised;
+		border-color: ds.$border-strong-hover;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-on-dark;
+		outline-offset: 2px;
+	}
+
+	&_active {
+		background-color: ds.$surface-nav-active;
+		border-color: ds.$accent-nav;
+		color: ds.$accent-nav;
+		font-weight: 700;
+
+		&:hover {
+			background-color: ds.$surface-nav-active;
+			border-color: ds.$accent-nav;
+		}
+	}
+
+	&_disabled {
+		color: ds.$text-on-dark-muted;
+		cursor: default;
+
+		&:hover {
+			background-color: ds.$surface-dark;
+			border-color: ds.$border-strong;
+		}
+	}
+}
+
+@include ds.down(ds.$bp-grid-sm) {
+	.navbarSectionList {
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.navbarSection {
+		min-height: 44px;
+	}
+}
+
+@include ds.down(ds.$bp-grid-xl) {
+	.navbarSections {
+		grid-column: 1 / -1;
+		order: 3;
+		width: 100%;
+		padding-bottom: ds.$space-2xs;
+	}
+
+	.navbarSectionList {
+		justify-content: center;
+	}
+}

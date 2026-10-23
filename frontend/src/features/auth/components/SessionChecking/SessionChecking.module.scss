@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.session-checking {
+.sessionChecking {
 	min-height: 100svh;
 	display: grid;
 	place-items: center;

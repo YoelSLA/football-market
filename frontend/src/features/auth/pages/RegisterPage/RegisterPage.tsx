@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
+import styles from "@/features/auth/AuthForm.module.scss";
+import { AuthLayout } from "@/features/auth/components";
+import { useRegisterPage } from "@/features/auth/hooks";
 import { Button, Field } from "@/shared/components";
-import styles from "../../AuthForm.module.scss";
-import { AuthLayout } from "../../components";
-import { useRegisterPage } from "../../hooks";
 
-export function RegisterPage() {
+export default function RegisterPage() {
 	const { form, onSubmit, error, isPending } = useRegisterPage();
 	return (
 		<AuthLayout
@@ -12,12 +12,12 @@ export function RegisterPage() {
 			description="Crea tu cuenta y entra en Football Market."
 		>
 			<form
-				className={styles["auth-form"]}
+				className={styles.authForm}
 				onSubmit={onSubmit}
 				noValidate
 				aria-busy={isPending}
 			>
-				<fieldset className={styles["auth-form__fields"]} disabled={isPending}>
+				<fieldset className={styles.authForm__fields} disabled={isPending}>
 					<Field
 						id="register-username"
 						label="Tu nombre de usuario"
@@ -54,24 +54,24 @@ export function RegisterPage() {
 						error={form.formState.errors.passwordConfirmation?.message}
 					/>
 				</fieldset>
-				<div className={styles["auth-form__feedback"]}>
+				<div className={styles.authForm__feedback}>
 					{error && (
-						<p className={styles["auth-form__error"]} role="alert">
+						<p className={styles.authForm__error} role="alert">
 							{error}
 						</p>
 					)}
 				</div>
 				<Button
-					className={styles["auth-form__submit"]}
+					className={styles.authForm__submit}
 					type="submit"
 					disabled={isPending}
 				>
 					{isPending ? "Creando tu cuenta…" : "Crear cuenta"}
 				</Button>
-				<p className={styles["auth-form__switch"]}>
+				<p className={styles.authForm__switch}>
 					¿Ya tienes cuenta?{" "}
 					<Link
-						className={styles["auth-form__link"]}
+						className={styles.authForm__link}
 						to="/login"
 						aria-disabled={isPending}
 						onClick={(event) => {

@@ -23,7 +23,7 @@ existente.
 - `<type>` indica la naturaleza del cambio y se toma de esta lista cerrada: `feat`, `fix`,
   `refactor`, `test`, `docs`, `chore`, `perf`, `ci`.
 - `<spec-id>` es el identificador de la spec a la que pertenece el cambio.
-- `<scope>` describe brevemente el cambio en `kebab-case`.
+- `<scope>` describe brevemente el cambio en `kebab-case` **y en inglés**.
 
 Si existe una spec relacionada:
 
@@ -39,7 +39,7 @@ Si el cambio es pequeño, técnico o independiente y no justifica una spec propi
 
 El nombre de la rama y el del directorio de la spec son cosas distintas: el directorio usa solo
 `<spec-id>-<scope>`, sin el prefijo de tipo. Para derivar uno del otro, quitar el prefijo
-`<type>/`.
+`<type>/`. El `<scope>` es el mismo en la rama y en el directorio de la spec.
 
 ## Reglas obligatorias
 
@@ -49,7 +49,7 @@ El nombre de la rama y el del directorio de la spec son cosas distintas: el dire
    identificador**. Reutilizar el identificador no autoriza crear una spec nueva para un cambio
    que ya se asocia correctamente a una existente.
 3. No asociar artificialmente un cambio a una spec cuando no exista relación funcional clara.
-4. `<scope>` siempre en `kebab-case`. No se admiten `snake_case`, `camelCase` ni `PascalCase`.
+4. `<scope>` siempre en `kebab-case` y en inglés. No se admiten `snake_case`, `camelCase` ni `PascalCase`.
 5. No se admiten nombres personales ni descripciones genéricas o ambiguas. El nombre debe ser
    breve, descriptivo y representar con claridad el cambio.
 6. Cuando la rama incluye un identificador de spec, el trabajo se vincula con el directorio
@@ -57,6 +57,12 @@ El nombre de la rama y el del directorio de la spec son cosas distintas: el dire
    contexto. La rama no sustituye ni reemplaza a los artefactos de la spec.
 7. Se mantiene la trazabilidad entre spec, rama, commits y Pull Request. El Pull Request
    referencia la spec y la rama; los commits de la rama se asocian a esa spec.
+8. El `<scope>` se escribe en **inglés**, aunque los issues, los títulos y la documentación del
+   proyecto estén en español. El scope es un identificador técnico de la spec y de la rama, no un
+   texto de negocio: se expresa en inglés la misma intención, sin transliterar ni traducir
+   mecánicamente las palabras del título de origen. El directorio de la spec reutiliza ese mismo
+   scope. Ejemplo: el issue `REQ-S2-15 | Visualizar portfolio personal` produce el scope
+   `view-personal-portfolio-ui`, nunca `visualizar-portfolio-personal`.
 
 ## Nomenclatura de las herramientas de especificación
 

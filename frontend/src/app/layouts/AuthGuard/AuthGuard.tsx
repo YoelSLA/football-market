@@ -2,7 +2,11 @@ import { Navigate, Outlet } from "react-router-dom";
 import { SessionChecking } from "@/features/auth";
 import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 
-export default function AuthGuard({ privateRoute }: { privateRoute: boolean }) {
+interface Props {
+	privateRoute: boolean;
+}
+
+export default function AuthGuard({ privateRoute }: Props) {
 	const status = useAuthStore((state) => state.status);
 
 	if (status === AuthStatus.UNKNOWN || status === AuthStatus.CHECKING) {

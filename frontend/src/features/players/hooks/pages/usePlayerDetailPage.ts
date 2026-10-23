@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 import {
 	usePlayerDetailQuery,
 	usePlayerSampleSeasonQuery,
 	usePlayerTokenQuoteQuery,
-} from "../queries";
+} from "@/features/players/hooks/queries";
+import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 
 export type PlayerDetailState =
 	| "loading"

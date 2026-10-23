@@ -213,10 +213,13 @@ Ya **no existen** los estados `SPECIFYING` ni `READY`: la preparación ocurre de
 especificación y se lee leyéndola. Tampoco hay una tarjeta por User Story: las historias viven en
 `spec.md` y las tareas técnicas en `tasks.md`.
 
-**Pendiente:** el tablero de GitHub Projects aún no está configurado y ninguna funcionalidad ha
-sido migrada. Hasta entonces **no hay columna que leer**. Eso no te bloquea: podés seguir
-autorizando implementación, revisando código y validando tests con normalidad. Lo único que no
-existe por ahora es el registro del estado de seguimiento, y no se inventa ninguno.
+**Tablero configurado:** el tablero de GitHub Projects `Football Market — Development` está
+configurado y en uso. Ahí leés el estado de seguimiento de cada funcionalidad, en las columnas
+`📋 BACKLOG`, `🔨 IN PROGRESS`, `🔍 IN REVIEW` y `✅ DONE`. La migración no es completa: hay
+funcionalidades sin item en el tablero y specs registradas en el tablero cuyo artefacto local
+todavía no está en `dev`, así que el estado se verifica item por item. Eso no te bloquea: podés
+seguir autorizando implementación, revisando código y validando tests con normalidad. Registrar o
+cambiar el estado de seguimiento no autoriza implementar, revisar, validar tests ni cerrar.
 
 Tus autorizaciones, revisiones y resultados de testing anteriores **siguen siendo válidos** y no
 se vuelven a pedir por falta del tablero.

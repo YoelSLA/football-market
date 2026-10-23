@@ -1,11 +1,11 @@
-export { Button } from "./Button";
-export { Field } from "./Field";
+export { default as Button } from "./Button";
+export { default as Field } from "./Field";
+export { default as Navbar } from "./Navbar";
 export type {
 	ActiveNavigation,
 	NavIconKey,
 	NavigationResolver,
 	NavSection,
 	NavTab,
-} from "./Navbar";
-export { default as Navbar } from "./Navbar";
+} from "./Navbar/types";
 export { default as Pagination } from "./Pagination";

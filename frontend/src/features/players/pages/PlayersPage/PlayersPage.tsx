@@ -1,17 +1,17 @@
 import { PaginatedPageLayout } from "@/app/layouts";
+import { usePlayersPage } from "@/features/players/hooks";
 import { Button } from "@/shared/components";
-
-import { PlayerCard, PlayerCatalogControls } from "../../components";
-import { usePlayersPage } from "../../hooks";
+import PlayerCard from "./PlayerCard";
+import PlayerCatalogControls from "./PlayerCatalogControls";
 import styles from "./PlayersPage.module.scss";
 
-export function PlayersPage() {
+export default function PlayersPage() {
 	const page = usePlayersPage();
 	const players = page.playersPage?.players ?? [];
 
 	const header = (
-		<div className={styles["players-page__toolbar"]}>
-			<div className={styles["players-page__heading"]}>
+		<div className={styles.playersPage__toolbar}>
+			<div className={styles.playersPage__heading}>
 				<h1>Catálogo de jugadores</h1>
 
 				{page.playersPage && (
@@ -31,7 +31,7 @@ export function PlayersPage() {
 	);
 
 	return (
-		<div className={styles["players-page"]} aria-busy={page.isLoading}>
+		<div className={styles.playersPage} aria-busy={page.isLoading}>
 			<PaginatedPageLayout
 				header={header}
 				page={page.playersPage ? page.selectedPage : undefined}
@@ -43,7 +43,7 @@ export function PlayersPage() {
 				onPageChange={page.selectPage}
 			>
 				{page.errorMessage ? (
-					<section className={styles["players-page__message"]} role="alert">
+					<section className={styles.playersPage__message} role="alert">
 						<p>{page.errorMessage}</p>
 
 						<Button type="button" onClick={() => page.retry()}>
@@ -51,18 +51,15 @@ export function PlayersPage() {
 						</Button>
 					</section>
 				) : page.isLoading ? (
-					<p className={styles["players-page__message"]} role="status">
+					<p className={styles.playersPage__message} role="status">
 						Cargando jugadores...
 					</p>
 				) : players.length === 0 ? (
-					<p className={styles["players-page__message"]} role="status">
+					<p className={styles.playersPage__message} role="status">
 						No hay jugadores disponibles.
 					</p>
 				) : (
-					<section
-						className={styles["players-page__grid"]}
-						aria-label="Jugadores"
-					>
+					<section className={styles.playersPage__grid} aria-label="Jugadores">
 						{players.map((player) => (
 							<PlayerCard key={player.id} player={player} />
 						))}
