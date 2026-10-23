@@ -1,3 +1,4 @@
+import type { NavIconKey } from "@/shared/components/Navbar/types";
 import {
 	House,
 	type LucideIcon,
@@ -5,8 +6,7 @@ import {
 	Trophy,
 	UsersRound,
 	Wallet,
-} from "lucide-react";
-import type { NavIconKey } from "../types";
+} from "@/shared/icons";
 import styles from "./NavIcon.module.scss";
 
 interface Props {
@@ -23,11 +23,11 @@ const NAV_ICONS: Record<NavIconKey, LucideIcon> = {
 };
 
 /** Centraliza los iconos decorativos, que heredan el color de su etiqueta. */
-export function NavIcon({ name, className }: Props) {
+export default function NavIcon({ name, className }: Props) {
 	const Icon = NAV_ICONS[name];
 	return (
 		<Icon
-			className={className ? `${styles.icon} ${className}` : styles.icon}
+			className={[styles.icon, className].filter(Boolean).join(" ")}
 			strokeWidth={1.6}
 			aria-hidden="true"
 			focusable="false"

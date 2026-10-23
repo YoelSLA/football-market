@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.players-page {
+.playersPage {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -95,25 +95,25 @@
 /* ================= TABLET ================= */
 
 @include ds.down(ds.$bp-grid-xl) {
-  .players-page__grid {
+  .playersPage__grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
 @include ds.down(ds.$bp-grid-lg) {
-  .players-page__grid {
+  .playersPage__grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @include ds.down(ds.$bp-grid-md) {
-  .players-page__grid {
+  .playersPage__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @include ds.down(ds.$bp-grid-sm) {
-  .players-page {
+  .playersPage {
     &__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -123,7 +123,7 @@
 /* ================= MOBILE ================= */
 
 @include ds.down(ds.$bp-mobile) {
-  .players-page {
+  .playersPage {
     padding: 1rem;
 
     &__heading {
@@ -144,7 +144,7 @@
 }
 
 @include ds.down(ds.$bp-xs) {
-  .players-page__grid {
+  .playersPage__grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -156,7 +156,7 @@
    ========================================================== */
 
 @include ds.compact() {
-  .players-page {
+  .playersPage {
     padding: ds.$space-2xs ds.$space-md;
 
     /* Encabezado y filtros comparten una sola fila. */

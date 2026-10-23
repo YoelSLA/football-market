@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AUTH_ERROR_CODES } from "@/features/auth/constants";
+import { useRegisterForm } from "@/features/auth/form";
+import { useRegisterMutation } from "@/features/auth/hooks/mutations";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
-import { AUTH_ERROR_CODES } from "../../constants";
-import { useRegisterForm } from "../../form";
-import { useRegisterMutation } from "../mutations";
 
 export function useRegisterPage() {
 	const form = useRegisterForm();

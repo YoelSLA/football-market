@@ -1,6 +1,6 @@
-@use "../../../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.player-detail {
+.playerDetail {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -93,7 +93,7 @@
    MODO COMPACTO — desktop con altura suficiente.
 
    Cadena de altura completa, igual que en el catalogo:
-     PageLayout__content (scroll) -> .player-detail (flex)
+     PageLayout__content (scroll) -> .playerDetail (flex)
      -> __grid (flex:1, min-height:0) -> filas del grid.
 
    La fila superior conserva su alto natural; la inferior toma
@@ -102,7 +102,7 @@
    ========================================================== */
 
 @include ds.compact-detail() {
-  .player-detail {
+  .playerDetail {
     padding: ds.$space-xs;
 
     &__grid {
@@ -137,7 +137,7 @@
 }
 
 @include ds.down(ds.$bp-detail-lg) {
-  .player-detail {
+  .playerDetail {
     padding: ds.$space-sm;
 
     &__grid {
@@ -147,7 +147,7 @@
 }
 
 @include ds.down(ds.$bp-detail) {
-  .player-detail {
+  .playerDetail {
     &__grid {
       grid-template-areas:
         "overview"
@@ -159,7 +159,7 @@
 }
 
 @include ds.down(ds.$bp-sm) {
-  .player-detail {
+  .playerDetail {
     padding: 0.75rem;
 
     &__grid,

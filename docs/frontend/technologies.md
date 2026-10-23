@@ -12,7 +12,7 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 | npm | No fijada; lockfile v3 | Gestión de dependencias y scripts del frontend mediante `package.json` y `package-lock.json`. |
 | TypeScript | 7.0.2 | Tipado estricto del código React; comprueba el proyecto sin emitir JavaScript antes del build de Vite. |
 | React y React DOM | 19.3.0 | Renderizado de la aplicación y composición de la UI en el navegador. |
-| Lucide React | 1.59.0 | Iconos de navegación mediante imports nominales. `NavIcon` centraliza el mapeo de secciones, el tamaño y la semántica decorativa; los iconos heredan `currentColor`. Sustituye los SVG manuales del Navbar. |
+| Lucide React | 1.59.0 | Iconos de navegación y de interfaz. `shared/icons` es el punto único de exportación: ningún módulo importa de la biblioteca directamente, y el inventario de iconos usados queda declarado en ese módulo. `NavIcon` centraliza el mapeo de secciones, el tamaño y la semántica decorativa; los iconos heredan `currentColor`. Sustituye los SVG manuales del Navbar. |
 | Vite y plugin React | Vite 8.3.0; plugin React 6.1.1 | Servidor de desarrollo, preview y generación del build, con procesamiento de JSX/TSX y transformaciones de React mediante su plugin. |
 | TanStack Query | 5.103.1 | Configuración global del estado remoto, caché y políticas de queries; base para queries, mutations e invalidaciones de features. |
 | React Router DOM | 7.18.4 | Router del navegador, asociación de rutas globales y redirecciones de la aplicación. |
@@ -31,7 +31,8 @@ Esta sección registra dependencias de recursos que no aparecen en `package.json
 | --- | --- | --- | --- |
 | Escudos de equipos (`features/players/assets/teams/`) | **Local**. Importados en tiempo de build desde Wikimedia Commons mediante `frontend/scripts/import-team-logos.mjs`, que genera el registro de la feature y su documentación en `frontend/scripts/TEAM-LOGOS.md`. | Identificación visual del equipo en la tarjeta del catálogo y en el detalle. No se cargan en runtime. | Sin coincidencia por nombre normalizado, la tarjeta y el detalle muestran un marcador de posición accesible. |
 | Banderas de nacionalidad (`getNationalityFlag`) | **Servicio externo en runtime** (`flagcdn.com`). | Identificación visual de la nacionalidad en la tarjeta del catálogo. | Marcador de posición accesible cuando la bandera no carga; la nacionalidad nunca depende de la imagen para ser comprensible. |
-| Recursos de liga y posición, iconos genéricos y capturas de referencia | **Local**. `features/players/assets/` y `referencias-imagenes/`. | Identificación visual de liga y posición, retrato genérico y referencia de diseño. | Se conserva siempre la identificación textual del dato. |
+| Recursos de liga y posición y capturas de referencia | **Local**. `features/players/assets/` y `referencias-imagenes/`. | Identificación visual de liga y posición y referencia de diseño. | Se conserva siempre la identificación textual del dato. |
+| Retrato genérico de jugador | **Local**. `shared/assets/Player Generic-Icon.png`, compartido por catálogo, detalle de jugador y Cartera. | Alternativa cuando el retrato no existe o no carga; sin copiar el recurso entre features. | Se conserva el nombre cuando existe y se comunica su ausencia cuando no es recuperable. |
 
 `getTeamLogo` resuelve exclusivamente por nombre normalizado y devuelve `null` ante colisiones o ausencias; los alias conocidos se aplican solo en la importación y nunca en tiempo de ejecución.
 

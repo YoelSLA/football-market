@@ -126,7 +126,7 @@ sincronización remota ni sustituye los artefactos SDD.
   estrategias es cerrado y no se ampliará. CR-03 a CR-07 (Baja): falta de copia defensiva en
   `ScoreRanking`, construcción duplicada de entradas, escala del score no discriminada en el test de
   contrato, riesgo heredado de TD-025 y alcance sin commits.
-- Deuda técnica registrada: TD-030 (cobertura de tests incompleta para el ranking por score), en estado
+- Deuda técnica registrada: TD-031 (cobertura de tests incompleta para el ranking por score), en estado
   `Pendiente`. No se modifica TD-025.
 - Naturaleza: operación exclusivamente documental de revisión. No se modificó código, tests,
   migraciones ni contratos, y no se marcó ni desmarcó ninguna tarea de `tasks.md`.
@@ -148,7 +148,7 @@ sincronización remota ni sustituye los artefactos SDD.
   evidencia registrada en el informe.
 - Control ejecutado: `backend/gradlew.bat build -x test` → BUILD SUCCESSFUL (Spotless y
   `validateTestClassification` con 124 clases). No compila ni ejecuta tests.
-- Estado del hallazgo: CR-01 **corregido en código de test, pendiente de ejecución**; TD-030 pasa a
+- Estado del hallazgo: CR-01 **corregido en código de test, pendiente de ejecución**; TD-031 pasa a
   `En curso` y no se cierra hasta que el usuario ejecute la suite con resultado satisfactorio.
 - CODE REVIEW: **no aprobado**; la aprobación humana del checklist sigue pendiente.
 

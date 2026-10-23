@@ -1,6 +1,6 @@
-import { DEMO_SEASON } from "../constants";
-import type { PlayerSampleSeason } from "../types";
-import { demoHash } from "../utils";
+import { DEMO_SEASON } from "@/features/players/constants";
+import type { PlayerSampleSeason } from "@/features/players/types";
+import { demoHash } from "@/features/players/utils";
 
 const MATCHES_RANGE = 34;
 const GOALS_RANGE = 18;

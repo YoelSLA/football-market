@@ -286,10 +286,35 @@ spec_prefix_exists() {
     return 1
 }
 
+# Fold Latin-1 accented characters to their ASCII base letter.
+# The scope of a spec and of a branch is an English technical identifier, but
+# the titles and descriptions it is derived from may still carry accents.
+# Folding keeps a word intact instead of splitting it into fragments
+# ("gestion" stays one word instead of becoming "gesti" plus a stray "n").
+# This is character normalization, not translation: the result is not
+# necessarily English, and it never changes the meaning of the input.
+fold_accents() {
+    LC_ALL=C sed \
+        -e 's/á/a/g' -e 's/Á/a/g' -e 's/à/a/g' -e 's/À/a/g' \
+        -e 's/ä/a/g' -e 's/Ä/a/g' -e 's/â/a/g' -e 's/Â/a/g' \
+        -e 's/ã/a/g' -e 's/Ã/a/g' -e 's/å/a/g' -e 's/Å/a/g' \
+        -e 's/é/e/g' -e 's/É/e/g' -e 's/è/e/g' -e 's/È/e/g' \
+        -e 's/ë/e/g' -e 's/Ë/e/g' -e 's/ê/e/g' -e 's/Ê/e/g' \
+        -e 's/í/i/g' -e 's/Í/i/g' -e 's/ì/i/g' -e 's/Ì/i/g' \
+        -e 's/ï/i/g' -e 's/Ï/i/g' -e 's/î/i/g' -e 's/Î/i/g' \
+        -e 's/ó/o/g' -e 's/Ó/o/g' -e 's/ò/o/g' -e 's/Ò/o/g' \
+        -e 's/ö/o/g' -e 's/Ö/o/g' -e 's/ô/o/g' -e 's/Ô/o/g' \
+        -e 's/õ/o/g' -e 's/Õ/o/g' -e 's/ú/u/g' -e 's/Ú/u/g' \
+        -e 's/ù/u/g' -e 's/Ù/u/g' -e 's/ü/u/g' -e 's/Ü/u/g' \
+        -e 's/û/u/g' -e 's/Û/u/g' -e 's/ñ/n/g' -e 's/Ñ/n/g' \
+        -e 's/ç/c/g' -e 's/Ç/c/g' -e 's/ý/y/g' -e 's/Ý/y/g' \
+        -e 's/ÿ/y/g' -e 's/Ÿ/y/g'
+}
+
 # Function to clean and format a branch name
 clean_branch_name() {
     local name="$1"
-    echo "$name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//' | sed 's/-$//'
+    echo "$name" | fold_accents | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/-\+/-/g' | sed 's/^-//' | sed 's/-$//'
 }
 
 # Fit a spec name within GitHub's ref-name limit.
@@ -508,7 +533,7 @@ generate_scope() {
     local stop_words="^(i|a|an|the|to|for|of|in|on|at|by|with|from|is|are|was|were|be|been|being|have|has|had|do|does|did|will|would|should|could|can|may|might|must|shall|this|that|these|those|my|your|our|their|want|need|add|get|set)$"
 
     # Convert to lowercase and split into words
-    local clean_name=$(printf '%s' "$description" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/ /g')
+    local clean_name=$(printf '%s' "$description" | fold_accents | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/ /g')
 
     # Filter words: remove stop words and words shorter than 3 chars (unless they're uppercase acronyms in original)
     local meaningful_words=()

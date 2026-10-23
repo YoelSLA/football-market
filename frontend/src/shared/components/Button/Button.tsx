@@ -1,11 +1,13 @@
 import type { ButtonHTMLAttributes } from "react";
 import styles from "./Button.module.scss";
 
-export function Button({
+interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {}
+
+export default function Button({
 	className,
 	type = "button",
 	...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
+}: Props) {
 	return (
 		<button
 			{...props}

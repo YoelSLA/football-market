@@ -1,4 +1,4 @@
-import { teamLogoEntries } from "../assets/teams";
+import { teamLogoEntries } from "@/features/players/assets/teams";
 
 function normalizeTeamName(name: string) {
 	return name.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();

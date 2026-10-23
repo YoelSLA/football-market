@@ -1,0 +1,41 @@
+@use "@/styles/abstracts" as ds;
+
+// BEM: panel es el bloque; título, filas y tonos pertenecen al panel.
+.panel {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: ds.$space-sm;
+	border: 1px solid ds.$border-finance;
+	border-radius: 12px;
+	background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
+
+	&__title {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-xs;
+		margin: 0 0 ds.$space-3xs;
+		padding-bottom: ds.$space-3xs;
+		border-bottom: 1px solid ds.$border-finance;
+		font-size: 14px;
+		line-height: 1.5;
+
+		svg { width: 23px; height: 23px; color: ds.$icon-portfolio-panel; flex-shrink: 0; }
+	}
+
+	&__rows { display: grid; flex: 1; margin: 0; }
+	&__row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: ds.$space-2xs;
+		align-items: center;
+		padding-block: 0;
+		font-size: 13px;
+		line-height: 1.5;
+
+		dt { color: ds.$text-portfolio-cell-sub; }
+		dd { margin: 0; text-align: right; font-weight: 600; overflow-wrap: anywhere; }
+	}
+	&__positive { color: ds.$accent-finance-green; }
+	&__negative { color: ds.$state-portfolio-negative; }
+}

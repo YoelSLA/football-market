@@ -1,6 +1,6 @@
-@use "../../styles/abstracts" as ds;
+@use "@/styles/abstracts" as ds;
 
-.auth-form {
+.authForm {
 	display: grid;
 	gap: .5rem;
 	min-width: 0;

@@ -166,7 +166,7 @@ degradación consistente; **Baja** = mantenibilidad, legibilidad o limpieza.
 
 | ID | Severidad | Hallazgo | Evidencia | Recomendación |
 | --- | --- | --- | --- | --- |
-| CR-01 | Media — corregido (test añadido, pendiente de ejecución) | **Cobertura de tests: el score persistido no se afirmaba en Service/Repository y la rama de atributos no se ejercitaba con datos.** La implementación **sí** devuelve entradas de `GENERAL_ATTRIBUTES` (el `else` despacha a `AttributeValuationRepository.findScoreRanking()` y mapea `finalGrl`); lo que no existía era un test de Service que recorriera esa rama con valuaciones persistidas. Tampoco ningún test de Service afirmaba `ScoreRankingEntry::score`. Una regresión que expusiera `rawGrl` en lugar de `finalGrl` no se detectaba en el caso de uso, pese a FR-004/FR-012/SC-005. | `backend/src/test/java/footballmarket/services/ScoreRankingQueryServiceTest.java:71-74,110-154`; `backend/src/test/java/footballmarket/support/ScoreRankingTestData.java:50-87,157-180` | Corregido: se añadió el caso de Service con ejecución `GENERAL_ATTRIBUTES`, score bruto distinto del final y afirmaciones de `score` y `valuationDate`; además se afirman los scores en el test posicional. Pendiente de ejecución por el usuario. Registrado como TD-030. |
+| CR-01 | Media — corregido (test añadido, pendiente de ejecución) | **Cobertura de tests: el score persistido no se afirmaba en Service/Repository y la rama de atributos no se ejercitaba con datos.** La implementación **sí** devuelve entradas de `GENERAL_ATTRIBUTES` (el `else` despacha a `AttributeValuationRepository.findScoreRanking()` y mapea `finalGrl`); lo que no existía era un test de Service que recorriera esa rama con valuaciones persistidas. Tampoco ningún test de Service afirmaba `ScoreRankingEntry::score`. Una regresión que expusiera `rawGrl` en lugar de `finalGrl` no se detectaba en el caso de uso, pese a FR-004/FR-012/SC-005. | `backend/src/test/java/footballmarket/services/ScoreRankingQueryServiceTest.java:71-74,110-154`; `backend/src/test/java/footballmarket/support/ScoreRankingTestData.java:50-87,157-180` | Corregido: se añadió el caso de Service con ejecución `GENERAL_ATTRIBUTES`, score bruto distinto del final y afirmaciones de `score` y `valuationDate`; además se afirman los scores en el test posicional. Pendiente de ejecución por el usuario. Registrado como TD-031. |
 | CR-02 | Descartado | **Despacho por defecto: sin hallazgo.** El responsable del proyecto confirmó que el catálogo de estrategias es cerrado: siempre serán `POSITIONAL_PERFORMANCE` y `GENERAL_ATTRIBUTES`, y no se sumará otra. El `else` es, por tanto, correcto y no requiere cambio. | `backend/src/main/java/footballmarket/services/impl/ScoreRankingQueryServiceImpl.java:57-81`; `ValuationStrategy`; `V20261019120000__create_player_valuations.sql:16,38` | Sin acción. Se conserva el identificador con la decisión registrada. |
 | CR-03 | Baja | **`ScoreRanking` no copia defensivamente la lista.** Solo rechaza `null`; si un llamador construyera el record con una lista mutable, el resultado quedaría modificable. `ScoreRankingEntry` tampoco valida `position`, `playerId`, `score` ni `valuationDate`, aunque `data-model.md` §3.2 los declara no nulos. | `backend/src/main/java/footballmarket/models/records/ScoreRanking.java:15-21`; `ScoreRankingEntry.java:13-14` | `List.copyOf(entries)` en el constructor compacto y, si se desea, validación de las invariantes declaradas. |
 | CR-04 | Baja | **Construcción de entradas duplicada** para las dos estrategias: dos bucles casi idénticos y `Integer` boxeado para una posición derivada de un índice. | `backend/src/main/java/footballmarket/services/impl/ScoreRankingQueryServiceImpl.java:59-81` | Extraer un helper genérico o `IntStream.range(...).mapToObj(...)` por estrategia. |
@@ -258,9 +258,9 @@ usuario. El build no acredita ninguna de las dos.
 
 | ID | Título | Prioridad |
 | --- | --- | --- |
-| TD-030 | Cobertura de tests incompleta para el ranking por score (valor del score y rama `GENERAL_ATTRIBUTES` en el Service) | Media — `En curso` (test añadido, pendiente de ejecución) |
+| TD-031 | Cobertura de tests incompleta para el ranking por score (valor del score y rama `GENERAL_ATTRIBUTES` en el Service) | Media — `En curso` (test añadido, pendiente de ejecución) |
 
-No se declara resuelta ninguna deuda existente: TD-030 pasa a `En curso` y solo se cerrará con la
+No se declara resuelta ninguna deuda existente: TD-031 pasa a `En curso` y solo se cerrará con la
 ejecución de los tests. TD-025 se referencia como riesgo heredado (CR-06) sin modificar su estado.
 
 ---
@@ -325,7 +325,7 @@ El usuario revisa y marca cada ítem. **El agente no aprueba este checklist.**
 
 ### E. Riesgo y deuda
 
-- [ ] E1. Se revisa el test añadido para CR-01 y la entrada TD-030 (`En curso`; cierre tras ejecución).
+- [ ] E1. Se revisa el test añadido para CR-01 y la entrada TD-031 (`En curso`; cierre tras ejecución).
 - [ ] E2. Se revisan CR-03 a CR-05 (severidad Baja) y se decide si se corrigen o se aceptan. CR-02
       queda descartado por decisión registrada.
 - [ ] E3. Se revisa CR-06 como riesgo heredado de TD-025, sin cambio en esta feature.
@@ -347,7 +347,7 @@ El usuario revisa y marca cada ítem. **El agente no aprueba este checklist.**
   build no acredita tests. Tests concretos sugeridos: `./gradlew lightweightTest` y
   `./gradlew integrationTest` desde `backend/`.
 - **CONVERGE** y **FEATURE COMPLETION**: no habilitados.
-- **Deuda técnica**: TD-030 `En curso` (test añadido, cierre tras ejecución); TD-025 se referencia como
+- **Deuda técnica**: TD-031 `En curso` (test añadido, cierre tras ejecución); TD-025 se referencia como
   riesgo heredado sin cambio de estado.
 - **Siguiente acción permitida**: ejecución de los tests por el usuario y aprobación humana de CODE
   REVIEW con el checklist de §10; después, la fase de TESTING.

@@ -5,7 +5,7 @@ Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar
 manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,
 no de épicas REQ. La existencia de este archivo no completa Specify ni habilita Ready. -->
 
-**Feature Branch**: `[<type>/<spec-id>-<scope>]` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `<spec-id>-<scope>`, sin el prefijo de tipo. La convención de ramas es normativa; ver la constitución §7.
+**Feature Branch**: `[<type>/<spec-id>-<scope>]` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `<spec-id>-<scope>`, sin el prefijo de tipo. La convención de ramas es normativa; ver la constitución §7. El `<scope>` va en inglés, con independencia del idioma de la descripción de origen.
 
 **Created**: [DATE]
 

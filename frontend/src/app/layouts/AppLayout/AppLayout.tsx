@@ -13,7 +13,7 @@ export default function AppLayout() {
 
 	const logout = useLogout();
 
-	const currentUser = useCurrentUserQuery(true, revision, location.pathname);
+	const currentUser = useCurrentUserQuery(true, revision);
 
 	return (
 		<div className={styles.appLayout}>

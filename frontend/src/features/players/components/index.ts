@@ -1,9 +1,0 @@
-export { PlayerBreadcrumb } from "./PlayerBreadcrumb";
-export { PlayerCard } from "./PlayerCard";
-export { PlayerCatalogControls } from "./PlayerCatalogControls";
-export { PlayerOverview } from "./PlayerOverview";
-export { PlayerPortrait } from "./PlayerPortrait";
-export { PlayerQuoteEvolutionChart } from "./PlayerQuoteEvolutionChart";
-export { PlayerQuotePanel } from "./PlayerQuotePanel";
-export { PlayerSportsSummary } from "./PlayerSportsSummary";
-export { PlayersPagination } from "./PlayersPagination";

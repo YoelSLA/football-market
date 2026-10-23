@@ -1,0 +1,50 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioSummary {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+	background: radial-gradient(ellipse at 80% 20%, rgba(ds.$accent-finance-cyan, 0.035), transparent 60%), ds.$surface-finance-base;
+	color: ds.$text-portfolio-strong;
+
+	&__panel {
+		display: flex;
+		flex: 1 0 auto;
+		flex-direction: column;
+		min-width: 0;
+		padding: ds.$space-sm 14px 18px;
+	}
+
+	// La referencia mide 941 px de alto. Por debajo, repartir la presión
+	// vertical entre espacios, no entre tipografías ni alturas del contenido.
+	// El umbral compartido exige desktop ancho y al menos 880 px de altura.
+	@include ds.compact() {
+		--portfolio-summary-density: clamp(0px, calc((941px - 100dvh) / 15), 4px);
+		--portfolio-summary-header-height: calc(76px - 3 * var(--portfolio-summary-density));
+		--portfolio-summary-subtitle-gap: calc(9px - 1.25 * var(--portfolio-summary-density));
+		--portfolio-summary-notice-inset: calc(#{ds.$space-xs} - 1.5 * var(--portfolio-summary-density));
+		--portfolio-summary-metric-height: calc(152px - 4 * var(--portfolio-summary-density));
+		--portfolio-summary-metric-top: calc(28px - 2 * var(--portfolio-summary-density));
+		--portfolio-summary-value-gap: calc(#{ds.$space-xs} - var(--portfolio-summary-density));
+		--portfolio-summary-content-gap: calc(18px - 1.5 * var(--portfolio-summary-density));
+		--portfolio-summary-content-margin: calc(#{ds.$space-md} - 2 * var(--portfolio-summary-density));
+		--portfolio-summary-card-inset: calc(#{ds.$space-sm} - var(--portfolio-summary-density));
+
+		&__panel {
+			padding-block: ds.$space-2xs;
+		}
+	}
+
+	:focus-visible {
+		outline: 3px solid ds.$focus-ring-on-dark;
+		outline-offset: 2px;
+	}
+
+	@include ds.down(ds.$bp-sm) {
+		&__panel {
+			padding: ds.$space-xs 0;
+		}
+	}
+}

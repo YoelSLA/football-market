@@ -81,7 +81,8 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-027](#td-027--índice-ausente-sobre-player_quotesorigin-en-el-camino-caliente-de-compra-y-publicación) | Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación | Backend / Rendimiento | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-028](#td-028--operaciones-de-cotización-del-mercado-sin-control-de-rol) | Operaciones de cotización del mercado sin control de rol | Backend / Seguridad | Media | Descartada | 2026-10-21 22:20:53 |
 | [TD-029](#td-029--cobertura-de-tests-incompleta-para-el-recálculo-de-cotizaciones) | Cobertura de tests incompleta para el recálculo de cotizaciones | Backend / Testing | Media | Pendiente | 2026-10-21 22:20:53 |
-| [TD-030](#td-030--cobertura-de-tests-incompleta-para-el-ranking-por-score) | Cobertura de tests incompleta para el ranking por score | Backend / Testing | Media | En curso | 2026-10-23 19:39:54 |
+| [TD-030](#td-030--cobertura-parcial-del-control-de-imports-scss) | Cobertura parcial del control de imports SCSS | Frontend / Herramientas | Media | Pendiente | 2026-10-22 14:32:17 |
+| [TD-031](#td-031--cobertura-de-tests-incompleta-para-el-ranking-por-score) | Cobertura de tests incompleta para el ranking por score | Backend / Testing | Media | En curso | 2026-10-23 19:39:54 |
 
 ## 6. Detalle de las deudas técnicas
 
@@ -602,11 +603,11 @@ cubran los comportamientos enumerados y el usuario los ejecute con resultado sat
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
 
-### TD-030 — Cobertura de tests incompleta para el ranking por score
+### TD-031 — Cobertura de tests incompleta para el ranking por score
 
 | Campo | Valor |
 | --- | --- |
-| **ID** | TD-030 |
+| **ID** | TD-031 |
 | **Fecha y hora de registro** | 2026-10-23 19:39:54 (`America/Argentina/Buenos_Aires`) |
 | **Estado** | `En curso` |
 | **Prioridad** | Media |
@@ -674,6 +675,7 @@ cubran el valor del score en ambas estrategias y el usuario los ejecute con resu
 | --- | --- |
 | 2026-10-23 19:39:54 | Registro inicial tras el code review de SPEC-018. No se modificó código, migraciones ni contratos. |
 | 2026-10-23 | Pasa a `En curso`: se añadió el test de Service de la rama `GENERAL_ATTRIBUTES` con score bruto distinto del final y las afirmaciones de score posicionales. Solo se cerrará con la ejecución satisfactoria del usuario. |
+| 2026-10-23 | Al integrar `origin/dev` en SPEC-018 se detectó que TD-030 ya estaba ocupado por «Cobertura parcial del control de imports SCSS»; esta deuda se reasigna a TD-031 conservando fecha de registro, estado, evidencia y criterio de cierre. Las menciones a TD-030 en los artefactos de SPEC-018 corresponden a esta deuda. |
 
 ### TD-021 — Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados
 
@@ -775,6 +777,18 @@ por una corrección documental aislada.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 16:20:55 | Registro inicial tras la revisión funcional de SPEC-016, en la que el responsable del proyecto decidió no modificar el código y conservar el congelamiento por jugador. No se modificó código, migraciones ni contratos. |
+<a id="td-021--cobertura-parcial-del-control-de-imports-scss"></a>
+### TD-030 — Cobertura parcial del control de imports SCSS
+
+- **Registrada**: 2026-10-22 14:32:17 (`America/Argentina/Buenos_Aires`, reloj del sistema).
+- **Estado**: Pendiente; **prioridad**: Media; **área**: Frontend / Herramientas.
+- **Evidencia**: `frontend/scripts/scss-check-imports.js` utiliza un patrón con `^@use` sin modo multilinea. Solo inspecciona la posición inicial del texto y no todas las directivas. El mensaje de éxito no acredita la regla completa. Hallazgo por lectura, sin ejecución.
+- **Impacto**: un import relativo situado después de otra directiva o comentario puede pasar inadvertido.
+- **Solución propuesta**: lectura de directivas SCSS que distinga comentarios y strings, cubra el archivo completo y valide la forma canónica, sin agregar dependencias innecesarias. No aplicar detección React mediante regex.
+- **Criterio de cierre**: implementación revisada y evidencia aportada por el usuario de detección de directivas válidas e inválidas en distintas posiciones; respetar las restricciones de ejecución vigentes. No se declara resuelta por el build.
+- **Historial**:
+  - 2026-10-22 14:32:17 — registrada durante la reorganización global del frontend; no se amplía el alcance para resolverla.
+  - 2026-10-23 14:24:46 — al integrar dev en SPEC-017, se reasigna el identificador local TD-021 a TD-030 para resolver la colisión con la deuda de backend «Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados». Se conservan fecha de registro, estado, evidencia y criterio de cierre. Las menciones históricas a TD-021 en el informe de SPEC-017 y en la auditoría de componentes del frontend corresponden a esta deuda; se conserva también el ancla anterior para no romper enlaces.
 
 ### TD-019 — Precisión del rating incompatible con el diseño de persistencia de SPEC-012
 
@@ -2124,7 +2138,7 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 
 **Referencias.**
 
-- `docs/frontend/architecture.md`
+- [Artículo 36.º — Capas globales de estilos](frontend/architecture/presentation.md#articulo-36) y [antecedente de implementación](frontend/architecture/implementation.md#estilos-de-la-implementacion).
 - `frontend/src/styles/abstracts/tokens/_colors.scss`
 - `frontend/src/features/players/components/PlayerCard/PlayerCard.module.scss`
 - `frontend/src/features/players/pages/PlayersPage/PlayersPage.module.scss`
