@@ -33,12 +33,19 @@ Contratos relacionados: [Artículo 23.º](composition.md#articulo-23) y [Artícu
 
 La configuración actual define `/login` y `/register` como rutas públicas de autenticación, `/home` como ruta privada y `/players` y `/players/:id` como rutas privadas del catálogo y su detalle. `/` redirige a `/login`. El guard envía a `/login` a una identidad anónima que intenta acceder a una ruta privada y a `/home` a una identidad autenticada que intenta acceder a las rutas públicas de autenticación; mientras el estado sea `UNKNOWN` o `CHECKING`, muestra `SessionChecking`. La ruta comodín redirige a `/players`.
 
+Cartera añade las rutas privadas `/portfolio` (resumen predeterminado) y `/portfolio/holdings`
+(tenencias). Ambas usan `AppLayout` y habilitan sus entradas en `app/navigation/sections.ts` sin
+modificar Navbar. Las pestañas de historial y gráficos siguen deshabilitadas. La feature portfolio
+consume DTO tipado mediante Service y Mapper de transformación; no duplica reglas financieras.
+Su panel de detalle usa un diálogo modal nativo: fondo inerte, foco confinado, cierre con Escape y
+restitución del foco; en móvil ocupa el ancho completo con cabecera visible y cuerpo desplazable.
+
 <a id="navegacion-actual"></a>
 ## Navegación actual
 
 `AppLayout` envuelve **todas las rutas privadas** (`/home`, `/players`, `/players/:id`), por lo que la navegación es una capacidad transversal y no una consecuencia de una feature concreta.
 
-Contrato de composición: [Artículo 29.º](composition.md#articulo-29).
+La enumeración anterior se conserva de la descripción original; las rutas de Cartera también se describen en el [Artículo 28.º](#articulo-28). Contrato de composición: [Artículo 29.º](composition.md#articulo-29).
 
 <a id="ubicacion-de-layouts"></a>
 ## Ubicación de layouts

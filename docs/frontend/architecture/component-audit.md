@@ -19,6 +19,7 @@ Todos tienen función nombrada con export default, barrel local default e interf
 | Pages auth | `HomePage`, `LoginPage`, `RegisterPage`; `LogoutButton` privado de HomePage. |
 | Catálogo | `PlayersPage` posee `PlayerCatalogControls`, `PlayerCard` y `PlayersPagination` recuperado sin uso. PlayerCard posee su `PlayerPortrait`, `NationalityFlag` y `TeamBadge`. |
 | Detalle jugador | `PlayerDetailPage` posee `PlayerBreadcrumb`, `PlayerOverview`, `PlayerQuoteEvolutionChart`, `PlayerQuotePanel`, `PlayerSportsSummary`. PlayerOverview posee su propio `PlayerPortrait`, diferente del retrato del catálogo. |
+| Resumen portfolio | `PortfolioSummaryPage` posee Header y Content; Content posee Metrics y Panels; Metrics posee `PortfolioMetricCard`; Panels posee `PortfolioTokenDistribution`. Los nombres completos conservan el prefijo `PortfolioSummary`. |
 | Tenencias | `PortfolioHoldingsPage` posee Header, Content y `PortfolioPositionDetail` sin uso; Header posee `PortfolioStatusFilter`; Content posee `PortfolioPositionCard`. `PortfolioPortrait` permanece en la Page, nivel común entre tarjeta y detalle. |
 | Portfolio compartido | `PortfolioValueSection` se comparte entre Panels y PositionDetail; posee `PortfolioValueHeader` y `PortfolioValueRows`; Rows posee `PortfolioValueRow`. |
 
