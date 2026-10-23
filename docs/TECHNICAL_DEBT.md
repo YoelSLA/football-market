@@ -72,11 +72,638 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-018](#td-018--colores-literales-en-los-módulos-de-estilo-de-componentes) | Colores literales en los módulos de estilo de componentes | Frontend / Convenciones | Baja | Pendiente | 2026-10-14 17:48:44 |
 | [TD-019](#td-019--precisión-del-rating-incompatible-con-el-diseño-de-persistencia-de-spec-011) | Precisión del rating incompatible con el diseño de persistencia de SPEC-012 | Backend / Datos | Alta | Pendiente | 2026-10-16 02:49:30 |
 | [TD-020](#td-020--contraste-entre-canales-retirado-en-spec-011) | Contraste entre canales retirado en SPEC-012 | Backend / Datos | Media | Pendiente | 2026-10-18 00:00:00 |
-| [TD-021](#td-021--cobertura-parcial-del-control-de-imports-scss) | Cobertura parcial del control de imports SCSS | Frontend / Herramientas | Media | Pendiente | 2026-10-22 14:32:17 |
+| [TD-021](#td-021--re-evaluación-con-una-campaña-de-métricas-ya-usada-reprecia-con-datos-estancados) | Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados | Backend / Datos | Media | Pendiente | 2026-10-21 16:20:55 |
+| [TD-022](#td-022--ranking-de-cotizaciones-sin-desempate-deterministica-un-jugador-puede-aparecer-dos-veces) | Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces | Backend / Datos | Media | En curso | 2026-10-21 22:20:53 |
+| [TD-023](#td-023--jugador-cotizable-sin-fila-initial-falla-en-cada-corrida-de-recálculo) | Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-024](#td-024--cotizaciones-confirmadas-sin-resumen-de-ejecución-persistido) | Cotizaciones confirmadas sin resumen de ejecución persistido | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-025](#td-025--quote_executions-sin-estado-una-ejecución-en-curso-es-indistinguible-de-una-terminada) | `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada | Backend / Datos | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-026](#td-026--inicialización-concurrente-del-mercado-responde-500-en-lugar-de-409) | Inicialización concurrente del mercado responde 500 en lugar de 409 | Backend / Contrato | Media | Descartada | 2026-10-21 22:20:53 |
+| [TD-027](#td-027--índice-ausente-sobre-player_quotesorigin-en-el-camino-caliente-de-compra-y-publicación) | Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación | Backend / Rendimiento | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-028](#td-028--operaciones-de-cotización-del-mercado-sin-control-de-rol) | Operaciones de cotización del mercado sin control de rol | Backend / Seguridad | Media | Descartada | 2026-10-21 22:20:53 |
+| [TD-029](#td-029--cobertura-de-tests-incompleta-para-el-recálculo-de-cotizaciones) | Cobertura de tests incompleta para el recálculo de cotizaciones | Backend / Testing | Media | Pendiente | 2026-10-21 22:20:53 |
+| [TD-030](#td-030--cobertura-parcial-del-control-de-imports-scss) | Cobertura parcial del control de imports SCSS | Frontend / Herramientas | Media | Pendiente | 2026-10-22 14:32:17 |
 
 ## 6. Detalle de las deudas técnicas
 
-### TD-021 — Cobertura parcial del control de imports SCSS
+### TD-022 — Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-022 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `En curso` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | — |
+
+**Verificación en la base de desarrollo (2026-10-21).** El ranking ejecutado sobre la base de
+desarrollo con el predicado exacto de `findRanking` devuelve **1.860 filas para 1.860 jugadores
+distintos**: no hay duplicados en los datos actuales. La tabla contiene 1.860 filas `INITIAL` del
+2026-10-19, 1.860 filas `RECOMPUTED` del 2026-10-19 y 1.860 filas `RECOMPUTED` del 2026-10-20, es
+decir, tres filas de historial por jugador, de las cuales el ranking expone solo la vigente. El
+defecto es latente y no se manifiesta con estos datos: se reproduce únicamente cuando un mismo
+jugador tiene dos filas con la **misma fecha de vigencia y el mismo instante de cálculo**, con
+orígenes de la familia `INITIAL`/`CARRIED_FORWARD`, condición que solo se alcanza si el instante de
+la fila inicial coincide con el de una fila arrastrada.
+
+**Descripción.** Las consultas que resuelven la cotización vigente de cada jugador no tienen un
+desempate total. Ordenan por `effective_date`, origen y `calculated_at`, pero no por `id`, de modo
+que dos filas del mismo jugador con la misma fecha de vigencia y el mismo instante de cálculo
+pueden devolver en cualquier orden. El ranking, que se construye con una condición `not exists`
+correlacionada que solo excluye la fila peor cuando el `calculated_at` es estrictamente mayor,
+puede devolver **dos filas del mismo jugador** cuando hay empate, contra FR-039, que exige una sola
+entrada por jugador cotizable.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java:26-31` — "última fila
+  por jugador": `order by effective_date desc, case origin ..., calculated_at desc`, sin desempate por
+  `id`.
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java:41-43` y `:55-57` —
+  historial y fila con `effective_date <= fecha` con el mismo criterio incompleto.
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java:72-88` — ranking: la
+  condición `not exists` excluye la fila peor solo con `q2.calculated_at > q.calculated_at`, de modo
+  que un empate no excluye ninguna fila.
+- `backend/src/main/java/footballmarket/services/impl/QuoteQueryServiceImpl.java:73-83` — construye el
+  ranking sin deduplicar por jugador.
+- `backend/src/main/java/footballmarket/integrations/RepositoryQuoteSource.java:63-68` — la fuente real
+  sí deduplica con `putIfAbsent`, de modo que el mercado queda protegido y la API HTTP de ranking no.
+
+**Causa técnica.** El desempate escrito en `data-model.md §1` y `research.md §2` no se trasladó a un
+criterio total en el SQL: falta el identificador de la fila como último criterio de orden y como
+condición de exclusión en el ranking.
+
+**Impacto técnico.** Con los datos actuales el ranking es correcto: una sola entrada por jugador,
+con su cotización vigente. El riesgo es latente: si un jugador llegara a tener dos filas de la misma
+fecha de vigencia y del mismo instante de cálculo, el ranking lo devolvería dos veces, contra
+FR-039. El mercado no se ve afectado porque la fuente real deduplica con `putIfAbsent`. El defecto
+es observable por HTTP y contradice FR-039 solo bajo esa condición de empate.
+
+**Solución propuesta.** Añadir `id` como criterio final de orden en las tres consultas y extender la
+condición de exclusión del ranking con `q2.id > q.id`, o reemplazar el `not exists` por un
+`distinct on (player_id)` ordenado por fecha, origen e instante, como ya contempla `research.md`.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Ninguna consulta de vigente, historial, fila por fecha ni ranking devuelva dos filas del mismo
+   jugador, incluso ante empate de fecha de vigencia e instante de cálculo.
+2. Existan tests backend que cubran el empate de fecha e instante entre las filas `RECOMPUTED` y
+   `CARRIED_FORWARD` y que afirmen una sola entrada por jugador en el ranking.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-026, FR-037, FR-039)
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md`
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java`
+- `backend/src/main/java/footballmarket/services/impl/QuoteQueryServiceImpl.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-01)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 22:20:53 | Verificación empírica en la base de desarrollo: el ranking devuelve 1.860 filas para 1.860 jugadores distintos, sin duplicados. El defecto se relega a latente y la prioridad baja de Alta a Media. Se documenta la condición exacta que lo reproduce y la prueba en transacción revertida. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Corrección aplicada por decisión del responsable del proyecto: el orden de lectura de `PlayerQuoteRepository` cierra con el identificador de la fila y la condición de exclusión del ranking añade `q2.id > q.id` ante empate de fecha de vigencia e instante de cálculo. Se escribieron los casos de empate en `QuoteQueryServiceTest`. El estado pasa a `En curso`: la corrección está implementada y compilada, pero la ejecución de los tests corresponde al usuario y la deuda no se declara resuelta sin esa evidencia. |
+
+### TD-023 — Jugador cotizable sin fila `INITIAL` falla en cada corrida de recálculo
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-023 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | — |
+
+**Descripción.** La población cotizable se resuelve por métricas informadas, pero la fila `INITIAL`
+solo la crea la inicialización del mercado, que es idempotente y no completa filas faltantes. Un
+jugador que obtiene métricas después de la inicialización es cotizable y a la vez carece de fila
+inicial. En cada corrida, el publicador toma la primera fila de la lista de cotizaciones vigentes y
+de la lista de fechas de referencia del jugador: al estar vacías, lanza `NoSuchElementException`, que
+se contabiliza como fallo del jugador. El jugador queda sin precio, no aparece en el ranking y la
+corrida muestra un contador `failed_players` permanente.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java:44` y `:47` —
+  `getFirst()` sobre el resultado de la última fila vigente y de las fechas de referencia.
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java:26-31` y `:99-110` —
+  consultas que devuelven listas vacías cuando el jugador no tiene ninguna fila.
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java:115-122` —
+  el fallo individual se captura, se registra y se cuenta en `failed_players`.
+- `backend/src/main/java/footballmarket/services/impl/QuoteMarketInitializationServiceImpl.java:49-57` —
+  la idempotencia no crea las filas `INITIAL` que falten.
+
+**Causa técnica.** FR-001 y FR-002 declaran cotizable a todo jugador con métricas informadas, pero la
+población cotizable y la población con fila inicial se resuelven con criterios distintos y no hay
+cota que los garantice.
+
+**Impacto técnico.** Un jugador incorporable al catálogo después de inicializar el mercado queda
+permanentemente sin cotización y desplaza el contador de fallos de cada corrida, sin que exista una
+señal que distinga ese caso de un fallo real.
+
+**Solución propuesta.** Tratar la ausencia de fila inicial como una condición de "no operable" y no
+como un fallo, y permitir que la inicialización idempotente complete las filas `INITIAL` faltantes de
+los jugadores cotizables actuales, o bien derivar la fila inicial de la fecha de mercado vigente
+cuando el jugador se vuelve cotizable.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Ningún jugador cotizable sin fila `INITIAL` provoque un fallo ni un contador de fallos en la
+   corrida.
+2. Existan tests backend que cubran un jugador que obtiene métricas después de la inicialización.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-001, FR-002, FR-034)
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java`
+- `backend/src/main/java/footballmarket/services/impl/QuoteMarketInitializationServiceImpl.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-02)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Decisión del responsable del proyecto: se conserva como deuda registrada. El caso es muy borde —un jugador que obtiene métricas después de la inicialización del mercado— y no se modifica el código. La entrada permanece `Pendiente` con su evidencia, su causa y su regla de resolución propuesta. |
+
+### TD-024 — Cotizaciones confirmadas sin resumen de ejecución persistido
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-024 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | — |
+
+**Descripción.** La corrida completa se ejecuta dentro de una transacción, pero la publicación de
+cada jugador usa `Propagation.REQUIRES_NEW` y confirma su fila por separado. Si la transacción
+global revierte después del bucle —por ejemplo, ante un fallo al guardar el resumen de la
+ejecución— las filas `RECOMPUTED` y `CARRIED_FORWARD` quedan confirmadas sin que exista la fila de
+`quote_executions` que las documenta. El precio se movió sin corrida registrada, y la fecha de
+cotización queda libre para una segunda ejecución que ya no puede reproducir el salto.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java:34` —
+  `REQUIRES_NEW` en la publicación por jugador.
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java:32` —
+  transacción de la corrida.
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java:133-139` —
+  actualización del resumen al final de la corrida.
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/research.md §13` — justificación del
+  `REQUIRES_NEW` por atomicidad individual.
+
+**Causa técnica.** La atomicidad por jugador y la atomicidad de la corrida se implementan con
+alcances transaccionales distintos, sin una decisión sobre qué ocurre cuando el segundo nivel falla
+después de que el primero confirmó.
+
+**Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
+consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.
+
+**Solución propuesta.** Definir y aplicar una de las dos alternativas: ejecutar toda la corrida en
+una única transacción con.Savepoint por jugador, o registrar la ejecución con un estado que
+distinga "en curso" de "terminada" y permita reconciliar las filas confirmadas con su resumen.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Ninguna fila de `player_quotes` pueda quedar confirmada sin su resumen de ejecución, o exista un
+   estado que haga detectable esa situación.
+2. Existan tests backend que simulate un fallo al persistir el resumen y afirmen el estado
+   resultante.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-061, FR-062)
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java`
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-03)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+
+### TD-025 — `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-025 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | — |
+
+**Descripción.** La fila de `quote_executions` se inserta como reserva al inicio de la corrida, con
+los cinco contadores en cero y `finished_at` igual a `started_at`, y se actualiza al final con los
+contadores reales. La tabla no tiene columna de estado, de modo que un lector concurrente que
+consulte el resumen de ejecuciones puede leer una corrida todavía en curso como si estuviera
+terminada, con contadores en cero. Además, la tabla se califica como append-only en el diseño de
+persistencia y su comentario de migración, pero admite actualización.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java:95-108` —
+  inserción de la fila de reserva.
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java:133-139` —
+  actualización final del resumen.
+- `backend/src/main/java/footballmarket/models/QuoteExecution.java:157-176` — `complete()` actualiza
+  la entidad; `finished_at` es actualizable y `started_at` no.
+- `backend/src/main/resources/db/migration/V20261021042325__create_player_quotes.sql:30` — comentario
+  que describe la tabla como append-only.
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md §2` — misma calificación.
+
+**Causa técnica.** La reserva anticipada de la fecha de cotización resuelve la unicidad de FR-060,
+pero el modelo no incorpora un estado que distinga la corrida en curso de la terminada, y la
+documentación declara un carácter append-only que la implementación no respeta.
+
+**Impacto técnico.** Un consumidor del resumen de ejecuciones puede interpretar una corrida en
+curso como una corrida terminada y sin efectos, y el desajuste entre documentación e
+implementación impide afirmar la trazabilidad de la tabla.
+
+**Solución propuesta.** Añadir una columna de estado (`IN_PROGRESS` / `COMPLETED`) con su
+restricción, o persistir la fila de ejecución solo al final y proteger la unicidad por fecha con un
+mecanismo distinto, como una fila de reserva con marca temporal.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Un lector del resumen pueda distinguir una ejecución en curso de una terminada.
+2. `data-model.md` y el comentario de la migración reflejen el carácter real de la tabla.
+3. Existan tests backend que consulten el resumen durante una ejecución en curso.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-060, FR-061)
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md`
+- `backend/src/main/java/footballmarket/models/QuoteExecution.java`
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-04)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+
+### TD-026 — Inicialización concurrente del mercado responde 500 en lugar de 409
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-026 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Descartada` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Contrato |
+| **Fecha de resolución** | - |
+
+**Decision del responsable del proyecto.** La carrera de inicializacion concurrente se descarta: no
+ocurre en el uso previsto del mercado, donde la inicializacion se ejecuta una sola vez y de forma
+manual. La entrada se conserva con su evidencia por trazabilidad, y no se modifica el codigo.
+
+**Descripción.** El camino secuencial de la inicialización detecta el mercado ya inicializado y
+responde `409 MARKET_ALREADY_INITIALIZED`. Dos inicializaciones concurrentes con fechas distintas no
+discurren por ese camino: la perdedora falla por violación de unicidad o de restricción y la
+excepción de integridad se traduce al manejador genérico, que responde `500 INTERNAL_ERROR`. El
+contrato HTTP de la feature exige `409` para esa situación.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/services/impl/QuoteMarketInitializationServiceImpl.java:48-57`
+  — detección secuencial del mercado ya inicializado.
+- `backend/src/main/java/footballmarket/controllers/exceptions/GlobalExceptionHandler.java:185-197` —
+  traducción de la violación de integridad a error interno.
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md §1` — código
+  `MARKET_ALREADY_INITIALIZED` con estado 409.
+- `backend/src/main/java/footballmarket/services/impl/QuoteRecalculationServiceImpl.java:95-99` —
+  el análogo de la corrida de recálculo sí traduce la violación de unicidad al código controlado.
+
+**Causa técnica.** La traducción de la violación de integridad al código de negocio existe en el
+servicio de recálculo y no en el de inicialización.
+
+**Impacto técnico.** Contrato incumplido en concurrencia: un cliente concurrente recibe un 500 en
+lugar del 409 documentado, y el error interno degrada el diagnóstico de la causa real.
+
+**Solución propuesta.** Traducir la violación de integridad de la inicialización al mismo
+`MarketAlreadyInitializedException` que usa el camino secuencial.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Dos inicializaciones concurrentes con fechas distintas produzcan una respuesta `409
+   MARKET_ALREADY_INITIALIZED` y ninguna `500`.
+2. Existan tests backend que cubran la carrera.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md §1`
+- `backend/src/main/java/footballmarket/services/impl/QuoteMarketInitializationServiceImpl.java`
+- `backend/src/main/java/footballmarket/controllers/exceptions/GlobalExceptionHandler.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-05)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Descartada por decisión del responsable del proyecto: la inicialización se ejecuta una sola vez y de forma manual, de modo que la carrera no se considera alcanzable. Se conserva la entrada con su evidencia y no se modifica código, migraciones ni contratos. |
+
+### TD-027 — Índice ausente sobre `player_quotes.origin` en el camino caliente de compra y publicación
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-027 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Rendimiento |
+| **Fecha de resolución** | — |
+
+**Descripción.** La tabla `player_quotes` no tiene ningún índice sobre la columna `origin`. La
+existencia de una fila `INITIAL`, que es el único criterio de mercado inicializado, se consulta en
+cada compra y en cada publicación de venta, y además se cuenta al inicializar el mercado. Sin
+índice, cada consulta es un recorrido secuencial de la tabla completa.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java:123` —
+  `existsByOrigin`.
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java:131` y `:117` —
+  `countByOrigin` y `findMarketDates`.
+- `backend/src/main/java/footballmarket/services/impl/BuyOrderServiceImpl.java:95` y `:200` — guardas
+  de mercado no inicializado en la compra.
+- `backend/src/main/java/footballmarket/services/impl/TokenListingServiceImpl.java:66` — guarda en la
+  publicación de venta.
+- `backend/src/main/resources/db/migration/V20261021042325__create_player_quotes.sql:27-28` — únicos
+  índices creados: `ix_player_quotes_player_date` e `ix_player_quotes_effective_price`.
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md §1` — el diseño de persistencia
+  no prevé índice sobre `origin`.
+
+**Causa técnica.** El diseño de índices no contempló que `origin` participara en el camino caliente
+de las operaciones de mercado.
+
+**Impacto técnico.** Degradación de rendimiento de cada operación de mercado a medida que crezca el
+historial de cotizaciones. No afecta la corrección funcional.
+
+**Solución propuesta.** Crear una migración con un índice parcial sobre `origin` para la fila
+`INITIAL`, o un índice compuesto que cubra las consultas de mercado, y actualizar `data-model.md`.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. El plan de ejecución de la consulta de mercado inicializado use un índice.
+2. Exista una migración que lo cree y el `data-model.md` la refleje.
+
+**Referencias.**
+
+- `backend/src/main/resources/db/migration/V20261021042325__create_player_quotes.sql`
+- `backend/src/main/java/footballmarket/repositories/PlayerQuoteRepository.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-06)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+
+### TD-028 — Operaciones de cotización del mercado sin control de rol
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-028 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Descartada` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Seguridad |
+| **Fecha de resolución** | - |
+
+**Decision del responsable del proyecto.** La ausencia de control de rol para inicializar el mercado
+y ejecutar recálculos se descarta: el acceso a esas operaciones es un uso interno y deliberado del
+equipo, y la spec no introduce roles nuevos (FR-059). La ausencia de autorizacion por rol del
+proyecto ya esta registrada en [TD-002](#td-002--autorización-por-rol-inexistente-prometida-en-el-contrato-público),
+que sigue vigente; esta entrada se conserva con su evidencia por trazabilidad y no se modifica el
+codigo.
+
+**Descripción.** La inicialización del mercado y el recálculo de cotizaciones son mutaciones globales
+del mercado: la primera fija la fecha de mercado y el ancla de precio de todo el catálogo, y la
+segunda reescribe precios y consume la unicidad de la fecha de cotización, de modo que puede bloquear
+la corrida legítima del día. Ambas exigen solamente un JWT válido, sin ninguna distinción de rol,
+porque la feature no introduce roles nuevos (FR-059) y el modelo de autorización del proyecto es
+"autenticado o no autenticado".
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/config/SecurityConfig.java:112-113` — `anyRequest()
+  .authenticated()` como única regla.
+- `backend/src/main/java/footballmarket/controllers/QuoteController.java:50` y `:84` — sin
+  `@PreAuthorize` ni verificación adicional.
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-059) — la feature no introduce
+  roles nuevos.
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md` — todas las rutas
+  exigen JWT válido.
+
+**Causa técnica.** La ausencia de autorización por rol es una decisión de alcance ya registrada en
+[TD-002](#td-002--autorización-por-rol-inexistente-prometida-en-el-contrato-público), que el
+proyecto decidió de forma consciente. Lo que no estaba evaluado es el efecto de esa decisión sobre las
+nuevas mutaciones globales del mercado.
+
+**Impacto técnico.** Cualquier usuario registrado puede fijar la fecha y el ancla del mercado y
+disparar un recálculo global. No hay exposición de información ni bypass de autenticación.
+
+**Solución propuesta.** Decidir con el responsable del proyecto si las dos operaciones exigen un rol
+administrativo o superusuario, o si la superficie se acepta y se documenta. La decisión debe
+incorporarse al modelo de autorización que TD-002 ya tiene pendiente.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Exista una decisión registrada sobre el control de rol de estas dos operaciones.
+2. Si se decide protegerlas, las rutas apliquen una regla explícita y existen tests backend que lo
+   afirmen.
+
+**Referencias.**
+
+- `docs/TECHNICAL_DEBT.md` (TD-002, TD-003)
+- `backend/src/main/java/footballmarket/config/SecurityConfig.java`
+- `backend/src/main/java/footballmarket/controllers/QuoteController.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-07)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Descartada por decisión del responsable del proyecto: el acceso a la inicialización y al recálculo es un uso interno y deliberado del equipo, y la spec no introduce roles nuevos (FR-059). La ausencia general de autorización por rol permanece registrada en TD-002. Se conserva la entrada con su evidencia y no se modifica código, migraciones ni contratos. |
+
+### TD-029 — Cobertura de tests incompleta para el recálculo de cotizaciones
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-029 |
+| **Fecha y hora de registro** | 2026-10-21 22:20:53 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Testing |
+| **Fecha de resolución** | — |
+
+**Descripción.** La suite escrita para la feature no cubre varios comportamientos exigidos por la
+spec. El más sensible es el fallo individual de un jugador (FR-062): no existe ninguna forma de
+provocarlo en los tests, de modo que una regresión que aborte la corrida entera al primer fallo
+seguiría en verde. Tampoco están cubiertos la rama `GENERAL_ATTRIBUTES` (FR-006, FR-009, FR-019), el
+puerto de cotizaciones por lotes `currentQuotes(Set)`, que es la ruta de revaluación del portfolio y
+perdió su test con la retirada del simulador, el modo de redondeo `HALF_UP` y la escala de seis
+decimales del multiplicador (FR-016), y la ausencia de escritura de filas y de resumen tras cada
+rechazo (FR-060, FR-063).
+
+**Evidencia.**
+
+- `backend/src/test/java/footballmarket/services/QuoteRecalculationServiceTest.java` — ningún caso
+  provoca un fallo individual; los contadores `carriedForwardRows`, `notRepricedPlayers` y
+  `failedPlayers` no se afirman sobre el resumen persistido; las validaciones de tope y piso solo se
+  ejercitan con objetos simulados en el controlador; la estrategia `GENERAL_ATTRIBUTES` nunca se usa.
+- `backend/src/test/java/footballmarket/models/QuoteAdjustmentTest.java:19-26` — el caso de fórmula
+  no distingue el modo de redondeo ni la escala del multiplicador.
+- `backend/src/test/java/footballmarket/integrations/RepositoryQuoteSourceTest.java` — sin caso de
+  lote para `currentQuotes(Set)`.
+- `backend/src/test/java/footballmarket/config/QuoteSimulationConfigurationTest.java` (eliminado) —
+  la retirada del simulador no tiene un test sustituto que acredite que el puerto resuelve contra el
+  repositorio canónico (SC-011).
+
+**Causa técnica.** La suite se construyó caso por caso sobre los criterios de aceptación, sin una
+fase de mutación ni una revisión de qué ramas del código quedan sin ejercitar.
+
+**Impacto técnico.** Regresiones en FR-062, FR-006, FR-009, FR-016, FR-019, FR-060 y FR-063 no se
+detectarían. La ejecución y la evidencia de los tests quedan a cargo del usuario.
+
+**Solución propuesta.** Ampliar la suite con un caso de fallo individual por jugador, con los
+contadores completos sobre el resumen persistido, con la rama `GENERAL_ATTRIBUTES`, con el lote del
+puerto, con un caso de redondeo discriminante y con aserciones de ausencia de efectos tras cada
+rechazo.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que existan tests backend que
+cubran los comportamientos enumerados y el usuario los ejecute con resultado satisfactorio.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-006, FR-009, FR-016, FR-019,
+  FR-060, FR-062, FR-063)
+- `backend/src/test/java/footballmarket/services/QuoteRecalculationServiceTest.java`
+- `backend/src/test/java/footballmarket/models/QuoteAdjustmentTest.java`
+- `backend/src/test/java/footballmarket/integrations/RepositoryQuoteSourceTest.java`
+- `docs/backend/testing.md`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-10)
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+
+### TD-021 — Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-021 |
+| **Fecha y hora de registro** | 2026-10-21 16:20:55 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | - |
+
+**Descripción.** Cuando la campaña JSON de métricas vigente no resulta utilizable, la capa de valuación
+reutiliza en silencio la campaña confirmada anterior y sella esas valuaciones con la fecha del día de
+la evaluación, no con la fecha de extracción de la campaña. El recálculo de ese día ve entonces una
+valuación posterior a la fecha de vigencia de referencia de cada jugador y vuelve a repreciar a todos
+con el mismo score, sobre métricas que no cambiaron. El tope de variación acota cada paso, pero no la
+cantidad de pasos: mientras la campaña siga sin ser utilizable, cada corrida semanal añade un paso al
+precio de todos los jugadores.
+
+No forma parte de esta deuda el comportamiento que el responsable del proyecto confirmó como deseado:
+un jugador cuyo item de campaña falló con `NO_DATA`, `NOT_FOUND` o `PROVIDER_ERROR` conserva su
+precio, no genera fila ese día y se reprecia cuando una campaña posterior aporte sus métricas.
+
+**Evidencia.**
+
+- `backend/src/main/java/footballmarket/services/internal/ValuationSnapshotSelector.java:50-57` — itera
+  las fechas de campaña en orden descendente y devuelve la primera confirmada, de modo que una campaña
+  no utilizable se descarta y se reutiliza la anterior, sin señal alguna en la respuesta.
+- `backend/src/main/java/footballmarket/services/internal/ValuationSnapshotSelector.java:60-70` —
+  `isConfirmed` rechaza la campaña completa cuando un único item JSON queda `INCOMPLETE`,
+  `INTERRUPTED`, `BLOCKED` o `STRUCTURE_CHANGED`.
+- `backend/src/main/java/footballmarket/services/impl/ValuationEvaluationServiceImpl.java:52` —
+  `valuationDate` es la fecha UTC de la evaluación, con independencia de la fecha de extracción de la
+  campaña usada.
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java:48` — la fila se
+  escribe como `RECOMPUTED` cuando `valuationDate.isAfter(referenceDate)`, condición que satisface una
+  valuación re-sellada con el día en curso.
+- `backend/src/main/java/footballmarket/services/impl/JsonStatisticsUpdateServiceImpl.java:79` — un
+  jugador bloqueado por el proveedor queda registrado como `BLOCKED` en su campaña.
+- `backend/src/main/java/footballmarket/services/impl/PlayerStatisticsSynchronizationServiceImpl.java:58,188`
+  — `PROVIDER_BLOCKED` es un código de parada global del recorrido.
+- `backend/src/main/java/footballmarket/repositories/PositionalValuationRepository.java:20-23` y
+  `backend/src/main/java/footballmarket/repositories/AttributeValuationRepository.java:20-23` — la
+  resolución toma la valuación más reciente por `valuation_date`, de modo que la re-sellada prevalece
+  sobre la anterior.
+- `backend/src/main/java/footballmarket/controllers/dtos/responses/ValuationEvaluationResponseDTO.java` —
+  el resumen de la evaluación no expone la fecha de extracción de la campaña utilizada, por lo que la
+  reutilización de una campaña anterior no es observable por HTTP.
+
+**Causa técnica.** La frescura del dato se pierde en la frontera entre la capa de valuación y la de
+cotización: la fecha de valuación es el día de la evaluación y no la fecha de extracción de la campaña,
+de modo que "valuación nueva" es indistinguible de "el mismo dato evaluado otra vez". La información
+necesaria para distinguir ambos casos sí está persistida (`source_extraction_date` en
+`player_positional_valuations` y `player_attribute_valuations`) y no la usa la capa de cotización.
+
+**Impacto técnico.** El precio de todos los jugadores se desplaza sobre datos estancados, un paso
+acotado por campaña no utilizable (con los parámetros por defecto, hasta el `variationCap` del 10 % por
+paso), y los pasos se acumulan mientras la campaña siga sin ser utilizable; un jugador bloqueado de
+forma permanente mantiene su campaña inutilizable durante ese lapso. La traza en `player_quotes`
+muestra un `effective_date` que avanza sin que avance el `source_extraction_date` de las valuaciones, y
+`POST /api/valuations/evaluate` responde 200 sin indicar que reutilizó una campaña anterior. No afecta
+al congelamiento por jugador, que es el comportamiento aceptado.
+
+**Solución propuesta.** Aplicar la regla en el pipeline de la capa de valuación y no como un gate por
+jugador en la capa de cotización: no evaluar cuando la fecha de extracción de la campaña seleccionada no
+sea más reciente que la fecha de extracción de la última evaluación. La información ya existe, la
+frontera permanece limpia (el recálculo sigue sin enterarse de la frescura) y ningún jugador sano queda
+bloqueado cuando la campaña es nueva y solo está parcialmente cubierta. La misma regla puede aplicarse
+sin cambios de código: no evaluar ni recalcular mientras la campaña de la semana no esté confirmada, y
+relanzar la extracción (`POST /api/players/statistics/whoscored/sync/json` o `/sync/scraping` con el
+mismo `extractionDate` y `maxPlayers: 1`) hasta que la campaña esté sana o sea parcialmente utilizable.
+
+**Criterios de resolución.** La deuda no se considera resuelta hasta que:
+
+1. Ninguna evaluación selle una valuación de una campaña ya usada por una evaluación anterior.
+2. La consulta de auditoría no muestre avance de `effective_date` en `player_quotes` sin avance
+   correlativo de `source_extraction_date` en las valuaciones.
+3. La regla operativa quede documentada en el quickstart de SPEC-016.
+4. Existan tests backend que demuestren el comportamiento con una campaña no utilizable y con una
+   campaña parcialmente cubierta.
+
+La ejecución y la evidencia de los tests quedan a cargo del usuario; no se declara resuelta por build ni
+por una corrección documental aislada.
+
+**Referencias.**
+
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/spec.md` (FR-027, FR-060)
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md`
+- `backend/src/main/java/footballmarket/services/internal/ValuationSnapshotSelector.java`
+- `backend/src/main/java/footballmarket/services/impl/ValuationEvaluationServiceImpl.java`
+- `backend/src/main/java/footballmarket/services/internal/QuotePlayerPublisher.java`
+- `backend/src/main/java/footballmarket/models/QuoteAdjustment.java`
+- `backend/src/main/resources/db/migration/V20261019120000__create_player_valuations.sql`
+- `backend/src/main/resources/db/migration/V20261021042325__create_player_quotes.sql`
+
+**Historial de cambios.**
+
+| Fecha y hora | Cambio |
+| --- | --- |
+| 2026-10-21 16:20:55 | Registro inicial tras la revisión funcional de SPEC-016, en la que el responsable del proyecto decidió no modificar el código y conservar el congelamiento por jugador. No se modificó código, migraciones ni contratos. |
+<a id="td-021--cobertura-parcial-del-control-de-imports-scss"></a>
+### TD-030 — Cobertura parcial del control de imports SCSS
 
 - **Registrada**: 2026-10-22 14:32:17 (`America/Argentina/Buenos_Aires`, reloj del sistema).
 - **Estado**: Pendiente; **prioridad**: Media; **área**: Frontend / Herramientas.
@@ -84,7 +711,9 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 - **Impacto**: un import relativo situado después de otra directiva o comentario puede pasar inadvertido.
 - **Solución propuesta**: lectura de directivas SCSS que distinga comentarios y strings, cubra el archivo completo y valide la forma canónica, sin agregar dependencias innecesarias. No aplicar detección React mediante regex.
 - **Criterio de cierre**: implementación revisada y evidencia aportada por el usuario de detección de directivas válidas e inválidas en distintas posiciones; respetar las restricciones de ejecución vigentes. No se declara resuelta por el build.
-- **Historial**: 2026-10-22 14:32:17 — registrada durante la reorganización global del frontend; no se amplía el alcance para resolverla.
+- **Historial**:
+  - 2026-10-22 14:32:17 — registrada durante la reorganización global del frontend; no se amplía el alcance para resolverla.
+  - 2026-10-23 14:24:46 — al integrar dev en SPEC-017, se reasigna el identificador local TD-021 a TD-030 para resolver la colisión con la deuda de backend «Re-evaluación con una campaña de métricas ya usada reprecia con datos estancados». Se conservan fecha de registro, estado, evidencia y criterio de cierre. Las menciones históricas a TD-021 en el informe de SPEC-017 y en la auditoría de componentes del frontend corresponden a esta deuda; se conserva también el ancla anterior para no romper enlaces.
 
 ### TD-019 — Precisión del rating incompatible con el diseño de persistencia de SPEC-012
 
@@ -925,6 +1554,13 @@ tienen manejador y terminan como error interno del servidor.
   `:81-82`, fuera de cualquier captura.
 - Tampoco hay manejador para `DataIntegrityViolationException`, ni para excepciones de bloqueo de
   filas.
+- A partir de SPEC-016 se suma una excepción propia sin manejador:
+  `backend/src/main/java/footballmarket/models/exceptions/InvalidQuoteException.java`, que se
+  construye en `backend/src/main/java/footballmarket/models/PlayerQuote.java:114,117,156,162,166,175`,
+  en `backend/src/main/java/footballmarket/models/QuoteExecution.java` y en
+  `backend/src/main/java/footballmarket/models/QuoteAdjustment.java:32`. Hoy está contenida dentro de
+  la corrida de recálculo, pero si escapara al controlador la respuesta 500 no usaría
+  `ErrorResponseDTO` ni el código `INTERNAL_ERROR` del contrato de la API.
 
 **Impacto técnico.** El impacto es de consistencia del contrato, no de exposición de información:
 la configuración de errores del servidor no habilita la inclusión de trazas ni de mensajes, de modo
@@ -954,6 +1590,8 @@ flujo que las pueda producir.
 - `backend/src/main/java/footballmarket/controllers/dtos/responses/ErrorResponseDTO.java`
 - `backend/src/main/java/footballmarket/controllers/AuthenticationController.java`
 - `backend/src/main/java/footballmarket/services/impl/FootballDataPlayerServiceImpl.java`
+- `backend/src/main/java/footballmarket/models/exceptions/InvalidQuoteException.java`
+- `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md` (CR-08)
 - `docs/backend/architecture.md`
 
 **Historial de cambios.**
@@ -961,6 +1599,7 @@ flujo que las pueda producir.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 17:48:44 | Registro inicial en `docs/TECHNICAL_DEBT.md`, tras auditoría técnica de solo lectura del 2026-10-14. El manejador se introdujo con la primera funcionalidad del backend y las ausencias no fueron registradas en su momento, por lo que la fecha registrada es la de su incorporación a este documento. |
+| 2026-10-21 22:20:53 | Se agrega `InvalidQuoteException` a las excepciones propias sin manejador, detectada en el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
 
 ### TD-012 — Integración continua sin verificación del frontend ni análisis de dependencias
 
@@ -1445,3 +2084,6 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 | 2026-10-14 16:29:48 | Creación del registro centralizado con TD-001. Se consolidaron como entrada las referencias dispersas que existían en `specs/trello.md` y `docs/backend/technologies.md`, conservando la traza hacia ellas. |
 | 2026-10-14 17:48:44 | Incorporación de TD-002 a TD-018 tras auditoría técnica integral de solo lectura del 2026-10-14. Cuatro entradas de prioridad Alta (TD-002 a TD-005), nueve de prioridad Media (TD-006 a TD-014) y cuatro de prioridad Baja (TD-015 a TD-018). TD-001 no se modificó: su contenido se verificó contra el código y sigue siendo exacto. Se incorporaron además tres deudas ya declaradas en `specs/009-player-detail/tasks.md` que nunca se habían centralizado (TD-015, TD-016, TD-017) y una divergencia declarada en `docs/frontend/architecture.md:163` cuya ancla de trazabilidad ya no existía (TD-018). No se registraron los hallazgos descartados por no cumplir los criterios del §2 ni los clasificados como funcionalidad pendiente o mejora opcional. Ninguna entrada modifica código, migraciones, contratos ni otra documentación. |
 | 2026-10-18 | Incorporación de TD-020 tras la alineación documental de SPEC-012 autorizada por el usuario, que retiró el contraste entre canales, fijó la cobertura efectiva 45/57/42 y recorrió quince combinaciones JSON. No se modificó código, migraciones ni contratos; la entrada requiere decisión humana y evidencia de tests para cerrarse. |
+| 2026-10-21 16:20:55 | Incorporación de TD-021 tras la revisión funcional de SPEC-016, en la que se verificó que la capa de valuación reutiliza en silencio la campaña de métricas anterior cuando la campaña vigente no está confirmada y sella esas valuaciones con el día de la evaluación, con lo que el recálculo reprecia a todos los jugadores sobre datos que no cambiaron. El responsable del proyecto decidió no modificar el código; la entrada registra el comportamiento real y su regla de resolución propuesta. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 22:20:53 | Incorporación de TD-022 a TD-029 tras el code review de SPEC-016: una deuda de prioridad Alta (TD-022, ranking sin desempate determinista) y siete de prioridad Media (TD-023 a TD-029). TD-011 se actualizó con `InvalidQuoteException` entre las excepciones propias sin manejador global. El code review completo, con los hallazgos, el orden de revisión y el checklist humano, quedó registrado en `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md`. No se modificó código, migraciones ni contratos. |
+| 2026-10-21 23:05:00 | Remediación del code review de SPEC-016 por decisión del responsable del proyecto: se cierra el desempate no determinista de la lectura de cotizaciones (CR-01, TD-022, T051 y T052) y se registran las decisiones sobre CR-02 (TD-023 se conserva como deuda), CR-05 (TD-026 descartada) y CR-07 (TD-028 descartada). TD-022 pasa a `En curso` porque la ejecución de los tests corresponde al usuario. Se modificó el repositorio de cotizaciones y la suite de pruebas de consultas; no se modificaron migraciones, contratos HTTP ni el esquema. |

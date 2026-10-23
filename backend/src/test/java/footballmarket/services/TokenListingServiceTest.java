@@ -167,6 +167,7 @@ class TokenListingServiceTest {
     superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
     market.emitInitialTokens(player, superuser);
+    market.initializeMarket(player);
     when(quotes.currentQuote(any()))
         .thenAnswer(
             invocation -> {
@@ -174,6 +175,47 @@ class TokenListingServiceTest {
               return Optional.of(new CurrentQuote(playerId, 100L, OffsetDateTime.now(), "fixture"));
             });
     buyService.buy(seller.getEmail(), new BuyOrderRequest(player.getId(), 20));
+  }
+
+  @Nested
+  @DisplayName("Mercado sin inicializar")
+  class UninitializedMarket {
+    @Test
+    @DisplayName("La publicación de venta se rechaza antes de leer la cotización")
+    void rechazaLaPublicacion() {
+      // Arrange
+      market.clearMarketInitialization();
+      org.mockito.Mockito.clearInvocations(quotes);
+
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  listingService.publish(
+                      seller.getEmail(), new SellOrderRequest(player.getId(), 5)))
+          .isInstanceOf(MarketNotInitializedException.class);
+      org.mockito.Mockito.verify(quotes, org.mockito.Mockito.never()).currentQuote(any());
+    }
+
+    @Test
+    @DisplayName("El rechazo no consume la tenencia del vendedor")
+    void elRechazoNoConsumeLaTenencia() {
+      // Arrange
+      market.clearMarketInitialization();
+
+      // Act
+      assertThatThrownBy(
+              () ->
+                  listingService.publish(
+                      seller.getEmail(), new SellOrderRequest(player.getId(), 5)))
+          .isInstanceOf(MarketNotInitializedException.class);
+      market.initializeMarket(player);
+      TokenListing listing =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 20));
+
+      // Assert
+      assertThat(listing.getQuantity()).isEqualTo(20);
+      assertThat(listing.getTotalAmount()).isEqualTo(2000);
+    }
   }
 
   @Nested

@@ -16,6 +16,7 @@ import footballmarket.repositories.TokenListingRepository;
 import footballmarket.repositories.UserRepository;
 import footballmarket.services.TokenListingService;
 import footballmarket.services.exceptions.*;
+import footballmarket.services.internal.MarketInitializationGuard;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -37,7 +38,8 @@ public class TokenListingServiceImpl implements TokenListingService {
   private final PlayerRepository players;
   private final PlayerTokenRepository holdings;
   private final TokenListingRepository listings;
-  private final QuoteSource quotes;
+  private final QuoteSource quoteSource;
+  private final MarketInitializationGuard marketInitialization;
   private final Clock marketClock;
 
   @Value("${market.listing.expiration-duration:PT24H}")
@@ -59,8 +61,11 @@ public class TokenListingServiceImpl implements TokenListingService {
     if (this.players.findVisibleById(player.getId()).isEmpty()) {
       throw new PlayerNotVisibleException();
     }
+    // El mercado debe existir antes de operar: el rechazo ocurre antes de leer la cotización y
+    // antes de cualquier movimiento de recursos.
+    this.marketInitialization.requireInitialized();
     CurrentQuote quote =
-        this.quotes.currentQuote(player.getId()).orElseThrow(QuoteUnavailableException::new);
+        this.quoteSource.currentQuote(player.getId()).orElseThrow(QuoteUnavailableException::new);
     if (!player.getId().equals(quote.playerId())) {
       throw new QuoteContractViolationException();
     }

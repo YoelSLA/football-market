@@ -12,11 +12,11 @@ Este documento define el puerto Integration que consume la compra, cómo se sele
 |---|---|
 | Rol arquitectónico | **Integration**, conforme a `docs/backend/architecture.md` §1.1 y §1.3 |
 | Ubicación | `footballmarket.integrations` |
-| Consumidor | Únicamente `BuyOrderServiceImpl` |
+| Consumidor | `BuyOrderServiceImpl` (compra) y `TokenListingServiceImpl` (publicación de venta, desde SPEC-011) |
 | Carácter | **Permanente mientras desacople la compra de la implementación concreta** |
 | Integración definitiva | Una implementación real del puerto consulta el repositorio canónico de REQ-S2-03 |
 
-**No es un Service.** No expone un caso de uso propio, no tiene interfaz e implementación obligatorias de aplicación y solo lo consume un Service. Ubicarlo en `services/` lo convertiría en un Service y produciría una dependencia Service → Service, prohibida por §1.3.
+**No es un Service.** No expone un caso de uso propio, no tiene interfaz e implementación obligatorias de aplicación y solo lo consumen Services. Ubicarlo en `services/` lo convertiría en un Service y produciría una dependencia Service → Service, prohibida por §1.3.
 
 Existe por una razón concreta: el repositorio canónico de REQ-S2-03 todavía no existe, y anticipar su tipo y nombre sería inventar un diseño ajeno. El puerto permite verificar la compra de forma aislada sin adivinar el contrato definitivo.
 
@@ -278,5 +278,6 @@ Un único valor de precio atraviesa toda la operación, de modo que importe, sal
 | `QuoteSource` | Integration | Puerto de lectura que consume la compra; desacopla la compra de la implementación concreta |
 | `SimulatedQuoteSource` | Integration | Proveer un precio fijo en desarrollo y pruebas; se elimina con REQ-S2-03 |
 | `BuyOrderServiceImpl` | Service | Consumir el precio, verificar su correspondencia, aplicarlo y registrarlo en la auditoría |
+| `TokenListingServiceImpl` | Service | Consumir el precio vigente y congelarlo en la publicación de venta (desde SPEC-011) |
 
 SPEC-010 no calcula cotizaciones, no las persiste y no las valida. Solo las consume.

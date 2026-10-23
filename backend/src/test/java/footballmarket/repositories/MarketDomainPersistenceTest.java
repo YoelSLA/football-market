@@ -110,6 +110,7 @@ class MarketDomainPersistenceTest {
     superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
     market.emitInitialTokens(player, superuser);
+    market.initializeMarket(player);
     givenQuote(PRICE);
   }
 

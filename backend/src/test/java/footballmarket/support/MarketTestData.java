@@ -2,19 +2,25 @@ package footballmarket.support;
 
 import footballmarket.models.League;
 import footballmarket.models.Player;
+import footballmarket.models.PlayerQuote;
 import footballmarket.models.PlayerToken;
 import footballmarket.models.PlayerTokenEmission;
 import footballmarket.models.Team;
 import footballmarket.models.User;
 import footballmarket.models.UserCredit;
+import footballmarket.models.enums.QuoteOrigin;
 import footballmarket.models.enums.UserRole;
 import footballmarket.repositories.LeagueRepository;
+import footballmarket.repositories.PlayerQuoteRepository;
 import footballmarket.repositories.PlayerRepository;
 import footballmarket.repositories.PlayerTokenEmissionRepository;
 import footballmarket.repositories.PlayerTokenRepository;
 import footballmarket.repositories.TeamRepository;
 import footballmarket.repositories.UserCreditRepository;
 import footballmarket.repositories.UserRepository;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +36,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class MarketTestData {
 
+  /**
+   * Fecha de mercado de la fila inicial del ancla, fija para que las pruebas sean deterministas.
+   */
+  private static final LocalDate MARKET_DATE = LocalDate.of(2026, 10, 17);
+
+  /** Instante de cálculo de la fila inicial del ancla. */
+  private static final Instant MARKET_INSTANT = Instant.parse("2026-10-17T09:00:00Z");
+
+  /** Precio del ancla inicial en centésimas de crédito: un crédito por token. */
+  private static final long INITIAL_PRICE = 100L;
+
   private final UserRepository users;
   private final LeagueRepository leagues;
   private final TeamRepository teams;
@@ -37,6 +54,7 @@ public class MarketTestData {
   private final UserCreditRepository credits;
   private final PlayerTokenRepository holdings;
   private final PlayerTokenEmissionRepository emissions;
+  private final PlayerQuoteRepository quotes;
 
   private final AtomicLong sequence = new AtomicLong(900_000L);
 
@@ -54,6 +72,7 @@ public class MarketTestData {
    * @param creditsRepo repositorio de saldos
    * @param holdingsRepo repositorio de tenencias
    * @param emissionsRepo repositorio de emisiones
+   * @param quotesRepo repositorio de cotizaciones
    */
   public MarketTestData(
       UserRepository usersRepo,
@@ -62,7 +81,8 @@ public class MarketTestData {
       PlayerRepository playersRepo,
       UserCreditRepository creditsRepo,
       PlayerTokenRepository holdingsRepo,
-      PlayerTokenEmissionRepository emissionsRepo) {
+      PlayerTokenEmissionRepository emissionsRepo,
+      PlayerQuoteRepository quotesRepo) {
     users = usersRepo;
     leagues = leaguesRepo;
     teams = teamsRepo;
@@ -70,6 +90,7 @@ public class MarketTestData {
     credits = creditsRepo;
     holdings = holdingsRepo;
     emissions = emissionsRepo;
+    quotes = quotesRepo;
   }
 
   /**
@@ -171,6 +192,69 @@ public class MarketTestData {
     }
     emissions.save(PlayerTokenEmission.issue(player.getId(), superuser));
     holdings.save(PlayerToken.issued(player, superuser, PlayerTokenEmission.EMITTED_TOKENS));
+  }
+
+  /**
+   * Deja el mercado inicializado persistiendo la fila inicial del ancla de un crédito.
+   *
+   * <p>Es la precondición que exigen las operaciones de mercado: sin ninguna fila de origen {@code
+   * INITIAL} el mercado no está inicializado y la operación se rechaza. Es idempotente para el
+   * jugador y la fecha indicados.
+   *
+   * @param player jugador cotizable que recibe la fila inicial
+   */
+  @Transactional
+  public void initializeMarket(Player player) {
+    boolean alreadyInitialized =
+        quotes.findAll().stream()
+            .anyMatch(
+                quote ->
+                    quote.getOrigin() == QuoteOrigin.INITIAL
+                        && quote.getPlayer().getId().equals(player.getId()));
+    if (alreadyInitialized) {
+      return;
+    }
+    quotes.save(
+        new PlayerQuote(
+            player,
+            MARKET_DATE,
+            INITIAL_PRICE,
+            null,
+            BigDecimal.ONE,
+            null,
+            null,
+            null,
+            null,
+            QuoteOrigin.INITIAL,
+            MARKET_INSTANT));
+  }
+
+  /**
+   * Deja el mercado inicializado para un jugador conocido solo por su identificador persistido.
+   *
+   * <p>Es la variante para los casos en los que el jugador nace del catálogo real y solo se conoce
+   * su identificador, no la entidad. Delega en {@link #initializeMarket(Player)}.
+   *
+   * @param playerId identificador interno del jugador que recibe la fila inicial
+   */
+  @Transactional
+  public void initializeMarket(long playerId) {
+    initializeMarket(players.findById(playerId).orElseThrow());
+  }
+
+  /**
+   * Retira la inicialización del mercado, dejando el mercado sin cotizaciones iniciales.
+   *
+   * <p>Permite preparar en Arrange la precondición de un mercado todavía no inicializado, que es el
+   * escenario de rechazo controlado de las operaciones de mercado.
+   */
+  @Transactional
+  public void clearMarketInitialization() {
+    for (PlayerQuote quote : quotes.findAll()) {
+      if (quote.getOrigin() == QuoteOrigin.INITIAL) {
+        quotes.delete(quote);
+      }
+    }
   }
 
   private Player createPlayer(boolean active, boolean currentTeam) {
