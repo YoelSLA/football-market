@@ -3,10 +3,10 @@ import type { MarketPlayer } from "@/features/market/types";
 import { Button } from "@/shared/components";
 import BuyTokenModal from "./BuyTokenModal";
 import styles from "./MarketBuyPage.module.scss";
-import MarketPlayerCard from "./MarketPlayerCard";
 import MarketFilters from "./MarketFilters";
 import MarketHeader from "./MarketHeader";
 import MarketPagination from "./MarketPagination";
+import MarketPlayerCard from "./MarketPlayerCard";
 
 interface Props {
 	players: MarketPlayer[];
@@ -48,39 +48,42 @@ export default function MarketBuyPage({
 
 	return (
 		<div className={styles.page}>
-			<div className={styles.page__header}><MarketHeader totalPlayers={totalPlayers} /></div>
+			<div className={styles.page__header}>
+				<MarketHeader totalPlayers={totalPlayers} />
+			</div>
 			<div className={styles.page__content}>
-			<MarketFilters />
-			<main className={styles.page__main}>
-				{isLoadingPlayers && (
-					<div role="status" className={styles.page__status}>
-						<p>Cargando catálogo del mercado...</p>
-					</div>
-				)}
+				<MarketFilters />
+				<main className={styles.page__main}>
+					{isLoadingPlayers && (
+						<div role="status" className={styles.page__status}>
+							<p>Cargando catálogo del mercado...</p>
+						</div>
+					)}
 
-				{!isLoadingPlayers && isPlayersError && (
-					<div role="alert" className={styles.page__errorState}>
-						<p>{errorMessage || "No se pudo cargar el listado del mercado."}</p>
-						{onRetryPlayers && (
-							<Button
-								type="button"
-								onClick={onRetryPlayers}
-								className={styles.page__retryBtn}
-							>
-								Reintentar
-							</Button>
-						)}
-					</div>
-				)}
+					{!isLoadingPlayers && isPlayersError && (
+						<div role="alert" className={styles.page__errorState}>
+							<p>
+								{errorMessage || "No se pudo cargar el listado del mercado."}
+							</p>
+							{onRetryPlayers && (
+								<Button
+									type="button"
+									onClick={onRetryPlayers}
+									className={styles.page__retryBtn}
+								>
+									Reintentar
+								</Button>
+							)}
+						</div>
+					)}
 
-				{!isLoadingPlayers && !isPlayersError && players.length === 0 && (
-					<div className={styles.page__status}>
-						<p>No hay jugadores disponibles en el mercado actualmente.</p>
-					</div>
-				)}
+					{!isLoadingPlayers && !isPlayersError && players.length === 0 && (
+						<div className={styles.page__status}>
+							<p>No hay jugadores disponibles en el mercado actualmente.</p>
+						</div>
+					)}
 
-				{!isLoadingPlayers && !isPlayersError && players.length > 0 && (
-					<>
+					{!isLoadingPlayers && !isPlayersError && players.length > 0 && (
 						<div className={styles.page__grid}>
 							{players.map((player) => {
 								const quoteState = marketBuy.quotesQuery.getQuoteState(
@@ -100,12 +103,19 @@ export default function MarketBuyPage({
 								);
 							})}
 						</div>
-
-					</>
-				)}
-			</main>
+					)}
+				</main>
 			</div>
-			<div className={styles.page__footer}><MarketPagination page={currentPage} totalPages={totalPages} totalPlayers={totalPlayers} visiblePlayers={players.length} pageSize={pageSize} onPageChange={onPageChange} /></div>
+			<div className={styles.page__footer}>
+				<MarketPagination
+					page={currentPage}
+					totalPages={totalPages}
+					totalPlayers={totalPlayers}
+					visiblePlayers={players.length}
+					pageSize={pageSize}
+					onPageChange={onPageChange}
+				/>
+			</div>
 
 			<BuyTokenModal
 				isOpen={marketBuy.isModalOpen}

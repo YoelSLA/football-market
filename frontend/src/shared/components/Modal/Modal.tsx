@@ -1,6 +1,5 @@
 import {
 	type KeyboardEvent,
-	type MouseEvent,
 	type ReactNode,
 	type RefObject,
 	useEffect,
@@ -47,7 +46,8 @@ export default function Modal({
 	// Guardar elemento activo al abrir y restaurar foco al cerrar/desmontar
 	useEffect(() => {
 		if (isOpen) {
-			previousActiveElementRef.current = document.activeElement as HTMLElement | null;
+			previousActiveElementRef.current =
+				document.activeElement as HTMLElement | null;
 
 			// Dar foco inicial
 			const timer = window.setTimeout(() => {
@@ -68,8 +68,11 @@ export default function Modal({
 				window.clearTimeout(timer);
 				const returnTarget =
 					triggerRef?.current || previousActiveElementRef.current;
-				if (returnTarget && returnTarget.isConnected && typeof returnTarget.focus === "function") {
-						returnTarget.focus({ preventScroll: true });
+				if (
+					returnTarget?.isConnected &&
+					typeof returnTarget.focus === "function"
+				) {
+					returnTarget.focus({ preventScroll: true });
 				}
 			};
 		}
@@ -92,7 +95,9 @@ export default function Modal({
 		if (e.key === "Tab" && dialogRef.current) {
 			const focusableElements = Array.from(
 				dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-			).filter((el) => el.offsetParent !== null || el === document.activeElement);
+			).filter(
+				(el) => el.offsetParent !== null || el === document.activeElement,
+			);
 
 			if (focusableElements.length === 0) {
 				e.preventDefault();
@@ -123,30 +128,29 @@ export default function Modal({
 		}
 	};
 
-	const handleOverlayClick = (e: MouseEvent<HTMLDivElement>) => {
-		if (e.target === e.currentTarget && closeOnOverlayClick && !isBusy) {
-			onClose();
-		}
-	};
-
 	const dialogClassName = className
 		? `${styles.modal__dialog} ${className}`
 		: styles.modal__dialog;
 
 	return createPortal(
-		<div
-			className={styles.modal__overlay}
-			onClick={handleOverlayClick}
-			onKeyDown={handleKeyDown}
-		>
+		<div className={styles.modal__overlay}>
+			<button
+				type="button"
+				className={styles.modal__backdrop}
+				aria-label="Cerrar diálogo al pulsar fuera"
+				tabIndex={-1}
+				disabled={!closeOnOverlayClick || isBusy}
+				onClick={onClose}
+			/>
 			<div
 				ref={dialogRef}
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby={title ? titleId : undefined}
-				aria-label={!title ? (ariaLabel || "Diálogo") : undefined}
+				aria-label={!title ? ariaLabel || "Diálogo" : undefined}
 				aria-busy={isBusy ? "true" : undefined}
 				tabIndex={-1}
+				onKeyDown={handleKeyDown}
 				className={dialogClassName}
 			>
 				{title && (

@@ -22,7 +22,8 @@ function isQuoteResponseDTO(value: unknown): value is QuoteResponseDTO {
 		typeof value.effectiveDate === "string" &&
 		/^\d{4}-\d{2}-\d{2}$/.test(value.effectiveDate) &&
 		Number.isFinite(Date.parse(value.effectiveDate)) &&
-		new Date(value.effectiveDate).toISOString().slice(0, 10) === value.effectiveDate &&
+		new Date(value.effectiveDate).toISOString().slice(0, 10) ===
+			value.effectiveDate &&
 		"calculatedAt" in value &&
 		typeof value.calculatedAt === "string" &&
 		/^\d{4}-\d{2}-\d{2}T.+(?:Z|[+-]\d{2}:\d{2})$/.test(value.calculatedAt) &&

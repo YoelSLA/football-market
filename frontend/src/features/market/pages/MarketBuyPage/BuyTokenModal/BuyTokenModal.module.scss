@@ -217,6 +217,16 @@
 		color: ds.$state-caution;
 	}
 
+	&__quickAmountsLegend {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
 	&__estimation {
 		display: flex;
 		flex-direction: column;

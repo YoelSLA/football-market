@@ -1,7 +1,11 @@
 import { useQueries } from "@tanstack/react-query";
 import { marketQueryKeys } from "@/features/market/constants";
 import { marketService } from "@/features/market/market.service";
-import { MarketQuoteReadError, type MarketQuote, type MarketQuoteStatus } from "@/features/market/types";
+import {
+	type MarketQuote,
+	MarketQuoteReadError,
+	type MarketQuoteStatus,
+} from "@/features/market/types";
 
 export interface MarketPlayerQuoteState {
 	quote: MarketQuote | null;
@@ -18,7 +22,10 @@ export interface MarketPlayerQuoteState {
  * Consulta las cotizaciones reales vigentes para los jugadores visibles.
  * Utiliza una query por id con la clave propia de market, sin consultas demo.
  */
-export function useMarketQuotesQuery(playerIds: number[], authenticated: boolean) {
+export function useMarketQuotesQuery(
+	playerIds: number[],
+	authenticated: boolean,
+) {
 	const queryResults = useQueries({
 		queries: playerIds.map((id) => ({
 			queryKey: marketQueryKeys.currentQuote(id),
@@ -27,7 +34,8 @@ export function useMarketQuotesQuery(playerIds: number[], authenticated: boolean
 			staleTime: 30_000,
 			enabled: authenticated,
 			retry: (failureCount: number, error: unknown) =>
-				failureCount < 1 && error instanceof MarketQuoteReadError &&
+				failureCount < 1 &&
+				error instanceof MarketQuoteReadError &&
 				(error.reason === "network-error" ||
 					(error.reason === "http-error" && (error.httpStatus ?? 0) >= 500)),
 		})),
@@ -42,18 +50,31 @@ export function useMarketQuotesQuery(playerIds: number[], authenticated: boolean
 		else if (res.isPaused) status = "paused";
 		else if (res.isPending || res.isFetching) status = "loading";
 		else if (res.isError) {
-			status = res.error instanceof MarketQuoteReadError ? res.error.reason : "network-error";
+			status =
+				res.error instanceof MarketQuoteReadError
+					? res.error.reason
+					: "network-error";
 		} else status = res.data ? "available" : "missing";
-		const canRetry = ["missing", "http-error", "network-error", "invalid-response"].includes(status);
+		const canRetry = [
+			"missing",
+			"http-error",
+			"network-error",
+			"invalid-response",
+		].includes(status);
 		quotesByPlayerId.set(id, {
 			quote: status === "available" ? (res.data ?? null) : null,
 			status,
-			httpStatus: res.error instanceof MarketQuoteReadError ? res.error.httpStatus : undefined,
+			httpStatus:
+				res.error instanceof MarketQuoteReadError
+					? res.error.httpStatus
+					: undefined,
 			isLoading: status === "loading",
 			isError: res.isError,
 			error: res.error,
 			canRetry,
-			onRetry: () => { if (canRetry) void res.refetch({ cancelRefetch: false }); },
+			onRetry: () => {
+				if (canRetry) void res.refetch({ cancelRefetch: false });
+			},
 		});
 	});
 

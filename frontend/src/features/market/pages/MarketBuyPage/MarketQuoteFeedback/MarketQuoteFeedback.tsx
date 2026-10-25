@@ -9,12 +9,21 @@ interface Props {
 	onRetry: () => void;
 }
 
-export default function MarketQuoteFeedback({ status, httpStatus, canRetry, onRetry }: Props) {
+export default function MarketQuoteFeedback({
+	status,
+	httpStatus,
+	canRetry,
+	onRetry,
+}: Props) {
 	if (status === "available") return null;
 	return (
 		<div className={styles.marketQuoteFeedback}>
 			<p role="status">{getMarketQuoteMessage(status, httpStatus)}</p>
-			{canRetry && <button type="button" onClick={onRetry}>Reintentar cotización</button>}
+			{canRetry && (
+				<button type="button" onClick={onRetry}>
+					Reintentar cotización
+				</button>
+			)}
 		</div>
 	);
 }

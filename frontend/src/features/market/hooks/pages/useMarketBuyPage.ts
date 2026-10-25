@@ -1,7 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getErrorCode } from "@/infrastructure/http";
-import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 import { marketQueryKeys } from "@/features/market/constants";
 import { useBuyQuantityForm } from "@/features/market/form";
 import { useBuyTokensMutation } from "@/features/market/hooks/mutations";
@@ -12,7 +10,12 @@ import type {
 	BuyResult,
 	MarketPlayer,
 } from "@/features/market/types";
-import { calculateEstimation, getMarketQuoteMessage } from "@/features/market/utils";
+import {
+	calculateEstimation,
+	getMarketQuoteMessage,
+} from "@/features/market/utils";
+import { getErrorCode } from "@/infrastructure/http";
+import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 
 interface UseMarketBuyPageParams {
 	players: MarketPlayer[];
@@ -38,7 +41,6 @@ function mapErrorCodeToMessage(error: unknown): string {
 		case "PLAYER_NOT_FOUND":
 		case "PLAYER_NOT_VISIBLE":
 			return "Jugador no disponible.";
-		case "INTERNAL_ERROR":
 		default:
 			return "Error del servidor, intente más tarde.";
 	}
@@ -55,8 +57,9 @@ export function useMarketBuyPage({
 }: UseMarketBuyPageParams) {
 	const queryClient = useQueryClient();
 	const { notifySuccess, notifyError } = useMarketToast();
-	const authenticated = useAuthStore((state) =>
-		state.status === AuthStatus.AUTHENTICATED && state.session !== null,
+	const authenticated = useAuthStore(
+		(state) =>
+			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
 	);
 
 	// IDs visibles de la página actual
@@ -219,12 +222,18 @@ export function useMarketBuyPage({
 	);
 	const confirmationBlockReason = !authenticated
 		? getMarketQuoteMessage("authentication-error")
-		: isBusy ? "La compra está en proceso."
-		: isSuccess ? "La compra ya fue confirmada."
-		: selectedQuoteState?.status !== "available"
-			? getMarketQuoteMessage(selectedQuoteState?.status ?? "loading", selectedQuoteState?.httpStatus)
-		: !validatedQuantity ? "Ingresá una cantidad entera entre 1 y 100."
-		: null;
+		: isBusy
+			? "La compra está en proceso."
+			: isSuccess
+				? "La compra ya fue confirmada."
+				: selectedQuoteState?.status !== "available"
+					? getMarketQuoteMessage(
+							selectedQuoteState?.status ?? "loading",
+							selectedQuoteState?.httpStatus,
+						)
+					: !validatedQuantity
+						? "Ingresá una cantidad entera entre 1 y 100."
+						: null;
 
 	return {
 		// Quotes query

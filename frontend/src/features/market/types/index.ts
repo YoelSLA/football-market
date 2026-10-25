@@ -10,8 +10,8 @@ export type {
 	BuyResult,
 	MarketPlayer,
 	MarketQuote,
-	MarketQuoteStatus,
 	MarketQuoteFailure,
+	MarketQuoteStatus,
 } from "./models";
 
 export { MarketQuoteReadError } from "./models";

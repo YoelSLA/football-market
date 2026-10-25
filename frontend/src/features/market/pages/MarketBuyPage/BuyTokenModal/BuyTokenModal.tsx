@@ -14,7 +14,15 @@ import {
 	formatQuoteCalculatedAt,
 } from "@/features/market/utils";
 import { Button, Field, Modal } from "@/shared/components";
-import { Coins, Layers3, LoaderCircle, Minus, Plus, ShoppingCart, X } from "@/shared/icons";
+import {
+	Coins,
+	Layers3,
+	LoaderCircle,
+	Minus,
+	Plus,
+	ShoppingCart,
+	X,
+} from "@/shared/icons";
 import MarketPlayerSummary from "../MarketPlayerSummary";
 import MarketQuoteFeedback from "../MarketQuoteFeedback";
 import styles from "./BuyTokenModal.module.scss";
@@ -131,30 +139,43 @@ export default function BuyTokenModal({
 				</header>
 
 				<div className={styles.modal__content}>
-					<section className={styles.modal__player} aria-label="Jugador seleccionado"><MarketPlayerSummary player={player} /></section>
+					<section
+						className={styles.modal__player}
+						aria-label="Jugador seleccionado"
+					>
+						<MarketPlayerSummary player={player} />
+					</section>
 					<div className={styles.modal__prices}>
-					{/* Cotización actual */}
-					<div className={styles.modal__quoteCard}>
-						<Coins aria-hidden="true" className={styles.modal__quoteIcon} />
-						<span className={styles.modal__quoteLabel}>Precio actual</span>
-						<MarketQuoteFeedback status={quoteStatus} httpStatus={quoteHttpStatus} canRetry={canRetryQuote} onRetry={onRetryQuote} />
-						{quoteStatus === "available" && quote && (
-							<>
-								<div className={styles.modal__quotePriceRow}>
-									<span className={styles.modal__quoteCredits}>
-										{formatCredits(quote.price)}
-									</span>
-									<span className={styles.modal__quoteCentimes}>
-										({formatCentimes(quote.price)})
-									</span>
-								</div>
-								<p className={styles.modal__quoteCalculated}>
-									{formatQuoteCalculatedAt(quote.calculatedAt)}
-								</p>
-							</>
-						)}
-					</div>
-					<div className={styles.modal__variation}><p>Variación (24h)</p><strong>Sin datos</strong></div>
+						{/* Cotización actual */}
+						<div className={styles.modal__quoteCard}>
+							<Coins aria-hidden="true" className={styles.modal__quoteIcon} />
+							<span className={styles.modal__quoteLabel}>Precio actual</span>
+							<MarketQuoteFeedback
+								status={quoteStatus}
+								httpStatus={quoteHttpStatus}
+								canRetry={canRetryQuote}
+								onRetry={onRetryQuote}
+							/>
+							{quoteStatus === "available" && quote && (
+								<>
+									<div className={styles.modal__quotePriceRow}>
+										<span className={styles.modal__quoteCredits}>
+											{formatCredits(quote.price)}
+										</span>
+										<span className={styles.modal__quoteCentimes}>
+											({formatCentimes(quote.price)})
+										</span>
+									</div>
+									<p className={styles.modal__quoteCalculated}>
+										{formatQuoteCalculatedAt(quote.calculatedAt)}
+									</p>
+								</>
+							)}
+						</div>
+						<div className={styles.modal__variation}>
+							<p>Variación (24h)</p>
+							<strong>Sin datos</strong>
+						</div>
 					</div>
 
 					{/* Alerta de error */}
@@ -167,7 +188,9 @@ export default function BuyTokenModal({
 					{/* Estado de éxito */}
 					{isSuccess && purchaseResult ? (
 						<div role="status" className={styles.modal__successCard}>
-							<h4 className={styles.modal__successTitle}>¡Compra confirmada!</h4>
+							<h4 className={styles.modal__successTitle}>
+								¡Compra confirmada!
+							</h4>
 							<p className={styles.modal__successSub}>
 								Transacción #{purchaseResult.transactionId}
 							</p>
@@ -200,32 +223,66 @@ export default function BuyTokenModal({
 							className={styles.modal__form}
 						>
 							<div className={styles.modal__quantity}>
-								<span className={styles.modal__quantityLabel}><Layers3 aria-hidden="true" /> Cantidad de tokens</span>
-								<button type="button" disabled aria-label="Disminuir cantidad: pendiente"><Minus aria-hidden="true" /></button>
-							<Field
-								id="buy-token-quantity"
-								label="Cantidad de tokens (1 a 100)"
-								type="text"
-								inputMode="numeric"
-								autoComplete="off"
-								disabled={isBusy}
-								error={formError}
-								ref={setInputRef}
-								className={styles.modal__quantityInput}
-								{...quantityProps}
-							/>
-								<button type="button" disabled aria-label="Aumentar cantidad: pendiente"><Plus aria-hidden="true" /></button>
+								<span className={styles.modal__quantityLabel}>
+									<Layers3 aria-hidden="true" /> Cantidad de tokens
+								</span>
+								<button
+									type="button"
+									disabled
+									aria-label="Disminuir cantidad: pendiente"
+								>
+									<Minus aria-hidden="true" />
+								</button>
+								<Field
+									id="buy-token-quantity"
+									label="Cantidad de tokens (1 a 100)"
+									type="text"
+									inputMode="numeric"
+									autoComplete="off"
+									disabled={isBusy}
+									error={formError}
+									ref={setInputRef}
+									className={styles.modal__quantityInput}
+									{...quantityProps}
+								/>
+								<button
+									type="button"
+									disabled
+									aria-label="Aumentar cantidad: pendiente"
+								>
+									<Plus aria-hidden="true" />
+								</button>
 							</div>
-							<div className={styles.modal__quickAmounts} aria-label="Cantidades rápidas pendientes">
-								{[1, 5, 10, 50, 100].map((amount) => <button type="button" disabled key={amount} aria-label={`${amount} tokens: pendiente`}>{amount}</button>)}
-							</div>
-							<p className={styles.modal__pending}>−/+ y cantidades rápidas: pendientes. Podés editar la cantidad.</p>
+							<fieldset className={styles.modal__quickAmounts}>
+								<legend className={styles.modal__quickAmountsLegend}>
+									Cantidades rápidas pendientes
+								</legend>
+								{[1, 5, 10, 50, 100].map((amount) => (
+									<button
+										type="button"
+										disabled
+										key={amount}
+										aria-label={`${amount} tokens: pendiente`}
+									>
+										{amount}
+									</button>
+								))}
+							</fieldset>
+							<p className={styles.modal__pending}>
+								−/+ y cantidades rápidas: pendientes. Podés editar la cantidad.
+							</p>
 
 							{/* Resumen de estimación */}
 							{quote && quote.price > 0 && estimation && (
 								<div className={styles.modal__estimation}>
-									<div className={styles.modal__detailRow}><span>Precio por token</span><strong>{formatCredits(quote.price)}</strong></div>
-									<div className={styles.modal__detailRow}><span>Cantidad de tokens</span><strong>{estimation.quantity}</strong></div>
+									<div className={styles.modal__detailRow}>
+										<span>Precio por token</span>
+										<strong>{formatCredits(quote.price)}</strong>
+									</div>
+									<div className={styles.modal__detailRow}>
+										<span>Cantidad de tokens</span>
+										<strong>{estimation.quantity}</strong>
+									</div>
 									<div className={styles.modal__estimationRow}>
 										<span className={styles.modal__estimationLabel}>
 											Importe estimado:
@@ -240,8 +297,9 @@ export default function BuyTokenModal({
 										</div>
 									</div>
 									<p className={styles.modal__estimationDisclaimer}>
-										Estimación orientativa. El precio definitivo y la disponibilidad
-										de stock son confirmados por el servidor al procesar la compra.
+										Estimación orientativa. El precio definitivo y la
+										disponibilidad de stock son confirmados por el servidor al
+										procesar la compra.
 									</p>
 								</div>
 							)}
@@ -249,7 +307,15 @@ export default function BuyTokenModal({
 					)}
 				</div>
 
-				{confirmationBlockReason && !isSuccess && <p id="market-buy-block-reason" role="status" className={styles.modal__blockReason}>{confirmationBlockReason}</p>}
+				{confirmationBlockReason && !isSuccess && (
+					<p
+						id="market-buy-block-reason"
+						role="status"
+						className={styles.modal__blockReason}
+					>
+						{confirmationBlockReason}
+					</p>
+				)}
 				<footer className={styles.modal__footer}>
 					{isSuccess ? (
 						<Button
@@ -275,9 +341,20 @@ export default function BuyTokenModal({
 								disabled={!canConfirm || isBusy}
 								className={styles.modal__btnPrimary}
 								aria-busy={isBusy ? "true" : undefined}
-								aria-describedby={confirmationBlockReason ? "market-buy-block-reason" : undefined}
+								aria-describedby={
+									confirmationBlockReason
+										? "market-buy-block-reason"
+										: undefined
+								}
 							>
-								{isBusy ? <LoaderCircle aria-hidden="true" className={styles.modal__spinner} /> : <ShoppingCart aria-hidden="true" />}
+								{isBusy ? (
+									<LoaderCircle
+										aria-hidden="true"
+										className={styles.modal__spinner}
+									/>
+								) : (
+									<ShoppingCart aria-hidden="true" />
+								)}
 								{isBusy ? "Procesando…" : "Confirmar compra"}
 							</Button>
 						</>

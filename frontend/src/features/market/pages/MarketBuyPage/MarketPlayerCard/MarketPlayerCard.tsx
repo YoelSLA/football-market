@@ -1,4 +1,8 @@
-import type { MarketPlayer, MarketQuote, MarketQuoteStatus } from "@/features/market/types";
+import type {
+	MarketPlayer,
+	MarketQuote,
+	MarketQuoteStatus,
+} from "@/features/market/types";
 import {
 	formatCentimes,
 	formatCredits,
@@ -40,7 +44,12 @@ export default function MarketPlayerCard({
 			<div className={styles.card__body}>
 				<div className={styles.card__quote}>
 					<p className={styles.card__label}>Precio actual</p>
-					<MarketQuoteFeedback status={quoteStatus} httpStatus={quoteHttpStatus} canRetry={canRetryQuote} onRetry={onRetryQuote} />
+					<MarketQuoteFeedback
+						status={quoteStatus}
+						httpStatus={quoteHttpStatus}
+						canRetry={canRetryQuote}
+						onRetry={onRetryQuote}
+					/>
 					{quoteStatus === "available" && quote && (
 						<>
 							<div className={styles.card__priceRow}>
@@ -51,13 +60,19 @@ export default function MarketPlayerCard({
 									({formatCentimes(quote.price)})
 								</span>
 							</div>
-							<p className={styles.card__calculatedAt} title={formatQuoteCalculatedAt(quote.calculatedAt)}>
+							<p
+								className={styles.card__calculatedAt}
+								title={formatQuoteCalculatedAt(quote.calculatedAt)}
+							>
 								{formatQuoteCalculatedAt(quote.calculatedAt)}
 							</p>
 						</>
 					)}
 				</div>
-				<div className={styles.card__variation}><p className={styles.card__label}>Variación (24h)</p><span>Sin datos</span></div>
+				<div className={styles.card__variation}>
+					<p className={styles.card__label}>Variación (24h)</p>
+					<span>Sin datos</span>
+				</div>
 			</div>
 
 			<div className={styles.card__actions}>

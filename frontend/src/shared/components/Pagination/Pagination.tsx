@@ -90,7 +90,9 @@ export default function Pagination({
 					? `${styles.pagination} ${styles.pagination_capsule}`
 					: styles.pagination,
 				className,
-			].filter(Boolean).join(" ")}
+			]
+				.filter(Boolean)
+				.join(" ")}
 			aria-label="Paginación"
 		>
 			<Button

@@ -5,11 +5,7 @@ import {
 	toMarketQuote,
 	toOrderBuyRequestDTO,
 } from "./market.mapper";
-import type {
-	BuyResult,
-	MarketQuote,
-	OrderBuyResponseDTO,
-} from "./types";
+import type { BuyResult, MarketQuote, OrderBuyResponseDTO } from "./types";
 import { MarketQuoteReadError } from "./types";
 
 /**
@@ -41,10 +37,16 @@ async function getCurrentQuote(
 		) {
 			return null;
 		}
-		const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-		if (status === 401) throw new MarketQuoteReadError("authentication-error", status);
+		const status = axios.isAxiosError(error)
+			? error.response?.status
+			: undefined;
+		if (status === 401)
+			throw new MarketQuoteReadError("authentication-error", status);
 		if (status === 403) throw new MarketQuoteReadError("forbidden", status);
-		throw new MarketQuoteReadError(status ? "http-error" : "network-error", status);
+		throw new MarketQuoteReadError(
+			status ? "http-error" : "network-error",
+			status,
+		);
 	}
 }
 
