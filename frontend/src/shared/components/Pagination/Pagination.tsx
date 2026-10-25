@@ -7,6 +7,7 @@ interface Props {
 	onChange: (page: number) => void;
 	/** "bar" mantiene la barra de ancho completo; "capsule" la version flotante. */
 	variant?: "bar" | "capsule";
+	className?: string;
 }
 
 type PageItem =
@@ -68,6 +69,7 @@ export default function Pagination({
 	totalPages,
 	onChange,
 	variant = "bar",
+	className,
 }: Props) {
 	if (totalPages <= 0) return null;
 
@@ -83,11 +85,12 @@ export default function Pagination({
 
 	return (
 		<nav
-			className={
+			className={[
 				variant === "capsule"
 					? `${styles.pagination} ${styles.pagination_capsule}`
-					: styles.pagination
-			}
+					: styles.pagination,
+				className,
+			].filter(Boolean).join(" ")}
 			aria-label="Paginación"
 		>
 			<Button

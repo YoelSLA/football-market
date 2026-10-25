@@ -11,7 +11,7 @@
   padding: 6px 12px;
 
   border-radius: 12px;
-  background-color: ds.$surface-dark;
+  background-color: var(--pagination-surface, #{ds.$surface-dark});
 
   /* ================= NAVEGACIÓN ================= */
 
@@ -26,10 +26,10 @@
     min-height: 34px;
     padding: 0;
 
-    border: 1px solid ds.$border-strong;
+    border: 1px solid var(--pagination-border, #{ds.$border-strong});
     border-radius: 8px;
 
-    background-color: ds.$surface-raised;
+    background-color: var(--pagination-control-surface, #{ds.$surface-raised});
     color: ds.$text-inverse;
 
     font-size: 22px;
@@ -97,10 +97,10 @@
     min-height: 34px;
     padding: 0;
 
-    border: 1px solid transparent;
+    border: 1px solid var(--pagination-border, transparent);
     border-radius: 8px;
 
-    background-color: transparent;
+    background-color: var(--pagination-control-surface, transparent);
     color: ds.$text-pagination;
 
     font-size: 13px;
@@ -125,8 +125,8 @@
 
     /* Página seleccionada */
     &_active {
-      background-color: ds.$action-selected;
-      border-color: ds.$action-selected;
+      background-color: var(--pagination-active, #{ds.$action-selected});
+      border-color: var(--pagination-active, #{ds.$action-selected});
       color: ds.$text-inverse;
       font-weight: 700;
 

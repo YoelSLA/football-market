@@ -21,6 +21,7 @@ Las versiones efectivas se obtienen de `frontend/package.json`, `frontend/packag
 | React Hook Form y resolvers | React Hook Form 7.88.0; resolvers 5.9.1 | Estado y comportamiento de los formularios de login y registro mediante Form Hooks, con integración de schemas Zod. |
 | Zod | 4.6.5 | Schemas de validación de email, contraseña y confirmación de los formularios de autenticación. |
 | Sass | 1.104.1 | Compilación de los estilos SCSS globales y de los SCSS Modules colocalizados con Pages y Components, incluida la capa global `styles/base` y `styles/abstracts` (breakpoints, tokens y temas). |
+| React-Toastify | 11.1.0 | Notificaciones visuales (toasts) de éxito y error de operaciones de usuario, configurado globalmente en `AppProviders`. |
 | Biome | 2.5.14 | Linting, formateo, organización de imports y controles recomendados sobre el frontend. |
 
 ## Recursos gráficos y dependencias que no son paquetes

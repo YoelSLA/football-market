@@ -1,0 +1,86 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: .65rem;
+	padding: .85rem;
+	min-width: 0;
+	border-radius: .65rem;
+	border: 1px solid ds.$border-finance;
+	background: linear-gradient(115deg, rgba(ds.$surface-finance-panel-from, .65), rgba(ds.$surface-finance-panel-to, .7));
+	color: ds.$text-portfolio-title;
+
+	&__body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: .65rem;
+		margin-top: .1rem;
+	}
+
+	&__quote {
+		min-width: 0;
+	}
+
+	&__label {
+		font-size: .76rem;
+		color: ds.$text-portfolio-label;
+		margin-bottom: .15rem;
+	}
+
+	&__priceRow {
+		display: flex;
+		align-items: baseline;
+		gap: .3rem;
+		flex-wrap: wrap;
+	}
+
+	&__priceCredits {
+		font-size: 1.1rem;
+		font-weight: 750;
+	}
+
+	&__priceCentimes {
+		font-size: .65rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__calculatedAt {
+		font-size: .6rem;
+		color: ds.$text-portfolio-label;
+		margin-top: .2rem;
+	}
+
+	&__variation {
+		font-size: .8rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__actions {
+		margin-top: auto;
+	}
+
+	&__buyButton {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: .5rem;
+		width: 100%;
+		padding: .45rem;
+		border-radius: .45rem;
+		border: 1px solid ds.$accent-finance-green;
+		color: ds.$accent-finance-green;
+		background: linear-gradient(120deg, ds.$surface-finance-active, rgba(ds.$surface-finance-active, .6));
+		font-size: .9rem;
+		font-weight: 700;
+
+		svg {
+			width: 1.3rem;
+			height: 1.3rem;
+		}
+
+		&:hover {
+			background: ds.$surface-finance-active;
+		}
+	}
+}

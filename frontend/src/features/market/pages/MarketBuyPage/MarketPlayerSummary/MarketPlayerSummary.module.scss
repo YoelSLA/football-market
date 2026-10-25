@@ -1,0 +1,132 @@
+@use "@/styles/abstracts" as ds;
+
+.marketPlayerSummary {
+	display: grid;
+	gap: .85rem;
+	min-width: 0;
+	color: ds.$text-portfolio-title;
+
+	&__identity {
+		display: flex;
+		align-items: flex-start;
+		gap: .85rem;
+		min-width: 0;
+	}
+
+	&__portrait {
+		width: clamp(4rem, 5.65vw, 6rem);
+		height: clamp(5rem, 6vw, 6.25rem);
+		flex-shrink: 0;
+		object-fit: cover;
+		object-position: top center;
+		border: 1px solid ds.$border-finance;
+		border-radius: .5rem;
+		background: linear-gradient(135deg, ds.$surface-finance-tile, ds.$surface-finance-base);
+	}
+
+	&__details {
+		flex: 1;
+		min-width: 0;
+
+		h3 {
+			font-size: clamp(.9rem, 1.1vw, 1.12rem);
+			line-height: 1.25;
+			margin: .25rem 0 .4rem;
+		}
+
+		p {
+			display: flex;
+			align-items: center;
+			gap: .35rem;
+			font-size: .77rem;
+			color: ds.$text-portfolio-label;
+			margin-top: .2rem;
+		}
+
+		svg {
+			width: 1rem;
+			height: 1rem;
+			flex-shrink: 0;
+		}
+	}
+
+	&__badge {
+		display: inline-block;
+		padding: .15rem .55rem;
+		border-radius: .3rem;
+		font-size: .7rem;
+		font-weight: 800;
+		line-height: 1.3;
+
+		&_goalkeeper {
+			background: linear-gradient(ds.$state-caution, rgba(ds.$state-caution, .8));
+			color: ds.$surface-finance-base;
+		}
+
+		&_outfield {
+			background: linear-gradient(ds.$accent-finance-cyan, ds.$action-selected);
+			color: ds.$text-portfolio-title;
+		}
+	}
+
+	&__favorite {
+		background: transparent;
+		border: 0;
+		padding: .1rem 0;
+		color: ds.$text-portfolio-label;
+		cursor: not-allowed;
+
+		svg {
+			width: 1.4rem;
+			height: 1.4rem;
+		}
+	}
+
+	&__stats {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: .45rem;
+
+		div {
+			display: flex;
+			align-items: center;
+			gap: .5rem;
+			min-width: 0;
+			padding: .5rem;
+			border-radius: .45rem;
+			background: rgba(ds.$surface-finance-tile, .4);
+		}
+
+		svg {
+			width: 1.3rem;
+			height: 1.3rem;
+			flex-shrink: 0;
+			color: ds.$accent-finance-cyan;
+		}
+
+		span {
+			min-width: 0;
+			font-size: .67rem;
+			color: ds.$text-portfolio-label;
+		}
+
+		strong {
+			display: block;
+			font-size: .72rem;
+			font-weight: 600;
+			color: ds.$text-portfolio-title;
+		}
+	}
+
+	@media (min-width: 1100px) and (max-width: 1500px) {
+		&__stats div {
+			gap: .3rem;
+			padding: .45rem .3rem;
+		}
+
+		&__stats svg {
+			width: 1rem;
+			height: 1rem;
+		}
+	}
+}

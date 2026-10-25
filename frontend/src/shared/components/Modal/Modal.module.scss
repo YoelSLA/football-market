@@ -1,0 +1,49 @@
+@use "@/styles/abstracts" as ds;
+
+.modal {
+	&__accessibleTitle {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	&__overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+		background-color: rgba(ds.$surface-finance-base, 0.7);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	&__dialog {
+		position: relative;
+		width: 100%;
+		max-width: 29rem;
+		max-height: calc(100dvh - 2rem);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		margin: auto;
+		background: linear-gradient(125deg, ds.$surface-finance-panel-from, ds.$surface-finance-base);
+		border: 1px solid ds.$border-finance;
+		border-radius: 0.65rem;
+		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+		color: ds.$text-on-dark;
+		outline: none;
+		display: flex;
+		flex-direction: column;
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-on-dark;
+			outline-offset: 2px;
+		}
+	}
+}

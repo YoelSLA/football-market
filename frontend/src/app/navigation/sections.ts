@@ -1,5 +1,13 @@
 import type { NavSection } from "@/shared/components";
-import { BarChart3, FileText, Package } from "@/shared/icons";
+import {
+	BarChart3,
+	FileText,
+	History,
+	Package,
+	Puzzle,
+	ShoppingCart,
+	Tag,
+} from "@/shared/icons";
 
 /**
  * Secciones de la navegacion principal.
@@ -38,11 +46,22 @@ export const NAV_SECTIONS: NavSection[] = [
 		key: "market",
 		label: "Mercado",
 		icon: "market",
-		path: null,
+		path: "/market/buy",
 		tabs: [
-			{ key: "market-buy", label: "Comprar tokens", path: null },
-			{ key: "market-offers", label: "Ofertas disponibles", path: null },
-			{ key: "market-listings", label: "Mis publicaciones", path: null },
+			{
+				key: "market-buy",
+				label: "Comprar tokens",
+				icon: ShoppingCart,
+				path: "/market/buy",
+			},
+			{ key: "market-sell", label: "Vender tokens", icon: Tag, path: null },
+			{ key: "market-orders", label: "Mis órdenes", icon: Puzzle, path: null },
+			{
+				key: "market-history",
+				label: "Historial de operaciones",
+				icon: History,
+				path: null,
+			},
 		],
 	},
 	{
