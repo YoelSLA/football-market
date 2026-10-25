@@ -1,0 +1,402 @@
+@use "@/styles/abstracts" as ds;
+
+.modal {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	color: ds.$text-portfolio-title;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: .8rem;
+		padding: 1rem 1.2rem;
+		border-bottom: 1px solid ds.$border-finance;
+	}
+
+	&__symbol {
+		width: 2.4rem;
+		height: 2.4rem;
+		flex-shrink: 0;
+		color: ds.$accent-finance-green;
+	}
+
+	&__heading {
+		flex: 1;
+		min-width: 0;
+
+		p {
+			font-size: .75rem;
+			color: ds.$text-portfolio-label;
+			margin-top: .25rem;
+		}
+	}
+
+	&__title {
+		font-size: 1.2rem;
+		line-height: 1.3;
+	}
+
+	&__closeButton {
+		display: grid;
+		place-items: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		flex-shrink: 0;
+		padding: .5rem;
+		border: 1px solid ds.$border-finance;
+		border-radius: .45rem;
+		background: ds.$surface-finance-tile;
+		color: ds.$text-portfolio-title;
+	}
+
+	&__content {
+		display: flex;
+		flex-direction: column;
+		gap: .65rem;
+		padding: .65rem 1.1rem;
+		min-width: 0;
+	}
+
+	&__player {
+		padding: .5rem;
+		border: 1px solid ds.$border-finance;
+		border-radius: .55rem;
+	}
+
+	&__prices {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: .65rem;
+	}
+
+	&__quoteCard,
+	&__variation {
+		position: relative;
+		padding: .6rem;
+		border: 1px solid ds.$border-finance;
+		border-radius: .5rem;
+		background: rgba(ds.$surface-finance-tile, .2);
+		min-width: 0;
+	}
+
+	&__quoteLabel,
+	&__variation p {
+		font-size: .75rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__quoteIcon {
+		float: left;
+		width: 1.6rem;
+		height: 1.6rem;
+		margin: .2rem .5rem .2rem 0;
+		color: ds.$state-caution;
+	}
+
+	&__quotePriceRow {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: .25rem;
+	}
+
+	&__quoteCredits {
+		font-size: 1.1rem;
+		font-weight: 750;
+	}
+
+	&__quoteCentimes,
+	&__quoteCalculated {
+		font-size: .65rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__quoteCalculated {
+		clear: both;
+		margin-top: .25rem;
+	}
+
+	&__variation strong {
+		display: block;
+		font-size: .85rem;
+		margin-top: .3rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__form {
+		display: flex;
+		flex-direction: column;
+		gap: .5rem;
+		min-width: 0;
+		padding-top: .4rem;
+		border-top: 1px solid ds.$border-finance;
+	}
+
+	&__quantity {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 2.6rem 4.8rem 2.6rem;
+		align-items: start;
+		gap: .3rem;
+
+		button {
+			display: grid;
+			place-items: center;
+			height: 2.6rem;
+			padding: .5rem;
+			border: 1px solid ds.$border-finance;
+			border-radius: .4rem;
+			background: ds.$surface-finance-tile;
+			color: ds.$text-portfolio-title;
+			cursor: not-allowed;
+		}
+
+		label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+
+		.modal__quantityInput {
+			height: 2.6rem;
+			padding: .35rem;
+			border-color: ds.$border-finance;
+			background: ds.$surface-finance-base;
+			color: ds.$text-portfolio-title;
+			text-align: center;
+			font-size: 1.1rem;
+		}
+
+		.modal__quantityInput:disabled {
+			background: ds.$surface-finance-panel-from;
+			color: ds.$text-portfolio-label;
+		}
+	}
+
+	&__quantityLabel {
+		display: flex;
+		align-items: center;
+		gap: .65rem;
+		font-size: .77rem;
+		font-weight: 700;
+		min-height: 2.6rem;
+
+		svg {
+			flex-shrink: 0;
+			width: 2.6rem;
+			height: 2.6rem;
+			padding: .6rem;
+			background: ds.$surface-finance-tile;
+			border-radius: .5rem;
+			color: ds.$accent-finance-cyan;
+		}
+	}
+
+	&__quickAmounts {
+		display: flex;
+		justify-content: flex-end;
+		gap: .4rem;
+
+		button {
+			min-width: 3.1rem;
+			padding: .3rem .65rem;
+			border: 1px solid ds.$border-finance;
+			border-radius: .35rem;
+			background: ds.$surface-finance-panel-from;
+			color: ds.$text-portfolio-label;
+			cursor: not-allowed;
+		}
+	}
+
+	&__pending {
+		font-size: .65rem;
+		color: ds.$state-caution;
+	}
+
+	&__quickAmountsLegend {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	&__estimation {
+		display: flex;
+		flex-direction: column;
+		gap: .4rem;
+		padding: .8rem;
+		border: 1px solid ds.$border-finance;
+		border-radius: .5rem;
+		background: rgba(ds.$surface-finance-tile, .2);
+	}
+
+	&__detailRow {
+		display: flex;
+		justify-content: space-between;
+		gap: .5rem;
+		font-size: .8rem;
+		color: ds.$text-portfolio-label;
+
+		strong {
+			color: ds.$text-portfolio-title;
+		}
+	}
+
+	&__estimationRow {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: .3rem;
+		margin-top: .15rem;
+		padding-top: .55rem;
+		border-top: 1px solid ds.$border-finance;
+	}
+
+	&__estimationLabel {
+		font-size: .9rem;
+		font-weight: 700;
+	}
+
+	&__estimationValues {
+		display: flex;
+		align-items: baseline;
+		flex-wrap: wrap;
+		gap: .25rem;
+	}
+
+	&__estimationCredits {
+		font-size: 1.15rem;
+		font-weight: 750;
+		color: ds.$accent-finance-green;
+	}
+
+	&__estimationCentimes,
+	&__estimationDisclaimer {
+		font-size: .65rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__footer {
+		display: flex;
+		gap: .65rem;
+		padding: .25rem 1.1rem 1rem;
+	}
+
+	&__blockReason {
+		padding: .35rem 1.1rem .65rem;
+		font-size: .75rem;
+		color: ds.$state-caution;
+	}
+
+	&__btnPrimary,
+	&__btnSecondary {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: .45rem;
+		min-width: 0;
+		padding: .75rem .5rem;
+		border-radius: .45rem;
+		font-weight: 700;
+		font-size: .85rem;
+
+		&:disabled {
+			opacity: .55;
+			cursor: not-allowed;
+		}
+
+		svg {
+			width: 1.4rem;
+			height: 1.4rem;
+			flex-shrink: 0;
+		}
+	}
+
+	&__btnPrimary {
+		flex: 1.4;
+		background: ds.$accent-finance-green;
+		color: ds.$surface-finance-base;
+		border: 1px solid ds.$accent-finance-green;
+	}
+
+	&__btnSecondary {
+		flex: 1;
+		background: ds.$surface-finance-base;
+		border: 1px solid ds.$text-portfolio-label;
+		color: ds.$text-portfolio-title;
+	}
+
+	&__errorAlert,
+	&__successCard {
+		display: grid;
+		gap: .5rem;
+		padding: .8rem;
+		border: 1px solid ds.$border-finance;
+		border-radius: .5rem;
+		font-size: .85rem;
+	}
+
+	&__errorAlert {
+		color: ds.$state-caution;
+	}
+
+	&__successTitle {
+		font-size: 1.1rem;
+		color: ds.$accent-finance-green;
+	}
+
+	&__successSub {
+		font-size: .8rem;
+		color: ds.$text-portfolio-label;
+	}
+
+	&__successDetails {
+		display: grid;
+		gap: .4rem;
+	}
+
+	&__spinner {
+		animation: marketSpin 1s linear infinite;
+	}
+
+	@media (max-width: 400px) {
+		&__content {
+			padding-inline: .65rem;
+		}
+
+		&__quantity {
+			grid-template-columns: minmax(0, 1fr) 2rem 3.3rem 2rem;
+		}
+
+		&__quantityLabel {
+			font-size: .7rem;
+			gap: .3rem;
+
+			svg {
+				width: 1.7rem;
+				height: 1.7rem;
+				padding: .3rem;
+			}
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		&__spinner {
+			animation: none;
+		}
+	}
+}
+
+@keyframes marketSpin {
+	to {
+		transform: rotate(360deg);
+	}
+}

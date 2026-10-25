@@ -10,13 +10,21 @@ import styles from "./AppLayout.module.scss";
 export default function AppLayout() {
 	const revision = useAuthStore((state) => state.revision);
 	const location = useLocation();
+	const containsPageScroll =
+		location.pathname.replace(/\/+$/, "") === "/market/buy";
 
 	const logout = useLogout();
 
 	const currentUser = useCurrentUserQuery(true, revision);
 
 	return (
-		<div className={styles.appLayout}>
+		<div
+			className={
+				containsPageScroll
+					? `${styles.appLayout} ${styles.appLayout_contained}`
+					: styles.appLayout
+			}
+		>
 			<Navbar
 				sections={NAV_SECTIONS}
 				location={location}

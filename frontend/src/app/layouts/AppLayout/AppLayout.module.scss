@@ -72,3 +72,24 @@
 		}
 	}
 }
+
+// Opt-in de ruta: las otras páginas conservan el scroll natural móvil.
+.appLayout_contained {
+	height: 100vh;
+	height: 100dvh;
+	min-height: 0;
+	max-height: 100dvh;
+	overflow: hidden;
+
+	.appLayout__content {
+		min-height: 0;
+		overflow: hidden;
+	}
+}
+
+:global(html):has(.appLayout_contained),
+:global(body):has(.appLayout_contained) {
+	height: 100dvh;
+	min-height: 0;
+	overflow: hidden;
+}
