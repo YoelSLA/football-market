@@ -21,4 +21,17 @@ public interface PositionalValuationRepository extends JpaRepository<PositionalV
       "select v from PositionalValuation v where v.player.id = :playerId"
           + " order by v.valuationDate desc, v.calculatedAt desc")
   List<PositionalValuation> findLatestByPlayerId(@Param("playerId") Long playerId);
+
+  /**
+   * Última valuación posicional de cada jugador que tiene cotización vigente.
+   *
+   * @return valuaciones ordenadas por score descendente y jugador ascendente
+   */
+  @Query(
+      "select v from PositionalValuation v where exists ("
+          + "select q.id from PlayerQuote q where q.player.id = v.player.id) and not exists ("
+          + "select newer.id from PositionalValuation newer where newer.player.id = v.player.id"
+          + " and newer.valuationDate > v.valuationDate)"
+          + " order by v.finalScore desc, v.player.id asc")
+  List<PositionalValuation> findScoreRanking();
 }

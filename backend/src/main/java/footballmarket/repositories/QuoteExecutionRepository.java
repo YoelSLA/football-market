@@ -17,6 +17,13 @@ public interface QuoteExecutionRepository extends JpaRepository<QuoteExecution, 
    */
   Optional<QuoteExecution> findByQuoteDate(LocalDate quoteDate);
 
+  /**
+   * Última ejecución persistida según su fecha de cotización.
+   *
+   * @return última ejecución, o vacío cuando todavía no existe ninguna
+   */
+  Optional<QuoteExecution> findTopByOrderByQuoteDateDesc();
+
   /** Resúmenes de una fecha, ordenados por inicio descendente. */
   List<QuoteExecution> findAllByQuoteDateOrderByStartedAtDesc(LocalDate quoteDate);
 }

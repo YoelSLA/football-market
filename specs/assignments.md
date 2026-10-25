@@ -34,4 +34,7 @@ se corrige con una fila nueva que la referencie.
 | SPEC-015 | Definir reglas contables de costo promedio y resultados financieros | YoelSLA | https://github.com/YoelSLA/football-market/issues/63 | REQ-S2-20 | feat/015-define-average-cost-and-financial-results-rules | 2026-10-19 |
 | SPEC-016 | Calcular y persistir la cotización de tokens de jugadores con historial trazable (corrige la fila anterior del 2026-10-20, que quedaba limitada al disparo manual del recálculo) | Vaqui26 | https://github.com/YoelSLA/football-market/issues/39 | REQ-S2-11-A, REQ-S2-03, REQ-S2-04, REQ-S2-05, REQ-S2-08 | feat/016-ejecutar-recalculo-manual-de-cotizaciones | 2026-10-20 |
 | SPEC-017 | Visualizar portfolio personal | YoelSLA | #26 | REQ-S2-15 | feat/017-view-personal-portfolio-ui | 2026-10-21 |
+| SPEC-018 | Consultar rankings de jugadores por precio y por score | Vaqui26 | https://github.com/YoelSLA/football-market/issues/19 | REQ-S2-08 | feat/018-consultar-rankings-de-jugadores | 2026-10-23 |
 | SPEC-019 | Comprar tokens desde el frontend | YoelSLA | #42 | REQ-S2-14-A | feat/019-buy-tokens-from-frontend | 2026-10-23 |
+| SPEC-020 | Consultar historial de operaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/21 | REQ-S2-10 | feat/020-view-operation-history | 2026-10-24 |
+
