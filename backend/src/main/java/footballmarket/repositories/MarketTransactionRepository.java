@@ -43,4 +43,21 @@ public interface MarketTransactionRepository extends JpaRepository<MarketTransac
           + " where t.buyer.id = :userId or t.seller.id = :userId"
           + " order by t.executedAt asc, t.id asc")
   List<MarketTransaction> findFinancialHistory(@Param("userId") Long userId);
+
+  /**
+   * Carga el historial personal completo en el orden contractual de presentación.
+   *
+   * <p>La consulta dedicada conserva el orden ascendente de {@link #findFinancialHistory(Long)},
+   * utilizado por la reconstrucción contable, y recupera en una sola lectura los participantes y el
+   * jugador necesarios para interpretar cada operación.
+   *
+   * @param userId usuario que debe figurar como comprador o vendedor
+   * @return transacciones propias desde la más reciente, con desempate por identidad descendente
+   */
+  @Query(
+      "select t from MarketTransaction t join fetch t.buyer join fetch t.seller"
+          + " join fetch t.player"
+          + " where t.buyer.id = :userId or t.seller.id = :userId"
+          + " order by t.executedAt desc, t.id desc")
+  List<MarketTransaction> findOperationHistory(@Param("userId") Long userId);
 }
