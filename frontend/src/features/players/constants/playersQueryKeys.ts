@@ -1,6 +1,7 @@
 export const playersQueryKeys = {
 	all: ["players"] as const,
-	catalog: (criteria: import("../types").PlayerCatalogCriteria, size: number) => ["players", "catalog", criteria, size] as const,
+	catalog: (criteria: import("../types").PlayerCatalogCriteria, size: number) =>
+		["players", "catalog", criteria, size] as const,
 	filters: ["players", "filters"] as const,
 	page: (page: number, size: number) =>
 		["players", "page", page, size] as const,

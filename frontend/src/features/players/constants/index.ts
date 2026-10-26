@@ -15,6 +15,6 @@ export {
 	getPlayerSampleStatistics,
 	PLAYER_SAMPLE_STATISTIC_ITEMS,
 } from "./playerSampleStatistics";
-export { playersQueryKeys } from "./playersQueryKeys";
-export { METRIC_DEFINITIONS, CATEGORIES } from "./playerStatisticsCatalog";
+export { CATEGORIES, METRIC_DEFINITIONS } from "./playerStatisticsCatalog";
 export { getPositionProfile } from "./playerStatisticsProfiles";
+export { playersQueryKeys } from "./playersQueryKeys";

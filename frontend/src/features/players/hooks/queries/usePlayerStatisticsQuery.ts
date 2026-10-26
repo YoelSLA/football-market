@@ -9,7 +9,8 @@ export function usePlayerStatisticsQuery(
 ) {
 	return useQuery({
 		queryKey: playersQueryKeys.statistics(id, seasonKey),
-		queryFn: ({ signal }) => playersService.getStatistics(id, seasonKey, signal),
+		queryFn: ({ signal }) =>
+			playersService.getStatistics(id, seasonKey, signal),
 		enabled: enabled && Number.isInteger(id) && id > 0,
 		retry: false,
 	});

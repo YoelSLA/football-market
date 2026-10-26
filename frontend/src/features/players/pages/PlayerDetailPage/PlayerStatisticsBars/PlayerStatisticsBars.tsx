@@ -21,7 +21,11 @@ function Bar({ label, value, unit, percentage, source }: BarProps) {
 					{sourceLabel}
 				</span>
 			</div>
-			<div className={styles.barTrack} role="img" aria-label={`${label}: ${displayValue}${sourceLabel}`}>
+			<div
+				className={styles.barTrack}
+				role="img"
+				aria-label={`${label}: ${displayValue}${sourceLabel}`}
+			>
 				<div
 					className={styles.barFill}
 					style={{ width: `${Math.min(percentage, 100)}%` }}
@@ -44,17 +48,21 @@ interface Props {
 
 export default function PlayerStatisticsBars({ bars, maxValue }: Props) {
 	return (
-		<div className={styles.bars} role="region" aria-label="Gráficos de barras">
+		<section className={styles.bars} aria-label="Gráficos de barras">
 			{bars.map((bar) => (
 				<Bar
 					key={bar.key}
 					label={bar.label}
 					value={bar.value}
 					unit={bar.unit}
-					percentage={maxValue > 0 && bar.value !== null ? (bar.value / maxValue) * 100 : 0}
+					percentage={
+						maxValue > 0 && bar.value !== null
+							? (bar.value / maxValue) * 100
+							: 0
+					}
 					source={bar.source}
 				/>
 			))}
-		</div>
+		</section>
 	);
 }
