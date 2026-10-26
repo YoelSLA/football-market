@@ -1,5 +1,72 @@
 # Feature Specification: Página de catálogo de jugadores
 
+## Revisión vigente — catálogo real con filtros globales
+
+**Fecha**: 2026-10-25. **Identidad**: `005-players-page`, reutilizada, sin nueva SPEC.
+**Status vigente**: Preparación documental; implementación no autorizada en este encargo.
+**Entrada aprobada**: rediseño de `referencias-imagenes/06-catalogo-jugadores.png`, datos reales, filtros globales, ordenamiento y paginación backend. Nombre ascendente sustituye «Más relevantes».
+
+Este bloque es normativo para el alcance nuevo; el contenido desde «Antecedente histórico» se conserva íntegro. Sustituye las restricciones de estadísticas demostrativas y filtros decorativos (FR-005/013/020), la referencia visual y distribución anteriores, sin borrar sus IDs ni aprobaciones históricas. No se transfiere aceptación de implementación, revisión o testing anterior a este alcance. Autenticación, visibilidad, navegación al detalle y fallbacks existentes se conservan. Los requisitos nuevos usan FR-023–038 y SC-012–019; las cuatro US conservan identidad funcional, US4 pasa de controles decorativos a exploración real. SPEC-002 documenta el contrato de lectura ampliado; SPEC-009 no se modifica.
+
+### Clarifications — sesión vigente
+
+- Decisión humana: nombre ascendente predeterminado en la UI, no relevancia, score, precio o métricas calculadas. Para conservar clientes antiguos, el listado API mantiene ID ascendente si no recibe orden explícito; la UI siempre pide nombre ascendente inicialmente.
+- Escaneo de Clarify: alcance, actores, estados, seguridad y contratos definidos; sin selector de temporada, favoritos, filtros estadísticos o métricas nuevas. Búsqueda parcial por nombre sin distinguir mayúsculas ni acentos. Decisión humana posterior: «José» coincide con «jose» y «Álvarez» con «alvarez», incluidas formas Unicode compuestas/descompuestas. Sustituye el supuesto anterior de acentos exactos, conservando los nombres originales. Filtros combinados por AND; IDs de liga/equipo y valores exactos persistidos de posición/nacionalidad. Se admiten nombre ascendente/descendente y el orden ID legado, no un orden de relevancia inventado.
+- Las opciones de filtros se obtienen del conjunto completo visible, no de la página ni de datos deportivos. No hay cascadas implícitas: seleccionar liga no borra equipo; una combinación incompatible devuelve vacío y puede limpiarse. Los opcionales nulos no generan nacionalidades ficticias.
+- Las tarjetas muestran solo `appearances_total`, `goals_total`, `assists_total` del último contexto individual confirmado disponible. Sin valor, «Sin datos», nunca cero simulado. La fecha y temporada del resumen son identificables; no exigir estadísticas para aparecer en catálogo. JSON tiene prioridad en la fecha elegida, respaldo scraping solo en mismo jugador/temporada/fecha/competición; cero conserva su valor. No se toma una fecha poblacional común ni se ejecuta extracción al leer.
+
+### User Scenarios & Testing vigentes
+
+**US1 (P1) — Consultar tarjetas reales.** Usuario autenticado abre `/players`, ve hasta 12 jugadores visibles con identidad, imagen/fallback, club, liga, nacionalidad/ausencia, posición y tres estadísticas reales/ausentes. Acceso directo al detalle conserva el ID interno. **Aceptación**: jugador sin estadísticas permanece visible; cero se distingue de ausencia; visitante no accede; imágenes fallidas no ocultan texto. Independiente de aplicar filtros.
+
+**US2 (P1) — Paginar resultados completos.** Usuario cambia página del conjunto filtrado/ordenado y conserva criterios. **Aceptación**: conteos y páginas corresponden al mismo filtro global, extremos deshabilitados, sin tarjetas de relleno; página que deja de existir se corrige una sola vez a la última válida, y total cero no ocasiona ciclos.
+
+**US3 (P2) — Usar el diseño aprobado.** Seis columnas y dos filas a 1920×913 para 12 jugadores, cabecera y barra de filtros, navbar/submenús existentes de 104 px como referencia de espacio, paginador inferior; scroll vertical cuando sea necesario. **Aceptación**: a 1280/768/360 las columnas se reducen, sin scroll horizontal del documento ni contenido esencial dependiente del hover; teclado, foco y alternativas textuales presentes. Fotografía y cifras del mockup son ilustración, no datos.
+
+**US4 (P1) — Buscar, filtrar y ordenar.** Usuario busca nombre, combina liga/equipo/posición/nacionalidad, elige nombre A–Z/Z–A o limpia todo. **Aceptación**: un jugador fuera de la página inicial puede encontrarse; cambios de criterios consultan página cero; limpiar restaura todos, nombre ascendente y página cero; texto con pausa breve evita una petición por tecla; respuestas tardías de otra selección no sustituyen la vigente. Vacío, carga y error con reintento son distintos.
+
+### Functional Requirements vigentes
+
+- **FR-023**: Mantener `/players` privado, visibilidad de catálogo (activo, equipo vigente, liga existente), identidad interna y navegación al detalle; no incluir inactivos ni relajar seguridad.
+- **FR-024**: Reproducir jerarquía/composición de `06-catalogo-jugadores.png`: título, conteo real, búsqueda, filtros, tarjetas y paginación. Mantener navbar/submenús/tema/iconos existentes; no copiar cifras ni acciones de favoritos sin funcionalidad aprobada.
+- **FR-025**: Consumir únicamente identidad y tres métricas canónicas reales disponibles; eliminar generación/etiquetado de demo del catálogo. Sin métricas, mantener jugador con «Sin datos»; cero se muestra como cero. Fecha/temporada del contexto son identificables sin agregar selector.
+- **FR-026**: Aplicar búsqueda por nombre, filtro por liga, equipo, posición y nacionalidad sobre todo el catálogo desde backend antes de ordenar/paginar, combinados por AND.
+- **FR-027**: Nombre usa coincidencia parcial sin distinguir mayúsculas ni acentos; espacios extremos se ignoran y vacío significa sin búsqueda. «José» coincide con «jose» y «Álvarez» con «alvarez», incluidas formas Unicode compuestas/descompuestas. Los nombres persistidos y mostrados no se modifican. `%`, `_` y el carácter de escape introducidos por el usuario son literales, nunca comodines. Filtros por ID de liga/equipo y valor persistido exacto de posición/nacionalidad; vacío significa sin criterio. La normalización se aplica a búsqueda de nombre, no redefine esos filtros ni el ordenamiento aprobado.
+- **FR-028**: Presentar opciones de filtros del conjunto completo visible, no de la página actual. Mantener selecciones incompatibles y explicar vacío; no fabricar una nacionalidad para null.
+- **FR-029**: UI inicia en nombre ascendente, ofrece nombre descendente y utiliza ID ascendente como desempate único estable. No «Más relevantes», puntuaciones o cotizaciones. Clientes API sin orden explícito conservan orden ID ascendente legado.
+- **FR-030**: Solicitar 12 elementos; conteos/totalPages representan el conjunto completo filtrado. Cambio de cualquier criterio vuelve a página cero; cambio de página conserva criterios. Limpiar restablece cinco filtros, nombre ascendente y página cero.
+- **FR-031**: Una búsqueda con entrada continua espera 300 ms de inactividad antes de consultar; filtros/orden/paginación aplican una selección efectiva única. Cancelar/ignorar respuestas de selecciones anteriores; no consultar estadísticas jugador por jugador desde el navegador.
+- **FR-032**: Mantener contratos de identidad/listado existentes por defecto, añadiendo filtros, orden y enriquecimiento opcional sin romper consumidores. Documentar los cambios necesarios en SPEC-002; lectura nunca sincroniza, valora o recotiza.
+- **FR-033**: Resumen deportivo de cada tarjeta selecciona contexto confirmado individual determinista y conserva fuente internamente, sin mostrar JSON/scraping al usuario ni mezclar fecha/competición/temporada; sin datos anteriores para rellenar un contexto incompleto.
+- **FR-034**: Mostrar carga, error recuperable con reintento, catálogo vacío y ausencia por filtro como situaciones distinguibles; no presentar resultados viejos como actuales ni ausencia deportiva como error general.
+- **FR-035**: Mantener foto principal→alternativa→genérico, escudos y banderas existentes con texto/fallback, nombre largo legible, etiquetas de posición/nacionalidad y vínculo al detalle; no añadir información física, contractual o financiera.
+- **FR-036**: Ajustar viewport de referencia y navbar existentes sin alturas fijas de Page ni recortes. Scroll de layout desktop y natural móvil existentes; no cambiar otras páginas para encajar catálogo.
+- **FR-037**: Teclado y foco visibles en filtros, limpiar, tarjetas y paginador, controles etiquetados, estado seleccionado perceptible y alternativa textual a iconos; información esencial sin depender de color o hover.
+- **FR-038**: Rechazar parámetros estructuralmente inválidos con errores globales seguros. ID válido de liga/equipo sin coincidencias y temporada sin estadísticas no revelan datos privados ni causan errores inventados: listado vacío o estadísticas ausentes según corresponda.
+
+### Success Criteria vigentes
+
+- **SC-012**: El 100 % de las tarjetas muestra identidad real y valores deportivos coincidentes con su snapshot seleccionado, o ausencia explícita; ninguna lectura usa generadores demo (FR-023/025/033/035).
+- **SC-013**: Un conjunto con más de dos páginas encuentra jugadores de cualquier página por nombre y los cuatro filtros; todas las combinaciones AND, conteos y resultados son globales y coherentes. Las búsquedas «jose», «JOSÉ» y su forma Unicode descompuesta encuentran el nombre «José»; «alvarez» encuentra «Álvarez»; los caracteres `%`, `_` y de escape solo coinciden literalmente (FR-026–028/030).
+- **SC-014**: Con nombres repetidos y ambos sentidos de nombre, el desempate por ID conserva orden repetible; sin parámetros nuevos, clientes antiguos conservan su contrato (FR-029/032).
+- **SC-015**: Cambiar cada criterio o limpiar desde una página posterior vuelve a cero; paginar mantiene filtros, no hay bucles al quedar vacío o fuera de rango y respuestas invertidas no sustituyen selección vigente (FR-030/031/034).
+- **SC-016**: Referencia 1920×913 presenta seis columnas/dos filas de hasta 12 tarjetas, respetando navbar existente; a 1280/768/360 todos los controles y datos esenciales siguen accesibles sin overflow horizontal (FR-024/036/037).
+- **SC-017**: En casos de carga/error/vacío, opcionales ausentes, cero legítimo y foto fallida se distingue cada estado y permanece la navegación/reintento pertinente (FR-025/034/035/038).
+- **SC-018**: Las consultas del catálogo no dependen de proveedores o finanzas y el número de consultas de estadísticas es por lote de página, no por jugador; escribir varios caracteres sin pausa no solicita cada texto intermedio (FR-028/031–033).
+- **SC-019**: Usuario sin credencial no accede; entradas inválidas tienen rechazo seguro y los filtros/paginador son operables por teclado con etiquetas y foco (FR-023/037/038).
+
+### Entidades, dependencias y límites
+
+Jugador visible; criterios efectivos de consulta; página filtrada con conteos; opciones globales de filtros; resumen individual de partidos/goles/asistencias con contexto y disponibilidad. Autenticación, catálogo y persistencia estadística existentes se reutilizan. No se modifica SPEC-009, su contrato ni su estado. No se incluyen edición, compra/venta, favoritos, ranking, nueva sincronización, nuevas métricas o filtros por estadísticas. Faltas de datos no se imputan. El supuesto inicial que posponía búsqueda sin acentos queda sustituido por la decisión humana incorporada en FR-027.
+
+### Evidencia de fases
+
+SPECIFY reanudado mediante script real con `--reuse --number 005 --short-name players-page`: reused, FEATURE_NUM 005, directorio preservado. `BRANCH_STATUS=skipped-dirty-tree`: no se creó/cambió rama; no stash/reset. CLARIFY evaluado mediante escaneo de dominios y `check-prerequisites --paths-only` con override explícito a esta carpeta. Cero preguntas nuevas; supuestos de coincidencia y compatibilidad arriba explícitos. No se acredita aceptación humana de checklists, implementación, tests o cierre. Las aprobaciones históricas no gobiernan este alcance nuevo.
+
+---
+
+## Antecedente histórico — contenido anterior íntegro
+
 **Feature Branch**: `005-players-page`
 
 **Created**: 2026-09-28

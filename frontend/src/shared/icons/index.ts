@@ -57,6 +57,7 @@ export {
 	Sigma,
 	SlidersHorizontal,
 	Store,
+	Star,
 	Tag,
 	TrendingDown,
 	TrendingUp,

@@ -1,0 +1,27 @@
+meta {
+  name: Consultar historial de cotizaciones
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/players/2/quotes
+  body: none
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

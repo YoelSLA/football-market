@@ -1,6 +1,8 @@
 package footballmarket.repositories;
 
+import footballmarket.models.League;
 import footballmarket.models.Player;
+import footballmarket.models.Team;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +18,43 @@ import org.springframework.stereotype.Repository;
 /** Consulta local del catálogo vigente con asociaciones disponibles al terminar la lectura. */
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Long> {
+  /** Mismo predicado de visibilidad y filtros para contenido y conteo, antes de paginar. */
+  @EntityGraph(attributePaths = {"team", "team.league"})
+  @Query(
+      "select p from Player p join p.team t join t.league l"
+          + " where p.active = true and t.current = true"
+          + " and (:leagueId is null or l.id = :leagueId)"
+          + " and (:teamId is null or t.id = :teamId)"
+          + " and (:position is null or p.position = :position)"
+          + " and (:nationality is null or p.nationality = :nationality)"
+          + " and (cast(:name as string) is null or cast(function('catalog_normalize_name', cast(:name as string)) as string) = ''"
+          + " or cast(function('catalog_normalize_name', p.name) as string) like"
+          + " concat('%', replace(replace(replace(cast(function('catalog_normalize_name', cast(:name as string)) as string),"
+          + " '!', '!!'), '%', '!%'), '_', '!_'), '%') escape '!')")
+  Page<Player> findCatalog(
+      @Param("name") String name,
+      @Param("leagueId") Long leagueId,
+      @Param("teamId") Long teamId,
+      @Param("position") String position,
+      @Param("nationality") String nationality,
+      Pageable pageable);
+
+  @Query(
+      "select distinct l from Player p join p.team t join t.league l where p.active=true and t.current=true order by l.name, l.id")
+  List<League> findCatalogLeagues();
+
+  @Query(
+      "select distinct t from Player p join p.team t join t.league l where p.active=true and t.current=true order by t.name, t.id")
+  List<Team> findCatalogTeams();
+
+  @Query(
+      "select distinct p.position from Player p join p.team t join t.league l where p.active=true and t.current=true and trim(p.position) <> '' order by p.position")
+  List<String> findCatalogPositions();
+
+  @Query(
+      "select distinct p.nationality from Player p join p.team t join t.league l where p.active=true and t.current=true and p.nationality is not null and trim(p.nationality) <> '' order by p.nationality")
+  List<String> findCatalogNationalities();
+
   @EntityGraph(attributePaths = {"team", "team.league"})
   @Query(
       "select p from Player p join p.team t join t.league l where p.active = true and t.current = true")

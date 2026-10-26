@@ -1,5 +1,40 @@
 # Research: Detalle individual del jugador
 
+## Investigación vigente — rediseño 2026-10-25
+
+Estas decisiones desarrollan exclusivamente el alcance vigente de `spec.md`. Las secciones R-01 y siguientes se conservan como investigación histórica; las decisiones sobre mocks, finanzas o herramientas retiradas no se aplican al rediseño.
+
+| Decisión | Razón y evidencia | Alternativas descartadas |
+| --- | --- | --- |
+| Mantener identidad y consulta estadística separadas | `players.service.ts` ya ofrece `getById`; `usePlayerDetailPage` distingue identidad y consultas secundarias. Permite mantener identidad ante error de estadísticas y no cambia consumidores del catálogo | Agregar estadísticas obligatorias al DTO del catálogo; reemplazar el endpoint de identidad |
+| Extender la feature `players`, sin feature estadística frontend nueva | La Page y sus recursos ya pertenecen a `features/players`; las normas prohíben dependencias entre features | Importar hooks de cartera/mercado; llevar lógica del jugador a `app` o `shared` |
+| Query Hook → Service → Mapper → Model | Es el flujo normativo de roles/dependencies. Servicio usa cliente `http` autenticado y `AbortSignal`; hook de Page coordina errores independientes, pestaña y filtros | HTTP en Component; DTO en Hook; validar manualmente cada campo HTTP como actualmente hace código heredado |
+| Constantes de metadatos y perfiles, no cálculos deportivos | La matriz de 60 claves de la spec fija nombres, categorías, orden y prioridad; cuatro perfiles declarativos seleccionan tarjetas y series. Valores siempre del contrato, sin normalización | Radar, percentiles, promedio de liga, SVG con datos simulados |
+| Barras HTML/CSS accesibles, sin paquete nuevo | Gráficos son conjuntos pequeños de tasas de igual unidad. Longitud proporcional al máximo positivo visible es codificación visual, no un indicador publicado; texto conserva el valor original. Cero tiene etiqueta 0, ausencia no tiene barra; todo cero no divide por cero | Incorporar una librería; reutilizar el gráfico financiero con semántica de serie temporal; porcentajes de rendimiento |
+| Page Hook existente como coordinador real | Ya coordina identidad, consultas y reintento. Separa estado de identidad del estado estadístico; clave estadística incluye ID y temporada solicitada. No usar `keepPreviousData` entre jugadores | Store global; ocultar identidad por un fallo estadístico; conservar ID antiguo mediante efecto durante un render |
+| Componentes locales presentativos | `PlayerOverview`, breadcrumb y retrato permanecen en la carpeta de la Page. Nuevos paneles reciben modelos y callbacks, no conectan hooks ni realizan HTTP | Moverlos a shared preventivamente; hooks en componentes locales de Page |
+| Preservar compatibilidad del catálogo | Catálogo aún consume la fuente de demostración: retirar únicamente las llamadas demo del detalle y revisar consumidores antes de eliminar archivos. Mantener firmas e identidad del catálogo | Borrar `demo/`, keys o hooks compartidos porque el detalle deja de usarlos |
+| No cambiar layouts globales | `PageLayout` gestiona scroll desktop; móvil usa comportamiento vigente, sin altura fija. Se conserva navbar desde `AppLayout`, tokens y breakpoints existentes; columnas colapsan sin exceder ancho | Cambiar breakpoints globales para resolver una Page; introducir scroll vertical anidado o forzar 60 filas en un viewport |
+
+No se añade selector de temporada a la UI. El contrato admite temporada explícita; la consulta sin selección resuelve el último contexto confirmado del jugador y devuelve su temporada real, sin hardcodear 2025/2026 ni 2026/2027. Esto operacionaliza el contexto existente sin ampliar la interacción.
+
+### Decisiones de backend contrastadas
+
+- **Decisión**: consulta dedicada con interfaz/implementación Service, Repository de estadísticas y Model de lectura puro; Mapper estático en Controller. **Razón**: matrices backend no permiten Service→Service general. Reutilizar `PlayerRepository.findVisibleById`, no invocar `PlayerCatalogService` desde el nuevo Service. **Alternativas**: usar selector poblacional de valuaciones o delegar composición en Mapper, incompatibles con spec/arquitectura.
+- **Decisión**: confirmación exige fila `RESOLVED` e item asociado `COMPLETED`, con jugador, fecha y canal consistentes. **Evidencia**: `PlayerStatisticsWriter` publica ambos atómicamente; filas sin contexto pueden existir con item `NO_DATA`; `run_item_id` nullable en migración. **Alternativa**: confiar en existencia de fila o fecha, insuficiente.
+- **Decisión**: seleccionar máximo de fecha por jugador/temporada y anclar por JSON, luego observación/ID; respaldar solo mismo contexto. **Evidencia**: unicidad `(extraction_date,source,player_id)` de `V20261018191335__flatten_player_statistics.sql`, columnas nullable y `MetricCatalog.metricValue`/`PlayerStatistics.metricValue`. **Alternativa**: mezclar valores históricos para maximizar cobertura, expresamente prohibida.
+- **Decisión**: lectura de ancla/respaldo dentro de snapshot transaccional consistente. **Razón**: una extracción concurrente no debe introducir datos de otra campaña entre consultas. **Alternativa**: varias consultas independientes sin consistencia, riesgo de selección no reproducible.
+- **Decisión**: sin migraciones nuevas inicialmente. **Razón**: columnas y clave de unicidad existentes bastan; índice de jugador/fecha ya existe. **Alternativa**: nueva tabla o materialización del dashboard, sin necesidad actual.
+- **Decisión**: contrato de consulta nuevo, no el DTO de sincronización/coverage. **Razón**: necesita 60 valores/procedencias y ausencia exitosa, no auditoría de run ni operaciones de extracción. **Alternativa**: exponer entidades JPA o respuestas operativas al frontend.
+
+Fuentes: `models/PlayerStatistics.java`, `models/MetricCatalog.java`, `repositories/PlayerStatisticsRepository.java`, `services/internal/PlayerStatisticsWriter.java`, `services/internal/LeagueContextSelection.java`, `services/internal/ValuationSnapshotSelector.java`, `controllers/PlayerController.java`, `config/SecurityConfig.java` y normas backend. La observación real de métricas ya registrada en spec no se convierte en un requisito de 57 valores para cada jugador.
+
+Verificación documental: fuentes consultadas incluyen arquitectura común, frontend (roles, dependencias, composición, presentación), tecnologías, convenciones y los consumidores actuales. Sin llamadas a proveedor, pruebas, build ni cambios funcionales.
+
+---
+
+## Antecedente histórico de investigación
+
 Resuelve las decisiones técnicas diferidas a Plan por las clarificaciones de 2026-10-12.
 Cada decisión indica opciones evaluadas y motivo; no introduce requisitos nuevos.
 

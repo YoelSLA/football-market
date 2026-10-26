@@ -5,12 +5,66 @@ import footballmarket.models.enums.MetricSource;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /** Fila ancha de métricas por jugador, campaña y canal. */
 public interface PlayerStatisticsRepository extends JpaRepository<PlayerStatistics, Long> {
+  /** Un solo lote: la fecha del ancla fija qué filas y contexto pueden contribuir. */
+  @Query(
+      value =
+          """
+      with confirmed as (
+        select s.* from player_statistics s
+        join player_statistics_run_items i on i.id = s.run_item_id
+        where s.player_id in (:playerIds) and s.context_status = 'RESOLVED'
+          and s.season_key is not null and s.provider_competition_id is not null
+          and i.result = 'COMPLETED' and i.player_id = s.player_id
+          and i.extraction_date = s.extraction_date and i.source = s.source
+      ), ranked as (
+        select c.*, row_number() over (partition by player_id order by extraction_date desc,
+          case when source = 'JSON' then 0 else 1 end, observed_at desc, id desc) as rank
+        from confirmed c
+      )
+      select c.* from confirmed c join ranked a on a.player_id = c.player_id and a.rank = 1
+        and a.extraction_date = c.extraction_date and a.season_key = c.season_key
+        and a.provider_competition_id = c.provider_competition_id
+      order by c.player_id, case when c.source = 'JSON' then 0 else 1 end, c.observed_at desc, c.id desc
+      """,
+      nativeQuery = true)
+  List<PlayerStatistics> findCatalogStatistics(@Param("playerIds") List<Long> playerIds);
+
+  /** Selección individual confirmada, sin exigir resultado global de la campaña. */
+  @Query(
+      "select s from PlayerStatistics s join s.runItem i"
+          + " where s.player.id = :playerId and (:seasonKey is null or s.seasonKey = :seasonKey)"
+          + " and s.contextStatus = 'RESOLVED' and s.seasonKey is not null"
+          + " and s.providerCompetitionId is not null"
+          + " and i.result = footballmarket.models.enums.PlayerExtractionResult.COMPLETED"
+          + " and i.player = s.player and i.extractionDate = s.extractionDate and i.source = s.source"
+          + " order by s.extractionDate desc,"
+          + " case when s.source = footballmarket.models.enums.MetricSource.JSON then 0 else 1 end,"
+          + " s.observedAt desc, s.id desc")
+  List<PlayerStatistics> findConfirmedForPlayer(
+      @Param("playerId") Long playerId, @Param("seasonKey") String seasonKey, Pageable pageable);
+
+  /** Filas compañeras del contexto exacto del ancla, como máximo una por canal. */
+  @Query(
+      "select s from PlayerStatistics s join s.runItem i"
+          + " where s.player.id = :playerId and s.extractionDate = :date"
+          + " and s.seasonKey = :seasonKey and s.providerCompetitionId = :competitionKey"
+          + " and s.contextStatus = 'RESOLVED'"
+          + " and i.result = footballmarket.models.enums.PlayerExtractionResult.COMPLETED"
+          + " and i.player = s.player and i.extractionDate = s.extractionDate and i.source = s.source"
+          + " order by s.observedAt desc, s.id desc")
+  List<PlayerStatistics> findConfirmedCompanions(
+      @Param("playerId") Long playerId,
+      @Param("date") LocalDate date,
+      @Param("seasonKey") String seasonKey,
+      @Param("competitionKey") String competitionKey);
+
   /**
    * Fila ya presente de un jugador en la campaña, si existe.
    *

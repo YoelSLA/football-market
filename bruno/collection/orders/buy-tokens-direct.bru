@@ -1,0 +1,35 @@
+meta {
+  name: Comprar tokens directamente
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/orders/buy
+  body: json
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  content-type: application/json
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "playerId": 7821,
+    "quantity": 10
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

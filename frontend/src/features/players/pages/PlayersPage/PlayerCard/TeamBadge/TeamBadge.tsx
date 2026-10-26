@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { getTeamLogo } from "@/features/players/utils";
+import { getTeamShield } from "@/shared/utils/teamShield";
 import styles from "./TeamBadge.module.scss";
 
 interface Props {
 	teamName: string;
+	leagueName?: string;
 }
 
-export default function TeamBadge({ teamName }: Props) {
-	const url = getTeamLogo(teamName);
+export default function TeamBadge({ teamName, leagueName }: Props) {
+	const url = leagueName ? getTeamShield(leagueName, teamName) : null;
 	const [failed, setFailed] = useState(false);
 	return url && !failed ? (
 		<img

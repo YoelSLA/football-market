@@ -64,6 +64,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+  @ExceptionHandler(InvalidPlayerIdException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidPlayerId(
+      InvalidPlayerIdException exception, HttpServletRequest request) {
+    return this.buildResponse(
+        exception.getMessage(), "INVALID_PARAMETER_TYPE", HttpStatus.BAD_REQUEST, request);
+  }
+
   @ExceptionHandler(InvalidValuationRequestException.class)
   public ResponseEntity<ErrorResponseDTO> handleInvalidValuationRequest(
       InvalidValuationRequestException exception, HttpServletRequest request) {
@@ -438,6 +445,21 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponseDTO> handleValidation(
       MethodArgumentNotValidException ex, HttpServletRequest request) {
+    if (request.getRequestURI().equals("/api/players")) {
+      org.springframework.validation.FieldError field = ex.getBindingResult().getFieldError();
+      String code =
+          field != null && field.isBindingFailure()
+              ? "INVALID_PARAMETER_TYPE"
+              : field != null
+                      && ("page".equals(field.getField()) || "size".equals(field.getField()))
+                  ? "INVALID_PLAYER_PAGE"
+                  : "INVALID_REQUEST";
+      return this.buildResponse(
+          "Los criterios del catálogo no tienen un formato válido",
+          code,
+          HttpStatus.BAD_REQUEST,
+          request);
+    }
     if (request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")) {
       org.springframework.validation.FieldError field = ex.getBindingResult().getFieldError();
       if (field != null) {

@@ -1,5 +1,21 @@
 # Modelo de datos: Página de catálogo de jugadores
 
+## Modelo vigente del rediseño
+
+- **PlayerCatalogCriteria**: name nullable normalizado con trim, leagueId/teamId nullable positivos, position/nationality nullable exactos, sort controlado y includeStatistics boolean. Page/size conservan sus validaciones. DTO de query distinto de Model aunque compartan campos.
+- **PlayerCatalogPage**: entradas visibles, page/size/totalElements/totalPages del mismo predicado global. Enrichment de página después de selección de IDs, dentro de snapshot transaccional consistente; no multiplica filas ni cambia count.
+- **PlayerCatalogEntry**: identidad vigente de Player (ID interno, nombre, IDs/nombres equipo/liga, posición, opcionales de fecha/nacionalidad/imágenes). Resumen estadístico opcional, no entidad persistida. active derivado true por elegibilidad, no cambia DTO legado.
+- **CatalogStatistics**: seasonKey/seasonLabel/extractionDate/competitionKey nullable, appearancesTotal/goalsTotal/assistsTotal nullable con fuente por valor. No snapshot → valores/contexto/fuentes null, no elimina jugador. Cero conserva valor/fuente. Ancla individual confirmada por item de mismojugador/fecha/canal y contexto resuelto; JSON antes de scraping en igualfecha, observado/ID como desempate; respaldo estrictamente mismo contexto.
+- **FilterOptions**: listas únicas leagues(id,name), teams(id,name,leagueId), positions/nationalities de valores no vacíos reales de todos los visibles. No se transforman países ni posiciones desconocidas a categorías inventadas. No nuevas tablas.
+- **Estado remoto**: querykey de criterios efectivos/page/size; opciones en key propia. No duplicar respuesta en store; DTO transformado por Mapper dentro de Service.
+- **Estado UI**: texto en edición, nombre efectivo tras300ms, cuatro selecciones, sort y page; cambiar criterio vuelve a0, paginar conserva criterios. Limpiar cancela debounce pendiente. Loading/error/vacío global/vacío por filtro identificables; no mostrar página anterior bajo otro filtro. Si totalPages baja, una corrección a última válida; si cero, mantener página0 sin loop.
+
+Tipos/metadatos HTTP exactos en [SPEC-002 contract](../002-player-catalog/contracts/catalog-query.md). El contenido posterior es antecedente, incluidos ID externo y campos team/league legacy ya sustituidos por el dominio integrado; no usarlos como fuente del código nuevo.
+
+---
+
+## Antecedente histórico del modelo anterior
+
 ## Contratos HTTP
 
 ### PlayerResponseDTO

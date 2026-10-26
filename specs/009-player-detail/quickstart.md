@@ -1,5 +1,74 @@
 # Guía de validación: Detalle individual del jugador
 
+## Guía vigente del rediseño — 2026-10-25
+
+Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md).
+
+### Prerrequisitos y arranque futuro
+
+Preparación de fixtures T049: usar un jugador visible por posición y temporada explícita `seasonKey`, dos fechas ordenadas, filas JSON/scraping coincidentes y una de competición distinta; preparar cero/nulo y tres métricas exclusivas scraping. Agregar inexistente, inactivo, fila huérfana e item no confirmado. Las fixtures backend viven solo en Testcontainers; no alterar PostgreSQL de desarrollo para estos casos. Concurrencia se prueba en Repository mediante dos transacciones coordinadas (T058), no con helpers de persistencia durante Act de Service. Para UI, elegir IDs/temporadas reales disponibles localmente y provocar error de lectura mediante herramientas del navegador del usuario: comparar contexto/fecha previos, cambio A→B y reintento; sin datos compatibles no se muestran valores.
+
+Backend configurado con PostgreSQL y datos reales existentes, credencial de usuario válida; frontend con Node del repositorio y `VITE_API_URL=http://localhost:8080/api`. Usar la configuración local existente sin publicar credenciales. No instalar dependencias nuevas.
+
+Comandos opcionales de arranque a cargo del usuario, en terminales separadas:
+
+```bash
+# Directorio backend/
+./gradlew bootRun
+```
+
+```bash
+# Directorio frontend/ con dependencias ya instaladas
+npm run dev
+```
+
+Consultar el endpoint con la sesión existente desde la aplicación o cliente HTTP autorizado. No ejecutar POST de sync/evaluate/requote para abrir el detalle. Usar temporada y jugador reales de la base local; no copiar cifras del mockup.
+
+### Escenarios de validación de producto a cargo del usuario
+
+| Escenario | Resultado esperado |
+| --- | --- |
+| Abrir desde catálogo, URL directa y recargar | Identidad real, Resumen inicial, exactamente dos pestañas y retorno existente |
+| Jugador con varias fechas confirmadas | Última fecha del jugador/temporada; fecha real visible, independiente de campaña poblacional |
+| Empate y contexto | JSON ancla en misma fecha; observación/ID deterministas; no fusionar competición distinta |
+| JSON cero y scraping positivo | Conservar 0 y fuente JSON |
+| JSON nulo y scraping coincidente | Valor real de scraping con fuente SCRAPING |
+| Respaldo de otra fecha/temporada/competición | No completar; mostrar Sin datos |
+| Solo scraping confirmado | Mostrar sus valores sin exigir snapshot JSON |
+| Fila huérfana, item no COMPLETED o contexto no resuelto | No seleccionarla como confirmada; no sustituir error técnico por ausencia |
+| Sin datos de jugador visible | Mantener identidad/tabs; 60 claves con ausencia explícita, sin mocks |
+| Fallo estadístico, carga y reintento | Estados distintos; identidad y retorno permanecen, sin datos de otro jugador |
+| Cuatro posiciones | Cuatro tarjetas exactas, series y adicionales de spec; sin cálculos nuevos ni finanzas |
+| Todas las estadísticas | 60 claves únicas; categorías 5/19/10/5/3/10/4/4; búsqueda nombre/clave sin acentos/mayúsculas intersecta categoría; limpiar restaura todo |
+| Orden y aparición de tres claves | P→S→B disponibles, luego ausentes; cero disponible; nuevos valores reordenan catálogo sin cambiar Resumen |
+| Privacidad | Visitante/sesión vencida no accede; inexistente e inactivo mismo no encontrado; ID inválido 400 |
+| Navegación rápida A→B | Respuesta tardía no altera B ni mezcla identidad/contexto/valores |
+| Teclado | Tabs flechas/Home/End, foco y selección; buscador, categorías y reintento accesibles; gráficos comprensibles por texto |
+| Viewports 360/768/1280 × 640/800 | Sin recortes ni overflow horizontal del documento; scroll en PageLayout desktop, natural móvil; controles siempre alcanzables |
+| Catálogo y otras rutas | Navegación, retrato fallback y sesión sin regresiones; no borrar consumidores compartidos de demos |
+| Nombre histórico de competición | Nombre solo con correspondencia fiable; sin ella «Competición no disponible», nunca liga actual como sustituto |
+| ID inválido frente a ausencia | Ambas lecturas 400 para formato/rango inválido/cero/negativo; válido inexistente/no visible 404; estadísticas ausentes de visible 200 NO_DATA |
+| Error de actualización con respuesta previa | Mismo jugador/temporada: conservar fecha/valores anteriores con error, advertencia y reintento; otro contexto no conserva valores; nueva respuesta exitosa NO_DATA reemplaza anterior |
+| Glosario de presentación | Las 60 etiquetas y unidades siguen `contracts/metric-glossary.md`, sin multiplicar porcentajes persistidos ni convertir tasas |
+
+No forzar cambios en datos reales para fabricar casos. Los casos imposibles de obtener con datos locales se cubren mediante fixtures backend en tests escritos durante implementación; no datos simulados del producto ni tests frontend.
+
+### Comprobaciones técnicas futuras
+
+Los tests backend aplicables se escriben en las categorías normativas. El usuario puede ejecutar, desde `backend/`, tras su implementación:
+
+```bash
+./gradlew test --tests 'footballmarket.controllers.PlayerControllerTest'
+```
+
+La selección exacta de nuevos tests de Model/Service/Repository se entregará en Testing Report cuando existan; no se presenta un nombre supuesto como clase disponible. Las pruebas de repositorio deben usar PostgreSQL/Testcontainers según normas. No crear ni ejecutar tests frontend.
+
+Builds únicamente tras modificar código, bajo AGENTS del área: `./gradlew build -x test` en backend y `npm run build` en frontend. No corresponden a este cambio documental; inspeccionar scripts/hooks antes de cualquier ejecución. Registrar evidencia del usuario; build no acredita tests, revisión ni cierre.
+
+---
+
+## Antecedente histórico de validación anterior — no ejecutar para el nuevo alcance
+
 Esta guía describe escenarios manuales verificables. El agente no ejecuta tests; el usuario
 ejecuta los comandos indicados.
 
