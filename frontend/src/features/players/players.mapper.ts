@@ -1,17 +1,15 @@
 import type {
 	Player,
+	PlayerCatalogFiltersDTO,
 	PlayerDetail,
 	PlayerMetric,
-	PlayersPage,
-	PlayerStatistics,
-	PlayerStatisticsState,
-} from "./types";
-import type {
 	PlayerMetricResponseDTO,
 	PlayerResponseDTO,
-	PlayersPageResponseDTO,
+	PlayerStatistics,
 	PlayerStatisticsResponseDTO,
-	PlayerCatalogFiltersDTO,
+	PlayerStatisticsState,
+	PlayersPage,
+	PlayersPageResponseDTO,
 } from "./types";
 
 export function toPlayerDetail(dto: PlayerResponseDTO): PlayerDetail {
@@ -31,11 +29,7 @@ export function toPlayerDetail(dto: PlayerResponseDTO): PlayerDetail {
 	};
 }
 
-export function toPlayersPage(
-	dto: PlayersPageResponseDTO,
-	page: number,
-	size: number,
-): PlayersPage {
+export function toPlayersPage(dto: PlayersPageResponseDTO): PlayersPage {
 	return {
 		players: dto.content.map(toPlayer),
 		page: dto.page,
@@ -59,12 +53,21 @@ export function toPlayer(dto: PlayerResponseDTO): Player {
 		imageUrl: dto.imageUrl,
 		fallbackImageUrl: dto.fallbackImageUrl,
 		active: true,
-		statistics: dto.statistics ? { ...dto.statistics, sources: { ...dto.statistics.sources } } : undefined,
+		statistics: dto.statistics
+			? { ...dto.statistics, sources: { ...dto.statistics.sources } }
+			: undefined,
 	};
 }
 
-export function toPlayerCatalogFilters(dto: PlayerCatalogFiltersDTO): import("./types").PlayerCatalogFilters {
-	return { leagues: dto.leagues.map((item) => ({ ...item })), teams: dto.teams.map((item) => ({ ...item })), positions: [...dto.positions], nationalities: [...dto.nationalities] };
+export function toPlayerCatalogFilters(
+	dto: PlayerCatalogFiltersDTO,
+): import("./types").PlayerCatalogFilters {
+	return {
+		leagues: dto.leagues.map((item) => ({ ...item })),
+		teams: dto.teams.map((item) => ({ ...item })),
+		positions: [...dto.positions],
+		nationalities: [...dto.nationalities],
+	};
 }
 
 export function toMetric(dto: PlayerMetricResponseDTO): PlayerMetric {
@@ -76,7 +79,9 @@ export function toMetric(dto: PlayerMetricResponseDTO): PlayerMetric {
 	};
 }
 
-export function toStatistics(dto: PlayerStatisticsResponseDTO): PlayerStatistics {
+export function toStatistics(
+	dto: PlayerStatisticsResponseDTO,
+): PlayerStatistics {
 	return {
 		playerId: dto.playerId,
 		requestedSeasonKey: dto.requestedSeasonKey,

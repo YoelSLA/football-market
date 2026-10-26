@@ -21,7 +21,11 @@ export interface PlayerCatalogStatisticsDTO {
 	appearancesTotal: number | null;
 	goalsTotal: number | null;
 	assistsTotal: number | null;
-	sources: { appearancesTotal: "JSON" | "SCRAPING" | null; goalsTotal: "JSON" | "SCRAPING" | null; assistsTotal: "JSON" | "SCRAPING" | null };
+	sources: {
+		appearancesTotal: "JSON" | "SCRAPING" | null;
+		goalsTotal: "JSON" | "SCRAPING" | null;
+		assistsTotal: "JSON" | "SCRAPING" | null;
+	};
 }
 
 export interface PlayerCatalogFiltersDTO {

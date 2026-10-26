@@ -20,7 +20,7 @@ for (const [path, module] of Object.entries(modules)) {
 	const leagueSlug = match[1];
 	const teamSlug = match[2];
 	if (!shields.has(leagueSlug)) shields.set(leagueSlug, new Map());
-	shields.get(leagueSlug)!.set(teamSlug, module.default);
+	shields.get(leagueSlug)?.set(teamSlug, module.default);
 }
 
 /** Normaliza un nombre a la forma de slug usada por los archivos. */
@@ -43,7 +43,10 @@ const teamAliases: Record<string, Record<string, string>> = {
 	},
 };
 
-export function getTeamShield(leagueName: string, teamName: string): string | null {
+export function getTeamShield(
+	leagueName: string,
+	teamName: string,
+): string | null {
 	const leagueSlug = getLeagueSlug(leagueName);
 	if (!leagueSlug) return null;
 	const leagueShields = shields.get(leagueSlug);

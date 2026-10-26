@@ -1,6 +1,6 @@
+export { usePlayerCatalogFiltersQuery } from "./usePlayerCatalogFiltersQuery";
 export { usePlayerDetailQuery } from "./usePlayerDetailQuery";
 export { usePlayerSampleSeasonQuery } from "./usePlayerSampleSeasonQuery";
-export { usePlayerTokenQuoteQuery } from "./usePlayerTokenQuoteQuery";
 export { usePlayerStatisticsQuery } from "./usePlayerStatisticsQuery";
-export { usePlayersQuery, PLAYERS_PAGE_SIZE } from "./usePlayersQuery";
-export { usePlayerCatalogFiltersQuery } from "./usePlayerCatalogFiltersQuery";
+export { PLAYERS_PAGE_SIZE, usePlayersQuery } from "./usePlayersQuery";
+export { usePlayerTokenQuoteQuery } from "./usePlayerTokenQuoteQuery";

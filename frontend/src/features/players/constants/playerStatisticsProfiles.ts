@@ -136,10 +136,18 @@ export function getPositionProfile(position: string): PositionProfile {
 	if (normalized === "goalkeeper" || normalized === "portero") {
 		return POSITION_PROFILES.Goalkeeper;
 	}
-	if (normalized === "defender" || normalized === "defence" || normalized === "defensa") {
+	if (
+		normalized === "defender" ||
+		normalized === "defence" ||
+		normalized === "defensa"
+	) {
 		return POSITION_PROFILES.Defender;
 	}
-	if (normalized === "midfielder" || normalized === "midfield" || normalized === "mediocampista") {
+	if (
+		normalized === "midfielder" ||
+		normalized === "midfield" ||
+		normalized === "mediocampista"
+	) {
 		return POSITION_PROFILES.Midfielder;
 	}
 	return POSITION_PROFILES.Forward;

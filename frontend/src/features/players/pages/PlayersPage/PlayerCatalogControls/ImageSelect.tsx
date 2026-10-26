@@ -17,19 +17,30 @@ interface Props {
 	placeholder?: string;
 }
 
-export default function ImageSelect({ label, icon, value, options, disabled, onChange, placeholder }: Props) {
+export default function ImageSelect({
+	label,
+	icon,
+	value,
+	options,
+	disabled,
+	onChange,
+	placeholder,
+}: Props) {
 	const [open, setOpen] = useState(false);
 	const [activeIndex, setActiveIndex] = useState(0);
 	const rootRef = useRef<HTMLDivElement | null>(null);
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
-	const listRef = useRef<HTMLUListElement | null>(null);
+	const listRef = useRef<HTMLDivElement | null>(null);
 
 	const selected = options.find((option) => option.value === value) ?? null;
 	const displayLabel = selected?.label ?? placeholder ?? "Todos";
 
 	useEffect(() => {
 		if (!open) return;
-		const index = Math.max(0, options.findIndex((option) => option.value === value));
+		const index = Math.max(
+			0,
+			options.findIndex((option) => option.value === value),
+		);
 		setActiveIndex(index === -1 ? 0 : index);
 	}, [open, options, value]);
 
@@ -46,7 +57,9 @@ export default function ImageSelect({ label, icon, value, options, disabled, onC
 
 	useEffect(() => {
 		if (open && listRef.current) {
-			const item = listRef.current.children[activeIndex] as HTMLElement | undefined;
+			const item = listRef.current.children[activeIndex] as
+				| HTMLElement
+				| undefined;
 			item?.scrollIntoView({ block: "nearest" });
 		}
 	}, [activeIndex, open]);
@@ -62,7 +75,12 @@ export default function ImageSelect({ label, icon, value, options, disabled, onC
 	const handleKeyDown = (event: React.KeyboardEvent) => {
 		if (disabled) return;
 		if (!open) {
-			if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
+			if (
+				event.key === "ArrowDown" ||
+				event.key === "ArrowUp" ||
+				event.key === "Enter" ||
+				event.key === " "
+			) {
 				event.preventDefault();
 				setOpen(true);
 			}
@@ -120,13 +138,19 @@ export default function ImageSelect({ label, icon, value, options, disabled, onC
 				onKeyDown={handleKeyDown}
 			>
 				{selected?.image && (
-					<img className={styles.imageSelect__thumb} src={selected.image} alt="" />
+					<img
+						className={styles.imageSelect__thumb}
+						src={selected.image}
+						alt=""
+					/>
 				)}
 				<span className={styles.imageSelect__value}>{displayLabel}</span>
-				<span className={styles.imageSelect__caret} aria-hidden="true">▾</span>
+				<span className={styles.imageSelect__caret} aria-hidden="true">
+					▾
+				</span>
 			</button>
 			{open && (
-				<ul
+				<div
 					id={listId}
 					ref={listRef}
 					className={styles.imageSelect__list}
@@ -135,9 +159,10 @@ export default function ImageSelect({ label, icon, value, options, disabled, onC
 					tabIndex={-1}
 				>
 					{options.map((option, index) => (
-						<li
+						<div
 							key={option.value || "__all__"}
 							role="option"
+							tabIndex={-1}
 							aria-selected={option.value === value}
 							className={
 								index === activeIndex
@@ -146,14 +171,24 @@ export default function ImageSelect({ label, icon, value, options, disabled, onC
 							}
 							onMouseEnter={() => setActiveIndex(index)}
 							onClick={() => commit(index)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter" || event.key === " ") {
+									event.preventDefault();
+									commit(index);
+								}
+							}}
 						>
 							{option.image && (
-								<img className={styles.imageSelect__optionImage} src={option.image} alt="" />
+								<img
+									className={styles.imageSelect__optionImage}
+									src={option.image}
+									alt=""
+								/>
 							)}
 							<span>{option.label}</span>
-						</li>
+						</div>
 					))}
-				</ul>
+				</div>
 			)}
 		</div>
 	);

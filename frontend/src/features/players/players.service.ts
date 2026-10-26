@@ -1,7 +1,17 @@
 import { http } from "@/infrastructure/http";
-import { toPlayerDetail, toPlayersPage, toStatistics, toPlayerCatalogFilters } from "./players.mapper";
-import type { PlayerDetail, PlayersPage, PlayerStatistics } from "./types";
-import type { PlayerResponseDTO, PlayersPageResponseDTO } from "./types";
+import {
+	toPlayerCatalogFilters,
+	toPlayerDetail,
+	toPlayersPage,
+	toStatistics,
+} from "./players.mapper";
+import type {
+	PlayerDetail,
+	PlayerResponseDTO,
+	PlayerStatistics,
+	PlayersPage,
+	PlayersPageResponseDTO,
+} from "./types";
 
 async function getPage(
 	page: number,
@@ -11,11 +21,25 @@ async function getPage(
 ): Promise<PlayersPage> {
 	const { data } = await http.get<PlayersPageResponseDTO>("/players", {
 		authenticated: true,
-		params: { page, size, ...(criteria ? { name: criteria.name || undefined, leagueId: criteria.leagueId || undefined, teamId: criteria.teamId || undefined, position: criteria.position || undefined, nationality: criteria.nationality || undefined, sort: criteria.sort, includeStatistics: true } : {}) },
+		params: {
+			page,
+			size,
+			...(criteria
+				? {
+						name: criteria.name || undefined,
+						leagueId: criteria.leagueId || undefined,
+						teamId: criteria.teamId || undefined,
+						position: criteria.position || undefined,
+						nationality: criteria.nationality || undefined,
+						sort: criteria.sort,
+						includeStatistics: true,
+					}
+				: {}),
+		},
 		signal,
 	});
 
-	return toPlayersPage(data, page, size);
+	return toPlayersPage(data);
 }
 
 async function getById(id: number, signal: AbortSignal): Promise<PlayerDetail> {
@@ -32,7 +56,9 @@ async function getStatistics(
 	seasonKey: string | null,
 	signal: AbortSignal,
 ): Promise<PlayerStatistics> {
-	const { data } = await http.get<import("./types").PlayerStatisticsResponseDTO>(`/players/${id}/statistics`, {
+	const { data } = await http.get<
+		import("./types").PlayerStatisticsResponseDTO
+	>(`/players/${id}/statistics`, {
 		authenticated: true,
 		params: { seasonKey: seasonKey ?? undefined },
 		signal,
@@ -41,8 +67,13 @@ async function getStatistics(
 	return toStatistics(data);
 }
 
-async function getFilters(signal: AbortSignal): Promise<import("./types").PlayerCatalogFilters> {
-	const { data } = await http.get<import("./types").PlayerCatalogFiltersDTO>("/players/filters", { authenticated: true, signal });
+async function getFilters(
+	signal: AbortSignal,
+): Promise<import("./types").PlayerCatalogFilters> {
+	const { data } = await http.get<import("./types").PlayerCatalogFiltersDTO>(
+		"/players/filters",
+		{ authenticated: true, signal },
+	);
 	return toPlayerCatalogFilters(data);
 }
 
