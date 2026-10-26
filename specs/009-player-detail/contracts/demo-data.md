@@ -1,5 +1,7 @@
 # Fuente de datos de demostración: estadísticas y cotizaciones
 
+> Antecedente histórico conservado, retirado del detalle por el rediseño 2026-10-25. No autoriza mocks, cotizaciones o historial financiero en la nueva página. El catálogo puede conservar consumidores existentes de muestras fuera del alcance; no eliminar este contrato o sus fuentes sin inspeccionarlos. Contrato vigente de estadísticas: [player-statistics.md](player-statistics.md).
+
 Define la fuente centralizada de datos simulados del detalle del jugador y cómo se sustituirá
 por información real. **No constituye un contrato HTTP**: estos datos no se transportan por la
 API y no provienen del backend.

@@ -1,5 +1,9 @@
 # Contrato HTTP: detalle individual de jugador
 
+> Vigencia del rediseño 2026-10-25: la identidad `GET /api/players/{id}` se conserva sin cambios. La consulta estadística real se diseña en [player-statistics.md](player-statistics.md). Las referencias siguientes a integración futura, ausencia de endpoint estadístico o datos de demostración son antecedentes históricos, no restricciones del dashboard vigente. No se reintroduce REST Docs como dependencia; OpenAPI y tests de Controller sostienen el contrato.
+
+> Aclaración vigente FR-046: se conservan DTO, ruta y visibilidad de identidad; se requiere alinear en la implementación futura la validación de ID para responder 400 ante formato/rango inválido, cero o negativo, y 404 solo ante ID válido inexistente/no visible. La implementación actual carece de validación positiva explícita; este requisito no se presenta como ya implementado. Ausencia estadística de jugador visible corresponde a 200 NO_DATA en la consulta estadística, no en identidad.
+
 Contrato nuevo que implementa `GET /api/players/{id}` y que consume la pantalla de detalle.
 La respuesta individual reutiliza el contrato de identidad del catálogo; no introduce campos de
 estadísticas ni de cotización.

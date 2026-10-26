@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
 	usePlayerDetailQuery,
-	usePlayerSampleSeasonQuery,
-	usePlayerTokenQuoteQuery,
+	usePlayerStatisticsQuery,
 } from "@/features/players/hooks/queries";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 
@@ -13,6 +12,8 @@ export type PlayerDetailState =
 	| "error"
 	| "ready";
 
+export type StatisticsTab = "summary" | "catalog";
+
 function parsePlayerId(rawId: string | undefined): number | null {
 	if (!rawId || !/^\d+$/.test(rawId)) return null;
 
@@ -22,36 +23,28 @@ function parsePlayerId(rawId: string | undefined): number | null {
 }
 
 export function usePlayerDetailPage(rawId: string | undefined) {
-	const [playerId, setPlayerId] = useState(parsePlayerId(rawId));
-	const [invalid, setInvalid] = useState<boolean>(
-		parsePlayerId(rawId) === null,
-	);
+	const playerId = parsePlayerId(rawId);
+	const invalid = playerId === null;
 
-	useEffect(() => {
-		const parsed = parsePlayerId(rawId);
-
-		setPlayerId(parsed);
-		setInvalid(parsed === null);
-	}, [rawId]);
+	const initial = { id: playerId, tab: "summary" as StatisticsTab, search: "", category: "all", unit: "all" };
+	const [controls, setControls] = useState(initial);
+	const currentControls = controls.id === playerId ? controls : initial;
+	const setActiveTab = (tab: StatisticsTab) => setControls({ ...currentControls, tab });
+	const setSearch = (search: string) => setControls({ ...currentControls, search });
+	const setCategory = (category: string) => setControls({ ...currentControls, category });
+	const setUnit = (unit: string) => setControls({ ...currentControls, unit });
+	const clearFilters = () => setControls({ ...currentControls, search: "", category: "all", unit: "all" });
 
 	const detail = usePlayerDetailQuery(playerId ?? 0, playerId !== null);
-	const sampleSeason = usePlayerSampleSeasonQuery(
-		detail.data?.id,
-		detail.isSuccess,
-	);
-	const tokenQuote = usePlayerTokenQuoteQuery(
-		detail.data?.id,
-		detail.isSuccess,
-	);
+	const statistics = usePlayerStatisticsQuery(playerId ?? 0, null, detail.isSuccess);
 
-	// Descarta cualquier dato que corresponda a una consulta anterior: solo se presenta
-	// la identidad del identificador vigente.
 	const visibleId = playerId;
 	const isCurrent = detail.data?.id === visibleId;
 	const player = isCurrent ? detail.data : undefined;
 	const retry = useCallback(() => void detail.refetch(), [detail]);
+	const retryStatistics = useCallback(() => void statistics.refetch(), [statistics]);
 
-	const state: PlayerDetailState = invalid
+	const detailState: PlayerDetailState = invalid
 		? "invalid-id"
 		: player
 			? "ready"
@@ -62,7 +55,7 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 					: "error";
 
 	const errorMessage =
-		state === "error"
+		detailState === "error"
 			? getErrorMessage(
 					detail.error,
 					"No pudimos consultar el jugador. Vuelve a intentarlo.",
@@ -70,11 +63,31 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 			: null;
 
 	return {
-		state,
+		playerId,
+		invalid,
+		detailState,
 		player,
-		sampleSeason: sampleSeason.data,
-		tokenQuote: tokenQuote.data,
+		statistics: statistics.data?.playerId === playerId ? statistics.data : undefined,
+		statisticsState: statistics.isPending
+			? "loading"
+			: statistics.isError
+				? "error"
+				: "ready",
+		statisticsErrorMessage:
+			statistics.isError && statistics.error
+				? getErrorMessage(statistics.error, "Error al cargar estadísticas")
+				: null,
 		errorMessage,
 		retry,
+		retryStatistics,
+		activeTab: currentControls.tab,
+		setActiveTab,
+		search: currentControls.search,
+		setSearch,
+		category: currentControls.category,
+		setCategory,
+		unit: currentControls.unit,
+		setUnit,
+		clearFilters,
 	};
 }

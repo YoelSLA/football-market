@@ -5,8 +5,10 @@ import footballmarket.controllers.dtos.responses.ErrorResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayerStatisticsCoverageResponseDTO;
 import footballmarket.controllers.dtos.responses.PlayerStatisticsSyncResponseDTO;
 import footballmarket.controllers.exceptions.InvalidStatisticsRequestException;
-import footballmarket.controllers.mappers.PlayerStatisticsMapper;
+import footballmarket.controllers.mappers.PlayerStatisticsCoverageMapper;
+import footballmarket.controllers.mappers.PlayerStatisticsSyncMapper;
 import footballmarket.models.enums.MetricSource;
+import footballmarket.models.records.PlayerStatisticsSyncRequest;
 import footballmarket.services.PlayerStatisticsCoverageService;
 import footballmarket.services.PlayerStatisticsSynchronizationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,9 +88,11 @@ public class PlayerStatisticsController {
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   public ResponseEntity<PlayerStatisticsSyncResponseDTO> synchronizeScraping(
       @Valid @RequestBody PlayerStatisticsSyncRequestDTO request) {
+    PlayerStatisticsSyncRequest domainRequest =
+        new PlayerStatisticsSyncRequest(request.extractionDate(), request.maxPlayers());
     return ResponseEntity.ok(
-        PlayerStatisticsMapper.toResponse(
-            this.synchronization.synchronizeScraping(PlayerStatisticsMapper.toModel(request))));
+        PlayerStatisticsSyncMapper.toResponse(
+            this.synchronization.synchronizeScraping(domainRequest)));
   }
 
   @PostMapping("/sync/json")
@@ -121,7 +125,7 @@ public class PlayerStatisticsController {
       HttpServletRequest request) {
     this.rejectJsonInput(request);
     return ResponseEntity.ok(
-        PlayerStatisticsMapper.toResponse(this.synchronization.synchronizeJson()));
+        PlayerStatisticsSyncMapper.toResponse(this.synchronization.synchronizeJson()));
   }
 
   @GetMapping("/coverage")
@@ -153,7 +157,8 @@ public class PlayerStatisticsController {
           "INVALID_STATISTICS_EXTRACTION_DATE", "La fecha de extracción no puede ser futura");
     }
     return ResponseEntity.ok(
-        PlayerStatisticsMapper.toResponse(this.coverage.coverage(date, this.channel(source))));
+        PlayerStatisticsCoverageMapper.toResponse(
+            this.coverage.coverage(date, this.channel(source))));
   }
 
   private MetricSource channel(String source) {

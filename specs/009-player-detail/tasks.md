@@ -5,6 +5,155 @@ description: "Task list template for feature implementation"
 
 # Tasks: Detalle individual del jugador
 
+## Tareas vigentes del rediseño — 2026-10-25
+
+### Continuación visual autorizada — referencias por posición
+
+Solicitud humana: reproducir las seis referencias `arquero-stats.png`, `arquero-todas-las-stats.png`, `defesa-stats.png` (nombre real del archivo solicitado como defensa), `defensa-todas-las-stats.png`, `mediocampista-stats.png` y `delantero-stats.png`, sin fuentes técnicas visibles, datos inventados ni cambios HTTP/backend. La solicitud autoriza este ajuste visual; no acepta resultados de implementación ni testing por sí misma.
+
+Cambios efectivos: cabecera de identidad y contexto, cuatro tarjetas de los perfiles aprobados, dos pestañas con teclado, paneles/zonas con tasas disponibles, filtros laterales y tabla de 60 claves con categoría/unidad/prioridad. Operaciones puras en `frontend/src/features/players/utils/playerStatisticsView.ts` exportadas por su API; se usa `PlayerDetail.position` real y no una métrica inexistente `position`. Fuentes permanecen en los Models para trazabilidad pero no se muestran en la UI. Navbar/submenús, contratos y backend no modificados por esta continuación. Controles locales se vinculan al ID vigente para no heredar filtros/pestaña de otro jugador.
+
+Adaptaciones conscientes: sin dorsal/altura/peso/pie hábil en DTO, esa franja presenta fecha y contexto reales; temporada informativa, no selector decorativo. Sin serie por partido, se presenta la calificación media de temporada con explicación, no una curva inventada. Sin particiones exclusivas validadas, barras en lugar de tortas/porcentajes; sin coordenadas defensivas/de pases, acciones reales en lugar de zonas ficticias. Tarjetas conservan las métricas funcionales aprobadas de SPEC-009 aunque algunas etiquetas del nuevo mockup difieran.
+
+Verificación de esta continuación: build frontend permitido; no tests ejecutados. Revisión visual humana a 1920×913 (navbar existente de dos niveles, sin alterar su altura) y tamaños móviles pendiente. La existencia de clases/componentes no acredita aceptación visual, accesibilidad manual ni cierre; las marcas históricas anteriores no sustituyen esta comprobación.
+
+**Rama**: `feat/009-player-detail-whoscored-stats-dashboard`. **Entrada**: secciones vigentes de [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md), [data-model.md](data-model.md), [contrato estadístico](contracts/player-statistics.md) y [glosario](contracts/metric-glossary.md).
+
+**Preparación observada**: checklists integration 16/16 y dashboard 12/12 conformes, marcados por autorización humana expresa y aceptación documental registrada en ambos archivos. Spec Kit `setup-tasks.sh --json` resuelve esta carpeta y la plantilla local. No existe `.specify/extensions.yml`: sin hooks before/after Tasks. Esta generación no ejecuta ANALYZE/IMPLEMENT ni autoriza código.
+
+**Preservación**: T001–T047 y sus estados permanecen íntegros bajo «Antecedente histórico». No se trasladan sus completados al rediseño ni se reactivan tareas de demos/finanzas. La numeración nueva empieza en T048; no se renumeran ni se eliminan pendientes humanos históricos. US3 financiera está retirada del alcance vigente. Las referencias FR/SC de este bloque son las vigentes del rediseño.
+
+**Formato y reglas**: `[P]` permite trabajo en archivos distintos tras cumplir sus dependencias, no concede delegación ni autorización de implementación. Cada tarea tiene área, rutas, dependencias y trazabilidad. Los tests backend se **escriben**, nunca se ejecutan por el agente; frontend sin tests ni infraestructura. Autorizaciones humanas no son tareas técnicas. Builds futuros solo tras cambios de código y bajo AGENTS; nada se ejecuta en esta fase.
+
+### Fase 1 — Preparación acotada
+
+**Autorización de implementación persistida — 2026-10-25**: el usuario solicitante autorizó explícitamente «Implementá SPEC-009 siguiendo las tareas T048–T085» y ratificó «Si no quedan bloqueos, retomá /speckit.implement siguiendo T048–T085 y sus dependencias» después de trasladar concurrencia a T058. Alcance: rediseño aprobado frontend/backend y escritura de pruebas, sin tests ejecutados, commits, push o merges. No autoriza CODE REVIEW, TESTING ni cierre. Reanálisis documental posterior a la corrección autorizada: T058 respeta categoría Repository con DB real; T059 conserva Arrange por helper y Act/Assert mediante Service público; dependencias/IDs/perfiles/contratos no cambian. Sin blockers identificados en ese ajuste; resultado de ANALYZE previo se conserva como antecedente. Checklists aplicables completos; no hooks configurados. Registro no acredita tareas implementadas.
+
+**Inventario T048**: `getPlayerSampleSeason` se exporta desde `demo/index.ts` y lo consume `hooks/queries/usePlayerSampleSeasonQuery.ts`, compartido por catálogo y detalle. `usePlayerTokenQuoteQuery` se exporta en `hooks/queries/index.ts` y `hooks/index.ts` y lo consume `usePlayerDetailPage.ts`. Los tres paneles históricos se componen únicamente desde `PlayerDetailPage.tsx`; los comentarios de tokens de colores no son consumidores de runtime. Conservar fuente deportiva/keys/tipos compartidos del catálogo; cualquier retiro futuro de la cadena financiera exige volver a revisar consumidores.
+
+- [X] T048 Registrar en `specs/009-player-detail/tasks.md` el inventario definitivo de consumidores de `frontend/src/features/players/demo/playerSampleSeason.ts`, `hooks/queries/usePlayerTokenQuoteQuery.ts` y los tres paneles históricos de `pages/PlayerDetailPage/`, antes de retirar dependencias; no eliminar consumidores de catálogo. Dependencias: ninguna; FR-037/040, SC-018.
+- [X] T049 Precisar en `specs/009-player-detail/quickstart.md` las fixtures y entradas para validación de snapshot, 400/404/NO_DATA, competición fiable/fallback y refetch, sin publicar credenciales ni modificar datos reales para fabricar casos. Dependencias: T048; FR-041/045–048, SC-022–024.
+
+### Fase 2 — Fundamentos compartidos
+
+- [X] T050 Definir contratos tipados separados DTO/Model de estadísticas y estados de recuperación en `frontend/src/features/players/types/dtos.ts`, `types/models.ts` y `types/index.ts`, alineados con `contracts/player-statistics.md`, incluido competitionName nullable y fuente por clave; no validaciones runtime ad hoc. Dependencias: T049; FR-028/029/033/041/045/047, SC-014/016/023/024.
+- [X] T051 Definir en `frontend/src/features/players/constants/playersQueryKeys.ts` la clave estadística por jugador y temporada solicitada (null para automática), preservando keys de catálogo/demo con consumidores; preparar export en `constants/index.ts`. Dependencias: T050; FR-025/026/041/047; SC-012/024.
+
+### Fase 3 — US1 (P1): identidad y navegación
+
+**Objetivo**: preservar identidad real, acceso directo y navegación; alinear IDs sin revelar inactivos. **Criterio independiente**: selección desde catálogo, recarga y URL directa, ID inválido vs no visible, respuestas tardías y retorno (SC-012/023). No exige todavía gráficos.
+
+**Entrega incremental parcial**: US1 entrega únicamente la base de identidad/navegación; no satisface por sí sola todos sus criterios finales. El escenario US1.1 de `spec.md` conserva las dos pestañas como aceptación final: su estructura accesible se incorpora en US4 (T072–074) y la integración completa de Resumen/Todas las estadísticas se completa en US5 (T078–079). No declarar US1 plenamente aceptada al terminar T056 ni reducir sus criterios finales.
+
+#### Pruebas backend — escritura
+
+- [X] T052 [US1] Ampliar `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` para identidad con ID no numérico, fuera de Long, cero/negativo → 400 y válido inexistente/no visible → 404, manteniendo contrato de respuesta y autenticación; sin ejecutar tests. Dependencias: T051; FR-025/046, SC-012/023.
+- [X] T053 [US1] Incorporar casos de visibilidad indistinguible al test de Service existente `backend/src/test/java/footballmarket/services/PlayerCatalogServiceTest.java`, sin modificar sincronización; no ejecutar. Dependencias: T052; FR-025/037/046, SC-012/023.
+
+#### Backend, frontend e integración
+
+- [X] T054 [US1] Alinear validación positiva de ID en `backend/src/main/java/footballmarket/controllers/PlayerController.java` y tratamiento de validación existente en `controllers/exceptions/GlobalExceptionHandler.java` solo si hace falta, conservando DTO/ruta/visibilidad y códigos globales. Dependencias: T052/T053; FR-025/046, SC-012/023.
+- [X] T055 [US1] Derivar ID vigente sin efecto que conserve el anterior en `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts`; proteger acceso directo y respuesta tardía, mantener `usePlayerDetailQuery`/signal y sesión global. Dependencias: T054; FR-025/037, SC-012/016.
+- [X] T056 [US1] Mantener identidad, fallback de retrato, breadcrumb y retorno en `frontend/src/features/players/pages/PlayerDetailPage/PlayerOverview/PlayerOverview.tsx`, `PlayerBreadcrumb/PlayerBreadcrumb.tsx` y `PlayerDetailPage.tsx`, separando identidad de indicadores demo y preservando navbar del layout; no crear menú/selector nuevo. Dependencias: T055; FR-025/026/037/040, SC-012/018.
+
+### Fase 4 — US2 (P1): resumen estadístico real
+
+**Avance parcial verificado — 2026-10-25**: T048–T056 implementadas/escritas y revisadas estáticamente; pruebas de T052/T053 NO ejecutadas ni compiladas como suite. `./gradlew build -x test` y `npm run build` satisfactorios tras corregir un salto de línea señalado por Spotless; backend no ejecutó tests. Frontend avisa bundle >500 kB, sin exigir optimización fuera del alcance. Issue #72 verificado OPEN y proyecto IN PROGRESS. No está implementada la consulta estadística, las dos pestañas o los gráficos: T057–T085 siguen pendientes. Los antiguos paneles ya no se presentan; hooks demo existentes aún deben retirarse del flujo en T068 y limpiarse tras revisar consumidores en T082. US1 es incremento parcial, no aceptación final ni CODE REVIEW global. No commits/push/merges.
+
+**Objetivo**: snapshot individual, cuatro tarjetas y gráficos por posición, con estados y fuente reales. **Criterio independiente**: un jugador por cada posición, sin valoraciones/cotizaciones; ceros, nulos, respaldo coincidente, scraping único, fechas/contextos incompatibles y errores (SC-014–016/018/019/022–024).
+
+#### Pruebas backend — escritura primero, ejecución humana
+
+- [X] T057 [P] [US2] Escribir pruebas puras de composición en `backend/src/test/java/footballmarket/models/PlayerStatisticsSnapshotTest.java`: 60 claves, nulos/cero, fuentes, JSON prioritario, tres exclusivas scraping, disponibilidad y prohibición de cálculos nuevos. Dependencias: T056; FR-027/029/031–033/041/043/044, SC-014/015/018/021/022.
+- [X] T058 [P] [US2] Escribir pruebas PostgreSQL/Testcontainers de Repository en `backend/src/test/java/footballmarket/repositories/PlayerStatisticsQueryRepositoryTest.java`: confirmación por item coherente, filas huérfanas/no resueltas, temporada explícita/automática, fecha/observación/ID, sin selección poblacional. Incluir dos transacciones coordinadas sin esperas temporales arbitrarias: lectura repeatable-read selecciona ancla; otra transacción confirma respaldo coincidente o campaña posterior; la primera conserva su snapshot al consultar filas compañeras, y una nueva transacción ve lo confirmado. Persistencia y assertions de estas consultas pertenecen a categoría Repository; no invocar sincronización/finanzas ni ejecutar tests desde el agente. Dependencias: T056; FR-028/041, SC-014/022; Plan §Riesgos, lectura consistente.
+- [X] T059 [P] [US2] Escribir pruebas de Service real con PostgreSQL/Testcontainers en `backend/src/test/java/footballmarket/services/PlayerStatisticsQueryServiceTest.java`: visibilidad, scraping único, contexto/fecha, nombre fiable o null, NO_DATA y fallos técnicos diferenciados. Arrange puede delegar fixtures a helper compartido conforme docs/backend/testing.md §5–6; Act/Assert utilizan exclusivamente la API pública productiva del Service. Sin acceso directo a Repository/JPA/SQL en el test, sin helper de persistencia concurrente durante Act/Assert y sin invocar sincronización/finanzas. Concurrencia cubierta en T058; no ejecutar tests desde el agente. Dependencias: T056; FR-025/027/029/041/045/046, SC-014/016/018/022/023.
+
+#### Backend
+
+- [X] T060 [US2] Crear el Model puro `backend/src/main/java/footballmarket/models/PlayerStatisticsSnapshot.java` y valores relacionados colocalizados: 60 definiciones MetricCatalog, value/source nullable, composición aprobada y AVAILABLE/PARTIAL/NO_DATA; sin nuevas entidades ni tablas. Dependencias: T057; FR-027/029/033/041/043, SC-014/018/022.
+- [X] T061 [US2] Ampliar `backend/src/main/java/footballmarket/repositories/PlayerStatisticsRepository.java` con selección individual confirmada acotada y filas compañeras, filtros y orden deterministas del contrato; evitar historia completa/N+1, sin modificar consultas poblacionales. Dependencias: T058/T060; FR-028/041, SC-022.
+- [X] T062 [US2] Crear `backend/src/main/java/footballmarket/services/PlayerStatisticsQueryService.java` y `services/impl/PlayerStatisticsQueryServiceImpl.java`: visibilidad por Repository, selección/composición Model, lectura consistente read-only repeatable-read, correspondencia fiable local de nombre o null; sin Service→Service ni llamadas externas. Dependencias: T059/T061; FR-025/027–029/041/045/046, SC-014/016/018/022/023.
+- [X] T063 [US2] Añadir `backend/src/main/java/footballmarket/controllers/dtos/responses/PlayerStatisticsResponseDTO.java`, `controllers/mappers/PlayerStatisticsMapper.java` y método en `controllers/PlayerController.java` con OpenAPI para `GET /api/players/{id}/statistics`, temporada opcional y 400/401/404/500, 60 claves y competencia nullable; Mapper sin negocio. Dependencias: T062; FR-025/028/033/041/045/046, SC-014/016/023.
+- [X] T064 [US2] Extender `backend/src/test/java/footballmarket/controllers/PlayerControllerTest.java` para contrato estadístico completo, numeric/null/source, errores, seguridad, temporada y NO_DATA exitoso; mantener pruebas identidad, sin REST Docs ni ejecución por agente. Dependencias: T052/T063; FR-025/027/029/033/041/045/046, SC-014/016/018/022/023.
+
+#### Frontend
+
+- [X] T065 [US2] Crear `frontend/src/features/players/constants/playerStatisticsCatalog.ts` y `playerStatisticsProfiles.ts` con 60 etiquetas/unidades/categorías del glosario, matriz P/S/B y cuatro tarjetas/series/adicionales exactos; exportar por `constants/index.ts`, sin valores demo. Dependencias: T050/T056; FR-030/032–034/044/048, SC-019–021/023.
+- [X] T066 [US2] Añadir `getStatistics` autenticado con AbortSignal en `frontend/src/features/players/players.service.ts` y transformación tipada en `players.mapper.ts`, preservando identidad/listado y source/competitionName/null/cero; no DTO en Hooks. Dependencias: T050/T063; FR-027–029/033/041/045, SC-014/016/023.
+- [X] T067 [US2] Crear `frontend/src/features/players/hooks/queries/usePlayerStatisticsQuery.ts` y export en `hooks/queries/index.ts`, key de T051, enabled tras identidad vigente, retry:false y signal; no placeholder entre jugadores/temporadas. Dependencias: T051/T066; FR-025/026/041/047, SC-012/024.
+- [X] T068 [US2] Integrar la lectura real en `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts`, retirar llamadas sampleSeason/tokenQuote del detalle y coordinar carga, error, parcialidad, NO_DATA, reintento y última respuesta compatible con fecha/advertencia; éxito NO_DATA reemplaza anterior, sin store duplicado. Dependencias: T055/T067; FR-027/029/040/047, SC-014/016/018/024.
+- [X] T069 [US2] Crear `frontend/src/features/players/pages/PlayerDetailPage/PlayerStatisticsSummary/PlayerStatisticsSummary.tsx`, SCSS y barrel con cuatro tarjetas, adicionales y aviso de posición desconocida; presentar fecha/contexto real y competitionName o fallback. Dependencias: T065/T068; FR-028/030/045, SC-014/019/023.
+- [X] T070 [US2] Crear gráfico presentativo `frontend/src/features/players/pages/PlayerDetailPage/PlayerStatisticsSummary/PlayerStatisticsBars/PlayerStatisticsBars.tsx`, SCSS y barrel para series aprobadas, valores originales/unidades y alternativa textual, cero/ausencia/series incompletas sin dividir por cero; sin normalización deportiva, porcentajes nuevos o mapas de eventos. Dependencias: T069; FR-030–032/036/039, SC-015/019.
+- [X] T071 [US2] Conectar resumen y estados estadísticos en `frontend/src/features/players/pages/PlayerDetailPage/PlayerDetailPage.tsx`, conservando identidad ante error y removiendo los paneles financieros de la composición; error de refetch con fecha previa y mensaje literal de FR-047. Dependencias: T056/T068/T070; FR-027/029/040/047, SC-016/018/024.
+
+### Fase 5 — US4 (P2): navegación accesible y viewport
+
+**Objetivo**: estructura de dos pestañas y presentación adaptable, sin tocar layouts globales. **Criterio independiente**: teclado y matriz 360/768/1280 × 640/800; textos/valores accesibles, sin recortes. La evidencia visual es del usuario, no tests frontend.
+
+#### Frontend e integración visual
+
+- [X] T072 [US4] Crear `frontend/src/features/players/pages/PlayerDetailPage/PlayerStatisticsTabs/PlayerStatisticsTabs.tsx`, SCSS y barrel con exactamente Resumen/Todas las estadísticas, tablist/tabpanel, aria-selected/controls, roving tabindex y flechas/Home/End; estado controlado por Page Hook, sin Hooks en componentes locales. Dependencias: T071; FR-026/039, SC-013/017.
+- [X] T073 [US4] Ajustar `frontend/src/features/players/pages/PlayerDetailPage/PlayerDetailPage.module.scss` y módulos locales del resumen/tabs para jerarquía del mockup sin radar, cuatro tarjetas adaptables, min-width/min-height:0, scroll PageLayout desktop/natural móvil y sin altura fija ni overflow horizontal; no modificar AppLayout/navbar. Dependencias: T072; FR-038/039; SC-017/019.
+- [X] T074 [US4] Integrar nombres accesibles, estado busy/status/alert y foco de recuperación en `frontend/src/features/players/pages/PlayerDetailPage/PlayerDetailPage.tsx`, `PlayerStatisticsTabs/PlayerStatisticsTabs.tsx` y `PlayerStatisticsSummary/PlayerStatisticsSummary.tsx`; preservar retorno/identidad y alternativa textual sin depender de color. Dependencias: T073; FR-029/037–039/047, SC-015–017/024.
+- [X] T075 [US4] Actualizar `specs/009-player-detail/quickstart.md` con escenarios visuales y de teclado de ambas pestañas, regresión del catálogo y fallback de imágenes, como instrucciones concretas para el usuario, sin ejecutar navegador ni crear tests frontend en esta tarea. Dependencias: T074; FR-037–039, SC-012/015/017.
+
+### Fase 6 — US5 (P2): catálogo completo
+
+**Objetivo**: 60 métricas, búsqueda/categorías y prioridades sin perder ausencias. **Criterio independiente**: 60 claves únicas en ocho grupos, búsqueda combinada, cero distinto de null y disponibilidad futura de las tres exclusivas scraping sin cambios del Resumen (SC-013/020/021/023).
+
+#### Frontend
+
+- [X] T076 [US5] Crear operaciones puras `frontend/src/features/players/utils/getPlayerStatisticsCatalog.ts` y export en `utils/index.ts` para unir valores con metadatos, categorías, búsqueda sin acentos/mayúsculas por nombre/clave y orden disponibles P→S→B, ausentes al final y orden estable de matriz. Dependencias: T065/T075; FR-033–035/042–044/048, SC-013/020/021/023.
+- [X] T077 [US5] Crear `frontend/src/features/players/pages/PlayerDetailPage/PlayerStatisticsCatalog/PlayerStatisticsCatalog.tsx`, SCSS y barrel con 60 etiquetas/unidades/valores, categorías, buscador etiquetado y sin coincidencias explícito; ausentes Sin datos y cero visible, sin nuevas columnas calculadas. Dependencias: T076; FR-033–035/039/042–044/048, SC-013/020/021/023.
+- [X] T078 [US5] Ampliar `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts` con filtros/categoría/pestaña locales, reset por jugador y conservación de contexto al alternar tabs; catálogo deriva del Model sin consultar por pestaña ni agregar selector de temporada. Dependencias: T072/T076/T077; FR-026/035/042/047, SC-013/024.
+- [X] T079 [US5] Conectar catálogo y resumen en `frontend/src/features/players/pages/PlayerDetailPage/PlayerDetailPage.tsx` y adaptar su módulo y el de `PlayerStatisticsCatalog/` para tabs compartidas y filas legibles en móvil; no tabla con scroll vertical anidado ni paginación preventiva. Dependencias: T074/T078; FR-026/033/038/039/043, SC-013/017/020.
+
+#### Pruebas backend y coherencia de integración
+
+- [X] T080 [US5] Ampliar `backend/src/test/java/footballmarket/models/PlayerStatisticsSnapshotTest.java` y `controllers/PlayerControllerTest.java` con las 60 claves exactas, tres ausentes que luego contienen cero/valor y catálogo con snapshot parcial o vacío, sin ejecución por agente. Dependencias: T057/T064/T079; FR-033/043/044, SC-013/020/021.
+- [X] T081 [US5] Alinear formato de unidades/etiquetas en `frontend/src/features/players/pages/PlayerDetailPage/PlayerStatisticsCatalog/PlayerStatisticsCatalog.tsx` y `PlayerStatisticsSummary/PlayerStatisticsSummary.tsx` con `contracts/metric-glossary.md`, conservando igualdad de valor/contexto entre pestañas y sin multiplicar porcentajes por 100. Dependencias: T070/T079/T080; FR-028/033/048, SC-014/023.
+
+### Fase 7 — Integración transversal y entrega técnica
+
+- [ ] T082 Revisar y retirar solo código muerto del detalle en `frontend/src/features/players/pages/PlayerDetailPage/`, `hooks/queries/` y barrels afectados; preservar `demo/playerSampleSeason.ts`, tipos/keys y recursos con consumidores reales; contrastar catálogo, contratos de identidad y navegación sin agregar funcionalidad. Dependencias: T048/T081; FR-027/037/040, SC-012/018.
+- [ ] T083 Alinear documentación contractual de `specs/009-player-detail/contracts/player-statistics.md`, `metric-glossary.md`, anotaciones de `backend/src/main/java/footballmarket/controllers/PlayerController.java` y evidencias de `quickstart.md` con el diff implementado; cualquier cambio funcional nuevo exige volver upstream, no reescribir requisitos para justificar desvíos. Dependencias: T082; FR-025–048, SC-012–024.
+- [ ] T084 Realizar solo builds permitidos tras cambios de código: `./gradlew build -x test` desde `backend/` y `npm run build` desde `frontend/`, previa inspección de scripts/hooks para evitar tests; revisar diff generado y registrar resultados reales en `specs/009-player-detail/quickstart.md`, clasificando fallos propios/preexistentes/entorno. Dependencias: T083; SC-012–024; no ejecutar tests ni presentar build como testing.
+- [ ] T085 Preparar en `specs/009-player-detail/quickstart.md` el resumen técnico verificable y selección exacta de tests backend existentes/nuevos para ejecución humana, cobertura de escenarios/risgos y comprobaciones visuales específicas; no ejecutar pruebas ni marcar aprobación, aceptación o cierre. Dependencias: T084; FR-025–048, SC-012–024.
+
+### Dependencias y oportunidades paralelas
+
+Cadena conservadora: T048→T049→T050→T051→US1 (T052–056)→US2 (T057–071)→US4 (T072–075)→US5 (T076–081)→T082–085. Las dependencias exactas de cada tarea gobiernan; pertenecer a una fase no convierte una tarea sin completar en autorización de implementación.
+
+- US1: T052/T053 preceden validación e integración; tocar `PlayerControllerTest.java` se serializa respecto de T064/T080. Sin paralelismo marcado por compartir flujos/consumidores.
+- US2: tras T056, T057/T058/T059 pueden **escribirse** en paralelo porque usan archivos distintos; no ejecutar tests. T060/T061/T062 siguen el orden Model→Repository→Service; T063→T066→T067 enlaza backend/frontend; T065 puede elaborarse mientras termina backend una vez cumplidas sus dependencias, sin solapar barrels.
+- US4: secuencial por módulos/estado compartidos; no modificar el hook mientras otra tarea lo modifica.
+- US5: tras sus prerrequisitos, operaciones puras y componente separados conceptualmente; secuencia T076→T077→T078→T079 evita contratos internos incompletos. T080 reusa tests anteriores y no se solapa con T064.
+- Integración/pruebas no son fases de autorización; las tareas de escritura de tests se vinculan a la historia que cubren. No hay tareas humanas de gate ni tareas ejecutables US3.
+
+### Cobertura resumida
+
+| Requisitos vigentes | Tareas principales | Aceptación |
+| --- | --- | --- |
+| FR-025/037/046 | T052–056, T062–064, T082 | SC-012/023 |
+| FR-026 | T072/T078/T079 | SC-013/017 |
+| FR-027–029/041/045/047 | T057–071 | SC-014/016/018/022–024 |
+| FR-030–032/036 | T065/T069/T070 | SC-015/019 |
+| FR-033–035/042–044/048 | T065/T076–081 | SC-013/020/021/023 |
+| FR-038/039 | T070/T072–075/T077–079 | SC-015/017 |
+| FR-040 | T048/T056/T068/T071/T082 | SC-018 |
+
+### Estrategia, límites y evidencia
+
+38 tareas nuevas: preparación/fundamentos 4, US1 5, US2 15, US4 4, US5 6, transversal 4. Todas inician pendientes. Incremento mínimo US1 conserva acceso/identidad y es parcial respecto de su aceptación final; MVP deportivo útil requiere también US2, y la aceptación final de las dos pestañas requiere US4/US5. US5 reutiliza la misma lectura sin depender de nuevos cálculos; US4 cubre navegación/viewport de ambas vistas. No cerrar ninguna historia ni la Feature por tareas completas.
+
+Riesgos: datos confirmados vs filas huérfanas, mezcla de competición/fecha, regresión de 400 de identidad, datos anteriores de otra temporada, consumers compartidos de demos y cambios de layout. Se prevén tests backend y validación humana de UI; ausencia de ejecución queda explícita. Ninguna tarea depende de resultados de valoración o cotización.
+
+TASKS generado conforme plantilla y operación real. No se crean Issues, no se duplican Tasks fuera de este archivo, no se ejecutaron tests/builds/ANALYZE/IMPLEMENT ni commits/push. Siguiente operación posible bajo encargo específico: `/speckit.analyze` read-only; después hará falta autorización humana explícita antes de implementar.
+
+---
+
+## Antecedente histórico — T001–T047 y evidencia anterior, sin aplicación automática al rediseño
+
 **Input**: Design documents from `/specs/009-player-detail/`
 **Branch**: `feat/009-player-detail`
 

@@ -1,5 +1,52 @@
 # Modelo de datos: Detalle individual del jugador
 
+## Modelo vigente — rediseño 2026-10-25
+
+Este bloque gobierna el rediseño; lo posterior a «Antecedente histórico» conserva evidencia anterior. No introduce tablas ni modifica entidades de extracción. Identidad mantiene el contrato existente, separado de estadísticas.
+
+### Entidades persistidas reutilizadas
+
+| Entidad | Campos necesarios | Invariantes de consulta |
+| --- | --- | --- |
+| `Player` | ID, activo, equipo/liga, posición e identidad existentes | Visibilidad por `findVisibleById`; inexistente e inactivo indistinguibles |
+| `PlayerStatistics` | ID, jugador, extractionDate, source, seasonKey/label, providerCompetitionId, providerTeamId, contextStatus, observedAt, runItem y 60 valores nullable | Única por jugador/fecha/canal; solo contexto RESOLVED con item COMPLETED coherente; no deducir confirmación por existencia |
+| Item de extracción | ID, jugador, fecha, canal, result | Es el item referenciado por la fila; resultado COMPLETED tras publicación atómica |
+| `MetricCatalog` | Clave canónica, unidad, orden y cobertura de canal | Exactamente 60 claves; no añadir métricas ni inferir disponibilidad por cobertura |
+
+`observedAt` en la fila corresponde al instante de confirmación usado por el writer, no a un evento de partido. Mantener `extractionDate` como fecha visible de extracción.
+
+### Model de lectura backend
+
+`PlayerStatisticsSnapshot` (no entidad persistida): `playerId`, `requestedSeasonKey` nullable, `status` (`AVAILABLE`, `PARTIAL`, `NO_DATA`), `seasonKey`, `seasonLabel`, `extractionDate`, `competitionKey`, `competitionName` nullable y `metrics` de 60 entradas. Contexto nulo si no existe snapshot; `requestedSeasonKey` puede conservarse para explicar una búsqueda vacía. `competitionName` solo desde correspondencia local fiable de la clave de competición persistida; sin correspondencia, null y «Competición no disponible», sin inferir desde equipo/liga actuales ni afirmar que el nombre está almacenado en la fila.
+
+Cada valor: `key`, `unit`, `value` (`BigDecimal` o null), `source` (`JSON`, `SCRAPING` o null). Fuente nula si valor nulo; cero conserva su fuente. Procedencia por métrica, no un único origen que oculte composición. `competitionKey` identifica el contexto persistido del proveedor, no el ID de liga local ni una URL; no usar el equipo actual para reetiquetarlo.
+
+Selección: filtrar jugador, temporada si se pide y confirmación; fecha DESC → JSON antes de scraping para anclar contexto → observedAt DESC → ID DESC. Con ancla JSON, completar nulos solo desde scraping de igual jugador/seasonKey/fecha/competitionKey. Si JSON no existe, ancla scraping. No retroceder de fecha para rellenar ausencias. No unir temporadas o competiciones ni depender de estado global de run. Consultas dentro de transacción read-only repeatable-read; límite en Repository antes de materializar historia.
+
+Disponibilidad del snapshot: 60 no nulos → AVAILABLE; 1–59 → PARTIAL; 0 o sin candidato → NO_DATA. Una fila de 57 valores JSON es PARTIAL respecto del catálogo completo, no error de extracción. `NO_DATA` de la respuesta no equivale al resultado interno del item. No imponer presencia de minutos/apariciones para mostrar valores conocidos.
+
+### DTO y Model frontend
+
+Contrato HTTP en [contracts/player-statistics.md](contracts/player-statistics.md), DTO record backend y `PlayerStatisticsResponseDTO` frontend conceptualmente separados de `PlayerStatistics` Model frontend. Service invoca Mapper tipado; UI nunca recibe DTO.
+
+Metadatos frontend: `MetricDefinition` con key, label español, category y orden estable de spec; nombres/categorías/unidades visibles de [contracts/metric-glossary.md](contracts/metric-glossary.md), unidades técnicas contrastadas con backend. `PositionProfile` selecciona exactamente cuatro tarjetas, series y adicionales de spec. Posiciones: Goalkeeper→arquero, Defence/Defender→defensor, Midfield/Midfielder→mediocampista, Offence/Forward→delantero. No crear subposiciones; desconocida presenta generales y aviso.
+
+Relevancia P/S/B fija por posición, independiente de `value !== null`. Titularidades principal en cuatro perfiles; tiros al arco B/S/S/P; segunda amarilla S/S/S/S. No modificar tarjetas o series al recibirlas. Categorías y cantidades: General 5, Ataque 19, Pases 10, Regates 5, Duelos 3, Defensa 10, Portería 4, Disciplina 4.
+
+### Estado de interacción
+
+- Identidad: loading, invalid-id, not-found, error, ready (sesión invalidada por infraestructura existente).
+- Estadísticas: idle hasta identidad vigente → loading → error sin respuesta o ready con disponibilidad AVAILABLE/PARTIAL/NO_DATA. Refetch del mismo jugador/temporada conserva la última respuesta exitosa de Query Cache, su disponibilidad y fecha original; error de actualización se comunica además del contenido, con advertencia y reintento, nunca simula ausencia confirmada ni éxito nuevo. Cambio de contexto retira valores incompatibles. Sin temporada explícita, se conserva el último contexto resuelto del mismo jugador como lectura anterior, no se adivina temporada nueva. Una nueva respuesta exitosa NO_DATA reemplaza la anterior. No duplicar respuesta en un store para implementar esta regla.
+- Estado cliente local: pestaña inicial Resumen, texto y categoría; reset al cambiar ID. La temporada resuelta no crea selector. Query cache es única autoridad de datos remotos.
+- Navegación A→B: no presentar respuesta de A bajo B ni hacer una request para A en el render inicial de B; cancelar mediante signal y validar el ID vigente. Respuesta tardía no modifica controles ni contexto de B.
+- Filtros: intersección categoría/texto normalizado; ordenar disponibles P→S→B y luego ausentes, con desempate por orden canónico. Cero participa como disponible. Error y carga no convierten las 60 filas en ausencias confirmadas.
+
+Sin modelos de valoración, precios, percentiles o radar en el diseño vigente.
+
+---
+
+## Antecedente histórico del modelo anterior
+
 ## Contratos HTTP
 
 ### PlayerDetailResponseDTO (nuevo, `GET /api/players/{id}`)

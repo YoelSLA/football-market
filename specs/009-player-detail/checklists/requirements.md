@@ -1,5 +1,41 @@
 # Specification Quality Checklist: Detalle individual del jugador
 
+## Evaluación vigente del rediseño — 2026-10-25
+
+**Feature**: [spec.md](../spec.md), secciones vigentes anteriores al antecedente histórico.
+**Purpose**: Evaluación documental de Specify, no aceptación humana ni validación del producto.
+
+### Content Quality
+
+- [x] Sin decisiones de stack, rutas nuevas, almacenamiento ni diseño técnico.
+- [x] Centrada en valor del usuario y necesidades de negocio.
+- [x] Redactada para stakeholders con escenarios observables.
+- [x] Secciones obligatorias completas.
+
+### Requirement Completeness
+
+- [x] Sin aclaraciones pendientes: FR-041 (snapshot y canales); prioridad futura de tres claves hoy ausentes pendiente si se incorporan valores.
+- [x] Todos los requisitos inequívocos: selección de registros pendiente de Clarify; no se exige definir cálculos excluidos.
+- [x] Criterios de éxito medibles: SC-012–018.
+- [x] Criterios agnósticos tecnológicamente.
+- [x] Escenarios de aceptación definidos para US1, US2, US4 y US5; US3 retirada con trazabilidad.
+- [x] Casos límite identificados, incluidos cero, ausencias, errores parciales y posición desconocida.
+- [x] Alcance delimitado: dos pestañas, 60 claves, sin finanzas ni mocks.
+- [x] Dependencias y supuestos identificados.
+
+### Feature Readiness
+
+- [x] Cobertura de aceptación completamente determinada: selección de registros pendiente de Clarify.
+- [x] Historias cubren consulta, navegación, resumen y catálogo completo.
+- [x] Resultados esperados definidos y medibles; no se afirma su cumplimiento real.
+- [x] No se prescriben detalles técnicos de implementación.
+
+### Notes
+
+Evaluación del agente actualizada: 13/16 criterios conformes documentalmente, 3 pendientes. FR-032 resuelto por exclusión de radar, percentiles y cálculos no definidos. Cuatro tarjetas por posición, gráficos, adicionales y matriz completa de categorías/prioridades incorporados; SC-019/020 agregan aceptación verificable. FR-041 sigue pendiente. Las tres claves actualmente ausentes conservan esa disponibilidad y no reciben prioridad deportiva inventada. No se ejecutaron tests ni build. La aprobación histórica que sigue no se extiende al nuevo alcance. `requirements-quality.md` conserva su evidencia anterior y debe reevaluarse en la fase correspondiente, sin modificar aprobaciones históricas en esta operación.
+
+## Antecedente histórico — evaluación anterior
+
 **Purpose**: Evaluación documental de requisitos de Specify/Clarify; no sustituye evaluación del revisor ni gates humanos.
 **Created**: 2026-10-12
 **Feature**: [spec.md](../spec.md)

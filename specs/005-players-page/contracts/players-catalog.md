@@ -1,5 +1,17 @@
 # Contrato consumido: catálogo de jugadores
 
+## Contrato vigente del rediseño (propuesto, no implementado)
+
+Referencia canónica: [SPEC-002, catalog-query.md](../../002-player-catalog/contracts/catalog-query.md). La UI solicita `GET /api/players` con page=0, size=12, sort=name,asc e includeStatistics=true, enviando solo criterios no vacíos; obtiene opciones mediante `GET /api/players/filters` sobre el conjunto completo visible. No filtra/ordena el contenido de una sola página ni obtiene estadísticas con peticiones por jugador. Fuentes técnicas se conservan en tipos internos, no en tarjetas.
+
+Estado cliente canónico: texto en edición y nombre efectivo (debounce 300ms), cuatro selectores, sort, page. Cambio efectivo resetea page=0 en la misma transición; limpiar cancela texto pendiente y restablece todos/nombre ascendente/página cero. Query key incluye todos los criterios efectivos, page y size; HTTP solo desde Service, DTO→Mapper→Model, signal y ausencia de placeholder de otro criterio. Error/vacío/carga diferenciados; no presentar resultados anteriores como criterio actual.
+
+Fotografías, escudos, ligas y banderas reutilizan fallbacks; no favoritos decorativos ni selecciones sin conducta. Mockup de referencia con 6×2 tarjetas a 1920×913, hasta 12 por página; navbar/submenús actuales permanecen. El valor de «Más relevantes» se sustituye por «Nombre A–Z»; nombres y cifras del mockup no son datos.
+
+---
+
+## Antecedente histórico del contrato consumido
+
 Este documento describe el contrato HTTP existente que consumirá la página. No propone cambios de backend.
 
 ## Consultar jugadores activos

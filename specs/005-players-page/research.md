@@ -1,5 +1,26 @@
 # Investigación: Página de catálogo de jugadores
 
+## Investigación vigente — filtros globales y tarjetas reales
+
+| Decisión | Razón / evidencia | Alternativas descartadas |
+| --- | --- | --- |
+| Mantener endpoint GET /players y flag opcional de enriquecimiento | Controller/listado actuales compartidos; conservar response sin flag y default ID | Reemplazar DTO obligatorio o hacer una petición estadística por tarjeta |
+| UI pide name,asc; API sin sort conserva id,asc | Decisión humana sobre default visual, compatibilidad del catálogo existente | «Más relevantes» sin regla, alterar silenciosamente clientes antiguos |
+| Filtros AND y count en Repository antes de page | Requisito global y paginación actual Spring Data | Filtrar la página o cargar toda la población en navegador |
+| Opciones endpoint global independiente | IDs/textos reales para los cuatro selectores sin recorrer páginas | Obtener opciones de las12 tarjetas o inventar catálogos constantes |
+| Solo tres métricas canónicas por lote | Valores ya persistidos, no necesitan finanzas, nueva extracción ni nuevas métricas | Reusar Service→Service o consultas por jugador; muestras deterministas |
+| Índice GIN de expresión con pg_trgm para nombre normalizado | La búsqueda global contiene una subcadena; se planifica un índice específico de esa expresión, sin duplicar nombres ni agregar otros índices preventivos | B-tree de lower(name) como supuesto acelerador de `%texto%`; migraciones de campos funcionales innecesarios |
+| Nombre insensible a mayúsculas y acentos | Decisión humana explícita: función PostgreSQL pura trim/NFD/eliminación de marcas U+0300–U+036F/lower sobre ambos operandos; el frontend envía texto original y no filtra | LOWER solo, que no elimina acentos; wrapper IMMUTABLE de unaccent con reglas mutables; normalizaciones divergentes entre JS y SQL |
+| No tocar SPEC-009 ni detalle | Encargo expreso; reutilizar conceptos persistidos, no cambiar contratos ajenos | Alterar autorizaciones o artefactos de otra Feature |
+
+Sin llamadas a proveedores, benchmarks, builds o tests. Fuentes reales examinadas en preparación: PlayerController/PlayerRepository/PlayerCatalogServiceImpl y DTO/Service/query/page/card de players. Las decisiones son propuestas de diseño, no resultados de código ni aceptación humana. Lo siguiente es histórico y no limita el backend del alcance nuevo.
+
+La decisión anterior de conservar acentos exactos queda sustituida, sin reescribir nombres originales ni cambiar sort. Parámetro normalizado escapado con `!` y bind de patrón; expresión/index idénticos. pg_trgm habilita búsqueda indexable, no garantiza que todo término use GIN (especialmente términos cortos). La implementación futura debe comprobar instalación/privilegios de extensión, compatibilidad UTF-8, función inmutable, migración e índice y reflejar el inventario de pg_trgm en tecnologías backend en esa misma tarea. No se modifica ese inventario ahora porque el encargo es solo documental y limitado a esta preparación.
+
+---
+
+## Antecedente histórico de investigación
+
 ## Decisiones
 
 ### Consumir el catálogo existente sin cambios backend
