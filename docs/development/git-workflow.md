@@ -116,6 +116,7 @@ Los tipos admitidos son los de la lista cerrada anterior. El texto va en **ingl�
 ## Pull Requests
 
 - El Pull Request referencia la spec, la rama, la evidencia y los pendientes.
+- **Momento de creación:** El Pull Request se crea obligatoriamente al finalizar la fase de CLARIFY (una vez que la especificación y sus clarificaciones están registradas, confirmadas y subidas a la rama remota), dirigiéndose a la rama de integración del proyecto (`dev`) y vinculando el issue correspondiente.
 - Vincularlo a la funcionalidad y a su registro de seguimiento **no** acredita implementación,
   revisión ni cierre.
 - No inventar URL ni hash de Pull Request. La revisión del diff local basta para aprobar; la

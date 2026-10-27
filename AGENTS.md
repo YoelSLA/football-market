@@ -24,6 +24,7 @@ No cargar instrucciones ni documentación del backend para una tarea exclusivame
 - Construir el nombre según las [convenciones de Git](docs/development/git-workflow.md): `<type>/<spec-id>-<scope>` cuando hay spec relacionada, `<type>/<scope>` cuando el cambio es pequeño, técnico o independiente. El `<scope>` va en `kebab-case`.
 - El nombre de la rama y el nombre del directorio de la spec son cosas distintas: el directorio usa solo `<spec-id>-<scope>`, sin el prefijo de tipo. Para derivar uno del otro, quitar el prefijo `<type>/`.
 - Cuando la tarea incluya el nombre de una rama, mantener la trazabilidad spec → rama → commits → Pull Request.
+- Creación del Pull Request: al finalizar la etapa de CLARIFY (tras consolidar las respuestas en la especificación, confirmar los cambios y subirlos a la rama remota), crear siempre el Pull Request hacia la rama de integración (`dev`), vinculando el issue de origen y reportando su URL.
 
 ### Inicio de un issue
 
