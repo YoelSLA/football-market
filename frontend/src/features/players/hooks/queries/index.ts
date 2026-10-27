@@ -1,3 +1,4 @@
+export { useAllPlayersQuery } from "./useAllPlayersQuery";
 export { usePlayerCatalogFiltersQuery } from "./usePlayerCatalogFiltersQuery";
 export { usePlayerDetailQuery } from "./usePlayerDetailQuery";
 export { usePlayerSampleSeasonQuery } from "./usePlayerSampleSeasonQuery";
