@@ -1,13 +1,9 @@
+import { useState } from "react";
 import type { MarketPlayer } from "@/features/market/types";
 import genericPlayerImage from "@/shared/assets/Player Generic-Icon.png";
-import {
-	CalendarDays,
-	Footprints,
-	Globe,
-	Goal,
-	Heart,
-	Shield,
-} from "@/shared/icons";
+import { Globe, Shield } from "@/shared/icons";
+import { getLeagueShield } from "@/shared/utils/leagueShield";
+import { getTeamShield } from "@/shared/utils/teamShield";
 import styles from "./MarketPlayerSummary.module.scss";
 
 interface Props {
@@ -28,6 +24,9 @@ const POSITION_BADGES: Record<string, string> = {
 };
 
 export default function MarketPlayerSummary({ player }: Props) {
+	const [teamShieldFailed, setTeamShieldFailed] = useState(false);
+	const [leagueShieldFailed, setLeagueShieldFailed] = useState(false);
+
 	const images = [player.imageUrl, player.fallbackImageUrl, genericPlayerImage]
 		.filter((url): url is string => Boolean(url))
 		.filter((url, index, urls) => urls.indexOf(url) === index);
@@ -36,6 +35,9 @@ export default function MarketPlayerSummary({ player }: Props) {
 		position === "ARQ"
 			? styles.marketPlayerSummary__badge_goalkeeper
 			: styles.marketPlayerSummary__badge_outfield;
+
+	const teamShield = getTeamShield(player.leagueName, player.teamName);
+	const leagueShield = getLeagueShield(player.leagueName);
 
 	return (
 		<div className={styles.marketPlayerSummary}>
@@ -66,42 +68,33 @@ export default function MarketPlayerSummary({ player }: Props) {
 					</span>
 					<h3>{player.name}</h3>
 					<p>
-						<Shield aria-hidden="true" />
-						{player.teamName}
+						{teamShield && !teamShieldFailed ? (
+							<img
+								src={teamShield}
+								alt=""
+								className={styles.marketPlayerSummary__metaIcon}
+								aria-hidden="true"
+								onError={() => setTeamShieldFailed(true)}
+							/>
+						) : (
+							<Shield aria-hidden="true" />
+						)}
+						<span>{player.teamName}</span>
 					</p>
 					<p>
-						<Globe aria-hidden="true" />
-						{player.leagueName}
+						{leagueShield && !leagueShieldFailed ? (
+							<img
+								src={leagueShield}
+								alt=""
+								className={styles.marketPlayerSummary__metaIcon}
+								aria-hidden="true"
+								onError={() => setLeagueShieldFailed(true)}
+							/>
+						) : (
+							<Globe aria-hidden="true" />
+						)}
+						<span>{player.leagueName}</span>
 					</p>
-				</div>
-				<button
-					type="button"
-					disabled
-					className={styles.marketPlayerSummary__favorite}
-					aria-label="Favoritos: pendiente"
-					title="Favoritos: pendiente"
-				>
-					<Heart aria-hidden="true" />
-				</button>
-			</div>
-			<div className={styles.marketPlayerSummary__stats}>
-				<div>
-					<CalendarDays aria-hidden="true" />
-					<span>
-						Partidos<strong>Sin datos</strong>
-					</span>
-				</div>
-				<div>
-					<Goal aria-hidden="true" />
-					<span>
-						Goles<strong>Sin datos</strong>
-					</span>
-				</div>
-				<div>
-					<Footprints aria-hidden="true" />
-					<span>
-						Asistencias<strong>Sin datos</strong>
-					</span>
 				</div>
 			</div>
 		</div>

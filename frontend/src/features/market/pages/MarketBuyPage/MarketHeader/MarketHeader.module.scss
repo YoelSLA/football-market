@@ -8,40 +8,6 @@
 	min-width: 0;
 	color: ds.$text-portfolio-title;
 
-	&__heading {
-		display: flex;
-		align-items: center;
-		gap: 1.15rem;
-		min-width: 0;
-
-		h1 {
-			font-size: clamp(1.3rem, 1.8vw, 1.75rem);
-			line-height: 1.25;
-			margin-bottom: .35rem;
-		}
-
-		p {
-			font-size: .9rem;
-			color: ds.$text-portfolio-label;
-		}
-	}
-
-	&__symbol {
-		display: grid;
-		place-items: center;
-		flex-shrink: 0;
-		width: 4rem;
-		height: 4rem;
-		border-radius: .65rem;
-		color: ds.$accent-finance-green;
-		background: ds.$surface-finance-active;
-
-		svg {
-			width: 2.4rem;
-			height: 2.4rem;
-		}
-	}
-
 	&__metrics {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -119,24 +85,6 @@
 
 	@media (max-width: 600px) {
 		gap: .5rem;
-
-		&__heading {
-			gap: .65rem;
-
-			p {
-				font-size: .75rem;
-			}
-		}
-
-		&__symbol {
-			width: 2.7rem;
-			height: 2.7rem;
-
-			svg {
-				width: 1.8rem;
-				height: 1.8rem;
-			}
-		}
 
 		&__metrics {
 			grid-template-columns: repeat(3, minmax(0, 1fr));

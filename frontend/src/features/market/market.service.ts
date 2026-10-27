@@ -4,8 +4,16 @@ import {
 	toBuyResult,
 	toMarketQuote,
 	toOrderBuyRequestDTO,
+	toOrderSellRequestDTO,
+	toSellResult,
 } from "./market.mapper";
-import type { BuyResult, MarketQuote, OrderBuyResponseDTO } from "./types";
+import type {
+	BuyResult,
+	MarketQuote,
+	OrderBuyResponseDTO,
+	OrderSellResponseDTO,
+	SellResult,
+} from "./types";
 import { MarketQuoteReadError } from "./types";
 
 /**
@@ -61,7 +69,19 @@ async function buyTokens(request: {
 	return toBuyResult(data);
 }
 
+async function sellTokens(request: {
+	playerId: number;
+	quantity: number;
+}): Promise<SellResult> {
+	const dto = toOrderSellRequestDTO(request);
+	const { data } = await http.post<OrderSellResponseDTO>("/orders/sell", dto, {
+		authenticated: true,
+	});
+	return toSellResult(data);
+}
+
 export const marketService = {
 	getCurrentQuote,
 	buyTokens,
+	sellTokens,
 };

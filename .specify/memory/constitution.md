@@ -137,6 +137,63 @@ técnicos, de commits, de merges ni de Pull Requests abiertos. Los registros que
 información histórica conservan su validez como evidencia y no se reescriben para reflejar un
 estado posterior.
 
+### VI. Mínimo alcance necesario
+
+Este principio es transversal y gobierna SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS, ANALYZE e
+IMPLEMENT. No deroga ni debilita los principios I a V, las obligaciones técnicas o de seguridad,
+la coherencia de contratos, la verificación y el testing, los requisitos académicos ni las
+autorizaciones humanas. No altera la prohibición de ejecutar tests ni la exención temporal de
+testing del frontend, y no omite ninguna fase, artefacto o control exigido por el workflow.
+
+Toda especificación MUST limitarse a lo indispensable para cumplir completamente el requerimiento
+y sus criterios de aceptación, incluidos los requisitos académicos que los integran. El mínimo no
+autoriza omitir parte de ese cumplimiento. Ante alternativas válidas, MUST priorizarse la
+solución más simple, suficiente y de menor alcance que satisfaga ese cumplimiento y preserve las
+garantías de este documento.
+
+MUST NOT agregarse funcionalidades, abstracciones, validaciones, pruebas, documentación ni
+requisitos adicionales sin una justificación concreta, registrada en el artefacto afectado y
+vinculada al requerimiento, a sus criterios de aceptación o a una obligación vigente. MUST
+reutilizarse las soluciones y convenciones existentes antes de introducir otras cuando satisfacen
+el requerimiento y las normas aplicables. Esa reutilización no conserva una práctica incompatible
+con la arquitectura definida o con esta Constitución, ni exige abstraer una duplicación por sí
+sola.
+
+Los requisitos no funcionales MUST limitarse al mínimo aplicable. Esa limitación MUST NOT
+debilitar obligaciones técnicas o de seguridad vigentes, ni convertir un objetivo no acordado en
+criterio de aceptación o tarea obligatoria.
+
+CHECKLIST y ANALYZE MUST NOT convertir una recomendación opcional en requisito obligatorio,
+criterio de aceptación, tarea obligatoria ni hallazgo bloqueante. Un problema MUST considerarse
+bloqueante solo cuando impida cumplir correctamente el requerimiento, sus criterios de aceptación
+o una obligación vigente. Siguen siendo bloqueantes: un caso obligatorio del principio II, una
+contradicción con esta Constitución y la falta de cobertura de un criterio de aceptación exigido.
+No son bloqueantes por sí solos un caso recomendado u opcional, un hallazgo editorial sin ese
+impacto ni una dependencia técnica identificada y resoluble por orden técnico.
+
+La aplicación por fase es normativa y no detalla procedimientos:
+
+- **SPECIFY**: la especificación se limita a lo indispensable para el cumplimiento completo.
+- **CLARIFY**: se resuelven solo las decisiones necesarias para ese cumplimiento; una ambigüedad
+  que no lo impida no se convierte en requisito.
+- **PLAN**: se adopta la solución más simple, suficiente y de menor alcance, reutilizando lo
+  existente antes de introducir abstracciones, validaciones o requisitos no funcionales no
+  exigidos.
+- **CHECKLIST**: se evalúa la calidad de lo especificado; no se elevan recomendaciones opcionales
+  a requisitos ni a condiciones de avance.
+- **TASKS**: se descompone solo el trabajo indispensable para ese cumplimiento y para las
+  obligaciones vigentes.
+- **ANALYZE**: se contrasta el alcance y se reportan hallazgos; no se convierten recomendaciones
+  opcionales en blockers ni se exige ampliar el alcance para cerrarlos.
+- **IMPLEMENT**: se escribe únicamente el alcance autorizado, sin agregar funcionalidad,
+  abstracción, validación, prueba ni documentación adicional sin la justificación exigida.
+
+Lo exigido por un principio vigente, por el alcance autorizado, por un requisito académico o por
+una norma aplicable del área no es alcance adicional. Eso incluye las actualizaciones que el
+principio IV impone en el mismo cambio y las validaciones que el principio III exige. Reducir o
+ampliar el alcance aprobado requiere decisión humana explícita, registrada en el artefacto
+afectado. Las decisiones relevantes de alcance siguen rigiéndose por el principio II.
+
 ## Restricciones adicionales
 
 ### Idioma
@@ -182,6 +239,9 @@ se descompone en tareas, se implementa y se valida antes de cerrarse. Los proced
 condiciones de avance entre fases y el uso de los comandos de la herramienta de especificación
 están en [`docs/development/sdd-workflow.md`](../../docs/development/sdd-workflow.md), que es
 el único documento que los detalla.
+
+SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS, ANALYZE e IMPLEMENT se ejecutan conforme al principio
+VI. Los procedimientos de cada fase siguen estando solo en el workflow.
 
 El agente no emula ni duplica operaciones de la herramienta de especificación. Si una
 operación requerida falta o falla, se detiene el trabajo y se reporta.
@@ -287,11 +347,11 @@ o ignorándola. Los agentes no pueden modificarla, ignorarla ni reinterpretarla 
 implementación incompatible; solo pueden hacerlo cuando el usuario lo solicite expresamente.
 
 Los documentos normativos de cada área mantienen su obligatoriedad cuando resulten aplicables.
-El procedimiento de desarrollo se ejecuta dentro del alcance autorizado. Ante un conflicto entre
-fuentes obligatorias, se detiene la transición y se aplican estas reglas de gobernanza; no se
-inventan excepciones. Ninguna especificación o registro operativo puede alterar los requisitos
-académicos para justificar una desviación: las contradicciones se señalan antes de proponer
-cambios.
+El procedimiento de desarrollo se ejecuta dentro del alcance autorizado y conforme al principio
+de mínimo alcance necesario. Ante un conflicto entre fuentes obligatorias, se detiene la
+transición y se aplican estas reglas de gobernanza; no se inventan excepciones. Ninguna
+especificación o registro operativo puede alterar los requisitos académicos para justificar una
+desviación: las contradicciones se señalan antes de proponer cambios.
 
 Las enmiendas requieren documentación, aprobación humana y, cuando existan, un plan de
 migración. Una enmienda **MUST** preservar la estructura vigente y las secciones ajenas.
@@ -309,4 +369,4 @@ impacto que se conserva **íntegro** en
 a la Constitución y no dentro de ella.
 
 
-**Version**: 9.0.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-10-18
+**Version**: 9.1.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-10-26
