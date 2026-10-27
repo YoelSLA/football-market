@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout, AuthGuard } from "@/app/layouts";
 import MarketBuyRoute from "@/app/market/MarketBuyRoute";
+import MarketSellRoute from "@/app/market/MarketSellRoute";
 import { HomePage, LoginPage, RegisterPage } from "@/features/auth";
 import { PlayerDetailPage, PlayersPage } from "@/features/players";
 import {
@@ -32,6 +33,7 @@ export default function AppRouter() {
 					<Route path="/players" element={<PlayersPage />} />
 					<Route path="/players/:id" element={<PlayerDetailPage />} />
 					<Route path="/market/buy" element={<MarketBuyRoute />} />
+					<Route path="/market/sell" element={<MarketSellRoute />} />
 				</Route>
 			</Route>
 

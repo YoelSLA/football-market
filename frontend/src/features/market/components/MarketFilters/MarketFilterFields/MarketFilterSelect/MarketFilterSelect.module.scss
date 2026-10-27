@@ -1,0 +1,32 @@
+@use "@/styles/abstracts" as ds;
+
+.marketFilterSelect {
+	display: grid;
+	gap: .2rem;
+	font-size: .8rem;
+	min-width: 0;
+	color: ds.$text-portfolio-label;
+
+	&__select {
+		width: 100%;
+		min-width: 0;
+		border: 1px solid ds.$border-finance;
+		border-radius: .45rem;
+		padding: .6rem .75rem;
+		font-size: .8rem;
+		color: ds.$text-portfolio-title;
+		background: ds.$surface-finance-base;
+		opacity: 1;
+		-webkit-text-fill-color: ds.$text-portfolio-title;
+
+		&:disabled {
+			cursor: not-allowed;
+		}
+	}
+
+	@media (min-width: 640px) and (max-height: 900px) {
+		&__select {
+			padding-block: .4rem;
+		}
+	}
+}

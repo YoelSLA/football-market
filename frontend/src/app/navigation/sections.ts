@@ -54,7 +54,12 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: ShoppingCart,
 				path: "/market/buy",
 			},
-			{ key: "market-sell", label: "Vender tokens", icon: Tag, path: null },
+			{
+				key: "market-sell",
+				label: "Vender tokens",
+				icon: Tag,
+				path: "/market/sell",
+			},
 			{ key: "market-orders", label: "Mis órdenes", icon: Puzzle, path: null },
 			{
 				key: "market-history",

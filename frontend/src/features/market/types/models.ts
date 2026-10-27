@@ -17,6 +17,7 @@ export interface MarketQuote {
 	price: number; // en centésimas
 	effectiveDate: string; // fecha de vigencia
 	calculatedAt: string; // instante de cálculo
+	previousPrice?: number | null; // precio anterior en centésimas, nulo en la cotización inicial
 }
 
 export type MarketQuoteStatus =
@@ -63,5 +64,26 @@ export interface BuyEstimation {
 }
 
 export interface BuyQuantityForm {
+	quantity: string;
+}
+
+export interface SellResult {
+	listingId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: string;
+	createdAt: string;
+	expiresAt: string;
+}
+
+export interface SellEstimation {
+	quantity: number;
+	unitPriceCentimes: number;
+	totalCentimes: number;
+}
+
+export interface SellQuantityForm {
 	quantity: string;
 }

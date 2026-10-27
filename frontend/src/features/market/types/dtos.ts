@@ -9,6 +9,7 @@ export interface QuoteResponseDTO {
 	calculatedAt: string;
 	id?: number;
 	playerId?: number;
+	previousPrice?: number | null;
 }
 
 export interface OrderBuyRequestDTO {
@@ -24,4 +25,20 @@ export interface OrderBuyResponseDTO {
 	totalAmount: number;
 	executedAt: string;
 	listingId?: number;
+}
+
+export interface OrderSellRequestDTO {
+	playerId: number;
+	quantity: number;
+}
+
+export interface OrderSellResponseDTO {
+	listingId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: string;
+	createdAt: string;
+	expiresAt: string;
 }
