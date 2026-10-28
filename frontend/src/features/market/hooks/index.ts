@@ -1,5 +1,5 @@
-export { useBuyTokensMutation } from "./mutations";
-export { useMarketBuyPage } from "./pages";
+export { useBuyTokensMutation, useSellTokensMutation } from "./mutations";
+export { useMarketBuyPage, useMarketSellPage } from "./pages";
 export {
 	type MarketPlayerQuoteState,
 	useMarketQuotesQuery,

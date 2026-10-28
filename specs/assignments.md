@@ -37,4 +37,5 @@ se corrige con una fila nueva que la referencie.
 | SPEC-018 | Consultar rankings de jugadores por precio y por score | Vaqui26 | https://github.com/YoelSLA/football-market/issues/19 | REQ-S2-08 | feat/018-consultar-rankings-de-jugadores | 2026-10-23 |
 | SPEC-019 | Comprar tokens desde el frontend | YoelSLA | #42 | REQ-S2-14-A | feat/019-buy-tokens-from-frontend | 2026-10-23 |
 | SPEC-020 | Consultar historial de operaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/21 | REQ-S2-10 | feat/020-view-operation-history | 2026-10-24 |
+| SPEC-009 | Rediseñar detalle individual y estadísticas reales del jugador (dashboard WhoScored) | YoelSLA | #72 | REQ-S2-12 | feat/009-player-detail-whoscored-stats-dashboard | 2026-10-25 |
 

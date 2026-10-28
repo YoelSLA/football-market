@@ -1,5 +1,7 @@
 # Contratos de API: Catálogo de jugadores
 
+> Actualización propuesta para SPEC-005 (2026-10-25): el contrato de lectura vigente de identidad usa IDs/nombres internos de equipo/liga y fallbackImageUrl incorporados por features posteriores. El diseño de filtros/orden y enriquecimiento opcional está en [catalog-query.md](catalog-query.md). Es preparación, no implementación ni modificación de sincronización. El bloque GET siguiente se conserva como antecedente histórico y no redefine los DTO actuales; POST /sync conserva su alcance y su evolución histórica.
+
 ## `GET /api/players`
 
 Consulta una página de jugadores activos del catálogo local.

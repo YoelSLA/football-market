@@ -1,0 +1,29 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsSummary {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-width: 0;
+	color: ds.$text-on-dark;
+	&__cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+	&__card { display: flex; gap: 18px; align-items: center; padding: 16px; border: 1px solid ds.$border-surface-dark; border-radius: 9px; background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to); min-width: 0;
+		h2 { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
+		strong { font-size: 29px; line-height: 1.15; font-variant-numeric: tabular-nums; }
+		small { display: block; font-size: 10px; margin-top: 3px; color: ds.$text-on-dark-muted; }
+	}
+	&__icon { display: grid; place-items: center; width: 62px; height: 62px; flex-shrink: 0; border-radius: 8px; color: ds.$accent-finance-cyan; background: ds.$surface-nav-active; border: 1px solid ds.$border-surface-dark; }
+	&__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+	&__panel { min-width: 0; padding: 14px; border: 1px solid ds.$border-surface-dark; border-radius: 9px; background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
+		h3 { display: flex; align-items: center; gap: 10px; font-size: 14px; margin: 0 0 14px; svg { color: ds.$accent-nav; flex-shrink: 0; } small { margin-left: auto; font-size: 10px; font-weight: 400; color: ds.$text-on-dark-muted; } }
+	}
+	&__rows { margin: 0; div { display: flex; gap: 12px; align-items: center; min-height: 29px; padding: 4px 0; border-bottom: 1px solid ds.$border-surface-dark; &:last-child { border: 0; } } dt { display: flex; align-items: center; gap: 9px; flex: 1; font-size: 12px; min-width: 0; svg { flex-shrink: 0; color: ds.$accent-finance-cyan; } } dd { margin: 0; text-align: right; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; } }
+	&__track { width: 26%; height: 8px; border-radius: 9px; background: ds.$surface-dark; overflow: hidden; span { display: block; height: 100%; border-radius: inherit; background: ds.$accent-nav; } }
+	&__pitch { position: relative; min-height: 150px; margin: 8px 12px 0; padding: 18px 8px 8px; border: 1px solid ds.$accent-nav; border-radius: 4px; background: linear-gradient(0deg, ds.$surface-nav-active, transparent); }
+	&__goal { position: absolute; inset: 0 0 auto; height: 16px; border: 3px solid ds.$text-on-dark-muted; background: repeating-linear-gradient(90deg, transparent, transparent 11px, ds.$border-surface-dark 12px); }
+	&__zones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 125px; div { display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 8px; border-right: 1px solid ds.$border-surface-dark; &:last-child { border: 0; } } strong { font-size: 22px; } span { font-size: 12px; } small { font-size: 10px; color: ds.$text-on-dark-muted; } }
+	&__rating { min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: ds.$accent-nav; strong { font-size: 38px; color: ds.$text-on-dark; } span { color: ds.$text-on-dark-muted; font-size: 12px; } }
+	&__note { color: ds.$text-on-dark-muted; font-size: 11px; margin: 8px 0; }
+}
+@include ds.down(ds.$bp-tablet) { .playerStatisticsSummary { &__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } &__grid { grid-template-columns: minmax(0, 1fr); } } }
+@media (max-width: 480px) { .playerStatisticsSummary { &__cards { grid-template-columns: minmax(0, 1fr); } } }

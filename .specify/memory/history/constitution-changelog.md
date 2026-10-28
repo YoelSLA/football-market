@@ -18,6 +18,94 @@ cronología, conservados en el mismo orden inverso al de las fechas.
 
 ---
 <!--
+Sync Impact Report — Enmienda 2026-10-26
+Versión: 9.0.0 → 9.1.0 (MINOR: se añade el principio VI, Mínimo alcance necesario, de forma
+compatible. No se elimina ni se redefine de forma incompatible ningún principio ni ninguna
+garantía).
+Principios modificados: ninguno. I. Simplicidad y calidad, II. Proporcionalidad del alcance,
+III. Seguridad e integridad, IV. Coherencia de contratos y V. Trazabilidad y fuente de verdad
+conservan título, número y texto.
+Sección añadida: ### VI. Mínimo alcance necesario, dentro de Core Principles. Es transversal y
+gobierna SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS, ANALYZE e IMPLEMENT.
+Secciones modificadas, solo para aplicar el principio sin trasladar procedimientos:
+- Flujo de desarrollo / Metodología: remisión al principio VI. El workflow sigue siendo el único
+  documento que detalla los procedimientos de fase.
+- Governance: el procedimiento de desarrollo se ejecuta dentro del alcance autorizado y conforme
+  al principio de mínimo alcance necesario.
+- Línea de versión: Last Amended 2026-10-18 → 2026-10-26. Ratificación conservada: 2026-08-31.
+Secciones eliminadas: ninguna. Ninguna sección renumerada.
+Reglas adoptadas:
+- Toda especificación se limita a lo indispensable para cumplir completamente el requerimiento y
+  sus criterios de aceptación, incluidos los requisitos académicos que los integran. El mínimo no
+  autoriza omitir parte de ese cumplimiento.
+- Ante alternativas válidas, se prioriza la solución más simple, suficiente y de menor alcance
+  que satisfaga ese cumplimiento y preserve las garantías constitucionales.
+- No se agregan funcionalidades, abstracciones, validaciones, pruebas, documentación ni
+  requisitos adicionales sin justificación concreta, registrada en el artefacto afectado y
+  vinculada al requerimiento, a sus criterios de aceptación o a una obligación vigente.
+- Se reutilizan las soluciones y convenciones existentes antes de introducir otras, cuando
+  satisfacen el requerimiento y las normas aplicables. La reutilización no conserva una práctica
+  incompatible con la arquitectura definida o con la Constitución, ni exige abstraer una
+  duplicación por sí sola.
+- Los requisitos no funcionales se limitan al mínimo aplicable y no debilitan obligaciones
+  técnicas o de seguridad vigentes, ni convierten un objetivo no acordado en criterio de
+  aceptación o tarea obligatoria.
+- CHECKLIST y ANALYZE no convierten recomendaciones opcionales en requisitos obligatorios,
+  criterios de aceptación, tareas obligatorias ni hallazgos bloqueantes.
+- Solo es bloqueante un problema que impida cumplir correctamente el requerimiento, sus
+  criterios de aceptación o una obligación vigente.
+Reglas de bloqueo que permanecen: un caso obligatorio del principio II, una contradicción con la
+Constitución y la falta de cobertura de un criterio de aceptación exigido. No son bloqueantes por
+sí solos un caso recomendado u opcional, un hallazgo editorial sin ese impacto ni una dependencia
+técnica identificada y resoluble por orden técnico.
+Garantías preservadas sin cambio: principios I a V; clasificación obligatorio / recomendado /
+opcional; aprobación humana de las decisiones relevantes de alcance y de toda reducción o
+ampliación del alcance aprobado; seguridad e integridad, incluido no deshabilitar seguridad para
+simplificar; actualización en el mismo cambio de especificación, implementación, tests,
+contratos, documentación y configuración; prohibición de ejecutar tests y exención temporal de
+testing del frontend; cuatro autorizaciones humanas; condiciones de entrega y definición de
+cierre; requisitos académicos no alterables por una especificación; precedencia de la
+arquitectura definida sobre prácticas incompatibles.
+No hay plan de migración. La enmienda no reescribe especificaciones, planes, tareas, checklists
+ni estados existentes, y no exige reanalizar trabajo en curso. Aplica a las fases SDD posteriores.
+Las citas históricas a §2.2 y a §II siguen refiriendo al principio II, cuyo texto no cambia.
+Placeholders diferidos: ninguno. La plantilla constitution-template se resolvió y no se reescribió;
+la Constitución existente se conservó como fuente y no se reconstruyó desde la plantilla.
+Autorización: solicitud explícita del usuario el 2026-10-26.
+Dependencias no modificadas, conforme al procedimiento de actualización, que limita esta
+operación a la Constitución y a este historial. Quedan pendientes de sincronización subordinada
+y no se asume realizada:
+- docs/development/sdd-workflow.md §6, cuyos procedimientos de fase y criterios de blocker siguen
+  subordinados. Ante tensión, prevalece la Constitución.
+- .opencode/commands/speckit.specify.md, speckit.clarify.md, speckit.plan.md,
+  speckit.checklist.md, speckit.tasks.md, speckit.analyze.md y speckit.implement.md. Leen la
+  Constitución en ejecución y no se editaron. La heurística genérica de analyze (adjetivos
+  vagos, cobertura de requisitos no funcionales, casos límite) y la generación de ítems de
+  checklist no convierten por sí solas una recomendación opcional en requisito o blocker.
+- .opencode/skills/sdd-orchestration/ y AGENTS.md. No requieren cambio para que el principio
+  rija, porque ordenan leer la Constitución.
+- Especificaciones existentes, incluida la cita a Constitution 9.0.0 en
+  specs/020-view-operation-history/plan.md, que conserva su valor como registro de aquella
+  revisión.
+Conflictos posibles, resueltos en el texto del principio y no por reinterpretación posterior:
+- Con I: ambos exigen la solución más simple. VI añade el menor alcance suficiente y no autoriza
+  una simplificación que deje de cumplir el requerimiento o una garantía.
+- Con II: la clasificación de casos límite y la regla de que solo lo obligatorio bloquea siguen
+  vigentes. VI no reclasifica un caso obligatorio como recomendación.
+- Con III y IV: una validación, un test o una documentación exigidos por esos principios, por el
+  alcance autorizado, por un requisito académico o por una norma aplicable del área no son
+  alcance adicional. VI no autoriza omitirlos ni ejecutar tests.
+- Con la arquitectura: reutilizar no conserva una práctica incompatible ni impone una abstracción
+  nueva solo por existir duplicación.
+- Con el workflow y con analyze: un hallazgo editorial, una recomendación opcional o una
+  dependencia técnica resoluble no bloquean. Una contradicción normativa, un caso obligatorio o
+  un criterio de aceptación exigido sin cobertura sí bloquean.
+Sin cambios en scripts, plantillas versionadas, código funcional, especificaciones funcionales,
+seguimiento, ramas, remotos ni estados. Sin operaciones Git de escritura, sin tests y sin builds.
+-->
+
+---
+<!--
 Sync Impact Report — Enmienda 2026-10-18 (segunda, misma fecha) — continuación
 Versión: se mantiene 9.0.0. Esta entrada amplía el alcance de la enmienda 9.0.0, que aún no fue
 integrada y cuyo número no se incrementa por esta vía porque no modifica el texto de la

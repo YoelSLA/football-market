@@ -372,7 +372,8 @@ class PlayerCatalogServiceTest {
       Long id = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
 
       assertThatExceptionOfType(PlayerNotFoundException.class)
-          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(id + 100_000L));
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(id + 100_000L))
+          .withMessage("No encontramos el jugador solicitado");
     }
 
     @Test
@@ -392,7 +393,8 @@ class PlayerCatalogServiceTest {
       playerCatalogService.applySynchronization(snapshot(visible));
 
       assertThatExceptionOfType(PlayerNotFoundException.class)
-          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(inactiveId));
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(inactiveId))
+          .withMessage("No encontramos el jugador solicitado");
     }
   }
 }

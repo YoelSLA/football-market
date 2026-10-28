@@ -1,5 +1,6 @@
 ---
 description: Create or update the feature specification from a natural language feature description.
+model: opencode/deepseek-v4.1-flash-free
 handoffs:
   - label: Clarify Spec Requirements
     agent: speckit.clarify

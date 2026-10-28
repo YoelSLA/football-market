@@ -9,6 +9,7 @@ import footballmarket.config.SecurityConfig;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
 import footballmarket.models.League;
 import footballmarket.models.Player;
+import footballmarket.models.PlayerStatisticsSnapshot;
 import footballmarket.models.Team;
 import footballmarket.models.User;
 import footballmarket.models.enums.ExternalProvider;
@@ -17,6 +18,7 @@ import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
 import footballmarket.services.AuthenticationService;
 import footballmarket.services.PlayerCatalogService;
+import footballmarket.services.PlayerStatisticsQueryService;
 import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import io.jsonwebtoken.Jwts;
@@ -55,6 +57,7 @@ class PlayerControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private PlayerCatalogService service;
+  @MockitoBean private PlayerStatisticsQueryService statisticsService;
   @MockitoBean private AuthenticationService authenticationService;
   @MockitoBean private PlayerSynchronizationOrchestrator orchestrator;
   private MockMvc mvc;
@@ -73,6 +76,238 @@ class PlayerControllerTest {
                 .expiration(Date.from(Instant.now().plusSeconds(300)))
                 .signWith(key)
                 .compact();
+  }
+
+  @Nested
+  @DisplayName("Catálogo filtrado y enriquecimiento opcional")
+  class CatalogQuery {
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    @DisplayName("El enriquecimiento explícito agrega únicamente el resumen deportivo solicitado")
+    void serializesOptionalStatistics(boolean enriched) throws Exception {
+      // Arrange
+      League league = new League("Liga");
+      Team team = new Team("Equipo", league, true);
+      Player player = new Player("José Álvarez", team, "Midfield");
+      ReflectionTestUtils.setField(player, "id", 7L);
+      ReflectionTestUtils.setField(team, "id", 8L);
+      ReflectionTestUtils.setField(league, "id", 9L);
+      footballmarket.models.PlayerCatalogStatistics summary =
+          enriched ? footballmarket.models.PlayerCatalogStatistics.compose(7L, null, null) : null;
+      footballmarket.models.PlayerCatalogPage.Entry entry =
+          new footballmarket.models.PlayerCatalogPage.Entry(player, summary);
+      footballmarket.models.PlayerCatalogPage page =
+          new footballmarket.models.PlayerCatalogPage(List.of(entry), 0, 12, 1, 1);
+      when(service.queryCatalog(any(), eq(0), eq(12))).thenReturn(page);
+      // Act / Assert
+      org.springframework.test.web.servlet.ResultActions result =
+          mvc.perform(
+                  get("/api/players")
+                      .param("page", "0")
+                      .param("size", "12")
+                      .param("sort", "name,asc")
+                      .param("includeStatistics", Boolean.toString(enriched))
+                      .param("name", "jose")
+                      .header("Authorization", authorization))
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.*").value(hasSize(5)))
+              .andExpect(jsonPath("$.content").value(hasSize(1)))
+              .andExpect(jsonPath("$.content[0].*").value(hasSize(enriched ? 12 : 11)))
+              .andExpect(jsonPath("$.content[0].id").value(7))
+              .andExpect(jsonPath("$.content[0].name").value("José Álvarez"))
+              .andExpect(jsonPath("$.content[0].teamId").value(8))
+              .andExpect(jsonPath("$.content[0].teamName").value("Equipo"))
+              .andExpect(jsonPath("$.content[0].leagueId").value(9))
+              .andExpect(jsonPath("$.content[0].leagueName").value("Liga"))
+              .andExpect(jsonPath("$.content[0].position").value("Midfield"))
+              .andExpect(jsonPath("$.page").value(0))
+              .andExpect(jsonPath("$.size").value(12))
+              .andExpect(jsonPath("$.totalElements").value(1))
+              .andExpect(jsonPath("$.totalPages").value(1));
+      if (enriched) {
+        result
+            .andExpect(
+                jsonPath("$.content[0].statistics.goalsTotal")
+                    .value(org.hamcrest.Matchers.nullValue()))
+            .andExpect(
+                jsonPath("$.content[0].statistics.sources.goalsTotal")
+                    .value(org.hamcrest.Matchers.nullValue()));
+      } else {
+        result.andExpect(jsonPath("$.content[0].statistics").doesNotExist());
+      }
+      // Verify
+      verify(service)
+          .queryCatalog(
+              new footballmarket.models.records.PlayerCatalogCriteria(
+                  "jose", null, null, null, null, "name,asc", enriched),
+              0,
+              12);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+      "sort,score,INVALID_REQUEST",
+      "leagueId,-1,INVALID_REQUEST",
+      "teamId,abc,INVALID_PARAMETER_TYPE",
+      "includeStatistics,notBoolean,INVALID_PARAMETER_TYPE"
+    })
+    @DisplayName("Rechaza criterios inválidos antes de consultar el catálogo")
+    void rejectsInvalidCriteria(String parameter, String value, String code) throws Exception {
+      // Act / Assert
+      mvc.perform(
+              get("/api/players").param(parameter, value).header("Authorization", authorization))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value(code));
+      // Verify
+      verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("Las opciones globales tienen listas reales incluso cuando están vacías")
+    void returnsFilterOptions() throws Exception {
+      // Arrange
+      footballmarket.models.PlayerCatalogFilters filters =
+          new footballmarket.models.PlayerCatalogFilters(
+              List.of(), List.of(), List.of(), List.of());
+      when(service.catalogFilters()).thenReturn(filters);
+      // Act / Assert
+      mvc.perform(get("/api/players/filters").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.*").value(hasSize(4)))
+          .andExpect(jsonPath("$.leagues").isEmpty())
+          .andExpect(jsonPath("$.teams").isEmpty())
+          .andExpect(jsonPath("$.positions").isEmpty())
+          .andExpect(jsonPath("$.nationalities").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Las opciones no son públicas")
+    void protectsFilterOptions() throws Exception {
+      // Act / Assert
+      mvc.perform(get("/api/players/filters")).andExpect(status().isUnauthorized());
+      // Verify
+      verifyNoInteractions(service);
+    }
+  }
+
+  @Nested
+  @DisplayName("Estadísticas individuales reales")
+  class Statistics {
+    @ParameterizedTest
+    @CsvSource({"0,NO_DATA", "1,PARTIAL", "60,AVAILABLE"})
+    @DisplayName("Devuelve las sesenta claves y su disponibilidad sin confundir cero con ausencia")
+    void returnsStatistics(int present, String availability) throws Exception {
+      // Arrange
+      List<footballmarket.models.MetricDefinition> definitions =
+          footballmarket.models.MetricCatalog.definitions();
+      List<PlayerStatisticsSnapshot.Metric> metrics =
+          java.util.stream.IntStream.range(0, definitions.size())
+              .mapToObj(
+                  index ->
+                      new PlayerStatisticsSnapshot.Metric(
+                          definitions.get(index).key(),
+                          definitions.get(index).unit(),
+                          index < present ? java.math.BigDecimal.ZERO : null,
+                          index < present ? footballmarket.models.enums.MetricSource.JSON : null))
+              .toList();
+      PlayerStatisticsSnapshot snapshot =
+          new PlayerStatisticsSnapshot(
+              7L,
+              "2026",
+              availability,
+              "2026",
+              "2026/2027",
+              LocalDate.of(2026, 10, 23),
+              "2",
+              null,
+              metrics);
+      when(statisticsService.getStatistics(7L, "2026")).thenReturn(snapshot);
+      // Act / Assert
+      org.springframework.test.web.servlet.ResultActions result =
+          mvc.perform(
+                  get("/api/players/7/statistics")
+                      .param("seasonKey", "2026")
+                      .header("Authorization", authorization))
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.*").value(hasSize(9)))
+              .andExpect(jsonPath("$.playerId").value(7))
+              .andExpect(jsonPath("$.requestedSeasonKey").value("2026"))
+              .andExpect(jsonPath("$.status").value(availability))
+              .andExpect(jsonPath("$.seasonKey").value("2026"))
+              .andExpect(jsonPath("$.seasonLabel").value("2026/2027"))
+              .andExpect(jsonPath("$.extractionDate").value("2026-10-23"))
+              .andExpect(jsonPath("$.competitionKey").value("2"))
+              .andExpect(jsonPath("$.competitionName").value(org.hamcrest.Matchers.nullValue()))
+              .andExpect(jsonPath("$.metrics").value(hasSize(60)));
+      for (int index = 0; index < definitions.size(); index++) {
+        String path = "$.metrics[" + index + "]";
+        result
+            .andExpect(jsonPath(path + ".*").value(hasSize(4)))
+            .andExpect(jsonPath(path + ".key").value(definitions.get(index).key()))
+            .andExpect(jsonPath(path + ".unit").value(definitions.get(index).unit().name()))
+            .andExpect(
+                jsonPath(path + ".value")
+                    .value(
+                        index < present
+                            ? org.hamcrest.Matchers.is(0)
+                            : org.hamcrest.Matchers.nullValue()))
+            .andExpect(
+                jsonPath(path + ".source")
+                    .value(
+                        index < present
+                            ? org.hamcrest.Matchers.is("JSON")
+                            : org.hamcrest.Matchers.nullValue()));
+      }
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(
+        strings = {"abc", "0", "-1", "1.2", "9223372036854775808"})
+    @DisplayName("Rechaza IDs estadísticos inválidos antes del Service")
+    void rejectsInvalidId(String invalid) throws Exception {
+      // Act / Assert
+      mvc.perform(
+              get("/api/players/{id}/statistics", invalid).header("Authorization", authorization))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_PARAMETER_TYPE"));
+      // Verify
+      verifyNoInteractions(statisticsService);
+    }
+
+    @Test
+    @DisplayName("Rechaza una temporada vacía antes del Service")
+    void rejectsEmptySeason() throws Exception {
+      // Act / Assert
+      mvc.perform(
+              get("/api/players/7/statistics")
+                  .param("seasonKey", " ")
+                  .header("Authorization", authorization))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+      // Verify
+      verifyNoInteractions(statisticsService);
+    }
+
+    @Test
+    @DisplayName("La consulta estadística mantiene la autenticación")
+    void requiresAuthentication() throws Exception {
+      // Act / Assert
+      mvc.perform(get("/api/players/7/statistics")).andExpect(status().isUnauthorized());
+      // Verify
+      verifyNoInteractions(statisticsService);
+    }
+
+    @Test
+    @DisplayName("La ausencia de jugador se distingue de ausencia estadística")
+    void returnsNotFound() throws Exception {
+      // Arrange
+      when(statisticsService.getStatistics(7L, null))
+          .thenThrow(new PlayerNotFoundException("No encontramos el jugador solicitado"));
+      // Act / Assert
+      mvc.perform(get("/api/players/7/statistics").header("Authorization", authorization))
+          .andExpect(status().isNotFound())
+          .andExpect(jsonPath("$.code").value("PLAYER_NOT_FOUND"));
+    }
   }
 
   @Nested
@@ -313,15 +548,17 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.timestamp").exists());
     }
 
-    @Test
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(
+        strings = {"abc", "0", "-1", "1.5", "9223372036854775808"})
     @DisplayName("Rechaza un identificador con formato inválido antes de consultar")
-    void rechazaIdentificadorInvalido() throws Exception {
-      mvc.perform(get("/api/players/{id}", "abc").header("Authorization", authorization))
+    void rechazaIdentificadorInvalido(String invalidId) throws Exception {
+      mvc.perform(get("/api/players/{id}", invalidId).header("Authorization", authorization))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.code").value("INVALID_PARAMETER_TYPE"))
-          .andExpect(jsonPath("$.path").value("/api/players/abc"))
+          .andExpect(jsonPath("$.path").value("/api/players/" + invalidId))
           .andExpect(jsonPath("$.timestamp").exists());
       verifyNoInteractions(service);
     }

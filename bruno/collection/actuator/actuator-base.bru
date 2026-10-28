@@ -1,0 +1,21 @@
+meta {
+  name: Actuator base
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/actuator
+  auth: none
+}
+
+headers {
+  accept: application/json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

@@ -1,4 +1,2 @@
-export {
-	type BuyQuantitySchemaType,
-	buyQuantitySchema,
-} from "./buyQuantitySchema";
+export { buyQuantitySchema } from "./buyQuantitySchema";
+export { sellQuantitySchema } from "./sellQuantitySchema";

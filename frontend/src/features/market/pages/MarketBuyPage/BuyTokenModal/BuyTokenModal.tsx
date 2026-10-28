@@ -1,5 +1,7 @@
 import type { RefObject } from "react";
 import type { UseFormRegister } from "react-hook-form";
+import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
+import MarketQuoteFeedback from "@/features/market/components/MarketQuoteFeedback";
 import type {
 	BuyEstimation,
 	BuyQuantityForm,
@@ -23,8 +25,6 @@ import {
 	ShoppingCart,
 	X,
 } from "@/shared/icons";
-import MarketPlayerSummary from "../MarketPlayerSummary";
-import MarketQuoteFeedback from "../MarketQuoteFeedback";
 import styles from "./BuyTokenModal.module.scss";
 
 interface Props {

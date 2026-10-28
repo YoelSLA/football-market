@@ -1,119 +1,12 @@
 @use "@/styles/abstracts" as ds;
-
 .playerOverview {
-	display: grid;
-	grid-template-areas:
-		"portrait identity identity"
-		"portrait indicators indicators";
-	grid-template-columns: auto minmax(0, 1fr);
-	gap: 1rem 1.25rem;
-	align-items: start;
-	padding: 1.25rem;
-	border-radius: 1rem;
-	background: linear-gradient(135deg, ds.$surface-overview-from, ds.$surface-overview-to);
-	color: ds.$text-on-brand-surface;
-
-	h1 {
-		margin: 0;
-		font-size: 1.75rem;
-		line-height: 1.2;
-		overflow-wrap: break-word;
-	}
+	display: grid; grid-template-columns: 180px minmax(0, 1fr) minmax(310px, .85fr); gap: 24px; align-items: center; min-width: 0; padding: 10px; border: 1px solid ds.$border-surface-dark; border-radius: 10px; background: linear-gradient(115deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to); color: ds.$text-on-dark;
+	&__portrait { width: 180px; height: 180px; border-radius: 7px; object-fit: contain; background: ds.$surface-nav-active; }
+	&__identity { min-width: 0; h1 { font-size: clamp(24px, 1.8vw, 34px); line-height: 1.15; margin: 0 0 14px; overflow-wrap: anywhere; } }
+	&__team { display: flex; align-items: center; flex-wrap: wrap; gap: 18px; font-size: 14px; margin-bottom: 14px; span { display: flex; align-items: center; gap: 10px; } img { width: 33px; height: 36px; object-fit: contain; } }
+	&__details { display: flex; flex-wrap: wrap; gap: 18px; border-top: 1px solid ds.$border-surface-dark; padding-top: 14px; margin: 0; > div { display: flex; align-items: center; gap: 10px; svg { color: ds.$accent-nav; flex-shrink: 0; } } img { width: 28px; max-height: 22px; object-fit: contain; } dt { font-size: 9px; text-transform: uppercase; margin-top: 5px; color: ds.$text-on-dark-muted; } dd { margin: 0; font-size: 13px; } }
+	&__context { align-self: stretch; display: flex; flex-direction: column; align-items: end; padding: 0 4px; min-width: 0; dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; border: 1px solid ds.$border-surface-dark; border-radius: 7px; padding: 12px; margin: 12px 0 0; > div { text-align: center; padding: 0 10px; &:first-child { border-right: 1px solid ds.$border-surface-dark; } } svg { color: ds.$accent-finance-cyan; } dt { font-size: 10px; color: ds.$text-on-dark-muted; margin: 7px 0; } dd { margin: 0; font-size: 12px; overflow-wrap: anywhere; } } p { font-size: 10px; color: ds.$text-on-dark-muted; margin: 8px 0 0; } }
+	&__season { padding: 8px 12px; border: 1px solid ds.$border-surface-dark; border-radius: 5px; font-size: 11px; }
 }
-
-.playerOverview__portrait {
-	grid-area: portrait;
-	width: 7rem;
-	height: 7rem;
-}
-
-.playerOverview__identity {
-	grid-area: identity;
-	min-width: 0;
-}
-
-.playerOverview__team {
-	margin: 0.25rem 0 0;
-	opacity: 0.85;
-}
-
-.playerOverview__details {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem 1rem;
-	margin: 0.75rem 0 0;
-
-	dt {
-		font-size: 0.75rem;
-		letter-spacing: 0.04em;
-		opacity: 0.75;
-		text-transform: uppercase;
-	}
-
-	dd {
-		margin: 0;
-		overflow-wrap: break-word;
-	}
-}
-
-.playerOverview__indicators {
-	grid-area: indicators;
-	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 1rem;
-	margin: 0;
-	padding-top: 0.75rem;
-	border-top: 1px solid rgb(248 250 252 / 25%);
-
-	dt {
-		font-size: 0.7rem;
-		letter-spacing: 0.04em;
-		opacity: 0.75;
-		text-transform: uppercase;
-	}
-
-	dd {
-		margin: 0;
-		font-size: 1.25rem;
-		font-weight: 700;
-		overflow-wrap: break-word;
-	}
-}
-
-.playerOverview__demo {
-	margin: 0.75rem 0 0;
-	font-size: 0.7rem;
-	letter-spacing: 0.06em;
-	opacity: 0.8;
-	text-transform: uppercase;
-}
-
-@media (max-width: 900px) {
-	.playerOverview {
-		grid-template-areas:
-			"portrait identity"
-			"indicators indicators";
-
-		&__indicators {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-}
-
-@media (max-width: 480px) {
-	.playerOverview {
-		grid-template-areas:
-			"portrait"
-			"identity"
-			"indicators";
-		grid-template-columns: minmax(0, 1fr);
-
-		&__portrait {
-			margin: 0 auto;
-		}
-
-		&__indicators {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-}
+@media (max-width: 1100px) { .playerOverview { grid-template-columns: 130px minmax(0, 1fr); gap: 16px; &__portrait { width: 130px; height: 150px; } &__context { grid-column: 1 / -1; align-items: start; } } }
+@media (max-width: 500px) { .playerOverview { grid-template-columns: 80px minmax(0, 1fr); gap: 12px; &__portrait { width: 80px; height: 110px; } &__identity h1 { font-size: 22px; } &__team { font-size: 11px; gap: 8px; img { width: 22px; height: 26px; } } &__details { gap: 10px; dd { font-size: 11px; } } } }

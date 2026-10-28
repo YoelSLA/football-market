@@ -2,11 +2,18 @@ package footballmarket.services.impl;
 
 import footballmarket.models.League;
 import footballmarket.models.Player;
+import footballmarket.models.PlayerCatalogFilters;
+import footballmarket.models.PlayerCatalogPage;
+import footballmarket.models.PlayerCatalogStatistics;
+import footballmarket.models.PlayerStatistics;
 import footballmarket.models.Team;
+import footballmarket.models.enums.MetricSource;
 import footballmarket.models.enums.ReviewSubjectType;
+import footballmarket.models.records.PlayerCatalogCriteria;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.repositories.PlayerRepository;
+import footballmarket.repositories.PlayerStatisticsRepository;
 import footballmarket.services.PlayerCatalogService;
 import footballmarket.services.exceptions.IncompletePhotoException;
 import footballmarket.services.exceptions.PlayerNotFoundException;
@@ -16,9 +23,11 @@ import footballmarket.services.internal.PlayerApplication;
 import footballmarket.services.internal.PlayerResolution;
 import footballmarket.services.internal.SynchronizationAttempt;
 import footballmarket.services.internal.TeamResolution;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -31,6 +40,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -47,6 +57,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class PlayerCatalogServiceImpl implements PlayerCatalogService {
   private static final Logger LOG = LoggerFactory.getLogger(PlayerCatalogServiceImpl.class);
   private final PlayerRepository players;
+  private final PlayerStatisticsRepository catalogStatistics;
   private final LeagueResolution leagues;
   private final TeamResolution teams;
   private final PlayerResolution playerResolution;
@@ -54,11 +65,13 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
 
   public PlayerCatalogServiceImpl(
       PlayerRepository players,
+      PlayerStatisticsRepository catalogStatistics,
       LeagueResolution leagues,
       TeamResolution teams,
       PlayerResolution playerResolution,
       PlatformTransactionManager manager) {
     this.players = players;
+    this.catalogStatistics = catalogStatistics;
     this.leagues = leagues;
     this.teams = teams;
     this.playerResolution = playerResolution;
@@ -108,6 +121,94 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
   public Page<Player> getActivePlayers(int page, int size) {
     return this.players.findByActiveTrue(
         PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
+  }
+
+  @Override
+  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  public PlayerCatalogPage queryCatalog(PlayerCatalogCriteria criteria, int page, int size) {
+    Sort sort =
+        "id,asc".equals(criteria.sort())
+            ? Sort.by("id")
+            : Sort.by(
+                new Sort.Order(
+                        "name,desc".equals(criteria.sort())
+                            ? Sort.Direction.DESC
+                            : Sort.Direction.ASC,
+                        "name")
+                    .ignoreCase(),
+                Sort.Order.asc("id"));
+    Page<Player> result =
+        this.players.findCatalog(
+            criteria.name(),
+            criteria.leagueId(),
+            criteria.teamId(),
+            criteria.position(),
+            criteria.nationality(),
+            PageRequest.of(page, size, sort));
+    java.util.Map<Long, java.util.List<PlayerStatistics>> byPlayer = new java.util.HashMap<>();
+    if (criteria.includeStatistics() && !result.isEmpty()) {
+      this.catalogStatistics
+          .findCatalogStatistics(result.getContent().stream().map(Player::getId).toList())
+          .forEach(
+              row ->
+                  byPlayer
+                      .computeIfAbsent(
+                          row.getPlayer().getId(), ignored -> new java.util.ArrayList<>())
+                      .add(row));
+    }
+    return new PlayerCatalogPage(
+        result.getContent().stream()
+            .map(
+                player -> {
+                  PlayerCatalogStatistics statistics = null;
+                  if (criteria.includeStatistics()) {
+                    java.util.List<PlayerStatistics> rows =
+                        byPlayer.getOrDefault(player.getId(), java.util.List.of());
+                    PlayerStatistics anchor = rows.isEmpty() ? null : rows.getFirst();
+                    PlayerStatistics scraping =
+                        rows.stream()
+                            .filter(row -> row.getSource() == MetricSource.SCRAPING)
+                            .findFirst()
+                            .orElse(null);
+                    statistics = PlayerCatalogStatistics.compose(player.getId(), anchor, scraping);
+                  }
+                  return new PlayerCatalogPage.Entry(player, statistics);
+                })
+            .toList(),
+        result.getNumber(),
+        result.getSize(),
+        result.getTotalElements(),
+        result.getTotalPages());
+  }
+
+  @Override
+  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  public PlayerCatalogFilters catalogFilters() {
+    Comparator<String> textOrder =
+        Comparator.comparing((String value) -> value.toLowerCase(Locale.ROOT))
+            .thenComparing(Comparator.naturalOrder());
+    return new PlayerCatalogFilters(
+        this.players.findCatalogLeagues().stream()
+            .map(league -> new PlayerCatalogFilters.LeagueOption(league.getId(), league.getName()))
+            .sorted(
+                Comparator.comparing(
+                        (PlayerCatalogFilters.LeagueOption option) ->
+                            option.name().toLowerCase(Locale.ROOT))
+                    .thenComparingLong(PlayerCatalogFilters.LeagueOption::id))
+            .toList(),
+        this.players.findCatalogTeams().stream()
+            .map(
+                team ->
+                    new PlayerCatalogFilters.TeamOption(
+                        team.getId(), team.getName(), team.getLeague().getId()))
+            .sorted(
+                Comparator.comparing(
+                        (PlayerCatalogFilters.TeamOption option) ->
+                            option.name().toLowerCase(Locale.ROOT))
+                    .thenComparingLong(PlayerCatalogFilters.TeamOption::id))
+            .toList(),
+        this.players.findCatalogPositions().stream().sorted(textOrder).toList(),
+        this.players.findCatalogNationalities().stream().sorted(textOrder).toList());
   }
 
   @Override

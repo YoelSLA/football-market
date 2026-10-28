@@ -1,5 +1,6 @@
 ---
 description: Generate a custom checklist for the current feature based on user requirements.
+model: opencode/glm-5.3-flash-free
 ---
 
 ## Checklist Purpose: "Unit Tests for English"

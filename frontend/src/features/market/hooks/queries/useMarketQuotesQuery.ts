@@ -16,6 +16,7 @@ export interface MarketPlayerQuoteState {
 	error: unknown;
 	canRetry: boolean;
 	onRetry: () => void;
+	refetch: () => Promise<{ data?: MarketQuote | null; isError: boolean }>;
 }
 
 /**
@@ -75,6 +76,7 @@ export function useMarketQuotesQuery(
 			onRetry: () => {
 				if (canRetry) void res.refetch({ cancelRefetch: false });
 			},
+			refetch: () => res.refetch({ cancelRefetch: false }),
 		});
 	});
 
@@ -94,6 +96,7 @@ export function useMarketQuotesQuery(
 				error: null,
 				canRetry: false,
 				onRetry: () => {},
+				refetch: async () => ({ data: null, isError: false }),
 			},
 	};
 }

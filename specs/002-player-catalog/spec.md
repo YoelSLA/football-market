@@ -1,5 +1,9 @@
 # Feature Specification: Catálogo de jugadores
 
+## Nota de evolución contractual — preparación de SPEC-005
+
+El usuario autorizó el 2026-10-25 preparar en SPEC-005 búsqueda/filtros globales por nombre/liga/equipo/posición/nacionalidad, orden explícito por nombre y datos deportivos reales por lote. Contrato propuesto en [contracts/catalog-query.md](contracts/catalog-query.md). No cambia identidad interna, visibilidad, sincronización, permisos ni el orden ID predeterminado de clientes API antiguos. El enriquecimiento deportivo es opcional y el orden nombre ascendente lo solicita explícitamente la nueva UI. Las obligaciones/US/tareas del rediseño viven en SPEC-005, no se duplican aquí. No acredita implementación ni reapertura de aprobaciones históricas ajenas al cambio.
+
 **Feature Branch**: `[002-player-catalog]`
 
 **Created**: 2026-09-15

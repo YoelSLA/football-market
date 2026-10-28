@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import type { BuyResult } from "@/features/market/types";
+import type { BuyResult, SellResult } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
@@ -37,9 +37,20 @@ export function useMarketToast() {
 	const notifyError = (message: string) => {
 		toast.error(message, { autoClose: 5000 });
 	};
+	const notifySellSuccess = (playerName: string, result: SellResult) => {
+		const expiresAt = new Date(result.expiresAt);
+		const expiry = Number.isNaN(expiresAt.getTime())
+			? result.expiresAt
+			: dateTimeFormatter.format(expiresAt);
+		toast.success(
+			`Publicaste ${result.quantity} tokens de ${playerName}. Publicación #${result.listingId}. Precio unitario: ${formatCredits(result.unitPrice)}. Total: ${formatCredits(result.totalAmount)}. Vence: ${expiry}.`,
+			{ autoClose: 5000 },
+		);
+	};
 
 	return {
 		notifySuccess,
 		notifyError,
+		notifySellSuccess,
 	};
 }
