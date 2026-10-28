@@ -9,12 +9,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.market.application.BuyOrderService;
+import footballmarket.features.market.application.TokenListingService;
+import footballmarket.features.market.application.exceptions.*;
+import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.models.TestFixtures;
-import footballmarket.models.TokenListing;
-import footballmarket.models.records.CurrentQuote;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.BuyOrderService;
-import footballmarket.services.TokenListingService;
 import footballmarket.services.exceptions.*;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;

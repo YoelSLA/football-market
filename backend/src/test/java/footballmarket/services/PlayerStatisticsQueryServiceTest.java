@@ -2,9 +2,12 @@ package footballmarket.services;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.PlayerStatisticsSnapshot;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
+import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSnapshot;
 import footballmarket.models.enums.*;
-import footballmarket.services.exceptions.PlayerNotFoundException;
 import footballmarket.support.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;

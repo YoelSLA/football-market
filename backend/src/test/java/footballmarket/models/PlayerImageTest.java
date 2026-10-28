@@ -2,6 +2,9 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

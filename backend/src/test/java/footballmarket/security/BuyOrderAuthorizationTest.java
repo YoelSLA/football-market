@@ -4,8 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.models.Player;
-import footballmarket.models.User;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import io.jsonwebtoken.Jwts;

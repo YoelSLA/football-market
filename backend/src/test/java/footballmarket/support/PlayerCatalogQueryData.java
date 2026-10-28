@@ -1,11 +1,11 @@
 package footballmarket.support;
 
-import footballmarket.models.League;
-import footballmarket.models.Player;
-import footballmarket.models.Team;
-import footballmarket.repositories.LeagueRepository;
-import footballmarket.repositories.PlayerRepository;
-import footballmarket.repositories.TeamRepository;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Datos funcionales compartidos, utilizados exclusivamente en Arrange de los tests de Service. */

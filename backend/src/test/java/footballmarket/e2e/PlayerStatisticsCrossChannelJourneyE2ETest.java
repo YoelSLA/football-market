@@ -6,15 +6,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import footballmarket.config.WhoScoredProperties;
-import footballmarket.controllers.dtos.requests.LoginRequestDTO;
-import footballmarket.controllers.dtos.requests.PlayerStatisticsSyncRequestDTO;
-import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
-import footballmarket.controllers.dtos.responses.LoginResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerIdentitySyncRunResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerStatisticsCoverageResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerStatisticsSyncResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
+import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
+import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
+import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.presentation.dtos.response.PlayerResponseDTO;
+import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
+import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
+import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
+import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
+import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
 import footballmarket.integrations.WhoScoredRequestPacer;
 import footballmarket.integrations.WhoScoredStatisticsIntegration;
 import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
@@ -73,8 +74,12 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
 
   @LocalServerPort private int port;
   @Autowired private WhoScoredRequestPacer pacer;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
-  @Autowired private footballmarket.repositories.PlayerRepository players;
+
+  @Autowired
+  private footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository
+      references;
+
+  @Autowired private footballmarket.features.catalog.infraestructure.PlayerRepository players;
   @MockitoSpyBean private WhoScoredProperties properties;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration scrapingIntegration;
   @MockitoBean private WhoScoredStatisticsIntegration jsonIntegration;
@@ -264,8 +269,7 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
     private String tournamentOf(String providerPlayerId) {
       Long playerId =
           references
-              .findByProviderAndExternalId(
-                  footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
+              .findByProviderAndExternalId(ExternalProvider.WHOSCORED, providerPlayerId)
               .orElseThrow()
               .getPlayer()
               .getId();

@@ -2,7 +2,9 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.enums.MetricAvailability;
+import footballmarket.features.statistics.domain.enums.MetricAvailability;
+import footballmarket.features.statistics.domain.models.MetricDerivationApplier;
+import footballmarket.features.statistics.domain.models.MetricValueNormalizer;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;

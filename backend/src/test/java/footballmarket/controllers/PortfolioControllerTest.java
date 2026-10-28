@@ -12,9 +12,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
-import footballmarket.models.records.PortfolioView;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.PortfolioService;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.portfolio.application.PortfolioService;
+import footballmarket.features.portfolio.domain.records.PortfolioView;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -178,7 +178,9 @@ class PortfolioControllerTest {
     void traduceErrorDeIntegridad() throws Exception {
       // Arrange
       when(portfolioService.portfolio(anyString(), anyInt(), anyInt(), any()))
-          .thenThrow(new footballmarket.models.exceptions.PortfolioIntegrityException());
+          .thenThrow(
+              new footballmarket.features.portfolio.domain.exceptions
+                  .PortfolioIntegrityException());
       // Act / Assert
       mvc.perform(get("/api/portfolio/me").header("Authorization", authorization))
           .andExpect(status().isInternalServerError())

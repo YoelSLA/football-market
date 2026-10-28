@@ -2,12 +2,12 @@ package footballmarket.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.controllers.dtos.requests.LoginRequestDTO;
-import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
-import footballmarket.controllers.dtos.responses.CurrentUserResponseDTO;
-import footballmarket.controllers.dtos.responses.LoginResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
-import footballmarket.models.enums.UserRole;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
+import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
+import footballmarket.features.auth.presentation.dtos.response.CurrentUserResponseDTO;
+import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
+import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
 import footballmarket.support.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

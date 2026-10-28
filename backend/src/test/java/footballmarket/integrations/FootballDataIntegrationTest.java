@@ -68,7 +68,7 @@ class FootballDataIntegrationTest {
 
   private void competition(String name) {
     respond("/competitions/PL", "{\"id\":2001,\"name\":" + name + "}");
-    respond("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}");
+    respond("/competitions/PL/team", "{\"team\":[{\"id\":10}]}");
   }
 
   @Nested
@@ -81,7 +81,7 @@ class FootballDataIntegrationTest {
     void conservaJugadorConFechaInvalida(String jsonValue) {
       competition("\"League\"");
       respond(
-          "/teams/10",
+          "/team/10",
           "{\"name\":\"T\",\"squad\":[{\"id\":44,\"name\":\"N\",\"position\":\"P\",\"dateOfBirth\":"
               + jsonValue
               + "}]}");
@@ -103,7 +103,7 @@ class FootballDataIntegrationTest {
     void conservaJugadorConNacionalidadInvalida(String jsonValue) {
       competition("\"League\"");
       respond(
-          "/teams/10",
+          "/team/10",
           "{\"name\":\"T\",\"squad\":[{\"id\":44,\"name\":\"N\",\"position\":\"P\",\"nationality\":"
               + jsonValue
               + "}]}");
@@ -118,7 +118,7 @@ class FootballDataIntegrationTest {
     void leeOpcionalesValidos() {
       competition("\"League\"");
       respond(
-          "/teams/10",
+          "/team/10",
           """
           {"name":"T","squad":[{"id":44,"name":"N","position":"P",
           "dateOfBirth":"1990-06-20","nationality":"Spain","imageUrl":"https://unused.example/image"}]}
@@ -134,7 +134,7 @@ class FootballDataIntegrationTest {
     void mapeaJugadoresValidosYCuentaCadaRegistroInvalido() {
       competition("\"League\"");
       respond(
-          "/teams/10",
+          "/team/10",
           """
           {"name":"Team","squad":[
           {"id":1,"name":"Name","position":"Forward"},
@@ -159,7 +159,7 @@ class FootballDataIntegrationTest {
     void descartaJugadoresSinLigaOEquipoSinInventarValores() {
       competition("null");
       respond(
-          "/teams/10",
+          "/team/10",
           "{\"name\":\"Team\",\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
       assertThat(integration.fetchCompetition("PL").discardedInvalid()).isEqualTo(1);
       server.verify();
@@ -170,7 +170,7 @@ class FootballDataIntegrationTest {
     void descartaJugadoresSinEquipo() {
       server.reset();
       competition("\"League\"");
-      respond("/teams/10", "{\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
+      respond("/team/10", "{\"squad\":[{\"id\":1,\"name\":\"N\",\"position\":\"P\"}]}");
       assertThat(integration.fetchCompetition("PL").discardedInvalid()).isEqualTo(1);
       server.verify();
     }
@@ -191,7 +191,7 @@ class FootballDataIntegrationTest {
     void insufficientIdentityRejectsSnapshot(String member) {
       // Arrange
       competition("\"League\"");
-      respond("/teams/10", "{\"name\":\"Team\",\"squad\":[" + member + "]}");
+      respond("/team/10", "{\"name\":\"Team\",\"squad\":[" + member + "]}");
 
       // Act / Assert
       assertThatThrownBy(() -> integration.fetchCompetition("PL"))
@@ -206,7 +206,7 @@ class FootballDataIntegrationTest {
     void truncatedTeamListRejectsSnapshot() {
       // Arrange
       respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
-      respond("/competitions/PL/teams", "{\"count\":2,\"teams\":[{\"id\":10}]}");
+      respond("/competitions/PL/team", "{\"count\":2,\"team\":[{\"id\":10}]}");
 
       // Act / Assert
       assertThatThrownBy(() -> integration.fetchCompetition("PL"))
@@ -221,7 +221,7 @@ class FootballDataIntegrationTest {
     @ValueSource(strings = {"{}", "{\"squad\":null}", "{\"squad\":{}}", "not-json", "null"})
     void rechazaPlantillaIncompleta(String body) {
       competition("\"League\"");
-      respond("/teams/10", body);
+      respond("/team/10", body);
       assertThatThrownBy(() -> integration.fetchCompetition("PL"))
           .isInstanceOf(FootballDataUnavailableException.class);
       server.verify();
@@ -230,10 +230,10 @@ class FootballDataIntegrationTest {
     @ParameterizedTest
     @DisplayName("Rechaza listas de equipos incompletas")
     @ValueSource(
-        strings = {"{}", "{\"teams\":null}", "{\"teams\":[{}]}", "{\"teams\":[null]}", "null"})
+        strings = {"{}", "{\"team\":null}", "{\"team\":[{}]}", "{\"team\":[null]}", "null"})
     void rechazaListaDeEquiposIncompleta(String body) {
       respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
-      respond("/competitions/PL/teams", body);
+      respond("/competitions/PL/team", body);
       assertThatThrownBy(() -> integration.fetchCompetition("PL"))
           .isInstanceOf(FootballDataUnavailableException.class);
       server.verify();
@@ -243,7 +243,7 @@ class FootballDataIntegrationTest {
     @DisplayName("Acepta una plantilla completa sin jugadores")
     void aceptaPlantillaCompletaVacia() {
       competition("\"League\"");
-      respond("/teams/10", "{\"name\":\"Team\",\"squad\":[]}");
+      respond("/team/10", "{\"name\":\"Team\",\"squad\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       server.verify();
     }
@@ -256,8 +256,8 @@ class FootballDataIntegrationTest {
     @DisplayName("Espera a la ventana cuando el proveedor agota su presupuesto")
     void esperaReinicioConPresupuestoAgotado() {
       respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "1", "12");
-      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "1", "12");
-      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "1", "12");
+      respondWithBudget("/competitions/PL/team", "{\"team\":[{\"id\":10}]}", "1", "12");
+      respondWithBudget("/team/10", "{\"name\":\"T\",\"squad\":[]}", "1", "12");
 
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(12), Duration.ofSeconds(12));
@@ -268,8 +268,8 @@ class FootballDataIntegrationTest {
     @DisplayName("No espera cuando el proveedor todavía puede servir la lectura")
     void noEsperaConPresupuestoDisponible() {
       respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "9", "40");
-      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "8", "40");
-      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "7", "40");
+      respondWithBudget("/competitions/PL/team", "{\"team\":[{\"id\":10}]}", "8", "40");
+      respondWithBudget("/team/10", "{\"name\":\"T\",\"squad\":[]}", "7", "40");
 
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).isEmpty();
@@ -280,8 +280,8 @@ class FootballDataIntegrationTest {
     @DisplayName("Conserva el margen de una petición y no espera por ella")
     void conservaMargenSinAgotarPresupuesto() {
       respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "2", "30");
-      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "1", "30");
-      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "1", "30");
+      respondWithBudget("/competitions/PL/team", "{\"team\":[{\"id\":10}]}", "1", "30");
+      respondWithBudget("/team/10", "{\"name\":\"T\",\"squad\":[]}", "1", "30");
 
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(30));
@@ -292,7 +292,7 @@ class FootballDataIntegrationTest {
     @DisplayName("La espera preventiva no se aplica antes de la primera lectura")
     void noEsperaAntesDeLaPrimeraLectura() {
       respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
-      respond("/competitions/PL/teams", "{\"teams\":[]}");
+      respond("/competitions/PL/team", "{\"team\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).isEmpty();
       server.verify();
@@ -305,8 +305,8 @@ class FootballDataIntegrationTest {
     @DisplayName("Ante un reinicio no utilizable espera el tiempo predeterminado")
     void esperaPredeterminadaAnteReinicioNoUtilizable(String counterReset, long seconds) {
       respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "0", counterReset);
-      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "0", counterReset);
-      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "0", counterReset);
+      respondWithBudget("/competitions/PL/team", "{\"team\":[{\"id\":10}]}", "0", counterReset);
+      respondWithBudget("/team/10", "{\"name\":\"T\",\"squad\":[]}", "0", counterReset);
 
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(seconds), Duration.ofSeconds(seconds));
@@ -317,8 +317,8 @@ class FootballDataIntegrationTest {
     @DisplayName("Un presupuesto no numérico no altera el ritmo ni el resultado")
     void ignoraPresupuestoNoNumerico() {
       respondWithBudget("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}", "many", "30");
-      respondWithBudget("/competitions/PL/teams", "{\"teams\":[{\"id\":10}]}", "many", "30");
-      respondWithBudget("/teams/10", "{\"name\":\"T\",\"squad\":[]}", "many", "30");
+      respondWithBudget("/competitions/PL/team", "{\"team\":[{\"id\":10}]}", "many", "30");
+      respondWithBudget("/team/10", "{\"name\":\"T\",\"squad\":[]}", "many", "30");
 
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).isEmpty();
@@ -332,7 +332,7 @@ class FootballDataIntegrationTest {
           .expect(requestTo("https://provider.example/v4/competitions/PL"))
           .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", "2"));
       respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
-      respond("/competitions/PL/teams", "{\"teams\":[]}");
+      respond("/competitions/PL/team", "{\"team\":[]}");
 
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(2));
@@ -350,7 +350,7 @@ class FootballDataIntegrationTest {
           .expect(requestTo("https://provider.example/v4/competitions/PL"))
           .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
       respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
-      respond("/competitions/PL/teams", "{\"teams\":[]}");
+      respond("/competitions/PL/team", "{\"team\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(60));
       server.verify();
@@ -381,7 +381,7 @@ class FootballDataIntegrationTest {
           .expect(requestTo("https://provider.example/v4/competitions/PL"))
           .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", retryAfter));
       respond("/competitions/PL", "{\"id\":2001,\"name\":\"League\"}");
-      respond("/competitions/PL/teams", "{\"teams\":[]}");
+      respond("/competitions/PL/team", "{\"team\":[]}");
       assertThat(integration.fetchCompetition("PL").obtained()).isZero();
       assertThat(waits).containsExactly(Duration.ofSeconds(seconds));
       server.verify();

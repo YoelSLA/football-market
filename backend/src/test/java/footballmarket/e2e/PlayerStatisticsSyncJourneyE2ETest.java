@@ -6,15 +6,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import footballmarket.config.WhoScoredProperties;
-import footballmarket.controllers.dtos.requests.LoginRequestDTO;
-import footballmarket.controllers.dtos.requests.PlayerStatisticsSyncRequestDTO;
-import footballmarket.controllers.dtos.requests.RegisterRequestDTO;
-import footballmarket.controllers.dtos.responses.LoginResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerIdentitySyncRunResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerStatisticsCoverageResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayerStatisticsSyncResponseDTO;
-import footballmarket.controllers.dtos.responses.PlayersPageResponseDTO;
+import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
+import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
+import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.presentation.dtos.response.PlayerResponseDTO;
+import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
+import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
+import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
+import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
+import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
 import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
 import footballmarket.integrations.records.WhoScoredScrapedContextRow;
 import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
@@ -57,10 +58,11 @@ class PlayerStatisticsSyncJourneyE2ETest {
   @MockitoSpyBean private WhoScoredProperties properties;
 
   @org.springframework.beans.factory.annotation.Autowired
-  private footballmarket.repositories.PlayerExternalReferenceRepository references;
+  private footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository
+      references;
 
   @org.springframework.beans.factory.annotation.Autowired
-  private footballmarket.repositories.PlayerRepository players;
+  private footballmarket.features.catalog.infraestructure.PlayerRepository players;
 
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
 
@@ -179,8 +181,7 @@ class PlayerStatisticsSyncJourneyE2ETest {
     private String tournamentOf(String providerPlayerId) {
       Long playerId =
           references
-              .findByProviderAndExternalId(
-                  footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
+              .findByProviderAndExternalId(ExternalProvider.WHOSCORED, providerPlayerId)
               .orElseThrow()
               .getPlayer()
               .getId();

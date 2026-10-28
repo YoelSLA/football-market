@@ -2,8 +2,11 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.enums.TeamResolutionFailure;
-import footballmarket.models.enums.TeamResolutionResult;
+import footballmarket.features.catalog.domain.enums.TeamResolutionFailure;
+import footballmarket.features.catalog.domain.enums.TeamResolutionResult;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.domain.models.team.TeamResolutionAttempt;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

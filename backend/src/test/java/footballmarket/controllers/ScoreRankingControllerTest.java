@@ -7,13 +7,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
-import footballmarket.models.User;
-import footballmarket.models.enums.UserRole;
-import footballmarket.models.enums.ValuationStrategy;
-import footballmarket.models.records.ScoreRanking;
-import footballmarket.models.records.ScoreRankingEntry;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.ScoreRankingQueryService;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.ranking.application.ScoreRankingQueryService;
+import footballmarket.features.ranking.domain.records.ScoreRanking;
+import footballmarket.features.ranking.domain.records.ScoreRankingEntry;
+import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -151,7 +151,7 @@ class ScoreRankingControllerTest {
           .andExpect(jsonPath("$.*").value(Matchers.hasSize(6)))
           .andExpect(jsonPath("$.status").value(500))
           .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
-          .andExpect(jsonPath("$.path").value("/api/players/ranking/score"))
+          .andExpect(jsonPath("$.path").value("/api/player/ranking/score"))
           .andExpect(jsonPath("$.ranking").doesNotExist())
           .andExpect(jsonPath("$.strategyVersion").doesNotExist());
     }

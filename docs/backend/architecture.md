@@ -120,13 +120,6 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
   `INVALID_STATISTICS_MAX_PLAYERS`, `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
   `PLAYER_STATISTICS_SYNC_FAILED` y `HEADED_BROWSER_UNAVAILABLE`, este último solo para scraping.
 
-### 3.3. Cliente operativo
-
-`tools/PlayerStatisticsSyncClient` es un cliente CLI de scraping ejecutado por el desarrollador,
-fuera del contexto Spring, con modos `batch` y `campaign`. No consulta WhoScored ni la
-persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
-por POST autenticado sin entrada.
-
 ## 4. Valoraciones estadísticas de jugadores (SPEC-013)
 
 - Controller: `ValuationController` expone únicamente `POST /api/valuations/evaluate`, sin body,

@@ -1,12 +1,12 @@
 package footballmarket.support;
 
-import footballmarket.models.Player;
-import footballmarket.models.PlayerToken;
-import footballmarket.models.TokenListing;
-import footballmarket.models.User;
-import footballmarket.models.records.CurrentQuote;
-import footballmarket.repositories.PlayerTokenRepository;
-import footballmarket.repositories.TokenListingRepository;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.models.PlayerToken;
+import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.infraestructure.PlayerTokenRepository;
+import footballmarket.features.market.infraestructure.TokenListingRepository;
+import footballmarket.features.quote.domain.records.CurrentQuote;
 import java.time.OffsetDateTime;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Aprovisionamiento de estado de mercado para las pruebas del portfolio.
  *
- * <p>Es infraestructura de pruebas: prepara tenencias, operaciones confirmadas y publicaciones
+ * <p>Es infraestructure de pruebas: prepara tenencias, operaciones confirmadas y publicaciones
  * vigentes, y únicamente en Arrange. Las afirmaciones sobre el comportamiento observable las hace
  * el test de la categoría Service, que solo usa la API pública del caso de uso.
  */

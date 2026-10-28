@@ -3,12 +3,13 @@ package footballmarket.services;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.when;
 
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.domain.records.LeagueCandidate;
+import footballmarket.features.catalog.domain.records.PlayerCandidate;
+import footballmarket.features.catalog.domain.records.PlayerSnapshot;
+import footballmarket.features.catalog.domain.records.TeamCandidate;
+import footballmarket.features.images.application.exceptions.PlayerImageSynchronizationException;
 import footballmarket.integrations.TheSportsDbIntegration;
-import footballmarket.models.records.LeagueCandidate;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
-import footballmarket.models.records.TeamCandidate;
-import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;

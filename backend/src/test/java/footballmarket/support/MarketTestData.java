@@ -1,23 +1,23 @@
 package footballmarket.support;
 
-import footballmarket.models.League;
-import footballmarket.models.Player;
-import footballmarket.models.PlayerQuote;
-import footballmarket.models.PlayerToken;
-import footballmarket.models.PlayerTokenEmission;
-import footballmarket.models.Team;
-import footballmarket.models.User;
-import footballmarket.models.UserCredit;
-import footballmarket.models.enums.QuoteOrigin;
-import footballmarket.models.enums.UserRole;
-import footballmarket.repositories.LeagueRepository;
-import footballmarket.repositories.PlayerQuoteRepository;
-import footballmarket.repositories.PlayerRepository;
-import footballmarket.repositories.PlayerTokenEmissionRepository;
-import footballmarket.repositories.PlayerTokenRepository;
-import footballmarket.repositories.TeamRepository;
-import footballmarket.repositories.UserCreditRepository;
-import footballmarket.repositories.UserRepository;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.auth.infraestructure.UserRepository;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
+import footballmarket.features.market.domain.models.PlayerToken;
+import footballmarket.features.market.domain.models.PlayerTokenEmission;
+import footballmarket.features.market.domain.models.UserCredit;
+import footballmarket.features.market.infraestructure.PlayerTokenEmissionRepository;
+import footballmarket.features.market.infraestructure.PlayerTokenRepository;
+import footballmarket.features.market.infraestructure.UserCreditRepository;
+import footballmarket.features.quote.domain.enums.QuoteOrigin;
+import footballmarket.features.quote.domain.models.PlayerQuote;
+import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Aprovisionamiento técnico de estado de mercado para pruebas.
  *
- * <p>Es infraestructura de pruebas y no un componente del dominio: existe para que los tests
+ * <p>Es infraestructure de pruebas y no un componente del dominio: existe para que los tests
  * funcionales no dependan de la persistencia. Los tests la usan únicamente en Arrange, y las
  * afirmaciones sobre estado durable se hacen en la categoría Repository, que sí puede observar la
  * base de datos, conforme a {@code docs/backend/testing.md} §5 y §6.

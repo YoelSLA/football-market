@@ -3,7 +3,11 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.exceptions.InvalidCatalogEntityException;
+import footballmarket.features.catalog.domain.exceptions.InvalidCatalogEntityException;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.player.PlayerPresentation;
+import footballmarket.features.catalog.domain.models.team.Team;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

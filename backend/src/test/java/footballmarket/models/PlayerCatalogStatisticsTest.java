@@ -2,6 +2,14 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.domain.records.PlayerCatalogStatistics;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.models.PlayerStatistics;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsExtractionRun;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsRunItem;
 import footballmarket.models.enums.*;
 import java.math.BigDecimal;
 import java.time.*;

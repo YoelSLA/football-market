@@ -3,12 +3,12 @@ package footballmarket.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.MarketTransaction;
-import footballmarket.models.Player;
-import footballmarket.models.User;
-import footballmarket.models.records.OperationHistoryEntry;
-import footballmarket.models.records.OperationHistoryEntry.OperationType;
-import footballmarket.services.exceptions.CurrentUserNotFoundException;
+import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
+import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
 import footballmarket.support.OperationHistoryTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.OffsetDateTime;

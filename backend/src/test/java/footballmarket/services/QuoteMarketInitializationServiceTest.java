@@ -3,8 +3,8 @@ package footballmarket.services;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.records.MarketInitializationResult;
-import footballmarket.services.exceptions.MarketAlreadyInitializedException;
+import footballmarket.features.market.application.exceptions.MarketAlreadyInitializedException;
+import footballmarket.features.market.domain.records.MarketInitializationResult;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

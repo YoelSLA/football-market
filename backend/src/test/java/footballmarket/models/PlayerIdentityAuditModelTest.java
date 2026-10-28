@@ -3,11 +3,11 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.enums.PlayerIdentityItemResult;
-import footballmarket.models.enums.PlayerIdentityPassType;
-import footballmarket.models.enums.PlayerIdentityRunStatus;
-import footballmarket.models.exceptions.InvalidPlayerException;
-import footballmarket.models.records.PlayerIdentitySyncCounters;
+import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
+import footballmarket.features.identity.domain.enums.PlayerIdentityItemResult;
+import footballmarket.features.identity.domain.enums.PlayerIdentityPassType;
+import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
+import footballmarket.features.identity.domain.records.PlayerIdentitySyncCounters;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;

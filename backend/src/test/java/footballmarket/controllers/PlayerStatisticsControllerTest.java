@@ -11,19 +11,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.statistics.application.PlayerStatisticsCoverageService;
+import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsCoverage;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncCounters;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
+import footballmarket.features.statistics.presentation.PlayerStatisticsController;
 import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
-import footballmarket.models.User;
-import footballmarket.models.enums.ExtractionRunStatus;
-import footballmarket.models.enums.MetricSource;
-import footballmarket.models.enums.UserRole;
-import footballmarket.models.records.PlayerStatisticsCoverage;
-import footballmarket.models.records.PlayerStatisticsSyncCounters;
-import footballmarket.models.records.PlayerStatisticsSyncSummary;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.PlayerStatisticsCoverageService;
-import footballmarket.services.PlayerStatisticsSynchronizationService;
-import footballmarket.services.exceptions.PlayerStatisticsSyncInProgressException;
-import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -52,7 +53,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles("test")
 @org.junit.jupiter.api.Tag("lightweight")
 class PlayerStatisticsControllerTest {
-  private static final String BASE = "/api/players/statistics/whoscored";
+  private static final String BASE = "/api/player/statistics/whoscored";
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
@@ -155,10 +156,12 @@ class PlayerStatisticsControllerTest {
                   .content("{\"extractionDate\":\"2026-10-15\",\"maxPlayers\":1}"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.coverageComplete").value(true));
-      org.mockito.ArgumentCaptor<footballmarket.models.records.PlayerStatisticsSyncRequest>
+      org.mockito.ArgumentCaptor<
+              footballmarket.features.statistics.domain.records.PlayerStatisticsSyncRequest>
           request =
               org.mockito.ArgumentCaptor.forClass(
-                  footballmarket.models.records.PlayerStatisticsSyncRequest.class);
+                  footballmarket.features.statistics.domain.records.PlayerStatisticsSyncRequest
+                      .class);
       org.mockito.Mockito.verify(synchronization).synchronizeScraping(request.capture());
       assertThat(request.getValue().extractionDate()).isEqualTo(LocalDate.of(2026, 10, 15));
       assertThat(request.getValue().maxPlayers()).isEqualTo(1);

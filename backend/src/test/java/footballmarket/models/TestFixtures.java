@@ -1,6 +1,9 @@
 package footballmarket.models;
 
-import footballmarket.models.enums.UserRole;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**

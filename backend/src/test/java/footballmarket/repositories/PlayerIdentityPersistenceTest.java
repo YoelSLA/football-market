@@ -3,18 +3,21 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.League;
-import footballmarket.models.Player;
-import footballmarket.models.PlayerIdentitySyncItem;
-import footballmarket.models.PlayerIdentitySyncRun;
-import footballmarket.models.Team;
-import footballmarket.models.WhoScoredIdentityCandidate;
-import footballmarket.models.WhoScoredIdentityMatcher;
-import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.enums.PlayerIdentityItemResult;
-import footballmarket.models.enums.PlayerIdentityPassType;
-import footballmarket.models.records.WhoScoredIdentityContext;
-import footballmarket.services.internal.PlayerIdentityReferenceConfirmation;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
+import footballmarket.features.identity.application.internal.PlayerIdentityReferenceConfirmation;
+import footballmarket.features.identity.domain.enums.PlayerIdentityItemResult;
+import footballmarket.features.identity.domain.enums.PlayerIdentityPassType;
+import footballmarket.features.identity.domain.models.PlayerIdentitySyncItem;
+import footballmarket.features.identity.domain.models.PlayerIdentitySyncRun;
+import footballmarket.features.identity.domain.models.WhoScoredIdentityCandidate;
+import footballmarket.features.identity.domain.models.WhoScoredIdentityMatcher;
+import footballmarket.features.identity.domain.records.WhoScoredIdentityContext;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.Instant;
 import java.util.List;
@@ -267,7 +270,7 @@ class PlayerIdentityPersistenceTest {
                     Instant.now());
                 PlayerIdentitySyncRun source = runs.findById(sourceId).orElseThrow();
                 source.finish(
-                    new footballmarket.models.records.PlayerIdentitySyncCounters(
+                    new footballmarket.features.identity.domain.records.PlayerIdentitySyncCounters(
                         1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0),
                     5,
                     Instant.now(),

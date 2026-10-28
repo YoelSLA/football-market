@@ -28,11 +28,11 @@ public final class IdentityControlledProvider implements AutoCloseable {
             String code = path.split("/")[2];
             int index = CODES.indexOf(code) + 1;
             response =
-                path.endsWith("/teams")
-                    ? Map.of("count", 1, "teams", List.of(Map.of("id", 200 + index)))
+                path.endsWith("/team")
+                    ? Map.of("count", 1, "team", List.of(Map.of("id", 200 + index)))
                     : Map.of("id", 100 + index, "name", "League " + index);
-          } else if (path.startsWith("/teams/")) {
-            int index = Integer.parseInt(path.substring("/teams/".length())) - 200;
+          } else if (path.startsWith("/team/")) {
+            int index = Integer.parseInt(path.substring("/team/".length())) - 200;
             response =
                 Map.of(
                     "name",
@@ -85,7 +85,7 @@ public final class IdentityControlledProvider implements AutoCloseable {
                         "lastRecordIndex",
                         empty ? 0 : 1));
           } else {
-            response = Map.of("teams", List.of());
+            response = Map.of("team", List.of());
           }
           byte[] bytes = mapper.writeValueAsBytes(response);
           exchange.getResponseHeaders().set("Content-Type", "application/json");

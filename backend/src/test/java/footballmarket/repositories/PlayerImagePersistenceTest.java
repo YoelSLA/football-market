@@ -4,22 +4,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
+import footballmarket.features.images.application.PlayerImageAuditService;
+import footballmarket.features.images.application.PlayerImageRunRecoveryService;
+import footballmarket.features.images.application.PlayerImageSynchronizationService;
+import footballmarket.features.images.application.exceptions.PlayerImageResolutionPersistenceException;
+import footballmarket.features.images.domain.enums.PlayerImageResolutionStatus;
+import footballmarket.features.images.domain.enums.PlayerImageSyncRunItemResult;
+import footballmarket.features.images.domain.enums.PlayerImageSyncRunStatus;
+import footballmarket.features.images.domain.models.PlayerImageResolution;
+import footballmarket.features.images.domain.models.PlayerImageSyncRun;
+import footballmarket.features.images.domain.models.PlayerImageSyncRunItem;
+import footballmarket.features.images.domain.records.PlayerImageSyncSummary;
 import footballmarket.integrations.TheSportsDbIntegration;
-import footballmarket.models.League;
-import footballmarket.models.Player;
-import footballmarket.models.PlayerImageResolution;
-import footballmarket.models.PlayerImageSyncRun;
-import footballmarket.models.PlayerImageSyncRunItem;
-import footballmarket.models.Team;
-import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.enums.PlayerImageResolutionStatus;
-import footballmarket.models.enums.PlayerImageSyncRunItemResult;
-import footballmarket.models.enums.PlayerImageSyncRunStatus;
-import footballmarket.models.records.PlayerImageSyncSummary;
-import footballmarket.services.PlayerImageAuditService;
-import footballmarket.services.PlayerImageRunRecoveryService;
-import footballmarket.services.PlayerImageSynchronizationService;
-import footballmarket.services.exceptions.PlayerImageResolutionPersistenceException;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.Instant;
@@ -328,11 +332,12 @@ class PlayerImagePersistenceTest {
               });
 
       // Act
-      Page<footballmarket.models.records.PlayerImageSyncSummary> history = audit.getRuns(0, 20);
+      Page<footballmarket.features.images.domain.records.PlayerImageSyncSummary> history =
+          audit.getRuns(0, 20);
 
       // Assert
       assertThat(history.getContent())
-          .extracting(footballmarket.models.records.PlayerImageSyncSummary::id)
+          .extracting(footballmarket.features.images.domain.records.PlayerImageSyncSummary::id)
           .containsExactly(recent.getId());
       assertThat(runs.existsById(old.getId())).isFalse();
       assertThat(items.findByRunIdOrderByIdAsc(old.getId(), PageRequest.of(0, 20))).isEmpty();

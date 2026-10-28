@@ -7,6 +7,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import footballmarket.config.WhoScoredProperties;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.application.internal.ExtractionRunManager;
+import footballmarket.features.statistics.application.internal.PlayerStatisticsCoverageQuery;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.integrations.WhoScoredIntegration;
 import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
 import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
@@ -14,11 +22,6 @@ import footballmarket.integrations.records.WhoScoredScrapedContextRow;
 import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
 import footballmarket.integrations.records.WhoScoredScrapedPlayer;
 import footballmarket.integrations.records.WhoScoredStructuredDataBlock;
-import footballmarket.models.enums.ExtractionRunStatus;
-import footballmarket.models.enums.MetricSource;
-import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
-import footballmarket.services.internal.ExtractionRunManager;
-import footballmarket.services.internal.PlayerStatisticsCoverageQuery;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -38,7 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 /**
- * Extracción de un jugador con la infraestructura productiva de ejecuciones de US02.
+ * Extracción de un jugador con la infraestructure productiva de ejecuciones de US02.
  *
  * <p>La ejecución se abre con el gestor de runs del caso de uso; el test no prepara datos
  * funcionales ni afirma sobre persistencia accesible solo por repositorio.
@@ -57,8 +60,12 @@ class PlayerStatisticsExtractionServiceTest {
   @Autowired private PlayerStatisticsCoverageQuery coverage;
   @Autowired private PlayerIdentitySynchronizationService identities;
   @Autowired private IdentityCatalogueFixture fixture;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
-  @Autowired private footballmarket.repositories.PlayerRepository players;
+
+  @Autowired
+  private footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository
+      references;
+
+  @Autowired private footballmarket.features.catalog.infraestructure.PlayerRepository players;
   @Autowired private PlayerCatalogService catalogue;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
   @MockitoBean private WhoScoredIntegration identityIntegration;
@@ -212,8 +219,7 @@ class PlayerStatisticsExtractionServiceTest {
   private String tournamentOf(String providerPlayerId) {
     Long playerId =
         references
-            .findByProviderAndExternalId(
-                footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
+            .findByProviderAndExternalId(ExternalProvider.WHOSCORED, providerPlayerId)
             .orElseThrow()
             .getPlayer()
             .getId();

@@ -2,14 +2,15 @@ package footballmarket.services;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.records.InvalidPlayerObservation;
+import footballmarket.features.catalog.domain.records.LeagueCandidate;
+import footballmarket.features.catalog.domain.records.PlayerCandidate;
+import footballmarket.features.catalog.domain.records.PlayerSnapshot;
+import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
+import footballmarket.features.catalog.domain.records.TeamCandidate;
 import footballmarket.integrations.TheSportsDbIntegration;
-import footballmarket.models.Player;
-import footballmarket.models.records.InvalidPlayerObservation;
-import footballmarket.models.records.LeagueCandidate;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
-import footballmarket.models.records.PlayerSynchronizationResult;
-import footballmarket.models.records.TeamCandidate;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;

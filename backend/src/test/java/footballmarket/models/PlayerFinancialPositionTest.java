@@ -3,8 +3,8 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.exceptions.FinancialPositionIntegrityException;
-import footballmarket.models.records.CurrentQuote;
+import footballmarket.features.portfolio.domain.exceptions.FinancialPositionIntegrityException;
+import footballmarket.features.quote.domain.records.CurrentQuote;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

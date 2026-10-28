@@ -10,6 +10,13 @@ import static org.mockito.Mockito.when;
 
 import footballmarket.config.PlayerStatisticsProperties;
 import footballmarket.config.WhoScoredProperties;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
+import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
+import footballmarket.features.statistics.application.internal.ExtractionBatchExecutor;
+import footballmarket.features.statistics.application.internal.ExtractionRunManager;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncRequest;
 import footballmarket.integrations.WhoScoredIntegration;
 import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
 import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
@@ -17,10 +24,6 @@ import footballmarket.integrations.records.WhoScoredScrapedContextRow;
 import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
 import footballmarket.integrations.records.WhoScoredScrapedPlayer;
 import footballmarket.integrations.records.WhoScoredStructuredDataBlock;
-import footballmarket.models.enums.MetricSource;
-import footballmarket.models.records.PlayerStatisticsSyncRequest;
-import footballmarket.services.internal.ExtractionBatchExecutor;
-import footballmarket.services.internal.ExtractionRunManager;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -61,9 +64,12 @@ class ExtractionBatchExecutorCutoffTest {
   @Autowired private PlayerStatisticsProperties properties;
   @Autowired private PlayerIdentitySynchronizationService identities;
   @Autowired private IdentityCatalogueFixture fixture;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
 
-  @Autowired private footballmarket.repositories.PlayerRepository players;
+  @Autowired
+  private footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository
+      references;
+
+  @Autowired private footballmarket.features.catalog.infraestructure.PlayerRepository players;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
   @MockitoBean private WhoScoredIntegration identityIntegration;
   @MockitoSpyBean private WhoScoredProperties providerProperties;
@@ -137,8 +143,7 @@ class ExtractionBatchExecutorCutoffTest {
   private String tournamentOf(String providerPlayerId) {
     Long playerId =
         references
-            .findByProviderAndExternalId(
-                footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
+            .findByProviderAndExternalId(ExternalProvider.WHOSCORED, providerPlayerId)
             .orElseThrow()
             .getPlayer()
             .getId();
@@ -264,7 +269,7 @@ class ExtractionBatchExecutorCutoffTest {
 
       // Assert
       assertThat(summary.status())
-          .isEqualTo(footballmarket.models.enums.ExtractionRunStatus.FAILED);
+          .isEqualTo(footballmarket.features.statistics.domain.enums.ExtractionRunStatus.FAILED);
       assertThat(summary.counters().pending()).isEqualTo(5);
       assertThat(summary.coverageComplete()).isFalse();
     }

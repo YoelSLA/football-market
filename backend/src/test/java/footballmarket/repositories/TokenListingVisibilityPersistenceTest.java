@@ -3,10 +3,11 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.TokenListing;
-import footballmarket.models.records.BuyListingRequest;
-import footballmarket.models.records.TokenListingView;
-import footballmarket.services.exceptions.ListingNotFoundException;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.application.exceptions.ListingNotFoundException;
+import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.domain.records.BuyListingRequest;
+import footballmarket.features.market.domain.records.TokenListingView;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,8 +28,7 @@ class TokenListingVisibilityPersistenceTest extends ListingRepositorySupport {
       transaction()
           .executeWithoutResult(
               status -> {
-                footballmarket.models.Player stored =
-                    players.findById(player.getId()).orElseThrow();
+                Player stored = players.findById(player.getId()).orElseThrow();
                 stored.deactivate();
                 players.saveAndFlush(stored);
               });

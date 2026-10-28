@@ -57,7 +57,7 @@ class TeamLeagueMigrationTest {
         try (ResultSet columns =
             statement.executeQuery(
                 "SELECT column_name FROM information_schema.columns "
-                    + "WHERE table_schema = current_schema() AND table_name = 'players' "
+                    + "WHERE table_schema = current_schema() AND table_name = 'player' "
                     + "ORDER BY column_name")) {
           List<String> names = new ArrayList<>();
           while (columns.next()) {

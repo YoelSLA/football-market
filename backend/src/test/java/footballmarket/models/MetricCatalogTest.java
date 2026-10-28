@@ -2,8 +2,10 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.enums.MetricSource;
-import footballmarket.models.exceptions.InvalidPlayerException;
+import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.models.MetricCatalog;
+import footballmarket.features.statistics.domain.records.MetricDefinition;
 import java.util.List;
 import org.junit.jupiter.api.*;
 

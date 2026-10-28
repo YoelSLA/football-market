@@ -2,8 +2,9 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.enums.TeamResolutionResult;
-import footballmarket.models.exceptions.InvalidCatalogEntityException;
+import footballmarket.features.catalog.domain.enums.TeamResolutionResult;
+import footballmarket.features.catalog.domain.exceptions.InvalidCatalogEntityException;
+import footballmarket.features.catalog.domain.models.team.TeamIdentityMatcher;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

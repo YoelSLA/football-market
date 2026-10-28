@@ -3,8 +3,9 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.TokenListing;
-import footballmarket.services.exceptions.InsufficientStockException;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.application.exceptions.InsufficientStockException;
+import footballmarket.features.market.domain.models.TokenListing;
 import java.sql.SQLException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -352,7 +353,7 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
     void conservaReferencias() {
       // Arrange
       footballmarket.models.User isolatedSeller = market.registerBuyer();
-      footballmarket.models.Player isolatedPlayer = market.createVisiblePlayer();
+      Player isolatedPlayer = market.createVisiblePlayer();
       jdbc.update("delete from user_credits where user_id = ?", isolatedSeller.getId());
       footballmarket.models.records.CurrentQuote quote =
           new footballmarket.models.records.CurrentQuote(

@@ -2,9 +2,9 @@ package footballmarket.integrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.Player;
-import footballmarket.models.User;
-import footballmarket.models.records.CurrentQuote;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.QuoteTestData;
 import footballmarket.support.TestcontainersConfiguration;

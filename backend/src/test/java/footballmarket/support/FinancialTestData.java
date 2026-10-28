@@ -1,16 +1,16 @@
 package footballmarket.support;
 
-import footballmarket.models.MarketTransaction;
-import footballmarket.models.Player;
-import footballmarket.models.PlayerToken;
-import footballmarket.models.PlayerTokenEmission;
-import footballmarket.models.User;
-import footballmarket.models.enums.UserRole;
-import footballmarket.repositories.MarketTransactionRepository;
-import footballmarket.repositories.PlayerRepository;
-import footballmarket.repositories.PlayerTokenEmissionRepository;
-import footballmarket.repositories.PlayerTokenRepository;
-import footballmarket.repositories.UserRepository;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.auth.infraestructure.UserRepository;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.market.domain.models.PlayerToken;
+import footballmarket.features.market.domain.models.PlayerTokenEmission;
+import footballmarket.features.market.infraestructure.MarketTransactionRepository;
+import footballmarket.features.market.infraestructure.PlayerTokenEmissionRepository;
+import footballmarket.features.market.infraestructure.PlayerTokenRepository;
 import java.time.OffsetDateTime;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

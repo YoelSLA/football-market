@@ -2,8 +2,8 @@ package footballmarket.services;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.enums.ValuationExclusionReason;
-import footballmarket.services.exceptions.ValuationSnapshotUnavailableException;
+import footballmarket.features.valuation.application.exceptions.ValuationSnapshotUnavailableException;
+import footballmarket.features.valuation.domain.enums.ValuationExclusionReason;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

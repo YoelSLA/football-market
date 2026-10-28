@@ -2,11 +2,11 @@
 -- aplicaron la forma aditiva de V5 antes de que ese archivo fuera reescrito.
 --
 -- V5 se aplicó en dos formas sucesivas en el historial del repositorio. La base de desarrollo
--- conserva la forma aditiva: players.team y players.league presentes, players.team_id nullable y
+-- conserva la forma aditiva: player.team y player.league presentes, player.team_id nullable y
 -- una tabla catalog_transition de control manual. Esta migración lleva esa base al mismo estado
 -- que obtiene una instalación limpia con el V5 actual, sin recrear la base y sin perder jugadores.
 --
--- Es idempotente: si players ya no expone los textos legacy, el bloque de datos no hace nada y solo
+-- Es idempotente: si player ya no expone los textos legacy, el bloque de datos no hace nada y solo
 -- se completan la restricción de unicidad del SUPERUSER y la ausencia de la tabla de control.
 
 DO $$
@@ -15,7 +15,7 @@ BEGIN
         SELECT 1
         FROM information_schema.columns
         WHERE table_schema = current_schema()
-          AND table_name = 'players'
+          AND table_name = 'player'
           AND column_name = 'league'
     ) THEN
         -- Cada liga distinta del catálogo legacy se materializa una sola vez.
@@ -50,7 +50,7 @@ BEGIN
         -- se descarta: la migración falla y el catálogo puede regenerarse desde la fuente externa.
         IF EXISTS (SELECT 1 FROM players WHERE team_id IS NULL) THEN
             RAISE EXCEPTION
-                'No se puede volver players.team_id obligatorio: quedan % jugadores sin equipo derivado',
+                'No se puede volver player.team_id obligatorio: quedan % jugadores sin equipo derivado',
                 (SELECT count(*) FROM players WHERE team_id IS NULL);
         END IF;
 

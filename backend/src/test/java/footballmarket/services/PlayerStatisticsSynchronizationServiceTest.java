@@ -13,6 +13,12 @@ import static org.mockito.Mockito.when;
 
 import footballmarket.config.PlayerStatisticsProperties;
 import footballmarket.config.WhoScoredProperties;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.statistics.application.PlayerStatisticsCoverageService;
+import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncRequest;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
 import footballmarket.integrations.WhoScoredIntegration;
 import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
 import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
@@ -20,9 +26,6 @@ import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
 import footballmarket.integrations.records.WhoScoredScrapedContextRow;
 import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
 import footballmarket.integrations.records.WhoScoredScrapedPlayer;
-import footballmarket.models.enums.ExtractionRunStatus;
-import footballmarket.models.records.PlayerStatisticsSyncRequest;
-import footballmarket.models.records.PlayerStatisticsSyncSummary;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -54,8 +57,12 @@ class PlayerStatisticsSynchronizationServiceTest {
   @Autowired private PlayerStatisticsCoverageService coverage;
   @Autowired private PlayerIdentitySynchronizationService identities;
   @Autowired private IdentityCatalogueFixture fixture;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
-  @Autowired private footballmarket.repositories.PlayerRepository players;
+
+  @Autowired
+  private footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository
+      references;
+
+  @Autowired private footballmarket.features.catalog.infraestructure.PlayerRepository players;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
   @MockitoBean private WhoScoredIntegration identityIntegration;
   @MockitoSpyBean private WhoScoredProperties properties;
@@ -220,7 +227,8 @@ class PlayerStatisticsSynchronizationServiceTest {
       assertThat(
               coverage
                   .coverage(
-                      segunda.extractionDate(), footballmarket.models.enums.MetricSource.SCRAPING)
+                      segunda.extractionDate(),
+                      footballmarket.features.statistics.domain.enums.MetricSource.SCRAPING)
                   .completedPlayers())
           .isEqualTo(4);
     }
@@ -270,15 +278,15 @@ class PlayerStatisticsSynchronizationServiceTest {
                       new PlayerStatisticsSyncRequest(
                           LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1), 1)))
           .isInstanceOf(
-              footballmarket.services.exceptions.PlayerStatisticsSynchronizationException.class);
+              footballmarket.features.statistics.application.exceptions
+                  .PlayerStatisticsSynchronizationException.class);
     }
   }
 
   private String tournamentOf(String providerPlayerId) {
     Long playerId =
         references
-            .findByProviderAndExternalId(
-                footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
+            .findByProviderAndExternalId(ExternalProvider.WHOSCORED, providerPlayerId)
             .orElseThrow()
             .getPlayer()
             .getId();

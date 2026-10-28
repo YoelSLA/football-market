@@ -6,21 +6,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import footballmarket.config.SecurityConfig;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.application.PlayerSynchronizationOrchestrator;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
+import footballmarket.features.catalog.application.exceptions.PlayerSynchronizationPersistenceException;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
+import footballmarket.features.catalog.presentation.PlayerController;
+import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
+import footballmarket.features.statistics.domain.records.PlayerStatisticsSnapshot;
 import footballmarket.integrations.exceptions.FootballDataUnavailableException;
-import footballmarket.models.League;
-import footballmarket.models.Player;
-import footballmarket.models.PlayerStatisticsSnapshot;
-import footballmarket.models.Team;
-import footballmarket.models.User;
-import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.enums.UserRole;
-import footballmarket.models.records.PlayerSynchronizationResult;
-import footballmarket.orchestrators.PlayerSynchronizationOrchestrator;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.PlayerCatalogService;
-import footballmarket.services.PlayerStatisticsQueryService;
-import footballmarket.services.exceptions.PlayerNotFoundException;
-import footballmarket.services.exceptions.PlayerSynchronizationPersistenceException;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -92,12 +93,17 @@ class PlayerControllerTest {
       ReflectionTestUtils.setField(player, "id", 7L);
       ReflectionTestUtils.setField(team, "id", 8L);
       ReflectionTestUtils.setField(league, "id", 9L);
-      footballmarket.models.PlayerCatalogStatistics summary =
-          enriched ? footballmarket.models.PlayerCatalogStatistics.compose(7L, null, null) : null;
-      footballmarket.models.PlayerCatalogPage.Entry entry =
-          new footballmarket.models.PlayerCatalogPage.Entry(player, summary);
-      footballmarket.models.PlayerCatalogPage page =
-          new footballmarket.models.PlayerCatalogPage(List.of(entry), 0, 12, 1, 1);
+      footballmarket.features.catalog.domain.records.PlayerCatalogStatistics summary =
+          enriched
+              ? footballmarket.features.catalog.domain.records.PlayerCatalogStatistics.compose(
+                  7L, null, null)
+              : null;
+      footballmarket.features.catalog.domain.records.PlayerCatalogPage.Entry entry =
+          new footballmarket.features.catalog.domain.records.PlayerCatalogPage.Entry(
+              player, summary);
+      footballmarket.features.catalog.domain.records.PlayerCatalogPage page =
+          new footballmarket.features.catalog.domain.records.PlayerCatalogPage(
+              List.of(entry), 0, 12, 1, 1);
       when(service.queryCatalog(any(), eq(0), eq(12))).thenReturn(page);
       // Act / Assert
       org.springframework.test.web.servlet.ResultActions result =
@@ -138,7 +144,7 @@ class PlayerControllerTest {
       // Verify
       verify(service)
           .queryCatalog(
-              new footballmarket.models.records.PlayerCatalogCriteria(
+              new footballmarket.features.catalog.domain.records.PlayerCatalogCriteria(
                   "jose", null, null, null, null, "name,asc", enriched),
               0,
               12);
@@ -166,8 +172,8 @@ class PlayerControllerTest {
     @DisplayName("Las opciones globales tienen listas reales incluso cuando están vacías")
     void returnsFilterOptions() throws Exception {
       // Arrange
-      footballmarket.models.PlayerCatalogFilters filters =
-          new footballmarket.models.PlayerCatalogFilters(
+      footballmarket.features.catalog.domain.records.PlayerCatalogFilters filters =
+          new footballmarket.features.catalog.domain.records.PlayerCatalogFilters(
               List.of(), List.of(), List.of(), List.of());
       when(service.catalogFilters()).thenReturn(filters);
       // Act / Assert
@@ -198,8 +204,8 @@ class PlayerControllerTest {
     @DisplayName("Devuelve las sesenta claves y su disponibilidad sin confundir cero con ausencia")
     void returnsStatistics(int present, String availability) throws Exception {
       // Arrange
-      List<footballmarket.models.MetricDefinition> definitions =
-          footballmarket.models.MetricCatalog.definitions();
+      List<footballmarket.features.statistics.domain.records.MetricDefinition> definitions =
+          footballmarket.features.statistics.domain.models.MetricCatalog.definitions();
       List<PlayerStatisticsSnapshot.Metric> metrics =
           java.util.stream.IntStream.range(0, definitions.size())
               .mapToObj(
@@ -208,7 +214,9 @@ class PlayerControllerTest {
                           definitions.get(index).key(),
                           definitions.get(index).unit(),
                           index < present ? java.math.BigDecimal.ZERO : null,
-                          index < present ? footballmarket.models.enums.MetricSource.JSON : null))
+                          index < present
+                              ? footballmarket.features.statistics.domain.enums.MetricSource.JSON
+                              : null))
               .toList();
       PlayerStatisticsSnapshot snapshot =
           new PlayerStatisticsSnapshot(
@@ -324,7 +332,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
           .andExpect(
               jsonPath("$.message").value("No se pudo aplicar la sincronización del catálogo"))
-          .andExpect(jsonPath("$.path").value("/api/players/sync"));
+          .andExpect(jsonPath("$.path").value("/api/player/sync"));
     }
 
     @Test
@@ -355,7 +363,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.status").value(502))
           .andExpect(jsonPath("$.error").value("Bad Gateway"))
           .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
-          .andExpect(jsonPath("$.path").value("/api/players/sync"))
+          .andExpect(jsonPath("$.path").value("/api/player/sync"))
           .andExpect(
               jsonPath("$.message")
                   .value("No se pudo completar la lectura del proveedor de jugadores"));
@@ -469,7 +477,7 @@ class PlayerControllerTest {
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.status").value(400))
-          .andExpect(jsonPath("$.path").value("/api/players"))
+          .andExpect(jsonPath("$.path").value("/api/player"))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.error").value("Bad Request"))
           .andExpect(
@@ -544,7 +552,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.error").value("Not Found"))
           .andExpect(jsonPath("$.code").value("PLAYER_NOT_FOUND"))
           .andExpect(jsonPath("$.message").value("No encontramos el jugador solicitado"))
-          .andExpect(jsonPath("$.path").value("/api/players/999999"))
+          .andExpect(jsonPath("$.path").value("/api/player/999999"))
           .andExpect(jsonPath("$.timestamp").exists());
     }
 
@@ -558,7 +566,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.code").value("INVALID_PARAMETER_TYPE"))
-          .andExpect(jsonPath("$.path").value("/api/players/" + invalidId))
+          .andExpect(jsonPath("$.path").value("/api/player/" + invalidId))
           .andExpect(jsonPath("$.timestamp").exists());
       verifyNoInteractions(service);
     }

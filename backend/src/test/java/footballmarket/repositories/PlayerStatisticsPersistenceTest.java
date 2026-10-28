@@ -4,13 +4,31 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
 import footballmarket.config.WhoScoredProperties;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsConfirmationException;
+import footballmarket.features.statistics.application.internal.ExtractionIncidentRecorder;
+import footballmarket.features.statistics.application.internal.PlayerMetricsContext;
+import footballmarket.features.statistics.application.internal.PlayerMetricsContext.MetricResult;
+import footballmarket.features.statistics.application.internal.PlayerStatisticsWriter;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
+import footballmarket.features.statistics.domain.models.ExtractionIncident;
+import footballmarket.features.statistics.domain.models.PlayerStatistics;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsExtractionRun;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsRunItem;
+import footballmarket.features.statistics.infraestructure.ExtractionIncidentRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsExtractionRunRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRunItemRepository;
 import footballmarket.models.*;
 import footballmarket.models.enums.*;
-import footballmarket.services.exceptions.PlayerStatisticsConfirmationException;
-import footballmarket.services.internal.ExtractionIncidentRecorder;
-import footballmarket.services.internal.PlayerMetricsContext;
-import footballmarket.services.internal.PlayerMetricsContext.MetricResult;
-import footballmarket.services.internal.PlayerStatisticsWriter;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import jakarta.persistence.EntityManager;
@@ -195,13 +213,15 @@ class PlayerStatisticsPersistenceTest {
                   incidentRecorder.record(
                       itemId, "<html>external</html>", "PROVIDER_TIMEOUT", 504, 2, NOW))
           .isInstanceOf(
-              footballmarket.services.exceptions.PlayerStatisticsSynchronizationException.class);
+              footballmarket.features.statistics.application.exceptions
+                  .PlayerStatisticsSynchronizationException.class);
       assertThatThrownBy(
               () ->
                   incidentRecorder.record(
                       itemId, "saves", "Authorization: synthetic-secret", 504, 2, NOW))
           .isInstanceOf(
-              footballmarket.services.exceptions.PlayerStatisticsSynchronizationException.class);
+              footballmarket.features.statistics.application.exceptions
+                  .PlayerStatisticsSynchronizationException.class);
       // Verify
       assertThat(incidents.count()).isEqualTo(1);
     }

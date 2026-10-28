@@ -6,9 +6,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
-import footballmarket.controllers.ValuationController;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.ValuationEvaluationService;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
+import footballmarket.features.valuation.application.ValuationEvaluationService;
+import footballmarket.features.valuation.presentation.ValuationController;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.util.Date;
@@ -61,7 +62,7 @@ class ValuationAuthorizationTest {
     @DisplayName("Rechaza un JWT cuyo usuario ya no está persistido")
     void rejectsMissingPersistedUser() throws Exception {
       when(authenticationService.getCurrentUser("missing@example.com"))
-          .thenThrow(new footballmarket.services.exceptions.CurrentUserNotFoundException());
+          .thenThrow(new CurrentUserNotFoundException());
       String token =
           "Bearer "
               + Jwts.builder()

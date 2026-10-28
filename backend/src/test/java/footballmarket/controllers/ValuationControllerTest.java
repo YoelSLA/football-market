@@ -7,14 +7,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
-import footballmarket.models.User;
-import footballmarket.models.enums.UserRole;
-import footballmarket.models.enums.ValuationExclusionReason;
-import footballmarket.models.records.ValuationEvaluationSummary;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.ValuationEvaluationService;
-import footballmarket.services.exceptions.ValuationEvaluationException;
-import footballmarket.services.exceptions.ValuationSnapshotUnavailableException;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.valuation.application.ValuationEvaluationService;
+import footballmarket.features.valuation.application.exceptions.ValuationEvaluationException;
+import footballmarket.features.valuation.application.exceptions.ValuationSnapshotUnavailableException;
+import footballmarket.features.valuation.domain.enums.ValuationExclusionReason;
+import footballmarket.features.valuation.domain.records.ValuationEvaluationSummary;
+import footballmarket.features.valuation.presentation.ValuationController;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;

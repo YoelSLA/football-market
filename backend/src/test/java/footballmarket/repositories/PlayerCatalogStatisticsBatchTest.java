@@ -2,7 +2,10 @@ package footballmarket.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.PlayerStatistics;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
+import footballmarket.features.statistics.domain.models.PlayerStatistics;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRepository;
 import footballmarket.models.enums.*;
 import footballmarket.support.*;
 import jakarta.persistence.EntityManagerFactory;

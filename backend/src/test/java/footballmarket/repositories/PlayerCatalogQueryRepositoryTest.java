@@ -2,7 +2,8 @@ package footballmarket.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.Player;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.support.PlayerCatalogQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

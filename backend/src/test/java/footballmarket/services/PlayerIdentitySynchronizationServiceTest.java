@@ -11,13 +11,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import footballmarket.config.WhoScoredProperties;
+import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
+import footballmarket.features.identity.domain.records.PlayerIdentitySyncSummary;
 import footballmarket.integrations.WhoScoredIntegration;
 import footballmarket.integrations.exceptions.WhoScoredIntegrationException;
 import footballmarket.integrations.records.WhoScoredCatalogPage;
 import footballmarket.integrations.records.WhoScoredPaging;
 import footballmarket.integrations.records.WhoScoredPlayerIdentity;
-import footballmarket.models.enums.PlayerIdentityRunStatus;
-import footballmarket.models.records.PlayerIdentitySyncSummary;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

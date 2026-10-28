@@ -9,21 +9,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.config.SecurityConfig;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.images.application.PlayerImageAuditService;
+import footballmarket.features.images.application.PlayerImageSynchronizationService;
+import footballmarket.features.images.application.exceptions.PlayerImageRunNotFoundException;
+import footballmarket.features.images.application.exceptions.PlayerImageSyncInProgressException;
+import footballmarket.features.images.application.exceptions.PlayerImageSynchronizationException;
+import footballmarket.features.images.domain.enums.PlayerImageResolutionStatus;
+import footballmarket.features.images.domain.enums.PlayerImageSyncRunItemResult;
+import footballmarket.features.images.domain.enums.PlayerImageSyncRunStatus;
+import footballmarket.features.images.domain.records.PlayerImageSyncCounters;
+import footballmarket.features.images.domain.records.PlayerImageSyncRunItemRecord;
+import footballmarket.features.images.domain.records.PlayerImageSyncSummary;
 import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
-import footballmarket.models.User;
-import footballmarket.models.enums.PlayerImageResolutionStatus;
-import footballmarket.models.enums.PlayerImageSyncRunItemResult;
-import footballmarket.models.enums.PlayerImageSyncRunStatus;
-import footballmarket.models.enums.UserRole;
-import footballmarket.models.records.PlayerImageSyncCounters;
-import footballmarket.models.records.PlayerImageSyncRunItemRecord;
-import footballmarket.models.records.PlayerImageSyncSummary;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.PlayerImageAuditService;
-import footballmarket.services.PlayerImageSynchronizationService;
-import footballmarket.services.exceptions.PlayerImageRunNotFoundException;
-import footballmarket.services.exceptions.PlayerImageSyncInProgressException;
-import footballmarket.services.exceptions.PlayerImageSynchronizationException;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.util.Date;
@@ -118,7 +118,7 @@ class PlayerImageControllerTest {
       mvc.perform(post("/api/players/images/sync").header("Authorization", authorization))
           .andExpect(status().isConflict())
           .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_IN_PROGRESS"))
-          .andExpect(jsonPath("$.path").value("/api/players/images/sync"));
+          .andExpect(jsonPath("$.path").value("/api/player/images/sync"));
     }
 
     @Test

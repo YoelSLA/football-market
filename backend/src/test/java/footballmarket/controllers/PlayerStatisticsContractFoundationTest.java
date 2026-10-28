@@ -5,13 +5,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import footballmarket.config.SecurityConfig;
-import footballmarket.controllers.exceptions.InvalidStatisticsRequestException;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.presentation.exceptions.InvalidStatisticsRequestException;
 import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
-import footballmarket.models.User;
-import footballmarket.models.enums.UserRole;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.exceptions.PlayerStatisticsSyncInProgressException;
-import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
 import io.jsonwebtoken.Jwts;
 import java.time.*;
 import java.util.Date;
@@ -38,7 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles("test")
 @org.junit.jupiter.api.Tag("lightweight")
 class PlayerStatisticsContractFoundationTest {
-  private static final String BASE = "/api/players/statistics/whoscored";
+  private static final String BASE = "/api/player/statistics/whoscored";
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;

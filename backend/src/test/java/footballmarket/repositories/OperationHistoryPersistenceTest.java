@@ -2,9 +2,9 @@ package footballmarket.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.MarketTransaction;
-import footballmarket.models.Player;
-import footballmarket.models.User;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.support.OperationHistoryTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.OffsetDateTime;

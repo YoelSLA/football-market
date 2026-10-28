@@ -172,7 +172,7 @@ class WhoScoredScrapingIntegrationTest {
 
   private Locator team() {
     Locator link = mock(Locator.class);
-    when(link.getAttribute("href")).thenReturn("/teams/3/show/team");
+    when(link.getAttribute("href")).thenReturn("/team/3/show/team");
     return link;
   }
 

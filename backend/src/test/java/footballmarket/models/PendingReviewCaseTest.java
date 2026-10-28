@@ -2,11 +2,11 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.enums.ReviewCategory;
-import footballmarket.models.enums.ReviewCause;
-import footballmarket.models.enums.ReviewSubjectType;
-import footballmarket.models.exceptions.InvalidCatalogEntityException;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.exceptions.InvalidCatalogEntityException;
+import footballmarket.features.identity.domain.enums.ReviewCategory;
+import footballmarket.features.identity.domain.enums.ReviewCause;
+import footballmarket.features.identity.domain.enums.ReviewSubjectType;
 import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;

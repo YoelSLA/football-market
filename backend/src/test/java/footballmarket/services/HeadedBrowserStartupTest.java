@@ -3,6 +3,8 @@ package footballmarket.services;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
 import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
 import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
 import footballmarket.support.TestcontainersConfiguration;

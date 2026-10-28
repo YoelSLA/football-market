@@ -3,9 +3,10 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.exceptions.InsufficientPlayerTokensException;
-import footballmarket.models.exceptions.InvalidTokenQuantityException;
-import footballmarket.models.exceptions.TokenPlayerMismatchException;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.exceptions.InsufficientPlayerTokensException;
+import footballmarket.features.market.domain.exceptions.InvalidTokenQuantityException;
+import footballmarket.features.market.domain.exceptions.TokenPlayerMismatchException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

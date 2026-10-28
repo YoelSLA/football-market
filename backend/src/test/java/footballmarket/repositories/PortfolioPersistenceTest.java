@@ -2,11 +2,12 @@ package footballmarket.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.Player;
-import footballmarket.models.PlayerTokenEmission;
-import footballmarket.models.User;
-import footballmarket.repositories.projections.HoldingQuantity;
-import footballmarket.repositories.projections.ReservedQuantity;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.market.domain.models.PlayerTokenEmission;
+import footballmarket.features.market.infraestructure.projections.HoldingQuantity;
+import footballmarket.features.market.infraestructure.projections.ReservedQuantity;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.PortfolioTestData;
 import footballmarket.support.TestcontainersConfiguration;

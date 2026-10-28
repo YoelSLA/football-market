@@ -1,5 +1,5 @@
 -- add_catalog_normalized_name_search
--- La normalización pertenece solo a la búsqueda; players.name conserva su presentación.
+-- La normalización pertenece solo a la búsqueda; player.name conserva su presentación.
 CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;
 
 CREATE FUNCTION public.catalog_normalize_name(input text)
