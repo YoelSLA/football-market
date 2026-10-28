@@ -3,7 +3,8 @@ package footballmarket.integrations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
+import footballmarket.integrations.thesportsdb.TheSportsDbRequestPacer;
+import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbConfigurationException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;

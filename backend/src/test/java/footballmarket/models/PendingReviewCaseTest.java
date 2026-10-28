@@ -7,6 +7,7 @@ import footballmarket.features.catalog.domain.exceptions.InvalidCatalogEntityExc
 import footballmarket.features.identity.domain.enums.ReviewCategory;
 import footballmarket.features.identity.domain.enums.ReviewCause;
 import footballmarket.features.identity.domain.enums.ReviewSubjectType;
+import footballmarket.features.identity.domain.models.PendingReviewCase;
 import java.time.Instant;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;

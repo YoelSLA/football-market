@@ -4,14 +4,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.features.statistics.presentation.exceptions.InvalidStatisticsRequestException;
-import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.integrations.whoscored.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.*;
 import java.util.Date;

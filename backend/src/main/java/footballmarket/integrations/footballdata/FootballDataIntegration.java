@@ -68,7 +68,7 @@ public class FootballDataIntegration {
     this(client, Clock.systemUTC(), duration -> Thread.sleep(duration));
   }
 
-  FootballDataIntegration(RestClient client, Clock clock, RetryWait retryWait) {
+  public FootballDataIntegration(RestClient client, Clock clock, RetryWait retryWait) {
     this.client = client;
     this.clock = clock;
     this.retryWait = retryWait;
@@ -353,7 +353,7 @@ public class FootballDataIntegration {
 
   /** Espera sustituible para controlar el tiempo sin demoras reales en las pruebas. */
   @FunctionalInterface
-  interface RetryWait {
+  public interface RetryWait {
     void await(Duration duration) throws InterruptedException;
   }
 

@@ -5,6 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
 import footballmarket.features.identity.domain.enums.PlayerIdentityItemResult;
+import footballmarket.features.identity.domain.models.PlayerIdentitySyncItem;
+import footballmarket.features.identity.domain.models.WhoScoredIdentityCandidate;
+import footballmarket.features.identity.domain.models.WhoScoredIdentityMatcher;
+import footballmarket.features.identity.domain.models.WhoScoredIdentityNormalizer;
+import footballmarket.features.identity.domain.models.WhoScoredTeamAliases;
 import footballmarket.features.identity.domain.records.WhoScoredIdentityContext;
 import java.util.List;
 import java.util.Map;

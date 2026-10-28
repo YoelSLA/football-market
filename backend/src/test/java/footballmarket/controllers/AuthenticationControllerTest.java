@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
 import footballmarket.features.auth.application.exceptions.EmailAlreadyRegisteredException;
@@ -27,6 +26,7 @@ import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.presentation.AuthenticationController;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.util.Date;

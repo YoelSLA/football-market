@@ -12,8 +12,8 @@ import footballmarket.features.catalog.domain.records.PlayerSynchronizationResul
 import footballmarket.features.catalog.domain.records.TeamCandidate;
 import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
-import footballmarket.integrations.QuoteSource;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

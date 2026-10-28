@@ -3,11 +3,16 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.market.domain.models.PlayerTokenEmission;
 import footballmarket.features.portfolio.domain.exceptions.FinancialPositionIntegrityException;
+import footballmarket.features.portfolio.domain.models.FinancialPositionCalculator;
+import footballmarket.features.portfolio.domain.models.PlayerFinancialPosition;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import java.lang.reflect.Field;
 import java.time.OffsetDateTime;

@@ -2,6 +2,7 @@ package footballmarket.services;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.application.exceptions.ValuationSnapshotUnavailableException;
 import footballmarket.features.valuation.domain.enums.ValuationExclusionReason;
 import footballmarket.support.IdentityCatalogueFixture;
@@ -53,7 +54,8 @@ class ValuationEvaluationServiceTest {
       data.prepareConfirmedJsonCampaign(LocalDate.of(2026, 10, 18));
 
       // Act
-      footballmarket.models.records.ValuationEvaluationSummary result = service.evaluate();
+      footballmarket.features.valuation.domain.records.ValuationEvaluationSummary result =
+          service.evaluate();
 
       // Assert
       org.assertj.core.api.Assertions.assertThat(result.evaluatedPlayers()).isEqualTo(5);
@@ -69,7 +71,8 @@ class ValuationEvaluationServiceTest {
       service.evaluate();
 
       // Act
-      footballmarket.models.records.ValuationEvaluationSummary result = service.evaluate();
+      footballmarket.features.valuation.domain.records.ValuationEvaluationSummary result =
+          service.evaluate();
 
       // Assert
       org.assertj.core.api.Assertions.assertThat(result.evaluatedPlayers()).isEqualTo(5);
@@ -101,7 +104,8 @@ class ValuationEvaluationServiceTest {
       data.preparePartialJsonCampaign(LocalDate.of(2026, 10, 18));
 
       // Act
-      footballmarket.models.records.ValuationEvaluationSummary result = service.evaluate();
+      footballmarket.features.valuation.domain.records.ValuationEvaluationSummary result =
+          service.evaluate();
 
       // Assert
       org.assertj.core.api.Assertions.assertThat(result.evaluatedPlayers()).isEqualTo(3);

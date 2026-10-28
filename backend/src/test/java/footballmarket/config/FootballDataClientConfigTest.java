@@ -2,7 +2,9 @@ package footballmarket.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.integrations.exceptions.InvalidFootballDataConfigurationException;
+import footballmarket.integrations.footballdata.config.FootballDataClientConfig;
+import footballmarket.integrations.footballdata.config.FootballDataProperties;
+import footballmarket.integrations.footballdata.exceptions.InvalidFootballDataConfigurationException;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

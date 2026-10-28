@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;

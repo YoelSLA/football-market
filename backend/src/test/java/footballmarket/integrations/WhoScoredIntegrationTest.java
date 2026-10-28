@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sun.net.httpserver.HttpServer;
-import footballmarket.config.WhoScoredClientConfig;
-import footballmarket.config.WhoScoredProperties;
-import footballmarket.integrations.exceptions.WhoScoredIntegrationException;
-import footballmarket.integrations.records.WhoScoredCatalogPage;
+import footballmarket.integrations.whoscored.WhoScoredIntegration;
+import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
+import footballmarket.integrations.whoscored.config.WhoScoredClientConfig;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredIntegrationException;
+import footballmarket.integrations.whoscored.records.WhoScoredCatalogPage;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;

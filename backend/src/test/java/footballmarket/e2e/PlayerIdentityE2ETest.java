@@ -3,7 +3,6 @@ package footballmarket.e2e;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
-import footballmarket.config.WhoScoredProperties;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
 import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
@@ -11,6 +10,7 @@ import footballmarket.features.catalog.presentation.dtos.response.PlayerResponse
 import footballmarket.features.catalog.presentation.dtos.response.PlayerSyncResponseDTO;
 import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
 import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
 import footballmarket.support.IdentityControlledProvider;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.ArrayList;

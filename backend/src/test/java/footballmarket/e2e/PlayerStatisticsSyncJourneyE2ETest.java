@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.WhoScoredProperties;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
 import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
@@ -16,11 +15,12 @@ import footballmarket.features.identity.presentation.dtos.response.PlayerIdentit
 import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
-import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
-import footballmarket.integrations.records.WhoScoredScrapedContextRow;
-import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
-import footballmarket.integrations.records.WhoScoredScrapedPlayer;
-import footballmarket.integrations.records.WhoScoredStructuredDataBlock;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedContextRow;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedMetricCell;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedPlayer;
+import footballmarket.integrations.whoscored.records.WhoScoredStructuredDataBlock;
 import footballmarket.support.IdentityControlledProvider;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

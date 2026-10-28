@@ -1,5 +1,6 @@
 package footballmarket.models;
 
+import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;

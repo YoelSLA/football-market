@@ -28,7 +28,7 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
       long sellerBefore = balance(seller);
       long audits = transactions.findByPlayerIdOrderByExecutedAtDescIdDesc(player.getId()).size();
       // Act
-      footballmarket.models.records.TokenListingView result =
+      footballmarket.features.market.domain.records.TokenListingView result =
           listingService.cancel(seller.getEmail(), listing.getId());
       // Assert
       assertThat(result.status().name()).isEqualTo("CANCELLED");
@@ -60,7 +60,8 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
       TokenListing cancelled = publish(5);
       TokenListing expired = publish(5);
       buyService.buyListing(
-          buyer.getEmail(), new footballmarket.models.records.BuyListingRequest(sold.getId()));
+          buyer.getEmail(),
+          new footballmarket.features.market.domain.records.BuyListingRequest(sold.getId()));
       transaction()
           .executeWithoutResult(
               status -> listings.lockById(cancelled.getId()).orElseThrow().markCancelled(NOW));
@@ -70,27 +71,27 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
           NOW.minusDays(1),
           expired.getId());
       // Act
-      java.util.List<footballmarket.models.records.TokenListingView> publicView =
+      java.util.List<footballmarket.features.market.domain.records.TokenListingView> publicView =
           listingService.market(buyer.getEmail());
-      java.util.List<footballmarket.models.records.TokenListingView> mine =
+      java.util.List<footballmarket.features.market.domain.records.TokenListingView> mine =
           listingService.mine(seller.getEmail(), null);
       // Assert
       assertThat(publicView)
           .filteredOn(view -> view.playerId().equals(player.getId()))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .containsExactly(active.getId());
       assertThat(listingService.market(seller.getEmail()))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .doesNotContain(active.getId());
       assertThat(mine).hasSize(4);
       assertThat(listingService.mine(seller.getEmail(), "EXPIRED"))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .containsExactly(expired.getId());
       assertThat(listingService.mine(seller.getEmail(), "SOLD"))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .containsExactly(sold.getId());
       assertThat(listingService.mine(seller.getEmail(), "CANCELLED"))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .containsExactly(cancelled.getId());
       // Verify
       assertThat(reserved()).isEqualTo(5);
@@ -110,16 +111,17 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
           expired.getId());
       jdbc.update("update players set active = false where id = ?", player.getId());
       // Act
-      java.util.List<footballmarket.models.records.TokenListingView> mine =
+      java.util.List<footballmarket.features.market.domain.records.TokenListingView> mine =
           listingService.mine(seller.getEmail(), "EXPIRED");
       // Assert
       assertThat(mine)
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .containsExactly(expired.getId());
       assertThat(listingService.detail(seller.getEmail(), expired.getId()).status().name())
           .isEqualTo("EXPIRED");
       assertThatThrownBy(() -> listingService.detail(buyer.getEmail(), expired.getId()))
-          .isInstanceOf(footballmarket.services.exceptions.ListingNotFoundException.class);
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.ListingNotFoundException.class);
     }
   }
 
@@ -135,14 +137,15 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
       TokenListing listing = publish(5);
       if ("SOLD".equals(state)) {
         buyService.buyListing(
-            buyer.getEmail(), new footballmarket.models.records.BuyListingRequest(listing.getId()));
+            buyer.getEmail(),
+            new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
       } else if ("CANCELLED".equals(state)) {
         listingService.cancel(seller.getEmail(), listing.getId());
       } else {
         org.mockito.Mockito.when(marketClock.instant())
             .thenReturn(listing.getExpiresAt().toInstant());
       }
-      footballmarket.models.User other = market.registerBuyer();
+      footballmarket.features.auth.domain.User other = market.registerBuyer();
       long sellerBefore = balance(seller);
       int tokensBefore = quantity(seller);
       long auditsBefore =
@@ -155,8 +158,11 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
               () ->
                   buyService.buyListing(
                       other.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
-          .isInstanceOf(footballmarket.services.exceptions.ListingNotAvailableException.class)
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.ListingNotAvailableException
+                  .class)
           .hasMessage("La publicación no está disponible.");
       // Verify
       assertThat(balance(seller)).isEqualTo(sellerBefore);
@@ -186,8 +192,11 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
               () ->
                   buyService.buyListing(
                       buyer.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
-          .isInstanceOf(footballmarket.services.exceptions.InsufficientCreditsException.class);
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.InsufficientCreditsException
+                  .class);
       // Verify
       assertThat(balance(buyer)).isEqualTo(1);
       assertThat(balance(seller)).isEqualTo(sellerBefore);
@@ -216,8 +225,11 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
               () ->
                   buyService.buyListing(
                       buyer.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
-          .isInstanceOf(footballmarket.services.exceptions.ListingNotAvailableException.class)
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.ListingNotAvailableException
+                  .class)
           .hasMessage("La publicación no está disponible.");
       // Verify
       assertThat(quantity(seller)).isEqualTo(20);
@@ -246,7 +258,8 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
               () ->
                   buyService.buyListing(
                       buyer.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
           .isInstanceOf(InsufficientStockException.class);
       // Verify
       assertThat(quantity(seller)).isEqualTo(4);
@@ -352,11 +365,11 @@ class TokenListingPersistenceTest extends ListingRepositorySupport {
     @DisplayName("Las claves foráneas de publicación no permiten borrar usuario ni jugador")
     void conservaReferencias() {
       // Arrange
-      footballmarket.models.User isolatedSeller = market.registerBuyer();
+      footballmarket.features.auth.domain.User isolatedSeller = market.registerBuyer();
       Player isolatedPlayer = market.createVisiblePlayer();
       jdbc.update("delete from user_credits where user_id = ?", isolatedSeller.getId());
-      footballmarket.models.records.CurrentQuote quote =
-          new footballmarket.models.records.CurrentQuote(
+      footballmarket.features.quote.domain.records.CurrentQuote quote =
+          new footballmarket.features.quote.domain.records.CurrentQuote(
               isolatedPlayer.getId(), 100L, NOW, "fixture-v1");
       TokenListing result =
           listings.saveAndFlush(

@@ -7,6 +7,8 @@ import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.application.BuyOrderService;
+import footballmarket.features.market.application.TokenListingService;
 import footballmarket.features.market.application.exceptions.ArithmeticOverflowException;
 import footballmarket.features.market.application.exceptions.InsufficientStockException;
 import footballmarket.features.market.application.exceptions.InvalidQuantityException;
@@ -15,11 +17,12 @@ import footballmarket.features.market.application.exceptions.SuperuserCannotBuyE
 import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.market.domain.models.UserCredit;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.quote.application.QuoteRecalculationService;
+import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
-import footballmarket.integrations.QuoteSource;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.Clock;
@@ -142,15 +145,16 @@ class BuyOrderServiceTest {
       // Arrange
       buy(2);
       User receiver = market.registerBuyer();
-      footballmarket.models.TokenListing listing =
+      footballmarket.features.market.domain.models.TokenListing listing =
           listingService.publish(
               buyer.getEmail(),
-              new footballmarket.models.records.SellOrderRequest(player.getId(), 1));
+              new footballmarket.features.market.domain.records.SellOrderRequest(
+                  player.getId(), 1));
       // Act
       MarketTransaction transaction =
           buyOrderService.buyListing(
               receiver.getEmail(),
-              new footballmarket.models.records.BuyListingRequest(listing.getId()));
+              new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
       // Assert
       assertThat(transaction.getExecutedAt()).isEqualTo(listing.getCreatedAt());
     }
@@ -165,17 +169,18 @@ class BuyOrderServiceTest {
     void liquidaPublicacion() {
       // Arrange
       buy(20);
-      footballmarket.models.TokenListing listing =
+      footballmarket.features.market.domain.models.TokenListing listing =
           listingService.publish(
               buyer.getEmail(),
-              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+              new footballmarket.features.market.domain.records.SellOrderRequest(
+                  player.getId(), 5));
       User consumer = market.registerBuyer();
       givenQuote(Optional.of(price(900L)));
       // Act
       MarketTransaction result =
           buyOrderService.buyListing(
               consumer.getEmail(),
-              new footballmarket.models.records.BuyListingRequest(listing.getId()));
+              new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
       // Assert
       assertThat(result.getListing().getId()).isEqualTo(listing.getId());
       assertThat(result.getSeller().getId()).isEqualTo(buyer.getId());
@@ -191,17 +196,21 @@ class BuyOrderServiceTest {
     void rechazaCompraPropia() {
       // Arrange
       buy(20);
-      footballmarket.models.TokenListing listing =
+      footballmarket.features.market.domain.models.TokenListing listing =
           listingService.publish(
               buyer.getEmail(),
-              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+              new footballmarket.features.market.domain.records.SellOrderRequest(
+                  player.getId(), 5));
       // Act / Assert
       assertThatThrownBy(
               () ->
                   buyOrderService.buyListing(
                       buyer.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
-          .isInstanceOf(footballmarket.services.exceptions.CannotBuyOwnListingException.class);
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.CannotBuyOwnListingException
+                  .class);
     }
 
     @Test
@@ -490,10 +499,11 @@ class BuyOrderServiceTest {
       // Arrange: publicar exige que el vendedor tenga tenencias, de modo que el comprador compra
       // antes de publicar sus tokens.
       buy(QUANTITY);
-      footballmarket.models.TokenListing listing =
+      footballmarket.features.market.domain.models.TokenListing listing =
           listingService.publish(
               buyer.getEmail(),
-              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+              new footballmarket.features.market.domain.records.SellOrderRequest(
+                  player.getId(), 5));
       market.clearMarketInitialization();
 
       // Act / Assert
@@ -501,7 +511,8 @@ class BuyOrderServiceTest {
               () ->
                   buyOrderService.buyListing(
                       buyer.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
           .isInstanceOf(MarketNotInitializedException.class);
     }
   }
@@ -516,7 +527,7 @@ class BuyOrderServiceTest {
       MarketTransaction first = buy(QUANTITY);
 
       // Act
-      footballmarket.models.QuoteExecution execution =
+      footballmarket.features.quote.domain.models.QuoteExecution execution =
           recalculation.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       MarketTransaction second = buy(1);
 

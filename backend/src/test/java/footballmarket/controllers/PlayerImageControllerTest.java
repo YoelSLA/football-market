@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -23,7 +22,9 @@ import footballmarket.features.images.domain.enums.PlayerImageSyncRunStatus;
 import footballmarket.features.images.domain.records.PlayerImageSyncCounters;
 import footballmarket.features.images.domain.records.PlayerImageSyncRunItemRecord;
 import footballmarket.features.images.domain.records.PlayerImageSyncSummary;
-import footballmarket.integrations.exceptions.InvalidTheSportsDbConfigurationException;
+import footballmarket.features.images.presentation.PlayerImageController;
+import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbConfigurationException;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.util.Date;

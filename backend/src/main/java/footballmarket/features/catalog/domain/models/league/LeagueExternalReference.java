@@ -52,7 +52,7 @@ public class LeagueExternalReference {
 
   protected LeagueExternalReference() {}
 
-  LeagueExternalReference(League league, ExternalProvider provider, String externalId) {
+  public LeagueExternalReference(League league, ExternalProvider provider, String externalId) {
     if (league == null
         || provider == null
         || externalId == null

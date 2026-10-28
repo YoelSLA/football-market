@@ -7,12 +7,13 @@ import static org.mockito.Mockito.when;
 
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.portfolio.application.PortfolioService;
 import footballmarket.features.portfolio.domain.exceptions.PortfolioIntegrityException;
 import footballmarket.features.portfolio.domain.records.PortfolioView;
 import footballmarket.features.portfolio.presentation.exceptions.InvalidPortfolioPageException;
 import footballmarket.features.portfolio.presentation.exceptions.InvalidPortfolioStatusException;
+import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
-import footballmarket.integrations.QuoteSource;
 import footballmarket.support.FinancialTestData;
 import footballmarket.support.PortfolioTestData;
 import footballmarket.support.TestcontainersConfiguration;

@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -21,6 +20,7 @@ import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
 import footballmarket.features.quote.presentation.PlayerQuoteController;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
 import java.time.Instant;

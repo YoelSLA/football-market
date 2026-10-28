@@ -2,7 +2,8 @@ package footballmarket.integrations;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.integrations.records.WhoScoredStructuredDataBlock;
+import footballmarket.integrations.whoscored.WhoScoredStructuredDataParser;
+import footballmarket.integrations.whoscored.records.WhoScoredStructuredDataBlock;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;

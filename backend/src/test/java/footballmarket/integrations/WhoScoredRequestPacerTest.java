@@ -3,7 +3,8 @@ package footballmarket.integrations;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.integrations.exceptions.WhoScoredIntegrationException;
+import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredIntegrationException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;

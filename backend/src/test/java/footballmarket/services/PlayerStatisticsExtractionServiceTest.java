@@ -6,22 +6,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.WhoScoredProperties;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
 import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.features.statistics.application.internal.ExtractionRunManager;
 import footballmarket.features.statistics.application.internal.PlayerStatisticsCoverageQuery;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
-import footballmarket.integrations.WhoScoredIntegration;
-import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
-import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
-import footballmarket.integrations.records.WhoScoredScrapedContextRow;
-import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
-import footballmarket.integrations.records.WhoScoredScrapedPlayer;
-import footballmarket.integrations.records.WhoScoredStructuredDataBlock;
+import footballmarket.integrations.whoscored.WhoScoredIntegration;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsException;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedContextRow;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedMetricCell;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedPlayer;
+import footballmarket.integrations.whoscored.records.WhoScoredStructuredDataBlock;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -88,9 +89,9 @@ class PlayerStatisticsExtractionServiceTest {
             invocation -> {
               int tournament = invocation.getArgument(0);
               int index = tournaments.indexOf(tournament) + 1;
-              return new footballmarket.integrations.records.WhoScoredCatalogPage(
+              return new footballmarket.integrations.whoscored.records.WhoScoredCatalogPage(
                   List.of(
-                      new footballmarket.integrations.records.WhoScoredPlayerIdentity(
+                      new footballmarket.integrations.whoscored.records.WhoScoredPlayerIdentity(
                           Integer.toString(1000 + index),
                           "Player " + index,
                           null,
@@ -100,7 +101,8 @@ class PlayerStatisticsExtractionServiceTest {
                           null,
                           null)),
                   List.of(),
-                  new footballmarket.integrations.records.WhoScoredPaging(1, 1, 1, 1, 1, 1),
+                  new footballmarket.integrations.whoscored.records.WhoScoredPaging(
+                      1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
     identities.synchronizeCurrent();

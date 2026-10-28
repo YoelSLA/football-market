@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -16,6 +15,7 @@ import footballmarket.features.valuation.application.exceptions.ValuationSnapsho
 import footballmarket.features.valuation.domain.enums.ValuationExclusionReason;
 import footballmarket.features.valuation.domain.records.ValuationEvaluationSummary;
 import footballmarket.features.valuation.presentation.ValuationController;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;

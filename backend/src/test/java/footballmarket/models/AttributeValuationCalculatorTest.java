@@ -2,13 +2,15 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.config.ValuationProperties;
 import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.models.team.Team;
 import footballmarket.features.valuation.domain.enums.GeneralPosition;
 import footballmarket.features.valuation.domain.enums.MetricSourceSummary;
+import footballmarket.features.valuation.domain.models.AttributeValuation;
+import footballmarket.features.valuation.domain.models.AttributeValuationCalculator;
 import footballmarket.features.valuation.domain.records.PreparedValuationMetrics;
+import footballmarket.features.valuation.infraestructure.config.ValuationProperties;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;

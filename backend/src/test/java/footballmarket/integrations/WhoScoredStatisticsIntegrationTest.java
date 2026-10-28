@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
-import footballmarket.config.PlayerStatisticsProperties;
-import footballmarket.config.WhoScoredProperties;
-import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
-import footballmarket.integrations.records.WhoScoredJsonQuery;
-import footballmarket.integrations.records.WhoScoredStatisticsResponse;
+import footballmarket.features.statistics.infraestructure.config.PlayerStatisticsProperties;
+import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsIntegration;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsException;
+import footballmarket.integrations.whoscored.records.WhoScoredJsonQuery;
+import footballmarket.integrations.whoscored.records.WhoScoredStatisticsResponse;
 import footballmarket.support.WhoScoredStatisticsProviderStub;
 import java.math.BigDecimal;
 import java.net.URI;

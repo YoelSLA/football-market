@@ -11,10 +11,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.portfolio.application.PortfolioService;
 import footballmarket.features.portfolio.domain.records.PortfolioView;
+import footballmarket.features.portfolio.presentation.PortfolioController;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -158,7 +159,9 @@ class PortfolioControllerTest {
     void rechazaParametroInvalido() throws Exception {
       // Arrange
       when(portfolioService.portfolio(anyString(), anyInt(), anyInt(), any()))
-          .thenThrow(new footballmarket.controllers.exceptions.InvalidPortfolioStatusException());
+          .thenThrow(
+              new footballmarket.features.portfolio.presentation.exceptions
+                  .InvalidPortfolioStatusException());
       // Act / Assert
       mvc.perform(
               get("/api/portfolio/me")
@@ -193,7 +196,9 @@ class PortfolioControllerTest {
     void traduceIndisponibilidadDeCotizaciones() throws Exception {
       // Arrange
       when(portfolioService.portfolio(anyString(), anyInt(), anyInt(), any()))
-          .thenThrow(new footballmarket.integrations.exceptions.QuoteBatchUnavailableException());
+          .thenThrow(
+              new footballmarket.features.quote.application.exceptions
+                  .QuoteBatchUnavailableException());
       // Act / Assert
       mvc.perform(get("/api/portfolio/me").header("Authorization", authorization))
           .andExpect(status().isServiceUnavailable())

@@ -4,11 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.SuperuserProperties;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.market.application.SuperuserProvisioningService;
 import footballmarket.features.market.application.exceptions.SuperuserProvisioningException;
+import footballmarket.features.market.infraestructure.config.SuperuserProperties;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;

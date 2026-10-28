@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
@@ -30,11 +29,13 @@ import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.BuyListingRequest;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.market.presentation.OrderController;
 import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.models.TestFixtures;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -82,7 +83,10 @@ class OrderControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private BuyOrderService buyOrderService;
-  @MockitoBean private footballmarket.services.TokenListingService tokenListingService;
+
+  @MockitoBean
+  private footballmarket.features.market.application.TokenListingService tokenListingService;
+
   @MockitoBean private AuthenticationService authenticationService;
 
   private MockMvc mvc;

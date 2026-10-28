@@ -6,14 +6,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.ranking.application.ScoreRankingQueryService;
 import footballmarket.features.ranking.domain.records.ScoreRanking;
 import footballmarket.features.ranking.domain.records.ScoreRankingEntry;
+import footballmarket.features.ranking.presentation.ScoreRankingController;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
 import java.time.Instant;

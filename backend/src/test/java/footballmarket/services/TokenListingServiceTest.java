@@ -6,14 +6,27 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
+import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.application.BuyOrderService;
+import footballmarket.features.market.application.TokenListingService;
 import footballmarket.features.market.application.exceptions.*;
+import footballmarket.features.market.application.exceptions.InsufficientStockException;
+import footballmarket.features.market.application.exceptions.InvalidListingStatusException;
+import footballmarket.features.market.application.exceptions.InvalidQuantityException;
+import footballmarket.features.market.application.exceptions.ListingNotAvailableException;
+import footballmarket.features.market.application.exceptions.ListingNotFoundException;
+import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
+import footballmarket.features.market.application.exceptions.SuperuserCannotSellException;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
 import footballmarket.features.market.domain.records.SellOrderRequest;
+import footballmarket.features.quote.application.QuoteSource;
+import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
+import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
+import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
-import footballmarket.integrations.QuoteSource;
-import footballmarket.services.exceptions.*;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.OffsetDateTime;
@@ -49,7 +62,8 @@ class TokenListingServiceTest {
           listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
       User other = market.registerBuyer();
       buyService.buyListing(
-          other.getEmail(), new footballmarket.models.records.BuyListingRequest(listing.getId()));
+          other.getEmail(),
+          new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
       // Act / Assert
       assertThatThrownBy(() -> listingService.cancel(seller.getEmail(), listing.getId()))
           .isInstanceOf(ListingNotAvailableException.class);
@@ -76,7 +90,7 @@ class TokenListingServiceTest {
       TokenListing listing =
           listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
       // Act
-      footballmarket.models.records.TokenListingView result =
+      footballmarket.features.market.domain.records.TokenListingView result =
           listingService.cancel(seller.getEmail(), listing.getId());
       // Assert
       assertThat(result.status().name()).isEqualTo("CANCELLED");
@@ -112,13 +126,13 @@ class TokenListingServiceTest {
       User viewer = market.registerBuyer();
       // Act / Assert
       assertThat(listingService.mine(seller.getEmail(), "ACTIVE"))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .contains(listing.getId());
       assertThat(listingService.market(seller.getEmail()))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .doesNotContain(listing.getId());
       assertThat(listingService.market(viewer.getEmail()))
-          .extracting(footballmarket.models.records.TokenListingView::listingId)
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
           .contains(listing.getId());
       assertThat(listingService.detail(viewer.getEmail(), listing.getId()).totalAmount())
           .isEqualTo(500);
@@ -142,7 +156,8 @@ class TokenListingServiceTest {
           listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
       User viewer = market.registerBuyer();
       buyService.buyListing(
-          viewer.getEmail(), new footballmarket.models.records.BuyListingRequest(listing.getId()));
+          viewer.getEmail(),
+          new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
       // Act / Assert
       assertThatThrownBy(() -> listingService.detail(viewer.getEmail(), listing.getId()))
           .isInstanceOf(ListingNotFoundException.class);
@@ -244,7 +259,7 @@ class TokenListingServiceTest {
       CurrentQuote updated = new CurrentQuote(player.getId(), 900L, OffsetDateTime.now(), "v2");
       when(quotes.currentQuote(any())).thenReturn(Optional.of(updated));
       // Act
-      footballmarket.models.records.TokenListingView result =
+      footballmarket.features.market.domain.records.TokenListingView result =
           listingService.detail(seller.getEmail(), listing.getId());
       // Assert
       assertThat(result.unitPrice()).isEqualTo(100);

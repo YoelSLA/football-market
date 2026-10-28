@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.SuperuserProperties;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.records.LeagueCandidate;
@@ -15,8 +14,9 @@ import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.application.SuperuserProvisioningService;
 import footballmarket.features.market.application.exceptions.SuperuserProvisioningException;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.market.infraestructure.config.SuperuserProperties;
+import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
-import footballmarket.integrations.QuoteSource;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

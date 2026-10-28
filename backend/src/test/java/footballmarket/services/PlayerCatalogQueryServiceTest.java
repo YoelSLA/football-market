@@ -7,7 +7,6 @@ import footballmarket.features.catalog.domain.records.PlayerCatalogCriteria;
 import footballmarket.features.catalog.domain.records.PlayerCatalogPage;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
-import footballmarket.models.enums.*;
 import footballmarket.support.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;

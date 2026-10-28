@@ -3,6 +3,7 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.domain.exceptions.EmailEmptyException;
 import footballmarket.features.auth.domain.exceptions.EmailInvalidException;

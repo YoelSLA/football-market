@@ -5,12 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
+import footballmarket.features.catalog.application.FootballDataPlayerService;
 import footballmarket.features.catalog.domain.records.PlayerCandidate;
 import footballmarket.features.catalog.domain.records.PlayerSnapshot;
-import footballmarket.integrations.FootballDataIntegration;
-import footballmarket.integrations.FootballDataIntegration.CompetitionSnapshot;
-import footballmarket.integrations.FootballDataIntegration.PlayerData;
-import footballmarket.integrations.exceptions.FootballDataUnavailableException;
+import footballmarket.integrations.footballdata.FootballDataIntegration;
+import footballmarket.integrations.footballdata.FootballDataIntegration.CompetitionSnapshot;
+import footballmarket.integrations.footballdata.FootballDataIntegration.PlayerData;
+import footballmarket.integrations.footballdata.exceptions.FootballDataUnavailableException;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

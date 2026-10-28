@@ -5,11 +5,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.quote.application.QuoteMarketInitializationService;
+import footballmarket.features.quote.application.QuoteQueryService;
+import footballmarket.features.quote.application.QuoteRecalculationService;
 import footballmarket.features.quote.application.exceptions.QuoteNotFoundException;
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
+import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.QuoteTestData;

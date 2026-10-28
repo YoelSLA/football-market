@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.ranking.application.ScoreRankingQueryService;
 import footballmarket.features.ranking.domain.records.ScoreRanking;
 import footballmarket.features.ranking.domain.records.ScoreRankingEntry;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;

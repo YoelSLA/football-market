@@ -52,7 +52,7 @@ public class TeamExternalReference {
 
   protected TeamExternalReference() {}
 
-  TeamExternalReference(Team team, ExternalProvider provider, String externalId) {
+  public TeamExternalReference(Team team, ExternalProvider provider, String externalId) {
     if (team == null
         || provider == null
         || externalId == null

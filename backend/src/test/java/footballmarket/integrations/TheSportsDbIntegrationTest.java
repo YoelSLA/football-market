@@ -7,10 +7,12 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import footballmarket.integrations.exceptions.InvalidTheSportsDbResponseException;
-import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
-import footballmarket.integrations.exceptions.TheSportsDbServerException;
-import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
+import footballmarket.integrations.thesportsdb.TheSportsDbIntegration;
+import footballmarket.integrations.thesportsdb.TheSportsDbRequestPacer;
+import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbResponseException;
+import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbRateLimitException;
+import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbServerException;
+import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbUnavailableException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Clock;

@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -21,7 +20,8 @@ import footballmarket.features.catalog.domain.records.PlayerSynchronizationResul
 import footballmarket.features.catalog.presentation.PlayerController;
 import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSnapshot;
-import footballmarket.integrations.exceptions.FootballDataUnavailableException;
+import footballmarket.integrations.footballdata.exceptions.FootballDataUnavailableException;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;

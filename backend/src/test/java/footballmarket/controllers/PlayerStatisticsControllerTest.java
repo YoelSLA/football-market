@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -24,7 +23,8 @@ import footballmarket.features.statistics.domain.records.PlayerStatisticsCoverag
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncCounters;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
 import footballmarket.features.statistics.presentation.PlayerStatisticsController;
-import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.integrations.whoscored.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;

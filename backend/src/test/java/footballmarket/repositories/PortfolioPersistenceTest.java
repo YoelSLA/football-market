@@ -6,6 +6,8 @@ import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.market.domain.models.PlayerTokenEmission;
+import footballmarket.features.market.infraestructure.PlayerTokenRepository;
+import footballmarket.features.market.infraestructure.TokenListingRepository;
 import footballmarket.features.market.infraestructure.projections.HoldingQuantity;
 import footballmarket.features.market.infraestructure.projections.ReservedQuantity;
 import footballmarket.support.MarketTestData;

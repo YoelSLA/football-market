@@ -3,7 +3,6 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
-import footballmarket.config.WhoScoredProperties;
 import footballmarket.features.catalog.domain.enums.ExternalProvider;
 import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -27,8 +26,7 @@ import footballmarket.features.statistics.infraestructure.ExtractionIncidentRepo
 import footballmarket.features.statistics.infraestructure.PlayerStatisticsExtractionRunRepository;
 import footballmarket.features.statistics.infraestructure.PlayerStatisticsRepository;
 import footballmarket.features.statistics.infraestructure.PlayerStatisticsRunItemRepository;
-import footballmarket.models.*;
-import footballmarket.models.enums.*;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import jakarta.persistence.EntityManager;

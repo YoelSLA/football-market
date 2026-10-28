@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.features.market.application.exceptions.MarketAlreadyInitializedException;
 import footballmarket.features.market.domain.records.MarketInitializationResult;
+import footballmarket.features.quote.application.QuoteMarketInitializationService;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;

@@ -7,6 +7,7 @@ import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundEx
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.portfolio.application.OperationHistoryService;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
 import footballmarket.support.OperationHistoryTestData;

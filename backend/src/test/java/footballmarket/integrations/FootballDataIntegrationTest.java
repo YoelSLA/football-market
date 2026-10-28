@@ -4,9 +4,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
-import footballmarket.integrations.FootballDataIntegration.CompetitionSnapshot;
-import footballmarket.integrations.FootballDataIntegration.PlayerData;
-import footballmarket.integrations.exceptions.FootballDataUnavailableException;
+import footballmarket.integrations.footballdata.FootballDataIntegration;
+import footballmarket.integrations.footballdata.FootballDataIntegration.CompetitionSnapshot;
+import footballmarket.integrations.footballdata.FootballDataIntegration.PlayerData;
+import footballmarket.integrations.footballdata.exceptions.FootballDataUnavailableException;
 import java.net.SocketTimeoutException;
 import java.time.Clock;
 import java.time.Duration;

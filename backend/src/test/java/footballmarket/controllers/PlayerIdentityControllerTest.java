@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -17,6 +16,8 @@ import footballmarket.features.identity.domain.enums.PlayerIdentityPassType;
 import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
 import footballmarket.features.identity.domain.records.PlayerIdentitySyncCounters;
 import footballmarket.features.identity.domain.records.PlayerIdentitySyncSummary;
+import footballmarket.features.identity.presentation.PlayerIdentityController;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.util.Date;
@@ -191,9 +192,11 @@ class PlayerIdentityControllerTest {
       RuntimeException failure =
           switch (kind) {
             case "not-found" ->
-                new footballmarket.services.exceptions.PlayerIdentityRunNotFoundException();
+                new footballmarket.features.identity.application.exceptions
+                    .PlayerIdentityRunNotFoundException();
             case "ineligible" ->
-                new footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException();
+                new footballmarket.features.identity.application.exceptions
+                    .PlayerIdentitySourceNotEligibleException();
             default -> new PlayerIdentitySynchronizationException();
           };
       int expected = kind.equals("not-found") ? 404 : kind.equals("ineligible") ? 409 : 500;

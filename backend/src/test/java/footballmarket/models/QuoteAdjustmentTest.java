@@ -2,6 +2,7 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.features.quote.domain.models.QuoteAdjustment;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

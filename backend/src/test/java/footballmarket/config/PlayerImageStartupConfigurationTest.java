@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import footballmarket.features.images.application.PlayerImageRunRecoveryService;
 import footballmarket.features.images.application.exceptions.PlayerImageResolutionPersistenceException;
+import footballmarket.features.images.infraestructure.config.PlayerImageStartupConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

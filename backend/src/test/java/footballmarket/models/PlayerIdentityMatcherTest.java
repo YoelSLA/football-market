@@ -7,6 +7,7 @@ import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
 import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.identity.domain.models.PlayerIdentityMatcher;
 import footballmarket.features.identity.domain.models.PlayerIdentityMatcher.Candidate;
 import footballmarket.features.identity.domain.records.PlayerIdentityAliases;
 import java.time.LocalDate;

@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.WhoScoredProperties;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
 import footballmarket.features.statistics.application.JsonStatisticsUpdateService;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsConfirmationException;
 import footballmarket.features.statistics.application.internal.ExtractionRunManager;
@@ -16,11 +16,12 @@ import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.models.PlayerStatistics;
 import footballmarket.features.statistics.infraestructure.PlayerStatisticsRepository;
-import footballmarket.integrations.WhoScoredIntegration;
-import footballmarket.integrations.WhoScoredRequestPacer;
-import footballmarket.integrations.WhoScoredStatisticsIntegration;
-import footballmarket.integrations.records.WhoScoredStatisticsResponse;
-import footballmarket.integrations.records.WhoScoredStatisticsTable;
+import footballmarket.integrations.whoscored.WhoScoredIntegration;
+import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsIntegration;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.records.WhoScoredStatisticsResponse;
+import footballmarket.integrations.whoscored.records.WhoScoredStatisticsTable;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -88,9 +89,9 @@ class JsonStatisticsUpdateServiceTest {
             invocation -> {
               int tournament = invocation.getArgument(0);
               int index = tournaments.indexOf(tournament) + 1;
-              return new footballmarket.integrations.records.WhoScoredCatalogPage(
+              return new footballmarket.integrations.whoscored.records.WhoScoredCatalogPage(
                   List.of(
-                      new footballmarket.integrations.records.WhoScoredPlayerIdentity(
+                      new footballmarket.integrations.whoscored.records.WhoScoredPlayerIdentity(
                           Integer.toString(1000 + index),
                           "Player " + index,
                           null,
@@ -100,7 +101,8 @@ class JsonStatisticsUpdateServiceTest {
                           null,
                           null)),
                   List.of(),
-                  new footballmarket.integrations.records.WhoScoredPaging(1, 1, 1, 1, 1, 1),
+                  new footballmarket.integrations.whoscored.records.WhoScoredPaging(
+                      1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
     identities.synchronizeCurrent();

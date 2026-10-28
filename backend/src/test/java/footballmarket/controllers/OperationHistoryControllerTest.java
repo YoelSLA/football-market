@@ -9,13 +9,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.portfolio.application.OperationHistoryService;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
+import footballmarket.features.portfolio.presentation.OperationHistoryController;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.OffsetDateTime;

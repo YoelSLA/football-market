@@ -4,7 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
+import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsException;
 import footballmarket.support.WhoScoredStatisticsProviderStub;
 import java.time.Clock;
 import java.time.Instant;

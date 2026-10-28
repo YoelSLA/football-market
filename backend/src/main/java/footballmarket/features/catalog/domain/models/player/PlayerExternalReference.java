@@ -48,7 +48,7 @@ public class PlayerExternalReference {
 
   protected PlayerExternalReference() {}
 
-  PlayerExternalReference(Player player, ExternalProvider provider, String externalId) {
+  public PlayerExternalReference(Player player, ExternalProvider provider, String externalId) {
     String canonical = canonicalExternalId(provider, externalId);
     validate(player, provider, canonical);
 

@@ -14,8 +14,13 @@ import footballmarket.features.market.domain.models.PlayerToken;
 import footballmarket.features.market.domain.models.PlayerTokenEmission;
 import footballmarket.features.market.domain.models.UserCredit;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.market.infraestructure.MarketTransactionRepository;
+import footballmarket.features.market.infraestructure.PlayerTokenEmissionRepository;
+import footballmarket.features.market.infraestructure.PlayerTokenRepository;
+import footballmarket.features.market.infraestructure.TokenListingRepository;
+import footballmarket.features.market.infraestructure.UserCreditRepository;
+import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
-import footballmarket.integrations.QuoteSource;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.sql.SQLException;
@@ -87,7 +92,7 @@ class MarketDomainPersistenceTest {
   }
 
   @Autowired private BuyOrderService buyOrderService;
-  @Autowired private footballmarket.services.TokenListingService listingService;
+  @Autowired private footballmarket.features.market.application.TokenListingService listingService;
   @Autowired private TokenListingRepository listings;
   @Autowired private AuthenticationService authenticationService;
   @Autowired private MarketTestData market;
@@ -165,7 +170,7 @@ class MarketDomainPersistenceTest {
   @DisplayName("Liquidación secundaria y reversión durable")
   class SecondarySettlement {
     private User secondarySeller;
-    private footballmarket.models.TokenListing listing;
+    private footballmarket.features.market.domain.models.TokenListing listing;
 
     @BeforeEach
     void prepareSecondaryListing() {
@@ -174,7 +179,8 @@ class MarketDomainPersistenceTest {
       listing =
           listingService.publish(
               secondarySeller.getEmail(),
-              new footballmarket.models.records.SellOrderRequest(player.getId(), 5));
+              new footballmarket.features.market.domain.records.SellOrderRequest(
+                  player.getId(), 5));
     }
 
     private Map<String, List<Map<String, Object>>> snapshot() {
@@ -210,7 +216,7 @@ class MarketDomainPersistenceTest {
       MarketTransaction result =
           buyOrderService.buyListing(
               buyer.getEmail(),
-              new footballmarket.models.records.BuyListingRequest(listing.getId()));
+              new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
       // Assert
       assertThat(result.getListing().getId()).isEqualTo(listing.getId());
       // Verify
@@ -259,7 +265,8 @@ class MarketDomainPersistenceTest {
                 () ->
                     buyOrderService.buyListing(
                         buyer.getEmail(),
-                        new footballmarket.models.records.BuyListingRequest(listing.getId())));
+                        new footballmarket.features.market.domain.records.BuyListingRequest(
+                            listing.getId())));
         // Assert
         assertThat(failure).isNotNull();
         boolean checkViolation = false;
@@ -288,8 +295,10 @@ class MarketDomainPersistenceTest {
               () ->
                   buyOrderService.buyListing(
                       buyer.getEmail(),
-                      new footballmarket.models.records.BuyListingRequest(listing.getId())))
-          .isInstanceOf(footballmarket.services.exceptions.ListingNotFoundException.class);
+                      new footballmarket.features.market.domain.records.BuyListingRequest(
+                          listing.getId())))
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.ListingNotFoundException.class);
       // Verify
       assertThat(snapshot()).isEqualTo(before);
       assertThat(listingService.detail(secondarySeller.getEmail(), listing.getId()).listingId())
@@ -515,7 +524,8 @@ class MarketDomainPersistenceTest {
     void elModeloRechazaUnSaldoNegativo() {
       // Act / Assert: invariante del dominio, independiente de la restricción del esquema.
       assertThatThrownBy(() -> UserCredit.restore(buyer.getId(), -100L))
-          .isInstanceOf(footballmarket.models.exceptions.InvalidCreditAmountException.class);
+          .isInstanceOf(
+              footballmarket.features.market.domain.exceptions.InvalidCreditAmountException.class);
     }
 
     @Test
@@ -540,7 +550,7 @@ class MarketDomainPersistenceTest {
       assertThatThrownBy(
               () ->
                   holdings.saveAndFlush(
-                      footballmarket.models.PlayerToken.restore(
+                      footballmarket.features.market.domain.models.PlayerToken.restore(
                           null, player, buyer, 5, OffsetDateTime.now(ZoneOffset.UTC))))
           .isInstanceOf(DataIntegrityViolationException.class);
     }
@@ -571,9 +581,10 @@ class MarketDomainPersistenceTest {
       // Act / Assert: invariante del dominio, independiente de la restricción del esquema.
       assertThatThrownBy(
               () ->
-                  footballmarket.models.PlayerToken.restore(
+                  footballmarket.features.market.domain.models.PlayerToken.restore(
                       null, player, buyer, -3, OffsetDateTime.now(ZoneOffset.UTC)))
-          .isInstanceOf(footballmarket.models.exceptions.InvalidTokenQuantityException.class);
+          .isInstanceOf(
+              footballmarket.features.market.domain.exceptions.InvalidTokenQuantityException.class);
     }
   }
 
@@ -600,7 +611,9 @@ class MarketDomainPersistenceTest {
 
       // Act
       assertThatThrownBy(() -> buy(player, 1))
-          .isInstanceOf(footballmarket.services.exceptions.InsufficientStockException.class);
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.InsufficientStockException
+                  .class);
 
       // Assert
       assertThat(creditOf(buyer)).isEqualTo(creditsBefore);
@@ -619,7 +632,9 @@ class MarketDomainPersistenceTest {
 
       // Act
       assertThatThrownBy(() -> buy(player, 1))
-          .isInstanceOf(footballmarket.services.exceptions.InsufficientCreditsException.class);
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.InsufficientCreditsException
+                  .class);
 
       // Assert
       assertThat(holdingOf(player, superuser)).isEqualTo(sellerTokensBefore);
@@ -636,7 +651,9 @@ class MarketDomainPersistenceTest {
       // Act
       removeSuperuser();
       assertThatThrownBy(() -> buy(player, QUANTITY))
-          .isInstanceOf(footballmarket.services.exceptions.SellerUnavailableException.class);
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.SellerUnavailableException
+                  .class);
 
       // Assert
       assertThat(creditOf(buyer)).isEqualTo(creditsBefore);
@@ -660,7 +677,8 @@ class MarketDomainPersistenceTest {
 
       // Act
       assertThatThrownBy(() -> buy(player, quantity))
-          .isInstanceOf(footballmarket.services.exceptions.InvalidQuantityException.class);
+          .isInstanceOf(
+              footballmarket.features.market.application.exceptions.InvalidQuantityException.class);
 
       // Assert
       assertThat(creditOf(buyer)).isEqualTo(creditsBefore);
@@ -682,7 +700,9 @@ class MarketDomainPersistenceTest {
 
       // Act
       assertThatThrownBy(() -> buy(notVisible, QUANTITY))
-          .isInstanceOf(footballmarket.services.exceptions.PlayerNotVisibleException.class);
+          .isInstanceOf(
+              footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException
+                  .class);
 
       // Assert: el jugador rechazado nunca estuvo en el mercado y sigue sin estarlo.
       assertThat(totalHeld(notVisible)).isZero();
@@ -709,7 +729,8 @@ class MarketDomainPersistenceTest {
 
       // Act
       assertThatThrownBy(() -> buy(player, QUANTITY))
-          .isInstanceOf(footballmarket.services.exceptions.QuoteUnavailableException.class);
+          .isInstanceOf(
+              footballmarket.features.quote.application.exceptions.QuoteUnavailableException.class);
 
       // Assert
       assertThat(creditOf(buyer)).isEqualTo(creditsBefore);
@@ -731,7 +752,9 @@ class MarketDomainPersistenceTest {
 
       // Act
       assertThatThrownBy(() -> buy(player, QUANTITY))
-          .isInstanceOf(footballmarket.services.exceptions.InvalidQuotePriceException.class);
+          .isInstanceOf(
+              footballmarket.features.quote.application.exceptions.InvalidQuotePriceException
+                  .class);
 
       // Assert
       assertThat(creditOf(buyer)).isEqualTo(creditsBefore);
@@ -1028,7 +1051,9 @@ class MarketDomainPersistenceTest {
         // Act / Assert: al retornar la excepción al llamador, el interceptor transaccional ya
         // concluyó el rollback. No se captura la excepción dentro de una transacción envolvente.
         assertThatThrownBy(() -> buy(player, 1))
-            .isInstanceOf(footballmarket.services.exceptions.ArithmeticOverflowException.class);
+            .isInstanceOf(
+                footballmarket.features.market.application.exceptions.ArithmeticOverflowException
+                    .class);
 
         // Verify: nuevas consultas JDBC, sin entidades del EntityManager de la compra.
         // Las filas completas incluyen available_credits y updated_at de ambas cuentas.

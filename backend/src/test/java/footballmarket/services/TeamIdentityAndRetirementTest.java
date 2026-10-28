@@ -10,7 +10,7 @@ import footballmarket.features.catalog.domain.records.PlayerCandidate;
 import footballmarket.features.catalog.domain.records.PlayerSnapshot;
 import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import footballmarket.features.catalog.domain.records.TeamCandidate;
-import footballmarket.integrations.TheSportsDbIntegration;
+import footballmarket.integrations.thesportsdb.TheSportsDbIntegration;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;

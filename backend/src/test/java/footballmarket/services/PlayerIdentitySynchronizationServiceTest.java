@@ -10,14 +10,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.WhoScoredProperties;
+import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
 import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
 import footballmarket.features.identity.domain.records.PlayerIdentitySyncSummary;
-import footballmarket.integrations.WhoScoredIntegration;
-import footballmarket.integrations.exceptions.WhoScoredIntegrationException;
-import footballmarket.integrations.records.WhoScoredCatalogPage;
-import footballmarket.integrations.records.WhoScoredPaging;
-import footballmarket.integrations.records.WhoScoredPlayerIdentity;
+import footballmarket.integrations.whoscored.WhoScoredIntegration;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredIntegrationException;
+import footballmarket.integrations.whoscored.records.WhoScoredCatalogPage;
+import footballmarket.integrations.whoscored.records.WhoScoredPaging;
+import footballmarket.integrations.whoscored.records.WhoScoredPlayerIdentity;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -226,10 +227,12 @@ class PlayerIdentitySynchronizationServiceTest {
       // Act / Assert
       assertThatThrownBy(() -> service.synchronizeHistorical(Long.MAX_VALUE))
           .isInstanceOf(
-              footballmarket.services.exceptions.PlayerIdentityRunNotFoundException.class);
+              footballmarket.features.identity.application.exceptions
+                  .PlayerIdentityRunNotFoundException.class);
       assertThatThrownBy(() -> service.synchronizeHistorical(historical.id()))
           .isInstanceOf(
-              footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException.class);
+              footballmarket.features.identity.application.exceptions
+                  .PlayerIdentitySourceNotEligibleException.class);
       // Verify
       verifyNoInteractions(integration);
     }

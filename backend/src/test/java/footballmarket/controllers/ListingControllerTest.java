@@ -8,15 +8,28 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
 import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
+import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.application.TokenListingService;
 import footballmarket.features.market.application.exceptions.*;
+import footballmarket.features.market.application.exceptions.ArithmeticOverflowException;
+import footballmarket.features.market.application.exceptions.InsufficientStockException;
+import footballmarket.features.market.application.exceptions.InvalidListingStatusException;
+import footballmarket.features.market.application.exceptions.InvalidQuantityException;
+import footballmarket.features.market.application.exceptions.ListingNotAvailableException;
+import footballmarket.features.market.application.exceptions.ListingNotFoundException;
+import footballmarket.features.market.application.exceptions.SuperuserCannotSellException;
 import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.presentation.ListingController;
+import footballmarket.features.market.presentation.OrderController;
+import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
+import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
+import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.models.TestFixtures;
-import footballmarket.services.exceptions.*;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -123,7 +136,7 @@ class ListingControllerTest {
         "Sin filtro devuelve las publicaciones propias sin convertir la ausencia en un estado")
     void listaPropiasSinFiltro() throws Exception {
       // Arrange
-      footballmarket.models.records.TokenListingView view = listing().snapshot(NOW);
+      footballmarket.features.market.domain.records.TokenListingView view = listing().snapshot(NOW);
       when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.isNull()))
           .thenReturn(java.util.List.of(view));
       // Act / Assert
@@ -142,7 +155,7 @@ class ListingControllerTest {
     @DisplayName("El mercado devuelve el sobre y los nueve campos de cada elemento sin closedAt")
     void listaMercado() throws Exception {
       // Arrange
-      footballmarket.models.records.TokenListingView view = listing().snapshot(NOW);
+      footballmarket.features.market.domain.records.TokenListingView view = listing().snapshot(NOW);
       when(listingService.market(anyString())).thenReturn(java.util.List.of(view));
       // Act / Assert
       mvc.perform(
