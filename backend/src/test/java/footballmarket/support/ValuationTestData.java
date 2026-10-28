@@ -43,8 +43,7 @@ public class ValuationTestData {
   public void prepareConfirmedJsonCampaign(LocalDate date) {
     List<Player> population = this.players.findAll();
     PlayerStatisticsExtractionRun run =
-        this.runs.save(
-            new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null));
+        this.runs.save(new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH));
     for (Player player : population) {
       String externalId = externalId(player);
       player.addExternalReference(ExternalProvider.WHOSCORED, externalId);
@@ -95,8 +94,7 @@ public class ValuationTestData {
   public void preparePartialJsonCampaign(LocalDate date) {
     List<Player> population = this.eligiblePopulation();
     PlayerStatisticsExtractionRun run =
-        this.runs.save(
-            new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null));
+        this.runs.save(new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH));
     Player withoutData = population.get(0);
     Player withoutSnapshot = population.get(population.size() - 1);
     for (Player player : population.subList(1, population.size() - 1)) {
@@ -141,8 +139,7 @@ public class ValuationTestData {
   public void prepareStructurallyFailedJsonCampaign(LocalDate date) {
     List<Player> population = this.eligiblePopulation();
     PlayerStatisticsExtractionRun run =
-        this.runs.save(
-            new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null));
+        this.runs.save(new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH));
     Player blocked = population.get(0);
     for (Player player : population.subList(1, population.size())) {
       PlayerStatisticsRunItem item = this.completedItem(run, player);

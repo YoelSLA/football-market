@@ -101,23 +101,21 @@ market:
 
 whoscored:
   statistics:
-    # Cuatro workers. Cada uno abre su propio contexto por sección y el navegador es único: el
-    # paralelismo no acelera la lectura de una tabla, solo reparte las cargas entre hilos. Medido el
-    # 2026-10-18: con el proveedor degradado, el recorrido completo de un jugador ronda los 17 s sin
-    # cortes y hasta 67 s cuando hay que agotar una espera de 45 s antes de reintentar la carga.
+    # Cuatro workers. Cada worker tiene su propia instancia de Playwright y su propio Chromium
+    # headed, confinada a su hilo; cada sección usa un BrowserContext independiente. La concurrencia
+    # es real: hasta cuatro navegaciones en vuelo, con el pacing de 1500 ms por worker. Medido el
+    # 2026-10-18: referencia histórica de 17 s sin cortes y hasta 67 s con recargas.
+    # Desde SPEC-012 (2026-10-27) no se reintenta dentro del POST ni se aplica deadline total.
     scraping-workers: 4
-    # El paralelismo lo define la maquina, no el proveedor: con 4 hilos y un intervalo de 1500 ms
-    # se sostiene ~2,7 peticiones por segundo. Cada peticion tarda ~400 ms, muy por debajo del
-    # intervalo, asi que en la practica hay una sola peticion en vuelo y no se acumula concurrencia.
-    # El limite observado del proveedor se manifesta como 502 y aparece con 6 peticiones
-    # simultaneas, no con el ritmo sostenido; por eso el ajuste es de workers e intervalo, y subir
-    # los workers por encima de 4 es contraproducente.
+    # El ritmo agregado esperado es ~2,7 inicios de navegación por segundo (4 workers con 1500 ms),
+    # no una única petición en vuelo. El limite observado del proveedor se manifiesta como 502 y
+    # aparece con 6 peticiones simultaneas, no con el ritmo sostenido; por eso el ajuste es de
+    # workers e intervalo, y subir los workers por encima de 4 es contraproducente.
     json-workers: 4
     # 1500 ms por hilo. Medido el 2026-10-16 sobre el feed real: sin 429 hasta 5,6 req/s y sin
     # errores en la zona de 2 req/s con pocas conexiones. Ver
     # specs/012-player-statistics-scraping/evidence/rate-limit-probe.md
     request-interval-ms: 1500
-    scraping-batch-timeout-ms: 1800000
     # 45 s por lectura de tabla: el proveedor degrada la tabla de detalle en ventanas de minutos y
     # con 20 s una de esas ventanas descartaba al jugador entero.
     navigation-timeout-ms: 45000

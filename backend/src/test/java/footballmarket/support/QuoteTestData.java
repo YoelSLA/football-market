@@ -103,7 +103,7 @@ public class QuoteTestData {
       return existing.getFirst();
     }
     PlayerStatisticsExtractionRun run =
-        new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null);
+        new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH);
     run.finish(
         ExtractionRunStatus.COMPLETED,
         Instant.EPOCH.plusSeconds(2),

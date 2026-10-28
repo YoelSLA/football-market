@@ -25,7 +25,7 @@ import org.springframework.web.client.RestClient;
  * <p>Usa el proveedor controlado de loopback y esperas sustituibles: nunca accede a Internet ni
  * depende de tiempos reales.
  */
-@org.junit.jupiter.api.Tag("unit")
+@org.junit.jupiter.api.Tag("lightweight")
 class WhoScoredStatisticsRequestPacerTest {
   private WhoScoredStatisticsProviderStub provider;
   private List<Long> waits;
@@ -103,8 +103,24 @@ class WhoScoredStatisticsRequestPacerTest {
   }
 
   @Nested
-  @DisplayName("Aplazamiento por Retry-After y corte de lote")
+  @DisplayName("Aplazamiento por Retry-After sin deadline de recorrido")
   class Deferral {
+    @Test
+    @DisplayName(
+        "Un aplazamiento mayor de treinta minutos se respeta sin repetir ni cortar el POST")
+    void defersBeyondFormerBudgetWithoutRetry() {
+      // Arrange
+      WhoScoredRequestPacer.StatisticsWorker worker = pacer.statisticsWorker(1);
+      pacer.defer("3600");
+      provider.enqueue(200, "application/json", "{}", null);
+      // Act
+      pacer.executeStatistics(
+          worker, null, () -> client.get().uri("/remaining").retrieve().toBodilessEntity());
+      // Assert
+      assertThat(waits).containsExactly(3_600_000L);
+      assertThat(provider.requests()).hasSize(1);
+    }
+
     @Test
     @DisplayName(
         "Un Retry-After numérico aplaza el siguiente inicio sin repetir la petición fallida")

@@ -73,8 +73,6 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
 
   @LocalServerPort private int port;
   @Autowired private WhoScoredRequestPacer pacer;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
-  @Autowired private footballmarket.repositories.PlayerRepository players;
   @MockitoSpyBean private WhoScoredProperties properties;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration scrapingIntegration;
   @MockitoBean private WhoScoredStatisticsIntegration jsonIntegration;
@@ -162,14 +160,11 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
     assertThat(identities.id()).isPositive();
   }
 
-  private PlayerStatisticsSyncResponseDTO postScraping(
-      RestClient api, String token, int maxPlayers) {
+  private PlayerStatisticsSyncResponseDTO postScraping(RestClient api, String token) {
     return api.post()
         .uri("/api/players/statistics/whoscored/sync/scraping")
         .headers(headers -> headers.setBearerAuth(token))
-        .body(
-            new PlayerStatisticsSyncRequestDTO(
-                LocalDate.now(CLOCK.withZone(ZoneOffset.UTC)), maxPlayers))
+        .body(new PlayerStatisticsSyncRequestDTO(LocalDate.now(CLOCK.withZone(ZoneOffset.UTC))))
         .retrieve()
         .body(PlayerStatisticsSyncResponseDTO.class);
   }
@@ -214,8 +209,8 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
       CLOCK.set(Instant.parse("2026-10-15T09:00:00Z"));
       when(scrapingIntegration.openSession())
           .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));
-      when(scrapingIntegration.scrape(any(), any(), any()))
-          .thenAnswer(invocation -> scraped(invocation.getArgument(1)));
+      when(scrapingIntegration.scrape(any(), any(), any(), any()))
+          .thenAnswer(invocation -> scraped(invocation.getArgument(3)));
       // El ritmo del canal JSON lo aporta el pacer real: la integración doblada no crea workers.
       when(jsonIntegration.newWorker()).thenAnswer(ignored -> pacer.statisticsWorker(1));
       when(jsonIntegration.fetch(any(), any()))
@@ -262,20 +257,7 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
     }
 
     private String tournamentOf(String providerPlayerId) {
-      Long playerId =
-          references
-              .findByProviderAndExternalId(
-                  footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
-              .orElseThrow()
-              .getPlayer()
-              .getId();
-      Long leagueId = players.findVisibleById(playerId).orElseThrow().getTeam().getLeague().getId();
-      return String.valueOf(
-          properties.competitions().stream()
-              .filter(competition -> competition.leagueId().equals(leagueId))
-              .findFirst()
-              .orElseThrow()
-              .tournamentId());
+      return footballmarket.support.StatisticsScrapingSamples.tournamentOf(providerPlayerId);
     }
 
     @Test
@@ -364,15 +346,15 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
       RestClient api = api();
       String token = authenticatedUser(api);
       confirmIdentities(api, token);
-      postScraping(api, token, 1);
+      postScraping(api, token);
 
       // Act
       PlayerStatisticsSyncResponseDTO json = postJson(api, token);
 
       // Assert
       assertThat(json.players().completed()).isEqualTo(5);
-      assertThat(coverage(api, token, "SCRAPING").completedPlayers()).isEqualTo(1);
-      assertThat(coverage(api, token, "SCRAPING").pendingPlayers()).isEqualTo(4);
+      assertThat(coverage(api, token, "SCRAPING").completedPlayers()).isEqualTo(5);
+      assertThat(coverage(api, token, "SCRAPING").pendingPlayers()).isZero();
     }
 
     @Test

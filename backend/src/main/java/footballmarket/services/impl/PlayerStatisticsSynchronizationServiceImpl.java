@@ -19,10 +19,8 @@ import footballmarket.services.internal.ExtractionRunManager;
 import footballmarket.services.internal.ExtractionWorkerPool;
 import footballmarket.services.internal.PlayerStatisticsEligibilitySelector;
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,7 +29,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 /**
- * Lote de scraping síncrono y reenrollable sobre la misma fecha y canal.
+ * Recorrido síncrono de todos los pendientes de una fecha y canal.
  *
  * <p>El navegador solo se abre cuando existe al menos un pendiente real, de modo que cero trabajo
  * se resuelve sin acceso al proveedor. Ninguna transacción permanece abierta durante el recorrido.
@@ -67,6 +65,8 @@ public class PlayerStatisticsSynchronizationServiceImpl
   private final Clock clock;
   private final JsonStatisticsUpdateService jsonUpdates;
   private final WhoScoredStatisticsIntegration jsonIntegration;
+  private final java.util.concurrent.locks.ReentrantLock scrapingLock =
+      new java.util.concurrent.locks.ReentrantLock();
 
   public PlayerStatisticsSynchronizationServiceImpl(
       PlayerStatisticsProperties properties,
@@ -94,44 +94,65 @@ public class PlayerStatisticsSynchronizationServiceImpl
     }
     LocalDate today = LocalDate.now(this.clock.withZone(ZoneOffset.UTC));
     LocalDate extractionDate = request.extractionDate() == null ? today : request.extractionDate();
-    if (extractionDate.isAfter(today)
-        || (request.maxPlayers() != null && request.maxPlayers() < 1)) {
+    if (extractionDate.isAfter(today)) {
       throw new PlayerStatisticsSynchronizationException();
     }
-    long budgetMillis = this.properties.scrapingBatchTimeoutMs();
-    Long runId =
-        this.runs
-            .open(extractionDate, MetricSource.SCRAPING, request.maxPlayers(), budgetMillis)
-            .getId();
-    boolean pending =
-        !this.selector.pendingPlayerIds(extractionDate, MetricSource.SCRAPING, 1).isEmpty();
-    if (!pending) {
-      return this.runs.close(runId, ExtractionRunStatus.COMPLETED, null, 0);
+    if (!this.scrapingLock.tryLock()) {
+      throw new footballmarket.services.exceptions.PlayerStatisticsSyncInProgressException();
     }
-    Instant deadline = Instant.now().truncatedTo(ChronoUnit.MICROS).plusMillis(budgetMillis);
-    try (PlayerStatisticsExtractionService.Batch batch = this.extraction.openBatch()) {
-      ExtractionBatchExecutor.Outcome outcome =
-          this.batches.execute(
-              batch,
-              runId,
-              extractionDate,
-              MetricSource.SCRAPING,
-              this.properties.scrapingWorkers(),
-              request.maxPlayers(),
-              deadline);
-      return this.runs.close(
-          runId,
-          outcome.interrupted() ? ExtractionRunStatus.INTERRUPTED : ExtractionRunStatus.COMPLETED,
-          outcome.failureCode(),
-          outcome.providerCalls());
-    } catch (HeadedBrowserUnavailableException unavailable) {
-      this.runs.close(runId, ExtractionRunStatus.INTERRUPTED, "HEADED_BROWSER_UNAVAILABLE", 0);
-      throw unavailable;
-    } catch (RuntimeException failure) {
-      // Una ejecucion que queda abierta bloquea la siguiente hasta vencer su presupuesto. Cualquier
-      // fallo inesperado cierra igualmente el lote, declarando lo que si se pudo confirmar.
-      this.runs.close(runId, ExtractionRunStatus.INTERRUPTED, "EXECUTION_INTERRUPTED", 0);
-      throw failure;
+    try {
+      Long runId = this.runs.open(extractionDate, MetricSource.SCRAPING, 0).getId();
+      PlayerStatisticsExtractionService.Batch batch = null;
+      RuntimeException failure = null;
+      ExtractionBatchExecutor.Outcome outcome = null;
+      try {
+        List<Long> pending =
+            this.selector.allPendingPlayerIds(extractionDate, MetricSource.SCRAPING);
+        if (!pending.isEmpty()) {
+          batch = this.extraction.openBatch();
+          try (PlayerStatisticsExtractionService.Batch resources = batch) {
+            outcome =
+                this.batches.execute(resources, runId, pending, this.properties.scrapingWorkers());
+          }
+        }
+      } catch (RuntimeException error) {
+        if (error instanceof HeadedBrowserUnavailableException
+            || error instanceof PlayerStatisticsSynchronizationException) {
+          failure = error;
+        } else {
+          failure = new PlayerStatisticsSynchronizationException();
+          failure.initCause(error);
+        }
+      }
+      String code =
+          failure instanceof HeadedBrowserUnavailableException
+              ? "HEADED_BROWSER_UNAVAILABLE"
+              : failure != null
+                  ? "EXECUTION_INTERRUPTED"
+                  : outcome == null ? null : outcome.failureCode();
+      PlayerStatisticsSyncSummary summary;
+      try {
+        summary =
+            this.runs.close(
+                runId,
+                failure != null || (outcome != null && outcome.interrupted())
+                    ? ExtractionRunStatus.INTERRUPTED
+                    : ExtractionRunStatus.COMPLETED,
+                code,
+                batch == null ? 0 : batch.providerCalls());
+      } catch (RuntimeException auditFailure) {
+        if (failure != null) {
+          failure.addSuppressed(auditFailure);
+          throw failure;
+        }
+        throw auditFailure;
+      }
+      if (failure != null) {
+        throw failure;
+      }
+      return summary;
+    } finally {
+      this.scrapingLock.unlock();
     }
   }
 
@@ -146,8 +167,7 @@ public class PlayerStatisticsSynchronizationServiceImpl
   @Override
   public PlayerStatisticsSyncSummary synchronizeJson() {
     LocalDate extractionDate = LocalDate.now(this.clock.withZone(ZoneOffset.UTC));
-    Long runId =
-        this.runs.open(extractionDate, MetricSource.JSON, null, JSON_RUN_BUDGET_MS).getId();
+    Long runId = this.runs.open(extractionDate, MetricSource.JSON, JSON_RUN_BUDGET_MS).getId();
     List<Long> pending = this.selector.allPendingPlayerIds(extractionDate, MetricSource.JSON);
     if (pending.isEmpty()) {
       return this.runs.close(runId, ExtractionRunStatus.COMPLETED, null, 0);

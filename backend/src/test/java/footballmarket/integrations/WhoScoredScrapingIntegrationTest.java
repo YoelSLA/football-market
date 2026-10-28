@@ -73,7 +73,7 @@ class WhoScoredScrapingIntegrationTest {
   }
 
   /** Prepara el panel de detalle: el doble de tabla cambia con la categoría seleccionada. */
-  private void configureDetail(Page page) {
+  private JSHandle configureDetail(Page page) {
     Locator tabs = mock(Locator.class);
     when(tabs.count()).thenReturn(1);
     when(page.locator("#player-tournament-stats-options")).thenReturn(tabs);
@@ -101,7 +101,10 @@ class WhoScoredScrapingIntegrationTest {
     when(container.count()).thenReturn(1);
     when(container.innerHTML()).thenReturn("tabla-" + selected.get());
     when(page.locator("#statistics-table-detailed")).thenReturn(container);
+    JSHandle render = mock(JSHandle.class);
+    when(page.evaluateHandle(anyString())).thenReturn(render);
     table(page, "#statistics-table-detailed table", null);
+    return render;
   }
 
   /**
@@ -188,7 +191,7 @@ class WhoScoredScrapingIntegrationTest {
     WhoScoredProperties provider = mock(WhoScoredProperties.class);
     when(provider.baseUrl()).thenReturn("https://provider.example");
     PlayerStatisticsProperties properties =
-        new PlayerStatisticsProperties(4, 4, 2500, 1800000, 20000, 20000, filter, true);
+        new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, filter, true);
     WhoScoredScrapingSectionNavigator navigator =
         new WhoScoredScrapingSectionNavigator(properties, pacer);
     return new WhoScoredStatisticsScrapingIntegration(
@@ -208,36 +211,143 @@ class WhoScoredScrapingIntegrationTest {
   @DisplayName("Recorrido headed en dos cargas")
   class Scraping {
     @Test
-    @DisplayName("Un timeout transitorio reintenta una vez en otro contexto respetando el ritmo")
-    void retriesTimeoutOnce() {
+    @DisplayName("Una categoría que agota su espera no se recarga ni cambia a otra categoría")
+    void doesNotRetryCategory() {
+      // Arrange
+      Page page = mock(Page.class);
+      JSHandle render = configureDetail(page);
+      AtomicLong time = new AtomicLong();
+      WhoScoredRequestPacer pacer = pacer(time);
+      PlayerStatisticsProperties properties =
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
+      WhoScoredScrapingSectionNavigator navigator =
+          new WhoScoredScrapingSectionNavigator(properties, pacer);
+      when(page.waitForFunction(anyString(), any(), any(Page.WaitForFunctionOptions.class)))
+          .thenReturn(null)
+          .thenThrow(new TimeoutError("recarga controlada"));
+      // Act / Assert
+      assertThatThrownBy(() -> navigator.chooseCategory(page, "aerial"))
+          .isInstanceOf(TimeoutError.class);
+      // Verify
+      verify(page.locator("#statistics-filter-detailed #category")).selectOption("aerial");
+      verify(page, never()).reload();
+      verify(render).evaluate("state => state.observer.disconnect()");
+      verify(render).dispose();
+    }
+
+    @Test
+    @DisplayName("Arma el observer antes del acumulado y conserva el timeout sin comparar HTML")
+    void waitsForAccumulationRender() {
+      // Arrange
+      Page page = mock(Page.class);
+      configureDetail(page);
+      selected.set("aerial");
+      Locator accumulation = page.locator("#statistics-filter-detailed #statsAccumulationType");
+      when(accumulation.inputValue()).thenReturn("0");
+      JSHandle render = mock(JSHandle.class);
+      when(page.evaluateHandle(anyString())).thenReturn(render);
+      AtomicLong time = new AtomicLong();
+      PlayerStatisticsProperties properties =
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
+      WhoScoredScrapingSectionNavigator navigator =
+          new WhoScoredScrapingSectionNavigator(properties, pacer(time));
+      // Act
+      navigator.chooseCategory(page, "aerial");
+      // Assert / Verify
+      org.mockito.InOrder order = inOrder(page, accumulation, render);
+      order.verify(page).evaluateHandle(contains("MutationObserver"));
+      order.verify(accumulation).selectOption("2");
+      ArgumentCaptor<Page.WaitForFunctionOptions> options =
+          ArgumentCaptor.forClass(Page.WaitForFunctionOptions.class);
+      order
+          .verify(page)
+          .waitForFunction(
+              contains("state.rendered"),
+              eq(List.of(render, "#statsAccumulationType", "2")),
+              options.capture());
+      assertThat(options.getValue().timeout).isEqualTo(20000);
+      order.verify(render).evaluate("state => state.observer.disconnect()");
+      order.verify(render).dispose();
+      verify(accumulation).selectOption("2");
+      verify(page, never()).reload();
+    }
+
+    @Test
+    @DisplayName("No vuelve a seleccionar filtros que ya tienen el valor solicitado")
+    void doesNotSelectUnchangedFilters() {
+      // Arrange
+      Page page = mock(Page.class);
+      configureDetail(page);
+      selected.set("aerial");
+      AtomicLong time = new AtomicLong();
+      PlayerStatisticsProperties properties =
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
+      WhoScoredScrapingSectionNavigator navigator =
+          new WhoScoredScrapingSectionNavigator(properties, pacer(time));
+      // Act
+      navigator.chooseCategory(page, "aerial");
+      // Verify
+      verify(page.locator("#statistics-filter-detailed #category"), never())
+          .selectOption(anyString());
+      verify(page.locator("#statistics-filter-detailed #statsAccumulationType"), never())
+          .selectOption(anyString());
+      verify(page, never()).evaluateHandle(anyString());
+    }
+
+    @Test
+    @DisplayName("Libera el observer ante fallo de selección sin ocultar el error original")
+    void preservesSelectionFailure() {
+      // Arrange
+      Page page = mock(Page.class);
+      JSHandle render = configureDetail(page);
+      Locator category = page.locator("#statistics-filter-detailed #category");
+      TimeoutError failure = new TimeoutError("selección controlada");
+      doThrow(failure).when(category).selectOption("aerial");
+      when(render.evaluate(anyString())).thenThrow(new PlaywrightException("cleanup controlado"));
+      AtomicLong time = new AtomicLong();
+      PlayerStatisticsProperties properties =
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
+      WhoScoredScrapingSectionNavigator navigator =
+          new WhoScoredScrapingSectionNavigator(properties, pacer(time));
+      // Act / Assert
+      assertThatThrownBy(() -> navigator.chooseCategory(page, "aerial")).isSameAs(failure);
+      // Verify
+      verify(render).dispose();
+      verify(category).selectOption("aerial");
+      verify(page, never()).reload();
+    }
+
+    @Test
+    @DisplayName("Un timeout falla sin abrir otro contexto ni reintentar la navegación")
+    void doesNotRetryTimeout() {
       // Arrange
       WhoScoredStatisticsPageStub stub = new WhoScoredStatisticsPageStub();
       Page failed = stub.enqueue(HTML, 200);
       when(failed.navigate(anyString(), any(Page.NavigateOptions.class)))
           .thenThrow(new TimeoutError("timeout controlado"));
-      Page recovered = stub.enqueue(HTML, 200);
-      configureSummary(recovered);
       AtomicLong time = new AtomicLong();
       WhoScoredRequestPacer pacer = pacer(time);
       PlayerStatisticsProperties properties =
-          new PlayerStatisticsProperties(4, 4, 2500, 1800000, 20000, 20000, false, true);
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
       WhoScoredScrapingSectionNavigator navigator =
           new WhoScoredScrapingSectionNavigator(properties, pacer);
       // Act
-      String html =
-          navigator.read(
-              stub.browser(),
-              "https://provider.example/players/123/show",
-              "initial",
-              Instant.now().plusSeconds(60),
-              pacer.statisticsWorker(2500),
-              () -> {},
-              (page, original) -> original);
+      assertThatThrownBy(
+              () ->
+                  navigator.read(
+                      stub.browser(),
+                      "https://provider.example/players/123/show",
+                      "initial",
+                      pacer.statisticsWorker(2500),
+                      () -> {},
+                      (page, original) -> original))
+          .isInstanceOfSatisfying(
+              WhoScoredStatisticsException.class,
+              failure -> assertThat(failure.getCode()).isEqualTo("PROVIDER_TIMEOUT"));
       // Assert
-      assertThat(html).isEqualTo(HTML);
-      assertThat(time.get()).isEqualTo(2500);
+      assertThat(time.get()).isZero();
       // Verify
-      verify(stub.browser(), times(2)).newContext();
+      verify(stub.browser()).newContext();
       for (BrowserContext context : stub.contexts()) {
         verify(context).close();
       }
@@ -282,10 +392,11 @@ class WhoScoredScrapingIntegrationTest {
       AtomicLong time = new AtomicLong();
       WhoScoredRequestPacer pacer = pacer(time);
       WhoScoredStatisticsScrapingIntegration integration = integration(pacer, filter);
+      Browser probe = mock(Browser.class);
       Playwright playwright = mock(Playwright.class);
       BrowserType chromium = mock(BrowserType.class);
       when(playwright.chromium()).thenReturn(chromium);
-      when(chromium.launch(any(BrowserType.LaunchOptions.class))).thenReturn(stub.browser());
+      when(chromium.launch(any(BrowserType.LaunchOptions.class))).thenReturn(probe, stub.browser());
       try (MockedStatic<Playwright> factory = mockStatic(Playwright.class)) {
         factory
             .when(() -> Playwright.create(any(Playwright.CreateOptions.class)))
@@ -293,7 +404,7 @@ class WhoScoredScrapingIntegrationTest {
         // Act
         WhoScoredScrapedPlayer result;
         try (WhoScoredStatisticsScrapingIntegration.Session session = integration.openSession()) {
-          result = integration.scrape(session, "123", Instant.now().plusSeconds(600));
+          result = integration.scrape(session, "123");
         }
         // Assert
         assertThat(result.rows()).hasSize(17);
@@ -306,8 +417,13 @@ class WhoScoredScrapingIntegrationTest {
         // Verify
         ArgumentCaptor<BrowserType.LaunchOptions> launch =
             ArgumentCaptor.forClass(BrowserType.LaunchOptions.class);
-        verify(chromium).launch(launch.capture());
-        assertThat(launch.getValue().headless).isFalse();
+        verify(chromium, times(2)).launch(launch.capture());
+        assertThat(launch.getAllValues())
+            .allSatisfy(options -> assertThat(options.headless).isFalse());
+        verify(probe, never()).newContext();
+        verify(probe).close();
+        verify(stub.browser()).close();
+        verify(playwright, times(2)).close();
         verify(stub.browser(), times(2)).newContext();
         for (BrowserContext context : stub.contexts()) {
           verify(context).close();
@@ -337,7 +453,7 @@ class WhoScoredScrapingIntegrationTest {
       AtomicLong time = new AtomicLong();
       WhoScoredRequestPacer pacer = pacer(time);
       PlayerStatisticsProperties properties =
-          new PlayerStatisticsProperties(4, 4, 2500, 1800000, 20000, 20000, false, true);
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
       WhoScoredScrapingSectionNavigator navigator =
           new WhoScoredScrapingSectionNavigator(properties, pacer);
       // Act / Assert
@@ -347,7 +463,6 @@ class WhoScoredScrapingIntegrationTest {
                       stub.browser(),
                       "https://provider.example/players/123/show",
                       "initial",
-                      Instant.now().plusSeconds(60),
                       pacer.statisticsWorker(2500),
                       () -> {},
                       (page, html) -> html))

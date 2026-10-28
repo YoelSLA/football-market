@@ -80,7 +80,7 @@ class PlayerStatisticsCoverageTest {
         .executeWithoutResult(
             status -> {
               PlayerStatisticsExtractionRun run =
-                  runs.saveAndFlush(new PlayerStatisticsExtractionRun(DATE, source, NOW, null));
+                  runs.saveAndFlush(new PlayerStatisticsExtractionRun(DATE, source, NOW));
               for (int index = 0; index < playerIds.size(); index++) {
                 PlayerStatisticsRunItem item =
                     new PlayerStatisticsRunItem(

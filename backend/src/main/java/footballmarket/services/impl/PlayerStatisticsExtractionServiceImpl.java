@@ -41,10 +41,23 @@ public class PlayerStatisticsExtractionServiceImpl implements PlayerStatisticsEx
     this.requireOutsideTransaction();
     WhoScoredStatisticsScrapingIntegration.Session session = this.browser.open();
     return new Batch() {
+      private final java.util.concurrent.atomic.AtomicLong calls =
+          new java.util.concurrent.atomic.AtomicLong();
+
       @Override
-      public Long extract(Long runId, Long playerId, Instant deadline) {
+      public Long extract(Long runId, Long playerId) {
         return PlayerStatisticsExtractionServiceImpl.this.extract(
-            session, runId, playerId, deadline);
+            session, runId, playerId, this.calls);
+      }
+
+      @Override
+      public long providerCalls() {
+        return this.calls.get();
+      }
+
+      @Override
+      public void releaseWorker() {
+        session.releaseWorker();
       }
 
       @Override
@@ -58,7 +71,7 @@ public class PlayerStatisticsExtractionServiceImpl implements PlayerStatisticsEx
       WhoScoredStatisticsScrapingIntegration.Session session,
       Long runId,
       Long playerId,
-      Instant deadline) {
+      java.util.concurrent.atomic.AtomicLong calls) {
     this.requireOutsideTransaction();
     String externalId =
         this.references
@@ -67,18 +80,18 @@ public class PlayerStatisticsExtractionServiceImpl implements PlayerStatisticsEx
             .getExternalId();
     Instant start = Instant.now();
     try {
-      WhoScoredScrapedPlayer scraped = this.integration.scrape(session, externalId, deadline);
-      java.util.List<PlayerMetricsContext> values = this.assembler.assemble(scraped);
-      if (deadline != null && !Instant.now().isBefore(deadline)) {
-        throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
-            "EXTRACTION_INTERRUPTED", null);
-      }
+      WhoScoredScrapedPlayer scraped =
+          this.integration.scrape(session, runId, playerId, externalId);
+      calls.addAndGet(scraped.providerCalls());
+      java.util.List<PlayerMetricsContext> values =
+          this.assembler.assemble(scraped, runId, playerId);
       Long itemId = this.writer.confirm(runId, playerId, externalId, start, Instant.now(), values);
       if (this.assembler.hasUnknownColumns(scraped)) {
         this.incidents.record(itemId, null, "PROVIDER_STRUCTURE_CHANGED", null, 1, Instant.now());
       }
       return itemId;
     } catch (footballmarket.integrations.exceptions.WhoScoredStatisticsException failure) {
+      calls.addAndGet(failure.getProviderCalls());
       footballmarket.models.enums.PlayerExtractionResult result =
           switch (failure.getCode()) {
             case "PROVIDER_BLOCKED" -> footballmarket.models.enums.PlayerExtractionResult.BLOCKED;

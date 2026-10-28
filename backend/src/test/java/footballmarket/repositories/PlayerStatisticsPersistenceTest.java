@@ -79,10 +79,10 @@ class PlayerStatisticsPersistenceTest {
                     player = players.findById(existingPlayerId).orElseThrow();
                   }
                   PlayerStatisticsExtractionRun run =
-                      runs.saveAndFlush(new PlayerStatisticsExtractionRun(date, source, NOW, null));
+                      runs.saveAndFlush(new PlayerStatisticsExtractionRun(date, source, NOW));
                   return new Fixture(run.getId(), player.getId());
                 });
-    this.bindTournament(fixture.playerId());
+    bindTournament(fixture.playerId());
     return fixture;
   }
 
@@ -101,7 +101,7 @@ class PlayerStatisticsPersistenceTest {
               ? new WhoScoredProperties.Competition(leagueId, Integer.parseInt(TOURNAMENT))
               : new WhoScoredProperties.Competition(leagueId + 100 + index, 100 + index));
     }
-    doReturn(bindings).when(this.properties).competitions();
+    doReturn(bindings).when(properties).competitions();
   }
 
   private void finishRun(Long runId) {
@@ -144,6 +144,56 @@ class PlayerStatisticsPersistenceTest {
   @Nested
   @DisplayName("Fila ancha por campaña y canal")
   class Persistence {
+    @Test
+    @DisplayName(
+        "Scraping cuenta valores no nulos y reconfirma en la misma fila un contexto sin valores")
+    void reconfirmsResolvedScrapingWithoutValues() {
+      // Arrange
+      Fixture first = prepare(MetricSource.SCRAPING, DATE, null);
+      Map<String, MetricResult> absent = new LinkedHashMap<>();
+      PlayerMetricsContext empty =
+          new PlayerMetricsContext(TOURNAMENT, "3", "2026", "2026/27", absent);
+      Long initialItem =
+          writer.confirm(
+              first.runId(), first.playerId(), "123", NOW, NOW.plusSeconds(1), List.of(empty));
+      Long rowId = statistics.findMetricsByCampaign(DATE, MetricSource.SCRAPING).getFirst().getId();
+      // Act
+      Long completedItem =
+          writer.confirm(
+              first.runId(),
+              first.playerId(),
+              "123",
+              NOW,
+              NOW.plusSeconds(1),
+              values("6.9033333333333333"));
+      // Assert
+      assertThat(items.findById(initialItem).orElseThrow().getResult())
+          .isEqualTo(PlayerExtractionResult.NO_DATA);
+      assertThat(items.findById(completedItem).orElseThrow().getResult())
+          .isEqualTo(PlayerExtractionResult.COMPLETED);
+      assertThat(statistics.findMetricsByCampaign(DATE, MetricSource.SCRAPING))
+          .singleElement()
+          .satisfies(
+              row -> {
+                assertThat(row.getId()).isEqualTo(rowId);
+                assertThat(row.getPresentMetrics()).isEqualTo(2);
+                assertThat(row.metricValue("whoscored_rating_average"))
+                    .isEqualTo(new BigDecimal("6.9033333333333333"));
+              });
+      // Verify: otro intento no puede degradar la confirmación satisfactoria.
+      assertThatThrownBy(
+              () ->
+                  writer.confirm(
+                      first.runId(),
+                      first.playerId(),
+                      "123",
+                      NOW,
+                      NOW.plusSeconds(1),
+                      List.of(empty)))
+          .isInstanceOf(PlayerStatisticsConfirmationException.class);
+      assertThat(items.findByRunIdOrderByPlayerIdAsc(first.runId())).hasSize(2);
+    }
+
     @Test
     @DisplayName("Audita códigos admitidos y rechaza contenido externo en código o sección")
     void recordsOnlySanitizedIncidents() {
@@ -358,7 +408,7 @@ class PlayerStatisticsPersistenceTest {
                     players.saveAndFlush(excluded);
                     return eligible.getId();
                   });
-      PlayerStatisticsPersistenceTest.this.bindTournament(otherId);
+      bindTournament(otherId);
       // Act
       List<Long> before =
           items.findPendingPlayerIds(

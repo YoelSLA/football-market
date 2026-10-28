@@ -145,7 +145,7 @@ class JsonStatisticsUpdateServiceTest {
   }
 
   private Long openRun(LocalDate date) {
-    return runs.open(date, MetricSource.JSON, null, 86_400_000L).getId();
+    return runs.open(date, MetricSource.JSON, 86_400_000L).getId();
   }
 
   private WhoScoredRequestPacer.StatisticsWorker worker() {

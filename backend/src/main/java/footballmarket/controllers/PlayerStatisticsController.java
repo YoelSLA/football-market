@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Frontera HTTP de los dos canales de estadísticas y de la consulta de cobertura.
  *
- * <p>La ruta determina el canal: el body solo puede acotar el lote de scraping y nunca cambia el
+ * <p>La ruta determina el canal: el body solo puede fijar la fecha de scraping y nunca cambia el
  * canal. El Controller valida estructura y transporte, y delega el caso de uso en la fachada.
  */
 @RestController
@@ -54,10 +54,10 @@ public class PlayerStatisticsController {
 
   @PostMapping("/sync/scraping")
   @Operation(
-      summary = "Ejecutar un lote de scraping de estadísticas",
+      summary = "Recorrer todos los pendientes de scraping de estadísticas",
       description =
-          "POST síncrono con body obligatorio. Fecha y máximo de jugadores opcionales; el máximo es "
-              + "global entre workers y 1 limita el lote a un único pendiente. No acepta identificadores "
+          "POST síncrono con body obligatorio y fecha opcional. Sin máximo ni deadline total; "
+              + "intenta una vez cada pendiente inicial. maxPlayers, incluso null, se rechaza. No acepta identificadores "
               + "de jugadores ni canal: la ruta fija SCRAPING. No confirma datos parciales.")
   @ApiResponse(
       responseCode = "200",
@@ -67,8 +67,7 @@ public class PlayerStatisticsController {
       content = @Content(schema = @Schema(implementation = PlayerStatisticsSyncResponseDTO.class)))
   @ApiResponse(
       responseCode = "400",
-      description =
-          "INVALID_STATISTICS_EXTRACTION_DATE, INVALID_STATISTICS_MAX_PLAYERS o INVALID_REQUEST",
+      description = "INVALID_STATISTICS_EXTRACTION_DATE o INVALID_REQUEST",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(
       responseCode = "401",

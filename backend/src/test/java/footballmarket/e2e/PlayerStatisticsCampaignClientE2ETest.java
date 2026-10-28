@@ -60,12 +60,6 @@ class PlayerStatisticsCampaignClientE2ETest {
   @MockitoSpyBean private WhoScoredProperties properties;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
 
-  @org.springframework.beans.factory.annotation.Autowired
-  private footballmarket.repositories.PlayerExternalReferenceRepository references;
-
-  @org.springframework.beans.factory.annotation.Autowired
-  private footballmarket.repositories.PlayerRepository players;
-
   @TestBean(name = "whoScoredRestClient", methodName = "providerClient")
   private RestClient whoScored;
 
@@ -152,12 +146,65 @@ class PlayerStatisticsCampaignClientE2ETest {
   @Nested
   @DisplayName("Modos del cliente de scraping")
   class Campaign {
+    @Test
+    @DisplayName("Con progreso incompleto el cliente no repite el POST; la reanudación es manual")
+    void incompleteResultNeedsManualResume() {
+      // Arrange
+      String token = authenticatedToken();
+      confirmIdentities(token);
+      java.util.concurrent.atomic.AtomicInteger attempts =
+          new java.util.concurrent.atomic.AtomicInteger();
+      org.mockito.Mockito.doAnswer(
+              invocation -> {
+                attempts.incrementAndGet();
+                String externalId = invocation.getArgument(3);
+                if ("1001".equals(externalId)) {
+                  throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
+                      "PROVIDER_TIMEOUT", null);
+                }
+                return scraped(externalId);
+              })
+          .when(integration)
+          .scrape(any(), any(), any(), any());
+      String[] arguments = {"--base-url", baseUrl()};
+      Map<String, String> environment = Map.of("FOOTBALL_MARKET_TOKEN", token);
+      // Act
+      int incomplete = client().run(arguments, environment);
+      // Assert
+      assertThat(incomplete).isEqualTo(1);
+      assertThat(attempts).hasValue(5);
+      // Verify: solo otra acción del operador intenta el único pendiente.
+      org.mockito.Mockito.doAnswer(
+              invocation -> {
+                attempts.incrementAndGet();
+                return scraped(invocation.getArgument(3));
+              })
+          .when(integration)
+          .scrape(any(), any(), any(), any());
+      assertThat(client().run(arguments, environment)).isZero();
+      assertThat(attempts).hasValue(6);
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"--mode", "--max-players"})
+    @DisplayName("Las opciones retiradas fallan localmente antes de contactar HTTP")
+    void rejectsRetiredOptions(String option) {
+      // Act
+      int exit =
+          client()
+              .run(
+                  new String[] {option, "1", "--base-url", "http://127.0.0.1:1"},
+                  Map.of("FOOTBALL_MARKET_TOKEN", "token-no-publicado"));
+      // Assert: 2 es error de opciones, no error de transporte (1).
+      assertThat(exit).isEqualTo(2);
+    }
+
     @BeforeEach
     void arrangeProvider() {
       when(integration.openSession())
           .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));
-      when(integration.scrape(any(), any(), any()))
-          .thenAnswer(invocation -> scraped(invocation.getArgument(1)));
+      when(integration.scrape(any(), any(), any(), any()))
+          .thenAnswer(invocation -> scraped(invocation.getArgument(3)));
     }
 
     /**
@@ -187,24 +234,11 @@ class PlayerStatisticsCampaignClientE2ETest {
 
     /** Competición del proveedor que la aplicación asocia a la liga del jugador indicado. */
     private String tournamentOf(String providerPlayerId) {
-      Long playerId =
-          references
-              .findByProviderAndExternalId(
-                  footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
-              .orElseThrow()
-              .getPlayer()
-              .getId();
-      Long leagueId = players.findVisibleById(playerId).orElseThrow().getTeam().getLeague().getId();
-      return String.valueOf(
-          properties.competitions().stream()
-              .filter(competition -> competition.leagueId().equals(leagueId))
-              .findFirst()
-              .orElseThrow()
-              .tournamentId());
+      return footballmarket.support.StatisticsScrapingSamples.tournamentOf(providerPlayerId);
     }
 
     @Test
-    @DisplayName("El modo campaña encadena lotes de un jugador hasta la cobertura completa")
+    @DisplayName("El cliente hace una petición que recorre todos los pendientes")
     void campaignHastaCoberturaCompleta() {
       // Arrange
       String token = authenticatedToken();
@@ -215,16 +249,7 @@ class PlayerStatisticsCampaignClientE2ETest {
       int exit =
           client()
               .run(
-                  new String[] {
-                    "--mode",
-                    "campaign",
-                    "--extraction-date",
-                    date,
-                    "--max-players",
-                    "1",
-                    "--base-url",
-                    baseUrl()
-                  },
+                  new String[] {"--extraction-date", date, "--base-url", baseUrl()},
                   Map.of("FOOTBALL_MARKET_TOKEN", token));
 
       // Assert
@@ -235,7 +260,7 @@ class PlayerStatisticsCampaignClientE2ETest {
     @DisplayName("Sin token en el entorno el cliente no ejecuta ningún lote")
     void sinTokenNoEjecuta() {
       // Act
-      int exit = client().run(new String[] {"--mode", "batch", "--base-url", baseUrl()}, Map.of());
+      int exit = client().run(new String[] {"--base-url", baseUrl()}, Map.of());
 
       // Assert
       assertThat(exit).isEqualTo(2);
@@ -249,7 +274,7 @@ class PlayerStatisticsCampaignClientE2ETest {
       int exit =
           client()
               .run(
-                  new String[] {"--mode", "batch", "--base-url", baseUrl()},
+                  new String[] {"--base-url", baseUrl()},
                   Map.of("FOOTBALL_MARKET_TOKEN", "token-invalido"));
 
       // Assert

@@ -130,21 +130,20 @@ class PlayerStatisticsControllerTest {
     }
 
     @Test
-    @DisplayName("Un máximo de un jugador se acepta y limita la selección total del lote")
-    void singlePlayerLimit() throws Exception {
-      when(synchronization.synchronizeScraping(any()))
-          .thenReturn(summary(MetricSource.SCRAPING, ExtractionRunStatus.COMPLETED, 2099, false));
+    @DisplayName("El máximo retirado se rechaza incluso si era válido en el contrato anterior")
+    void rejectsRetiredLimit() throws Exception {
       mvc.perform(
               post(BASE + "/sync/scraping")
                   .header("Authorization", authorization)
                   .contentType("application/json")
                   .content("{\"maxPlayers\":1}"))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.players.selected").value(105));
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+      verifyNoInteractions(synchronization);
     }
 
     @Test
-    @DisplayName("Una fecha ISO y un máximo positivo explícitos se envían a la fachada")
+    @DisplayName("Una fecha ISO explícita se envía a la fachada sin límite de jugadores")
     void explicitDateAndLimit() throws Exception {
       when(synchronization.synchronizeScraping(any()))
           .thenReturn(summary(MetricSource.SCRAPING, ExtractionRunStatus.COMPLETED, 0, true));
@@ -152,7 +151,7 @@ class PlayerStatisticsControllerTest {
               post(BASE + "/sync/scraping")
                   .header("Authorization", authorization)
                   .contentType("application/json")
-                  .content("{\"extractionDate\":\"2026-10-15\",\"maxPlayers\":1}"))
+                  .content("{\"extractionDate\":\"2026-10-15\"}"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.coverageComplete").value(true));
       org.mockito.ArgumentCaptor<footballmarket.models.records.PlayerStatisticsSyncRequest>
@@ -161,7 +160,6 @@ class PlayerStatisticsControllerTest {
                   footballmarket.models.records.PlayerStatisticsSyncRequest.class);
       org.mockito.Mockito.verify(synchronization).synchronizeScraping(request.capture());
       assertThat(request.getValue().extractionDate()).isEqualTo(LocalDate.of(2026, 10, 15));
-      assertThat(request.getValue().maxPlayers()).isEqualTo(1);
     }
 
     @Test
@@ -190,7 +188,7 @@ class PlayerStatisticsControllerTest {
     }
 
     @Test
-    @DisplayName("Un máximo no numérico se rechaza con INVALID_STATISTICS_MAX_PLAYERS")
+    @DisplayName("El campo retirado con texto se rechaza con INVALID_REQUEST")
     void invalidMaxPlayers() throws Exception {
       mvc.perform(
               post(BASE + "/sync/scraping")
@@ -198,7 +196,7 @@ class PlayerStatisticsControllerTest {
                   .contentType("application/json")
                   .content("{\"maxPlayers\":\"dos\"}"))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_MAX_PLAYERS"));
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
       verifyNoInteractions(synchronization);
     }
 
@@ -211,7 +209,7 @@ class PlayerStatisticsControllerTest {
                   .contentType("application/json")
                   .content("{\"maxPlayers\":0}"))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_MAX_PLAYERS"));
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
       verifyNoInteractions(synchronization);
     }
 
@@ -270,8 +268,8 @@ class PlayerStatisticsControllerTest {
   @DisplayName("Validación del cuerpo de scraping")
   class BodyValidation {
     @ParameterizedTest
-    @ValueSource(strings = {"0", "-1", "1.5", "1.0", "\"1\"", "2147483648", "true", "{}"})
-    @DisplayName("Rechaza máximos fuera del entero positivo sin coerción silenciosa")
+    @ValueSource(strings = {"null", "0", "-1", "1.5", "1.0", "\"1\"", "2147483648", "true", "{}"})
+    @DisplayName("Rechaza la presencia de maxPlayers, incluido null, antes del Service")
     void rechazaMaximosInvalidos(String maximum) throws Exception {
       // Act / Assert
       mvc.perform(
@@ -280,7 +278,7 @@ class PlayerStatisticsControllerTest {
                   .contentType("application/json")
                   .content("{\"maxPlayers\":" + maximum + "}"))
           .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_MAX_PLAYERS"));
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
       verifyNoInteractions(synchronization);
     }
 

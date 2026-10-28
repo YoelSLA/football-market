@@ -88,8 +88,14 @@ public class ScrapingMetricAssembler {
           "redcard");
 
   public List<PlayerMetricsContext> assemble(WhoScoredScrapedPlayer scraped) {
+    return this.assemble(scraped, null, null);
+  }
+
+  /** Correlaciona el rechazo de una celda con el intento local sin exponer identidad externa. */
+  public List<PlayerMetricsContext> assemble(
+      WhoScoredScrapedPlayer scraped, Long runId, Long playerId) {
     try {
-      return this.assembleValues(scraped);
+      return this.assembleValues(scraped, "run=" + runId + " player=" + playerId);
     } catch (InvalidPlayerException invalid) {
       LOG.warn("Ensamblado inconsistente: {}", invalid.getMessage());
       throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
@@ -97,7 +103,8 @@ public class ScrapingMetricAssembler {
     }
   }
 
-  private List<PlayerMetricsContext> assembleValues(WhoScoredScrapedPlayer scraped) {
+  private List<PlayerMetricsContext> assembleValues(
+      WhoScoredScrapedPlayer scraped, String diagnostic) {
     Map<String, List<WhoScoredScrapedContextRow>> groups = new LinkedHashMap<>();
     for (WhoScoredScrapedContextRow row : scraped.rows()) {
       groups
@@ -145,7 +152,8 @@ public class ScrapingMetricAssembler {
             continue;
           }
           String published = field.equals("apps") ? appearancesText(cell.text()) : cell.text();
-          MetricValueNormalizer.NormalizedMetricValue normalized = publishedValue(published);
+          MetricValueNormalizer.NormalizedMetricValue normalized =
+              diagnosticValue(published, row, field, diagnostic);
           MetricValue value;
           if (derived) {
             MetricDerivationApplier.DerivedMetricValue quotient =
@@ -249,19 +257,39 @@ public class ScrapingMetricAssembler {
   /**
    * Valor publicado en una tabla del proveedor.
    *
-   * <p>El guion y el vacío son el cero del proveedor: escribe {@code -} cuando el jugador notiene
-   * ese dato porque no ocurrió, y no cuando lo omite. Leerlo como ausencia perdería la diferencia
-   * entre "no marcó ningún gol" y "no lo sabemos", que es justamente la que necesita la valuación.
-   * La ausencia queda reservada a lo que el proveedor no declara, como las métricas del bloque
-   * estructurado o las que solo publica el canal JSON.
+   * <p>El guion y el vacío son ausencias, nunca ceros inferidos (FR-022/FR-031).
    */
   private static MetricValueNormalizer.NormalizedMetricValue publishedValue(String raw) {
-    String value = raw == null ? null : raw.strip();
-    if (value == null || value.isEmpty() || value.equals("-")) {
-      return new MetricValueNormalizer.NormalizedMetricValue(
-          BigDecimal.ZERO, MetricAvailability.PRESENT, 0);
+    return MetricValueNormalizer.normalize(raw);
+  }
+
+  /** Solo permite tokens cortos de aspecto numérico; el resto se informa sin texto externo. */
+  private static MetricValueNormalizer.NormalizedMetricValue diagnosticValue(
+      String raw, WhoScoredScrapedContextRow row, String field, String diagnostic) {
+    try {
+      return publishedValue(raw);
+    } catch (InvalidPlayerException invalid) {
+      String token =
+          raw != null
+                  && raw.length() <= 48
+                  && (raw.matches("[0-9\\s\\p{Z}.,%()+/\\-−–—]*")
+                      || Set.of("N/A", "n/a", "NaN", "null").contains(raw))
+              ? raw.codePoints()
+                  .mapToObj(code -> String.format("U+%04X", code))
+                  .collect(java.util.stream.Collectors.joining(" "))
+              : "[redacted]";
+      LOG.warn(
+          "{} worker={} evento=invalid-decimal section={} field={} competition={} season={} token={} length={}",
+          diagnostic,
+          Thread.currentThread().getName(),
+          row.section(),
+          field,
+          row.competitionId(),
+          row.seasonKey(),
+          token,
+          raw == null ? 0 : raw.length());
+      throw invalid;
     }
-    return MetricValueNormalizer.normalize(value);
   }
 
   /**

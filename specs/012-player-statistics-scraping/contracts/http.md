@@ -13,26 +13,27 @@
 
 | Método y ruta relativa | Canal fijo | Acceso externo |
 | --- | --- | --- |
-| POST `/sync/scraping` | `SCRAPING` | Lote Playwright/Chromium headed de 45 métricas, con fecha y máximo opcionales en body. |
+| POST `/sync/scraping` | `SCRAPING` | Todos los pendientes de la fecha en un POST Playwright/Chromium headed, 45 métricas; fecha opcional en body. |
 | POST `/sync/json` | `JSON` | Todos los pendientes JSON del día UTC; quince consultas conocidas por jugador, 57 métricas, sin navegador, parámetros ni body. |
 
-Son dos endpoints distintos bajo la base común. No existe un POST genérico `/sync`. Comparten la estructura de respuesta, no el request. La ruta fija el canal. Scraping ejecuta un lote limitado por cantidad opcional y presupuesto temporal (30 minutos por defecto). JSON recorre todos los elegibles pendientes del día UTC en una única petición síncrona, sin estos límites. Ninguna petición ejecuta ambos canales.
+Contrato objetivo actualizado el 2026-10-27, pendiente de implementación. Son endpoints distintos, sin POST genérico `/sync`. Comparten respuesta, no request; la ruta fija el canal. Ambos recorren todos sus pendientes en una petición síncrona sin límite total de tiempo o cantidad. Ninguna petición ejecuta ambos canales.
 
 ### Request de POST `/sync/scraping`
 
 ```json
 {
-  "extractionDate": "2026-10-15",
-  "maxPlayers": 1
+  "extractionDate": "2026-10-15"
 }
 ```
 
 - `extractionDate`: opcional; por defecto, fecha UTC actual; no puede ser futura.
-- `maxPlayers`: entero positivo opcional; omitido o null significa sin límite adicional de cantidad. Un valor de `1` limita la selección total a un jugador pendiente, no a uno por worker. Cero, negativos, fracciones, valores no numéricos o fuera del rango de entero de 32 bits son inválidos.
+- `maxPlayers` retirado: su presencia, incluso null, se rechaza con `400 INVALID_REQUEST` antes de invocar Service. No se ignora ni se interpreta como límite. Cambio incompatible explícito respecto del contrato anterior; todos los clientes deben retirar ese campo.
 - Body JSON obligatorio; `{}` usa los defaults anteriores. El Request DTO no declara `source`; la selección del canal solo depende de la ruta y ningún campo del body puede cambiarla.
 - No acepta IDs: el universo proviene del catálogo local.
-- Selecciona pendientes por ID local ascendente con referencia WhoScored confirmada. El máximo solicitado no garantiza procesar esa cantidad si no cabe en el plazo restante.
-- La espera y las operaciones externas se acotan al plazo restante; el trabajo interrumpido no confirma datos parciales. Las reglas de ritmo estimado y reanudación están en `../plan.md` y `../data-model.md`.
+- Resuelve fecha al inicio y fija un snapshot de todos los pendientes por ID local ascendente con referencia confirmada. Lo conserva al cruzar medianoche; cada ID se intenta una sola vez, sin retries de jugador, sección, categoría o navegación dentro del POST.
+- Timeouts por operación y ritmo siguen activos, sin deadline total ni corte por estimación. Un fallo individual no detiene el resto. Fallo global/interrupción cierra con pendientes explícitos y sin confirmar extracción incompleta por fallo.
+- Fallidos, no-data y jugadores sin ningún valor numérico obtenido permanecen pendientes para otro POST; una métrica opcional ausente no invalida el resto. Los completados no vuelven a consultarse esa fecha/canal. Sin pendientes: `200 COMPLETED`, seleccionados y llamadas cero, sin abrir navegador.
+- Cobertura al cerrar contra elegibles vigentes, incluidos nuevos elegibles posteriores al snapshot. Haber recorrido todos los seleccionados no garantiza cobertura completa.
 
 ### Request de POST `/sync/json`
 
@@ -62,11 +63,11 @@ Authorization: Bearer <token>
   "players": {
     "eligible": 2100,
     "excludedWithoutReference": 35,
-    "selected": 105,
-    "completed": 102,
+    "selected": 2100,
+    "completed": 2097,
     "withoutData": 1,
     "failed": 2,
-    "pending": 1998
+    "pending": 3
   },
 "metrics": {
     "present": 12000,
@@ -78,11 +79,11 @@ Authorization: Bearer <token>
 }
 ```
 
-El ejemplo es un lote de scraping sin límite de cantidad solicitado; los números son ilustrativos, no valores garantizados de métricas/llamadas. Con `maxPlayers = 1`, `players.selected` no supera 1. Para JSON, la misma estructura declara `source = "JSON"` y la fecha UTC fijada al iniciar; su selección comprende todos los pendientes del snapshot, sin corte temporal ni request DTO.
+El ejemplo ilustra un recorrido completo de scraping con tres pendientes no resueltos, no una medición de duración, métricas ni llamadas. Para JSON, la misma estructura declara `source = "JSON"` y fecha UTC inicial, sin request DTO. `players.selected` cuenta jugadores efectivamente intentados y auditados, no los del snapshot que no llegaron a iniciarse por interrupción. `selected = completed + withoutData + failed`; los no intentados permanecen incluidos en `pending`. `providerCalls` cuenta accesos realmente iniciados, no el número teórico de secciones.
 
 `status`:
 
-- `COMPLETED`: recorrido sin fallos o sin trabajo pendiente. En scraping puede quedar población pendiente por límite temporal/cantidad; en JSON se recorre todo el snapshot y la cobertura también considera nuevos elegibles.
+- `COMPLETED`: recorrido sin fallos (puede haber no-data), o sin trabajo pendiente; no garantiza cobertura completa. También considera nuevos elegibles al evaluar cobertura, sin corte por límite temporal/cantidad.
 - `PARTIAL`: al menos un jugador confirmado y uno fallido.
 - `FAILED`: había jugadores seleccionados y no se confirmó ninguno por fallo. Cero trabajo con cobertura completa no es fallo.
 - `INTERRUPTED`: cierre controlado tras interrupción.
@@ -94,8 +95,7 @@ El ejemplo es un lote de scraping sin límite de cantidad solicitado; los númer
 | HTTP | `code` | Condición |
 | --- | --- | --- |
 | 400 | `INVALID_STATISTICS_EXTRACTION_DATE` | Solo scraping: fecha futura o formato inválido. |
-| 400 | `INVALID_STATISTICS_MAX_PLAYERS` | Solo scraping: `maxPlayers` no es un entero positivo representable. |
-| 400 | `INVALID_REQUEST` | Scraping: body requerido ausente o JSON malformado. JSON: query parameters o body no vacío. |
+| 400 | `INVALID_REQUEST` | Scraping: body requerido ausente, JSON malformado o presencia del campo retirado `maxPlayers`. JSON: query parameters o body no vacío. |
 | 401 | gestionado por seguridad | JWT ausente, expirado o inválido. |
 | 409 | `PLAYER_STATISTICS_SYNC_IN_PROGRESS` | Ya existe una ejecución activa para el canal. |
 | 500 | `PLAYER_STATISTICS_SYNC_FAILED` | Fallo interno antes de emitir resumen. |
@@ -105,11 +105,11 @@ Los fallos individuales se reflejan en el resumen `200` si la ejecución pudo ce
 
 `INVALID_STATISTICS_SOURCE` corresponde exclusivamente al filtro de `GET /coverage`, no a los POST con canal fijo. La operación de ambos POST está destinada al cliente del desarrollador y conserva la autenticación de catálogo, sin un rol nuevo.
 
-## Cliente operativo de scraping: un lote o campaña
+## Cliente operativo de scraping: una petición
 
-El cliente del desarrollador usa exclusivamente `/sync/scraping`, resuelve la fecha una vez y envía solo `extractionDate` y `maxPlayers`. En modo `batch` realiza una petición. En modo `campaign` consulta primero `/coverage?source=SCRAPING` y encadena peticiones de la misma fecha mientras disminuyan los pendientes. Si ya no hay pendientes, no realiza un POST innecesario. JSON se invoca directamente una vez sin body ni parámetros; no requiere este cliente ni encadenamiento externo.
+El cliente usa exclusivamente `/sync/scraping`, resuelve la fecha una vez y envía solo `extractionDate`. Hace un único POST; desaparecen `--mode` y `--max-players` y se rechazan localmente antes de HTTP. JWT desde entorno, nunca impreso. JSON conserva su POST directo sin entrada.
 
-Solo `coverageComplete = true` acredita éxito de campaña. Sin progreso, ante `FAILED`, `INTERRUPTED`, fallo HTTP/transporte o interrupción local, termina con campaña incompleta y código distinto de cero, sin repetir automáticamente peticiones de resultado incierto. Un lote `PARTIAL` con reducción de pendientes permite continuar. La cobertura local confirmada permanece disponible para una reanudación manual posterior del cliente. La falta de datos o los errores persistentes no se ocultan como cobertura completa.
+Solo `coverageComplete = true` acredita éxito de campaña (salida 0 del CLI). Si quedan pendientes, hay error HTTP/transporte o interrupción, salida distinta de cero sin repetir el POST, aunque haya progreso. El operador puede invocar otra petición para la misma fecha. Cliente y proxy deben permitir una conexión prolongada; perder la respuesta no implica que el servidor no haya confirmado datos. Consultar cobertura antes de decidir una nueva petición, sin reintento automático.
 
 ## GET `/coverage`
 

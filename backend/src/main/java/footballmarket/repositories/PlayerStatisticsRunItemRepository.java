@@ -27,6 +27,9 @@ public interface PlayerStatisticsRunItemRepository
 
   List<PlayerStatisticsRunItem> findByRunIdOrderByPlayerIdAsc(Long runId);
 
+  boolean existsByPlayerIdAndExtractionDateAndSourceAndResult(
+      Long playerId, LocalDate extractionDate, MetricSource source, PlayerExtractionResult result);
+
   List<PlayerStatisticsRunItem> findByExtractionDateAndSourceAndResultOrderByFinishedAtDescIdDesc(
       LocalDate extractionDate,
       MetricSource source,

@@ -71,23 +71,17 @@ public class PlayerStatisticsExtractionRun {
   private long providerCalls;
 
   private String failureCode;
-  private Integer maxPlayers;
 
   protected PlayerStatisticsExtractionRun() {}
 
   public PlayerStatisticsExtractionRun(
-      LocalDate extractionDate, MetricSource source, Instant startedAt, Integer maxPlayers) {
-    if (extractionDate == null
-        || source == null
-        || startedAt == null
-        || (maxPlayers != null && maxPlayers < 1)
-        || (source == MetricSource.JSON && maxPlayers != null)) {
+      LocalDate extractionDate, MetricSource source, Instant startedAt) {
+    if (extractionDate == null || source == null || startedAt == null) {
       throw new InvalidPlayerException("La ejecución de estadísticas es inconsistente");
     }
     this.extractionDate = extractionDate;
     this.source = source;
     this.startedAt = startedAt;
-    this.maxPlayers = maxPlayers;
     this.status = ExtractionRunStatus.RUNNING;
   }
 
@@ -125,8 +119,7 @@ public class PlayerStatisticsExtractionRun {
             notDerivableMetrics,
             providerCalls)
         || selectedPlayers != completedPlayers + noDataPlayers + failedPlayers
-        || pendingPlayers > eligiblePlayers
-        || (this.maxPlayers != null && selectedPlayers > this.maxPlayers)) {
+        || pendingPlayers > eligiblePlayers) {
       throw new InvalidPlayerException("Los resultados de estadísticas son inconsistentes");
     }
     this.status = status;

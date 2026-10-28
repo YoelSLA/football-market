@@ -143,7 +143,7 @@ class PlayerStatisticsSecurityIntegrationTest {
               post(BASE + "/sync/scraping")
                   .header("Authorization", authorization)
                   .contentType("application/json")
-                  .content("{\"maxPlayers\":1}"))
+                  .content("{}"))
           .andExpect(status().isOk());
     }
   }

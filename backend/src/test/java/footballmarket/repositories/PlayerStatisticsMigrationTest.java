@@ -64,6 +64,24 @@ class PlayerStatisticsMigrationTest {
   @DisplayName("Restricciones reales de campaña y precisión decimal")
   class Migration {
     @Test
+    @DisplayName("El esquema ya no contiene la columna retirada max_players")
+    void removesRetiredMaximum() throws Exception {
+      // Arrange
+      try (Connection connection = connection("statistics_no_maximum");
+          Statement statement = connection.createStatement()) {
+        // Act
+        try (ResultSet columns =
+            statement.executeQuery(
+                "SELECT count(*) FROM information_schema.columns WHERE table_schema='statistics_no_maximum'"
+                    + " AND table_name='player_statistics_extraction_runs' AND column_name='max_players'")) {
+          // Assert
+          columns.next();
+          assertThat(columns.getLong(1)).isZero();
+        }
+      }
+    }
+
+    @Test
     @DisplayName("La colisión al confirmar revierte todos los datos nuevos de la transacción")
     void rollsBackPartialConfirmation() throws Exception {
       // Arrange

@@ -810,3 +810,577 @@ este historial. No declarar SYNCED hasta completar la conciliación remota.
 - Base de datos: no se inspecciono ninguna. Si player_statistics ya estuviera aplicada en alguna
   base, el responsable debe detener el despliegue y revisar lyway_schema_history antes de
   aplicar, conforme a la seccion de remediacion de lyway-migrations.md.
+
+## 2026-10-25 - IMPLEMENT AUTHORIZATION acotada a la corrección de concurrencia (T094)
+
+- Feature: `012-player-statistics-scraping`. Reingreso a IMPLEMENT por defecto de implementación,
+  no por alcance funcional nuevo. No se crea SPEC nueva.
+- Gate: IMPLEMENT AUTHORIZATION.
+- Result: AUTHORIZED LOCAL, acotada.
+- Validated by: HUMAN.
+- Responsable de la decisión: usuario de esta conversación.
+- Evidencia humana: respuesta explícita «Sí, solo código (T094)» a la pregunta que describía el
+  alcance T094–T096, sus límites y el control ejecutable permitido.
+- Alcance autorizado: únicamente T094 — código productivo del ciclo de vida por worker y los
+  comentarios de `application.yml`. Incluye `WhoScoredStatisticsScrapingIntegration`,
+  `WhoScoredScrapingSectionNavigator`, `ExtractionWorkerPool`, `PlayerStatisticsExtractionService`,
+  `PlayerStatisticsExtractionServiceImpl`, `ExtractionBatchExecutor` y `application.yml` (solo
+  comentarios).
+- Exclusiones explícitas: T095 (ajuste de `WhoScoredScrapingIntegrationTest` y tests nuevos de
+  concurrencia y de pool) y T096 (alineación de `research.md`, `plan.md`, `tasks.md`,
+  `contracts/whoscored.md`, `quickstart.md` y `docs/backend/technologies.md`) quedan sin
+  autorización. No se autoriza campaña, base de datos, contrato HTTP, persistencia,
+  migraciones, workers, intervalo, headless, User-Agent ni las deudas TD-019/TD-020.
+- Hallazgo que motiva la corrección: el run SCRAPING del 2026-10-25 agotó su deadline con items
+  que arrancaron juntos y terminaron escalonados. `synchronized (browser)` en
+  `WhoScoredScrapingSectionNavigator.read` abarcaba navegación, esperas, recorrido de las
+  dieciséis categorías y cierre del contexto, y `Session` compartía un único `Browser` entre los
+  cuatro workers.
+- Causa raíz: Playwright Java es afín a su hilo; compartir una instancia entre workers obliga a
+  serializar, lo que contradice `plan.md` §Technical Constraints y FR-018/FR-012.
+- Decisión autorizada: una instancia de Playwright y un `Browser` por worker, creada y cerrada en
+  su hilo, con sondeo headed al abrir la sesión y `BrowserContext` independiente por sección.
+- Base verificada antes de modificar código: rama local `fix/012-scraping-parallel-workers`
+  creada desde `origin/dev` (`ff4fab0`); SPEC-012 integrada en `origin/dev` por el merge
+  `91ae948` (PR #36); `git status --short` sin cambios; artefactos de la Feature presentes.
+- Consecuencia declarada: hasta que se autorice T095, `WhoScoredScrapingIntegrationTest` conserva
+  expectativas del navegador compartido y no refleja el nuevo ciclo de vida; no se ejecutan tests
+  en esta operación y TESTING no puede aprobarse con esas expectativas desalineadas.
+- Verificación permitida: `gradlew.bat build -x test` desde `backend/`. El build no acredita
+  tests ni comportamiento.
+- Estado de gates: IMPLEMENT acotado autorizado; CODE REVIEW y TESTING pendientes. La
+  autorización histórica de US01/US02/US03 no se reutiliza para este cambio de diseño.
+- Seguimiento operativo: no consultado en esta sesión. No se afirma sincronización ni se
+  inventan IDs, tarjetas o estados remotos.
+- Siguiente acción permitida: implementar T094 y detenerse; solicitar autorización separada para
+  T095 y T096.
+
+## 2026-10-25 - IMPLEMENT AUTHORIZATION de los tests de la corrección (T095)
+
+- Feature: `012-player-statistics-scraping`. Complemento de la autorización acotada anterior.
+- Gate: IMPLEMENT AUTHORIZATION.
+- Result: AUTHORIZED LOCAL.
+- Validated by: HUMAN.
+- Responsable de la decisión: usuario de esta conversación.
+- Evidencia humana literal: «autorizo T095».
+- Alcance autorizado: T095 — ajuste de `WhoScoredScrapingIntegrationTest` al ciclo de vida de
+  sondeo + navegador por worker, nuevo `WhoScoredScrapingConcurrencyTest` (dos workers leen a la
+  vez con navegadores distintos; aislamiento y cierre por hilo) y nuevo `ExtractionWorkerPoolTest`
+  (cleanup por hilo, espera acotada de cierre, propagación del primer fallo). Incluye los ajustes
+  mínimos en dobles y en otros tests que el cambio de `Session.browser` a método o el `default
+  releaseWorker()` exijan para compilar y mantener sus expectativas.
+- Exclusiones: T096 (documentación de `research.md`, `plan.md`, `tasks.md`,
+  `contracts/whoscored.md`, `quickstart.md`, `docs/backend/technologies.md`) continúa sin
+  autorización. No se modifica código productivo, contrato HTTP, persistencia, configuración
+  funcional, campaña ni base de datos.
+- Base evaluada: diff local de T094 sobre la rama `fix/012-scraping-parallel-workers`, con build
+  `-x test` satisfactorio; sin commit creado. El evento anterior ya declaró que el test existente
+  conserva expectativas del navegador compartido.
+- Condición de ejecución: los tests se escriben y ajustan, pero no se ejecutan. La ejecución y su
+  evidencia siguen siendo del usuario. TESTING no se aprueba con esta autorización.
+- Verificación permitida: `gradlew.bat build -x test` desde `backend/`.
+- Estado de gates: IMPLEMENT de T094 y T095 autorizado; T096 sin autorización. CODE REVIEW y
+  TESTING pendientes.
+- Seguimiento operativo: no consultado en esta sesión; no se afirma sincronización.
+- Siguiente acción permitida: completar T095 y detenerse; solicitar autorización separada para
+  T096.
+
+## 2026-10-25 - IMPLEMENT AUTHORIZATION de la trazabilidad documental (T096)
+
+- Feature: `012-player-statistics-scraping`. Cierre documental de la corrección de concurrencia.
+- Gate: IMPLEMENT AUTHORIZATION.
+- Result: AUTHORIZED LOCAL.
+- Validated by: HUMAN.
+- Responsable de la decisión: usuario de esta conversación.
+- Evidencia humana literal: «autorizo T096».
+- Alcance autorizado: T096 — alinear con el navegador por worker `research.md`, `plan.md`,
+  `tasks.md` (bloque de corrección T094–T096, sin renumerar tareas existentes),
+  `contracts/whoscored.md`, `quickstart.md` y `docs/backend/technologies.md`.
+- Exclusiones: no se modifica código productivo, tests, contrato HTTP, persistencia,
+  migraciones, configuración funcional, campaña ni base de datos. No se ejecutan tests.
+- Base evaluada: T094 y T095 completados sobre `fix/012-scraping-parallel-workers`; build
+  `gradlew.bat build -x test` satisfactorio y clasificación de tests válida. Los tests no se
+  ejecutaron.
+- Verificación permitida: `gradlew.bat build -x test` desde `backend/` si el cambio documental
+  afecta archivos alcanzados por el build. El build no acredita tests ni comportamiento.
+- Estado de gates: IMPLEMENT de T094, T095 y T096 autorizado. CODE REVIEW y TESTING pendientes;
+  TESTING no se aprueba por completar la documentación.
+- Seguimiento operativo: no consultado en esta sesión; no se afirma sincronización.
+- Siguiente acción permitida: completar T096 y detenerse. Cualquier CODE REVIEW o TESTING
+  requiere decisión humana separada.
+
+## 2026-10-26 - IMPLEMENT AUTHORIZATION de instrumentación diagnóstica
+
+- Feature: `012-player-statistics-scraping`. Diagnóstico de rendimiento y fallos del scraping headed.
+- Gate: IMPLEMENT AUTHORIZATION.
+- Result: AUTHORIZED LOCAL.
+- Validated by: HUMAN.
+- Responsable de la decisión: usuario de esta conversación.
+- Evidencia humana literal: «Diseña la mejora para conocer mas en profundidad que problasm hay, si hay que agregar logs en el codigo no hay problema. Agregalos y avisame que ejecuto el endpoint y te paso la respuesta de la terminal»; delimitación posterior: «Solo en la implementacion, no hace falta tests que testeen el diagnostico».
+- Alcance autorizado: instrumentación de logs de scraping correlacionados por run, jugador local, worker, sección/fase y duración; no registrar URL, JWT, HTML ni ID externo del proveedor. Ajustes mínimos de firmas y llamadas necesarios para transportar el contexto de diagnóstico.
+- Exclusiones: no cambiar estrategia de carga, timeouts, retries, pacing, comportamiento funcional, persistencia, contrato HTTP ni configuración; no agregar tests cuyo propósito exclusivo sea comprobar mensajes de diagnóstico; no ejecutar tests.
+- Siguiente acción permitida: implementar la instrumentación y detenerse. CODE REVIEW y TESTING permanecen pendientes.
+
+## 2026-10-27 — Preparación autorizada de scraping sin lotes
+
+- Feature: `012-player-statistics-scraping`; rama de trabajo `fix/012-scraping-parallel-workers`.
+- Responsable de decisiones: usuario de esta conversación. Evidencia literal: «Perfecto, proceda con lo pendiente porfavor hasta el analyze.»; ante advertencia de persistencia del selector respondió «Si, no hay que tocar codigo hasta alinear la spec con lo nuevo. Aunque una vez implementado habra cambios post prueba y se requerira una nueva alineacion.»
+- Alcance autorizado: Plan, Checklists, Tasks y Analyze para el cambio previamente aclarado; selección persistente de SPEC-012 en `.specify/feature.json`. No autoriza IMPLEMENT, tests, campaña, SQL, commits ni seguimiento remoto.
+- Clarify integrado en `spec.md`: POST síncrono completo, sin lotes/maxPlayers/deadline total; tentativa única por pendiente, sin retries de scraping; fallos/no-data/sin valores quedan para otro POST; correcciones solo de síntomas observados con causa investigada antes de corregir.
+- Plan ejecutado conforme a `.opencode/commands/speckit.plan.md`, con `setup-plan.sh --json` y selección explícita, que conservó el plan existente. Fuentes alineadas: `plan.md`, `research.md`, `data-model.md`, `contracts/http.md`, `contracts/whoscored.md` y `quickstart.md`. Constitution Check pre/post documental; sin nuevas tecnologías ni cambio funcional JSON/identidad.
+- Decisiones técnicas derivadas: snapshot único, sin recuperar run vivo por edad en instancia única, no-data aun con contexto resuelto y reconfirmación sin éxito previo; retiro contractual explícito y adaptación de CLI a un POST. No se atribuye causa al rechazo decimal o excepción de cierre sin evidencia.
+- Checklists: generación real con `check-prerequisites.sh --json --template checklist-template`; creado `checklists/synchronous-scraping.md`, 16 criterios generales/API/datos/resiliencia/seguridad. Evaluación asistida con soporte documental 16/16; marcadores 0/16, aceptación del revisor pendiente. Histórico `requirements-quality.md` preservado, sin reutilizar su aceptación para este alcance.
+- Tasks ejecutado conforme al comando local, con `setup-tasks.sh --json`; preservados T001–T096 y sus marcas históricas; añadidos T097–T109 pendientes, con sustitución por impacto y dependencias. Ninguna tarea nueva marcada ni código modificado por esta preparación.
+- Vigencia: Analyze anterior y autorizaciones históricas no acreditan el nuevo recorrido ni sus correcciones. IMPLEMENT AUTHORIZATION para este alcance: NONE; CODE REVIEW/TESTING/cierre pendientes, sin invalidar alcances históricos no afectados ni borrar evidencia.
+- Seguimiento operativo GitHub Issues/Projects: no consultado ni modificado; estado no verificado, sincronización PENDING. Las notas Trello precedentes son históricas, no instrucciones vigentes.
+- Próxima operación: Analyze estrictamente de lectura. El resultado se comunica en el informe, no se presume por estos artefactos.
+- Cambios posteriores a pruebas: ante feedback, clasificar defecto de implementación frente a cambio funcional; actualizar solo artefactos impactados y repetir Analyze/autorizaciones por impacto cuando corresponda. No se interpreta esta previsión como permiso futuro para implementar ni alinear la spec silenciosamente al código.
+
+## 2026-10-27 — Analyze sin blockers y estado SDD Ready for implementation
+
+- Feature: `012-player-statistics-scraping`; rama activa `fix/012-scraping-parallel-workers`, asociada a esta misma SPEC para el cambio correctivo/refactor.
+- Operación: `/speckit.analyze`, ejecutada en modo estrictamente de lectura después de la corrección de I1.
+- Resultado observado: 0 blockers CRITICAL, 0 HIGH; 2 hallazgos LOW editoriales (C1, nota de propiedad de marcadores; C2, aclaración entre rama de la spec y rama activa). No se identificaron brechas materiales de cobertura.
+- Métricas del informe: 79 requisitos (66 FR y 13 SC), 109 tareas (T001–T109). El informe revisó la cobertura semánticamente; no atribuye ejecución de tests ni verificación de implementación.
+- C1 y C2 se corrigieron después del Analyze como cambios editoriales, sin impacto en requisitos, diseño, cobertura ni orden de tareas. No se repite Analyze por no existir impacto material.
+- Decisión de estado: a solicitud explícita del usuario, `spec.md` pasa a `Ready for implementation`, conforme a `specs/README.md`. El estado acredita preparación SDD, no inicio de IMPLEMENT ni autorización para el nuevo alcance T097–T109.
+- IMPLEMENT AUTHORIZATION para T097–T109: NONE. CODE REVIEW, TESTING y FEATURE COMPLETION AUTHORIZATION: pendientes conforme a su alcance.
+- Seguimiento operativo: no verificado ni modificado en esta operación; no se afirma sincronización ni estado remoto.
+- Verificación: solo revisión documental y `git diff --check`; sin tests ni builds.
+- Próxima acción permitida: presentar y obtener autorización humana explícita de IMPLEMENT para el alcance propuesto antes de escribir código.
+
+## 2026-10-27 — Autorización vigente e inicio de IMPLEMENT T097–T109
+
+- Responsable: usuario de esta conversación. Evidencia literal: «Okey chat, te autorizo a implementar los cambios que hubo en la SPEC012.»; tras registrar Analyze: «Listo, se supone que podes continuar ya.»
+- Alcance: T097–T109 del cambio de scraping síncrono sin lotes, incluidos consumidores, persistencia, cliente, tests a escribir y documentación. Se conserva JSON e identidad sin cambios funcionales.
+- Base releída: Analyze sin blockers registrado arriba, checklist synchronous-scraping 16/16 aceptado y tasks vigentes. Prerrequisitos oficiales satisfactorios, FEATURE_DIR resuelto a SPEC-012.
+- Inicio efectivo: IMPLEMENT en rama `fix/012-scraping-parallel-workers`, preservando todos los cambios locales preexistentes. Sin commits, push, campaña, acceso a DB ni ejecución de tests.
+- CODE REVIEW, TESTING y cierre: pendientes. Seguimiento remoto no consultado ni modificado; sincronización PENDING.
+
+## 2026-10-27 — Entrega técnica parcial de IMPLEMENT T097–T109
+
+### Estado y controles observados
+
+- Alcance técnico implementado: T097–T099, T101, T102 y T104. Avance parcial en las demás tareas según `tasks.md`; no se declara completada la implementación global.
+- Control permitido: `gradlew.bat build -x test` desde `backend/`, configuración Gradle inspeccionada antes de ejecutarlo. Último resultado: **BUILD SUCCESSFUL en 11 s**, 11 tareas (7 ejecutadas, 4 up-to-date); clasificación estática de 129 clases válida. Hubo intentos previos fallidos por formato introducido durante la edición; corregidos mediante patches de las fuentes, sin ejecutar `spotlessApply` ni controles separados. Compilación productiva con aviso de API deprecada, no error.
+- Migración generada con la tarea oficial `createMigration -PmigrationDescription=remove_statistics_max_players`: `V20261027162044__remove_statistics_max_players.sql`. Solo creada y editada; no ejecutada sobre ninguna DB. El drop de columna PostgreSQL retira también los tres checks locales dependientes; las migraciones anteriores no cambian.
+- Tests: escritos/ajustados, **no ejecutados ni compilados** por el agente. No campaña, aplicación, navegador real, proveedor real, DB externa, commits ni push. Prerrequisitos Spec Kit oficiales satisfactorios; sin `extensions.yml` ni hooks de implementación encontrados. Ignore existente protege build, secretos y capturas.
+- CODE REVIEW: PENDING, sin transición global a revisión porque faltan tareas. TESTING y FEATURE COMPLETION: PENDING. IMPLEMENT autorizado continúa vigente para el mismo alcance; no se alteran aprobaciones históricas no afectadas. Seguimiento GitHub remoto no consultado ni modificado: estado desconocido, sincronización PENDING.
+
+### Informe de código parcial (no aprobación de CODE REVIEW)
+
+**Funcionamiento:** la fachada fija fecha y obtiene exclusión de scraping en la instancia única. Abre run, toma una sola instantánea ordenada de pendientes y no abre navegador si está vacía. Workers consumen IDs una vez, sin capacidad estimada, máximo, deadline de campaña ni retries de scraping. Se conservan timeouts externos y pacing/Retry-After. Cada fallo individual queda auditado sin frenar restantes; pérdida del navegador o imposibilidad de auditoría detienen el recorrido. Finalizan extracción y limpieza antes de cerrar auditoría y liberar exclusión. JSON conserva su recuperación, retries y conteos anteriores.
+
+**Decisiones que revisar:**
+
+1. `PlayerStatisticsSyncRequestDTO.rejectRetiredField` rechaza presencia de `maxPlayers`, incluso null, antes de Service; no se reintroduce el límite en Model, configuración ni CLI.
+2. `synchronizeScraping` mantiene exclusión durante workers/cleanup/auditoría; `ExtractionRunManager.open/recover` no usa antigüedad en scraping. Es diseño de instancia única, no soporte multiinstancia.
+3. `ExtractionWorkerPool.forEach` usa una tarea duradera por worker y hace cleanup antes de completar el Future. Shutdown normal no interrumpe el driver. La interrupción externa deja de seleccionar y espera el cierre afín al hilo. Los fallos secundarios quedan suppressed; la fachada conserva conteos del Batch aun ante fallo global o de cierre.
+4. `WhoScoredStatisticsException.providerCalls` transporta navegaciones observadas hasta el fallo; el éxito transporta el contador del resultado. No se usa el número teórico de secciones en scraping.
+5. `PlayerStatisticsWriter.write/reconfirmOrCreate` y `PlayerStatistics.reconfirm` distinguen contexto de valores presentes: sin números o contexto es NO_DATA, reconfirmable sin item COMPLETED. Un éxito previo se protege junto con unicidad y rollback; JSON conserva su regla anterior.
+6. `ScrapingMetricAssembler.publishedValue` deja de inventar cero para ausencia y usa el normalizador existente. No se amplían formatos ni se declara corregido el token decimal desconocido.
+7. El CLI tiene una sola llamada POST, sin bucle ni timeout total añadido por el cliente. Salida 0 solo por cobertura completa. Transporte incierto no dispara otra petición; consultar cobertura antes de una reanudación manual.
+
+**Archivos productivos nuevos:**
+
+- `backend/src/main/resources/db/migration/V20261027162044__remove_statistics_max_players.sql`: retiro mínimo del límite persistido, sin preservar configuración obsoleta ni ejecutar DB.
+
+**Archivos productivos modificados** (rutas relativas a `backend/src/main/java/footballmarket/`):
+
+| Archivos | Responsabilidad y razón |
+| --- | --- |
+| `config/PlayerStatisticsProperties.java` | Retira presupuesto temporal de scraping; conserva validaciones de workers, pacing, timeouts y headed. |
+| `controllers/PlayerStatisticsController.java` | OpenAPI del POST completo y del rechazo contractual; no cambia autorización. |
+| `controllers/dtos/requests/PlayerStatisticsSyncRequestDTO.java` | Fecha opcional y rechazo del campo retirado. |
+| `controllers/exceptions/GlobalExceptionHandler.java` | Retira códigos exclusivos de máximo; conserva INVALID_REQUEST y error de fecha. |
+| `controllers/mappers/PlayerStatisticsMapper.java` | Transporta request sin máximo. |
+| `models/records/PlayerStatisticsSyncRequest.java`, `models/PlayerStatisticsExtractionRun.java` | Retiran atributo y validaciones de máximo. |
+| `models/PlayerStatistics.java` | Reconfirmación acotada de no-data sin degradar éxito. |
+| `repositories/PlayerStatisticsRunItemRepository.java` | Consulta de existencia de confirmación de campaña para proteger reconfirmación. |
+| `services/PlayerStatisticsExtractionService.java`, `services/impl/PlayerStatisticsExtractionServiceImpl.java` | Contrato sin deadline; conserva llamadas realmente iniciadas y errores auditados. |
+| `services/impl/PlayerStatisticsSynchronizationServiceImpl.java` | Exclusión, snapshot único, cierre posterior al cleanup y preservación de fallo principal. |
+| `services/internal/ExtractionBatchExecutor.java` | Sustituye corte por recorrido completo y continuidad ante errores individuales; conserva logs locales por run/jugador/worker. |
+| `services/internal/ExtractionRunManager.java` | Recuperación solo huérfana en scraping y resultado INTERRUPTED explícito; JSON conserva política anterior. |
+| `services/internal/ExtractionWorkerPool.java` | Afinidad, cleanup previo a Future y shutdown sin interrupción normal. |
+| `services/internal/PlayerStatisticsWriter.java` | Conteo de valores, no-data y confirmación/reconfirmación atómica. |
+| `services/internal/PlayerStatisticsEligibilitySelector.java` | Documenta snapshot compartido por ambos canales; consulta existente conservada. |
+| `services/internal/ScrapingMetricAssembler.java` | Ausencias no se inventan como cero. |
+| `services/internal/ExtractionIncidentRecorder.java` | Admite código estable de pérdida de entorno de navegador, sin contenido externo. |
+| `integrations/WhoScoredScrapingSectionNavigator.java` | Tentativa única de navegación/pestaña/categoría; timeouts preservados y pérdida de conexión diferenciada. |
+| `integrations/WhoScoredStatisticsScrapingIntegration.java` | Sin deadline, contexto de diagnóstico y conteos; orden Browser → Playwright y preservación de causa/fallos secundarios. |
+| `integrations/exceptions/WhoScoredStatisticsException.java` | Contador observado de llamadas en fallo, sin cambiar el contrato HTTP. |
+| `tools/PlayerStatisticsSyncClient.java` | Un POST y rechazo local de opciones retiradas. |
+
+**Eliminado:** `controllers/dtos/requests/StatisticsMaxPlayersDeserializer.java`, sin consumidores tras retirar el campo. Se revisaron consumidores y se adaptaron constructores de entidades y properties sin alterar otras features funcionalmente.
+
+**Configuración/documentación:** `backend/src/main/resources/application.yml` y `backend/src/test/resources/application-test.yml` retiran property; comentarios conservan medición histórica como tal. `docs/backend/architecture.md`, `docs/backend/technologies.md` y `quickstart.md` describen el flujo y comandos actuales. `research.md` separa evidencias de hipótesis. `contracts/whoscored.md` documenta pérdida de navegador. `tasks.md` registra avance real. `docs/TECHNICAL_DEBT.md` incorpora TD-032/033 con evidencia y pendientes. Los demás cambios de spec/plan/modelo/contrato HTTP/checklists ya estaban en el árbol al iniciar y se preservaron.
+
+### Informe de tests parcial — ejecución humana pendiente
+
+| Archivo (bajo `backend/src/test/java/footballmarket/`) | Cobertura y frontera |
+| --- | --- |
+| **Nuevo** `services/ExtractionPopulationExecutorTest.java` | Service real + PostgreSQL: reloj más allá de 30 min/medianoche con fecha inicial fija, timeout por ID una vez, llamadas reales, exclusión de run vivo y recuperación de huérfano reciente. Sustituye `services/ExtractionBatchExecutorCutoffTest.java`, eliminado porque probaba el algoritmo retirado. |
+| **Nuevos** `support/StatisticsScrapingSamples.java`, `support/StatisticsRunTestData.java` | Respuestas reutilizadas del proveedor controlado y preparación de huérfanos exclusivamente en Arrange, sin assertions funcionales ni acceso a DB desde el test de Service. |
+| `controllers/PlayerStatisticsControllerTest.java` | Rechazo del máximo retirado incluso null sin invocar Service, request de fecha, estados/errores/seguridad y JSON conservados. Foundation se revisó y preservó: verifica advice por ruta exclusiva, no duplica Controller. |
+| `config/PlayerStatisticsConfigurationTest.java`, `security/PlayerStatisticsSecurityIntegrationTest.java` | Binding sin presupuesto y body válido sin alterar JWT. |
+| `services/PlayerStatisticsSynchronizationServiceTest.java` | Población completa, no-data con contexto, reconfirmación y reanudación solo de fallidos, cero trabajo sin navegador y recuperación que conserva éxitos. |
+| `services/PlayerStatisticsExtractionServiceTest.java` | API sin deadline y guion como ausencia observable desde cobertura; se retiraron accesos directos a Repository del test. |
+| `repositories/PlayerStatisticsMigrationTest.java`, `repositories/PlayerStatisticsPersistenceTest.java` | Columna retirada, no-data resuelto reconfirmable en misma fila, éxito protegido, atomicidad, unicidad y precisión existente. Se retiraron referencias `this` del test de persistencia modificado. |
+| `repositories/PlayerStatisticsCoverageTest.java`, `services/JsonStatisticsUpdateServiceTest.java`, `support/QuoteTestData.java`, `support/ValuationTestData.java` | Adaptación mecánica de constructores/firmas eliminando máximo, sin cambios funcionales de JSON/cotizaciones/valuación. |
+| `integrations/WhoScoredScrapingIntegrationTest.java` | Timeout sin nueva navegación, categoría sin recarga, timeouts por operación conservados, headed y dieciséis categorías. |
+| `integrations/WhoScoredScrapingConcurrencyTest.java` | Firma sin deadline, aislamiento y concurrencia ya existentes preservados. Era archivo sin seguimiento previo; no creado por esta ejecución. |
+| `integrations/WhoScoredStatisticsRequestPacerTest.java` | Espera Retry-After mayor de 30 min sin corte ni repetición; clasificación lightweight por proveedor loopback. |
+| `integrations/WhoScoredStatisticsIntegrationTest.java` | Constructor de properties adaptado; política JSON existente preservada. |
+| `services/internal/ExtractionWorkerPoolTest.java` | Cleanup antes del retorno y sin flag interrumpido, mismo hilo, error secundario suppressed y cierre/validación existente. Era archivo sin seguimiento previo, ampliado en esta ejecución. |
+| `support/WhoScoredStatisticsPageStub.java` | Declara conexión del navegador controlado disponible para distinguir pérdida global real del entorno. |
+| `e2e/PlayerStatisticsSyncJourneyE2ETest.java`, `e2e/PlayerStatisticsCampaignClientE2ETest.java`, `e2e/PlayerStatisticsCrossChannelJourneyE2ETest.java` | HTTP real de población completa, CLI incompleto sin repetición, reanudación manual, rechazo de opciones retiradas y separación JSON/scraping. Se retiraron accesos directos a Repository; **frontera de Integration aún incumplida**, TD-033/T105 pendientes. |
+
+**Mocks y assertions importantes:** solo la Integration es sustituida en Service, con Services/DB reales. Integration usa Playwright doblado sin navegador real; pacing usa loopback/tiempo sustituible. Controller afirma rechazo antes de Service. Repository usa PostgreSQL/Testcontainers y Flyway reales cuando lo ejecute el usuario. Assert clave: ningún ID se repite, no-data no excluye, otra petición no pisa éxitos, contador de accesos no es una estimación y limpieza no oculta error principal. No se agregaron tests exclusivos de logs.
+
+**Riesgos/falsos positivos:** el build no compila tests; la mutación de Clock simula el paso del tiempo, no duración real; las capturas son históricas, no reproducen el run fallido; los journeys con Integration mock no acreditan E2E completo. Falta caso dedicado de nuevo elegible posterior al snapshot, regresión del token decimal concreto y contraste del stacktrace de cierre. TD-032 hace inexacto el contador histórico `failedPlayers` de GET, aunque los contadores por resultado del resumen se conservan. No se da por superado TESTING ni CODE REVIEW.
+
+**Orden sugerido de revisión:** contrato/DTO/configuración/migración → fachada/run → pool/Integration → writer/ausencia → CLI → tests por sus fronteras → research y pendientes. Checklist humano cuando el alcance esté completo:
+
+- [ ] Revisé todos los archivos creados/modificados, incluidos tests y migración.
+- [ ] Entiendo qué cambió y por qué, incluidos incompatibilidad y límites de evidencia.
+- [ ] Revisé las decisiones de concurrencia, limpieza, atomicidad y llamadas.
+- [ ] No detecté comportamiento fuera de la spec y se resolvieron los pendientes del alcance.
+- [ ] Apruebo avanzar a TESTING (requiere decisión explícita posterior; no aprobado aquí).
+
+**Comandos para el usuario**, desde `backend/` en PowerShell, con Docker para PostgreSQL/Testcontainers:
+
+```powershell
+.\gradlew.bat test --tests '*PlayerStatistics*Test' --tests '*ExtractionPopulationExecutorTest' --tests '*ExtractionWorkerPoolTest' --tests '*WhoScoredScraping*Test' --tests '*WhoScoredStatistics*Test' --tests '*WhoScoredStructuredDataParserTest' --tests '*WhoScoredRequestPacerTest' --tests '*MetricValuePipelineTest' --tests '*HeadedBrowserStartupTest'
+# Regresión completa (incluye consumidores de constructores modificados):
+.\gradlew.bat test
+```
+
+Los resultados aún no fueron aportados. No se requiere salida completa si pasan; si fallan, aportar el fallo y su causa. La ejecución humana no sustituye completar T103/T105/T106/T107 ni aprobar los gates separados.
+
+### Próxima acción y bloqueos
+
+- **Evidencia humana necesaria para la corrección causal:** run/jugador local, sección, columna técnica y token exacto saneado del rechazo decimal; stacktrace saneado del cierre. Sin JWT, cookies, URL o HTML completo. No se inventará que N/A u otro formato provocó ese run.
+- Continúan autorizados los pendientes técnicos independientes: cobertura de nuevos elegibles y adaptación de frontera E2E. No requieren reautorizar el mismo alcance ni relajar las normas de pruebas. El agente no ejecuta tests ni campaña.
+- No se ejecutó CONVERGE porque el trabajo técnico necesario está incompleto; no se solicita cierre ni aprobación global de CODE REVIEW en esta entrega parcial.
+
+**Verificación documental final:** `git diff --check` sin salida (satisfactorio); `git status --short`
+y diff final revisados. Se conservaron los cambios previos y archivos sin seguimiento, incluidos
+los tests de concurrencia y cleanup anteriores. Ningún archivo de build generado se incorporó al
+cambio. No se efectuó commit, push ni actualización remota.
+
+## 2026-10-27 — Instrumentación adicional autorizada para run=6 (T106)
+
+- Responsable: usuario de esta conversación. Evidencia literal: «Te autorizo a que toques
+  el codigo para obtener la siguiente evidencia. Ademas si queres ver la base de datos
+  local podes hacerlo o dejarme la consulta para que la ejecute y darte la respuesta.»
+- Alcance: diagnóstico de filtros/tabla, eventos de transporte/JavaScript sin contenido
+  externo sensible y celda decimal rechazada con run/jugador local. Se entregan consultas
+  SQL de solo lectura para ejecución humana; no se accede a la DB desde el agente.
+- Archivos productivos: `WhoScoredScrapingSectionNavigator`,
+  `WhoScoredStatisticsScrapingIntegration`, `ScrapingMetricAssembler` y
+  `PlayerStatisticsExtractionServiceImpl`. Sobrecargas conservan consumidores existentes.
+- Sin cambios a criterios de espera, timeouts, retries, pacing, catálogo, normalización,
+  persistencia ni HTTP. No tests exclusivos de mensajes, conforme a la delimitación
+  diagnóstica previa; pruebas funcionales existentes quedan a cargo del usuario.
+- T106 parcialmente implementada: nueva captura humana y corrección causal pendientes.
+  CODE REVIEW, TESTING y cierre global siguen pendientes. No se modifica ni se afirma
+  sincronización con seguimiento remoto.
+- Verificación: `gradlew.bat build -x test` desde `backend/` satisfactorio en 14 s;
+  11 tareas, 7 ejecutadas y 4 up-to-date. Dos intentos anteriores detectaron únicamente
+  formato en las fuentes editadas, corregido mediante patch. No se ejecutó formatter
+  independiente, tests, aplicación, navegador ni SQL. `git diff --check` satisfactorio;
+  diff/status revisados preservando cambios previos y sin incorporar archivos generados.
+- Revisión sugerida del alcance diagnóstico: navigator (metadatos y filtros sin alterar
+  esperas) → Integration (contexto local) → assembler y Service (celda saneada y misma
+  excepción) → SQL (SELECT en transacción READ ONLY) → research/tasks. No modifica
+  aprobaciones históricas ajenas ni concede aceptación del cambio.
+
+## 2026-10-28 — Autorización de corrección N/A y espera (T106/T107)
+
+- Responsable: usuario de esta conversación. Evidencia literal: «Te autorizo a que
+  modifiques el codigo. Tambien que se admita N/A como el resto de ausencias, y cambia
+  o modificar la espera.»
+- Alcance: `N/A` literal tras recorte como ausencia, cambio de espera por renderizado
+  aunque el HTML resulte idéntico, regresiones y sincronización documental afectada.
+  No se autoriza campaña, ejecución de tests, acceso DB, commit, push ni cierre.
+- La decisión se refleja en FR-022, contrato externo, plan y detalle de T106/T107.
+  Revalidación Analyze por impacto pendiente antes de modificar código productivo.
+- CODE REVIEW y TESTING de este alcance: pendientes; no se reutilizan aprobaciones
+  anteriores para el comportamiento modificado. Estado remoto no verificado, sin
+  escrituras ni afirmación de sincronización. Status de spec no se cambia.
+
+### Revalidación Analyze por impacto, previa a IMPLEMENT
+
+- Operación de lectura conforme a `.opencode/commands/speckit.analyze.md`;
+  prerequisites real resolvió `/mnt/c/Users/Vaqui/IdeaProjects/football-market/specs/012-player-statistics-scraping`
+  y research/data-model/contracts/quickstart/tasks. No hay extensions.yml ni hooks.
+- Cobertura del cambio: FR-022/023/024 y SC-007 → T106/T107 (ausencia, cero,
+  precisión y rechazo); FR-039/041 y FR-011/012 → T100/T106/T107 (espera acotada,
+  renderizado observable, sin datos parciales/retries). Sin tareas nuevas ni huérfanas.
+- Hallazgos bloqueantes del alcance: 0; ambigüedades nuevas: 0; conflictos
+  constitucionales: 0. No se revalida ni se declara implementado todo T097–T109.
+- Observación LOW editorial: notas históricas de plan/spec/quickstart aún hablan de
+  preparación o token pendiente; evidencia más reciente en esta sección y research.
+  No alteran el requisito ni autorizan aceptar datos sin renderizado.
+- Checklists leídas sin editar: requirements-quality 48/48 y synchronous-scraping
+  16/16. IMPLEMENT limitado a la autorización literal anterior; revisiones y tests
+  quedan pendientes, incluido comportamiento real del DOM/proveedor.
+
+### Code Review Report — corrección acotada del 2026-10-28
+
+**Resultado técnico:** código del alcance modificado y build sin tests satisfactorio.
+No se declara terminada SPEC-012 ni T106/T107; validación de DOM real pendiente (TD-034).
+
+**Funcionamiento y decisiones:**
+
+1. `MetricValueNormalizer.normalize` reconoce únicamente `N/A` después de `strip`,
+   devolviendo valor/precisión nulos y `ABSENT`, igual que guion/vacío. Cero sigue
+   numérico; NaN, null textual, n/a y otros textos siguen rechazados. La regla compartida
+   alcanza también a JSON cuando pase ese token, sin cambios de consultas/retry.
+2. `WhoScoredScrapingSectionNavigator.select` espera tabla inicial con cuerpo y carga
+   oculta, arma el observer antes de seleccionar una sola vez y espera incorporación de
+   tabla/cuerpo/fila completa o escritura de celda. Un reemplazo con HTML idéntico cuenta;
+   cambiar solo el selector, borrar filas o animar el spinner hermano no cuenta.
+3. Para leer se exigen encabezados técnicos, cuerpo, selector solicitado y carga oculta
+   si existe. Se conserva el timeout configurado, sin sleeps, red global ni retries.
+   Si no hay render observable se conserva el fallo: no se acepta la tabla anterior por
+   mera presencia. El observer se desconecta y el handle se dispone en `finally`; una
+   excepción Playwright de limpieza se diagnostica sin ocultar el error principal.
+4. `cambioTabla` queda como diagnóstico, no como condición. Se agrega
+   `evento=filter-rendered` con el contexto saneado existente, sin URLs ni contenido.
+
+**Archivos modificados de este alcance** (todos preexistentes; el resto del diff local
+pertenece al trabajo anterior y no se atribuye a esta corrección):
+
+| Ruta | Responsabilidad, cambio y razón |
+| --- | --- |
+| `backend/src/main/java/footballmarket/models/MetricValueNormalizer.java` | Regla de ausencia, FR-022; no convertir N/A en cero ni rechazar al jugador por ese marcador. |
+| `backend/src/main/java/footballmarket/integrations/WhoScoredScrapingSectionNavigator.java` | `awaitTable`, `select`, `releaseObserver` y Javadoc; render observable en lugar de desigualdad de HTML, carga oculta y limpieza. |
+| `backend/src/test/java/footballmarket/models/MetricValuePipelineTest.java` | Añade N/A/espacios, precisión nula en ausencia y rechazo de otros textos; conserva rating y derivación existentes. |
+| `backend/src/test/java/footballmarket/integrations/WhoScoredScrapingIntegrationTest.java` | Adapta fixture/timeout a observer y espera inicial; añade orden observer→selección→espera→limpieza, timeout preservado, filtros sin cambio y fallo de selección con fallo secundario de limpieza. |
+| `specs/012-player-statistics-scraping/spec.md` | FR-022 incorpora la decisión funcional humana sobre N/A. |
+| `specs/012-player-statistics-scraping/contracts/whoscored.md` | Marcador literal y condiciones de render/tabla lista, sin alterar HTTP propio. |
+| `specs/012-player-statistics-scraping/plan.md` | Diseño acotado del normalizador y observer, exclusiones y límites de validación. |
+| `specs/012-player-statistics-scraping/research.md` | Conteos/ventana real de run=7, token confirmado, distinción entre hipótesis y causa demostrada y limitaciones. |
+| `specs/012-player-statistics-scraping/tasks.md` | Detalle y avance parcial T106/T107, conservando IDs y casillas abiertas. |
+| `specs/012-player-statistics-scraping/quickstart.md` | Semántica N/A y estado de validación actualizado; no pedir otra campaña larga como primera comprobación. |
+| `docs/TECHNICAL_DEBT.md` | TD-034: los dobles no ejecutan JS/DOM; no se declara resolución ni dispensa de pruebas. |
+| `specs/012-player-statistics-scraping/sdd-gates.md` | Autorización literal, revalidación por impacto, este reporte y pendientes humanos. |
+
+**Orden recomendado:** FR-022/contrato → normalizador y tests Model → plan/navigator
+→ tests Integration → research/TD-034 → tasks/quickstart/evidencia.
+
+**Puntos delicados:** observer exige estructura de tabla y contenedor estable; un cambio
+de estructura o una selección sin mutaciones sigue fallando. Observar render no demuestra
+por sí solo el contenido de una petición del proveedor. Los 35 timeouts del fragmento no
+prueban que haya habido reemplazo idéntico: no se declara que todos queden resueltos.
+Los mocks verifican protocolo, no ejecutan el observer/predicado real. No se cambia
+catálogo, DB, endpoint, timeout, pacing, retry ni ciclo de vida de workers.
+
+**Checklist humano (sin marcar por el agente):**
+
+- [ ] Revisé los archivos creados/modificados del alcance.
+- [ ] Entiendo qué cambió y por qué.
+- [ ] Revisé las decisiones importantes y las limitaciones del DOM (TD-034).
+- [ ] No detecté comportamiento fuera de la spec.
+- [ ] Apruebo avanzar a TESTING de este alcance.
+
+### Preparación del Testing Report — ejecución exclusivamente humana
+
+- Tests nuevos: ninguno como archivo; se amplían los dos anteriores.
+- US1, FR-022/023/024 y SC-007: N/A y espacios como ausencia, valor/precisión nulos,
+  cero presente, otros textos rechazados; se conservan punto/coma, rating exacto y
+  cociente HALF_UP. Model puro, sin mocks, Spring o DB.
+- US1, FR-011/012/039/041: Page/Locator/JSHandle mock controlados; selección única,
+  observer anterior a la acción, espera con timeout configurado y handle, limpieza en
+  éxito/timeout/error de selección, preservación de excepción principal y no-op de
+  filtros ya seleccionados. Se conserva el recorrido de dieciséis categorías.
+- Riesgo de falso positivo: los mocks no evalúan JS ni comprueban tabla idéntica real,
+  spinner, retrasos o mutaciones ausentes. Esas verificaciones no se presentan como
+  cubiertas; TD-034 y validación humana de DOM pendientes. Sin llamadas a WhoScored.
+- Revisar primero semántica Model; luego orden y errores de Integration. Comandos
+  para el usuario desde `backend/`, después de revisión de código:
+
+```powershell
+.\gradlew.bat unitTest --tests "footballmarket.models.MetricValuePipelineTest*"
+.\gradlew.bat lightweightTest --tests "footballmarket.integrations.WhoScoredScrapingIntegrationTest*"
+```
+
+- Estos comandos no requieren DB ni proveedor real; no acreditan la brecha DOM.
+  Si pasan, basta confirmación humana; si fallan, aportar salida del fallo. No se
+  solicita repetir ahora una campaña de horas ni se dispara operación automáticamente.
+
+### Verificación y estado al entregar este alcance
+
+- Build final permitido: `gradlew.bat build -x test` desde backend, satisfactorio
+  en 10 s (11 tareas: 7 ejecutadas, 4 up-to-date). Un primer intento detectó formato
+  en dos archivos editados; se corrigió por patch. El build no compila ni ejecuta tests.
+- No se ejecutaron tests, navegador, aplicación, SQL, campaña ni hooks. La inspección
+  adicional de capturas HTML/HAR locales se limitó al DOM y metadatos no sensibles;
+  no se incorporan esos documentos al cambio.
+- Feature: `012-player-statistics-scraping`; fase SDD: IMPLEMENT acotado entregado,
+  CODE REVIEW pendiente. Status de spec: Ready for implementation, sin cambio.
+- IMPLEMENT AUTHORIZATION: vigente para N/A/espera y regresiones del alcance literal.
+  CODE REVIEW: PENDING. TESTING: PENDING. FEATURE COMPLETION AUTHORIZATION: PENDING.
+- Seguimiento operativo: no verificado; sincronización PENDING, sin escrituras remotas.
+  Siguiente acción: revisión humana del alcance; no cierre de Feature ni de T106/T107.
+- Diff final revisado separando cambios previos; `git diff --check` satisfactorio y
+  `git status --short` revisado. Archivos generados no editados ni incorporados;
+  cambios anteriores y archivos sin seguimiento preservados. Sin commit ni push.
+
+## 2026-10-28 — Conformidad humana y resultados de tests de N/A/espera
+
+- Responsable: usuario de esta conversación. Evidencia literal: «Pasaron ambos tests,
+  y depaso no rompio ningun test mas. Y estoy conforme ya que fue algo que redactaste
+  poco a poco.» Responde al informe y solicitud de revisión del alcance N/A/espera.
+- CODE REVIEW del alcance acotado: APPROVED por conformidad humana contextual con
+  el reporte anterior; no se extiende al resto de SPEC-012 ni marca checklists por el usuario.
+- Evidencia humana satisfactoria para los dos comandos solicitados:
+  `unitTest --tests "footballmarket.models.MetricValuePipelineTest*"` y
+  `lightweightTest --tests "footballmarket.integrations.WhoScoredScrapingIntegrationTest*"`.
+  También informa ausencia de regresiones en otros tests, sin detalle de comando,
+  cantidad o suite: no se inventan esos datos ni se atribuye ejecución al agente.
+- TESTING: resultados automatizados aceptados por el usuario; permanece pendiente
+  la validación del JavaScript/DOM real descrita en TD-034. No se declara superada esa
+  brecha, resolución de timeouts del proveedor ni cierre de T106/T107 o de la Feature.
+- Siguiente acción permitida: definir una validación acotada del DOM con proveedor
+  controlado, sin repetir todavía una campaña larga. Nuevos cambios de infraestructura
+  o tests se proponen antes de implementarlos; no quedan autorizados por esta conformidad.
+- Sin cambios de código, build, ejecución de tests, commit, push ni escrituras remotas.
+  Status de spec intacto; seguimiento remoto no verificado, sincronización PENDING;
+  FEATURE COMPLETION AUTHORIZATION: PENDING.
+
+## 2026-10-28 — Autorización de regresión DOM local (T107 / TD-034)
+
+- Responsable: usuario de esta conversación. Propuesta: «¿Autorizás preparar esa
+  regresión con navegador local y página simulada, sin acceder a WhoScored? La ejecución
+  seguiría a tu cargo.» Respuesta literal: «si autorizo».
+- Alcance: clase de tests DOM con Playwright y Chromium locales, HTML en memoria y red
+  bloqueada; escenarios idéntico, sin render y carga pendiente/diferida; documentación
+  de ejecución y actualización de T107/TD-034. No código productivo, tests del agente,
+  campaña, cambios HTTP/DB, dependencias, commit ni push.
+- Excepción de T107 registrada en tasks/plan: solo la nueva regresión usa navegador
+  headed real, con activación humana opt-in y fuera de suites rápidas. No se extiende
+  a tests existentes ni a ejecución por el agente. Revalidación por impacto previa al test.
+- La aprobación humana del código productivo N/A/espera se conserva: no se modifica.
+  CODE REVIEW de la nueva clase: PENDING; TESTING DOM: PENDING; cierre: PENDING.
+  Seguimiento remoto sin verificar; ninguna escritura remota autorizada ni realizada.
+
+### Revalidación Analyze por impacto — DOM local
+
+- Prerequisites real resolvió SPEC-012 y sus artefactos; sin hooks nuevos. Análisis
+  de lectura según `.opencode/commands/speckit.analyze.md` después de ajustar plan/T107.
+- FR-011/012/039/041 → T107 y nueva clase DOM: selección única, timeout sin render,
+  carga pendiente y éxito con render idéntico/finalización diferida. Sin requisitos
+  funcionales nuevos ni modificaciones a código aprobado; FR-022 permanece intacto.
+- Contratos/modelo/arquitectura productiva sin impacto; la excepción de navegador
+  real es de infraestructura de esta regresión y no permite red/proveedor reales.
+  Se preservan checklists y IDs. Bloqueantes nuevos: 0; tareas huérfanas nuevas: 0.
+- Siguiente operación: IMPLEMENT exclusivamente de la clase y documentación autorizadas;
+  la clasificación es `integration` por dependencia nativa de Chromium, nunca rápida.
+
+### Code Review Report — regresión DOM local
+
+**Resultado:** nueva clase `WhoScoredScrapingDomTest`, cuatro casos escritos. No cambia
+producción; la aprobación previa de N/A/espera y la evidencia humana de sus tests se
+conservan. Revisión humana de la nueva clase y ejecución DOM pendientes.
+
+**Cómo funciona:** por caso abre Playwright y Chromium headed locales, crea un contexto
+con todas sus solicitudes abortadas y carga HTML en memoria mediante `setContent`.
+La fixture reproduce los IDs de filtros/tabla/loading y reacciona a un solo cambio de
+acumulados. Invoca `chooseCategory` productivo, sin mocks de Page/Locator/JSHandle y sin
+copiar su observer o predicado. Cierra contexto → Browser → Playwright aun ante fallos.
+
+**Casos y decisiones:**
+
+- `acceptsIdenticalRender`: reemplaza tabla por nodos nuevos idénticos y afirma mismo
+  HTML, identidad de nodo distinta, filtro `2` y un solo evento de selección.
+- `rejectsStaleTable`: cambia selector y anima solo el spinner hermano; exige timeout,
+  HTML intacto y una selección. Un timeout previo a la selección no satisface el caso.
+- `rejectsPendingLoading`: renderiza datos `12`, deja carga visible y exige timeout.
+  Demuestra que renderizar no basta para leer datos todavía en carga, sin depender de
+  una carrera de milisegundos entre la assertion y un timer.
+- `acceptsCompletedLoading`: publica primero una tabla idéntica en carga y finaliza
+  por dos frames, con dato `12` y marca `finalized`; exige retorno satisfactorio,
+  finalización y carga oculta. Sin sleeps ni umbrales de duración medidos.
+- Timeouts de fixture: 1 s negativos / 5 s positivos; no cambia configuración real.
+- Opt-in `FOOTBALL_MARKET_DOM_TESTS=true`: fuera de suites rápidas. Sin opt-in se omite;
+  con opt-in no se capturan ni convierten en skip errores de navegador/display.
+  Se deshabilita descarga automática y se exige Chromium preinstalado. No hay DB,
+  servidor, Spring, provider real ni dependencias nuevas.
+
+**Archivos del alcance:**
+
+| Ruta | Cambio y motivo |
+| --- | --- |
+| `backend/src/test/java/footballmarket/integrations/WhoScoredScrapingDomTest.java` | Nuevo test con navegador/DOM reales; cubre la brecha de scripts no ejecutados por mocks. |
+| `specs/012-player-statistics-scraping/plan.md` | Diseña la excepción opt-in local y sus cuatro escenarios sin red. |
+| `specs/012-player-statistics-scraping/tasks.md` | Registra excepción y avance parcial de T107 preservando IDs y casilla abierta. |
+| `specs/012-player-statistics-scraping/quickstart.md` | Prerrequisitos, comando humano con restauración de variable y `--rerun-tasks`, casos esperados y límites. |
+| `docs/backend/technologies.md` | Agrega el uso de Playwright para esta regresión sin cambiar versión/dependencias. |
+| `docs/TECHNICAL_DEBT.md` | TD-034 pasa a En curso con prueba escrita; no resuelta sin ejecución humana. |
+| `specs/012-player-statistics-scraping/sdd-gates.md` | Autorización literal/contextual, revalidación, este reporte y verificaciones. |
+
+**Orden recomendado de revisión:** fixture y lifecycle del test → cuatro escenarios →
+opt-in y comando quickstart → plan/tasks → tecnologías/deuda/evidencia.
+
+**Riesgos:** no es WhoScored real, no cubre toda variación de DOM ni garantiza resolver
+los timeouts de run=7. La clase se omite sin opt-in; no interpretar una tarea exitosa con
+casos omitidos como evidencia. El cambio de variable no invalida automáticamente el
+cache Gradle; por eso el comando exige `--rerun-tasks`. El build permitido no compila
+tests: compilación Java de esta clase y ejecución quedan pendientes del usuario.
+
+**Checklist humano pendiente:**
+
+- [ ] Revisé los archivos creados/modificados de la regresión DOM.
+- [ ] Entiendo qué cambió y por qué.
+- [ ] Revisé el opt-in, aislamiento de red, lifecycle, escenarios y límites.
+- [ ] No detecté comportamiento fuera del alcance autorizado.
+- [ ] Apruebo avanzar a TESTING de esta regresión.
+
+### Testing Report preparado — DOM local
+
+- Clase nueva: `WhoScoredScrapingDomTest`; ninguna otra clase de test modificada.
+- US1 / FR-011/012/039/041 y T107: espera productiva acotada, sin repetir selección,
+  reemplazo idéntico, rechazo de tabla vieja y carga pendiente, éxito al terminar carga.
+- Mocks: ninguno; proveedor simulado mediante HTML y eventos DOM locales. Cliente
+  Playwright y Chromium reales, sin acceso a WhoScored. No sustituye pruebas numéricas
+  de FR-022 ni la evidencia de sus tests ya aportada por el usuario.
+- Assertions importantes: éxito/timeout según escenario, identidad nueva con HTML
+  idéntico, valor final, visibilidad de loading y contador exactamente uno. Los casos
+  negativos verifican selección completada y datos presentes después del timeout.
+- Falso positivo a vigilar: clase omitida, task cacheado o error de preparación aceptado
+  como timeout. Opt-in/`--rerun-tasks` y assertions posteriores evitan esos caminos.
+- Revisar la clase y el checklist anterior antes de ejecutarla. Desde `backend/`:
+
+```powershell
+$previousDomTests = $env:FOOTBALL_MARKET_DOM_TESTS
+try {
+    $env:FOOTBALL_MARKET_DOM_TESTS = 'true'
+    .\gradlew.bat integrationTest --tests "footballmarket.integrations.WhoScoredScrapingDomTest*" --rerun-tasks
+} finally {
+    $env:FOOTBALL_MARKET_DOM_TESTS = $previousDomTests
+}
+```
+
+- Resultado esperado: 4 casos ejecutados, 0 omitidos, 0 fallidos. Confirmación humana
+  suficiente si pasan; aportar salida si fallan o no se ejecutan. No se ha ejecutado
+  este comando, Chromium ni ningún test por el agente. TD-034 no se cierra hasta contar
+  con evidencia humana verificable del alcance; no autoriza cierre global de SPEC-012.
+
+### Verificación y estado — DOM local entregado
+
+- Build permitido `gradlew.bat build -x test`: satisfactorio en 3 s, 11 tareas
+  (3 ejecutadas, 8 up-to-date), clasificación estática de 130 clases. Primer intento
+  detectó solo una línea de formato en la clase nueva, corregida mediante patch.
+  Sin compilación/ejecución de tests ni uso de navegador por el agente.
+- Feature SPEC-012; fase IMPLEMENT de regresión local entregada; Status de spec intacto
+  (Ready for implementation). IMPLEMENT AUTHORIZATION vigente solo para este alcance.
+- CODE REVIEW productivo N/A/espera: APPROVED previamente por usuario y conservado;
+  CODE REVIEW de nueva regresión: PENDING; TESTING DOM: PENDING; cierre de Feature: PENDING.
+- T107/TD-034 siguen abiertos. Seguimiento remoto no verificado, sincronización PENDING,
+  sin escrituras remotas, commit ni push. Próxima acción: revisión humana y ejecución
+  de los cuatro casos con opt-in, no otra campaña larga.
+- Revisión final: clase nueva releída, diff/stat y status revisados preservando cambios
+  anteriores y archivos sin seguimiento; `git diff --check` satisfactorio. Sin cambios
+  de fuentes productivas ni edición/incorporación de salidas generadas en este alcance.

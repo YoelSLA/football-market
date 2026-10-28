@@ -17,14 +17,23 @@ public class WhoScoredStatisticsException extends IntegrationException {
    */
   private final String section;
 
+  private final long providerCalls;
+
   public WhoScoredStatisticsException(String code, Integer providerStatus) {
     this(code, providerStatus, null);
   }
 
   public WhoScoredStatisticsException(String code, Integer providerStatus, String section) {
+    this(code, providerStatus, section, 0);
+  }
+
+  /** Conserva los accesos iniciados antes de un fallo del recorrido. */
+  public WhoScoredStatisticsException(
+      String code, Integer providerStatus, String section, long providerCalls) {
     super("No se pudo completar la extracción de estadísticas del proveedor");
     this.code = code;
     this.providerStatus = providerStatus;
     this.section = section;
+    this.providerCalls = providerCalls;
   }
 }
