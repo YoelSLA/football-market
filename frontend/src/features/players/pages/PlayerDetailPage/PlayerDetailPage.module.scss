@@ -1,0 +1,9 @@
+@use "@/styles/abstracts" as ds;
+.playerDetail {
+	display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; padding: 12px 24px 20px; color: ds.$text-on-dark; background: ds.$surface-finance-panel-to;
+	&__content { min-width: 0; width: 100%; }
+	&__context { font-size: 11px; margin: 6px 0 10px; color: ds.$text-on-dark-muted; }
+	&__message { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px; margin: 10px 0; border: 1px solid ds.$border-surface-dark; border-radius: 8px; p { margin: 0; } button, a { color: ds.$accent-nav; background: ds.$surface-nav-active; border: 1px solid ds.$border-surface-dark; padding: 8px 12px; border-radius: 4px; cursor: pointer; } }
+	button:focus-visible, a:focus-visible, [role="tabpanel"]:focus-visible { outline: 2px solid ds.$focus-ring-on-dark; outline-offset: 2px; }
+}
+@include ds.down(ds.$bp-tablet) { .playerDetail { padding: 10px; } }

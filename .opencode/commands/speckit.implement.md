@@ -1,8 +1,13 @@
 ---
-description: Execute the implementation plan by processing and executing all tasks defined in tasks.md
+description: Implementar el alcance autorizado de la funcionalidad y sus prerrequisitos explicitos desde tasks.md.
+model: opencode/deepseek-v4.1-flash-free
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar que la preparación está completa, ANALYZE vigente sin blockers, y que existe IMPLEMENT AUTHORIZATION humana explícita, vigente y persistida para el alcance y sus prerrequisitos autorizados. Dependency ≠ Blocker: dependencias conocidas se resuelven por orden técnico, sin inventar alcance. Autorización ≠ inicio: el registro de seguimiento pasa a In Progress solo cuando el trabajo comienza realmente. Un requisito sin spec, un registro en Backlog y una tarea técnica aislada no son entradas ejecutables; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests ni indirectamente mediante hooks. Implementación completa habilita CODE REVIEW con report completo (incluidos tests), no DONE: CODE REVIEW y TESTING son gates humanos separados. CONVERGE final y FEATURE COMPLETION AUTHORIZATION corresponden a cierre de Feature, fuera de esta ejecución. Invalidar gates solo por impacto sobre alcance evaluado, conservando aprobaciones no afectadas.
 
 ```text
 $ARGUMENTS
@@ -74,10 +79,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
    - **If any checklist has unchecked items**:
      - Display the table with unchecked item counts
-     - **STOP** and ask: "Some checklists have unchecked items. Do you want to proceed with implementation anyway? (yes/no)"
-     - Wait for user response before continuing
-     - If user says "no" or "wait" or "stop", halt execution
-     - If user says "yes" or "proceed" or "continue", proceed to step 3
+     - **STOP** y reportar criterios pendientes al revisor. MUST NOT ofrecer una excepción genérica a esa condición. Solo reanudar con evaluación suficiente registrada, ausencia de bloqueantes y elegibilidad vigente conforme al workflow.
 
    - **If all checklists are checked**:
      - Display the table showing all checklists passed
@@ -145,7 +147,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 6. Execute implementation following the task plan:
    - **Phase-by-phase execution**: Complete each phase before moving to the next
    - **Respect dependencies**: Run sequential tasks in order, parallel tasks [P] can run together
-   - **Follow TDD approach**: Execute test tasks before their corresponding implementation tasks
+   - **Tests:** escribir/modificar los necesarios del backend; su ejecución queda a cargo del usuario. MUST NOT ejecutar tests ni crear tests frontend.
    - **File-based coordination**: Tasks affecting the same files must run sequentially
    - **Validation checkpoints**: Verify each phase completion before proceeding
 
@@ -165,12 +167,12 @@ You **MUST** consider the user input before proceeding (if not empty).
    - **IMPORTANT** For completed tasks, make sure to mark the task off as [X] in the tasks file.
 
 9. Completion validation:
-   - Verify all required tasks are completed
+   - Verificar Tasks del alcance autorizado de la US, sin exigir ni marcar avance de otras historias
    - Check that implemented features match the original specification
-   - Validate that tests pass and coverage meets requirements
+   - Registrar evidencia de tests aportada por el usuario y verificaciones pendientes; MUST NOT afirmar PASS sin salida ni ejecutar tests. Aplicar únicamente builds permitidos cuando cambió código del área.
    - Confirm the implementation follows the technical plan
 
-Note: This command assumes a complete task breakdown exists in tasks.md. If tasks are incomplete or missing, suggest running `/speckit.tasks` first to regenerate the task list.
+Si faltan Tasks necesarias, detener implementación y solicitar corrección autorizada del desglose preservando IDs/avance, seguida de Analyze; MUST NOT regenerar destructivamente ni continuar sin gate vigente.
 
 ## Mandatory Post-Execution Hooks
 
@@ -212,7 +214,7 @@ Report final status with summary of completed work.
 
 ## Done When
 
-- [ ] All tasks in tasks.md completed and marked `[X]`
-- [ ] Implementation validated against specification, plan, and test coverage
+- [ ] Tasks del alcance de la US realmente completadas y verificadas marcadas `[X]`; ejecución/verificación pendiente permanece explícita, sin marcar trabajo ajeno
+- [ ] Implementación del alcance validada contra SPEC/plan; Code Review Report completo y checklist humano; lista para CODE REVIEW, sin aprobar gates ni DONE automáticamente. Tests pendientes explícitos no equivalen a TESTING aprobado.
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with summary of completed work

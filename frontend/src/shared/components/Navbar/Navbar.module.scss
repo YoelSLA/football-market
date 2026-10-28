@@ -1,0 +1,38 @@
+@use "@/styles/abstracts" as ds;
+
+.navbar {
+	box-sizing: border-box;
+	flex-shrink: 0;
+	width: 100%;
+	min-width: 0;
+	padding: 0 ds.$space-md;
+	border-radius: 0;
+	background: ds.$surface-finance-base;
+	border-bottom: 1px solid ds.$border-finance;
+
+	&__top {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+		align-items: center;
+		gap: ds.$space-xs;
+		min-height: 58px;
+		min-width: 0;
+	}
+
+	@include ds.down(ds.$bp-grid-xl) {
+		&__top {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+	}
+
+	@include ds.down(ds.$bp-grid-sm) {
+		padding-inline: ds.$space-2xs;
+	}
+
+	@include ds.down(ds.$bp-2xs) {
+		&__top {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+}

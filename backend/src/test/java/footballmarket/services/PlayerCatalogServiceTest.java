@@ -1,87 +1,304 @@
 package footballmarket.services;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.Player;
-import footballmarket.models.records.PlayerSnapshot;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
+import footballmarket.features.catalog.application.exceptions.PlayerSynchronizationPersistenceException;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.records.LeagueCandidate;
+import footballmarket.features.catalog.domain.records.PlayerCandidate;
+import footballmarket.features.catalog.domain.records.PlayerSnapshot;
+import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
+import footballmarket.features.catalog.domain.records.TeamCandidate;
+import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
+import java.time.LocalDate;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.TestExecutionListeners;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestcontainersConfiguration.class)
-@Transactional
+@TestExecutionListeners(
+    listeners = ResetPlayerCatalogListener.class,
+    mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
+@org.junit.jupiter.api.Tag("integration")
 class PlayerCatalogServiceTest {
-
   @Autowired private PlayerCatalogService playerCatalogService;
 
-  @BeforeEach
-  void clearActiveCatalog() {
-    playerCatalogService.applySynchronization(new PlayerSnapshot(List.of(), 0, 0));
+  private PlayerCandidate candidate(String id, String name) {
+    return new PlayerCandidate(id, name, "Team", "League", "Forward", null, null, "100");
+  }
+
+  private PlayerSnapshot snapshot(PlayerCandidate... candidates) {
+    LeagueCandidate firstLeague = new LeagueCandidate("10", "League");
+    LeagueCandidate secondLeague = new LeagueCandidate("20", "New League");
+    TeamCandidate firstTeam = new TeamCandidate("100", "Team", "10", true);
+    TeamCandidate secondTeam = new TeamCandidate("200", "New Team", "20", true);
+    return new PlayerSnapshot(
+        List.of(candidates),
+        candidates.length,
+        0,
+        List.of(firstLeague, secondLeague),
+        List.of(firstTeam, secondTeam),
+        List.of());
   }
 
   @Nested
   @DisplayName("Sincronización del catálogo")
   class Synchronization {
-    @Test
-    void creaActualizaReactivaEInactivaSoloJugadoresActivosAusentes() {
-      long firstId = 91001L;
-      long createdId = 91002L;
-      long absentId = 91003L;
-      playerCatalogService.applySynchronization(
-          new PlayerSnapshot(
-              List.of(
-                  new Player(firstId, "Old", "T", "L", "P"),
-                  new Player(absentId, "Absent", "T", "L", "P")),
-              2,
-              0));
-      playerCatalogService.applySynchronization(
-          new PlayerSnapshot(List.of(new Player(absentId, "Absent", "T", "L", "P")), 1, 0));
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+        "Un alta con observaciones equivalentes elige textos originales canónicos sin depender del orden")
+    void canonicalizeNewPlayerPresentation(boolean reverse) {
+      // Arrange
+      PlayerCandidate upper =
+          new PlayerCandidate(
+              "91020", "JOSE PEREZ", "Team", "League", "MIDFIELDER", null, null, "100");
+      PlayerCandidate natural =
+          new PlayerCandidate(
+              "91020", "José Pérez", "Team", "League", "Midfielder", null, null, "100");
+      PlayerSnapshot photo = reverse ? snapshot(natural, upper) : snapshot(upper, natural);
 
-      var result =
-          playerCatalogService.applySynchronization(
-              new PlayerSnapshot(
-                  List.of(
-                      new Player(firstId, "New", "Team", "League", "Forward"),
-                      new Player(createdId, "Created", "T", "L", "P"),
-                      new Player(createdId, "Duplicate", "T", "Later", "P")),
-                  4,
-                  1));
+      // Act
+      PlayerSynchronizationResult result = playerCatalogService.applySynchronization(photo);
 
+      // Assert
       assertThat(result.created()).isEqualTo(1);
-      assertThat(result.updated()).isEqualTo(1);
-      assertThat(result.markedInactive()).isEqualTo(1);
-      assertThat(result.obtained()).isEqualTo(4);
-      assertThat(result.discardedInvalid()).isEqualTo(1);
-      assertThat(playerCatalogService.getActivePlayers(0, 100).getContent())
-          .extracting(Player::getId)
-          .containsExactly(firstId, createdId);
-      assertThat(playerCatalogService.getActivePlayers(0, 100).getContent())
-          .filteredOn(player -> player.getId().equals(firstId))
-          .extracting(Player::getName)
-          .containsExactly("New");
+      assertThat(result.discardedInvalid()).isZero();
+
+      // Verify
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              player -> {
+                assertThat(player.getName()).isEqualTo("José Pérez");
+                assertThat(player.getPosition()).isEqualTo("Midfielder");
+              });
     }
 
     @Test
-    void inactivaLosJugadoresActivosAnteUnConjuntoCompletoVacio() {
-      playerCatalogService.applySynchronization(
-          new PlayerSnapshot(List.of(new Player(92003L, "Absent", "T", "L", "P")), 1, 0));
-
-      var result = playerCatalogService.applySynchronization(new PlayerSnapshot(List.of(), 0, 0));
-
-      assertThat(result.markedInactive()).isEqualTo(1);
-      assertThat(result.created()).isZero();
+    @DisplayName("Crea un jugador con identidad interna y opcionales desconocidos")
+    void creaJugadoresNuevos() {
+      PlayerCandidate player = candidate("91001", "New Player");
+      PlayerSnapshot photo = snapshot(player);
+      PlayerSynchronizationResult result = playerCatalogService.applySynchronization(photo);
+      assertThat(result.created()).isEqualTo(1);
       assertThat(result.updated()).isZero();
-      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent()).isEmpty();
+      assertThat(result.markedInactive()).isZero();
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              local -> {
+                assertThat(local.getId()).isNotNull();
+                assertThat(local.getName()).isEqualTo("New Player");
+                assertThat(local.getDateOfBirth()).isNull();
+                assertThat(local.getNationality()).isNull();
+                assertThat(local.getImageUrl()).isNull();
+              });
+    }
+
+    @Test
+    @DisplayName("Resuelve por referencia y actualiza sin cambiar el identificador interno")
+    void actualizaJugadoresExistentes() {
+      PlayerCandidate original = candidate("91002", "Old");
+      playerCatalogService.applySynchronization(snapshot(original));
+      Long internalId =
+          playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
+      PlayerCandidate changed =
+          new PlayerCandidate(
+              "91002", "New", "New Team", "New League", "Goalkeeper", null, null, "200");
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(changed));
+      assertThat(result.created()).isZero();
+      assertThat(result.updated()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              local -> {
+                assertThat(local.getId()).isEqualTo(internalId);
+                assertThat(local.getName()).isEqualTo("New");
+                assertThat(local.getTeam().getName()).isEqualTo("New Team");
+                assertThat(local.getLeague().getName()).isEqualTo("New League");
+                assertThat(local.getPosition()).isEqualTo("Goalkeeper");
+              });
+    }
+
+    @Test
+    @DisplayName("Reactiva por la misma referencia sin crear otro jugador")
+    void reactivaJugadorInactivoCuandoReaparece() {
+      PlayerCandidate player = candidate("91003", "Player");
+      playerCatalogService.applySynchronization(snapshot(player));
+      Long id = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
+      playerCatalogService.applySynchronization(snapshot());
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(player));
+      assertThat(result.created()).isZero();
+      assertThat(result.updated()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .extracting(Player::getId)
+          .containsExactly(id);
+    }
+
+    @Test
+    @DisplayName("Inactiva únicamente al jugador ausente de la foto completa")
+    void inactivaJugadoresActivosAusentesEnLaSincronizacion() {
+      PlayerCandidate present = candidate("91004", "Present");
+      PlayerCandidate absent = candidate("91005", "Absent");
+      playerCatalogService.applySynchronization(snapshot(present, absent));
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(present));
+      assertThat(result.markedInactive()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .extracting(Player::getName)
+          .containsExactly("Present");
+    }
+
+    @Test
+    @DisplayName("No vuelve a contar a un jugador que ya estaba inactivo")
+    void noVuelveAContarComoInactivoUnJugadorQueYaEstabaInactivo() {
+      PlayerCandidate active = candidate("91006", "Active");
+      PlayerCandidate inactive = candidate("91007", "Inactive");
+      playerCatalogService.applySynchronization(snapshot(active, inactive));
+      playerCatalogService.applySynchronization(snapshot(active));
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(active));
+      assertThat(result.markedInactive()).isZero();
+      assertThat(result.created()).isZero();
+      assertThat(result.updated()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .extracting(Player::getName)
+          .containsExactly("Active");
+    }
+
+    @Test
+    @DisplayName("Conserva los contadores de obtención y descarte de la fuente")
+    void conservaLosContadoresOriginalesDelSnapshot() {
+      PlayerCandidate player = candidate("91008", "Player");
+      PlayerSnapshot valid = snapshot(player);
+      PlayerSnapshot photo =
+          new PlayerSnapshot(List.of(player), 2, 1, valid.leagues(), valid.teams(), List.of());
+      PlayerSynchronizationResult result = playerCatalogService.applySynchronization(photo);
+      assertThat(result.obtained()).isEqualTo(2);
+      assertThat(result.discardedInvalid()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Consolida un jugador repetido y mantiene la primera liga")
+    void resuelveJugadoresDuplicadosSinCrearDosRegistros() {
+      PlayerCandidate first = candidate("91009", "First");
+      PlayerCandidate duplicate =
+          new PlayerCandidate("91009", "Duplicate", "T", "Later", "P", null, null, "200");
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(first, duplicate));
+      assertThat(result.created()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              local -> {
+                assertThat(local.getName()).isEqualTo("First");
+                assertThat(local.getLeague().getName()).isEqualTo("League");
+              });
+    }
+
+    @Test
+    @DisplayName("Una foto completa vacía inactiva a los jugadores de Football-Data")
+    void inactivaTodosLosJugadoresActivosAnteUnConjuntoCompletoVacio() {
+      PlayerCandidate player = candidate("91010", "Player");
+      playerCatalogService.applySynchronization(snapshot(player));
+      PlayerSynchronizationResult result = playerCatalogService.applySynchronization(snapshot());
+      assertThat(result.markedInactive()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20)).isEmpty();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t"})
+    @DisplayName("Los opcionales no informados no borran datos previamente conocidos")
+    void conservaOpcionales(String nationality) {
+      LocalDate birth = LocalDate.of(1990, 6, 20);
+      PlayerCandidate original =
+          new PlayerCandidate("44", "N", "T", "L", "P", birth, "Spain", "100");
+      playerCatalogService.applySynchronization(snapshot(original));
+      PlayerCandidate degraded =
+          new PlayerCandidate("44", "N", "T", "L", "P", null, nationality, "100");
+      playerCatalogService.applySynchronization(snapshot(degraded));
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .singleElement()
+          .satisfies(
+              local -> {
+                assertThat(local.getDateOfBirth()).isEqualTo(birth);
+                assertThat(local.getNationality()).isEqualTo("Spain");
+                assertThat(local.getImageUrl()).isNull();
+              });
+    }
+
+    @Test
+    @DisplayName("Un valor opcional válido reemplaza el valor previamente conocido")
+    void actualizaOpcionalesValidos() {
+      PlayerCandidate original =
+          new PlayerCandidate("44", "N", "T", "L", "P", LocalDate.of(1990, 1, 1), "Spain", "100");
+      playerCatalogService.applySynchronization(snapshot(original));
+      PlayerCandidate changed =
+          new PlayerCandidate(
+              "44", "N", "T", "L", "P", LocalDate.of(1991, 1, 1), "Argentina", "100");
+      playerCatalogService.applySynchronization(snapshot(changed));
+      Player local = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst();
+      assertThat(local.getDateOfBirth()).isEqualTo(changed.dateOfBirth());
+      assertThat(local.getNationality()).isEqualTo("Argentina");
+    }
+
+    @Test
+    @DisplayName("Una resincronización idéntica no duplica, no descarta y no presenta de más")
+    void unaResincronizacionIdenticaNoAfectaLaPresentacion() {
+      // Arrange
+      PlayerCandidate player = candidate("91011", "Player");
+      playerCatalogService.applySynchronization(snapshot(player));
+
+      // Act
+      PlayerSynchronizationResult result =
+          playerCatalogService.applySynchronization(snapshot(player));
+
+      // Assert
+      assertThat(result.created()).isZero();
+      assertThat(result.updated()).isEqualTo(1);
+      assertThat(result.discardedInvalid()).isZero();
+      assertThat(result.markedInactive()).isZero();
+
+      // Verify
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .extracting(Player::getName)
+          .containsExactly("Player");
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Un fallo técnico revierte las escrituras previas sin convertirlas en descartes")
+    void revierteAnteFalloTecnico() {
+      PlayerCandidate existing = candidate("44", "Original");
+      playerCatalogService.applySynchronization(snapshot(existing));
+      PlayerCandidate changed = candidate("44", "Changed");
+      PlayerCandidate tooLong = candidate("45", "X".repeat(256));
+      assertThatThrownBy(
+              () -> playerCatalogService.applySynchronization(snapshot(changed, tooLong)))
+          .isInstanceOf(PlayerSynchronizationPersistenceException.class);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
+          .extracting(Player::getName)
+          .containsExactly("Original");
     }
   }
 
@@ -89,30 +306,96 @@ class PlayerCatalogServiceTest {
   @DisplayName("Consulta paginada de jugadores activos")
   class Pagination {
     @Test
-    void consultaSoloJugadoresActivosLocalesConPaginacionEstable() {
-      playerCatalogService.applySynchronization(
-          new PlayerSnapshot(
-              List.of(
-                  new Player(93001L, "First", "T", "L", "P"),
-                  new Player(93002L, "Second", "T", "L", "P"),
-                  new Player(93003L, "Third", "T", "L", "P")),
-              3,
-              0));
-
-      var result = playerCatalogService.getActivePlayers(1, 2);
-
-      assertThat(result.getContent()).extracting(Player::getId).containsExactly(93003L);
+    @DisplayName("La segunda página devuelve el jugador restante y metadatos correctos")
+    void devuelveLaPaginaSolicitada() {
+      PlayerCandidate first = candidate("93001", "First");
+      PlayerCandidate second = candidate("93002", "Second");
+      PlayerCandidate third = candidate("93003", "Third");
+      playerCatalogService.applySynchronization(snapshot(first, second, third));
+      Page<Player> result = playerCatalogService.getActivePlayers(1, 2);
+      assertThat(result.getContent()).extracting(Player::getName).containsExactly("Third");
+      assertThat(result.getNumber()).isEqualTo(1);
       assertThat(result.getSize()).isEqualTo(2);
       assertThat(result.getTotalElements()).isEqualTo(3);
+      assertThat(result.getTotalPages()).isEqualTo(2);
+      assertThat(result.hasPrevious()).isTrue();
+      assertThat(result.hasNext()).isFalse();
     }
 
     @Test
-    void devuelveMetadatosDePaginaVacia() {
-      var result = playerCatalogService.getActivePlayers(0, 20);
+    @DisplayName("La consulta no expone jugadores inactivos")
+    void noDevuelveJugadoresInactivos() {
+      PlayerCandidate active = candidate("93007", "Active");
+      PlayerCandidate absent = candidate("93008", "Absent");
+      playerCatalogService.applySynchronization(snapshot(active, absent));
+      playerCatalogService.applySynchronization(snapshot(active));
+      Page<Player> result = playerCatalogService.getActivePlayers(0, 20);
+      assertThat(result.getContent()).extracting(Player::getName).containsExactly("Active");
+      assertThat(result.getTotalElements()).isEqualTo(1);
+    }
 
+    @Test
+    @DisplayName("Una página vacía conserva los metadatos solicitados")
+    void devuelveMetadatosDePaginaVacia() {
+      Page<Player> result = playerCatalogService.getActivePlayers(0, 20);
       assertThat(result.getContent()).isEmpty();
+      assertThat(result.getNumber()).isZero();
       assertThat(result.getSize()).isEqualTo(20);
       assertThat(result.getTotalElements()).isZero();
+      assertThat(result.getTotalPages()).isZero();
+    }
+  }
+
+  @Nested
+  @DisplayName("Consulta individual de un jugador visible")
+  class PlayerDetail {
+    @Test
+    @DisplayName("Devuelve la identidad real con equipo y liga cargados")
+    void devuelveJugadorVisible() {
+      playerCatalogService.applySynchronization(snapshot(candidate("94001", "Joel Robles")));
+
+      Player player = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst();
+
+      Player found = playerCatalogService.getVisiblePlayerById(player.getId());
+
+      assertThat(found.getId()).isEqualTo(player.getId());
+      assertThat(found.getName()).isEqualTo("Joel Robles");
+      assertThat(found.getTeam()).isNotNull();
+      assertThat(found.getLeague()).isNotNull();
+      assertThat(found.getLeague().getId()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Un identificador inexistente produce la ausencia del jugador")
+    void fallaSiElJugadorNoExiste() {
+      playerCatalogService.applySynchronization(snapshot(candidate("94002", "Existente")));
+
+      Long id = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
+
+      assertThatExceptionOfType(PlayerNotFoundException.class)
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(id + 100_000L))
+          .withMessage("No encontramos el jugador solicitado");
+    }
+
+    @Test
+    @DisplayName("Un jugador inactivo es indistinguible de uno inexistente")
+    void fallaSiElJugadorEstaInactivo() {
+      PlayerCandidate visible = candidate("94003", "Visible");
+      PlayerCandidate absent = candidate("94004", "Inactivo");
+      playerCatalogService.applySynchronization(snapshot(visible, absent));
+
+      Long inactiveId =
+          playerCatalogService.getActivePlayers(0, 100).getContent().stream()
+              .filter(player -> player.getName().equals("Inactivo"))
+              .map(Player::getId)
+              .findFirst()
+              .orElseThrow();
+
+      playerCatalogService.applySynchronization(snapshot(visible));
+
+      assertThatExceptionOfType(PlayerNotFoundException.class)
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(inactiveId))
+          .withMessage("No encontramos el jugador solicitado");
     }
   }
 }

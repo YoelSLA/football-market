@@ -1,9 +1,20 @@
 export {
+	DEMO_DATA_LABEL,
+	DEMO_MESSAGES,
+	DEMO_QUOTE_DATES,
+	DEMO_QUOTE_DAYS,
+	DEMO_QUOTE_PERIOD_START,
+	DEMO_QUOTE_UNIT_LABEL,
+	DEMO_SEASON,
+} from "./demoData";
+export {
 	getLeagueClassification,
 	getPositionClassification,
 } from "./playerClassifications";
 export {
+	getPlayerSampleStatistics,
 	PLAYER_SAMPLE_STATISTIC_ITEMS,
-	PLAYER_SAMPLE_STATISTICS,
 } from "./playerSampleStatistics";
+export { CATEGORIES, METRIC_DEFINITIONS } from "./playerStatisticsCatalog";
+export { getPositionProfile } from "./playerStatisticsProfiles";
 export { playersQueryKeys } from "./playersQueryKeys";

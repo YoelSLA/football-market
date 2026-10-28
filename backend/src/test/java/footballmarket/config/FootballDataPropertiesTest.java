@@ -2,7 +2,8 @@ package footballmarket.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.integrations.exceptions.InvalidFootballDataConfigurationException;
+import footballmarket.integrations.footballdata.config.FootballDataProperties;
+import footballmarket.integrations.footballdata.exceptions.InvalidFootballDataConfigurationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
 
+@org.junit.jupiter.api.Tag("lightweight")
 class FootballDataPropertiesTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
@@ -27,8 +29,10 @@ class FootballDataPropertiesTest {
   @DisplayName("Configuración de ligas al iniciar")
   class Competitions {
     @ParameterizedTest
-    @ValueSource(strings = {"PL,BL1,PD,SA,FL1", "BL1,PL,PD,SA,FL1", "FL1,SA,PD,BL1,PL"})
-    void iniciaConLasCincoLigasConfiguradas(String competitions) {
+    @DisplayName("Inicia con cualquier lista no vacía de ligas únicas, conservando el orden")
+    @ValueSource(
+        strings = {"PL,BL1,PD,SA,FL1", "BL1,PL,PD,SA,FL1", "PL", "PL,CL", "PL,BL1,PD,SA,FL1,CL"})
+    void acceptsUniqueCompetitions(String competitions) {
       runner
           .withPropertyValues("football-data.competitions=" + competitions)
           .run(
@@ -40,15 +44,8 @@ class FootballDataPropertiesTest {
     }
 
     @ParameterizedTest
-    @ValueSource(
-        strings = {
-          "",
-          "PL,BL1,PD,SA",
-          "PL,BL1,PD,SA,FL1,CL",
-          "PL,BL1,PD,SA,FL1,FL1",
-          "PL,BL1,PD,SA,SA",
-          "PL,BL1,PD,SA,CL"
-        })
+    @DisplayName("Impide el arranque con una lista vacía o códigos duplicados")
+    @ValueSource(strings = {"", "PL,BL1,PD,SA,FL1,FL1", "PL,BL1,PD,SA,SA", "PL,PL"})
     void rechazaLigasInvalidasAlIniciar(String competitions) {
       runner
           .withPropertyValues("football-data.competitions=" + competitions)
@@ -59,6 +56,7 @@ class FootballDataPropertiesTest {
     }
 
     @Test
+    @DisplayName("Impide el arranque cuando falta la configuración de ligas")
     void rechazaAusenciaDeLigasAlIniciar() {
       runner.run(
           context ->

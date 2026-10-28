@@ -1,0 +1,27 @@
+meta {
+  name: Resolver pendientes desde catálogo histórico
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/players/identities/whoscored/sync-runs/7/historical
+  body: none
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

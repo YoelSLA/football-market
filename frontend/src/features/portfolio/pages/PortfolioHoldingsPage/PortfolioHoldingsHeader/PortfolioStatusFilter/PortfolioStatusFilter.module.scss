@@ -1,0 +1,94 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioFilter {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-2xs;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+	&__option {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		box-sizing: border-box;
+		height: 36px;
+		padding: 0 14px;
+		border: 1px solid transparent;
+		border-radius: 999px;
+		font-size: 12px;
+		font-weight: 500;
+		cursor: pointer;
+		white-space: nowrap;
+		transition: all 0.18s ease;
+
+		// Todas: verde oscuro, borde verde
+		&[data-filter="ALL"] {
+			border-color: ds.$accent-finance-green;
+			background: rgba(ds.$accent-finance-green, 0.12);
+			color: ds.$accent-finance-green;
+
+			&:hover:not(:disabled) {
+				background: rgba(ds.$accent-finance-green, 0.2);
+			}
+		}
+
+		// Abiertas: azul/cian oscuro, borde sutil
+		&[data-filter="OPEN"] {
+			border-color: rgba(ds.$accent-finance-cyan, 0.35);
+			background: rgba(ds.$accent-finance-cyan, 0.08);
+			color: ds.$accent-finance-cyan;
+
+			&:hover {
+				background: rgba(ds.$accent-finance-cyan, 0.15);
+			}
+		}
+
+		// Cerradas: violeta oscuro, borde sutil
+		&[data-filter="CLOSED"] {
+			border-color: rgba(ds.$accent-finance-violet, 0.35);
+			background: rgba(ds.$accent-finance-violet, 0.08);
+			color: ds.$accent-finance-violet;
+
+			&:hover {
+				background: rgba(ds.$accent-finance-violet, 0.15);
+			}
+		}
+
+		// Estado activo
+		&_active {
+			font-weight: 700;
+
+			&[data-filter="ALL"] {
+				background: ds.$accent-finance-green;
+				border-color: ds.$accent-finance-green;
+				color: ds.$text-inverse;
+			}
+
+			&[data-filter="OPEN"] {
+				background: rgba(ds.$accent-finance-cyan, 0.25);
+				border-color: ds.$accent-finance-cyan;
+				color: ds.$accent-finance-cyan;
+			}
+
+			&[data-filter="CLOSED"] {
+				background: rgba(ds.$accent-finance-violet, 0.25);
+				border-color: ds.$accent-finance-violet;
+				color: ds.$accent-finance-violet;
+			}
+		}
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-on-dark;
+			outline-offset: 2px;
+		}
+	}
+
+	&__icon {
+		flex-shrink: 0;
+		width: 14px;
+		height: 14px;
+	}
+}

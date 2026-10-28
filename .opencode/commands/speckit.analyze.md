@@ -1,8 +1,13 @@
 ---
 description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
+model: openai/gpt-6.1-sol
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks. MUST ejecutar solo Analyze autorizado, estrictamente de lectura. MUST NOT ejecutar tests ni hooks incompatibles. CRITICAL, HIGH o cualquier incertidumbre fundamental son bloqueantes; MUST NOT autorizar la implementación con ellos. El informe se registra como evidencia fuera del análisis cuando el seguimiento esté autorizado; corregir artefactos requiere otro paso autorizado y repetir Analyze.
 
 ```text
 $ARGUMENTS

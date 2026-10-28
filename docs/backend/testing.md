@@ -1,6 +1,35 @@
+<!--
+Sync Impact Report — Enmienda 2026-10-17
+Versión: (sin versionado previo) → 2.0.0. MAJOR: amplía de forma material el alcance de la
+prohibición de acceso a la persistencia en los tests de categoría Service, acotando la exclusividad
+de §5 y §6 con una excepción explícita y delimitada.
+Documento modificado: únicamente este archivo.
+Secciones modificadas: §5, §6 y §16. Secciones eliminadas: ninguna. Principios renumerados: ninguno.
+Regla adoptada: un test de categoría Service puede preparar sus precondiciones persistentes en
+Arrange mediante un helper compartido que acceda a repositorios, siempre que ese acceso no alcance
+Act, Assert ni Verify, que el helper no ejecute la operación de negocio bajo prueba y que no contenga
+assertions funcionales. La prohibición se mantiene íntegra para Verify y para las demás categorías.
+Motivo: `MarketTestData` prepara compradores, catálogo, inventario y saldos por repositorio. La
+regla anterior lo declaraba no conforme sin ofrecer una vía alternativa, porque §5 solo admite
+Services auxiliares y el dominio de mercado no expone ninguno para aprovisionar inventario. La
+excepción cierra ese hueco y, al limitarse a Arrange y prohibir assertions en el helper, impide que
+se use para eludir la frontera que §5 protege.
+Compatibilidad: §2 y §2.2 (no amplía el alcance funcional de ninguna SPEC), §3 y §4 (la excepción
+es de arquitectura de tests y no altera contratos ni garantías de integridad), §6 (no habilita
+controles ejecutables ni reduce la prohibición de que el agente ejecute tests), §8 (la excepción
+requiere autorización humana expresa, otorgada el 2026-10-17) y §9 (enmienda solicitada y autorizada
+expresamente, con impacto y dependencias declarados aquí).
+Dependencias: en el mismo cambio se actualizan las referencias cruzadas de §5, §6 y §16 de este
+documento. No requieren cambios la Constitución (ya declara este documento normativo con la misma
+obligatoriedad), `docs/development/sdd-workflow.md` §8, `AGENTS.md` y `backend/AGENTS.md` (remiten
+aquí sin describir la excepción), ni `specs/010-buy-tokens/plan.md`.
+Sin cambios en código, migraciones, contratos, Constitución, AGENTS.md ni tecnologías. No se
+ejecutaron tests ni builds: la verificación queda a cargo del usuario conforme a la sección de verificación y testing de la Constitución.
+Autorización: solicitud explícita del usuario el 2026-10-17.
+-->
 # Testing del backend
 
-La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6; los comandos permitidos, en AGENTS.md.
+La ejecución queda a cargo del usuario: el agente no ejecuta tests. El frontend está temporalmente exento de testing. Las condiciones completas de verificación y entrega están en la constitución §6 (Verificación); los comandos permitidos, en AGENTS.md.
 
 ## Guía de lectura
 
@@ -46,6 +75,16 @@ Act y Assert funcionales utilizan exclusivamente la API pública productiva del 
 
 El test no declara, inyecta, accede, invoca, mockea ni verifica Repository, JPA/Hibernate, `EntityManager`, JDBC, SQL o DB directamente, tampoco para preparación, limpieza o assertions. Las fronteras y la excepción técnica están en §6.
 
+**Excepción de Arrange, desde la enmienda 2.0.0**: el test de categoría Service puede delegar la preparación de sus precondiciones persistentes en un helper compartido que acceda a repositorios, con estas condiciones acumulativas y todas obligatorias:
+
+- El acceso a la persistencia ocurre exclusivamente en `Arrange`; `Act` y `Assert` usan solo las APIs públicas productivas del Service bajo prueba.
+- El helper no ejecuta la operación de negocio que constituye el comportamiento bajo prueba ni ninguna de sus partes.
+- El helper no contiene assertions funcionales: afirma únicamente lo que necesita para preparar su siguiente precondición.
+- La excepción no habilita usar repositorios para verificar resultados, ni para limpiar estado en `Verify`, ni para observar credenciales, tenencias o auditoría.
+- El test no inyecta ni accede al repositorio por sí mismo: el helper encapsulates el acceso.
+
+Esta excepción no altera §2 (la categoría sigue siendo Service), ni las reglas de Repository de §4, ni las de Security de §10, que conservan íntegra la prohibición de eludir su frontera. Un helper que prepare por repositorio puede ser usado por tests de cualquier categoría, pero solo la categoría Service se beneficia de esta excepción.
+
 Afirmar retorno y estado final observable por el Service: altas, cambios, reactivaciones, bajas, paginación, filtros, existencia, snapshots, entradas completas y consistencia posterior según el caso. Si su contrato no expone un detalle persistido, no eludir la frontera para observarlo ni agregar métodos productivos solo para tests. `verify(repository...)` está prohibido.
 
 Se pueden configurar mocks de Integration con `@MockitoBean`/`when(...)`, pero no invocarlos como Act ni probar su implementación: la ejecución funcional comienza en el Service; el protocolo se verifica en Integration.
@@ -57,7 +96,9 @@ Cada test parte de un estado conocido e independiente:
 - `Test/Helper → Service → Repository → DB` está permitido mediante APIs públicas productivas y respetando Arrange/Act/Assert de §5.
 - `Test/Helper → Repository/JPA/Hibernate/EntityManager/JDBC/SQL/DB` está prohibido si elude esa frontera.
 
-La infraestructura técnica puede acceder a la DB exclusivamente de testing para provisionamiento, aislamiento transaccional u otro aislamiento y restauración. No expone dependencias de persistencia al test o helper funcional ni habilita preparar datos funcionales o hacer assertions eludiendo Service.
+La infraestructura técnica puede acceder a la DB exclusivamente de testing para provisionamiento, aislamiento transaccional u otro aislamiento y restauración. No expone dependencias de persistencia al test ni habilita preparar datos funcionales o hacer assertions eludiendo Service.
+
+**Helper funcional de fixtures (enmienda 2.0.0)**: un componente de test compartido puede, además, preparar datos funcionales por repositorio **solo al servicio de la categoría Service y únicamente en `Arrange`**, conforme a las condiciones de la excepción de §5. Ese helper no se considera «infraestructura técnica» a los efectos del párrafo anterior y por eso sí puede exponer su acceso a la persistencia; lo que no puede es cruzar a `Act`, `Assert` o `Verify`, ejecutar el caso de uso bajo prueba ni afirmar resultados funcionales. El helper es reutilizable y su ubicación en `support` es la de §16.
 
 Crear datos funcionales por el Service bajo prueba o auxiliares permitidos. Ninguna estrategia puede afectar bases ajenas a testing ni justificar métodos productivos exclusivos para tests.
 
@@ -65,15 +106,24 @@ Crear datos funcionales por el Service bajo prueba o auxiliares permitidos. Ning
 
 Verificar colaboradores invocados, datos transferidos, resultados propagados/compuestos y fallos que impiden invocaciones posteriores. Se permiten `verify(...)`, `verifyNoInteractions(...)` y orden cuando la coordinación lo requiera. No repetir lógica interna de Services.
 
-## 8. Controller y Spring REST Docs
+## 8. Controller y contrato HTTP
 
 Comprobar rutas, métodos, parámetros, path variables, bodies, DTO, serialización, status, estructura/contenido exactos del contrato, validaciones, errores, `GlobalExceptionHandler` y seguridad HTTP. No acceder directamente a Repository; DB solo con justificación excepcional. No repetir lógica del Service.
 
 Verificar rechazos de entradas inválidas y ausencia de interacción con Service/Orchestrator cuando aporte valor demostrar rechazo previo al caso de uso, como paginación inválida o JWT ausente/inválido.
 
-Todo endpoint y caso distinto de respuesta contractual debe quedar documentado por tests de Controller mediante Spring REST Docs: no hay subconjunto opcional. No duplicar snippets por ejecución parametrizada o pruebas internas cuando otro test documenta el mismo caso HTTP.
+Todo endpoint y cada caso distinto de respuesta contractual debe quedar cubierto por tests de Controller que afirmen el comportamiento observable: status, estructura y contenido exactos. No hay subconjunto opcional. No duplicar la afirmación de un mismo caso HTTP por ejecución parametrizada o por pruebas internas cuando otro test ya lo cubre.
 
-Primero afirmar status, estructura y contenido; REST Docs deriva del comportamiento verificado y no sustituye assertions. Mantener snippets y descripciones sincronizados con request, response, status y campos. Controller es su fuente principal; E2E no está obligado a duplicarlos.
+El contrato HTTP del backend se documenta y mantiene mediante cuatro fuentes que deben permanecer coherentes entre sí:
+
+- **Springdoc OpenAPI**, que genera la especificación y la UI a partir de los endpoints y sus anotaciones.
+- **Las anotaciones OpenAPI de Controllers y DTO**, que son la fuente de la especificación y deben reflejar propósito, ruta, parámetros, headers, autenticación, campos, validaciones, códigos y errores.
+- **Los contratos definidos en `specs/*/contracts/`**, que son la referencia funcional y normativa de la API de cada feature.
+- **Los tests funcionales de Controller**, que verifican que el comportamiento real coincide con ese contrato.
+
+La documentación OpenAPI no sustituye las assertions: primero se afirma status, estructura y contenido, y la anotación se mantiene sincronizada con lo verificado. Controller es su fuente principal; E2E no está obligado a duplicarla.
+
+Las anotaciones deben poder utilizarse sin credenciales reales, y sus ejemplos no sustituyen a los contratos de `specs/*/contracts/`: cuando un contrato normativo y un ejemplo diverjan, prevalece el contrato.
 
 ## 9. Integration externa
 
@@ -127,9 +177,120 @@ El uso de `@Nested` de JUnit es obligatorio en todos los tests del backend, en t
 
 Está prohibido usar `this` en todo el código de tests, incluidos métodos de prueba, ciclo de vida, helpers y clases `@Nested`. Acceder a atributos y métodos de instancia directamente, sin `this` ni referencias calificadas como `OuterTest.this`. Evitar nombres de parámetros o variables locales que oculten miembros necesarios de la instancia. Esta regla es la excepción explícita a la convención de código productivo de [convenciones del backend](conventions.md).
 
-Nombres que expresen condición y resultado; estructura conceptual Arrange/Act/Assert sin comentarios artificiales. `fixtures`, `builders` y `support` se permiten con reutilización real para datos o infraestructura compartida, no como categorías nuevas.
+Nombres que expresen condición y resultado; estructura Arrange/Act/Assert/Verify explícita cuando corresponda, sin bloques vacíos. `fixtures`, `builders` y `support` se permiten con reutilización real para datos o infraestructura compartida, no como categorías nuevas.
 
-Helpers privados o compartidos no contienen assertions ni ocultan comportamiento o flujos de negocio. Respetan la frontera de su categoría, incluida §6 para persistencia de Service.
+### Estilo de los escenarios
+
+- Un método prueba un comportamiento o escenario concreto. Separar reglas independientes (por ejemplo, crear, actualizar, reactivar e inactivar) en tests distintos; conservar juntas las comprobaciones que describen el mismo resultado. Un journey E2E puede abarcar pasos sucesivos de un único flujo crítico.
+- Usar `// Arrange` para datos, mocks y precondiciones; `// Act` para la operación bajo prueba; `// Assert` para retorno o excepción; `// Verify` para estado persistido observable e interacciones o consecuencias. Omitir los bloques sin contenido. Las operaciones previas que preparan estado, incluso cuando llaman al método bajo prueba, pertenecen a Arrange. Si una excepción se afirma al ejecutar la acción, `// Act / Assert` es válido.
+- No utilizar `var` en tests: declarar tipos explícitos, también para páginas, snapshots, resultados, builders y recursos concurrentes.
+- Declarar entidades y objetos relevantes antes de incluirlos en `List.of(...)`, snapshots, requests o llamadas a Services: `Player player = new Player(1L, "N", "T", "L", "P"); List<Player> players = List.of(player); PlayerSnapshot snapshot = new PlayerSnapshot(players, 1, 0);`. No crear variables para literales triviales cuando no aportan claridad.
+- Los identificadores siguen las convenciones de idioma de la constitución. Dar a cada método un nombre corto y descriptivo, y a cada test un `@DisplayName` en español natural que explique condición y comportamiento observable. Bien: `creaJugadorNuevo` con `@DisplayName("Crea un jugador cuando no existe en el catálogo")`; mal: `testPlayer`, `works` o `creaActualizaReactivaEInactiva`. El nombre visible no debe limitarse a repetir literalmente el método.
+- Agrupar mediante `@Nested` según §16 y dar al grupo un `@DisplayName` que describa la funcionalidad compartida (por ejemplo, «Sincronización del catálogo»), sin anidamientos adicionales superfluos.
+- Parametrizar únicamente cuando varíen las entradas de una misma regla y expectativa. Preferir `@CsvSource` para combinaciones, `@ValueSource` para un valor y `@NullAndEmptySource` para ausencias; usar otras fuentes cuando aporten claridad. Dar también un `@DisplayName` humano a los casos parametrizados. No juntar reglas conceptualmente distintas para ahorrar líneas.
+- Las assertions deben demostrar la promesa del test: retorno, excepción o respuesta directa en Assert; efecto observable y colaboraciones relevantes en Verify. No añadir comprobaciones ajenas para incrementar cobertura ni verificar implementación privada. Respetar la frontera de cada categoría (§2–14).
+- Antes de cambiar una expectativa, leer implementación y contrato; no modificar código productivo para hacer pasar un test ni ajustar silenciosamente un valor esperado por un fallo. Registrar discrepancias cuya semántica no esté clara.
+
+Ejemplo de Service (con estado inicial ya conocido):
+
+```java
+@Test
+@DisplayName("Crea un jugador cuando todavía no existe en el catálogo")
+void creaJugadorNuevo() {
+  // Arrange
+  Player player = new Player(1L, "Name", "Team", "League", "Forward");
+  List<Player> players = List.of(player);
+  PlayerSnapshot snapshot = new PlayerSnapshot(players, 1, 0);
+
+  // Act
+  PlayerSynchronizationResult result = playerCatalogService.applySynchronization(snapshot);
+
+  // Assert
+  assertThat(result.created()).isEqualTo(1);
+
+  // Verify
+  Page<Player> activePlayers = playerCatalogService.getActivePlayers(0, 20);
+  assertThat(activePlayers.getContent()).extracting(Player::getId).containsExactly(1L);
+}
+```
+
+Helpers privados o compartidos no contienen assertions funcionales ni ocultan comportamiento o flujos de negocio. Respetan la frontera de su categoría, incluida §6 para persistencia de Service y la excepción de Arrange de §5. Un helper que prepara por repositorio puede afirmar lo que necesita para completar su propia precondición —por ejemplo, localizar la fila que acaba de insertar—, y esa comprobación es preparación, no una assertion funcional.
+
+### Suites de ejecución y clasificación
+
+Las suites son perfiles de **ejecución Gradle**, no perfiles Spring nuevos ni categorías
+arquitectónicas. La categoría de §2 y sus dependencias obligatorias no cambian. Por ejemplo,
+un Service sigue probándose con Spring y PostgreSQL reales, y `integrations/` no implica
+automáticamente una prueba pesada.
+
+Cada clase contenedora concreta declara exactamente una `@Tag` JUnit literal: `unit`,
+`lightweight`, `integration` o `e2e`. El tag se aplica a todos sus grupos `@Nested`.
+No declarar tags en métodos, grupos anidados, helpers o clases base; no usar `@Tags`, constantes
+ni anotaciones compuestas para clasificar. Mantener una clase contenedora por archivo; usar
+el sufijo `Test` o `Tests`, también para tests que hereden métodos de prueba.
+
+| Tag | Dependencias reales | Ejemplos |
+| --- | --- | --- |
+| `unit` | Sin contexto Spring, DB ni servidor | Model, Orchestrator, pacers, parsing y componentes instanciados directamente. |
+| `lightweight` | Contexto reducido, slice MVC o proveedor controlado; sin PostgreSQL, Docker ni navegador real | Controller, `ApplicationContextRunner`, clientes con `MockRestServiceServer` o HTTP local y Playwright sustituido. |
+| `integration` | Contexto completo o PostgreSQL/Testcontainers | Service, persistencia, migraciones, seguridad completa y startup con DB. |
+| `e2e` | Journey desde HTTP con servidor completo | Tests de `e2e/`, conservando las reglas de §13. |
+
+`validateTestClassification` inspecciona fuentes Java sin cargar ni ejecutar clases. Detecta
+tests por el sufijo del archivo o por anotaciones estándar de JUnit, exige un tag explícito en
+la clase contenedora y rechaza tags múltiples, anidados o no literales. También rechaza
+referencias directas a infraestructura Spring completa/Testcontainers en las suites rápidas.
+No es un analizador transitivo de dependencias: revisar también helpers y herencia cuando se
+agreguen pruebas rápidas. La convención de nombres permite detectar pruebas heredadas sin tags.
+
+La validación es requisito de las suites parciales, `check` y Sonar. La tarea completa `test`
+**no filtra tags ni depende de esa validación**: los tests sin clasificar siguen incluidos.
+Un fallo de clasificación bloquea la validación rápida y el build de CI, no elimina tests.
+
+Comandos desde `backend/`, para ejecución humana:
+
+| Comando | Resultado |
+| --- | --- |
+| `./gradlew validateTestClassification` | Solo validación estática de clasificación. |
+| `./gradlew unitTest` | Solo unitarios, sin cobertura. |
+| `./gradlew lightweightTest` | Solo pruebas ligeras, sin cobertura. |
+| `./gradlew fastTest` | Agrega `unitTest` y `lightweightTest`, sin ejecutar `test`. |
+| `./gradlew integrationTest` | Solo integración, sin cobertura. |
+| `./gradlew e2eTest` | Solo E2E, sin cobertura. |
+| `./gradlew test` | Todos los tests y reporte JaCoCo completo. |
+| `./gradlew build` | Build, formato, clasificación y suite completa. |
+| `./gradlew sonar` | Clasificación, suite completa, cobertura y análisis Sonar. |
+
+Las suites parciales son disjuntas, tienen salidas propias y excluyen los otros tags de suite.
+La validación impide clasificaciones contradictorias. `fastTest` no es otra tarea `Test`:
+Gradle ejecuta cada dependencia una sola vez, incluso si se solicita también por nombre.
+No combinar `test` con suites parciales si se quiere evitar repetir pruebas deliberadamente.
+Todas las JVM de testing usan UTC.
+
+El pre-push delega la detección a `.githooks/backend-changes.sh`. Solo omite backend cuando
+todos los registros recibidos permiten demostrar que no hay cambios relevantes: frontend o
+documentación. Revisa los paths de cada commit del rango fast-forward, incluidos merges,
+renombres, eliminaciones y cambios luego revertidos. Referencias eliminadas no requieren
+pruebas. Ante referencias nuevas, force-push, objetos ausentes, nombres especiales, entrada
+inválida o errores, ejecuta `fastTest`. No hace fetch ni modifica el árbol local.
+
+El hook ejecuta Gradle una sola vez, desde `backend/`, con daemon y cachés existentes y sin
+JaCoCo. Valida el árbol local, que puede diferir de los commits enviados; CI es la validación
+del estado remoto. No acredita una suite completa ni reemplaza la aprobación humana.
+
+CI ejecuta `build` completo en PR hacia `dev` o `main` y pushes a `dev`; Sonar ejecuta la
+suite completa y su cobertura en pushes a `main`. Con `CI=true`, las tareas `Test` no usan
+resultados de build cache ni se omiten por `UP-TO-DATE`; compilación, dependencias y
+configuration cache mantienen sus optimizaciones. Ambos workflows publican reportes como
+artefactos incluso ante fallos. Exigir el check de CI antes de merge requiere configurar las
+protecciones de ramas en GitHub; los workflows por sí solos no las habilitan.
+
+Verificación humana pendiente tras cambios de infraestructura: ejecutar `fastTest` con Docker
+detenido y luego `test` con Docker disponible; comprobar suites disjuntas, ausencia de ejecución
+de integración/E2E y de JaCoCo en la rápida, y cobertura completa en CI/Sonar. Comprobar también
+el hook con cambios backend, solo documentación/frontend, múltiples commits/referencias,
+renombres, eliminaciones, ramas nuevas y force-push. La existencia de esta configuración no
+acredita esos resultados ni la aceptación académica del requisito de perfiles de testing.
 
 ## 17. Cambios y cobertura
 
@@ -139,4 +300,6 @@ Elegir el nivel más específico capaz de demostrar la responsabilidad (§2), si
 
 ## 18. Entrega
 
-Aplicar la constitución §6: el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
+Aplicar la constitución §6 (Verificación): el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
+
+**Versión**: 2.1.0 | **Última enmienda**: 2026-10-19 (suites de ejecución y clasificación explícita autorizadas por el usuario; sin cambios en las fronteras funcionales de los tests)

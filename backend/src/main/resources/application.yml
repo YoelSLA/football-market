@@ -1,6 +1,14 @@
 server:
   port: 8080
 
+valuation:
+  minimum-minutes:
+    field: ${VALUATION_MINIMUM_MINUTES_FIELD:270}
+    goalkeeper: ${VALUATION_MINIMUM_MINUTES_GOALKEEPER:540}
+  performance-maximum-impact: ${VALUATION_PERFORMANCE_MAXIMUM_IMPACT:0.10}
+  discipline-maximum-impact: ${VALUATION_DISCIPLINE_MAXIMUM_IMPACT:0.05}
+  attribute-penalty-maximum-impact: ${VALUATION_ATTRIBUTE_PENALTY_MAXIMUM_IMPACT:0.10}
+
 spring:
   profiles:
     active: dev
@@ -25,3 +33,114 @@ logging:
     org.hibernate.SQL: OFF
     org.hibernate.orm.jdbc.bind: OFF
     org.hibernate.stat: OFF
+
+the-sports-db:
+  api-key: ${THE_SPORTS_DB_API_KEY}
+  base-url: ${THE_SPORTS_DB_BASE_URL:https://www.thesportsdb.com/api/v1/json}
+  request-interval-ms: ${THE_SPORTS_DB_REQUEST_INTERVAL_MS:2500}
+  max-retries: ${THE_SPORTS_DB_MAX_RETRIES:3}
+  image-retry-days: ${THE_SPORTS_DB_IMAGE_RETRY_DAYS:30}
+  audit-retention-days: ${THE_SPORTS_DB_AUDIT_RETENTION_DAYS:}
+
+# Monitoreo del backend con Spring Boot Actuator.
+# La exposición es restrictiva y explícita: nunca se usa el comodín `*`. El health check informa
+# únicamente el estado general, sin componentes ni detalles internos, y por eso es seguro
+# dejarlo accesible sin token. No se exponen `env`, `heapdump`, `threaddump`, `configprops`,
+# `beans` ni `shutdown` en ningún perfil.
+#
+# `info` queda accesible sin token para el diagnóstico local. Antes de cualquier despliegue
+# público debe restringirse: ver "PENDIENTE — Seguridad de Actuator" en docs/backend/technologies.md
+# y la deuda TD-001 en docs/TECHNICAL_DEBT.md.
+#
+# La lista de exposición se resuelve por entorno con un valor por defecto que NO incluye
+# `metrics`. Deliberadamente no se condiciona al perfil `dev`: ese perfil es el valor por defecto
+# de `spring.profiles.active` en este repositorio, de modo que atar la exposición a ese perfil
+# dejaría las métricas disponibles en cualquier entorno que no fije el perfil.
+#
+#   Habilitar métricas:  MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics
+#   Restablecer:        unset de la variable
+#
+# Solo `health`, `info` y `metrics` son endpoints de monitoreo previstos. Exponer cualquier otro
+# es una regresión de seguridad cubierta por TD-001.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "${MANAGEMENT_EXPOSED_ENDPOINTS:health,info}"
+  endpoint:
+    health:
+      show-details: never
+
+# Aprovisionamiento de la cuenta singular SUPERUSER, propietario inicial de los tokens.
+# Deshabilitado por defecto. Identidad y contraseña se proveen por el entorno de ejecución:
+# el repositorio no declara credenciales ni valores por defecto. Si se habilita sin completar la
+# configuración, el arranque falla de forma explícita.
+footballmarket:
+  superuser:
+    enabled: ${SUPERUSER_ENABLED:false}
+    username: ${SUPERUSER_USERNAME:}
+    email: ${SUPERUSER_EMAIL:}
+    password: ${SUPERUSER_PASSWORD:}
+
+# Cotización del mercado.
+#
+# El puerto Integration `QuoteSource` tiene una única implementación: la fuente real sostenida por
+# el repositorio canónico de cotizaciones (`player_quotes`), registrada en
+# `footballmarket.integrations.RepositoryQuoteSource`. No existe fuente simulada ni selección de
+# fuente en el arranque.
+market:
+  listing:
+    expiration-duration: ${MARKET_LISTING_EXPIRATION_DURATION:PT24H}
+  quote:
+    # Control de variabilidad de las cotizaciones. Los valores por defecto están disponibles sin
+    # configuración explícita y el operador puede ajustarlos en cada ejecución.
+    adjustment-factor: ${MARKET_QUOTE_ADJUSTMENT_FACTOR:0.10}
+    variation-cap: ${MARKET_QUOTE_VARIATION_CAP:0.10}
+    min-price-floor: ${MARKET_QUOTE_MIN_PRICE_FLOOR:1}
+    initial-anchor: ${MARKET_QUOTE_INITIAL_ANCHOR:100}
+
+whoscored:
+  statistics:
+    # Cuatro workers. Cada uno abre su propio contexto por sección y el navegador es único: el
+    # paralelismo no acelera la lectura de una tabla, solo reparte las cargas entre hilos. Medido el
+    # 2026-10-18: con el proveedor degradado, el recorrido completo de un jugador ronda los 17 s sin
+    # cortes y hasta 67 s cuando hay que agotar una espera de 45 s antes de reintentar la carga.
+    scraping-workers: 4
+    # El paralelismo lo define la maquina, no el proveedor: con 4 hilos y un intervalo de 1500 ms
+    # se sostiene ~2,7 peticiones por segundo. Cada peticion tarda ~400 ms, muy por debajo del
+    # intervalo, asi que en la practica hay una sola peticion en vuelo y no se acumula concurrencia.
+    # El limite observado del proveedor se manifesta como 502 y aparece con 6 peticiones
+    # simultaneas, no con el ritmo sostenido; por eso el ajuste es de workers e intervalo, y subir
+    # los workers por encima de 4 es contraproducente.
+    json-workers: 4
+    # 1500 ms por hilo. Medido el 2026-10-16 sobre el feed real: sin 429 hasta 5,6 req/s y sin
+    # errores en la zona de 2 req/s con pocas conexiones. Ver
+    # specs/012-player-statistics-scraping/evidence/rate-limit-probe.md
+    request-interval-ms: 1500
+    scraping-batch-timeout-ms: 1800000
+    # 45 s por lectura de tabla: el proveedor degrada la tabla de detalle en ventanas de minutos y
+    # con 20 s una de esas ventanas descartaba al jugador entero.
+    navigation-timeout-ms: 45000
+    query-timeout-ms: 20000
+    filter-third-party-resources: false
+    headed: true
+  base-url: ${WHOSCORED_BASE_URL:https://es.whoscored.com}
+  user-agent: ${WHOSCORED_USER_AGENT:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36}
+  page-size: ${WHOSCORED_PAGE_SIZE:100}
+  request-interval-ms: ${WHOSCORED_REQUEST_INTERVAL_MS:2500}
+  connect-timeout-ms: ${WHOSCORED_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${WHOSCORED_READ_TIMEOUT_MS:20000}
+  max-pages-per-league: ${WHOSCORED_MAX_PAGES_PER_LEAGUE:10000}
+  max-response-bytes: ${WHOSCORED_MAX_RESPONSE_BYTES:5242880}
+  competitions:
+    # league-id: PK de la liga local; tournament-id: competición equivalente en WhoScored.
+    - league-id: ${WHOSCORED_PREMIER_LEAGUE_ID:1}
+      tournament-id: 2
+    - league-id: ${WHOSCORED_BUNDESLIGA_ID:2}
+      tournament-id: 3
+    - league-id: ${WHOSCORED_LALIGA_ID:3}
+      tournament-id: 4
+    - league-id: ${WHOSCORED_SERIE_A_ID:4}
+      tournament-id: 5
+    - league-id: ${WHOSCORED_LIGUE_1_ID:5}
+      tournament-id: 22

@@ -1,0 +1,48 @@
+@use "@/styles/abstracts" as ds;
+
+.marketPagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .8rem;
+	flex-wrap: wrap;
+	min-width: 0;
+	color: ds.$text-portfolio-label;
+	font-size: .8rem;
+
+	&__pages {
+		--pagination-surface: transparent;
+		--pagination-border: #{ds.$border-finance};
+		--pagination-control-surface: #{ds.$surface-finance-panel-to};
+		--pagination-active: #{ds.$accent-finance-cyan};
+		width: auto;
+		max-width: 100%;
+		padding: 0;
+		gap: .4rem;
+	}
+
+	&__size {
+		display: flex;
+		align-items: center;
+		gap: .65rem;
+		flex-wrap: wrap;
+
+		select {
+			color: ds.$text-portfolio-title;
+			background: ds.$surface-finance-base;
+			border: 1px solid ds.$border-finance;
+			border-radius: .35rem;
+			padding: .3rem 1rem;
+			opacity: 1;
+		}
+
+		small {
+			font-size: .65rem;
+			color: ds.$state-caution;
+		}
+	}
+
+	@media (max-width: 850px) {
+		justify-content: center;
+	}
+}

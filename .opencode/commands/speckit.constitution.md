@@ -8,6 +8,10 @@ handoffs:
 
 ## User Input
 
+## Reglas locales obligatorias
+
+MUST leer Constitution vigente, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. Una enmienda MUST preservar estructura/secciones no afectadas, justificar versión y registrar impacto; la plantilla no autoriza reescritura global de una Constitution existente. MUST NOT ejecutar tests ni hooks incompatibles ni iniciar Specify por completar gobernanza.
+
 ```text
 $ARGUMENTS
 ```
@@ -16,7 +20,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Scope Guard
 
-This command's own work is limited to updating the project constitution itself. Dependent templates
+This command's own work is limited to the project constitution itself and its amendment history.
+The amendment history lives in `.specify/memory/history/constitution-changelog.md`, which this
+command MAY create and append to; nothing else may be created or modified here. Dependent templates
 and commands read the constitution at runtime and are not modified here.
 
 - Classify every part of the user input as either constitution content or a separate,
@@ -99,18 +105,26 @@ Follow this execution flow:
      - PATCH: Clarifications, wording, typo fixes, non-semantic refinements.
    - If version bump type ambiguous, propose reasoning before finalizing.
 
-3. Draft the updated constitution content using the resolved template as the required structure:
+3. Redactar la enmienda preservando la estructura vigente si existe Constitution; usar la plantilla como estructura inicial solo si no existe:
    - Replace every placeholder with concrete text (no bracketed tokens left except intentionally retained template slots that the project has chosen not to define yet—explicitly justify any left).
    - Preserve heading hierarchy and comments can be removed once replaced unless they still add clarifying guidance.
    - Ensure each Principle section: succinct name line, paragraph (or bullet list) capturing non‑negotiable rules, explicit rationale if not obvious.
    - Ensure Governance section lists amendment procedure, versioning policy, and compliance review expectations.
 
-4. Produce a Sync Impact Report (prepend as an HTML comment at top of the constitution file after update):
-   - Version change: old → new
-   - List of modified principles (old title → new title if renamed)
-   - Added sections
-   - Removed sections
-   - Follow-up TODOs if any placeholders intentionally deferred.
+4. Produce a Sync Impact Report. Do NOT place it inside the constitution file.
+   - Target file: `.specify/memory/history/constitution-changelog.md`. Create the
+     `.specify/memory/history/` directory if it does not exist.
+   - Prepend the new report as an HTML comment at the top of that changelog file, above any
+     existing reports. Preserve every prior report byte for byte: never edit, summarize,
+     reorder or delete it.
+   - The constitution file holds principles and guarantees only. Keep in it a short pointer
+     comment linking to `history/constitution-changelog.md`, never the reports themselves.
+   - Report contents:
+     - Version change: old -> new
+     - List of modified principles (old title -> new title if renamed)
+     - Added sections
+     - Removed sections
+     - Follow-up TODOs if any placeholders intentionally deferred.
 
 5. Validation before final output:
    - No remaining unexplained bracket tokens.
@@ -137,7 +151,9 @@ If the user supplies partial updates (e.g., only one principle revision), still 
 
 If critical info missing (e.g., ratification date truly unknown), insert `TODO(<FIELD_NAME>): explanation` and include in the Sync Impact Report under deferred items.
 
-Write only `.specify/memory/constitution.md`; do not create or modify template source files.
+Write only `.specify/memory/constitution.md` and its Sync Impact Report in
+`.specify/memory/history/constitution-changelog.md`; do not create or modify template source files,
+scripts or any other document.
 
 ## Post-Execution Checks
 

@@ -1,8 +1,13 @@
 ---
 description: Assess the current codebase against the feature's spec, plan, and tasks, then append any remaining unbuilt work as new tasks to tasks.md so implement can complete it.
+model: opencode-go/kimi-k3.1-pro
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks. Este comando corresponde al gate final tras Implement de SPEC satisfactorio y todas las US requeridas Done. MUST NOT ejecutar tests ni hooks incompatibles. Su evaluación SDD/código y escritura append-only no acreditan por sí solas cierre: la revisión complementaria de checklists, documentación, evidencia y trazabilidad entre el seguimiento operativo, los artefactos SDD y Git ocurre fuera del comando. Con hallazgos MUST mantener abierta la funcionalidad y reabrir el ciclo autorizado de US afectadas, no ejecutar Tasks automáticamente.
 
 ```text
 $ARGUMENTS

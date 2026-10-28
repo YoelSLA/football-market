@@ -1,55 +1,372 @@
-# Constitución de Football Market
+<!--
 
-## 1. Documentos normativos
+Football Market Constitution — Constitution vigente.
 
-Esta constitución contiene las reglas globales. [Arquitectura común](../../docs/architecture.md), [arquitectura del backend](../../docs/backend/architecture.md) y [arquitectura del frontend](../../docs/frontend/architecture.md) definen roles y dependencias; las [convenciones del backend](../../docs/backend/conventions.md) y las [convenciones del frontend](../../docs/frontend/conventions.md) definen sus reglas de implementación; [tecnologías del backend](../../docs/backend/technologies.md) y [tecnologías del frontend](../../docs/frontend/technologies.md) documentan el stack y su propósito; [testing](../../docs/backend/testing.md) define las pruebas del backend. Todos tienen la misma obligatoriedad cuando resulten aplicables. La configuración efectiva del proyecto conserva precedencia como fuente de verdad de dependencias y versiones.
+Las enmiendas y su historialSync Impact Report completo se conservan en
+.specify/memory/history/constitution-changelog.md. Este archivo contiene únicamente los
+principios y garantías vigentes.
 
-Consultar solo las secciones pertinentes y sus reglas generales, siguiendo las guías de lectura de cada documento. Las instrucciones operativas están en [AGENTS.md](../../AGENTS.md). Specs y Plans no deben repetir restricciones globales salvo consideraciones específicas de la feature.
+Documentos subordinados y su responsabilidad única:
 
-## 2. Calidad y alcance
+| Responsabilidad                          | Fuente                                          |
+| ---------------------------------------- | ----------------------------------------------- |
+| Principios y garantías                    | Este archivo                                    |
+| Roles y dependencias                     | `docs/architecture.md` y la arquitectura de cada área |
+| Convenciones de implementación           | Convenciones de cada área                       |
+| Stack, versiones y dependencias           | Tecnologías de cada área y la configuración efectiva |
+| Requisitos académicos                    | `tp/enunciado.md` y `tp/entregas.md`           |
+| Procedimiento de desarrollo SDD          | `docs/development/sdd-workflow.md`             |
+| Ramas, commits y Pull Requests            | `docs/development/git-workflow.md`             |
+| Deuda técnica                             | `docs/TECHNICAL_DEBT.md`                       |
+| Instrucciones de trabajo del agente       | `AGENTS.md` y los `AGENTS.md` de cada área      |
+| Estado de las especificaciones            | `specs/README.md`                               |
+-->
+# Football Market Constitution
 
-- Preferir la solución válida más simple, con responsabilidades coherentes y detalles encapsulados mediante contratos. No crear capas, interfaces, dependencias o abstracciones por costumbre o necesidades hipotéticas; una duplicación no exige por sí sola abstraer.
-- No agregar dependencias si las capacidades existentes bastan. Las tecnologías nuevas requieren justificación técnica y aprobación; las versiones administradas por Spring Boot no se sobrescriben sin necesidad justificada.
-- Limitar los cambios a la tarea y a la coherencia de sus elementos afectados. Refactorizar solo con beneficio concreto, preservando comportamiento ajeno; revisar consumidores antes de eliminar o renombrar elementos.
-- Eliminar código muerto dentro del alcance. Mantener comentarios útiles y actualizados, sin repetir lo evidente.
-- Reportar violaciones o fallos preexistentes ajenos al cambio sin ocultarlos ni ampliar el alcance para corregirlos.
+## Core Principles
 
-## 3. Seguridad
+### I. Simplicidad y calidad
 
-- Validar entradas externas no confiables conforme al contrato y las reglas funcionales. No deshabilitar seguridad para simplificar una implementación.
-- Usar la autenticación del proyecto y comprobar autorización de forma independiente, incluidos roles, permisos y pertenencia al recurso cuando corresponda.
-- Usar parametrización, binding o escaping seguro; no concatenar entrada externa cuando exista un mecanismo seguro equivalente. No implementar criptografía propia.
-- Mantener secretos, credenciales y tokens fuera del código y del repositorio; no filtrar información sensible en respuestas, logs, errores o configuraciones versionadas.
-- Aplicar mínimo privilegio, valores seguros por defecto y comunicaciones seguras, incluido HTTPS cuando corresponda. Corregir vulnerabilidades relevantes introducidas o agravadas por el cambio.
+Preferir la solución válida más simple, con responsabilidades coherentes y detalles
+encapsulados mediante contratos. No crear capas, interfaces, dependencias o abstracciones por
+costumbre o por necesidades hipotéticas; una duplicación no exige por sí sola abstraer. No
+agregar dependencias si las capacidades existentes bastan; las tecnologías nuevas requieren
+justificación técnica y aprobación, y las versiones administradas por la plataforma no se
+sobrescriben sin necesidad justificada.
 
-## 4. Contratos y sincronización
+Limitar los cambios a la tarea y a la coherencia de sus elementos afectados. Refactorizar solo
+con beneficio concreto, preservando el comportamiento ajeno y revisando consumidores antes de
+eliminar o renombrar elementos. Eliminar el código muerto dentro del alcance y mantener
+comentarios útiles y actualizados, sin repetir lo evidente.
 
-Los consumidores dependen de contratos, no de detalles internos. Todo cambio observable es un cambio de contrato: evaluar compatibilidad, incluidos campos, obligatoriedad, significado y errores. No introducir incompatibilidades silenciosas; tratar contratos con consumidores desconocidos como potencialmente utilizados.
+Entre alternativas técnicamente válidas, elegir la más sencilla que satisfaga los requisitos y
+preserve las garantías de este documento.
 
-Actualizar en el mismo cambio los elementos afectados: Spec, implementación, tests del backend, DTO, documentación, OpenAPI, Postman y configuración. Resolver discrepancias entre Spec y código según el comportamiento acordado; nunca cambiar la Spec para justificar una desviación no acordada ni alterar tests o controles para ocultar fallos.
+### II. Proporcionalidad del alcance
 
-Todo cambio que afecte el inventario tecnológico —incorporación, eliminación, sustitución o actualización de una tecnología o dependencia, o cambio de su versión o propósito sustancial de uso— debe reflejarse en la misma tarea en el `docs/backend/technologies.md` o `docs/frontend/technologies.md` correspondiente. La configuración efectiva conserva precedencia como fuente de verdad.
 
-El contrato HTTP del backend se define en [arquitectura del backend](../../docs/backend/architecture.md) §1.7; sus reglas de documentación, en [convenciones del backend](../../docs/backend/conventions.md).
+Dimensionar cada especificación al alcance solicitado. No agregar requisitos por constituir
+buenas prácticas generales ni porque un escenario sea técnicamente posible.
 
-## 5. Idioma
+Todo caso límite se clasifica **antes** de convertirse en requisito:
 
-Código nuevo o modificado en inglés: identificadores, paquetes, endpoints y campos JSON. Los nombres impuestos por contratos externos conservan su forma. Los nombres descriptivos de tests deben estar en español; el resto de su código sigue la regla general.
+- **Obligatorio**: exigido por los requisitos académicos, aprobado expresamente por el equipo o
+  necesario para preservar una garantía esencial.
+- **Recomendado**: mejora razonable de robustez, mantenibilidad o experiencia de uso, sujeta a
+  evaluación.
+- **Opcional**: escenario excepcional, hipotético o de baja relevancia práctica.
 
-Documentación propia, Specs, Javadoc, OpenAPI y mensajes de validación en español; documentación externa puede conservar su idioma. Nombres de ramas, commits, Pull Requests e Issues en inglés. No traducir código existente fuera del alcance: aplicar estas convenciones a los elementos nuevos o modificados.
+Un caso sin clasificar no es requisito. Solo los obligatorios bloquean el avance; los
+recomendados y opcionales se documentan, cuando aportan valor, como observaciones, riesgos
+conocidos o mejoras futuras, y no entran por sí solos en requisitos funcionales, criterios de
+aceptación ni tareas obligatorias.
 
-## 6. Verificación
+Antes de elevar un caso a obligatorio, evaluar si puede ocurrir en los flujos reales de la
+aplicación, si puede reproducirse o verificarse razonablemente, su probabilidad e impacto, su
+relación con los requisitos originales, la complejidad de implementarlo y si existe una solución
+más sencilla que lo resuelva. La dificultad de reproducción no justifica descartar ni posponer
+riesgos críticos de seguridad o integridad.
 
-El agente tiene prohibido ejecutar tests, incluso indirectamente. Los tests del backend los ejecuta el usuario; si se necesitan resultados, solicitar los casos concretos y su salida. El frontend queda temporalmente exento de testing: no crear ni ejecutar tests ni incorporar infraestructura para ellos.
 
-El único control ejecutable por el agente es el build sin tests del área cuyo código cambió, con los comandos de AGENTS.md. Los cambios exclusivamente documentales no requieren build.
+Los agentes identifican problemas y proponen soluciones: no convierten unilateralmente una
+recomendación en requisito obligatorio ni amplían el alcance aprobado. Toda decisión relevante
+de alcance requiere aprobación del equipo y queda registrada en el artefacto afectado.
 
-Se puede entregar con el build aprobado y los tests del backend explícitamente pendientes del usuario. Un fallo preexistente verificablemente ajeno al cambio no bloquea la entrega, pero debe reportarse. SonarQube, Quality Gates y otros controles opcionales quedan a cargo del usuario y no condicionan la finalización. El cambio debe dejar coherentes todos sus elementos afectados; toda ampliación del alcance requiere justificación explícita.
+### III. Seguridad e integridad
 
-## 7. Gobernanza
+Validar las entradas externas no confiables conforme al contrato y a las reglas funcionales. No
+deshabilitar seguridad para simplificar una implementación.
 
-Los agentes no pueden modificar, ignorar ni reinterpretar la Constitution ni los documentos normativos aplicables para justificar o facilitar una implementación incompatible. Solo pueden modificarlos cuando el usuario solicite explícitamente una modificación normativa.
+Usar la autenticación del proyecto y comprobar la autorización de forma independiente,
+incluidos roles, permisos y pertenencia al recurso cuando corresponda.
 
-Ante un conflicto necesario, proponer la enmienda antes del cambio incompatible. Si los documentos, la Spec y el código no resuelven una decisión normativa relevante, solicitar aclaración sin inventar reglas o excepciones.
+Usar parametrización, binding o escapado seguro; no concatenar entrada externa cuando exista un
+mecanismo seguro equivalente. No implementar criptografía propia.
 
-**Versión**: 3.2.0 | **Ratificación**: 2026-08-31 | **Última enmienda**: 2026-09-22
+Mantener secretos, credenciales y tokens fuera del código y del repositorio, y no filtrar
+información sensible en respuestas, registros, errores ni configuraciones versionadas.
+
+Aplicar mínimo privilegio, valores seguros por defecto y comunicaciones seguras. Corregir las
+vulnerabilidades relevantes introducidas o agravadas por el cambio.
+
+### IV. Coherencia de contratos
+
+Los consumidores dependen de contratos, no de detalles internos. Todo cambio observable es un
+cambio de contrato: evaluar su compatibilidad —campos, obligatoriedad, significado y errores— y
+tratar los contratos con consumidores desconocidos como potencialmente utilizados. No
+introducir incompatibilidades silenciosas.
+
+Actualizar **en el mismo cambio** todos los elementos afectados: especificación, implementación,
+tests, contratos, documentación y configuración. Resolver las discrepancias entre especificación
+y código según el comportamiento acordado. Nunca cambiar la especificación para justificar una
+desviación no acordada, ni alterar tests o controles para ocultar fallos.
+
+Todo cambio que afecte al inventario tecnológico —incorporación, eliminación, sustitución o
+actualización de una tecnología o de una dependencia, o cambio de su versión o de su propósito
+sustancial de uso— debe reflejarse en la misma tarea en el documento de tecnologías del área
+correspondiente. La configuración efectiva conserva precedencia como fuente de verdad.
+
+### V. Trazabilidad y fuente de verdad
+
+El seguimiento operativo de una funcionalidad se realiza en el sistema de seguimiento del
+proyecto. Su configuración, sus estados y sus transiciones están definidos en
+[`docs/development/sdd-workflow.md`](../../docs/development/sdd-workflow.md).
+
+El seguimiento operativo **no es fuente de requisitos**. Una tarjeta, una etiqueta, una columna
+o un comentario no sustituye a la especificación, al plan, a las tareas ni a la documentación
+técnica. Si una tarjeta contradice un artefacto, prevalece el artefacto.
+
+El estado de una funcionalidad tiene dos ámbitos con fuentes distintas:
+
+- El **estado del proceso**, que viven en los artefactos de la especificación y se rige por
+  [`specs/README.md`](../../specs/README.md).
+- El **estado del seguimiento**, que vive en el sistema de seguimiento.
+
+Cada fuente gobierna únicamente su ámbito y **no existe precedencia universal entre ambas**: el
+estado del proceso no describe el avance del seguimiento, ni el estado del seguimiento describe
+la fase del proceso. Si discrepan, es una inconsistencia que se corrige en el origen que la
+evidencia contradija, no un conflicto que se resuelva aplicando una fuente sobre la otra.
+
+Cada cambio debe ser trazable a su origen: la funcionalidad a su requisito, el trabajo a su
+especificación y el resultado a su rama, sus commits y su Pull Request. Las convenciones de
+ramas, commits y Pull Requests están en
+[`docs/development/git-workflow.md`](../../docs/development/git-workflow.md).
+
+Ningún estado se deduce de la existencia de archivos, de tareas marcadas, de controles
+técnicos, de commits, de merges ni de Pull Requests abiertos. Los registros que contienen
+información histórica conservan su validez como evidencia y no se reescriben para reflejar un
+estado posterior.
+
+### VI. Mínimo alcance necesario
+
+Este principio es transversal y gobierna SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS, ANALYZE e
+IMPLEMENT. No deroga ni debilita los principios I a V, las obligaciones técnicas o de seguridad,
+la coherencia de contratos, la verificación y el testing, los requisitos académicos ni las
+autorizaciones humanas. No altera la prohibición de ejecutar tests ni la exención temporal de
+testing del frontend, y no omite ninguna fase, artefacto o control exigido por el workflow.
+
+Toda especificación MUST limitarse a lo indispensable para cumplir completamente el requerimiento
+y sus criterios de aceptación, incluidos los requisitos académicos que los integran. El mínimo no
+autoriza omitir parte de ese cumplimiento. Ante alternativas válidas, MUST priorizarse la
+solución más simple, suficiente y de menor alcance que satisfaga ese cumplimiento y preserve las
+garantías de este documento.
+
+MUST NOT agregarse funcionalidades, abstracciones, validaciones, pruebas, documentación ni
+requisitos adicionales sin una justificación concreta, registrada en el artefacto afectado y
+vinculada al requerimiento, a sus criterios de aceptación o a una obligación vigente. MUST
+reutilizarse las soluciones y convenciones existentes antes de introducir otras cuando satisfacen
+el requerimiento y las normas aplicables. Esa reutilización no conserva una práctica incompatible
+con la arquitectura definida o con esta Constitución, ni exige abstraer una duplicación por sí
+sola.
+
+Los requisitos no funcionales MUST limitarse al mínimo aplicable. Esa limitación MUST NOT
+debilitar obligaciones técnicas o de seguridad vigentes, ni convertir un objetivo no acordado en
+criterio de aceptación o tarea obligatoria.
+
+CHECKLIST y ANALYZE MUST NOT convertir una recomendación opcional en requisito obligatorio,
+criterio de aceptación, tarea obligatoria ni hallazgo bloqueante. Un problema MUST considerarse
+bloqueante solo cuando impida cumplir correctamente el requerimiento, sus criterios de aceptación
+o una obligación vigente. Siguen siendo bloqueantes: un caso obligatorio del principio II, una
+contradicción con esta Constitución y la falta de cobertura de un criterio de aceptación exigido.
+No son bloqueantes por sí solos un caso recomendado u opcional, un hallazgo editorial sin ese
+impacto ni una dependencia técnica identificada y resoluble por orden técnico.
+
+La aplicación por fase es normativa y no detalla procedimientos:
+
+- **SPECIFY**: la especificación se limita a lo indispensable para el cumplimiento completo.
+- **CLARIFY**: se resuelven solo las decisiones necesarias para ese cumplimiento; una ambigüedad
+  que no lo impida no se convierte en requisito.
+- **PLAN**: se adopta la solución más simple, suficiente y de menor alcance, reutilizando lo
+  existente antes de introducir abstracciones, validaciones o requisitos no funcionales no
+  exigidos.
+- **CHECKLIST**: se evalúa la calidad de lo especificado; no se elevan recomendaciones opcionales
+  a requisitos ni a condiciones de avance.
+- **TASKS**: se descompone solo el trabajo indispensable para ese cumplimiento y para las
+  obligaciones vigentes.
+- **ANALYZE**: se contrasta el alcance y se reportan hallazgos; no se convierten recomendaciones
+  opcionales en blockers ni se exige ampliar el alcance para cerrarlos.
+- **IMPLEMENT**: se escribe únicamente el alcance autorizado, sin agregar funcionalidad,
+  abstracción, validación, prueba ni documentación adicional sin la justificación exigida.
+
+Lo exigido por un principio vigente, por el alcance autorizado, por un requisito académico o por
+una norma aplicable del área no es alcance adicional. Eso incluye las actualizaciones que el
+principio IV impone en el mismo cambio y las validaciones que el principio III exige. Reducir o
+ampliar el alcance aprobado requiere decisión humana explícita, registrada en el artefacto
+afectado. Las decisiones relevantes de alcance siguen rigiéndose por el principio II.
+
+## Restricciones adicionales
+
+### Idioma
+
+El código nuevo o modificado se escribe en inglés: identificadores, paquetes, endpoints y
+campos de serialización. Los nombres impuestos por contratos externos conservan su forma. Los
+nombres descriptivos de tests se escriben en español; el resto de su código sigue la regla
+general.
+
+La documentación propia, las especificaciones, la documentación de API y los mensajes de
+validación se escriben en español; la documentación externa puede conservar su idioma. Los
+nombres de commits, ramas, Issues y Pull Requests se rigen por las convenciones del proyecto.
+No traducir código existente fuera del alcance.
+
+### Gestión de datos en desarrollo
+
+Mientras el proyecto no esté en producción, los datos son descartables y su conservación no es
+un requisito. Aplicar estas reglas únicamente a la base de datos y al estado de desarrollo; no
+constituyen una excepción a los principios anteriores.
+
+Preferir el esquema y la representación de datos más simples que satisfagan los requisitos
+actuales. Se permite eliminar, recrear o reinicializar datos, tablas y estructuras de base de
+datos cuando eso simplifique la implementación.
+
+No implementar migraciones, mecanismos de compatibilidad retroactiva, columnas o rutas de
+escritura preservadoras ni capas de traducción cuyo único propósito sea conservar datos o
+estructuras de desarrollo existentes. No anticipar requisitos de producción no definidos.
+
+Esta permisividad se limita a los datos: no habilita alterar contratos, eliminar operaciones o
+respuestas documentadas, ni evadir el principio de coherencia de contratos. Toda operación
+destructiva respeta las restricciones de verificación y las autorizaciones humanas, y no se
+ejecuta por iniciativa propia del agente.
+
+Esta restricción se revisa cuando el proyecto avance hacia producción y deje de ser aplicable
+sin una enmienda posterior.
+
+## Flujo de desarrollo
+
+### Metodología
+
+El desarrollo se rige por Spec-Driven Development: una funcionalidad se especifica, se planifica,
+se descompone en tareas, se implementa y se valida antes de cerrarse. Los procedimientos, las
+condiciones de avance entre fases y el uso de los comandos de la herramienta de especificación
+están en [`docs/development/sdd-workflow.md`](../../docs/development/sdd-workflow.md), que es
+el único documento que los detalla.
+
+SPECIFY, CLARIFY, PLAN, CHECKLIST, TASKS, ANALYZE e IMPLEMENT se ejecutan conforme al principio
+VI. Los procedimientos de cada fase siguen estando solo en el workflow.
+
+El agente no emula ni duplica operaciones de la herramienta de especificación. Si una
+operación requerida falta o falla, se detiene el trabajo y se reporta.
+
+### Verificación y testing
+
+**El agente tiene prohibido ejecutar tests**, directa e indirectamente, mediante comandos,
+scripts, builds, hooks o generadores. Los tests los ejecuta el usuario. El agente tampoco puede
+presentar tests como ejecutados sin resultados aportados por el usuario.
+
+El único control ejecutable por el agente es el que el área afectada autorice en su `AGENTS.md`,
+y nunca un control que incluya la ejecución de tests. Los cambios exclusivamente documentales no
+requieren control ejecutable.
+
+**Exención temporal de testing del frontend.** El frontend queda exento de testing: no se crean
+ni se ejecutan tests del frontend, ni se incorpora infraestructura para ellos. Esta exención es
+temporal y se revisa cuando el proyecto lo permita.
+
+**Excepción acotada para infraestructura de desarrollo.** Como única excepción a la exclusividad
+anterior, el agente **MAY** ejecutar validaciones controladas de infraestructura de desarrollo,
+exclusivamente cuando sean necesarias para comprobar mecanismos de integración de agentes,
+captura de evidencias y registro de conversaciones. Cada validación **MUST** contar con
+autorización humana explícita para una ejecución y un alcance concretos; esta norma no concede
+permisos implícitos.
+
+Esa excepción **MUST NOT** utilizarse para ejecutar tests de aplicación, directa o
+indirectamente, ampliar los controles autorizados, modificar comportamiento funcional, aprobar o
+invalidar autorizaciones, cambiar estados del proceso o del seguimiento, modificar el tablero o
+las entradas de seguimiento, ejecutar operaciones de escritura de historial ni acceder o
+modificar SPEC-008. La creación o modificación de instrumentación, plugins, configuraciones,
+servicios o sesiones requiere autorización humana específica, y el inicio de servicios o la
+interrupción de sesiones también.
+
+Las validaciones **MUST** ser reversibles, preservar el trabajo existente, proteger la
+información sensible y registrar únicamente resultados realmente observados, con sus
+limitaciones. La limpieza **MUST** limitarse a elementos creados o modificados bajo
+autorización. Ante riesgo de exposición de información sensible, pérdida de trabajo o efectos
+secundarios no autorizados, el agente **MUST** detenerse y solicitar decisión humana. Una
+validación satisfactoria de infraestructura no implica aceptación funcional de la aplicación ni
+aprobación de ninguna autorización.
+
+### Condiciones de entrega
+
+Se puede entregar con el control aprobado y los tests explícitamente pendientes del usuario. Un
+fallo preexistente verificablemente ajeno al cambio no bloquea la entrega, pero debe reportarse.
+Los controles opcionales a cargo del usuario, como análisis estático o puertas de calidad, no
+condicionan la finalización.
+
+**La entrega técnica y un control satisfactorio no acreditan revisión, testing ni cierre.** Los
+tests aplicables pendientes impiden superar el testing y alcanzar el cierre. La no aplicabilidad
+de tests automatizados requiere justificación y validación humana explícita.
+
+### Autorizaciones humanas
+
+Las personas deciden; el agente prepara, implementa y documenta.
+
+**Ninguna implementación se escribe sin autorización humana explícita y vigente.** Ninguna
+autorización se concede, renueva, infiere ni sustituye por otra, ni se deriva de tareas
+completas, de un control técnico, de un commit, de un Pull Request ni de un diagnóstico
+favorable. Una expresión ambigua no constituye aprobación, y el agente no puede aprobar,
+rechazar ni dar por válido un gate en nombre del usuario.
+
+Las autorizaciones requeridas son cuatro y se consolidan **por alcance explícito**, no por
+unidad de historia:
+
+1. **Implementación** — habilita escribir el código del alcance autorizado y no habilita la
+   revisión, el testing ni el cierre.
+2. **Revisión de código** — sobre el informe de revisión completo, incluidos los tests. Revisar
+   y aprobar código no sustituye revisar y aprobar pruebas.
+3. **Testing** — sobre el resultado ejecutado y aportado por el usuario, o sobre una no
+   aplicabilidad justificada y validada explícitamente.
+4. **Cierre de la funcionalidad** — referida a la funcionalidad concreta y al resultado
+   evaluado y presentado. Un diagnóstico favorable prepara el cierre, no lo autoriza.
+
+Toda autorización debe ser explícita, verificable y persistente en un soporte del proyecto, de
+modo que se pueda identificar quién autorizó, qué autorizó y con qué evidencia se compara. No
+se prescribe un formato obligatorio ni un sistema específico, y la evidencia existente es
+reutilizable cuando sea suficiente para acreditar una autorización vigente.
+
+Las autorizaciones se **invalidan solo por impacto sobre el alcance evaluado**: los cambios de
+código, tests o requisitos que afecten a lo evaluado invalidan las autorizaciones
+correspondientes, y los cambios sin impacto conservan las aprobaciones no afectadas. Las
+invalidaciones se registran como eventos nuevos, con su motivo y su alcance, sin borrar la
+evidencia histórica y sin atribuirse a una aprobación humana. No se reinicia el trabajo completo
+por un cambio acotado.
+
+Las condiciones, los informes y las listas de verificación de cada autorización están en
+[`docs/development/sdd-workflow.md`](../../docs/development/sdd-workflow.md).
+
+### Definición de cierre
+
+Una funcionalidad se cierra únicamente con: trabajo técnico necesario completo, implementación
+completa del alcance autorizado, revisión de código vigente, testing aprobado o no aplicabilidad
+validada, diagnóstico final satisfactorio, autorización de cierre humana explícita, vigente y
+persistida, y coherencia de todos los artefactos afectados. `tasks.md` completo, un build
+satisfactorio, un commit, un merge o un Pull Request abierto no equivalen a cierre.
+
+## Governance
+
+Esta Constitución tiene la máxima autoridad normativa del proyecto. Ninguna decisión técnica,
+especificación, artefacto o registro operativo puede justificarse debilitándola, reinterpretándola
+o ignorándola. Los agentes no pueden modificarla, ignorarla ni reinterpretarla para facilitar una
+implementación incompatible; solo pueden hacerlo cuando el usuario lo solicite expresamente.
+
+Los documentos normativos de cada área mantienen su obligatoriedad cuando resulten aplicables.
+El procedimiento de desarrollo se ejecuta dentro del alcance autorizado y conforme al principio
+de mínimo alcance necesario. Ante un conflicto entre fuentes obligatorias, se detiene la
+transición y se aplican estas reglas de gobernanza; no se inventan excepciones. Ninguna
+especificación o registro operativo puede alterar los requisitos académicos para justificar una
+desviación: las contradicciones se señalan antes de proponer cambios.
+
+Las enmiendas requieren documentación, aprobación humana y, cuando existan, un plan de
+migración. Una enmienda **MUST** preservar la estructura vigente y las secciones ajenas.
+
+El versionado es semántico:
+
+- **MAJOR** al eliminar o redefinir de forma incompatible un principio o una garantía.
+- **MINOR** al añadir un principio o ampliar materialmente uno existente de forma compatible.
+- **PATCH** al aclarar sin cambio semántico.
+
+Toda enmienda justifica su incremento, registra el impacto y las dependencias, conserva la fecha
+de ratificación y actualiza la fecha de la última enmienda. Cada enmienda produce un informe de
+impacto que se conserva **íntegro** en
+[`.specify/memory/history/constitution-changelog.md`](history/constitution-changelog.md), junto
+a la Constitución y no dentro de ella.
+
+
+**Version**: 9.1.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-10-26

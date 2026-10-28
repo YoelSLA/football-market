@@ -1,0 +1,55 @@
+package footballmarket.models;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.valuation.domain.enums.GeneralPosition;
+import footballmarket.features.valuation.domain.enums.MetricSourceSummary;
+import footballmarket.features.valuation.domain.models.AttributeValuation;
+import footballmarket.features.valuation.domain.models.AttributeValuationCalculator;
+import footballmarket.features.valuation.domain.records.PreparedValuationMetrics;
+import footballmarket.features.valuation.infraestructure.config.ValuationProperties;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Set;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+@org.junit.jupiter.api.Tag("unit")
+class AttributeValuationCalculatorTest {
+  @Nested
+  @DisplayName("Atributos exclusivos de arquero")
+  class GoalkeeperAttributes {
+    @Test
+    @DisplayName("Calcula SAV DIS y ACT sin atributos de campo")
+    void calculatesGoalkeeperShape() {
+      Player player =
+          new Player("Keeper", new Team("Team", new League("League"), true), "Goalkeeper");
+      PreparedValuationMetrics metrics =
+          new PreparedValuationMetrics(
+              GeneralPosition.GOALKEEPER,
+              MetricSourceSummary.JSON,
+              LocalDate.of(2026, 10, 19),
+              PositionalValuationCalculatorTest.neutralValues(),
+              Set.of(),
+              BigDecimal.ONE);
+      ValuationProperties properties =
+          new ValuationProperties(
+              new ValuationProperties.MinimumMinutes(270, 540),
+              new BigDecimal(".10"),
+              new BigDecimal(".05"),
+              new BigDecimal(".10"));
+      AttributeValuation result =
+          AttributeValuationCalculator.calculate(
+              player, LocalDate.of(2026, 10, 19), metrics, properties, Instant.EPOCH);
+      assertThat(result.getSaving()).isNotNull();
+      assertThat(result.getDistribution()).isNotNull();
+      assertThat(result.getActivity()).isNotNull();
+      assertThat(result.getShooting()).isNull();
+    }
+  }
+}

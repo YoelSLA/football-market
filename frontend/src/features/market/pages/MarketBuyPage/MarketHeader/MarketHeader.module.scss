@@ -1,0 +1,120 @@
+@use "@/styles/abstracts" as ds;
+
+.marketHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.25rem;
+	min-width: 0;
+	color: ds.$text-portfolio-title;
+
+	&__metrics {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+		flex: 1;
+		max-width: 60rem;
+		min-width: 0;
+	}
+
+	&__metric {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding: .75rem;
+		min-width: 0;
+		border: 1px solid ds.$border-finance;
+		border-radius: .6rem;
+		background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
+		color: ds.$accent-finance-cyan;
+
+		p {
+			font-size: .78rem;
+			color: ds.$text-portfolio-label;
+			margin-bottom: .35rem;
+		}
+
+		strong {
+			font-size: clamp(.95rem, 1.35vw, 1.35rem);
+			line-height: 1.2;
+		}
+
+		&_violet {
+			color: ds.$accent-finance-violet;
+			border-color: rgba(ds.$accent-finance-violet, .35);
+		}
+
+		&_gold {
+			color: ds.$state-caution;
+			border-color: rgba(ds.$state-caution, .3);
+		}
+	}
+
+	&__tile {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 3.25rem;
+		height: 3.25rem;
+		background: currentColor;
+		background: rgba(ds.$accent-finance-cyan, .13);
+		border-radius: .55rem;
+
+		svg {
+			width: 2rem;
+			height: 2rem;
+		}
+	}
+
+	&__metric_violet &__tile {
+		background: rgba(ds.$accent-finance-violet, .16);
+	}
+
+	&__metric_gold &__tile {
+		background: rgba(ds.$state-caution, .14);
+	}
+
+	@media (max-width: 1200px) {
+		flex-direction: column;
+		align-items: stretch;
+
+		&__metrics {
+			max-width: none;
+		}
+	}
+
+	@media (max-width: 600px) {
+		gap: .5rem;
+
+		&__metrics {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: .35rem;
+		}
+
+		&__metric {
+			gap: .3rem;
+			padding: .45rem;
+			align-items: flex-start;
+
+			p {
+				font-size: .65rem;
+				margin-bottom: .2rem;
+			}
+
+			strong {
+				font-size: .75rem;
+			}
+		}
+
+		&__tile {
+			width: 1rem;
+			height: 1rem;
+			background: transparent;
+
+			svg {
+				width: 1rem;
+				height: 1rem;
+			}
+		}
+	}
+}

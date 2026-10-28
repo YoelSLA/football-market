@@ -1,3 +1,3 @@
 export { SessionChecking } from "./components";
-export { useCurrentUserQuery } from "./hooks/queries";
+export { useCurrentUserQuery, useLogout } from "./hooks";
 export { HomePage, LoginPage, RegisterPage } from "./pages";
