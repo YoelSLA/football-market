@@ -54,20 +54,6 @@ public class WhoScoredScrapingSectionNavigator {
    */
   private static final long CLICK_GRACE_MILLIS = 8_000L;
 
-  /**
-   * Intentos de recarga por categoría.
-   *
-   * <p>El proveedor degrada su tabla de detalle en ventanas de minutos durante las que una recarga
-   * puede tardar más que el presupuesto de lectura. Descartar al jugador entero por una de esas
-   * ventanas pierde métricas ya disponibles del resto de categorías.
-   */
-  private static final int CATEGORY_ATTEMPTS = 3;
-
-  /** Segunda oportunidad de carga de la tabla de detalle. */
-  private static final int DETAIL_ATTEMPTS = 2;
-
-  private static final long DETAIL_WAIT_MS = 45_000L;
-
   private final PlayerStatisticsProperties properties;
   private final WhoScoredRequestPacer pacer;
 
@@ -78,140 +64,200 @@ public class WhoScoredScrapingSectionNavigator {
   }
 
   /**
-   * El callback lee el DOM antes de cerrar el contexto; solo transporte y timeout admiten un retry.
+   * El callback lee el DOM antes de cerrar el contexto; no se reintenta ninguna operación.
    *
    * <p>Las pestañas no se abren por la URL: el hash deja la página en su estado inicial. La sección
    * se activa con un clic sobre su pestaña, que es lo que dispara la carga perezosa. En la tabla de
    * detalle la carga la completa el filtro de categorías, que es lo primero que se espera.
+   *
+   * <p>El {@code Browser} recibido pertenece al hilo llamante y no se comparte: la concurrencia
+   * entre workers la garantiza una instancia por worker, así que el recorrido no debe envolverse en
+   * ningún bloqueo compartido.
    */
   public <T> T read(
       Browser browser,
       String url,
       String section,
-      Instant deadline,
+      WhoScoredRequestPacer.StatisticsWorker worker,
+      Runnable navigationStarted,
+      java.util.function.BiFunction<Page, String, T> reader) {
+    return this.read(browser, url, section, null, null, worker, navigationStarted, reader);
+  }
+
+  /** Lee una sección y registra sus fases correlacionadas con los identificadores locales. */
+  public <T> T read(
+      Browser browser,
+      String url,
+      String section,
+      Long runId,
+      Long playerId,
       WhoScoredRequestPacer.StatisticsWorker worker,
       Runnable navigationStarted,
       java.util.function.BiFunction<Page, String, T> reader) {
     String tab = section.equals(INITIAL) ? "summary" : "detailed";
-    for (int attempt = 1; attempt <= 2; attempt++) {
-      try {
-        synchronized (browser) {
-          return this.pacer.executeStatistics(
-              worker,
-              deadline,
-              () -> {
-                try (BrowserContext context = browser.newContext()) {
-                  Page page = context.newPage();
-                  page.setDefaultTimeout(this.timeout(deadline));
-                  page.setDefaultNavigationTimeout(this.timeout(deadline));
-                  navigationStarted.run();
-                  if (this.properties.filterThirdPartyResources()) {
-                    page.route(
-                        "**/*",
-                        route -> {
-                          String host = java.net.URI.create(route.request().url()).getHost();
-                          if (host != null
-                              && List.of(
-                                      "doubleclick.net",
-                                      "googlesyndication.com",
-                                      "google-analytics.com")
-                                  .stream()
-                                  .anyMatch(
-                                      domain ->
-                                          host.equals(domain) || host.endsWith("." + domain))) {
-                            route.abort();
-                          } else {
-                            route.resume();
-                          }
-                        });
-                  }
-                  Response response =
-                      page.navigate(
-                          url,
-                          new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
-                  if (response == null) {
-                    throw new WhoScoredStatisticsUnavailableException(
-                        "PROVIDER_TRANSPORT_ERROR", null);
-                  }
-                  int status = response.status();
-                  if (status == 429) {
-                    this.pacer.defer(response.headerValue("retry-after"));
-                    throw new WhoScoredStatisticsRateLimitException(status);
-                  }
-                  if (status == 403 || status == 404) {
-                    throw new WhoScoredStatisticsException(
-                        status == 403 ? "PROVIDER_BLOCKED" : "PLAYER_NOT_FOUND", status);
-                  }
-                  if (status >= 400) {
-                    throw new WhoScoredStatisticsException("PROVIDER_TRANSPORT_ERROR", status);
-                  }
-                  if (page.locator("#player-tournament-stats-options").count() != 1) {
-                    throw new WhoScoredStatisticsStructureChangedException();
-                  }
-                  this.openTab(page, tab);
-                  if (section.equals(INITIAL)) {
-                    this.awaitTable(page, container(section), deadline);
-                  } else {
-                    this.awaitDetailFilter(page, deadline);
-                  }
-                  if (deadline != null && !Instant.now().isBefore(deadline)) {
-                    throw new WhoScoredStatisticsException("EXTRACTION_INTERRUPTED", null);
-                  }
-                  return reader.apply(page, response.text());
-                }
-              });
-        }
-      } catch (WhoScoredStatisticsUnavailableException unavailable) {
-        if (attempt == 2 || unavailable.getProviderStatus() != null) {
-          throw unavailable;
-        }
-      } catch (com.microsoft.playwright.TimeoutError timeout) {
-        if (attempt == 2) {
-          throw new WhoScoredStatisticsUnavailableException("PROVIDER_TIMEOUT", null);
-        }
-      } catch (PlaywrightException transport) {
-        if (attempt == 2) {
-          throw new WhoScoredStatisticsUnavailableException("PROVIDER_TRANSPORT_ERROR", null);
-        }
-      }
+    String diagnostic = diagnostic(runId, playerId, section);
+    int attemptNumber = 1;
+    long attemptStarted = System.nanoTime();
+    try {
+      return this.pacer.executeStatistics(
+          worker,
+          null,
+          () -> {
+            String[] phase = {"open-context"};
+            long phaseStarted = System.nanoTime();
+            try (BrowserContext context = browser.newContext()) {
+              Page page = context.newPage();
+              observeRequests(page, diagnostic);
+              page.setDefaultTimeout(this.properties.navigationTimeoutMs());
+              page.setDefaultNavigationTimeout(this.properties.navigationTimeoutMs());
+              phase[0] = "navigate";
+              phaseStarted = System.nanoTime();
+              if (this.properties.filterThirdPartyResources()) {
+                page.route(
+                    "**/*",
+                    route -> {
+                      String host = java.net.URI.create(route.request().url()).getHost();
+                      if (host != null
+                          && List.of(
+                                  "doubleclick.net",
+                                  "googlesyndication.com",
+                                  "google-analytics.com")
+                              .stream()
+                              .anyMatch(
+                                  domain -> host.equals(domain) || host.endsWith("." + domain))) {
+                        route.abort();
+                      } else {
+                        route.resume();
+                      }
+                    });
+              }
+              navigationStarted.run();
+              Response response =
+                  page.navigate(
+                      url,
+                      new Page.NavigateOptions().setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+              LOG.info(
+                  "{} fase=navigate intento={} duraciónMs={} status={}",
+                  diagnostic,
+                  attemptNumber,
+                  elapsedMillis(phaseStarted),
+                  response == null ? "null" : response.status());
+              if (response == null) {
+                throw new WhoScoredStatisticsUnavailableException("PROVIDER_TRANSPORT_ERROR", null);
+              }
+              int status = response.status();
+              if (status == 429) {
+                this.pacer.defer(response.headerValue("retry-after"));
+                throw new WhoScoredStatisticsRateLimitException(status);
+              }
+              if (status == 403 || status == 404) {
+                throw new WhoScoredStatisticsException(
+                    status == 403 ? "PROVIDER_BLOCKED" : "PLAYER_NOT_FOUND", status);
+              }
+              if (status >= 400) {
+                throw new WhoScoredStatisticsException("PROVIDER_TRANSPORT_ERROR", status);
+              }
+              if (page.locator("#player-tournament-stats-options").count() != 1) {
+                throw new WhoScoredStatisticsStructureChangedException();
+              }
+              phase[0] = "open-tab";
+              phaseStarted = System.nanoTime();
+              this.openTab(page, tab);
+              LOG.info(
+                  "{} fase=open-tab intento={} duraciónMs={}",
+                  diagnostic,
+                  attemptNumber,
+                  elapsedMillis(phaseStarted));
+              phase[0] = section.equals(INITIAL) ? "await-summary-table" : "await-detail-filter";
+              phaseStarted = System.nanoTime();
+              if (section.equals(INITIAL)) {
+                this.awaitTable(page, container(section));
+              } else {
+                this.awaitSelector(page, "#statistics-filter-detailed #category");
+              }
+              LOG.info(
+                  "{} fase={} intento={} duraciónMs={}",
+                  diagnostic,
+                  phase[0],
+                  attemptNumber,
+                  elapsedMillis(phaseStarted));
+              phase[0] = "parse-document";
+              phaseStarted = System.nanoTime();
+              T result = reader.apply(page, response.text());
+              LOG.info(
+                  "{} fase=parse-document intento={} duraciónMs={}",
+                  diagnostic,
+                  attemptNumber,
+                  elapsedMillis(phaseStarted));
+              return result;
+            } catch (RuntimeException failure) {
+              LOG.warn(
+                  "{} fase={} intento={} falló tras {} ms: {}",
+                  diagnostic,
+                  phase[0],
+                  attemptNumber,
+                  elapsedMillis(attemptStarted),
+                  failure.getClass().getSimpleName());
+              throw failure;
+            }
+          });
+    } catch (WhoScoredStatisticsUnavailableException unavailable) {
+      LOG.warn(
+          "{} intento={} falló tras {} ms: {}",
+          diagnostic,
+          attemptNumber,
+          elapsedMillis(attemptStarted),
+          unavailable.getCode());
+      throw unavailable;
+    } catch (com.microsoft.playwright.TimeoutError timeout) {
+      LOG.warn(
+          "{} intento={} agotó timeout tras {} ms",
+          diagnostic,
+          attemptNumber,
+          elapsedMillis(attemptStarted));
+      throw new WhoScoredStatisticsUnavailableException("PROVIDER_TIMEOUT", null);
+    } catch (PlaywrightException transport) {
+      LOG.warn(
+          "{} intento={} falló transporte tras {} ms",
+          diagnostic,
+          attemptNumber,
+          elapsedMillis(attemptStarted));
+      throw new WhoScoredStatisticsException(
+          browser.isConnected() ? "PROVIDER_TRANSPORT_ERROR" : "HEADED_BROWSER_UNAVAILABLE", null);
     }
-    throw new WhoScoredStatisticsUnavailableException("PROVIDER_TRANSPORT_ERROR", null);
+  }
+
+  private static long elapsedMillis(long started) {
+    return java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
+  }
+
+  private static String diagnostic(Long runId, Long playerId, String section) {
+    return "run="
+        + (runId == null ? "n/a" : runId)
+        + " player="
+        + (playerId == null ? "n/a" : playerId)
+        + " worker="
+        + Thread.currentThread().getName()
+        + " section="
+        + section;
   }
 
   /**
    * Elige una categoría de la tabla de detalle y el modo de acumulados, y espera su tabla.
    *
    * <p>Es la interacción que hace una persona sobre el desplegable. El proveedor sustituye el
-   * contenido de la tabla mediante una petición propia, así que la lectura solo es válida cuando el
-   * contenido renderizado ha cambiado. Cuando esa recarga no llega, la sección completa no se
-   * pierde: se vuelve a elegir otra categoría y luego la pedida, porque un valor que ya estaba
-   * seleccionado no genera un cambio nuevo que el proveedor pueda atender.
+   * contenido de la tabla mediante una petición propia. Se espera un renderizado posterior al
+   * cambio, aunque publique los mismos valores. Si no llega se falla sin recarga ni retry.
    */
-  public void chooseCategory(Page page, String category, Instant deadline) {
-    for (int attempt = 1; ; attempt++) {
-      try {
-        this.select(page, "#category", category, deadline);
-        this.select(page, "#statsAccumulationType", "2", deadline);
-        this.awaitTable(page, container(DETAILED), deadline);
-        return;
-      } catch (com.microsoft.playwright.TimeoutError slow) {
-        if (attempt >= CATEGORY_ATTEMPTS) {
-          throw slow;
-        }
-        LOG.warn("Categoría {} sin recargar en el intento {}; se reintenta", category, attempt);
-        this.select(page, "#category", otherCategory(category), deadline);
-      }
-    }
+  public void chooseCategory(Page page, String category) {
+    this.chooseCategory(page, category, "run=n/a player=n/a");
   }
 
-  /** Una categoría distinta de la pedida, para forzar un cambio real en el desplegable. */
-  private static String otherCategory(String category) {
-    for (String candidate : CATEGORIES) {
-      if (!candidate.equals(category)) {
-        return candidate;
-      }
-    }
-    throw new WhoScoredStatisticsStructureChangedException();
+  /** Conserva el recorrido y añade correlación a la operación concreta del filtro. */
+  public void chooseCategory(Page page, String category, String diagnostic) {
+    this.select(page, "#category", category, diagnostic);
+    this.select(page, "#statsAccumulationType", "2", diagnostic);
+    this.awaitTable(page, container(DETAILED));
   }
 
   public static String container(String section) {
@@ -219,18 +265,26 @@ public class WhoScoredScrapingSectionNavigator {
   }
 
   /**
-   * Espera a que la tabla de la sección exista con sus columnas técnicas.
+   * Espera la tabla con columnas técnicas, cuerpo e indicador de carga oculto.
    *
    * <p>Si expira, registra qué había realmente en el DOM: si el contenedor existe pero está vacío,
    * la sección no llegó a abrirse; si tiene tabla sin columnas, el proveedor cambió la forma.
    */
-  public void awaitTable(Page page, String selector, Instant deadline) {
-    page.setDefaultTimeout(this.timeout(deadline));
+  public void awaitTable(Page page, String selector) {
+    page.setDefaultTimeout(this.properties.navigationTimeoutMs());
     try {
       page.waitForFunction(
-          "selector => !!document.querySelector(selector + ' table thead [data-stat-name]')",
+          """
+          selector => {
+            const loading = document.querySelector(selector + '-loading');
+            return !!document.querySelector(selector + ' table thead [data-stat-name]')
+              && !!document.querySelector(selector + ' table tbody')
+              && (!loading || !loading.getClientRects().length
+                  || getComputedStyle(loading).visibility === 'hidden');
+          }
+          """,
           selector,
-          new Page.WaitForFunctionOptions().setTimeout(this.timeout(deadline)));
+          new Page.WaitForFunctionOptions().setTimeout(this.properties.navigationTimeoutMs()));
     } catch (com.microsoft.playwright.TimeoutError expired) {
       LOG.warn("Tabla no disponible en {}: {}", selector, state(page, selector));
       throw expired;
@@ -242,9 +296,7 @@ public class WhoScoredScrapingSectionNavigator {
    *
    * <p>El clic se emite una sola vez y se le concede margen. El proveedor carga la tabla mediante
    * una petición propia y cada clic adicional cancela la que tiene en marcha, de modo que insistir
-   * sobre la pestaña mientras carga deja el panel vacío. Solo si tras ese margen la sección sigue
-   * sin abrir, que es el caso en que el clic se perdió, se emite un único evento dirigido al
-   * elemento.
+   * sobre la pestaña mientras carga deja el panel vacío. Si no abre se falla sin otro clic.
    */
   private void openTab(Page page, String tab) {
     Locator link =
@@ -261,8 +313,7 @@ public class WhoScoredScrapingSectionNavigator {
     }
     link.click(new Locator.ClickOptions().setForce(true));
     if (!panelVisibleWithin(page, tab, CLICK_GRACE_MILLIS)) {
-      LOG.info("Pestaña {} sin abrir tras el clic; se emite el evento dirigido", tab);
-      link.dispatchEvent("click");
+      throw new WhoScoredStatisticsUnavailableException("PROVIDER_TIMEOUT", null);
     }
   }
 
@@ -281,40 +332,13 @@ public class WhoScoredScrapingSectionNavigator {
   }
 
   /**
-   * *Espera a que la tabla de detalle esté disponible, con una segunda oportunidad acotada.*
-   *
-   * <p>El proveedor abre el panel y en ventanas de degradación su carga no llega. Como el panel ya
-   * está visible, repetir el clic durante la carga cancelaría la petición en marcha, así que la
-   * segunda oportunidad se concede solo tras agotar la espera completa, cuando ya no hay nada en
-   * vuelo que cancelar, y se emite el evento dirigido al elemento para que la carga vuelva a
-   * dispararse.
-   */
-  private void awaitDetailFilter(Page page, Instant deadline) {
-    for (int attempt = 1; ; attempt++) {
-      try {
-        this.awaitSelector(page, "#statistics-filter-detailed #category", deadline);
-        return;
-      } catch (com.microsoft.playwright.TimeoutError notLoaded) {
-        if (attempt >= DETAIL_ATTEMPTS) {
-          throw notLoaded;
-        }
-        LOG.warn(
-            "Tabla de detalle sin contenido tras {} ms; se reintenta su carga", DETAIL_WAIT_MS);
-        page.locator("#player-tournament-stats-options a[href='#player-tournament-stats-detailed']")
-            .first()
-            .dispatchEvent("click");
-      }
-    }
-  }
-
-  /**
    * Espera a que un control del filtro exista.
    *
    * <p>El filtro de la tabla de detalle se puebla junto con la tabla, pero no en el mismo instante:
    * consultarlo demasiado pronto da cero coincidencias y se confundía con un cambio de estructura.
    */
-  private void awaitSelector(Page page, String selector, Instant deadline) {
-    page.setDefaultTimeout(this.timeout(deadline));
+  private void awaitSelector(Page page, String selector) {
+    page.setDefaultTimeout(this.properties.navigationTimeoutMs());
     try {
       page.waitForSelector(
           selector, new Page.WaitForSelectorOptions().setState(WaitForSelectorState.ATTACHED));
@@ -327,25 +351,141 @@ public class WhoScoredScrapingSectionNavigator {
   /**
    * Cambia un filtro y espera la tabla recargada.
    *
-   * <p>El proveedor sustituye el contenido de la tabla mediante una petición propia y su atributo
-   * {@code data-fwsc} no cambia siempre, así que la espera se apoya en el contenido renderizado.
+   * <p>El observer se arma antes de emitir el cambio: reemplazar nodos por otros con HTML idéntico
+   * también es un renderizado. No bastan el valor del selector, cambios de atributos ni quitar
+   * filas. La tabla inicial se espera antes de observar para no aceptar su carga pendiente como
+   * respuesta al filtro.
    */
-  private void select(Page page, String selector, String value, Instant deadline) {
-    page.setDefaultTimeout(this.timeout(deadline));
+  private void select(Page page, String selector, String value, String diagnostic) {
+    page.setDefaultTimeout(this.properties.navigationTimeoutMs());
     Locator control = page.locator("#statistics-filter-detailed " + selector);
     if (control.count() != 1) {
       throw new WhoScoredStatisticsStructureChangedException();
     }
     if (!value.equals(control.inputValue())) {
+      this.awaitTable(page, container(DETAILED));
+      long started = System.nanoTime();
+      String before = safeControlValue(control.inputValue());
       String previous = page.locator(container(DETAILED)).innerHTML();
-      control.selectOption(value);
-      page.waitForFunction(
-          "previous => { const t = document.querySelector('#statistics-table-detailed');"
-              + " return !!t && t.innerHTML !== previous"
-              + " && !!t.querySelector('table thead [data-stat-name]'); }",
-          previous,
-          new Page.WaitForFunctionOptions().setTimeout(this.timeout(deadline)));
+      LOG.info("{} filtro={} anterior={} solicitado={}", diagnostic, selector, before, value);
+      JSHandle render =
+          page.evaluateHandle(
+              """
+              () => {
+                const container = document.querySelector('#statistics-table-detailed');
+                const state = { rendered: false };
+                const dataRow = node => {
+                  const row = node.nodeType === Node.ELEMENT_NODE
+                    ? node.closest('tr') : node.parentElement?.closest('tr');
+                  const columns = container.querySelectorAll('table thead th').length;
+                  return columns > 1 && row?.querySelectorAll(':scope > td').length === columns;
+                };
+                state.observer = new MutationObserver(records => {
+                  state.rendered ||= records.some(record =>
+                    [...record.addedNodes].some(node =>
+                      (node.nodeType === Node.ELEMENT_NODE
+                        && (node.matches('table, tbody')
+                            || !!node.querySelector('table, tbody')
+                            || (node.matches('tr, td') && dataRow(node))))
+                      || (node.nodeType === Node.TEXT_NODE
+                          && !!node.parentElement?.closest('tbody td') && dataRow(node)))
+                    || (record.type === 'characterData'
+                        && !!record.target.parentElement?.closest('tbody td')
+                        && dataRow(record.target)));
+                });
+                state.observer.observe(container, { childList: true, subtree: true,
+                  characterData: true });
+                return state;
+              }
+              """);
+      try {
+        control.selectOption(value);
+        page.waitForFunction(
+            """
+            ([state, selector, value]) => {
+              const container = document.querySelector('#statistics-table-detailed');
+              const control = document.querySelector('#statistics-filter-detailed ' + selector);
+              const loading = document.querySelector('#statistics-table-detailed-loading');
+              return state.rendered && control?.value === value
+                && !!container?.querySelector('table thead [data-stat-name]')
+                && !!container?.querySelector('table tbody')
+                && (!loading || !loading.getClientRects().length
+                    || getComputedStyle(loading).visibility === 'hidden');
+            }
+            """,
+            List.of(render, selector, value),
+            new Page.WaitForFunctionOptions().setTimeout(this.properties.navigationTimeoutMs()));
+        LOG.info(
+            "{} filtro={} solicitado={} evento=filter-rendered duraciónMs={} cambioTabla={}",
+            diagnostic,
+            selector,
+            value,
+            elapsedMillis(started),
+            tableChanged(page, previous));
+      } catch (com.microsoft.playwright.TimeoutError expired) {
+        LOG.warn(
+            "{} worker={} filtro={} anterior={} solicitado={} duraciónMs={} cambioTabla={} estado={}",
+            diagnostic,
+            Thread.currentThread().getName(),
+            selector,
+            before,
+            value,
+            elapsedMillis(started),
+            tableChanged(page, previous),
+            state(page, container(DETAILED)));
+        throw expired;
+      } finally {
+        releaseObserver(render, diagnostic);
+      }
     }
+  }
+
+  /** La limpieza no oculta un fallo de selección o espera; el contexto también se cierra. */
+  private static void releaseObserver(JSHandle render, String diagnostic) {
+    try {
+      try {
+        render.evaluate("state => state.observer.disconnect()");
+      } finally {
+        render.dispose();
+      }
+    } catch (PlaywrightException cleanup) {
+      LOG.warn("{} evento=filter-observer-cleanup-failed", diagnostic);
+    }
+  }
+
+  private static String safeControlValue(String value) {
+    return value != null && value.matches("[a-z0-9-]{1,40}") ? value : "unavailable";
+  }
+
+  private static String tableChanged(Page page, String previous) {
+    try {
+      return String.valueOf(
+          page.evaluate(
+              "previous => document.querySelector('#statistics-table-detailed')?.innerHTML !== previous",
+              previous));
+    } catch (RuntimeException unreadable) {
+      return "unavailable";
+    }
+  }
+
+  /** Observa solo metadatos de transporte; nunca cuerpos, URLs ni mensajes externos. */
+  private static void observeRequests(Page page, String diagnostic) {
+    page.onResponse(
+        response -> {
+          String type = response.request().resourceType();
+          if (type.equals("xhr") || type.equals("fetch")) {
+            LOG.info(
+                "{} evento=data-response status={} tipo={}", diagnostic, response.status(), type);
+          }
+        });
+    page.onRequestFailed(
+        request -> {
+          String type = request.resourceType();
+          if (type.equals("xhr") || type.equals("fetch") || type.equals("document")) {
+            LOG.warn("{} evento=request-failed tipo={}", diagnostic, type);
+          }
+        });
+    page.onPageError(error -> LOG.warn("{} evento=javascript-error", diagnostic));
   }
 
   /** Estado observable del contenedor, sin volcar el documento externo. */
@@ -362,20 +502,16 @@ public class WhoScoredScrapingSectionNavigator {
           + " columnas="
           + columns
           + " categoria="
-          + (page.locator("#statistics-filter-detailed #category").count() == 1);
+          + (page.locator("#statistics-filter-detailed #category").count() == 1)
+          + " filtros="
+          + page.evaluate(
+              "() => ['category', 'statsAccumulationType'].map(id => {"
+                  + " const c = document.querySelector('#statistics-filter-detailed #' + id);"
+                  + " const v = c ? c.value : '';"
+                  + " return id + ':' + (/^[a-z0-9-]{1,40}$/.test(v) ? v : 'unavailable');"
+                  + " }).join(',')");
     } catch (RuntimeException unreadable) {
       return "estado ilegible";
     }
-  }
-
-  private double timeout(Instant deadline) {
-    long remaining =
-        deadline == null
-            ? this.properties.navigationTimeoutMs()
-            : Duration.between(Instant.now(), deadline).toMillis();
-    if (remaining <= 0) {
-      throw new WhoScoredStatisticsException("EXTRACTION_INTERRUPTED", null);
-    }
-    return Math.max(1, Math.min(this.properties.navigationTimeoutMs(), remaining));
   }
 }

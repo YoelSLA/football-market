@@ -44,7 +44,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 /** Lote de scraping, reanudación, recuperación de ejecución activa y fallo por jugador. */
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
+@Import({
+  TestcontainersConfiguration.class,
+  IdentityCatalogueFixture.class,
+  footballmarket.support.StatisticsRunTestData.class
+})
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
@@ -54,8 +58,7 @@ class PlayerStatisticsSynchronizationServiceTest {
   @Autowired private PlayerStatisticsCoverageService coverage;
   @Autowired private PlayerIdentitySynchronizationService identities;
   @Autowired private IdentityCatalogueFixture fixture;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
-  @Autowired private footballmarket.repositories.PlayerRepository players;
+  @Autowired private footballmarket.support.StatisticsRunTestData runData;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
   @MockitoBean private WhoScoredIntegration identityIntegration;
   @MockitoSpyBean private WhoScoredProperties properties;
@@ -92,12 +95,11 @@ class PlayerStatisticsSynchronizationServiceTest {
                   new footballmarket.integrations.records.WhoScoredPaging(1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
-    doReturn(1_800_000L).when(statistics).scrapingBatchTimeoutMs();
     identities.synchronizeCurrent();
     session = mock(WhoScoredStatisticsScrapingIntegration.Session.class);
     when(integration.openSession()).thenReturn(session);
-    when(integration.scrape(any(), any(), any()))
-        .thenAnswer(invocation -> scraped(invocation.getArgument(1)));
+    when(integration.scrape(any(), any(), any(), any()))
+        .thenAnswer(invocation -> scraped(invocation.getArgument(3)));
   }
 
   private WhoScoredScrapedPlayer scraped(String playerId) {
@@ -122,35 +124,68 @@ class PlayerStatisticsSynchronizationServiceTest {
         List.of());
   }
 
-  private PlayerStatisticsSyncSummary run(Integer maxPlayers) {
+  private PlayerStatisticsSyncSummary run() {
     return service.synchronizeScraping(
-        new PlayerStatisticsSyncRequest(LocalDate.now(java.time.ZoneOffset.UTC), maxPlayers));
+        new PlayerStatisticsSyncRequest(LocalDate.now(java.time.ZoneOffset.UTC)));
   }
 
   @Nested
   @DisplayName("Lote de scraping sobre la población elegible")
   class Batch {
     @Test
-    @DisplayName("Un máximo de un jugador procesa un único pendiente y deja el resto pendiente")
-    void limitaASoloUnJugador() {
+    @DisplayName(
+        "Recuperar un run huérfano conserva confirmaciones y no abre navegador sin pendientes")
+    void orphanRecoveryPreservesCompletedPlayers() {
+      // Arrange
+      PlayerStatisticsSyncSummary completed = run();
+      runData.orphanScrapingRun(completed.extractionDate());
+      when(integration.openSession()).thenThrow(new HeadedBrowserUnavailableException());
       // Act
-      PlayerStatisticsSyncSummary summary = run(1);
+      PlayerStatisticsSyncSummary summary = run();
+      // Assert
+      assertThat(summary.counters().selected()).isZero();
+      assertThat(summary.providerCalls()).isZero();
+      assertThat(summary.coverageComplete()).isTrue();
+    }
+
+    @Test
+    @DisplayName(
+        "Sin valores numéricos el contexto resuelto queda pendiente y admite reconfirmación")
+    void noDataConContextoResuelto() {
+      // Arrange
+      doAnswer(
+              invocation ->
+                  footballmarket.support.StatisticsScrapingSamples.player(
+                      invocation.getArgument(3),
+                      List.of(new WhoScoredScrapedMetricCell("goal", "-"))))
+          .when(integration)
+          .scrape(any(), any(), any(), any());
+      // Act
+      PlayerStatisticsSyncSummary summary = run();
 
       // Assert
       assertThat(summary.status()).isEqualTo(ExtractionRunStatus.COMPLETED);
       assertThat(summary.counters().eligible()).isEqualTo(5);
       assertThat(summary.counters().excludedWithoutReference()).isZero();
-      assertThat(summary.counters().selected()).isEqualTo(1);
-      assertThat(summary.counters().completed()).isEqualTo(1);
-      assertThat(summary.counters().pending()).isEqualTo(4);
+      assertThat(summary.counters().selected()).isEqualTo(5);
+      assertThat(summary.counters().completed()).isZero();
+      assertThat(summary.counters().withoutData()).isEqualTo(5);
+      assertThat(summary.counters().pending()).isEqualTo(5);
       assertThat(summary.coverageComplete()).isFalse();
+      // Verify: nueva petición reconfirma las mismas filas nulas sin colisión.
+      doAnswer(invocation -> scraped(invocation.getArgument(3)))
+          .when(integration)
+          .scrape(any(), any(), any(), any());
+      PlayerStatisticsSyncSummary reconfirmed = run();
+      assertThat(reconfirmed.counters().completed()).isEqualTo(5);
+      assertThat(reconfirmed.coverageComplete()).isTrue();
     }
 
     @Test
     @DisplayName("Sin límite explícito el lote recorre toda la población elegible del día")
     void recorrePoblacionCompleta() {
       // Act
-      PlayerStatisticsSyncSummary summary = run(null);
+      PlayerStatisticsSyncSummary summary = run();
 
       // Assert
       assertThat(summary.counters().selected()).isEqualTo(5);
@@ -166,10 +201,10 @@ class PlayerStatisticsSynchronizationServiceTest {
       // doThrow: con when() el doble se invoca con null y se ejecuta la respuesta del arrange.
       doThrow(new WhoScoredStatisticsException("PROVIDER_BLOCKED", 403))
           .when(integration)
-          .scrape(any(), any(), any());
+          .scrape(any(), any(), any(), any());
 
       // Act
-      PlayerStatisticsSyncSummary summary = run(null);
+      PlayerStatisticsSyncSummary summary = run();
 
       // Assert
       assertThat(summary.status()).isEqualTo(ExtractionRunStatus.FAILED);
@@ -184,14 +219,14 @@ class PlayerStatisticsSynchronizationServiceTest {
       // Arrange
       doAnswer(
               invocation ->
-                  "1001".equals(invocation.getArgument(1, String.class))
+                  "1001".equals(invocation.getArgument(3, String.class))
                       ? scraped("1001")
                       : throwBlocked())
           .when(integration)
-          .scrape(any(), any(), any());
+          .scrape(any(), any(), any(), any());
 
       // Act
-      PlayerStatisticsSyncSummary summary = run(null);
+      PlayerStatisticsSyncSummary summary = run();
 
       // Assert
       assertThat(summary.status()).isEqualTo(ExtractionRunStatus.PARTIAL);
@@ -208,32 +243,42 @@ class PlayerStatisticsSynchronizationServiceTest {
     @DisplayName("Un relanzamiento no duplica lo confirmado y reanuda los pendientes")
     void reanudaSinDuplicar() {
       // Arrange
-      run(2);
+      doAnswer(
+              invocation ->
+                  "1001".equals(invocation.getArgument(3, String.class))
+                      ? throwBlocked()
+                      : scraped(invocation.getArgument(3)))
+          .when(integration)
+          .scrape(any(), any(), any(), any());
+      run();
+      doAnswer(invocation -> scraped(invocation.getArgument(3)))
+          .when(integration)
+          .scrape(any(), any(), any(), any());
 
       // Act
-      PlayerStatisticsSyncSummary segunda = run(2);
+      PlayerStatisticsSyncSummary segunda = run();
 
       // Assert
-      assertThat(segunda.counters().selected()).isEqualTo(2);
-      assertThat(segunda.counters().completed()).isEqualTo(2);
-      assertThat(segunda.counters().pending()).isEqualTo(1);
+      assertThat(segunda.counters().selected()).isEqualTo(1);
+      assertThat(segunda.counters().completed()).isEqualTo(1);
+      assertThat(segunda.counters().pending()).isZero();
       assertThat(
               coverage
                   .coverage(
                       segunda.extractionDate(), footballmarket.models.enums.MetricSource.SCRAPING)
                   .completedPlayers())
-          .isEqualTo(4);
+          .isEqualTo(5);
     }
 
     @Test
     @DisplayName("Sin pendientes el lote cierra completo sin abrir el navegador")
     void sinPendientesNoAbreNavegador() {
       // Arrange
-      run(null);
+      run();
       when(integration.openSession()).thenThrow(new HeadedBrowserUnavailableException());
 
       // Act
-      PlayerStatisticsSyncSummary summary = run(null);
+      PlayerStatisticsSyncSummary summary = run();
 
       // Assert
       assertThat(summary.status()).isEqualTo(ExtractionRunStatus.COMPLETED);
@@ -250,14 +295,14 @@ class PlayerStatisticsSynchronizationServiceTest {
       when(integration.openSession()).thenThrow(new HeadedBrowserUnavailableException());
 
       // Act
-      assertThatThrownBy(() -> run(1)).isInstanceOf(HeadedBrowserUnavailableException.class);
+      assertThatThrownBy(() -> run()).isInstanceOf(HeadedBrowserUnavailableException.class);
 
       // Verify
       // doReturn evita invocar el stub que lanza la excepción durante el propio re-stubbing.
       doReturn(session).when(integration).openSession();
-      PlayerStatisticsSyncSummary posterior = run(1);
+      PlayerStatisticsSyncSummary posterior = run();
       assertThat(posterior.status()).isEqualTo(ExtractionRunStatus.COMPLETED);
-      assertThat(posterior.counters().selected()).isEqualTo(1);
+      assertThat(posterior.counters().selected()).isEqualTo(5);
     }
 
     @Test
@@ -268,26 +313,13 @@ class PlayerStatisticsSynchronizationServiceTest {
               () ->
                   service.synchronizeScraping(
                       new PlayerStatisticsSyncRequest(
-                          LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1), 1)))
+                          LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1))))
           .isInstanceOf(
               footballmarket.services.exceptions.PlayerStatisticsSynchronizationException.class);
     }
   }
 
   private String tournamentOf(String providerPlayerId) {
-    Long playerId =
-        references
-            .findByProviderAndExternalId(
-                footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
-            .orElseThrow()
-            .getPlayer()
-            .getId();
-    Long leagueId = players.findVisibleById(playerId).orElseThrow().getTeam().getLeague().getId();
-    return String.valueOf(
-        properties.competitions().stream()
-            .filter(competition -> competition.leagueId().equals(leagueId))
-            .findFirst()
-            .orElseThrow()
-            .tournamentId());
+    return footballmarket.support.StatisticsScrapingSamples.tournamentOf(providerPlayerId);
   }
 }

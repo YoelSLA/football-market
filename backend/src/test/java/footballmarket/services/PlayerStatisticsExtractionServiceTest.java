@@ -57,8 +57,6 @@ class PlayerStatisticsExtractionServiceTest {
   @Autowired private PlayerStatisticsCoverageQuery coverage;
   @Autowired private PlayerIdentitySynchronizationService identities;
   @Autowired private IdentityCatalogueFixture fixture;
-  @Autowired private footballmarket.repositories.PlayerExternalReferenceRepository references;
-  @Autowired private footballmarket.repositories.PlayerRepository players;
   @Autowired private PlayerCatalogService catalogue;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
   @MockitoBean private WhoScoredIntegration identityIntegration;
@@ -102,8 +100,8 @@ class PlayerStatisticsExtractionServiceTest {
         .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));
     // getArgument con tipo: String.valueOf(genérico) infería char[] y rompía en tiempo de
     // ejecución.
-    when(integration.scrape(any(), any(), any()))
-        .thenAnswer(invocation -> scraped(invocation.getArgument(1, String.class)));
+    when(integration.scrape(any(), any(), any(), any()))
+        .thenAnswer(invocation -> scraped(invocation.getArgument(3, String.class)));
   }
 
   /**
@@ -133,7 +131,7 @@ class PlayerStatisticsExtractionServiceTest {
   }
 
   private Long openRun() {
-    return runs.open(DATE, MetricSource.SCRAPING, null, 1_800_000L).getId();
+    return runs.open(DATE, MetricSource.SCRAPING, 0).getId();
   }
 
   @Nested
@@ -147,14 +145,15 @@ class PlayerStatisticsExtractionServiceTest {
 
       // Act
       try (PlayerStatisticsExtractionService.Batch batch = extraction.openBatch()) {
-        batch.extract(runId, playerId, null);
+        batch.extract(runId, playerId);
       }
 
       // Assert / Verify
-      var result = coverage.coverage(DATE, MetricSource.SCRAPING);
+      footballmarket.models.records.PlayerStatisticsCoverage result =
+          coverage.coverage(DATE, MetricSource.SCRAPING);
       assertThat(result.completedPlayers()).isEqualTo(1);
       assertThat(result.pendingPlayers()).isEqualTo(4);
-      assertThat(result.systemicallyAbsentMetrics()).isNotNull();
+      assertThat(result.systemicallyAbsentMetrics()).contains("goals_total");
     }
 
     @Test
@@ -166,16 +165,17 @@ class PlayerStatisticsExtractionServiceTest {
       org.mockito.Mockito.doThrow(
               new WhoScoredStatisticsException("PROVIDER_STRUCTURE_CHANGED", 200))
           .when(integration)
-          .scrape(any(), any(), any());
+          .scrape(any(), any(), any(), any());
 
       // Act
       try (PlayerStatisticsExtractionService.Batch batch = extraction.openBatch()) {
-        assertThatThrownBy(() -> batch.extract(runId, playerId, null))
+        assertThatThrownBy(() -> batch.extract(runId, playerId))
             .isInstanceOf(WhoScoredStatisticsException.class);
       }
 
       // Assert / Verify
-      var result = coverage.coverage(DATE, MetricSource.SCRAPING);
+      footballmarket.models.records.PlayerStatisticsCoverage result =
+          coverage.coverage(DATE, MetricSource.SCRAPING);
       assertThat(result.completedPlayers()).isZero();
       assertThat(result.failedPlayers()).isEqualTo(1);
       assertThat(result.pendingPlayers()).isEqualTo(5);
@@ -189,7 +189,7 @@ class PlayerStatisticsExtractionServiceTest {
 
       // Act / Assert
       try (PlayerStatisticsExtractionService.Batch batch = extraction.openBatch()) {
-        assertThatThrownBy(() -> batch.extract(runId, 999_999L, null))
+        assertThatThrownBy(() -> batch.extract(runId, 999_999L))
             .isInstanceOf(PlayerStatisticsSynchronizationException.class);
       }
     }
@@ -203,26 +203,13 @@ class PlayerStatisticsExtractionServiceTest {
 
       // Act / Assert
       try (PlayerStatisticsExtractionService.Batch batch = extraction.openBatch()) {
-        assertThatThrownBy(() -> batch.extract(runId, playerId, null))
+        assertThatThrownBy(() -> batch.extract(runId, playerId))
             .isInstanceOf(PlayerStatisticsSynchronizationException.class);
       }
     }
   }
 
   private String tournamentOf(String providerPlayerId) {
-    Long playerId =
-        references
-            .findByProviderAndExternalId(
-                footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
-            .orElseThrow()
-            .getPlayer()
-            .getId();
-    Long leagueId = players.findVisibleById(playerId).orElseThrow().getTeam().getLeague().getId();
-    return String.valueOf(
-        properties.competitions().stream()
-            .filter(competition -> competition.leagueId().equals(leagueId))
-            .findFirst()
-            .orElseThrow()
-            .tournamentId());
+    return footballmarket.support.StatisticsScrapingSamples.tournamentOf(providerPlayerId);
   }
 }

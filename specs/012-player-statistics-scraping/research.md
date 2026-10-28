@@ -26,11 +26,11 @@
 
 ## Ciclo de vida del navegador
 
-**Decision**: Crear Playwright y Chromium al comenzar un lote de scraping, compartir el proceso entre un máximo inicial de cuatro workers y usar un `BrowserContext` independiente para la carga inicial y otro para la sección de detalle. Cerrar todos los recursos al finalizar.
+**Decision**: Playwright y Chromium headed por worker, confinados a su hilo; contextos independientes por sección. Sondeo headed al abrir sesión, recursos de worker bajo demanda y cierre en su hilo al terminar el recorrido. No compartir navegador ni driver. El orden de cierre y sus fallos observados requieren investigación acotada, sin atribuir una causa no demostrada.
 
-**Rationale**: Conserva el aislamiento que evitó el agotamiento de sesión y permite que la aplicación arranque sin entorno gráfico.
+**Rationale**: Playwright Java está confinado al hilo que lo crea. Compartir una instancia entre los cuatro workers obligaba a serializar el recorrido completo bajo un bloqueo y anulaba el paralelismo; el run `SCRAPING` del 2026-10-25 agotó su deadline con items que arrancaron juntos y terminaron escalonados. Una instancia por worker conserva el aislamiento de contexto, permite navegaciones simultáneas y mantiene la aplicación arrancable sin entorno gráfico.
 
-**Alternatives considered**: Un contexto por jugador reproduce el fallo observado; un navegador por sección agrega coste; un singleton de arranque viola FR-055.
+**Alternatives considered**: El navegador compartido con `synchronized` serializaba navegación, esperas, las dieciséis categorías y el cierre del contexto, y contradecía FR-018/FR-012; un navegador por sección multiplica los procesos sin aportar aislamiento adicional; un singleton de arranque viola FR-055.
 
 ## Cliente JSON
 
@@ -44,19 +44,19 @@ El control de ritmo, timeouts y `Retry-After` no se duplica: se extiende el pace
 
 ## Paralelismo, ritmo y duración
 
-**Decision**: Máximo inicial de cuatro workers por canal, lote de 30 minutos solo para scraping, intervalo mínimo de 1500 ms por worker y reintentos acotados solo ante transporte o timeout. JSON recorre todos los pendientes del día en una petición sin corte temporal de lote ni máximo de jugadores; mantiene timeouts de consultas y límite de retry. No reintentar 403, 404, estructura inválida ni datos incoherentes.
+**Decision**: Desde la aclaración del 2026-10-27, ambos canales recorren todos sus pendientes en una petición, sin lote temporal ni máximo de jugadores. Cuatro workers por canal e intervalo de 1500 ms sin cambios. Scraping sin retries de jugador, sección, navegación o categoría; JSON mantiene su retry técnico existente. Conservar timeouts de operaciones externas.
 
-**Rationale**: La extrapolación histórica de 4–5 horas con tres workers no acredita el diseño final con contexto independiente por sección y pacing de 2500 ms. El objetivo acordado el 2026-10-16 es hasta 10 horas para aproximadamente 2100 jugadores por scraping, con la configuración vigente de cuatro workers y 1500 ms y proveedor disponible, incluyendo el encadenamiento de lotes; falta medición humana. JSON realiza quince consultas por jugador y reporta duración y cobertura por separado.
+**Rationale**: El usuario eligió un POST síncrono completo y una tentativa por pendiente, aceptando duración prolongada. El objetivo de 10 horas es informativo histórico, no deadline ni SLA. No se promete obtener métricas válidas de toda la población en una pasada.
 
-El pacing se aplica a inicios de navegación de secciones por worker en scraping y a inicios de consultas por worker en JSON, incluidos retries, no a cada recurso del navegador. Solo scraping acota además por deadline de lote: su media de ritmo se reconstruye de las últimas 20 confirmaciones de campaña usando duración persistida por item; sin muestras usa 60 s conservadores, no medidos. `maxPlayers` limita el total de scraping entre workers. JSON reutiliza pacing/auditoría pero no ese corte y cierra controladamente ante indisponibilidad global/interrupción, sin insistir indefinidamente.
+Pacing por navegación de sección en scraping y por consulta/retry existente en JSON, no por recurso. Se retiran el deadline, la media de ritmo y `maxPlayers`; no sustituirlos por un presupuesto total de 24 h ni por otro límite oculto. Snapshot único de pendientes por POST. Fallos individuales continúan; interrupción o fallo global cierran con pendientes declarados. No recuperar scraping por antigüedad: exclusión por canal en la instancia única y recuperación solo de runs sin ejecución viva propia, conforme a `plan.md`.
 
-**Alternatives considered**: Más workers elevan riesgo de bloqueo; múltiples retries contradicen FR-018. La decisión anterior de lotes acotados para ambos canales queda reemplazada por la aclaración humana: JSON recorre toda la población pendiente del día; solo scraping mantiene lotes visibles al cliente.
+**Alternatives considered**: Lotes encadenados, `maxPlayers`, retries de scraping y ejecución asíncrona quedan descartados por decisión humana. Más workers o bajar timeouts a ciegas no resuelven una causa demostrada y no forman parte del alcance.
 
 ## Reanudación e idempotencia
 
-**Decision**: Identificar la campaña por `extractionDate` UTC y canal. Un jugador queda completado para esa campaña cuando existe un resultado `COMPLETED`; los siguientes lotes seleccionan por ID local ascendente los pendientes o fallidos.
+**Decision**: Campaña por fecha UTC y canal; solo `COMPLETED` excluye. Cada POST fija un snapshot ascendente de pendientes e intenta cada ID una vez. Fallidos, no-data y sin métricas permanecen para otro POST. Una ausencia opcional aislada no invalida la extracción con datos.
 
-El usuario confirmó que JSON tampoco debe repetir confirmados del mismo día. Su POST sin entrada resuelve fecha UTC al inicio y conserva esa fecha aunque cruce medianoche. Otra llamada ese día reanuda pendientes; si ya está completo no consulta al proveedor. Una llamada otro día inicia nueva campaña; no hay parámetro de fecha histórica ni modo de forzar actualización diaria repetida. En scraping la fecha puede mantenerse explícita entre lotes, incluso después de medianoche.
+JSON no repite completados del día y fija UTC al inicio sin entrada. Scraping conserva fecha opcional/default durante la petición, incluso al cruzar medianoche. Otro POST de esa fecha reintenta solo pendientes. Sin pendientes no hay proveedor. No se añade modo forzado.
 
 La unicidad entre runs se garantiza mediante fecha/canal no nulos en el item, FK compuesta `(run_id, extraction_date, source)` al run e índice único parcial por `(extraction_date, source, player_id)` solo para `COMPLETED`. Los intentos fallidos se conservan; una colisión revierte la confirmación atómica entera. Los detalles están en `data-model.md`.
 
@@ -66,7 +66,7 @@ La unicidad entre runs se garantiza mediante fecha/canal no nulos en el item, FK
 
 ## Persistencia y transacciones
 
-**Decision**: Persistir inicio y cierre del run en transacciones breves; realizar llamadas externas fuera de transacción; confirmar atómicamente por jugador sus contextos, observaciones e incidencias. No mantener una tabla mutable de valores actuales: una consulta ordenada por `observedAt` y desempate estable obtiene la observación vigente.
+**Decision**: Transacciones breves al abrir/cerrar run y confirmar por jugador su fila aplanada e item; acceso externo sin transacción. Histórico por campaña/canal, no por observación. Scraping sin valor numérico presente es `NO_DATA`, incluso con contexto resuelto; su fila sin éxito previo es reconfirmable, sin sobrescribir un item `COMPLETED`. JSON conserva su semántica.
 
 **Rationale**: Cumple FR-032/FR-035/FR-063, conserva todo el histórico y evita inconsistencias entre una tabla actual y sus observaciones.
 
@@ -82,9 +82,9 @@ La unicidad entre runs se garantiza mediante fecha/canal no nulos en el item, FK
 
 ## Valores ausentes y decimales
 
-**Decision**: Guardar valores en PostgreSQL `NUMERIC` nullable sin precisión ni escala fijas, con disponibilidad `PRESENT`, `ABSENT` o `NOT_DERIVABLE`; utilizar `BigDecimal` desde el token decimal original hasta la persistencia y conservar precisión observada. Solo `PRESENT` participa en la selección del valor vigente. Tolerancias y diferencias también usan `NUMERIC` sin escala fija y operaciones decimales exactas.
+**Decision**: Columnas `NUMERIC` nullable sin escala fija, `BigDecimal` desde el token original. Ausencia y no derivable se guardan como null, no como cero. Precisión observada, tolerancias y diferencias no se persisten en el modelo vigente; el diseño normalizado anterior es histórico.
 
-**Rationale**: Distingue ausencia, denominador inválido y cero; permite aplicar tolerancias sin error binario y evita que una ausencia posterior borre un valor real.
+**Rationale**: Distingue ausencia de cero y conserva el decimal publicado, sin error binario ni redondeo de valores directos. No reintroduce el contraste retirado.
 
 La corrección autorizada el 2026-10-16 sustituye el diseño anterior `NUMERIC(18,6)`:
 la captura local `RecorridoHTML/PaginaPrincipal.txt:1219` publica el rating
@@ -102,7 +102,7 @@ con 16 decimales publicados, la mitad de la unidad mínima es `0.000000000000000
 
 ## Contrato HTTP
 
-**Decision**: Dos POST independientes: `/api/players/statistics/whoscored/sync/scraping` recibe DTO con fecha/máximo opcionales; `/api/players/statistics/whoscored/sync/json` no recibe parámetros ni body y procesa todos los pendientes de su fecha UTC inicial. Se reemplazan las decisiones previas de POST único y de body común, aún no implementadas. La respuesta sigue compartida y conserva canal/fecha auditados. `GET /coverage` mantiene `source` obligatorio y fecha opcional para consultar ambos canales.
+**Decision**: Scraping conserva POST con body obligatorio y fecha opcional, pero retira `maxPlayers` y rechaza su presencia con `400 INVALID_REQUEST`, incluso null. JSON mantiene POST sin entrada. Se conserva salida común y GET de cobertura. Actualización incompatible explícita en DTO, Model de entrada, Mapper, OpenAPI, advice, CLI y tests; no ignorar el campo retirado.
 
 **Rationale**: Las rutas y entradas distintas expresan las operaciones requeridas por el usuario. Ambas son síncronas, con idempotencia diaria por canal y auditoría compartida; JSON no requiere conocer población, IDs ni tamaño de lote. Compartir salida e infraestructura interna no obliga a recibir el mismo request ni a limitar JSON por tiempo de scraping.
 
@@ -110,11 +110,82 @@ con 16 decimales publicados, la mitad de la unidad mínima es `0.000000000000000
 
 ## Cliente operativo del desarrollador
 
-**Decision**: Cliente CLI Java externo al proceso del backend y ejecutado manualmente por el desarrollador, exclusivamente para scraping. No es bean Spring ni scheduler. Reutiliza Java/RestClient y DTO de la API propia, con modos `batch` y `campaign`, fecha fija y máximo opcional por lote; no necesita opción de canal. JSON se invoca directamente sin body ni parámetros, sin encadenamiento del cliente. JWT desde entorno, sin registro ni propagación al proveedor. Componentes/opciones: `plan.md`.
+**Decision**: Simplificar el CLI existente a una sola petición de scraping con fecha y base URL opcionales; retirar/rechazar `--mode` y `--max-players` antes de HTTP. Mantener tarea Gradle y JWT desde entorno sin impresión. Sin scheduler, bean nuevo ni loop de peticiones. JSON se invoca directamente sin entrada.
 
-**Rationale**: El usuario confirmó que el cliente es el desarrollador. Un modo campaña permite encadenar lotes síncronos sin intervención entre peticiones, sin agregar un proceso autónomo residente en el backend. Con máximo de 1, `batch` procesa como máximo un pendiente y `campaign` encadena lotes de un pendiente.
+**Rationale**: Un POST ya recorre todo el snapshot; encadenar repetiría fallidos/no-data en contra de la decisión de reintento solo en otra acción del operador.
 
-**Parada**: consultar cobertura inicial; terminar con éxito solo con cobertura completa; continuar si los pendientes disminuyen; detenerse como campaña incompleta sin progreso, ante error global/HTTP/transporte o interrupción. No reintentar automáticamente POST de resultado incierto. La posterior reanudación conserva fecha/canal y lo ya confirmado.
+**Parada**: finalizar después de ese POST; código 0 solo con cobertura completa. Pendientes o error HTTP/transporte: salida distinta de cero, sin retry automático. Una conexión perdida puede coexistir con confirmaciones del servidor; consultar cobertura antes de otra acción manual.
+
+## Investigación pendiente y límites de evidencia — 2026-10-27
+
+Síntomas aportados: rechazo decimal `PROVIDER_DATA_INCONSISTENT`, fases de 45–47 s y `Failed to send message` en cierre de workers. La lectura estática encuentra bucles de retry y esperas en `WhoScoredScrapingSectionNavigator`, corte de población y parada por timeout individual en `ExtractionBatchExecutor`, recuperación por antigüedad en `ExtractionRunManager` y confirmación por contexto (no por valores presentes) en `PlayerStatisticsWriter`. Son puntos a adaptar o investigar; no demuestran la causa del token decimal ni de la excepción de cierre.
+
+**Decision**: seguir datos y ciclo de vida con capturas/logs locales y fixtures controlados antes de corregir; registrar evidencia y regresión por causa confirmada. No introducir formatos, fallback a cero, optimización especulativa o cambios de JSON/identidad. Si falta el token concreto o una reproducción, pedir evidencia mínima al usuario. Tests y campaña solo del usuario; investigación técnica ordenada antes de la corrección, no hallazgo resuelto.
+
+### Investigación de implementación — 2026-10-27
+
+- **Esperas confirmadas por lectura estática**: `navigation-timeout-ms=45000` rige navegación, controles y tabla. El navigator anterior envolvía cada sección en dos intentos, detalle en dos cargas y categoría en tres intentos más cambio forzado de categoría. Se retiraron esos retries y el segundo clic dirigido; se conserva el timeout de operación. Esto elimina trabajo repetido, no acredita una mejora de duración medida ni explica todo bloqueo DOM.
+- **Cierre confirmado por lectura estática**: `ExtractionWorkerPool.close()` llamaba siempre `shutdownNow()`. El `ThreadFactory` ejecutaba `releaseWorker()` después de `runnable.run()`; el Future podía terminar antes de la limpieza, y el executor podía recibir la interrupción de cierre mientras Browser/Playwright aún enviaban mensajes. Ahora una tarea duradera por worker consume IDs y ejecuta su cleanup en `finally` antes de completar el Future; `close()` hace shutdown normal. La interrupción explícita detiene nuevos IDs, espera los Futures y limpia con el indicador de interrupción temporalmente retirado, restaurándolo después. Orden: contextos de cada sección → Browser → Playwright, todos en su hilo. Los fallos secundarios se conservan como suppressed y la fachada cierra auditoría tras la limpieza. Se escribió regresión controlada, sin ejecutarla. **No se afirma reproducida ni resuelta la excepción específica `Failed to send message` del run humano**; falta contraste con su stacktrace y una nueva ejecución humana.
+- **Ausencia demostrable en código**: `ScrapingMetricAssembler.publishedValue` convertía null/vacío/guion en cero, contradiciendo FR-022/031. Se delega al normalizador existente; no cambian JSON ni los formatos decimales admitidos. Un contexto sin valores es NO_DATA y reconfirmable; la regresión desde Service atraviesa ensamblador y persistencia reales.
+- **Token decimal aún pendiente**: se consultaron las capturas locales ignoradas de `RecorridoHTML/` sin acceder al proveedor. `PaginaPrincipal.txt:1178` contiene `N/A` en la fila de amistoso internacional (`tournament 27`) del resumen; `:1219` contiene el bloque tournaments y el rating exacto `6.9033333333333333`. La fila N/A no demuestra la causa del run afectado: el parser descarta competiciones sin entrada vigente en el bloque, y no se dispone del token/celda y correlación del jugador fallido de ese run. No se convierte N/A en cero, no se amplía el normalizador ni se da por corregido el rechazo decimal. Evidencia mínima solicitada: run/jugador **local**, sección, nombre técnico de columna, token saneado tal como llega al ensamblador y stacktrace de cierre saneado, sin URL, JWT, cookies ni documento completo. T106 y las regresiones causales dependientes quedan parcialmente pendientes.
+
+### Evidencia de run=6 e instrumentación autorizada
+
+- Resumen humano: 2053 seleccionados, 442 completados, 57 NO_DATA, 1554 fallidos;
+  4106 navegaciones observadas. El fragmento muestra timeouts de 45 s al seleccionar
+  filtros, paneles de detalle vacíos y rechazos decimales después de extraer filas.
+- En el código leído, `chooseCategory:253` del stack original corresponde al cambio de
+  acumulación a `2`, no necesariamente al cambio de categoría `aerial`. La atribución
+  depende de confirmar que el binario ejecutado coincide con esa fuente.
+- La espera compara `innerHTML` y presencia de encabezados; no prueba finalización de
+  la petición. No se cambia aún su criterio ni se atribuye una causa sin reproducción.
+- Diagnóstico añadido: filtro anterior/solicitado, cambio de HTML, estado de controles y
+  tabla al timeout; eventos XHR/fetch con estado HTTP y fallos de transporte; presencia
+  de errores JavaScript sin su mensaje. No se registran URLs, headers, cuerpos ni cookies.
+- Rechazos decimales: run/jugador local, worker, sección, columna y contexto. El token
+  numérico corto o marcador conocido se representa por puntos Unicode para conservar
+  espacios/guiones invisibles sin inyección de líneas; otros textos quedan redactados.
+  No se amplían formatos admitidos ni se convierten ausencias en cero.
+- Los eventos de red incluyen también peticiones auxiliares: un HTTP fallido aislado
+  no acredita que haya fallado el endpoint de estadísticas. Los errores JavaScript se
+  cuentan por evento, sin stack ni mensaje externo; si no basta se pedirá captura saneada.
+- `scraping-diagnostics.sql` permite contrastar resultados e incidencias y los éxitos
+  previos de campaña que explicarían los 51 no seleccionados. No ejecutado por el agente.
+- T106 sigue pendiente de evidencia humana y corrección causal; instrumentar no acredita
+  resolución de los fallos ni aceptación funcional.
+
+### Evidencia correlacionada de run=7 — 2026-10-28
+
+- Archivo humano: `Logs Scraping 27-10-2026.txt`, 5930 líneas. JSON completo:
+  1611 seleccionados, 345 completados, 53 NO_DATA, 1213 fallidos, 1266 pendientes.
+  El log comienza con línea cortada; timestamps completos de 02:28:33.848 a
+  02:39:31.628 -03, solo los últimos once minutos de una ejecución de unas 4 h 35 min.
+  No extrapolar sus frecuencias a toda la corrida.
+- 46 eventos finales `PROVIDER_TIMEOUT` en detailed, de los cuales 35 tienen diagnóstico
+  de filtro `#statsAccumulationType`, `0 → 2`, `cambioTabla=false`. Los otros once no
+  se atribuyen al filtro sin evidencia adicional. Siete eventos finales
+  `PROVIDER_DATA_INCONSISTENT`, todos correlacionados con `invalid-decimal` de
+  `initial/minsplayed`, token `U+004E U+002F U+0041` (`N/A`). Confirma el token pendiente
+  del diagnóstico anterior, no que todos los fallos históricos sean de la misma causa.
+- Estados de respuestas observados: 200 XHR (651), 200 fetch (491), 204 fetch (111),
+  ninguno 4xx/5xx registrado. Eventos JavaScript/fetch no prueban causalidad porque
+  también aparecen en fases exitosas y no identifican el recurso de estadísticas.
+- La condición anterior `innerHTML != previous` falla necesariamente si se renderiza
+  una tabla idéntica. El log no distingue esa situación de una selección sin render.
+  Bajo autorización humana se sustituye por MutationObserver armado antes de seleccionar,
+  que detecta incorporación de tabla/cuerpo/fila completa o escritura de celda, aunque
+  el texto sea igual. Exige encabezados, cuerpo, carga oculta y valor solicitado;
+  no se espera red global. También se espera cuerpo/carga oculta en la tabla inicial.
+- `N/A` literal recortado se admite como ausencia sin cero ni precisión; otros textos
+  siguen rechazados. La regla compartida también afecta a consumidores JSON del normalizador,
+  sin cambiar recorrido, requests ni política de retry de ese canal.
+- Sin render observable se conserva el timeout; no se acepta automáticamente la tabla
+  anterior ni se afirma que esta modificación resuelva los 35 casos. Las capturas locales
+  de detalle muestran un spinner hermano del contenedor de tabla: observar únicamente
+  la tabla evita contar sus cambios de estilo como actualización.
+- Regresiones de protocolo escritas, no ejecutadas; no ejercitan el JavaScript real:
+  brecha registrada como TD-034. Persisten validación humana de DOM/proveedor y causas
+  de paneles vacíos. T106/T107 siguen abiertas; no se declara resolución global.
 
 ## Ubicación de las reglas de dominio
 
@@ -139,4 +210,4 @@ están resumidas en la tabla de decisiones vigentes de `spec.md`.
 - 2026-10-15, alcance del lote: la decisión inicial era aplicar el lote acotado a ambos
   canales; quedó precisada el 2026-10-16, con lotes solo en scraping y recorrido completo
   de los pendientes del día en JSON (FR-012, FR-043).
-
+- 2026-10-16, scraping por lotes de 30 minutos, media de 20 muestras, máximo opcional y cliente `batch/campaign`: sustituido el 2026-10-27 por snapshot completo en un POST, sin máximo/deadline ni retries de scraping. Las aclaraciones originales se conservan en `spec.md` como bitácora histórica.

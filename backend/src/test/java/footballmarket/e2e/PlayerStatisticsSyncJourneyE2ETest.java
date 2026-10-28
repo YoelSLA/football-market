@@ -56,12 +56,6 @@ class PlayerStatisticsSyncJourneyE2ETest {
   @LocalServerPort private int port;
   @MockitoSpyBean private WhoScoredProperties properties;
 
-  @org.springframework.beans.factory.annotation.Autowired
-  private footballmarket.repositories.PlayerExternalReferenceRepository references;
-
-  @org.springframework.beans.factory.annotation.Autowired
-  private footballmarket.repositories.PlayerRepository players;
-
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
 
   @TestBean(name = "whoScoredRestClient", methodName = "providerClient")
@@ -148,8 +142,8 @@ class PlayerStatisticsSyncJourneyE2ETest {
     void arrangeProvider() {
       when(integration.openSession())
           .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));
-      when(integration.scrape(any(), any(), any()))
-          .thenAnswer(invocation -> scraped(invocation.getArgument(1)));
+      when(integration.scrape(any(), any(), any(), any()))
+          .thenAnswer(invocation -> scraped(invocation.getArgument(3)));
     }
 
     /**
@@ -177,24 +171,11 @@ class PlayerStatisticsSyncJourneyE2ETest {
     }
 
     private String tournamentOf(String providerPlayerId) {
-      Long playerId =
-          references
-              .findByProviderAndExternalId(
-                  footballmarket.models.enums.ExternalProvider.WHOSCORED, providerPlayerId)
-              .orElseThrow()
-              .getPlayer()
-              .getId();
-      Long leagueId = players.findVisibleById(playerId).orElseThrow().getTeam().getLeague().getId();
-      return String.valueOf(
-          properties.competitions().stream()
-              .filter(competition -> competition.leagueId().equals(leagueId))
-              .findFirst()
-              .orElseThrow()
-              .tournamentId());
+      return footballmarket.support.StatisticsScrapingSamples.tournamentOf(providerPlayerId);
     }
 
     @Test
-    @DisplayName("Un lote de un jugador deja cobertura consultable sin repetir la extracción")
+    @DisplayName("Un POST recorre la población y deja cobertura completa consultable")
     void loteDeUnJugadorYCoverage() {
       // Arrange
       RestClient api = api();
@@ -207,7 +188,7 @@ class PlayerStatisticsSyncJourneyE2ETest {
           api.post()
               .uri("/api/players/statistics/whoscored/sync/scraping")
               .headers(headers -> headers.setBearerAuth(token))
-              .body(new PlayerStatisticsSyncRequestDTO(today, 1))
+              .body(new PlayerStatisticsSyncRequestDTO(today))
               .retrieve()
               .body(PlayerStatisticsSyncResponseDTO.class);
       PlayerStatisticsCoverageResponseDTO coverage =
@@ -220,13 +201,13 @@ class PlayerStatisticsSyncJourneyE2ETest {
       // Assert
       assertThat(summary.source()).isEqualTo("SCRAPING");
       assertThat(summary.status()).isEqualTo("COMPLETED");
-      assertThat(summary.players().selected()).isEqualTo(1);
-      assertThat(summary.players().completed()).isEqualTo(1);
-      assertThat(summary.coverageComplete()).isFalse();
+      assertThat(summary.players().selected()).isEqualTo(5);
+      assertThat(summary.players().completed()).isEqualTo(5);
+      assertThat(summary.coverageComplete()).isTrue();
       assertThat(coverage.source()).isEqualTo("SCRAPING");
       assertThat(coverage.extractionDate()).isEqualTo(today);
-      assertThat(coverage.completedPlayers()).isEqualTo(1);
-      assertThat(coverage.pendingPlayers()).isEqualTo(4);
+      assertThat(coverage.completedPlayers()).isEqualTo(5);
+      assertThat(coverage.pendingPlayers()).isZero();
       assertThat(coverage.lastRunId()).isEqualTo(summary.runId());
     }
 

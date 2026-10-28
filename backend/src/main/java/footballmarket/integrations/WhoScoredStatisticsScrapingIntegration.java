@@ -40,7 +40,35 @@ public class WhoScoredStatisticsScrapingIntegration {
     this.pacer = pacer;
   }
 
+  /**
+   * Comprueba de forma temprana que el navegador headed arranca y deja la sesión sin recursos.
+   *
+   * <p>Cada worker crea su propio navegador cuando lo necesita. El sondeo evita abrir el run y
+   * seleccionar jugadores cuando no hay entorno gráfico, y sus recursos se liberan antes de
+   * recorrer nada.
+   */
   public Session openSession() {
+    BrowserHandle probe;
+    try {
+      probe = this.openBrowser();
+    } catch (RuntimeException failure) {
+      LOG.warn(
+          "No se pudo abrir el navegador visible de WhoScored: {}", failure.toString(), failure);
+      throw new HeadedBrowserUnavailableException(failure.getMessage());
+    }
+    try (probe) {
+      LOG.info("Navegador headed disponible; se libera hasta el primer worker");
+    }
+    return new Session();
+  }
+
+  /**
+   * Abre una instancia de Playwright y su Chromium headed.
+   *
+   * <p>Playwright Java está confinado al hilo que la crea: cada worker mantiene la suya y la cierra
+   * en ese mismo hilo.
+   */
+  private BrowserHandle openBrowser() {
     Playwright playwright = null;
     try {
       playwright =
@@ -49,69 +77,129 @@ public class WhoScoredStatisticsScrapingIntegration {
                   .setEnv(Map.of("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "1")));
       Browser browser =
           playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
-      return new Session(playwright, browser);
+      return new BrowserHandle(playwright, browser);
     } catch (RuntimeException failure) {
       if (playwright != null) {
-        playwright.close();
+        try {
+          playwright.close();
+        } catch (RuntimeException cleanup) {
+          failure.addSuppressed(cleanup);
+        }
       }
-      LOG.warn(
-          "No se pudo abrir el navegador visible de WhoScored: {}", failure.toString(), failure);
-      throw new HeadedBrowserUnavailableException(failure.getMessage());
+      throw failure;
+    }
+  }
+
+  /** Recursos de navegador de un hilo; se usan y se cierran siempre en él. */
+  private record BrowserHandle(Playwright playwright, Browser browser) implements AutoCloseable {
+    @Override
+    public void close() {
+      RuntimeException failure = null;
+      try {
+        this.browser.close();
+      } catch (RuntimeException error) {
+        failure = error;
+      }
+      try {
+        this.playwright.close();
+      } catch (RuntimeException error) {
+        if (failure == null) {
+          failure = error;
+        } else {
+          failure.addSuppressed(error);
+        }
+      }
+      if (failure != null) {
+        throw failure;
+      }
     }
   }
 
   /**
    * Procesa el resumen y las dieciséis categorías antes de devolver cualquier dato como completo.
    */
-  public WhoScoredScrapedPlayer scrape(Session session, String playerId, Instant deadline) {
+  public WhoScoredScrapedPlayer scrape(Session session, String playerId) {
+    return this.scrape(session, null, null, playerId);
+  }
+
+  /** Scrapea un jugador y adjunta a los logs los identificadores locales de la campaña. */
+  public WhoScoredScrapedPlayer scrape(
+      Session session, Long runId, Long localPlayerId, String playerId) {
     if (playerId == null || !playerId.matches("[1-9][0-9]*")) {
       throw new WhoScoredStatisticsException("PROVIDER_DATA_INCONSISTENT", null);
     }
+    long playerStarted = System.nanoTime();
+    String diagnostic = diagnostic(runId, localPlayerId);
     List<WhoScoredScrapedContextRow> rows = new ArrayList<>();
     java.util.concurrent.atomic.AtomicLong calls = new java.util.concurrent.atomic.AtomicLong();
     WhoScoredStructuredDataBlock[] data = {new WhoScoredStructuredDataBlock(List.of())};
     String url = this.provider.baseUrl() + "/players/" + playerId + "/show";
     for (String section : WhoScoredScrapingSectionNavigator.SECTIONS) {
       Instant started = Instant.now();
-      LOG.info("Sección {} iniciada", section);
+      LOG.info("{} Sección {} iniciada", diagnostic, section);
       List<WhoScoredScrapedContextRow> parsed;
       try {
         parsed =
             this.navigator.read(
-                session.browser,
+                session.browser(),
                 url,
                 section,
-                deadline,
+                runId,
+                localPlayerId,
                 session.workers.get(),
                 calls::incrementAndGet,
                 (page, originalHtml) ->
                     section.equals(WhoScoredScrapingSectionNavigator.INITIAL)
                         ? this.summary(page, originalHtml, data)
-                        : this.detail(page, originalHtml, deadline));
+                        : this.detail(page, originalHtml, diagnostic));
       } catch (RuntimeException failure) {
         // El recorrido abandona al jugador en la primera sección que falla, de modo que la
         // incidencia
         // solo es accionable si declara dónde se rompió el recorrido.
         LOG.warn(
-            "Sección {} fallida tras {} ms: {}",
+            "{} Sección {} fallida tras {} ms: {}",
+            diagnostic,
             section,
             Duration.between(started, Instant.now()).toMillis(),
             describe(failure),
             failure);
-        if (failure instanceof WhoScoredStatisticsException known && known.getSection() == null) {
-          throw new WhoScoredStatisticsException(
-              known.getCode(), known.getProviderStatus(), section);
+        if (failure instanceof WhoScoredStatisticsException known) {
+          WhoScoredStatisticsException reported =
+              new WhoScoredStatisticsException(
+                  known.getCode(),
+                  known.getProviderStatus(),
+                  known.getSection() == null ? section : known.getSection(),
+                  calls.get());
+          reported.initCause(known);
+          throw reported;
         }
         throw failure;
       }
       LOG.info(
-          "Sección {} leída en {} ms: {} contextos",
+          "{} Sección {} leída en {} ms: {} contextos",
+          diagnostic,
           section,
           Duration.between(started, Instant.now()).toMillis(),
           parsed.size());
       rows.addAll(parsed);
     }
+    LOG.info(
+        "{} Jugador scrapeado en {} ms: {} secciones, {} filas, {} llamadas observadas",
+        diagnostic,
+        Duration.ofNanos(System.nanoTime() - playerStarted).toMillis(),
+        WhoScoredScrapingSectionNavigator.SECTIONS.size(),
+        rows.size(),
+        calls.get());
     return new WhoScoredScrapedPlayer(playerId, rows, data[0], calls.get(), List.of());
+  }
+
+  private static String diagnostic(Long runId, Long localPlayerId) {
+    return "run="
+        + (runId == null ? "n/a" : runId)
+        + " player="
+        + (localPlayerId == null ? "n/a" : localPlayerId)
+        + " worker="
+        + Thread.currentThread().getName();
   }
 
   /** Resumen de la carga inicial: contexto de temporada y totales. */
@@ -135,13 +223,14 @@ public class WhoScoredStatisticsScrapingIntegration {
    * categoría que falló para que la incidencia diga dónde se rompió.
    */
   private List<WhoScoredScrapedContextRow> detail(
-      Page page, String originalHtml, Instant deadline) {
+      Page page, String originalHtml, String diagnostic) {
     WhoScoredStructuredDataBlock block = this.structured.parse(originalHtml);
     List<WhoScoredScrapedContextRow> rows = new ArrayList<>();
     for (String category : WhoScoredScrapingSectionNavigator.CATEGORIES) {
       Instant started = Instant.now();
+      long categoryStarted = System.nanoTime();
       try {
-        this.navigator.chooseCategory(page, category, deadline);
+        this.navigator.chooseCategory(page, category, diagnostic);
         rows.addAll(
             this.tables.parse(
                 page,
@@ -152,7 +241,8 @@ public class WhoScoredStatisticsScrapingIntegration {
                 Instant.now()));
       } catch (RuntimeException failure) {
         LOG.warn(
-            "Categoría {} fallida tras {} ms: {}",
+            "{} categoría={} fallida tras {} ms: {}",
+            diagnostic,
             category,
             Duration.between(started, Instant.now()).toMillis(),
             describe(failure),
@@ -164,9 +254,10 @@ public class WhoScoredStatisticsScrapingIntegration {
         throw failure;
       }
       LOG.info(
-          "Categoría {} leída en {} ms: {} contextos",
+          "{} categoría={} leída en {} ms: {} contextos",
+          diagnostic,
           category,
-          Duration.between(started, Instant.now()).toMillis(),
+          Duration.ofNanos(System.nanoTime() - categoryStarted).toMillis(),
           rows.size());
     }
     return List.copyOf(rows);
@@ -177,30 +268,59 @@ public class WhoScoredStatisticsScrapingIntegration {
     return code == null ? failure.getClass().getSimpleName() : code;
   }
 
-  /** Recursos de lote; el navegador se comparte y cada sección tiene su propio contexto. */
+  /**
+   * Recursos del lote: un navegador por hilo de worker y el ritmo estadístico de ese worker.
+   *
+   * <p>Playwright Java no admite el uso concurrente de una misma instancia, así que la concurrencia
+   * la garantiza una instancia confinada a cada hilo, no un bloqueo compartido. Los recursos de un
+   * worker se liberan en su propio hilo al terminar el lote.
+   */
   public final class Session implements AutoCloseable {
-    private final Playwright playwright;
-    private final Browser browser;
+    private final ThreadLocal<BrowserHandle> handles = new ThreadLocal<>();
+    private final java.util.concurrent.atomic.AtomicInteger liveBrowsers =
+        new java.util.concurrent.atomic.AtomicInteger();
     private final ThreadLocal<WhoScoredRequestPacer.StatisticsWorker> workers =
         ThreadLocal.withInitial(
             () ->
                 WhoScoredStatisticsScrapingIntegration.this.pacer.statisticsWorker(
                     WhoScoredStatisticsScrapingIntegration.this.properties.requestIntervalMs()));
 
-    private Session(Playwright playwright, Browser browser) {
-      this.playwright = playwright;
-      this.browser = browser;
+    private Session() {}
+
+    /** Navegador del hilo llamante, creado la primera vez que ese worker lo necesita. */
+    Browser browser() {
+      BrowserHandle handle = this.handles.get();
+      if (handle == null) {
+        try {
+          handle = WhoScoredStatisticsScrapingIntegration.this.openBrowser();
+        } catch (RuntimeException unavailable) {
+          throw new HeadedBrowserUnavailableException(null);
+        }
+        this.handles.set(handle);
+        this.liveBrowsers.incrementAndGet();
+      }
+      return handle.browser();
+    }
+
+    /** Libera los recursos del hilo llamante; debe invocarse en el hilo del worker. */
+    public void releaseWorker() {
+      this.workers.remove();
+      BrowserHandle handle = this.handles.get();
+      if (handle == null) {
+        return;
+      }
+      this.handles.remove();
+      this.liveBrowsers.decrementAndGet();
+      handle.close();
     }
 
     @Override
     public void close() {
-      synchronized (this.browser) {
-        try {
-          this.browser.close();
-        } finally {
-          this.playwright.close();
-          this.workers.remove();
-        }
+      // El hilo de la petición no posee navegadores de worker; solo se libera por si acaso.
+      this.releaseWorker();
+      int open = this.liveBrowsers.get();
+      if (open != 0) {
+        LOG.warn("Quedaron {} navegadores de scraping sin cerrar al cerrar la sesión", open);
       }
     }
   }

@@ -3,6 +3,7 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.*;
 
 import footballmarket.models.enums.MetricAvailability;
+import footballmarket.models.exceptions.InvalidPlayerException;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,7 +29,7 @@ class MetricValuePipelineTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"-", " \t "})
+    @ValueSource(strings = {"-", " \t ", "N/A", "\t N/A  "})
     @DisplayName("Distingue una ausencia de un cero publicado")
     void distinguishesAbsence(String published) {
       // Act
@@ -38,8 +39,18 @@ class MetricValuePipelineTest {
       // Assert
       assertThat(absent.availability()).isEqualTo(MetricAvailability.ABSENT);
       assertThat(absent.value()).isNull();
+      assertThat(absent.observedPrecision()).isNull();
       assertThat(zero.availability()).isEqualTo(MetricAvailability.PRESENT);
       assertThat(zero.value()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"NaN", "null", "abc", "N/A%", "n/a"})
+    @DisplayName("Rechaza textos ajenos al marcador literal de ausencia autorizado")
+    void rejectsInvalidText(String published) {
+      // Act / Assert
+      assertThatThrownBy(() -> MetricValueNormalizer.normalize(published))
+          .isInstanceOf(InvalidPlayerException.class);
     }
   }
 

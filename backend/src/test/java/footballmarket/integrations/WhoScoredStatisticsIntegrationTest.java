@@ -76,7 +76,7 @@ class WhoScoredStatisticsIntegrationTest {
                     new WhoScoredProperties.Competition(3L, 4),
                     new WhoScoredProperties.Competition(4L, 5),
                     new WhoScoredProperties.Competition(5L, 22))),
-            new PlayerStatisticsProperties(3, 3, 1, 1_800_000, 30_000, 30_000, false, true),
+            new PlayerStatisticsProperties(3, 3, 1, 30_000, 30_000, false, true),
             JsonMapper.builder().build());
   }
 
@@ -381,7 +381,7 @@ class WhoScoredStatisticsIntegrationTest {
                       new WhoScoredProperties.Competition(3L, 4),
                       new WhoScoredProperties.Competition(4L, 5),
                       new WhoScoredProperties.Competition(5L, 22))),
-              new PlayerStatisticsProperties(3, 3, 1, 1_800_000, 30_000, 30_000, false, true),
+              new PlayerStatisticsProperties(3, 3, 1, 30_000, 30_000, false, true),
               JsonMapper.builder().build());
 
       // Act / Assert

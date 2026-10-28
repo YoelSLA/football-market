@@ -56,7 +56,6 @@ whoscored:
     request-interval-ms: 1
     # El presupuesto del lote debe superar el ritmo por defecto de 60 s por jugador: si no, la
     # capacidad calculada limita el lote a un jugador y las pruebas de poblacion fallan.
-    scraping-batch-timeout-ms: 1800000
     navigation-timeout-ms: 1000
     query-timeout-ms: 1000
     filter-third-party-resources: false

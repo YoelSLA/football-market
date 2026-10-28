@@ -83,8 +83,101 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-029](#td-029--cobertura-de-tests-incompleta-para-el-recálculo-de-cotizaciones) | Cobertura de tests incompleta para el recálculo de cotizaciones | Backend / Testing | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-030](#td-030--cobertura-parcial-del-control-de-imports-scss) | Cobertura parcial del control de imports SCSS | Frontend / Herramientas | Media | Pendiente | 2026-10-22 14:32:17 |
 | [TD-031](#td-031--cobertura-de-tests-incompleta-para-el-ranking-por-score) | Cobertura de tests incompleta para el ranking por score | Backend / Testing | Media | En curso | 2026-10-23 19:39:54 |
+| [TD-032](#td-032--conteo-de-fallidos-de-estadísticas-incluye-no-data-y-fallos-ya-reconfirmados) | Conteo de fallidos de estadísticas incluye no-data y fallos ya reconfirmados | Backend / Contrato | Alta | Pendiente | 2026-10-27 13:45:51 |
+| [TD-033](#td-033--journeys-de-estadísticas-sustituyen-las-integrations-productivas) | Journeys de estadísticas sustituyen las Integrations productivas | Backend / Testing | Media | Pendiente | 2026-10-27 13:45:51 |
+| [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-034 — Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-034 |
+| **Fecha y hora de registro** | 2026-10-28 11:39:59 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `En curso` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Testing |
+| **Fecha de resolución** | — |
+
+**Evidencia:** `WhoScoredScrapingIntegrationTest` sustituye `Page`, `Locator` y
+`JSHandle`. Las regresiones de T107 verifican orden, timeout, selección única y limpieza,
+pero `waitForFunction`/`evaluateHandle` no ejecutan el JavaScript de producción. Esto ya
+limitaba la comparación anterior de HTML; también limita la nueva observación de render.
+
+**Impacto:** esas pruebas no demuestran por sí solas renderizado de tabla idéntica,
+rechazo de tabla vieja/spinner, actualización tardía ni ausencia real de mutaciones.
+Un build sin tests tampoco lo acredita. T106/T107 no se cierran por esas pruebas.
+
+**Solución en curso:** regresión de DOM contra HTML local controlado que ejercite el
+JavaScript real, sin Internet ni WhoScored. La excepción de T107 para navegador local
+se autorizó y registró en tasks/plan: Chromium ya instalado, headed y opt-in. No se
+agregan dependencias ni se amplían controles ejecutables del agente.
+
+**Cierre:** demostrar los escenarios anteriores con la implementación real de la espera
+y evidencia de ejecución humana satisfactoria, sin convertir un selector cambiado o una
+respuesta auxiliar en prueba de datos actualizados.
+
+**Historial:** 2026-10-28 11:39:59 — registrada durante la corrección autorizada de
+T106/T107 de SPEC-012; no resuelta ni dispensada por su registro.
+
+**Avance autorizado — 2026-10-28:** se escribe `WhoScoredScrapingDomTest`, opt-in con
+Chromium headed local y HTML en memoria, sin mocks del navegador ni acceso a WhoScored.
+Ejercita el observer/predicado productivo para reemplazo idéntico, tabla vieja sin render,
+carga pendiente y finalización diferida. Los casos negativos verifican que hubo selección
+y que la tabla está presente, evitando pasar por un timeout de preparación. No ejecutado
+por el agente: compilación y ejecución humanas pendientes; no se declara resuelta.
+
+### TD-032 — Conteo de fallidos de estadísticas incluye no-data y fallos ya reconfirmados
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-032 |
+| **Fecha y hora de registro** | 2026-10-27 13:45:51 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Alta |
+| **Área afectada** | Backend / Contrato |
+| **Fecha de resolución** | — |
+
+**Evidencia estática:** `PlayerStatisticsCoverageQuery.coverage` asigna a `failedPlayers` el
+resultado de `countDistinctPlayersWithoutConfirmation`. La consulta en
+`PlayerStatisticsRunItemRepository` cuenta cualquier item distinto de `COMPLETED`, incluidos
+`NO_DATA`, y no excluye jugadores que luego tengan una confirmación satisfactoria. Puede informar
+fallidos aun con cero pendientes. Es preexistente al cambio de scraping del 2026-10-27.
+
+**Impacto:** el resumen del run conserva contadores por resultado, pero el GET de cobertura puede
+inflar su contador de fallidos. No se corrige fuera de alcance: requiere decisión y pruebas por impacto.
+
+**Cierre:** demostrar no-data separado, exclusión de fallos posteriormente reconfirmados y
+coherencia `failedPlayers <= pendingPlayers` según el contrato aprobado, con ejecución humana.
+
+**Historial:** 2026-10-27 13:45:51 — registrada durante T108 de SPEC-012; sin corrección ni tests atribuidos.
+
+### TD-033 — Journeys de estadísticas sustituyen las Integrations productivas
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-033 |
+| **Fecha y hora de registro** | 2026-10-27 13:45:51 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Testing |
+| **Fecha de resolución** | — |
+
+**Evidencia:** `PlayerStatisticsSyncJourneyE2ETest`, `PlayerStatisticsCampaignClientE2ETest` y
+`PlayerStatisticsCrossChannelJourneyE2ETest` usan HTTP propio real pero declaran
+`@MockitoBean WhoScoredStatisticsScrapingIntegration` (y JSON en el último). Ya existía antes de
+este cambio. No cumplen íntegramente `docs/backend/testing.md` §13, que exige Integrations reales
+y sustitución del proveedor; no prueban la conexión Service → adaptador productivo.
+
+**Estado de SPEC-012:** se adaptaron sus contratos y escenarios al único POST, sin presentar esas
+pruebas como E2E normativamente completas. T105 no se marca completa; registrar deuda no dispensa
+el requisito ni permite cerrar la feature. Falta adaptar a proveedor Playwright/HTTP controlado con
+componentes internos reales, no renombrar las pruebas para ocultar la brecha.
+
+**Cierre:** frontera E2E conforme, sin Internet/navegador real, y ejecución humana satisfactoria.
+
+**Historial:** 2026-10-27 13:45:51 — registrada durante T105/T108; no se declara resuelta.
 
 ### TD-022 — Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces
 

@@ -85,12 +85,13 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 
 - Controller: `PlayerStatisticsController` expone únicamente `POST /api/players/statistics/whoscored/sync/scraping`,
   `POST /api/players/statistics/whoscored/sync/json` y `GET /api/players/statistics/whoscored/coverage`.
-  La ruta determina el canal; el body de scraping solo admite `extractionDate` y `maxPlayers`, y la
+  La ruta determina el canal; el body de scraping admite fecha opcional `extractionDate`, rechaza
+  `maxPlayers` incluso null, y la
   entrada JSON rechaza cualquier parámetro o cuerpo.
 - Services: `PlayerStatisticsSynchronizationService` es la fachada que abre y cierra la campaña;
   `PlayerStatisticsExtractionService` ejecuta un jugador de scraping; `JsonStatisticsUpdateService`
   ejecuta un jugador por JSON; `PlayerStatisticsCoverageService` responde la cobertura sin acceder
-  al proveedor. Los componentes internos de `services/internal/` resuelven selección, lotes,
+  al proveedor. Los componentes internos de `services/internal/` resuelven selección, recorrido,
   ritmo, ensamblado y confirmación por jugador.
 - Model: `MetricCatalog` y `MetricDefinition` materializan el catálogo cerrado de 60 métricas con
   cobertura 45/57/42 por canal; `MetricValueNormalizer` y `MetricDerivationApplier` encapsulan
@@ -107,8 +108,12 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 
 ### 3.2. Contrato HTTP
 
-- `POST /sync/scraping` acepta `extractionDate` opcional no futura y `maxPlayers` entero positivo
-  opcional; el límite es global entre workers y el alcance temporal lo acota el ritmo de campaña.
+- `POST /sync/scraping` exige body (`{}` o `extractionDate` opcional no futura) e intenta una vez
+  todos los pendientes del snapshot inicial ascendente, sin máximo, deadline total ni retries.
+  Conserva timeouts por operación y pacing, y continúa tras fallos individuales. La exclusión de
+  instancia única se mantiene hasta terminar workers y limpieza; solo un run huérfano se recupera,
+  nunca uno vivo por antigüedad. Sin valores numéricos o contexto, el jugador queda `NO_DATA` y
+  puede reconfirmarse en otro POST sin sobrescribir éxitos anteriores.
 - `POST /sync/json` no admite query parameters ni body; fija la fecha UTC al iniciar y recorre
   todos los pendientes de esa campaña sin corte temporal ni límite de cantidad.
 - Ambos devuelven el mismo resumen: identificación del run, estado, contadores de jugadores, de
@@ -117,13 +122,14 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 - `GET /coverage` exige `source` y admite `extractionDate` opcional; devuelve conteos por fecha y
   canal, `systemicallyAbsentMetrics` y el último run. No accede al proveedor.
 - Errores controlados: `INVALID_STATISTICS_SOURCE`, `INVALID_STATISTICS_EXTRACTION_DATE`,
-  `INVALID_STATISTICS_MAX_PLAYERS`, `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
+  `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
   `PLAYER_STATISTICS_SYNC_FAILED` y `HEADED_BROWSER_UNAVAILABLE`, este último solo para scraping.
 
 ### 3.3. Cliente operativo
 
 `tools/PlayerStatisticsSyncClient` es un cliente CLI de scraping ejecutado por el desarrollador,
-fuera del contexto Spring, con modos `batch` y `campaign`. No consulta WhoScored ni la
+fuera del contexto Spring, con un único POST sin repetición automática. Rechaza `--mode` y
+`--max-players`; solo devuelve salida 0 con cobertura completa. No consulta WhoScored ni la
 persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
 por POST autenticado sin entrada.
 

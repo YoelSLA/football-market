@@ -7,6 +7,7 @@ import footballmarket.models.PlayerStatisticsExtractionRun;
 import footballmarket.models.PlayerStatisticsRunItem;
 import footballmarket.models.enums.ExternalProvider;
 import footballmarket.models.enums.ExtractionRunStatus;
+import footballmarket.models.enums.MetricSource;
 import footballmarket.models.enums.PlayerExtractionResult;
 import footballmarket.repositories.PlayerRepository;
 import footballmarket.repositories.PlayerStatisticsExtractionRunRepository;
@@ -98,8 +99,8 @@ public class PlayerStatisticsWriter {
    * Devuelve la fila de la campaña del jugador, creándola si todavía no existe.
    *
    * <p>Una fila confirmada no se sobrescribe ni se degrada: se rechaza como campaña repetida para
-   * no mezclar sus métricas con las de otro contexto. Solo una fila sin contexto resuelto admite la
-   * reconfirmación posterior.
+   * no mezclar sus métricas con las de otro contexto. Una fila sin contexto o, en scraping, sin
+   * valores ni confirmación satisfactoria admite reconfirmación posterior.
    */
   private PlayerStatistics reconfirmOrCreate(
       PlayerStatisticsExtractionRun run,
@@ -114,7 +115,13 @@ public class PlayerStatisticsWriter {
           player, run.getExtractionDate(), run.getSource(), contextStatus, item, finishedAt);
     }
     PlayerStatistics row = existing.get();
-    if (!NO_LEAGUE_CONTEXT.equals(row.getContextStatus())) {
+    if (this.items.existsByPlayerIdAndExtractionDateAndSourceAndResult(
+            player.getId(),
+            run.getExtractionDate(),
+            run.getSource(),
+            PlayerExtractionResult.COMPLETED)
+        || (!NO_LEAGUE_CONTEXT.equals(row.getContextStatus())
+            && !(run.getSource() == MetricSource.SCRAPING && row.getPresentMetrics() == 0))) {
       throw new PlayerStatisticsConfirmationException(true);
     }
     row.reconfirm(contextStatus, item, finishedAt);
@@ -159,15 +166,27 @@ public class PlayerStatisticsWriter {
       row.resolveContext(
           context.competitionId(), context.teamId(), context.seasonKey(), context.seasonLabel());
     }
-    row.applyMetrics(
-        this.values(metrics), metrics.size(), Math.max(0, catalogSize - metrics.size()));
+    int present =
+        run.getSource() == MetricSource.SCRAPING
+            ? (int)
+                MetricCatalog.definitions().stream()
+                    .filter(definition -> definition.sources().contains(MetricSource.SCRAPING))
+                    .filter(
+                        definition ->
+                            metrics.containsKey(definition.key())
+                                && metrics.get(definition.key()).value() != null)
+                    .count()
+            : metrics.size();
+    row.applyMetrics(this.values(metrics), present, Math.max(0, catalogSize - present));
 
     item.finish(
-        resolved.isPresent() ? PlayerExtractionResult.COMPLETED : PlayerExtractionResult.NO_DATA,
+        resolved.isPresent() && (run.getSource() != MetricSource.SCRAPING || present > 0)
+            ? PlayerExtractionResult.COMPLETED
+            : PlayerExtractionResult.NO_DATA,
         finishedAt,
         resolved.isPresent() ? 1 : 0,
-        metrics.size(),
-        Math.max(0, catalogSize - metrics.size()),
+        present,
+        Math.max(0, catalogSize - present),
         null);
     this.items.save(item);
     if (row.getId() == null) {

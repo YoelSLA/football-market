@@ -6,11 +6,13 @@
 > `PlayerStatisticsExtractionRun`, `PlayerStatisticsRunItem`, `PlayerStatistics` y
 > `ExtractionIncident`. No existen contextos, observaciones ni auditorías de contraste.
 
+> **Diseño objetivo del 2026-10-27**: recorrido sin lotes y no-data reintentable; cambios pendientes de implementación. Las referencias a esquema existente se distinguen de los cambios objetivo descritos abajo.
+
 ## Principios
 
 - El catálogo inmutable contiene exactamente 60 métricas y vive en código.
 - Cada campaña se identifica por fecha UTC y canal (`SCRAPING` o `JSON`).
-- JSON fija su fecha en el backend al iniciar el POST sin parámetros ni body; conserva esa fecha hasta cerrar el run. Otras llamadas del mismo día procesan solo pendientes; otro día es otra campaña. Scraping permite fijar fecha entre lotes.
+- JSON fija fecha al iniciar su POST sin entrada; scraping admite fecha opcional o resuelve UTC al inicio. Ambos conservan fecha hasta cerrar el run y otras peticiones solo intentan pendientes de esa campaña.
 - Cada campaña y canal conserva exactamente una fila por jugador confirmado; una nueva llamada actualiza esa fila en lugar de acumular histórico por métrica.
 - El contexto se limita a la liga local vigente del jugador; nunca se suman contextos de competiciones distintas.
 - Una ausencia no borra el resto de la fila y ningún acceso externo mantiene una transacción abierta.
@@ -61,7 +63,7 @@ Tabla: `player_statistics_extraction_runs`.
 | `notDerivableMetrics` | long | Se mantiene la columna y el contador por compatibilidad de contrato, pero **siempre vale 0**: una derivada no derivable se persiste como columna nula y no se distingue de una ausencia. |
 | `providerCalls` | long | Navegaciones o consultas externas. |
 | `failureCode` | String? | Fallo global estable y saneado. |
-| `maxPlayers` | Integer? | Límite positivo solicitado solo para scraping; null sin límite de cantidad. Para JSON siempre null, sin corte de lote temporal. |
+| `maxPlayers` | Integer? (existente, a retirar) | No forma parte del modelo objetivo ni del request de ningún canal. Retirar atributo y columna de auditoría obsoletos junto con sus consumidores; no convertirlos en un límite oculto. |
 
 ### Invariantes
 
@@ -69,8 +71,7 @@ Tabla: `player_statistics_extraction_runs`.
 - `pending <= eligible`.
 - Solo un run `RUNNING` por canal en la instancia (índice único parcial `uq_statistics_running_source`).
 - Puede haber varios runs por fecha y canal; cada uno conserva su auditoría.
-- `selectedPlayers <= maxPlayers` cuando el límite no es null, contando todos los workers.
-- En JSON `maxPlayers` es null. La selección cubre todos los pendientes del snapshot inicial de elegibles, sin máximo de cantidad ni corte temporal de scraping. Con cero pendientes, run `COMPLETED` con cero seleccionados y cero llamadas externas, sin tocar al proveedor.
+- En ambos canales el snapshot cubre todos los pendientes iniciales, sin límite total de tiempo/cantidad. `selectedPlayers` cuenta intentos efectivamente auditados; un snapshot interrumpido puede dejar IDs sin intentar. Con cero pendientes, run `COMPLETED`, cero seleccionados y llamadas, sin proveedor ni navegador.
 - Restricción única adicional `(id, extraction_date, source)` para la referencia compuesta desde items.
 
 ## PlayerStatisticsRunItem
@@ -103,9 +104,9 @@ Garantías de esquema:
 - Índice único parcial `uq_statistics_item_completed_campaign` sobre `(extraction_date, source, player_id) WHERE result = 'COMPLETED'`. Aplica entre runs distintos; no limita el número de intentos fallidos y permite confirmar otra fecha o canal.
 - La confirmación del item y de su fila `player_statistics` ocurre en una sola transacción. Una colisión revierte esa confirmación completa, sin datos parciales, y se traduce de forma controlada en la frontera de persistencia del caso de uso.
 
-El ritmo para cortar lotes de scraping se reconstruye de `finishedAt - startedAt` de las últimas 20 confirmaciones `COMPLETED` de igual fecha y canal `SCRAPING`, ordenadas por `finishedAt` e `id` descendentes. Solo entran en la media las muestras con duración conocida; sin ninguna, 60 segundos por jugador. JSON conserva tiempos de auditoría pero no usa esta media para cortar su población.
+Los timestamps sirven para auditoría, no para calcular capacidad ni cortar el recorrido. Scraping no reintenta ni vuelve a seleccionar IDs dentro del mismo POST; JSON conserva sus retries técnicos por consulta sin reselección de jugadores.
 
-Pendientes de scraping = referencias `WHOSCORED` confirmadas menos jugadores con item `COMPLETED` de igual fecha y `SCRAPING`, mediante exclusión por existencia, no mediante un cursor del cliente. Los fallidos, interrumpidos y no intentados siguen pendientes. La selección ordena por ID local ascendente y nunca utiliza nombres o IDs proporcionados por el desarrollador. La misma exclusión se aplica a JSON para su fecha UTC inicial y canal `JSON`; completar uno de los canales no completa el otro. La cobertura usa el catálogo elegible vigente, no solo la población seleccionada en el último run.
+Pendientes = referencias `WHOSCORED` confirmadas sin item `COMPLETED` de igual fecha/canal, mediante exclusión por existencia. Fallidos, interrumpidos, no intentados y `NO_DATA` siguen pendientes para otro POST. En scraping sin valor numérico presente no se confirma `COMPLETED`, aun con contexto resuelto. Orden ascendente de ID local; sin IDs de entrada. La cobertura usa elegibles vigentes, no solo snapshot, y cada canal es independiente.
 
 ## PlayerStatistics
 
@@ -157,12 +158,7 @@ selección en código lee la configuración, no la migración.
 
 ### Reconfirmación
 
-Solo una fila `NO_LEAGUE_CONTEXT` admite reconfirmación: si el jugador vuelve a aparecer en la
-misma campaña y ahora tiene contexto de liga local resuelto, la fila se actualiza con el contexto,
-las métricas y el nuevo `runItem`/`observedAt`. Una fila `RESOLVED` se rechaza como campaña repetida
-y sus métricas no se sobrescriben ni se degradan. La colisión de `uq_player_statistics` entre dos
-ejecuciones concurrentes se conserva como detección de concurrencia real y revierte la confirmación
-completa.
+Una fila `NO_LEAGUE_CONTEXT` admite reconfirmación. Además, para scraping una fila con contexto `RESOLVED` pero sin ningún valor numérico presente y sin item `COMPLETED` de esa campaña admite reconfirmación: su intento anterior es `NO_DATA`. Contar valores no nulos, no entradas del mapa que pueden representar ausencias. Actualizar contexto, métricas y `runItem`/`observedAt` atómicamente. Una campaña con item `COMPLETED` nunca se sobrescribe ni degrada; conservar unicidad y rollback ante colisión real. JSON mantiene la regla anterior: solo fila `NO_LEAGUE_CONTEXT` reconfirmable.
 
 ## ExtractionIncident
 
@@ -175,7 +171,7 @@ Tabla: `player_statistics_incidents`.
 | `section` | String? | Sección o combinación JSON. |
 | `code` | String | Bloqueo, timeout, transporte, estructura, columna no catalogada, dato incoherente, no encontrado o interrupción. |
 | `providerStatus` | Integer? | HTTP cuando exista, entre 100 y 599. |
-| `attempt` | int | 1 o 2. |
+| `attempt` | int | Scraping: 1, sin retries. JSON conserva los intentos permitidos de su contrato externo. |
 | `occurredAt` | Instant | Obligatorio. |
 
 No guarda HTML, JSON completo, cookies, credenciales ni tokens.
@@ -195,7 +191,11 @@ PlayerStatisticsRunItem 1 ── N ExtractionIncident
 RUNNING → COMPLETED | PARTIAL | FAILED | INTERRUPTED
 ```
 
-No hay transición desde un run final. La recuperación marca runs activos previos del mismo canal como `INTERRUPTED`, crea otro run y conserva todos los datos confirmados.
+No hay transición desde un run final. En scraping no se deduce orfandad por antigüedad: el POST no tiene deadline total. En la instancia única, la exclusión por canal permanece hasta terminar workers/limpieza; con una ejecución viva se rechaza otra entrada. Solo sin ejecución viva propia se recupera un run huérfano (incluido reinicio), cerrándolo `INTERRUPTED` antes de crear otro y preservando datos confirmados. El índice único de run activo sigue como respaldo. No se agrega soporte multiinstancia; JSON no cambia su recuperación.
+
+## Impacto de esquema previsto
+
+Retirar `max_players` del modelo y construcción de runs. La columna existente y sus tres checks asociados se retiran mediante DDL destructivo mínimo en una nueva migración timestamp dentro de `backend/src/main/resources/db/migration/`, generada según `docs/development/flyway-migrations.md`. No editar checksums de migraciones ya aplicadas ni agregar capas preservadoras de datos de desarrollo; el drop solo elimina configuración obsoleta, no migra valores a otro lugar. La preparación no genera ni ejecuta SQL. Si el usuario prefiere recrear una base de desarrollo, requiere autorización destructiva separada; no se presume aquí.
 
 ## Consultas derivadas
 

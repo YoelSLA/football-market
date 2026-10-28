@@ -291,22 +291,19 @@ public class PlayerStatistics {
   }
 
   /**
-   * Reconfirma una fila de la campaña cuya liga local todavía no había publicado contexto.
-   *
-   * <p>Solo una fila {@code NO_LEAGUE_CONTEXT} admite reconfirmación: es la única que el recorrido
-   * vuelve a seleccionar, porque un jugador confirmado queda excluido de su campaña. Una fila ya
-   * resuelta nunca se sobrescribe ni se degrada, de modo que sus métricas no se mezclan con las de
-   * otro contexto.
-   *
-   * <p>Una fila sin contexto resuelto no publica ninguna métrica, así que todas sus columnas siguen
-   * nulas y la reconfirmación no necesita borrar valores previos.
+   * Reconfirma una fila sin contexto o, solo en scraping, sin métricas ni éxito previo. El escritor
+   * verifica además que no exista ningún item COMPLETED de esa campaña.
    */
   public void reconfirm(String contextStatus, PlayerStatisticsRunItem runItem, Instant observedAt) {
     if (contextStatus == null || runItem == null || observedAt == null) {
       throw new InvalidPlayerException("La reconfirmación requiere contexto completo");
     }
-    if (!NO_LEAGUE_CONTEXT.equals(this.contextStatus)) {
-      throw new InvalidPlayerException("Solo una fila sin contexto resuelto admite reconfirmación");
+    if (!NO_LEAGUE_CONTEXT.equals(this.contextStatus)
+        && !(this.source == MetricSource.SCRAPING
+            && this.presentMetrics == 0
+            && this.runItem.getResult()
+                != footballmarket.models.enums.PlayerExtractionResult.COMPLETED)) {
+      throw new InvalidPlayerException("La fila ya confirmada no admite reconfirmación");
     }
     if (!NO_LEAGUE_CONTEXT.equals(contextStatus) && !RESOLVED.equals(contextStatus)) {
       throw new InvalidPlayerException("El estado de contexto reconfirmado no es válido");
@@ -314,6 +311,10 @@ public class PlayerStatistics {
     this.contextStatus = contextStatus;
     this.runItem = runItem;
     this.observedAt = observedAt;
+    this.providerCompetitionId = null;
+    this.providerTeamId = null;
+    this.seasonKey = null;
+    this.seasonLabel = null;
   }
 
   /** Aplica las métricas del catálogo; las claves ausentes quedan en null. */

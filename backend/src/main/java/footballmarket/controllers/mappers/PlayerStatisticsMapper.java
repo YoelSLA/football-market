@@ -14,7 +14,7 @@ public final class PlayerStatisticsMapper {
     if (request == null) {
       throw new StatisticsMappingException();
     }
-    return new PlayerStatisticsSyncRequest(request.extractionDate(), request.maxPlayers());
+    return new PlayerStatisticsSyncRequest(request.extractionDate());
   }
 
   public static PlayerStatisticsSyncResponseDTO toResponse(PlayerStatisticsSyncSummary summary) {

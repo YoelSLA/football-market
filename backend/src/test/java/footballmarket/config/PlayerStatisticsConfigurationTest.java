@@ -18,7 +18,6 @@ class PlayerStatisticsConfigurationTest {
               "whoscored.statistics.scraping-workers=3",
               "whoscored.statistics.json-workers=3",
               "whoscored.statistics.request-interval-ms=2500",
-              "whoscored.statistics.scraping-batch-timeout-ms=1800000",
               "whoscored.statistics.navigation-timeout-ms=20000",
               "whoscored.statistics.query-timeout-ms=20000",
               "whoscored.statistics.filter-third-party-resources=false",
@@ -43,7 +42,6 @@ class PlayerStatisticsConfigurationTest {
             assertThat(properties.scrapingWorkers()).isEqualTo(3);
             assertThat(properties.jsonWorkers()).isEqualTo(3);
             assertThat(properties.requestIntervalMs()).isEqualTo(2500);
-            assertThat(properties.scrapingBatchTimeoutMs()).isEqualTo(1800000);
             assertThat(properties.navigationTimeoutMs()).isEqualTo(20000);
             assertThat(properties.queryTimeoutMs()).isEqualTo(20000);
             assertThat(properties.filterThirdPartyResources()).isFalse();
@@ -54,10 +52,11 @@ class PlayerStatisticsConfigurationTest {
     @ParameterizedTest
     @ValueSource(
         strings = {
-          "whoscored.statistics.scraping-workers=0", "whoscored.statistics.json-workers=0",
+          "whoscored.statistics.scraping-workers=0",
+          "whoscored.statistics.json-workers=0",
           "whoscored.statistics.request-interval-ms=0",
-              "whoscored.statistics.scraping-batch-timeout-ms=0",
-          "whoscored.statistics.navigation-timeout-ms=0", "whoscored.statistics.query-timeout-ms=0",
+          "whoscored.statistics.navigation-timeout-ms=0",
+          "whoscored.statistics.query-timeout-ms=0",
           "whoscored.statistics.headed=false"
         })
     @DisplayName("Mantiene el rechazo de propiedades inválidas en el binding separado")

@@ -13,7 +13,7 @@ public final class MetricValueNormalizer {
       return new NormalizedMetricValue(null, MetricAvailability.ABSENT, null);
     }
     String normalized = publishedValue.strip();
-    if (normalized.isEmpty() || normalized.equals("-")) {
+    if (normalized.isEmpty() || normalized.equals("-") || normalized.equals("N/A")) {
       return new NormalizedMetricValue(null, MetricAvailability.ABSENT, null);
     }
     normalized = normalized.replace(',', '.');

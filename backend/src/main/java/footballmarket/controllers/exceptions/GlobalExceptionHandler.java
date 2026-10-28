@@ -139,9 +139,6 @@ public class GlobalExceptionHandler {
           if ("extractionDate".equals(field)) {
             code = "INVALID_STATISTICS_EXTRACTION_DATE";
             message = "La fecha de extracción debe tener formato ISO y no ser futura";
-          } else if ("maxPlayers".equals(field)) {
-            code = "INVALID_STATISTICS_MAX_PLAYERS";
-            message = "El máximo de jugadores debe ser un entero positivo de 32 bits";
           }
         }
       }
@@ -444,9 +441,7 @@ public class GlobalExceptionHandler {
         String code =
             "extractionDate".equals(field.getField())
                 ? "INVALID_STATISTICS_EXTRACTION_DATE"
-                : "maxPlayers".equals(field.getField())
-                    ? "INVALID_STATISTICS_MAX_PLAYERS"
-                    : "INVALID_REQUEST";
+                : "INVALID_REQUEST";
         return this.buildResponse(field.getDefaultMessage(), code, HttpStatus.BAD_REQUEST, request);
       }
     }
