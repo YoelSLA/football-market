@@ -110,7 +110,7 @@ El título del registro de seguimiento que este comando establece es el formato 
 Leer la definición del comando correspondiente y ejecutar solo la operación autorizada. Inspeccionar hooks; nunca activar ejecución directa o indirecta de tests.
 
 - **SPECIFY:** materializar intención, US, criterios, escenarios, requisitos y límites; evaluar calidad. Artefacto no equivale a fase completada. Ambigüedades pendientes se explicitan para CLARIFY.
-- **CLARIFY:** siempre obligatorio después de SPECIFY. Resolver decisiones funcionales y registrarlas en spec, no solo chat. Cero preguntas es válido si el escaneo acredita claridad; omitir no equivale a completar.
+- **CLARIFY:** siempre obligatorio después de SPECIFY. Resolver decisiones funcionales y registrarlas en spec, no solo chat. Cero preguntas es válido si el escaneo acredita claridad; omitir no equivale a completar. Al finalizar la fase CLARIFY (con la especificación clarificada, confirmada y subida a la rama remota), MUST crearse siempre el Pull Request hacia `dev` vinculando el issue correspondiente si aún no existe, para asegurar visibilidad temprana y trazabilidad continua.
 - **PLAN:** diseño implementable, Constitution Check antes y después, contratos y consumidores. Mantener plan, research, data-model, contracts y quickstart pertinentes, justificando no aplicabilidad. Corregir requisitos upstream, no ocultarlos en diseño. La documentación del contrato HTTP de una feature se sostiene en sus `contracts/`, en las anotaciones OpenAPI de Controllers y DTO y en los tests funcionales de Controller; ninguna tarea de entrega puede depender de una herramienta de documentación retirada sin sustituirla por esas fuentes.
 - **CHECKLIST:** obligatorio; general de calidad más especializados aplicables, selección justificada. Generación no es evaluación; respetar propiedad del revisor, no marcar para avanzar.
 - **TASKS:** preservar IDs y avance; cobertura, dependencias, rutas, tareas compartidas y verificabilidad. Incluir creación o modificación de tests backend cuando las normas aplicables lo exijan; no tests frontend ni tareas humanas de autorización. Tareas completas significan implementación completa, no cierre.
@@ -168,7 +168,8 @@ reset y no hacer stash de cambios ajenos.
 
 Declarar en el commit la spec, las User Stories o las tareas correspondientes y el alcance
 compartido, con hashes reales cuando existan. Vincular el Pull Request a la funcionalidad y a su
-registro de seguimiento; vincularlo no acredita implementación, revisión ni cierre.
+registro de seguimiento; vincularlo no acredita implementación, revisión ni cierre. El Pull Request
+se abre obligatoriamente al concluir la fase CLARIFY tras publicar el commit de la especificación.
 
 No inventar URL ni hash de Pull Request. El diff local revisable basta para revisión; aprobar el
 estado exacto no implica merge ni publicación. No hacer commit, crear ramas ni push sin encargo.

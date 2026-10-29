@@ -311,7 +311,9 @@ empieza**, no cuando se autoriza.
 3. **SPECIFY** (solo `REQ-` y `SPEC-`): `/speckit.specify` con la descripción de la
    funcionalidad.
 4. **CLARIFY**: `/speckit.clarify`. Siempre obligatorio después de SPECIFY. Cero preguntas es un
-   resultado válido si el escaneo acredita claridad; omitir la fase no lo es.
+   resultado válido si el escaneo acredita claridad; omitir la fase no lo es. Al concluir, se
+   confirman y publican los cambios de la especificación y se crea siempre el Pull Request hacia
+   `dev` vinculado al issue si no existía.
 5. **PLAN**: `/speckit.plan`.
 6. **CHECKLIST**: `/speckit.checklist`. Obligatorio. El agente genera; la persona revisa y marca.
 7. **TASKS**: `/speckit.tasks`.

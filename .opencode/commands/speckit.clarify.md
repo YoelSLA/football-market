@@ -227,6 +227,17 @@ Execution steps:
         - **Still unchecked**: items that remain unchecked.
      8. Record the before/after pass counts as checked/total checkbox items (e.g., "12/16 → 15/16 items passing").
 
+10. **Pull Request Creation (obligatorio al finalizar la etapa de CLARIFY)**:
+    - Tras registrar las clarificaciones en la especificación y actualizar los artefactos:
+      1. Confirmar los cambios locales (`FEATURE_SPEC`, checklists y artefactos de la spec) en la rama actual con un commit descriptivo conforme a las convenciones de Git (ej. `docs(<scope>): clarify specification and resolve open questions`).
+      2. Publicar el commit a la rama remota: `git push origin <BRANCH_NAME>`.
+      3. Verificar si ya existe un Pull Request abierto para la rama: `gh pr list --head <BRANCH_NAME>`.
+      4. Si no existe, crear el Pull Request hacia la rama de integración (`dev`), vinculando el issue correspondiente y detallando la spec:
+         ```bash
+         gh pr create --base dev --head <BRANCH_NAME> --title "<type>/<spec-id>-<scope>" --body "Vinculado al issue correspondiente.\n\n## Resumen\nEspecificación clarificada y preparada para la fase de diseño técnico (PLAN)."
+         ```
+      5. Obtener y registrar la URL efectiva del Pull Request creado o existente para reportarla al usuario.
+
 Behavior rules:
 
 - If no meaningful ambiguities found (or all potential questions would be low-impact), respond: "No critical ambiguities detected worth formal clarification." and suggest proceeding.
@@ -282,11 +293,14 @@ Report completion (after questioning loop ends or early termination):
 - Spec quality checklist status (if `FEATURE_DIR/checklists/requirements.md` was re-validated): show before/after pass counts (e.g., "Spec Quality Checklist: 12/16 → 15/16 items passing") and list any items that changed state — both newly checked (unchecked → checked) and any regressions (checked → unchecked). If any items remain unchecked, list them as areas needing attention.
 - Coverage summary table listing each taxonomy category with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
 - If any Outstanding or Deferred remain, recommend whether to proceed to `/speckit.plan` or run `/speckit.clarify` again later post-plan.
+- Pull Request: URL y estado del Pull Request creado hacia `dev` (o existente).
 - Suggested next command.
 
 ## Done When
 
 - [ ] Spec ambiguities identified and clarifications integrated into spec file
 - [ ] Spec quality checklist re-validated against updated spec (if `FEATURE_DIR/checklists/requirements.md` exists)
+- [ ] Spec changes committed and pushed to remote branch
+- [ ] Pull Request created targeting `dev` (or verified existing) with issue linked
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
-- [ ] Completion reported to user with questions answered, sections touched, checklist status, and coverage summary
+- [ ] Completion reported to user with questions answered, sections touched, checklist status, coverage summary, and PR URL
