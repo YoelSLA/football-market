@@ -22,27 +22,46 @@ export const resolveActiveNavigation: NavigationResolver = (
 	sections,
 	pathname,
 ) => {
-	const section = sections.find(
-		(candidate) =>
-			candidate.path !== null && belongsTo(candidate.path, pathname),
-	);
+	const matchingSections = sections.flatMap((candidate) => {
+		const matchingTabs = candidate.tabs.filter(
+			(tab) => tab.path !== null && belongsTo(tab.path, pathname),
+		);
+		const sectionMatches =
+			candidate.path !== null && belongsTo(candidate.path, pathname);
 
-	if (!section) {
+		return sectionMatches || matchingTabs.length > 0
+			? [{ candidate, matchingTabs }]
+			: [];
+	});
+	const sectionMatch = matchingSections.sort((left, right) => {
+		const leftPathLength = Math.max(
+			left.candidate.path?.length ?? -1,
+			...left.matchingTabs.map((tab) => tab.path?.length ?? -1),
+		);
+		const rightPathLength = Math.max(
+			right.candidate.path?.length ?? -1,
+			...right.matchingTabs.map((tab) => tab.path?.length ?? -1),
+		);
+		return rightPathLength - leftPathLength;
+	})[0];
+
+	if (!sectionMatch) {
 		return { sectionKey: null, tabKey: null };
 	}
 
-	let tabKey: string | null = null;
-	let matchedPathLength = -1;
+	const activeTab = sectionMatch.matchingTabs.reduce<
+		(typeof sectionMatch.matchingTabs)[number] | null
+	>(
+		(current, tab) =>
+			current === null ||
+			(tab.path?.length ?? -1) > (current.path?.length ?? -1)
+				? tab
+				: current,
+		null,
+	);
 
-	for (const tab of section.tabs) {
-		if (tab.path === null) continue;
-		if (!belongsTo(tab.path, pathname)) continue;
-
-		if (tab.path.length > matchedPathLength) {
-			matchedPathLength = tab.path.length;
-			tabKey = tab.key;
-		}
-	}
-
-	return { sectionKey: section.key, tabKey };
+	return {
+		sectionKey: sectionMatch.candidate.key,
+		tabKey: activeTab?.key ?? null,
+	};
 };

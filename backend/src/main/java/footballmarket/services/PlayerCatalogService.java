@@ -1,6 +1,9 @@
 package footballmarket.services;
 
 import footballmarket.models.Player;
+import footballmarket.models.PlayerCatalogFilters;
+import footballmarket.models.PlayerCatalogPage;
+import footballmarket.models.records.PlayerCatalogCriteria;
 import footballmarket.models.records.PlayerSnapshot;
 import footballmarket.models.records.PlayerSynchronizationResult;
 import footballmarket.services.exceptions.PlayerNotFoundException;
@@ -33,6 +36,12 @@ public interface PlayerCatalogService {
    * @return página de jugadores activos
    */
   Page<Player> getActivePlayers(int page, int size);
+
+  /** Página del conjunto visible con filtros globales y enriquecimiento solicitado. */
+  PlayerCatalogPage queryCatalog(PlayerCatalogCriteria criteria, int page, int size);
+
+  /** Opciones globales independientes de los filtros y la página actual. */
+  PlayerCatalogFilters catalogFilters();
 
   /**
    * Obtiene un jugador visible para el catálogo mediante su identificador interno.

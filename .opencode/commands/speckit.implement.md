@@ -1,5 +1,6 @@
 ---
 description: Implementar el alcance autorizado de la funcionalidad y sus prerrequisitos explicitos desde tasks.md.
+model: opencode/deepseek-v4.1-flash-free
 ---
 
 ## User Input

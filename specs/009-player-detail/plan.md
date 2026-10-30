@@ -1,5 +1,102 @@
 # Implementation Plan: Detalle individual del jugador
 
+**Plan vigente del rediseño** — 2026-10-25 · Rama real `feat/009-player-detail-whoscored-stats-dashboard` · [Spec y Clarify](spec.md).
+
+Las secciones vigentes terminan antes de «Antecedente histórico». Se preservan los planes y decisiones anteriores como evidencia, no como requisitos del nuevo dashboard. `tasks.md` no se modifica ni se considera vigente para este alcance por existir.
+
+## Summary
+
+Extender el detalle existente con dos pestañas y estadísticas reales mediante una lectura backend independiente de identidad. Seleccionar un snapshot individual confirmado y componer JSON/scraping sin mezclar contextos. Mantener las 60 claves, metadatos de presentación y cuatro perfiles aprobados; sustituir las llamadas de demostración del detalle sin alterar los consumidores del catálogo. Sin datos financieros, paquetes nuevos, radar, percentiles ni indicadores deportivos derivados.
+
+## Technical Context
+
+- **Lenguajes y dependencias**: TypeScript/React, TanStack Query, Axios, Sass y router existentes; Java/Spring Web/Data JPA y PostgreSQL existentes. Versiones efectivas: configuraciones de cada área; no se modifican dependencias.
+- **Persistencia**: reutilizar `PlayerStatistics`, `MetricCatalog`, item de extracción y repositorios. Sin tablas nuevas ni migraciones iniciales. Índice existente `(player_id, extraction_date DESC)`; no anticipar índices sin evidencia.
+- **Plataforma**: navegador autenticado; anchos 360/768/1280 y alturas 640/800 de SC-017.
+- **Escala**: un jugador/contexto por lectura y 60 valores; selección sin cargar toda la población ni todas las campañas en memoria. Evidencia histórica: 950 filas, no una garantía de volumen.
+- **Rendimiento**: consulta indexable acotada, sin N+1 ni proveedores externos; no agregar umbrales de latencia no aprobados.
+- **Testing**: escribir tests backend en implementación autorizada, ejecutados por el usuario. Sin tests ni infraestructura frontend. En este PLAN documental no se ejecutan builds ni tests.
+
+## Constitution Check
+
+| Garantía | Antes de research | Después del diseño |
+| --- | --- | --- |
+| Simplicidad y proporcionalidad | Conforme: ampliar flujos existentes | Conforme: una lectura, sin tablas, capas o dependencias preventivas |
+| Seguridad e integridad | Autenticación y elegibilidad existentes | Misma visibilidad para identidad/estadísticas; sin llamadas externas ni escritura al consultar |
+| Coherencia contractual | Identidad/catálogo compatibles | Endpoint estadístico aditivo; contrato, mappers, OpenAPI y tests backend previstos en el mismo cambio futuro |
+| Fuente de verdad y trazabilidad | Reutilizar 009 y preservar historia | Perfiles/60 claves de spec; snapshots de SPEC-012; no selección poblacional de SPEC-013 |
+| Verificación y autorizaciones | Solo PLAN autorizado | Sin código, tests ejecutados, commit, push ni cambio de seguimiento; no autoriza implementar |
+| Idioma y límites arquitectónicos | Documentación española | Identificadores ingleses; Controller→Service→Repository/Model y UI→Hook→Service→Mapper |
+
+No se detectan violaciones sin justificar ni decisiones funcionales abiertas. Las discrepancias históricas de layouts no se resuelven cambiando normas globales: conservar comportamiento y limitar el cambio a esta Page.
+
+## Phase 0 — Research
+
+Decisiones y alternativas en [research.md](research.md), sección vigente. Investigación estática sobre implementación y consumidores de ambas áreas. No se emulan operaciones de Spec Kit. `setup-plan.sh --json`, invocado mediante Bash, conservó el plan existente y resolvió esta carpeta; su `BRANCH=009-player-detail` es la selección lógica, no la rama Git real.
+
+## Phase 1 — Diseño
+
+### Backend
+
+1. `PlayerController` añade `GET /api/players/{id}/statistics`, sin alterar DTO, ruta o visibilidad de `GET /{id}` ni listado. Alinear validación de ID positivo de ambas lecturas según FR-046: 400 para formato/rango inválido, cero o negativo; 404 para ID válido inexistente/no visible. Es corrección futura acotada de identidad, hoy sin validación positiva explícita, no cambio ya implementado. Temporada opcional, OpenAPI y errores globales; no permitir que la nueva subruta quede bajo operaciones de sincronización.
+2. Nuevo contrato `PlayerStatisticsQueryService` y `impl/PlayerStatisticsQueryServiceImpl`: orquestación transaccional read-only consistente, consulta de visibilidad y selección individual. No invocar otros Services ni `ValuationSnapshotSelector`.
+3. `PlayerStatisticsRepository`: candidatos resueltos con item referenciado `COMPLETED` y coincidencia de jugador/fecha/canal; elegir última fecha confirmada con filtro `seasonKey` si se suministra. Obtener solo ancla y filas compañeras de esa fecha, no historia completa. Sin parámetro de temporada, usar el último contexto confirmado del propio jugador y devolver la temporada real; no selector visual nuevo.
+4. Anclar contexto en esa fecha: JSON antes que scraping; ante varios candidatos del canal, `observedAt DESC, id DESC`. El ancla fija temporada y competición. La unicidad vigente por jugador/fecha/canal evita múltiples contextos del mismo canal; el orden defensivo no autoriza su fusión. Buscar respaldo exclusivamente de igual jugador, temporada, fecha y competición. Datos de otra competición, incluso más recientes dentro de esa fecha, no completan el ancla.
+5. Model puro de lectura `PlayerStatisticsSnapshot`/valor métrico aplica composición por `MetricCatalog`: JSON no nulo gana, nulo admite scraping coincidente, cero nunca activa respaldo; scraping solo también es válido. Iterar siempre 60 claves. No depender del resultado global del run ni de snapshots de otros jugadores.
+6. Mapper estático de Controller transforma Model a DTO record; nunca decide fuentes. DTO con contexto, fecha y 60 valores nullable/procedencia. El Service enriquece el nombre de competición solo mediante correspondencia local fiable de la clave persistida; sin nombre verificable entrega null, nunca la liga actual por asociación del jugador. No requiere nuevo almacenamiento ni proveedor externo. Contrato completo en [contracts/player-statistics.md](contracts/player-statistics.md).
+
+### Frontend
+
+- `playersService.getStatistics` usa `http` autenticado y signal; mapper convierte DTO tipado en Model. No introducir validación runtime ad hoc ni tipos HTTP en componentes/hooks.
+- Nuevo `usePlayerStatisticsQuery` con key `playersQueryKeys.statistics(id, requestedSeasonKey ?? null)`, `retry: false` consistente con identidad. Activar solo tras identidad vigente; cancelación y comprobación de ID/contexto, sin placeholder de otro jugador. Backend entrega temporada resuelta; no duplicar caché bajo un segundo estado global.
+- `usePlayerDetailPage`: derivar ID directamente de params, sin conservar un render del anterior mediante efecto. Coordinar identidad y estadísticas con estados independientes, reintento separado y pestaña/filtro/categoría locales. Resetear controles al cambiar jugador; cambiar pestaña no inicia otra consulta del mismo snapshot.
+- `PlayerDetailPage`: conservar breadcrumb, PageLayout y navbar global; quitar consumo de season/quote demo. `PlayerOverview` queda para identidad y recursos existentes, sin precio ni indicadores simulados.
+- Componentes locales bajo `pages/PlayerDetailPage/`: `PlayerStatisticsTabs`, `PlayerStatisticsSummary`, `PlayerStatisticsCatalog` y gráfico de barras privado del resumen con TSX/SCSS/barrel. Hijos reciben modelos/callbacks, no hooks. Separación por responsabilidad, no por número de líneas.
+- `constants/playerStatisticsCatalog.ts`: nombres españoles, unidades visibles y categorías exactas de [contracts/metric-glossary.md](contracts/metric-glossary.md), orden y prioridades de la matriz; `playerStatisticsProfiles.ts`: tarjetas, series y adicionales por posición. Tipos en `types/models.ts`, DTO en `types/dtos.ts`; transformaciones en mapper, agrupación/filtrado/orden puro sobre Model en `utils/`. Barrels exponen solo lo necesario.
+- Catálogo: ocho categorías; buscar sin mayúsculas/acentos por clave o nombre, intersección con categoría. Disponibles P→S→B; ausentes al final, orden estable de spec. Sin paginación inicial necesaria para 60 filas: lista agrupada accesible con scroll de PageLayout; no agregar páginas, selector o totales derivados del mockup como requisito.
+- Resumen: exactamente cuatro tarjetas de cada perfil y gráficos/adicionales definidos en spec. Barras en unidades originales con valores textuales; falta un valor → aviso y sin barra; cero → 0 visible; si todos son cero no se divide por cero. No generar proporciones de zonas, medias ni totales desde tasas.
+- Responsive: conservar tokens y flex/min-width:0/min-height:0, sin alturas fijas. PageLayout posee scroll desktop; móvil conserva scroll natural vigente. Columnas se apilan; filas largas se adaptan sin overflow de documento. No tocar layouts compartidos para corregir esta Page.
+- Accesibilidad: tablist/tabpanel, aria-selected/controls, roving tabindex y flechas/Home/End; buscador etiquetado, categorías con selección perceptible, feedback role=status y errores role=alert, foco y reintento. Tabla/listado mantiene nombre/unidad/valor en móvil, gráfico con alternativa textual; no depender del color.
+
+### Archivos afectados durante implementación futura
+
+Rutas backend relativas a `backend/src/main/java/footballmarket/`:
+
+| Acción | Archivos/responsabilidad |
+| --- | --- |
+| Modificar | `controllers/PlayerController.java`, `repositories/PlayerStatisticsRepository.java` |
+| Crear | `services/PlayerStatisticsQueryService.java`, `services/impl/PlayerStatisticsQueryServiceImpl.java` |
+| Crear | `models/PlayerStatisticsSnapshot.java`, `controllers/dtos/responses/PlayerStatisticsResponseDTO.java`, `controllers/mappers/PlayerStatisticsMapper.java` (valores relacionados colocalizados cuando corresponda) |
+| Tests backend futuros | `controllers/PlayerControllerTest.java`; tests de consulta Service, composición Model y selección Repository bajo paquetes existentes |
+
+Frontend: modificar `features/players/players.service.ts`, `players.mapper.ts`, `types/{dtos,models,index}.ts`, `constants/playersQueryKeys.ts`, `hooks/pages/usePlayerDetailPage.ts`, `pages/PlayerDetailPage/{PlayerDetailPage.tsx,PlayerDetailPage.module.scss}`, `PlayerOverview/` y barrels necesarios. Añadir query hook, metadatos/perfiles, operaciones puras y componentes locales descritos arriba. Inspeccionar consumidores antes de retirar `PlayerSportsSummary/`, `PlayerQuotePanel/`, `PlayerQuoteEvolutionChart/` o hooks de demo; el catálogo comparte `playerSampleSeason`, no borrar esa fuente ni modificar su comportamiento sin alcance adicional.
+
+No modificar router, sesión, navbar, sincronización, valuaciones o finanzas. Los cambios de testing/documentación OpenAPI necesarios acompañarán el código en implementación autorizada; no se generan ahora.
+
+## Riesgos y verificación
+
+- Filas migradas sin item no acreditan confirmación; `NO_LEAGUE_CONTEXT`/`NO_DATA` no son snapshot válido. No ocultar fallo técnico como ausencia.
+- `observedAt` de fila refleja confirmación en el writer: no presentarlo como fecha de partido ni como observación individual de cada tabla. La fecha visible es `extractionDate`.
+- Transferencias: contexto estadístico se obtiene de la fila, no se reescribe con equipo/liga actuales. Identidad vigente y contexto histórico se etiquetan separadamente.
+- La consulta debe mantener consistencia entre ancla y respaldo (transacción read-only con aislamiento repeatable-read para consultas separadas); ninguna dependencia del estado poblacional.
+- Contrato antiguo menciona REST Docs y demos: antecedente sustituido por contrato nuevo y OpenAPI/tests de Controller, sin reintroducir herramientas retiradas.
+- IDs cero/negativos: divergencia heredada identificada y resolución documental aprobada en FR-046. Ambas lecturas deben cumplir 400 para ID inválido; conservar 404 de válido inexistente/no visible y 200 NO_DATA de ausencia estadística. Implementación futura incluye alineación acotada y casos de contrato de identidad, sin afirmar que ya esté corregida.
+- Checklist y quickstart verifican casos de snapshot, precedencia, claves, perfiles, estados, accesibilidad y viewports. Builds solo en una futura modificación de código y bajo AGENTS de cada área; tests backend siempre a cargo del usuario.
+
+## Evidencia y siguiente paso
+
+Revisión de criterios parciales: I-01 resuelto con `competitionName` opcional/fallback fiable; I-02 con FR-046 y alineación futura explícita de identidad; D-01 con glosario de 60 claves; D-02 con FR-047 y conservación acotada de respuesta previa. El Page Hook obtiene la última respuesta compatible de Query Cache, no duplica estadísticas en un store ni usa placeholder de otro contexto. Error de refetch es estado de UI adicional a disponibilidad de la última respuesta, con fecha original y advertencia; una nueva respuesta NO_DATA reemplaza la anterior.
+
+Artefactos vigentes: este plan, research, data-model, contracts/player-statistics y quickstart; encabezados de contratos anteriores delimitan su vigencia sin borrar evidencia. Constitution Check antes/después conforme documentalmente. No se modifica `tasks.md`, aprobaciones históricas ni seguimiento. No se ejecutaron tests, builds o hooks; no existe `.specify/extensions.yml`. Siguiente paso: generar y evaluar checklists de calidad y especializados aplicables bajo autorización, nunca TASKS automáticamente.
+
+## Complexity Tracking
+
+Sin excepciones arquitectónicas nuevas. Diseño acotado a lectura, composición de fuentes y presentación aprobada.
+
+---
+
+## Antecedente histórico del plan anterior
+
 **Branch**: `feat/009-player-detail` | **Date**: 2026-10-12 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `/specs/009-player-detail/spec.md`

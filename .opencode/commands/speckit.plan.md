@@ -1,5 +1,6 @@
 ---
 description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+model: openai/gpt-6.1-sol
 handoffs:
   - label: Create Checklist
     agent: speckit.checklist

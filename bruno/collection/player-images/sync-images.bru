@@ -1,0 +1,26 @@
+meta {
+  name: Sincronizar imágenes manualmente
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/players/images/sync?force=false
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

@@ -1,5 +1,38 @@
 # Guía de validación: Página de catálogo de jugadores
 
+## Guía vigente del rediseño — ejecución humana futura
+
+Preflight de viabilidad 2026-10-26 (solo metadatos, sin migraciones ni pruebas): PostgreSQL local reporta UTF8 y pg_trgm1.6 disponible, no instalado. El rol consultado `postgres` tiene CREATE en base y esquema public. Esto no acredita que el rol efectivo de Flyway/deploy sea el mismo; antes de aplicar migraciones, el usuario debe verificar sus permisos de extensión/función/índice y que pg_trgm esté disponible en ese servidor. No se instala unaccent. El agente no aplica la migración ni inicia servicios para hacerlo indirectamente.
+
+No ejecutada por el agente; no implica implementación. Consultar [contrato](../002-player-catalog/contracts/catalog-query.md), mockup `referencias-imagenes/06-catalogo-jugadores.png` y matriz de escenarios siguiente después de implementar bajo autorización. Usar backend/frontend configurados existentes y datos reales locales; fixtures solo en Testcontainers backend. No iniciar sincronizaciones o recálculos para presentar la página.
+
+| Escenario | Resultado a verificar por el usuario |
+| --- | --- |
+| Sesión ausente/vencida | No exponer catálogo privado; flujo existente |
+| Apertura normal |12 tarjetas máximo, name,asc explícito, datos reales/ausencias y conteo real |
+| Usuario API antiguo sin flags nuevos | Mismos campos de identidad, page/size defaults y orden ID ascendente |
+| Jugador fuera de página inicial | Nombre y cuatro filtros lo encuentran globalmente; count/totalPages coherentes |
+| Liga/equipo incompatibles o nacionalidad no coincidente | Vacío por filtros, sin borrar criterios; limpiar recupera default |
+| Nombre repetido, A–Z y Z–A | Orden por lowercase con ID ascendente de desempate, sin relevancia inventada |
+| Name incluye mayúsculas o acentos | «José» coincide con «jose», «JOSÉ» y representación Unicode descompuesta; «Álvarez» con «alvarez», manteniendo nombres originales en respuesta |
+| Name incluye %, _ o ! | Son caracteres literales, no comodines introducidos por el usuario; patrón escapado y parametrizado, mismo predicado en página y count |
+| Búsqueda corta o normalizada vacía | Términos cortos siguen siendo válidos; si queda vacío se omite solo nombre. No suponer que cada consulta use GIN |
+| Cambio desde página posterior y limpiar durante escritura | Página0 en una transición; debounce300ms no vuelve a aplicar texto borrado |
+| Respuestas tardías y error técnico | No mezclar criterios, feedback y reintento; error no se convierte en ceroestadísticas |
+| Jugador sin snapshots / con cero / snapshot parcial | Permanece visible; Sin datos distinto de0; contexto y fecha por jugador |
+| Snapshot JSON/scraping | JSON prioritario, respaldo coincidente, no mezcla fechas, ausencia sin rellenar con otra campaña |
+| Fotografía o bandera fallida y nombres largos | Fallback/texto legibles, sin valores inventados |
+| Viewport1920×913 y navbar104px; 1280/768/360 |6×2 en referencia, distribución responsive y scroll vertical sin recortes/overflow horizontal |
+| Teclado y móvil | Filtros/limpiar/tarjetas/paginador etiquetados, foco y sin depender de hover |
+
+Pruebas backend futuras: Controller para contratos/seguridad/rechazos completos, Repository PostgreSQL/Testcontainers para filtros/count/orden/opciones/lote, Service real con helper de Arrange y API pública en Act/Assert. No tests frontend. Comandos exactos se definirán cuando existan las clases nuevas; no inventar que ya están disponibles. Builds permitidos solo tras modificaciones de código: backend `./gradlew build -x test`, frontend `npm run build`; no corresponden a esta preparación documental. Tests siempre los ejecuta el usuario.
+
+Verificación futura de búsqueda: PostgreSQL UTF-8 con función pura de normalización y GIN pg_trgm instalados por migración aprobada. Comprobar en tests aislados la equivalencia de formas Unicode, permanencia del nombre original y coincidencia literal de comodines. Inspección del plan de consulta/index con datos representativos solo durante implementación y bajo controles expresamente permitidos; no se ejecuta aquí ni se promete aceleración universal de términos cortos. No cambiar filtros exactos por nacionalidad/posición ni orden nombre/ID por esta corrección.
+
+---
+
+## Antecedente histórico de validación anterior
+
 ## Prerrequisitos
 
 - Node.js 24.19.0 o una versión compatible con el requisito `>=24`.

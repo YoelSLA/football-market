@@ -1,11 +1,11 @@
+import MarketFilters from "@/features/market/components/MarketFilters";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { useMarketBuyPage } from "@/features/market/hooks";
 import type { MarketPlayer } from "@/features/market/types";
 import { Button } from "@/shared/components";
 import BuyTokenModal from "./BuyTokenModal";
 import styles from "./MarketBuyPage.module.scss";
-import MarketFilters from "./MarketFilters";
 import MarketHeader from "./MarketHeader";
-import MarketPagination from "./MarketPagination";
 import MarketPlayerCard from "./MarketPlayerCard";
 
 interface Props {
