@@ -2,6 +2,8 @@ package footballmarket.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.features.valuation.infraestructure.config.ValuationConfig;
+import footballmarket.features.valuation.infraestructure.config.ValuationProperties;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

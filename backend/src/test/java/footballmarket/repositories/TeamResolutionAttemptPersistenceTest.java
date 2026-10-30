@@ -2,11 +2,14 @@ package footballmarket.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.League;
-import footballmarket.models.Team;
-import footballmarket.models.TeamResolutionAttempt;
-import footballmarket.models.enums.TeamResolutionFailure;
-import footballmarket.models.enums.TeamResolutionResult;
+import footballmarket.features.catalog.domain.enums.TeamResolutionFailure;
+import footballmarket.features.catalog.domain.enums.TeamResolutionResult;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.domain.models.team.TeamResolutionAttempt;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
+import footballmarket.features.catalog.infraestructure.TeamResolutionAttemptRepository;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.Instant;

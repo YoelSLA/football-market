@@ -1,8 +1,8 @@
 package footballmarket.support;
 
-import footballmarket.models.PlayerStatisticsExtractionRun;
-import footballmarket.models.enums.MetricSource;
-import footballmarket.repositories.PlayerStatisticsExtractionRunRepository;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsExtractionRun;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsExtractionRunRepository;
 import java.time.Instant;
 import java.time.LocalDate;
 import org.springframework.transaction.annotation.Transactional;

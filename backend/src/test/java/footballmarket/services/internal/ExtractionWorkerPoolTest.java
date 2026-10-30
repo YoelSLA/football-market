@@ -3,7 +3,8 @@ package footballmarket.services.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.application.internal.ExtractionWorkerPool;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

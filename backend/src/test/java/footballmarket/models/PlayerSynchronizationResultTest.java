@@ -2,11 +2,11 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.exceptions.InvalidPlayerSnapshotException;
-import footballmarket.models.exceptions.InvalidPlayerSynchronizationResultException;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
-import footballmarket.models.records.PlayerSynchronizationResult;
+import footballmarket.features.catalog.domain.exceptions.InvalidPlayerSnapshotException;
+import footballmarket.features.catalog.domain.exceptions.InvalidPlayerSynchronizationResultException;
+import footballmarket.features.catalog.domain.records.PlayerCandidate;
+import footballmarket.features.catalog.domain.records.PlayerSnapshot;
+import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;

@@ -4,9 +4,16 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.microsoft.playwright.*;
-import footballmarket.config.*;
-import footballmarket.integrations.exceptions.*;
-import footballmarket.integrations.records.*;
+import footballmarket.features.statistics.infraestructure.config.PlayerStatisticsProperties;
+import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
+import footballmarket.integrations.whoscored.WhoScoredScrapingSectionNavigator;
+import footballmarket.integrations.whoscored.WhoScoredScrapingTableParser;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
+import footballmarket.integrations.whoscored.WhoScoredStructuredDataParser;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsException;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedContextRow;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedPlayer;
 import footballmarket.support.WhoScoredStatisticsPageStub;
 import java.time.*;
 import java.time.Clock;
@@ -247,7 +254,7 @@ class WhoScoredScrapingIntegrationTest {
 
   private Locator team() {
     Locator link = mock(Locator.class);
-    when(link.getAttribute("href")).thenReturn("/teams/3/show/team");
+    when(link.getAttribute("href")).thenReturn("/team/3/show/team");
     return link;
   }
 

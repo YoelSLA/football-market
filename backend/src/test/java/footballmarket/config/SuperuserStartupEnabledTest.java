@@ -2,10 +2,10 @@ package footballmarket.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.User;
-import footballmarket.models.enums.UserRole;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.SuperuserProvisioningService;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.market.application.SuperuserProvisioningService;
 import footballmarket.support.TestcontainersConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

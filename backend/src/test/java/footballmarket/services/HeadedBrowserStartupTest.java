@@ -3,8 +3,10 @@ package footballmarket.services;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
-import footballmarket.integrations.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
+import footballmarket.integrations.whoscored.exceptions.HeadedBrowserUnavailableException;
 import footballmarket.support.TestcontainersConfiguration;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;

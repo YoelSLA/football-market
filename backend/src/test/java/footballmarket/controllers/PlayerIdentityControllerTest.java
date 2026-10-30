@@ -7,16 +7,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
-import footballmarket.models.User;
-import footballmarket.models.enums.PlayerIdentityPassType;
-import footballmarket.models.enums.PlayerIdentityRunStatus;
-import footballmarket.models.enums.UserRole;
-import footballmarket.models.records.PlayerIdentitySyncCounters;
-import footballmarket.models.records.PlayerIdentitySyncSummary;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.PlayerIdentitySynchronizationService;
-import footballmarket.services.exceptions.PlayerIdentitySynchronizationException;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
+import footballmarket.features.identity.application.exceptions.PlayerIdentitySynchronizationException;
+import footballmarket.features.identity.domain.enums.PlayerIdentityPassType;
+import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
+import footballmarket.features.identity.domain.records.PlayerIdentitySyncCounters;
+import footballmarket.features.identity.domain.records.PlayerIdentitySyncSummary;
+import footballmarket.features.identity.presentation.PlayerIdentityController;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.util.Date;
@@ -51,7 +52,7 @@ class PlayerIdentityControllerTest {
   @MockitoBean private AuthenticationService authentication;
   private MockMvc mvc;
   private String authorization;
-  private static final String PATH = "/api/players/identities/whoscored/sync";
+  private static final String PATH = "/api/player/identities/whoscored/sync";
 
   @BeforeEach
   void setUp() {
@@ -72,7 +73,7 @@ class PlayerIdentityControllerTest {
   @DisplayName("POST histórico autenticado")
   class Historical {
     private static final String HISTORICAL_PATH =
-        "/api/players/identities/whoscored/sync-runs/1/historical";
+        "/api/player/identities/whoscored/sync-runs/1/historical";
 
     @ParameterizedTest
     @EnumSource(
@@ -130,8 +131,9 @@ class PlayerIdentityControllerTest {
     void returnsEmptyHistorical() throws Exception {
       // Arrange
       Instant at = Instant.parse("2026-10-14T12:00:00Z");
-      footballmarket.models.PlayerIdentityLeagueDiscovery scope =
-          new footballmarket.models.PlayerIdentityLeagueDiscovery(2L, 10L, "Liga", 2);
+      footballmarket.features.identity.domain.models.PlayerIdentityLeagueDiscovery scope =
+          new footballmarket.features.identity.domain.models.PlayerIdentityLeagueDiscovery(
+              2L, 10L, "Liga", 2);
       scope.skip(at);
       PlayerIdentitySyncCounters counters =
           PlayerIdentitySyncCounters.from(java.util.Map.of(), 0, 0, 0);
@@ -165,7 +167,7 @@ class PlayerIdentityControllerTest {
     void rejectsInvalidId(String id) throws Exception {
       // Arrange
       boolean nonPositive = id.equals("0") || id.equals("-1");
-      String path = "/api/players/identities/whoscored/sync-runs/" + id + "/historical";
+      String path = "/api/player/identities/whoscored/sync-runs/" + id + "/historical";
       // Act / Assert
       mvc.perform(post(path).header("Authorization", authorization))
           .andExpect(status().isBadRequest())
@@ -190,9 +192,11 @@ class PlayerIdentityControllerTest {
       RuntimeException failure =
           switch (kind) {
             case "not-found" ->
-                new footballmarket.services.exceptions.PlayerIdentityRunNotFoundException();
+                new footballmarket.features.identity.application.exceptions
+                    .PlayerIdentityRunNotFoundException();
             case "ineligible" ->
-                new footballmarket.services.exceptions.PlayerIdentitySourceNotEligibleException();
+                new footballmarket.features.identity.application.exceptions
+                    .PlayerIdentitySourceNotEligibleException();
             default -> new PlayerIdentitySynchronizationException();
           };
       int expected = kind.equals("not-found") ? 404 : kind.equals("ineligible") ? 409 : 500;

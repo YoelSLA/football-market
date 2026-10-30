@@ -11,7 +11,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.microsoft.playwright.*;
-import footballmarket.config.*;
+import footballmarket.features.statistics.infraestructure.config.PlayerStatisticsProperties;
+import footballmarket.integrations.whoscored.*;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
 import footballmarket.support.WhoScoredStatisticsPageStub;
 import java.time.Clock;
 import java.util.List;

@@ -7,8 +7,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import footballmarket.services.SuperuserProvisioningService;
-import footballmarket.services.exceptions.InvalidSuperuserConfigurationException;
+import footballmarket.features.market.application.SuperuserProvisioningService;
+import footballmarket.features.market.application.exceptions.InvalidSuperuserConfigurationException;
+import footballmarket.features.market.infraestructure.config.SuperuserProperties;
+import footballmarket.features.market.infraestructure.config.SuperuserStartupConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -3,9 +3,12 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import footballmarket.models.enums.TokenListingStatus;
-import footballmarket.models.exceptions.InvalidTokenListingException;
-import footballmarket.models.records.CurrentQuote;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.enums.TokenListingStatus;
+import footballmarket.features.market.domain.exceptions.InvalidTokenListingException;
+import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.quote.domain.records.CurrentQuote;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

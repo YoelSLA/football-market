@@ -1,8 +1,8 @@
 package footballmarket.support;
 
-import footballmarket.models.MarketTransaction;
-import footballmarket.models.Player;
-import footballmarket.models.User;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.models.MarketTransaction;
 import java.time.OffsetDateTime;
 import org.springframework.stereotype.Component;
 

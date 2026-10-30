@@ -131,7 +131,7 @@ dependencies {
 // TEST
 // ============================================================
 
-// Validación estática: no carga clases, no descubre tests ni arranca infraestructura.
+// Validación estática: no carga clases, no descubre tests ni arranca infraestructure.
 val validateTestClassification = tasks.register("validateTestClassification") {
     group = "verification"
     description = "Comprueba una única categoría explícita por clase contenedora de tests."
@@ -177,7 +177,7 @@ val validateTestClassification = tasks.register("validateTestClassification") {
                     classified++
                     if (category in setOf("unit", "lightweight") &&
                         Regex("\\b(?:SpringBootTest|Testcontainers|PostgreSQLContainer|TestcontainersConfiguration)\\b").containsMatchIn(code)) {
-                        errors.add("${source.path}: una suite rápida no puede declarar infraestructura de contexto completo o PostgreSQL.")
+                        errors.add("${source.path}: una suite rápida no puede declarar infraestructure de contexto completo o PostgreSQL.")
                     }
                 }
             } else if (tagDeclaration.containsMatchIn(code)) {
@@ -284,19 +284,6 @@ spotless {
 
         endWithNewline()
     }
-}
-
-// ============================================================
-// CLIENTE OPERATIVO DE ESTADÍSTICAS
-// ============================================================
-
-// Invocación manual del cliente de scraping: sin arranque de Spring y sin opciones sensibles.
-// El JWT se obtiene de FOOTBALL_MARKET_TOKEN; clientArgs solo admite opciones no secretas.
-tasks.register<JavaExec>("statisticsSyncClient") {
-    group = "application"
-    description = "Ejecuta el cliente operativo de scraping de estadísticas WhoScored"
-    mainClass.set("footballmarket.tools.PlayerStatisticsSyncClient")
-    classpath = sourceSets["main"].runtimeClasspath
 }
 
 // ============================================================

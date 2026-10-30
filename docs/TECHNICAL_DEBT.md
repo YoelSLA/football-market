@@ -87,6 +87,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-033](#td-033--journeys-de-estadísticas-sustituyen-las-integrations-productivas) | Journeys de estadísticas sustituyen las Integrations productivas | Backend / Testing | Media | Pendiente | 2026-10-27 13:45:51 |
 | [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
 | [TD-035](#td-035--doble-división-potencial-de-estadísticas-json-y-auditoría-histórica-pendiente) | Doble división potencial de estadísticas JSON y auditoría histórica pendiente | Backend / Datos | Alta | Pendiente | 2026-10-29 12:59:24 |
+| [TD-036](#td-036--acoplamiento-de-paquete-entre-referencias-del-catálogo-e-identidad-whoscored) | Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored | Backend / Arquitectura | Media | Pendiente | 2026-10-28 16:08:35 |
 
 ## 6. Detalle de las deudas técnicas
 
@@ -2306,6 +2307,20 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 17:48:44 | Registro inicial en `docs/TECHNICAL_DEBT.md`, tras auditoría técnica de solo lectura del 2026-10-14. La divergencia ya estaba declarada en la documentación de arquitectura con un ancla que ya no existe, por lo que la fecha registrada es la de su incorporación a este documento. |
+
+### TD-036 — Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored
+
+Identificador anterior en `dev`: TD-032; renumerado por colisión durante la integración con SPEC-012.
+
+- **Estado:** Pendiente.
+- **Prioridad:** Media.
+- **Registro:** 2026-10-28 16:08:35 (`America/Argentina/Buenos_Aires`).
+- **Origen:** migración organizativa a Package by Feature, limitada a `catalog` y sin cambios de implementación.
+- **Evidencia:** `backend/src/main/java/footballmarket/models/PlayerExternalReference.java` declara `canonicalExternalId` con acceso de paquete; `WhoScoredIdentityCandidate.java`, en el mismo directorio, lo invoca. `Player.java` usa el constructor de paquete de `PlayerExternalReference`.
+- **Impacto:** trasladar solo `PlayerExternalReference` a `catalog/domain/models` rompe ambos accesos; trasladar `Player` sin la referencia también rompe el acceso al constructor. Las dos clases permanecen pendientes, sin ampliar visibilidad ni trasladar el dominio de identidad.
+- **Resolución propuesta:** decidir explícitamente la pertenencia y el contrato de esa colaboración antes de completar ambos traslados; no duplicar la canonicalización ni cambiar visibilidad como ajuste implícito de imports.
+- **Criterio de cierre:** separación acordada e implementada, accesos de paquete resueltos sin migrar otra feature sin autorización, build backend permitido satisfactorio y verificación funcional aportada por el usuario si cambia el contrato.
+- **Historial:** 2026-10-28 16:08:35 — registro del acoplamiento comprobado; no resuelto en la migración organizativa.
 
 ## 7. Historial de actualizaciones del registro
 

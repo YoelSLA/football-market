@@ -2,6 +2,7 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.features.catalog.domain.models.team.TeamNameNormalizer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -131,23 +131,14 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
   `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
   `PLAYER_STATISTICS_SYNC_FAILED` y `HEADED_BROWSER_UNAVAILABLE`, este último solo para scraping.
 
-### 3.3. Cliente operativo
-
-`tools/PlayerStatisticsSyncClient` es un cliente CLI de scraping ejecutado por el desarrollador,
-fuera del contexto Spring, con un único POST sin repetición automática. Rechaza `--mode` y
-`--max-players`; solo devuelve salida 0 con cobertura completa. No consulta WhoScored ni la
-persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
-por POST autenticado sin entrada.
-
-### 3.4. Observabilidad operativa
+### 3.3. Observabilidad operativa
 
 La aplicación conserva logs de campaña, jugador, sección y errores, además de archivo
 UTF-8 configurable con rotación estándar. El perfil test desactiva ese archivo.
 Se retiraron el CLI diagnóstico individual, su tarea Gradle, su Logback y los hooks
 temporales de captura de red/DOM; no existe una segunda vía de scraping manual.
 El MutationObserver de renderizado permanece: es parte de la sincronización productiva,
-no de la auditoría temporal. Los tests de protocolo y Model se conservan; los tests
-DOM locales opt-in fueron retirados por decisión humana (brecha registrada en TD-034).
+no de la auditoría temporal.
 
 ## 4. Valoraciones estadísticas de jugadores (SPEC-013)
 

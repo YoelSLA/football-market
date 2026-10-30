@@ -1,6 +1,6 @@
 package footballmarket.support;
 
-import footballmarket.integrations.records.*;
+import footballmarket.integrations.whoscored.records.*;
 import java.time.Instant;
 import java.util.List;
 

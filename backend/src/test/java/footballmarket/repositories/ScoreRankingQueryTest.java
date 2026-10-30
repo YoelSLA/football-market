@@ -2,11 +2,14 @@ package footballmarket.repositories;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import footballmarket.models.AttributeValuation;
-import footballmarket.models.Player;
-import footballmarket.models.PositionalValuation;
-import footballmarket.models.QuoteExecution;
-import footballmarket.services.PlayerCatalogService;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.quote.domain.models.QuoteExecution;
+import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
+import footballmarket.features.valuation.domain.models.AttributeValuation;
+import footballmarket.features.valuation.domain.models.PositionalValuation;
+import footballmarket.features.valuation.infraestructure.AttributeValuationRepository;
+import footballmarket.features.valuation.infraestructure.PositionalValuationRepository;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.ScoreRankingTestData;

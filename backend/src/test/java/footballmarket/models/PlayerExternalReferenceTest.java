@@ -2,8 +2,12 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
-import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.exceptions.InvalidPlayerException;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.player.PlayerExternalReference;
+import footballmarket.features.catalog.domain.models.team.Team;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

@@ -6,19 +6,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import footballmarket.config.WhoScoredProperties;
-import footballmarket.integrations.WhoScoredIntegration;
-import footballmarket.integrations.WhoScoredStatisticsScrapingIntegration;
-import footballmarket.integrations.exceptions.WhoScoredStatisticsException;
-import footballmarket.integrations.records.WhoScoredScrapedContextRow;
-import footballmarket.integrations.records.WhoScoredScrapedMetricCell;
-import footballmarket.integrations.records.WhoScoredScrapedPlayer;
-import footballmarket.integrations.records.WhoScoredStructuredDataBlock;
-import footballmarket.models.enums.ExtractionRunStatus;
-import footballmarket.models.enums.MetricSource;
-import footballmarket.services.exceptions.PlayerStatisticsSynchronizationException;
-import footballmarket.services.internal.ExtractionRunManager;
-import footballmarket.services.internal.PlayerStatisticsCoverageQuery;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
+import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
+import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.application.internal.ExtractionRunManager;
+import footballmarket.features.statistics.application.internal.PlayerStatisticsCoverageQuery;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.integrations.whoscored.WhoScoredIntegration;
+import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
+import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsException;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedContextRow;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedMetricCell;
+import footballmarket.integrations.whoscored.records.WhoScoredScrapedPlayer;
+import footballmarket.integrations.whoscored.records.WhoScoredStructuredDataBlock;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -38,7 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 /**
- * Extracción de un jugador con la infraestructura productiva de ejecuciones de US02.
+ * Extracción de un jugador con la infraestructure productiva de ejecuciones de US02.
  *
  * <p>La ejecución se abre con el gestor de runs del caso de uso; el test no prepara datos
  * funcionales ni afirma sobre persistencia accesible solo por repositorio.
@@ -79,9 +82,9 @@ class PlayerStatisticsExtractionServiceTest {
             invocation -> {
               int tournament = invocation.getArgument(0);
               int index = tournaments.indexOf(tournament) + 1;
-              return new footballmarket.integrations.records.WhoScoredCatalogPage(
+              return new footballmarket.integrations.whoscored.records.WhoScoredCatalogPage(
                   List.of(
-                      new footballmarket.integrations.records.WhoScoredPlayerIdentity(
+                      new footballmarket.integrations.whoscored.records.WhoScoredPlayerIdentity(
                           Integer.toString(1000 + index),
                           "Player " + index,
                           null,
@@ -91,7 +94,8 @@ class PlayerStatisticsExtractionServiceTest {
                           null,
                           null)),
                   List.of(),
-                  new footballmarket.integrations.records.WhoScoredPaging(1, 1, 1, 1, 1, 1),
+                  new footballmarket.integrations.whoscored.records.WhoScoredPaging(
+                      1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
     identities.synchronizeCurrent();
@@ -149,7 +153,7 @@ class PlayerStatisticsExtractionServiceTest {
       }
 
       // Assert / Verify
-      footballmarket.models.records.PlayerStatisticsCoverage result =
+      footballmarket.features.statistics.domain.records.PlayerStatisticsCoverage result =
           coverage.coverage(DATE, MetricSource.SCRAPING);
       assertThat(result.completedPlayers()).isEqualTo(1);
       assertThat(result.pendingPlayers()).isEqualTo(4);
@@ -174,7 +178,7 @@ class PlayerStatisticsExtractionServiceTest {
       }
 
       // Assert / Verify
-      footballmarket.models.records.PlayerStatisticsCoverage result =
+      footballmarket.features.statistics.domain.records.PlayerStatisticsCoverage result =
           coverage.coverage(DATE, MetricSource.SCRAPING);
       assertThat(result.completedPlayers()).isZero();
       assertThat(result.failedPlayers()).isEqualTo(1);

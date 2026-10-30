@@ -53,7 +53,7 @@ class TeamLeagueConvergenceMigrationTest {
         var rows =
             statement.executeQuery(
                 "SELECT column_name FROM information_schema.columns "
-                    + "WHERE table_schema = current_schema() AND table_name = 'players' "
+                    + "WHERE table_schema = current_schema() AND table_name = 'player' "
                     + "ORDER BY column_name")) {
       while (rows.next()) {
         names.add(rows.getString("column_name"));
@@ -109,15 +109,15 @@ class TeamLeagueConvergenceMigrationTest {
         migrate(schema, "8");
 
         // Assert
-        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.players")).isEqualTo(4);
-        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.teams")).isEqualTo(3);
-        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.leagues")).isEqualTo(2);
+        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.player")).isEqualTo(4);
+        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.team")).isEqualTo(3);
+        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.league")).isEqualTo(2);
         assertThat(
                 count(
                     connection,
                     schema,
-                    "SELECT count(*) FROM @schema@.players p "
-                        + "LEFT JOIN @schema@.teams t ON t.id = p.team_id WHERE t.id IS NULL"))
+                    "SELECT count(*) FROM @schema@.player p "
+                        + "LEFT JOIN @schema@.team t ON t.id = p.team_id WHERE t.id IS NULL"))
             .isZero();
       }
     }

@@ -7,10 +7,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import footballmarket.models.MarketTransaction;
-import footballmarket.models.TokenListing;
-import footballmarket.models.records.BuyListingRequest;
-import footballmarket.services.exceptions.ListingNotAvailableException;
+import footballmarket.features.market.application.exceptions.ListingNotAvailableException;
+import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.domain.records.BuyListingRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

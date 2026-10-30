@@ -11,30 +11,31 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.config.SecurityConfig;
-import footballmarket.models.MarketTransaction;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
+import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
+import footballmarket.features.market.application.BuyOrderService;
+import footballmarket.features.market.application.exceptions.ArithmeticOverflowException;
+import footballmarket.features.market.application.exceptions.CannotBuyOwnListingException;
+import footballmarket.features.market.application.exceptions.InsufficientCreditsException;
+import footballmarket.features.market.application.exceptions.InsufficientStockException;
+import footballmarket.features.market.application.exceptions.InvalidQuantityException;
+import footballmarket.features.market.application.exceptions.ListingNotAvailableException;
+import footballmarket.features.market.application.exceptions.ListingNotFoundException;
+import footballmarket.features.market.application.exceptions.SellerUnavailableException;
+import footballmarket.features.market.application.exceptions.SuperuserCannotBuyException;
+import footballmarket.features.market.domain.exceptions.InsufficientUserCreditsException;
+import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.domain.records.BuyListingRequest;
+import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.market.presentation.OrderController;
+import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
+import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
+import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
+import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.models.TestFixtures;
-import footballmarket.models.TokenListing;
-import footballmarket.models.exceptions.InsufficientUserCreditsException;
-import footballmarket.models.records.BuyListingRequest;
-import footballmarket.models.records.BuyOrderRequest;
-import footballmarket.models.records.CurrentQuote;
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.BuyOrderService;
-import footballmarket.services.exceptions.ArithmeticOverflowException;
-import footballmarket.services.exceptions.CannotBuyOwnListingException;
-import footballmarket.services.exceptions.InsufficientCreditsException;
-import footballmarket.services.exceptions.InsufficientStockException;
-import footballmarket.services.exceptions.InvalidQuantityException;
-import footballmarket.services.exceptions.InvalidQuotePriceException;
-import footballmarket.services.exceptions.ListingNotAvailableException;
-import footballmarket.services.exceptions.ListingNotFoundException;
-import footballmarket.services.exceptions.PlayerNotFoundException;
-import footballmarket.services.exceptions.PlayerNotVisibleException;
-import footballmarket.services.exceptions.QuoteContractViolationException;
-import footballmarket.services.exceptions.QuoteUnavailableException;
-import footballmarket.services.exceptions.SellerUnavailableException;
-import footballmarket.services.exceptions.SuperuserCannotBuyException;
+import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -82,7 +83,10 @@ class OrderControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private BuyOrderService buyOrderService;
-  @MockitoBean private footballmarket.services.TokenListingService tokenListingService;
+
+  @MockitoBean
+  private footballmarket.features.market.application.TokenListingService tokenListingService;
+
   @MockitoBean private AuthenticationService authenticationService;
 
   private MockMvc mvc;

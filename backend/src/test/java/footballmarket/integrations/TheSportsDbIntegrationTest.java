@@ -7,10 +7,12 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import footballmarket.integrations.exceptions.InvalidTheSportsDbResponseException;
-import footballmarket.integrations.exceptions.TheSportsDbRateLimitException;
-import footballmarket.integrations.exceptions.TheSportsDbServerException;
-import footballmarket.integrations.exceptions.TheSportsDbUnavailableException;
+import footballmarket.integrations.thesportsdb.TheSportsDbIntegration;
+import footballmarket.integrations.thesportsdb.TheSportsDbRequestPacer;
+import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbResponseException;
+import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbRateLimitException;
+import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbServerException;
+import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbUnavailableException;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Clock;
@@ -66,7 +68,7 @@ class TheSportsDbIntegrationTest {
       MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
       server
           .expect(requestTo(BASE + "/lookupplayer.php?id=123"))
-          .andRespond(withSuccess("{\"players\":null}", MediaType.APPLICATION_JSON));
+          .andRespond(withSuccess("{\"player\":null}", MediaType.APPLICATION_JSON));
 
       assertThat(createIntegration(builder).lookup("123")).isEmpty();
       server.verify();
@@ -116,7 +118,7 @@ class TheSportsDbIntegrationTest {
           .andRespond(
               withSuccess(
                   """
-              {"teams":[{"idTeam":"1","strTeam":"Team","strSport":"Soccer"},
+              {"team":[{"idTeam":"1","strTeam":"Team","strSport":"Soccer"},
               {"idTeam":"2","strTeam":"Other","strSport":"Basketball"}]}
               """,
                   MediaType.APPLICATION_JSON));
@@ -139,7 +141,7 @@ class TheSportsDbIntegrationTest {
       MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
       server
           .expect(requestTo(BASE + "/searchteams.php?t=Team"))
-          .andRespond(withSuccess("{\"teams\":null}", MediaType.APPLICATION_JSON));
+          .andRespond(withSuccess("{\"team\":null}", MediaType.APPLICATION_JSON));
 
       TheSportsDbIntegration.TeamSearch search = createIntegration(builder).searchTeams("Team");
 
@@ -152,9 +154,9 @@ class TheSportsDbIntegrationTest {
     @ValueSource(
         strings = {
           "{}",
-          "{\"teams\":{}}",
-          "{\"teams\":[{\"strTeam\":\"Team\"}]}",
-          "{\"teams\":[\"x\"]}"
+          "{\"team\":{}}",
+          "{\"team\":[{\"strTeam\":\"Team\"}]}",
+          "{\"team\":[\"x\"]}"
         })
     @DisplayName("Una estructura de equipos inválida se traduce a respuesta inválida")
     void searchTeamsRejectsInvalidStructure(String body) {
