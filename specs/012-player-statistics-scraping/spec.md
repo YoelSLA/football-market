@@ -9,7 +9,7 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 
 **Created**: 2026-10-15
 
-**Status**: Ready for implementation. El Analyze del 2026-10-27 no detectó blockers CRITICAL ni HIGH para el alcance de scraping síncrono sin lotes; la preparación queda completa conforme a `specs/README.md`. Este estado no autoriza ni inicia IMPLEMENT: las autorizaciones históricas no cubren el nuevo alcance y se requiere autorización humana explícita antes de implementar. Evidencia local en [sdd-gates.md](sdd-gates.md). Seguimiento remoto no verificado.
+**Status**: Ready for implementation. Se conserva el estado canónico de preparación; IMPLEMENT fue autorizado e iniciado para los alcances registrados en [sdd-gates.md](sdd-gates.md), incluidas las correcciones de lectura nativa, apertura y limpieza temporal. La campaña humana completa run 11 acredita recorrido poblacional, no cierre global ni aprobación de revisión. CODE REVIEW, validación posterior a la limpieza y cierre permanecen pendientes. Seguimiento remoto no verificado.
 
 <!-- Estados y criterios de transición: ../../specs/README.md.
 Histórico, no vigente: el Analyze previo a la corrección decimal reportó 0 CRITICAL, 0 HIGH,
@@ -31,6 +31,30 @@ porque hacerlo rompería la trazabilidad con sdd-gates.md, plan.md y tasks.md. -
 **Input**: User description: "Scraping de estadisticas de rendimiento de jugadores de las cinco ligas mediante scraping con Playwright sobre WhoScored, recorriendo los identificadores externos ya persistidos en el catalogo local, persistiendo las metricas obtenidas para toda la poblacion de jugadores, y verificando el resultado contrastandolo contra el endpoint publico del proveedor"
 
 ## Contexto y evidencia previa
+
+### Estado vigente tras validación y limpieza — 2026-10-30
+
+Scraping conserva resumen y dieciséis categorías en contextos independientes por
+sección, Chromium headed por worker y una tentativa por jugador. La apertura espera
+resumen renderizado/seleccionado y detalle oculto, hace un clic y confirma selección
+y visibilidad CSS. Detalle conserva modo nativo `0` y espera render/carga real incluso
+con HTML idéntico; sus valores por partido no se dividen otra vez por apariciones.
+Resumen mantiene sus derivaciones; `N/A` es ausencia, no cero. Competición/temporada,
+60/45/57/42, exactitud decimal, persistencia y contrato HTTP se conservan.
+
+Run 11 humano: 2104 seleccionados, 1889 completados, 214 NO_DATA y un timeout;
+89,78 % con datos, sin expectativa de que todos los elegibles publiquen estadísticas.
+`coverageComplete` sigue siendo false con pendientes: no se relaja el contrato para
+declarar éxito. El caso 2449 fue informado como arreglado por el usuario sin nuevo
+run aportado; no se reescriben los resultados originales.
+
+Se retira el código de diagnóstico temporal (CLI, captura red/DOM, hooks, Logback y
+tarea Gradle). Se conservan la sincronización productiva, los tests de regresión y
+el logging general a archivo. La auditoría numérica JSON TD-035 queda fuera de alcance.
+
+Decisión posterior del 2026-10-30: retirar los tests DOM opt-in y su variable de
+activación. Permanecen tests de protocolo/Model y evidencia humana histórica, pero
+no se considera que una campaña sustituya la cobertura DOM determinista (TD-034).
 
 Esta spec describe la extracción de estadísticas de rendimiento de jugadores mediante dos vías de WhoScored: scraping con Playwright sobre el sitio público y consulta de su interfaz JSON pública. Ambas recorren los jugadores que ya tienen un identificador externo WhoScored confirmado en el catálogo local y pueden actualizar datos de forma independiente. El scraping conserva íntegramente su recorrido y obtiene 45 métricas; la interfaz JSON obtiene 57. La unión de ambas coberturas alcanza las 60 métricas del catálogo.
 
@@ -93,11 +117,11 @@ aclaraciones superadas como evidencia de proceso y MUST NOT aplicarse.
 | C8 | ¿La ejecución que lanza la extracción es síncrona o asíncrona? | Síncrona: cada canal recorre todos sus pendientes en una petición (FR-050, FR-043). |
 | C9 | ¿Qué diferencia entre contenido visible e interfaz pública se acepta por redondeo? | No se contrasta el valor de ambos canales: cada fila conserva solo el valor y la procedencia del canal que la produjo (FR-044, FR-047 y FR-048 quedan retirados). |
 | C10 | ¿Las métricas opcionales no publicadas se listan una a una en el resumen? | Solo como conteo agregado de métricas ausentes, sin listado individual por clave (FR-051). |
-| C11 | ¿`foulsPerGame` y `foulCommitted / apps` se persisten como métricas propias? | No. Ambos son alias técnicos de `fouls_committed_per_match`, sin entrada de equivalencia adicional; el catálogo conserva exactamente 60 métricas (FR-064, FR-003). |
+| C11 | ¿`foulsPerGame` y `foulCommitted` se persisten como métricas propias? | No. Ambos son alias técnicos de `fouls_committed_per_match`, interpretados según su origen (detalle nativo por partido, sin nueva división), sin entrada adicional; el catálogo conserva 60 métricas (FR-064, FR-003). |
 | C12 | ¿Debe incorporarse `fouls_received`? | No. El catálogo conserva únicamente `fouls_committed_per_match` de esa sección (FR-030, FR-065). |
 | C13 | ¿Qué cobertura debe tener la interfaz JSON sin reducir el scraping? | El scraping conserva su recorrido y 45 métricas; JSON obtiene 57 y ambos canales pueden actualizar por separado, con unión de 60 (FR-001, FR-045, FR-008). |
 | C14 | ¿Qué valor prevalece cuando ambos canales actualizan una métrica compartida? | No hay valor vigente único entre canales: cada canal persiste su propia fila de campaña y conserva su procedencia (FR-063). |
-| C15 | ¿Se conservan los acumulados de las 29 métricas de detalle? | No. El acumulado se usa en el cálculo y se descarta; solo se persiste la derivada por partido (FR-027). |
+| C15 | ¿Se convierten las 29 métricas de detalle a partir de supuestos acumulados? | No. En scraping se lee el modo publicado `0` (por partido), sin cambiar a Total ni volver a dividir por apps. Solo los acumulados reales del resumen se derivan (FR-027/FR-028). |
 
 Las decisiones del 2026-10-16 se conservan como evidencia; las relativas a lotes, `maxPlayers` y encadenamiento quedan sustituidas por la sesión del 2026-10-27.
 
@@ -154,41 +178,45 @@ por FR-004 y FR-005, pero no aportan métricas a la cobertura del canal de scrap
 | 14 | `dribbled_past_per_match` | `wasDribbledPerGame` | `PER_MATCH` | JSON |
 | 15 | `offsides_won_per_match` | `offsideWonPerGame` | `PER_MATCH` | JSON |
 | 16 | `own_goals_total` | `goalOwn` | `SEASON_TOTAL` | JSON |
-`foulsPerGame` no es una entrada adicional del catálogo: es un alias técnico de `fouls_committed_per_match`, al igual que `foulCommitted / apps`. Ambos nombres externos se normalizan directamente a la misma clave canónica conforme a FR-064.
+`foulsPerGame` no es una entrada adicional del catálogo: es un alias técnico de `fouls_committed_per_match`, al igual que `foulCommitted`. En el detalle nativo de scraping se lee por partido directamente; solo un acumulado real requiere división. Ambos nombres normalizan a la misma clave canónica conforme a FR-064.
 
 ### Grupo 3 — Subcategorías de detalle (29 métricas, por scraping)
 
+Valores publicados en el modo `0` (por partido) de la fila de competición/temporada,
+sin cambiar el selector de acumulación ni dividir nuevamente por `apps`. La fila
+agregada «Total/Promedio» no sustituye al contexto de liga local.
+
 | # | Clave canónica | `statColumn` | Subcategoría |
 | --- | --- | --- | --- |
-| 17 | `saves_per_match` | `saveTotal` / apps | saves |
-| 18 | `six_yard_box_saves_per_match` | `saveSixYardBox` / apps | saves |
-| 19 | `penalty_area_saves_per_match` | `savePenaltyArea` / apps | saves |
-| 20 | `outside_box_saves_per_match` | `saveObox` / apps | saves |
-| 21 | `attempted_tackles_per_match` | `tackleTotalAttempted` / apps | tackles |
-| 22 | `blocked_crosses_per_match` | `passCrossBlockedDefensive` / apps | blocks |
-| 23 | `blocked_passes_per_match` | `outfielderBlockedPass` / apps | blocks |
-| 24 | `failed_dribbles_per_match` | `dribbleLost` / apps | dribbles |
-| 25 | `total_dribbles_per_match` | `dribbleTotal` / apps | dribbles |
-| 26 | `aerial_duels_lost_per_match` | `duelAerialLost` / apps | aerial |
-| 27 | `total_aerial_duels_per_match` | `duelAerialTotal` / apps | aerial |
-| 28 | `inaccurate_long_balls_per_match` | `passLongBallInaccurate` / apps | passes |
-| 29 | `accurate_short_passes_per_match` | `shortPassAccurate` / apps | passes |
-| 30 | `inaccurate_short_passes_per_match` | `shortPassInaccurate` / apps | passes |
-| 31 | `long_key_passes_per_match` | `keyPassLong` / apps | key-passes |
-| 32 | `short_key_passes_per_match` | `keyPassShort` / apps | key-passes |
-| 33 | `six_yard_box_shots_per_match` | `shotSixYardBox` / apps | shots |
-| 34 | `penalty_area_shots_per_match` | `shotPenaltyArea` / apps | shots |
-| 35 | `outside_box_shots_per_match` | `shotOboxTotal` / apps | shots |
-| 36 | `six_yard_box_goals_per_match` | `goalSixYardBox` / apps | goals |
-| 37 | `penalty_area_goals_per_match` | `goalPenaltyArea` / apps | goals |
-| 38 | `outside_box_goals_per_match` | `goalObox` / apps | goals |
-| 39 | `cross_assists_per_match` | `assistCross` / apps | assists |
-| 40 | `corner_assists_per_match` | `assistCorner` / apps | assists |
-| 41 | `through_ball_assists_per_match` | `assistThroughball` / apps | assists |
-| 42 | `free_kick_assists_per_match` | `assistFreekick` / apps | assists |
-| 43 | `throw_in_assists_per_match` | `assistThrowin` / apps | assists |
-| 44 | `other_assists_per_match` | `assistOther` / apps | assists |
-| 45 | `fouls_committed_per_match` | `foulCommitted` / apps | fouls |
+| 17 | `saves_per_match` | `saveTotal` | saves |
+| 18 | `six_yard_box_saves_per_match` | `saveSixYardBox` | saves |
+| 19 | `penalty_area_saves_per_match` | `savePenaltyArea` | saves |
+| 20 | `outside_box_saves_per_match` | `saveObox` | saves |
+| 21 | `attempted_tackles_per_match` | `tackleTotalAttempted` | tackles |
+| 22 | `blocked_crosses_per_match` | `passCrossBlockedDefensive` | blocks |
+| 23 | `blocked_passes_per_match` | `outfielderBlockedPass` | blocks |
+| 24 | `failed_dribbles_per_match` | `dribbleLost` | dribbles |
+| 25 | `total_dribbles_per_match` | `dribbleTotal` | dribbles |
+| 26 | `aerial_duels_lost_per_match` | `duelAerialLost` | aerial |
+| 27 | `total_aerial_duels_per_match` | `duelAerialTotal` | aerial |
+| 28 | `inaccurate_long_balls_per_match` | `passLongBallInaccurate` | passes |
+| 29 | `accurate_short_passes_per_match` | `shortPassAccurate` | passes |
+| 30 | `inaccurate_short_passes_per_match` | `shortPassInaccurate` | passes |
+| 31 | `long_key_passes_per_match` | `keyPassLong` | key-passes |
+| 32 | `short_key_passes_per_match` | `keyPassShort` | key-passes |
+| 33 | `six_yard_box_shots_per_match` | `shotSixYardBox` | shots |
+| 34 | `penalty_area_shots_per_match` | `shotPenaltyArea` | shots |
+| 35 | `outside_box_shots_per_match` | `shotOboxTotal` | shots |
+| 36 | `six_yard_box_goals_per_match` | `goalSixYardBox` | goals |
+| 37 | `penalty_area_goals_per_match` | `goalPenaltyArea` | goals |
+| 38 | `outside_box_goals_per_match` | `goalObox` | goals |
+| 39 | `cross_assists_per_match` | `assistCross` | assists |
+| 40 | `corner_assists_per_match` | `assistCorner` | assists |
+| 41 | `through_ball_assists_per_match` | `assistThroughball` | assists |
+| 42 | `free_kick_assists_per_match` | `assistFreekick` | assists |
+| 43 | `throw_in_assists_per_match` | `assistThrowin` | assists |
+| 44 | `other_assists_per_match` | `assistOther` | assists |
+| 45 | `fouls_committed_per_match` | `foulCommitted` | fouls |
 
 ### Grupo 4 — Derivadas del resumen (2 métricas, por scraping)
 
@@ -369,10 +397,10 @@ Como responsable del sistema de mercado, quiero actualizar desde la interfaz JSO
 - **FR-026**: Cada fila confirmada MUST conservar un único contexto de competición, temporada y equipo, de modo que nunca se sumen métricas de competiciones distintas del mismo jugador. El contexto vigente es el de la liga local del jugador, identificado con los IDs publicados por el proveedor y el mapeo de configuración; sin coincidencia la fila se confirma con contexto nulo y todas sus métricas ausentes.
 - **FR-027**: Las métricas que el proveedor entrega acumuladas MUST derivarse por partido mediante la división por el total de apariciones de esa misma fila de contexto. El sistema MUST obtener ese denominador antes de derivar y MUST dejar la métrica sin derivar cuando el denominador no exista o sea cero, persistiéndola como ausente sin distinguir esa causa de una ausencia del proveedor. El valor derivado MUST persistirse con seis decimales y redondeo decimal exacto (half-up) sobre el valor publicado por el proveedor. Solo MUST persistirse la métrica por partido derivada; el acumulado recibido se utiliza durante el cálculo y se descarta, sin crear otra clave ni ampliar el catálogo de 60 métricas.
 - **FR-063**: El sistema MUST persistir el resultado de cada canal en su propia fila de campaña, con `extraction_date` y `source` parte de la clave, de modo que la actualización de un canal MUST NOT sobrescribir ni degradar la fila del otro. Una fila sin contexto de liga local resuelto admite reconfirmación posterior. En scraping también MUST admitirla una fila con contexto resuelto pero sin ningún valor numérico presente y sin confirmación `COMPLETED` de esa campaña, para reintentar el no-data de FR-013. Una campaña ya `COMPLETED` MUST rechazarse como repetida, sin sobrescribirla ni degradarla. JSON conserva la reconfirmación limitada a filas sin contexto resuelto.
-- **FR-064**: `foulsPerGame` y el valor derivado de `foulCommitted / apps` MUST normalizarse como alias técnicos de la única clave canónica `fouls_committed_per_match`. El sistema MUST NOT crear una métrica, definición ni registro de equivalencia adicional por esos nombres externos. Si ambos aparecen en la misma fila, se confirman como una sola métrica conforme a FR-063.
+- **FR-064**: `foulsPerGame` y `foulCommitted` MUST normalizarse como alias técnicos de la única clave canónica `fouls_committed_per_match`, respetando si el origen ya es por partido (detalle nativo de scraping) o es un acumulado real que requiere FR-027. El sistema MUST NOT crear una métrica, definición ni registro de equivalencia adicional por esos nombres externos. Si ambos aparecen en la misma fila, se confirman como una sola métrica conforme a FR-063.
 - **FR-065**: El catálogo de métricas MUST permanecer cerrado durante la vigencia de la feature. Una métrica nueva, un nombre de métrica cambiado o una columna desconocida MUST registrarse como diagnóstico o incidencia del proveedor conforme a FR-040 y MUST NOT crear entradas en el catálogo, ampliar el conjunto de 60 métricas ni alterar la cobertura por canal declarada en FR-008.
 - **FR-066**: El estado consultable de cobertura MUST distinguir la ausencia sistémica de una métrica —no publicada por el proveedor para ningún jugador elegible en la fecha de extracción— de la ausencia individual observada en un jugador concreto. La ausencia sistémica MUST reportarse como tal, MUST NOT computarse como cero, MUST NOT invalidar la extracción de los jugadores cuyos valores sí están publicados y MUST NOT modificar el catálogo conforme a FR-065.
-- **FR-028**: Las métricas que el proveedor ya entrega por partido MUST persistirse tal cual, sin volver a derivarlas ni aplicarles transformación adicional.
+- **FR-028**: Las métricas que el proveedor ya entrega por partido MUST persistirse tal cual, sin volver a derivarlas ni aplicarles transformación adicional. En scraping esto incluye las 29 métricas de detalle leídas con modo publicado `0`: MUST NOT cambiar a Total ni dividirlas nuevamente por apps. MUST confirmar carga/render de la categoría, con timeout por operación preservado, y validar modo `0` antes y después de la selección; un modo distinto o desconocido no se interpreta silenciosamente como por partido. Se conserva el contexto de competición/temporada, sin usar la fila agregada Total/Promedio. Los acumulados reales del resumen siguen FR-027; este cambio no modifica el procesamiento JSON ni recalcula filas ya persistidas.
 - **FR-029**: El sistema MUST persistir el rating del proveedor con la precisión que publica la fuente, sin redondeo, por ser la entrada central de las estrategias de valuación.
 - **FR-030**: El sistema MUST extraer, cuando el proveedor los incluya en el contenido de la página, los cinco indicadores que las tablas no muestran: titularidades, apariciones como suplente, tiros al arco, tarjetas de segunda amarilla y el rating del proveedor. Estos indicadores MUST ser opcionales: si no están presentes, las métricas correspondientes quedan ausentes y la extracción sigue siendo válida.
 - **FR-031**: El sistema MUST NOT inventar, inferir ni completar métricas ausentes. Una métrica no publicada se persiste como ausente.

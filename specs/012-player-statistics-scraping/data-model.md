@@ -31,6 +31,16 @@ Definición inmutable, no persistida como tabla.
 | `optional` | boolean | Solo para métricas declaradas opcionales. |
 | `derivation` | DerivationRule | `NONE` o `DIVIDE_BY_APPEARANCES`. |
 
+`derivation` conserva la regla base para entradas acumuladas y consumidores previos.
+La regla efectiva por canal se obtiene con `derivationFor(source)`: scraping de detalle
+en modo `0` usa `NONE` (ya publicado por partido); las dos derivadas del resumen mantienen
+`DIVIDE_BY_APPEARANCES`. JSON conserva su comportamiento previo en este alcance. No se
+agrega campo persistido ni se cambia el catálogo o cobertura; no se recalculan datos.
+
+`normalizeFor(source, published, apps)` aplica esa regla en Model: conserva el valor
+normalizado y su precisión cuando es nativo, o usa el cociente decimal existente si
+el origen es un acumulado. Service no implementa la aritmética por su cuenta.
+
 La inicialización valida exactamente 60 claves, cobertura 45/57/42, las tres exclusivas de
 scraping y ausencia de columnas sin definición. `foulsPerGame` y `foulCommitted` son aliases de
 `fouls_committed_per_match`; no existe `MetricEquivalenceDefinition`.

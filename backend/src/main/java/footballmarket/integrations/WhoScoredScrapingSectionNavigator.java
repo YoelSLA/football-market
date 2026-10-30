@@ -48,10 +48,7 @@ public class WhoScoredScrapingSectionNavigator {
           "shots",
           "tackles");
 
-  /**
-   * Margen para considerar que la sección se abrió. Cubre tanto el retraso con que el proveedor
-   * engancha su manejador de pestañas como el de la carga de la tabla.
-   */
+  /** Margen para confirmar selección y visibilidad tras el clic, posterior a la preparación. */
   private static final long CLICK_GRACE_MILLIS = 8_000L;
 
   private final PlayerStatisticsProperties properties;
@@ -107,7 +104,6 @@ public class WhoScoredScrapingSectionNavigator {
             long phaseStarted = System.nanoTime();
             try (BrowserContext context = browser.newContext()) {
               Page page = context.newPage();
-              observeRequests(page, diagnostic);
               page.setDefaultTimeout(this.properties.navigationTimeoutMs());
               page.setDefaultNavigationTimeout(this.properties.navigationTimeoutMs());
               phase[0] = "navigate";
@@ -243,7 +239,7 @@ public class WhoScoredScrapingSectionNavigator {
   }
 
   /**
-   * Elige una categoría de la tabla de detalle y el modo de acumulados, y espera su tabla.
+   * Elige una categoría de detalle y espera su tabla en el modo nativo por partido.
    *
    * <p>Es la interacción que hace una persona sobre el desplegable. El proveedor sustituye el
    * contenido de la tabla mediante una petición propia. Se espera un renderizado posterior al
@@ -255,9 +251,20 @@ public class WhoScoredScrapingSectionNavigator {
 
   /** Conserva el recorrido y añade correlación a la operación concreta del filtro. */
   public void chooseCategory(Page page, String category, String diagnostic) {
+    requireNativePerMatch(page);
     this.select(page, "#category", category, diagnostic);
-    this.select(page, "#statsAccumulationType", "2", diagnostic);
     this.awaitTable(page, container(DETAILED));
+    requireNativePerMatch(page);
+  }
+
+  /**
+   * Un selector cambiado no acredita unidades distintas; no se interpreta otro modo como nativo.
+   */
+  private static void requireNativePerMatch(Page page) {
+    Locator accumulation = page.locator("#statistics-filter-detailed #statsAccumulationType");
+    if (accumulation.count() != 1 || !"0".equals(accumulation.inputValue())) {
+      throw new WhoScoredStatisticsStructureChangedException();
+    }
   }
 
   public static String container(String section) {
@@ -294,11 +301,31 @@ public class WhoScoredScrapingSectionNavigator {
   /**
    * Activa una pestaña de estadísticas.
    *
-   * <p>El clic se emite una sola vez y se le concede margen. El proveedor carga la tabla mediante
-   * una petición propia y cada clic adicional cancela la que tiene en marcha, de modo que insistir
-   * sobre la pestaña mientras carga deja el panel vacío. Si no abre se falla sin otro clic.
+   * <p>Espera el resumen renderizado y las pestañas en su estado inicial antes del único clic. No
+   * usa la visibilidad transitoria del HTML sin inicializar como prueba de activación. El proveedor
+   * carga la tabla mediante una petición propia y cada clic adicional cancela la que tiene en
+   * marcha, de modo que insistir sobre la pestaña mientras carga deja el panel vacío. Si no abre se
+   * falla sin otro clic.
    */
-  private void openTab(Page page, String tab) {
+  void openTab(Page page, String tab) {
+    page.waitForFunction(
+        """
+        () => {
+          const visible = e => !!e && !!e.getClientRects().length
+            && getComputedStyle(e).visibility !== 'hidden';
+          const summary = document.querySelector('#player-tournament-stats-summary');
+          const detail = document.querySelector('#player-tournament-stats-detailed');
+          const selected = document.querySelector(
+            '#player-tournament-stats-options a.selected[href="#player-tournament-stats-summary"]');
+          return !!selected && visible(summary) && !!detail && !visible(detail)
+            && !!summary.querySelector('table thead [data-stat-name]')
+            && !!summary.querySelector('table tbody')
+            && !visible(document.querySelector('#statistics-table-summary-loading'));
+        }
+        """,
+        null,
+        new Page.WaitForFunctionOptions()
+            .setTimeout((double) this.properties.navigationTimeoutMs()));
     Locator link =
         page.locator(
                 "#player-tournament-stats-options a[href='#player-tournament-stats-" + tab + "']")
@@ -317,12 +344,19 @@ public class WhoScoredScrapingSectionNavigator {
     }
   }
 
-  /** Si el panel de la sección sigue oculto tras el clic. */
+  /** Confirma selección del enlace y visibilidad CSS real del panel tras el clic. */
   private static boolean panelVisibleWithin(Page page, String tab, long milliseconds) {
     try {
       page.waitForFunction(
-          "tab => { const d = document.querySelector('#player-tournament-stats-' + tab);"
-              + " return !!d && d.style.display !== 'none'; }",
+          """
+          tab => {
+            const panel = document.querySelector('#player-tournament-stats-' + tab);
+            const link = document.querySelector(
+              '#player-tournament-stats-options a[href="#player-tournament-stats-' + tab + '"]');
+            return !!link?.classList.contains('selected') && !!panel
+              && !!panel.getClientRects().length && getComputedStyle(panel).visibility !== 'hidden';
+          }
+          """,
           tab,
           new Page.WaitForFunctionOptions().setTimeout((double) milliseconds));
       return true;
@@ -366,8 +400,6 @@ public class WhoScoredScrapingSectionNavigator {
       this.awaitTable(page, container(DETAILED));
       long started = System.nanoTime();
       String before = safeControlValue(control.inputValue());
-      String previous = page.locator(container(DETAILED)).innerHTML();
-      LOG.info("{} filtro={} anterior={} solicitado={}", diagnostic, selector, before, value);
       JSHandle render =
           page.evaluateHandle(
               """
@@ -416,22 +448,20 @@ public class WhoScoredScrapingSectionNavigator {
             List.of(render, selector, value),
             new Page.WaitForFunctionOptions().setTimeout(this.properties.navigationTimeoutMs()));
         LOG.info(
-            "{} filtro={} solicitado={} evento=filter-rendered duraciónMs={} cambioTabla={}",
+            "{} filtro={} solicitado={} evento=filter-rendered duraciónMs={}",
             diagnostic,
             selector,
             value,
-            elapsedMillis(started),
-            tableChanged(page, previous));
+            elapsedMillis(started));
       } catch (com.microsoft.playwright.TimeoutError expired) {
         LOG.warn(
-            "{} worker={} filtro={} anterior={} solicitado={} duraciónMs={} cambioTabla={} estado={}",
+            "{} worker={} filtro={} anterior={} solicitado={} duraciónMs={} estado={}",
             diagnostic,
             Thread.currentThread().getName(),
             selector,
             before,
             value,
             elapsedMillis(started),
-            tableChanged(page, previous),
             state(page, container(DETAILED)));
         throw expired;
       } finally {
@@ -455,37 +485,6 @@ public class WhoScoredScrapingSectionNavigator {
 
   private static String safeControlValue(String value) {
     return value != null && value.matches("[a-z0-9-]{1,40}") ? value : "unavailable";
-  }
-
-  private static String tableChanged(Page page, String previous) {
-    try {
-      return String.valueOf(
-          page.evaluate(
-              "previous => document.querySelector('#statistics-table-detailed')?.innerHTML !== previous",
-              previous));
-    } catch (RuntimeException unreadable) {
-      return "unavailable";
-    }
-  }
-
-  /** Observa solo metadatos de transporte; nunca cuerpos, URLs ni mensajes externos. */
-  private static void observeRequests(Page page, String diagnostic) {
-    page.onResponse(
-        response -> {
-          String type = response.request().resourceType();
-          if (type.equals("xhr") || type.equals("fetch")) {
-            LOG.info(
-                "{} evento=data-response status={} tipo={}", diagnostic, response.status(), type);
-          }
-        });
-    page.onRequestFailed(
-        request -> {
-          String type = request.resourceType();
-          if (type.equals("xhr") || type.equals("fetch") || type.equals("document")) {
-            LOG.warn("{} evento=request-failed tipo={}", diagnostic, type);
-          }
-        });
-    page.onPageError(error -> LOG.warn("{} evento=javascript-error", diagnostic));
   }
 
   /** Estado observable del contenedor, sin volcar el documento externo. */

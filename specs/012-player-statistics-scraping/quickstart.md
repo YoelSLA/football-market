@@ -14,6 +14,25 @@ Implementación en curso del cambio del 2026-10-27; validación humana pendiente
 
 ## Preparación
 
+### Log completo en archivo
+
+Al reiniciar el backend actualizado se conserva la consola y se escribe también
+`logs/football-market.log` en UTF-8, relativo al directorio de trabajo. Si se inicia desde
+`backend/`, queda en `backend/logs/football-market.log`; si el IDE usa la raíz, en `logs/`.
+Se puede cambiar con `FOOTBALL_MARKET_LOG_FILE` o `-Dlogging.file.name=...`.
+No depende del historial visible de la consola. La rotación estándar de Spring Boot
+conserva segmentos comprimidos: para una corrida larga guardar el archivo actual **y sus
+rotaciones**, no solo el último segmento. Copiarlos al terminar, antes de su retención/purga.
+El perfil test deja vacío `logging.file.name`; no genera ese archivo al ejecutar tests.
+Los directorios `logs/` de raíz/backend están ignorados por Git, incluidas rotaciones.
+Revisar cualquier log general antes de compartirlo por posibles datos de otros módulos.
+
+### Estado tras limpieza del 2026-10-30
+
+La herramienta diagnóstica temporal y su tarea Gradle fueron retiradas. Se conservan
+logs históricos sin modificarlos. La validación vigente usa tests de regresión y el
+endpoint poblacional documentado abajo, no un CLI que consulte fichas individuales.
+
 El usuario puede iniciar el backend desde `backend/`:
 
 ```bash
@@ -74,12 +93,16 @@ Pendientes = elegibles sin item `COMPLETED` para fecha/`SCRAPING`; incluye no in
 
 ## Escenario 4: alias y derivación
 
-Para un contexto con `apps = 10` y `foulCommitted = 25`:
+Para un contexto de scraping con `apps = 2`, `goal = 6` en el resumen y tasas nativas
+de detalle `foulCommitted = 2.5`, `duelAerialTotal = 2.6`:
 
-- se persiste `fouls_committed_per_match = 2.5`;
-- no se persiste `foulCommitted = 25` como métrica;
+- se deriva `goals_per_match = 3.000000` desde el acumulado real del resumen;
+- se conservan `fouls_committed_per_match = 2.5` y `total_aerial_duels_per_match = 2.6`
+  sin dividirlas por apps otra vez;
+- no se crea un acumulado a partir de esas tasas de detalle;
 - `foulsPerGame` alimenta la misma clave y no crea equivalencia adicional;
-- `apps = 0` deja la métrica sin derivar y la persiste como columna nula, igual que una ausencia del proveedor.
+- `apps = 0` deja ausentes las derivadas de acumulados reales, pero no elimina una tasa
+  nativa publicada en detalle. JSON no se modifica; revisar el riesgo independiente TD-035.
 
 ## Escenario 5: ausencia frente a cero
 
@@ -88,44 +111,12 @@ Para un contexto con `apps = 10` y `foulCommitted = 25`:
 - una ausencia posterior no borra el resto de la fila de campaña;
 - una estructura obligatoria ausente falla el jugador y no confirma datos parciales.
 
-### Regresión DOM local de la espera — ejecución humana opt-in
+### Alcance de regresión conservado
 
-`WhoScoredScrapingDomTest` usa el navigator y JavaScript productivos en Chromium **visible**
-con HTML simulado en memoria. No utiliza Spring, DB ni WhoScored; bloquea las solicitudes
-del contexto. Requiere Chromium de la versión Playwright del proyecto ya instalado y
-sesión gráfica disponible. No instala navegadores automáticamente; si se activa y falta
-el navegador o display, debe fallar, no omitirse silenciosamente.
-
-Desde `backend/`, en PowerShell:
-
-```powershell
-$previousDomTests = $env:FOOTBALL_MARKET_DOM_TESTS
-try {
-    $env:FOOTBALL_MARKET_DOM_TESTS = 'true'
-    .\gradlew.bat integrationTest --tests "footballmarket.integrations.WhoScoredScrapingDomTest*" --rerun-tasks
-} finally {
-    $env:FOOTBALL_MARKET_DOM_TESTS = $previousDomTests
-}
-```
-
-`--rerun-tasks` evita reutilizar una ejecución previa omitida o cacheada: la variable
-activa la condición JUnit, pero no es un input específico del task Gradle. Sin la variable
-la clase se omite intencionalmente, y una salida exitosa con casos omitidos **no** acredita
-esta regresión. No forma parte de `fastTest`/`lightweightTest`.
-
-Esperar **cuatro casos ejecutados, cero omitidos**:
-
-1. Reemplazo de tabla por nodos nuevos con HTML idéntico: éxito y una selección.
-2. Selector cambiado y spinner animado, sin render de tabla: timeout con tabla vieja intacta.
-3. Render de tabla nueva con carga aún visible: timeout, sin aceptar lectura prematura.
-4. Finalización diferida por frames: éxito con marca de finalización, datos nuevos y carga oculta.
-
-No hay assertions de duración de pared ni sleeps; los negativos mantienen el estado
-pendiente hasta el timeout de prueba (1 s), los positivos admiten 5 s. Son valores de
-test y no cambian el timeout productivo. Si pasan, confirmar cantidad ejecutada y ausencia
-de omitidos; si fallan, aportar salida/reportes. Esta prueba no reproduce el proveedor
-real ni demuestra que todos los timeouts del run=7 estén resueltos. TD-034 queda pendiente
-de evidencia humana; no relanzar una campaña larga como sustituto de esta comprobación.
+Los tests DOM opt-in fueron retirados por solicitud expresa del usuario. No se requiere
+configurar variables ni navegador para los tests de protocolo. Estos usan dobles de
+Playwright y no ejecutan el JavaScript de las esperas; la brecha permanece en TD-034.
+Las campañas reales no sustituyen regresiones deterministas de estados negativos.
 
 ### Precisión decimal sin pérdida — regresión de FR-029
 
@@ -201,3 +192,21 @@ El benchmark histórico de 21–27 s y la extrapolación de 4–5 horas no prueb
 ```
 
 Para la regresión completa, ejecutar `.\gradlew.bat test`. No se ejecutaron estos comandos desde el agente; el build sin tests no compila ni ejecuta estas pruebas. No usar `--mode`, `--max-players` ni `maxPlayers` en requests válidos.
+## Regresión de apertura y lectura nativa tras limpieza (2026-10-30)
+
+Corrección de apertura: espera resumen inicial renderizado/seleccionado y detalle
+oculto antes del único clic. Confirma selección y visibilidad CSS real después.
+No aumenta timeouts ni reintenta. Desde `backend/`, el usuario ejecuta:
+
+```powershell
+.\gradlew.bat lightweightTest --tests "footballmarket.integrations.WhoScoredScrapingIntegrationTest"
+```
+
+No se conserva suite DOM ni activación por variable de entorno.
+
+Comprobar también normalización nativa y logging general conservado:
+
+```powershell
+.\gradlew.bat unitTest --tests "footballmarket.models.MetricCatalogTest" --tests "footballmarket.models.MetricValuePipelineTest"
+.\gradlew.bat lightweightTest --tests "footballmarket.config.BackendFileLoggingTest"
+```

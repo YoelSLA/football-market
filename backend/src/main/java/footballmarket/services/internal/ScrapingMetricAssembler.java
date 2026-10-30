@@ -15,8 +15,9 @@ import org.springframework.stereotype.Component;
  * Traduce las filas externas y aplica exclusivamente las reglas numéricas de Model.
  *
  * <p>El resumen inicial aporta las nueve métricas de contexto y de totales de temporada, y cada
- * subcategoría de detalle aporta las suyas por división de apariciones. Las siete métricas que solo
- * publicaba la pestaña defensiva se obtienen por la interfaz JSON y no forman parte del recorrido.
+ * subcategoría de detalle aporta tasas nativas por partido, sin dividir otra vez. Las siete
+ * métricas que solo publicaba la pestaña defensiva se obtienen por la interfaz JSON y no forman
+ * parte del recorrido.
  */
 @Component
 public class ScrapingMetricAssembler {
@@ -88,14 +89,8 @@ public class ScrapingMetricAssembler {
           "redcard");
 
   public List<PlayerMetricsContext> assemble(WhoScoredScrapedPlayer scraped) {
-    return this.assemble(scraped, null, null);
-  }
-
-  /** Correlaciona el rechazo de una celda con el intento local sin exponer identidad externa. */
-  public List<PlayerMetricsContext> assemble(
-      WhoScoredScrapedPlayer scraped, Long runId, Long playerId) {
     try {
-      return this.assembleValues(scraped, "run=" + runId + " player=" + playerId);
+      return this.assembleValues(scraped);
     } catch (InvalidPlayerException invalid) {
       LOG.warn("Ensamblado inconsistente: {}", invalid.getMessage());
       throw new footballmarket.integrations.exceptions.WhoScoredStatisticsException(
@@ -103,8 +98,7 @@ public class ScrapingMetricAssembler {
     }
   }
 
-  private List<PlayerMetricsContext> assembleValues(
-      WhoScoredScrapedPlayer scraped, String diagnostic) {
+  private List<PlayerMetricsContext> assembleValues(WhoScoredScrapedPlayer scraped) {
     Map<String, List<WhoScoredScrapedContextRow>> groups = new LinkedHashMap<>();
     for (WhoScoredScrapedContextRow row : scraped.rows()) {
       groups
@@ -124,7 +118,7 @@ public class ScrapingMetricAssembler {
                   definition.key(),
                   null,
                   MetricAvailability.ABSENT,
-                  definition.derivation(),
+                  definition.derivationFor(MetricSource.SCRAPING),
                   null,
                   context.observedAt()));
         }
@@ -134,7 +128,7 @@ public class ScrapingMetricAssembler {
         row.cells()
             .forEach(
                 cell -> fields.put(cell.providerField().toLowerCase(Locale.ROOT), cell.text()));
-        BigDecimal apps = appearances(fields.get("apps"));
+        BigDecimal apps = row.section().equals("initial") ? appearances(fields.get("apps")) : null;
         for (WhoScoredScrapedMetricCell cell : row.cells()) {
           String field = cell.providerField().toLowerCase(Locale.ROOT);
           if (row.section().equals("initial") && !INITIAL.contains(field)) {
@@ -147,35 +141,24 @@ public class ScrapingMetricAssembler {
             continue;
           }
           MetricDefinition definition = MetricCatalog.require(key);
-          boolean derived = definition.derivation() == DerivationRule.DIVIDE_BY_APPEARANCES;
-          if (!row.section().equals("initial") && !derived) {
+          if (!definition.sources().contains(MetricSource.SCRAPING)) {
+            continue;
+          }
+          if (!row.section().equals("initial")
+              && definition.derivation() != DerivationRule.DIVIDE_BY_APPEARANCES) {
             continue;
           }
           String published = field.equals("apps") ? appearancesText(cell.text()) : cell.text();
           MetricValueNormalizer.NormalizedMetricValue normalized =
-              diagnosticValue(published, row, field, diagnostic);
-          MetricValue value;
-          if (derived) {
-            MetricDerivationApplier.DerivedMetricValue quotient =
-                MetricDerivationApplier.perAppearance(normalized.value(), apps);
-            value =
-                new MetricValue(
-                    key,
-                    quotient.value(),
-                    quotient.availability(),
-                    DerivationRule.DIVIDE_BY_APPEARANCES,
-                    quotient.observedPrecision(),
-                    row.observedAt());
-          } else {
-            value =
-                new MetricValue(
-                    key,
-                    normalized.value(),
-                    normalized.availability(),
-                    DerivationRule.NONE,
-                    normalized.observedPrecision(),
-                    row.observedAt());
-          }
+              definition.normalizeFor(MetricSource.SCRAPING, published, apps);
+          MetricValue value =
+              new MetricValue(
+                  key,
+                  normalized.value(),
+                  normalized.availability(),
+                  definition.derivationFor(MetricSource.SCRAPING),
+                  normalized.observedPrecision(),
+                  row.observedAt());
           MetricValue previous = metrics.get(key);
           if (previous != null
               && (value.availability() == MetricAvailability.PRESENT
@@ -261,35 +244,6 @@ public class ScrapingMetricAssembler {
    */
   private static MetricValueNormalizer.NormalizedMetricValue publishedValue(String raw) {
     return MetricValueNormalizer.normalize(raw);
-  }
-
-  /** Solo permite tokens cortos de aspecto numérico; el resto se informa sin texto externo. */
-  private static MetricValueNormalizer.NormalizedMetricValue diagnosticValue(
-      String raw, WhoScoredScrapedContextRow row, String field, String diagnostic) {
-    try {
-      return publishedValue(raw);
-    } catch (InvalidPlayerException invalid) {
-      String token =
-          raw != null
-                  && raw.length() <= 48
-                  && (raw.matches("[0-9\\s\\p{Z}.,%()+/\\-−–—]*")
-                      || Set.of("N/A", "n/a", "NaN", "null").contains(raw))
-              ? raw.codePoints()
-                  .mapToObj(code -> String.format("U+%04X", code))
-                  .collect(java.util.stream.Collectors.joining(" "))
-              : "[redacted]";
-      LOG.warn(
-          "{} worker={} evento=invalid-decimal section={} field={} competition={} season={} token={} length={}",
-          diagnostic,
-          Thread.currentThread().getName(),
-          row.section(),
-          field,
-          row.competitionId(),
-          row.seasonKey(),
-          token,
-          raw == null ? 0 : raw.length());
-      throw invalid;
-    }
   }
 
   /**

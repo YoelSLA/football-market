@@ -96,10 +96,16 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 - Model: `MetricCatalog` y `MetricDefinition` materializan el catálogo cerrado de 60 métricas con
   cobertura 45/57/42 por canal; `MetricValueNormalizer` y `MetricDerivationApplier` encapsulan
   normalización, alias y derivación por partido sin dependencias hacia fuera de Model.
+  `MetricDefinition.derivationFor/normalizeFor` explicita la regla del canal: detalle
+  nativo de scraping directo, dos derivadas del resumen por apps; JSON permanece intacto.
 - Integrations: `WhoScoredStatisticsIntegration` consulta la interfaz JSON pública sobre el
   `RestClient` seguro ya existente; `WhoScoredStatisticsScrapingIntegration` recorre la ficha
   headed con Playwright. Ambas reutilizan `WhoScoredRequestPacer`, que no se duplica. El navegador se
   inicializa de forma perezosa: el arranque de la aplicación no abre Chromium.
+  Detalle de scraping conserva modo `0`, confirma render/carga de categoría y no opera
+  el selector Total; un modo inesperado se rechaza. No se usa la fila Total/Promedio.
+  La apertura espera resumen renderizado/seleccionado y detalle oculto antes de un
+  solo clic; confirma selección del enlace y visibilidad CSS del panel, sin retries.
 - Persistencia: una fila `player_statistics` por jugador, fecha de campaña y canal, con las 60
   métricas en columnas `NUMERIC` sin precisión ni escala fijas. `player_statistics_extraction_runs`,
   `player_statistics_run_items` y `player_statistics_incidents` conservan la auditoría de la
@@ -132,6 +138,16 @@ fuera del contexto Spring, con un único POST sin repetición automática. Recha
 `--max-players`; solo devuelve salida 0 con cobertura completa. No consulta WhoScored ni la
 persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
 por POST autenticado sin entrada.
+
+### 3.4. Observabilidad operativa
+
+La aplicación conserva logs de campaña, jugador, sección y errores, además de archivo
+UTF-8 configurable con rotación estándar. El perfil test desactiva ese archivo.
+Se retiraron el CLI diagnóstico individual, su tarea Gradle, su Logback y los hooks
+temporales de captura de red/DOM; no existe una segunda vía de scraping manual.
+El MutationObserver de renderizado permanece: es parte de la sincronización productiva,
+no de la auditoría temporal. Los tests de protocolo y Model se conservan; los tests
+DOM locales opt-in fueron retirados por decisión humana (brecha registrada en TD-034).
 
 ## 4. Valoraciones estadísticas de jugadores (SPEC-013)
 

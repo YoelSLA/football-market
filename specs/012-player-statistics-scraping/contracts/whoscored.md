@@ -21,6 +21,13 @@
   - dieciséis subcategorías de detalle.
 - No recorre resumen ofensivo, resumen de distribución, xG detallado, mapas de calor, comparativas ni nacionalidad.
 - Cobertura: 45 métricas.
+- Detalle: modo nativo `statsAccumulationType=0` validado antes/después de cambiar
+  categoría. No se selecciona Total ni se espera una recarga de acumulados que el
+  proveedor no realiza. Se conserva el render/timeout de categoría, incluso HTML
+  idéntico. La fila con competición/temporada sigue siendo obligatoria, no Total/Promedio.
+- Las 29 métricas de detalle se leen por partido sin dividir por apps ni exigir su
+  denominador; ausencias/ceros/precisión se conservan. Resumen: derivación de acumulados
+  reales sin cambios. JSON y filas existentes no se modifican en este alcance.
 - `foulsPerGame` normaliza a `fouls_committed_per_match`.
 - `-`, `N/A`, vacío o blanco significa `ABSENT` después de recortar espacios, nunca cero. No se amplía la aceptación a otros textos no numéricos.
 - Al cambiar un filtro se observa el renderizado de la tabla después de la selección,
@@ -99,7 +106,8 @@ Todas declaran solo columnas que `summary/all` ya publica, más columnas ajenas 
 - Campos acumulados marcados `/apps` se dividen por `apps` del mismo contexto; el acumulado se descarta.
 - Solo ese cociente se calcula con seis decimales y `HALF_UP` (FR-027); los valores
   publicados directamente, incluido el rating, se conservan tal cual (FR-028/FR-029).
-- `foulsPerGame` y `foulCommitted / apps` producen `fouls_committed_per_match`.
+- `foulsPerGame` y `foulCommitted` producen `fouls_committed_per_match`; detalle nativo
+  scraping se conserva directamente, sin dividir otra vez por apps.
 - `subOn` y `SubOn` se normalizan según la definición canónica.
 - Una columna esperada ausente produce `ABSENT`; una sección o forma estructural inesperada produce `PROVIDER_STRUCTURE_CHANGED`.
 
@@ -149,3 +157,11 @@ El bloque estructurado del scraping es opcional para sus métricas; su ausencia 
 | `EXTRACTION_INTERRUPTED` | Interrupción o cierre anticipado. |
 
 No se persisten HTML, JSON completo, cookies, cabeceras sensibles ni cuerpos externos.
+# Apertura inicial de pestañas — corrección autorizada 2026-10-29
+
+Scraping espera resumen seleccionado, visible y renderizado (encabezados/cuerpo,
+carga oculta), con panel de detalle existente y oculto, antes del único clic.
+Confirma enlace seleccionado y visibilidad CSS real del panel; no basta display
+inline. Preparación conserva timeout de operación y activación margen de 8 s.
+Sin sleeps, retries, cambios de unidades, contexto ni persistencia. Verificación
+humana local/live pendiente; no acredita resolución de todos los fallos poblacionales.

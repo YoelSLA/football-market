@@ -44,6 +44,107 @@ El permiso de scraping regula inicios de navegación de sección por worker sin 
 
 ## Investigación acotada de fallos observados
 
+### Estado final y limpieza autorizada — 2026-10-30
+
+Decisión posterior: usuario solicita eliminar la suite DOM opt-in. Se elimina su
+clase y comandos/variable, conservando tests de protocolo y Model. La implementación
+productiva no cambia; la cobertura real de JavaScript deja de estar automatizada.
+TD-034 registra la brecha, sin declarar equivalencia entre campañas y regresiones.
+Las referencias posteriores a esa suite describen antecedentes, no alcance vigente.
+
+Se conservan correcciones de apertura, modo nativo, ausencia N/A y normalización
+por canal; se retiran herramienta diagnóstica, tarea Gradle, Logback dedicado,
+hooks de observación, listeners de red/JS y comparación de HTML usada solo para logs.
+El observer de render permanece funcional. Se conserva logging operativo/general
+con rotación y tests aislados bajo BackendFileLoggingTest. No DB, proveedor ni cambios
+JSON. Las secciones diagnósticas siguientes son antecedentes retirados, no diseño vigente;
+la evidencia histórica y logs del usuario no se eliminan. Validación posterior a limpieza
+pendiente, sin cierre global ni merge implícito.
+
+### Corrección autorizada de apertura inicial — 2026-10-29
+
+El diagnóstico secuencial 7 reprodujo await-detail-filter con panel vacío: clic a
+81 ms, panel visible antes del clic, ocultación a 1132 ms, sin petición shots.
+Antes del único clic, esperar estado inicial renderizado: resumen seleccionado,
+visible, con encabezados/tbody y carga oculta; detalle existente y oculto mediante
+visibilidad CSS real. Evidencia estructural: HTML local `RecorridoHTML/PaginaPrincipal.txt`
+y `RecorridoHTML/Recorrido-Haaland/Resumen.txt`. Después del clic exigir enlace
+seleccionado y panel visible, no solo style.display. Sin sleeps, retries ni nuevos
+timeouts: preparación usa navigationTimeoutMs (45000), activación conserva 8000.
+No garantiza ausencia global de fallos ni atribuye todos los de run 9 a esta carrera.
+
+### Histórico retirado: diagnóstico secuencial autorizado — 2026-10-29
+
+Una ficha y un worker: Resumen → Detallado, mismo Browser y StatisticsWorker,
+contextos separados mediante Navigator. Resumen espera su tabla sin parsear métricas;
+detalle conserva captura temprana y una categoría aerial nativa. Red correlacionada
+por sección; si resumen falla no continuar a detalle. Sin DB, población, retries,
+cambios de clics, esperas ni timeouts. No reproduce aún cuatro workers ni la vida
+prolongada del navegador. Tests de protocolo mediante dobles, ejecución humana.
+
+### Histórico retirado: captura temprana de inicialización — 2026-10-29
+
+Diagnóstico individual: instalar observación de red antes de navegar y de DOM en
+DOMContentLoaded, antes del clic. Finalizar antes del cierre del contexto incluso si
+fallan `open-tab` o `await-detail-filter`. Capturar documento/scripts/xhr/fetch,
+errores JS sin mensajes, clic capture/bubble y presencia/visibilidad de panel,
+contenedor, filtro y tabla. Sin URLs, contenido, IDs externos ni cambio de navegación,
+timeout, retries, métricas o persistencia. El recorrido normal usa callbacks vacíos.
+Las mutaciones se limitan a subárboles relevantes; máximo 1000 eventos y contador
+de descartados, con estado final independiente. Validación humana individual: 7,
+después 803 si resulta necesario; no repetir población para este diagnóstico.
+
+### Corrección de lectura nativa de detalle — autorización del 2026-10-29
+
+- Sustituye para scraping las decisiones anteriores de seleccionar acumulados `2`.
+  Navigator valida modo nativo `0` antes y después de elegir cada categoría; no cambia
+  ese selector. Conserva espera por render, encabezados/cuerpo/carga oculta y timeout
+  de 45 s como máximo, sin sleeps ni espera mínima de 2 s, sin retries. Modo desconocido
+  o distinto se rechaza, no se convierte por conjetura.
+- Model explicita regla por canal en `MetricDefinition.derivationFor`: las 29 claves
+  de detalle son nativas por partido en scraping; goles/asistencias del resumen conservan
+  división. El accessor legado y procesamiento JSON se conservan sin cambios.
+- Assembler usa esa regla y no exige apps para detalle; conserva normalización exacta,
+  ausencias, selección de contexto por competición/temporada y catálogo 60/45/57/42.
+  No cambia parser, Writer, claves de DB ni filas existentes.
+- Actualizar tests Model de regla por canal, protocolo Integration y DOM opt-in para
+  categorías sin cambio de acumulación, incluyendo rechazo de modo inesperado. Mantener
+  las comprobaciones de no render/carga pendiente/HTML idéntico y tentativa única.
+- Evidencia: traza humana individual (input/change de acumulados sin petición/render)
+  y comparación manual de varios jugadores. Captura HAR local previa de modo `0`
+  publica duelAerialTotal fraccionario con apps=6; HTML local muestra el valor por partido.
+  No se accede al proveedor por el agente. Riesgo numérico del canal JSON identificado
+  durante lectura se registra como deuda independiente, sin corregir fuera de alcance.
+
+### Histórico: diagnóstico individual retirado y log general conservado — 2026-10-29
+
+- Añadir `tools/WhoScoredScrapingDiagnostic` y
+  `integrations/WhoScoredScrapingDiagnosticIntegration`: entrada manual independiente
+  de Spring, sin Repository/Service, POST poblacional, run ni persistencia de métricas.
+  El tool no es un rol de aplicación; toda comunicación externa queda en Integration.
+  Excepción diagnóstica a la frase anterior «no se añade otro cliente»: no es un canal
+  nuevo ni una vía de actualización, solo una captura acotada para T106.
+- Una ficha, una navegación de detalle y una llamada a `chooseCategory(aerial)` real,
+  sin retry ni cambio de timeout (45 s). IDs provistos por variables de entorno,
+  validados antes de abrir navegador; ID externo nunca en logs/argumentos de Gradle.
+  El ID local solo sirve para correlacionar y no se resuelve ni escribe en DB.
+- Eventos de red con secuencia local, tipo, endpoint clasificado (estadísticas/otro),
+  categoría/subcategoría/acumulación de una lista permitida, status y fin/fallo.
+  Nunca URL completa, query libre, headers, cookies, bodies o mensajes externos.
+- Observer diagnóstico independiente: secuencia temporal de input/change y mutaciones,
+  tabla presente, filas/columnas, carga, reemplazo de nodo y cambio de HTML (solo
+  booleanos/conteos). Buffer acotado a 1000 eventos con contador explícito de descartados;
+  captura final y limpieza aun si el filtro falla. No cambia el observer ni el criterio
+  de espera productivos.
+- Configurar archivo persistente del backend `logs/football-market.log`, configurable
+  por `FOOTBALL_MARKET_LOG_FILE`, además de consola; rotación estándar de Spring Boot.
+  Perfil test sin archivo. La herramienta usa logback dedicado, consola y archivo
+  append completo `logs/whoscored-diagnostic.log`, configurable por propiedad Gradle.
+  Ignorar directorios de logs y documentar conservación de todos los archivos rotados.
+- Tests de entradas inválidas del tool sin navegador/red y de configuración logging;
+  no tests de texto de mensajes diagnósticos. Ejecución de la herramienta, backend y
+  tests exclusivamente humana; preparación no autoriza acceso externo por el agente.
+
 ### Corrección autorizada tras run=7 — 2026-10-28
 
 - FR-022 incorpora únicamente el marcador literal `N/A` tras `strip`, como `ABSENT`,

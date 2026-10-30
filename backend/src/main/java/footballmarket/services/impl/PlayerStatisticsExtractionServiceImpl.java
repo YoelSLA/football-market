@@ -83,8 +83,7 @@ public class PlayerStatisticsExtractionServiceImpl implements PlayerStatisticsEx
       WhoScoredScrapedPlayer scraped =
           this.integration.scrape(session, runId, playerId, externalId);
       calls.addAndGet(scraped.providerCalls());
-      java.util.List<PlayerMetricsContext> values =
-          this.assembler.assemble(scraped, runId, playerId);
+      java.util.List<PlayerMetricsContext> values = this.assembler.assemble(scraped);
       Long itemId = this.writer.confirm(runId, playerId, externalId, start, Instant.now(), values);
       if (this.assembler.hasUnknownColumns(scraped)) {
         this.incidents.record(itemId, null, "PROVIDER_STRUCTURE_CHANGED", null, 1, Instant.now());

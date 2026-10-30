@@ -27,6 +27,11 @@ spring:
     time-zone: America/Argentina/Buenos_Aires
 
 logging:
+  charset:
+    file: UTF-8
+  file:
+    # Archivo completo independiente del límite de consola; conservar también sus rotaciones.
+    name: ${FOOTBALL_MARKET_LOG_FILE:logs/football-market.log}
   level:
     root: INFO
     ar.edu.unq.schoolmanager: DEBUG

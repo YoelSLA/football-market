@@ -3,6 +3,7 @@ package footballmarket.models;
 import static org.assertj.core.api.Assertions.*;
 
 import footballmarket.models.enums.MetricAvailability;
+import footballmarket.models.enums.MetricSource;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.*;
@@ -11,6 +12,40 @@ import org.junit.jupiter.params.provider.*;
 
 @org.junit.jupiter.api.Tag("unit")
 class MetricValuePipelineTest {
+  @Nested
+  @DisplayName("Tasas nativas por canal sin segunda división")
+  class NativeRates {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"0", "2", "6"})
+    @DisplayName("Conserva 2.6 por partido aunque apps falte, sea cero o tenga varias apariciones")
+    void preservesPublishedRate(String appearancesText) {
+      // Arrange
+      MetricDefinition definition = MetricCatalog.require("total_aerial_duels_per_match");
+      BigDecimal appearances = appearancesText == null ? null : new BigDecimal(appearancesText);
+      // Act
+      MetricValueNormalizer.NormalizedMetricValue result =
+          definition.normalizeFor(MetricSource.SCRAPING, "2.6", appearances);
+      // Assert
+      assertThat(result.value()).isEqualTo(new BigDecimal("2.6"));
+      assertThat(result.observedPrecision()).isEqualTo(1);
+      assertThat(result.availability()).isEqualTo(MetricAvailability.PRESENT);
+    }
+
+    @Test
+    @DisplayName("Mantiene la derivación de goles del resumen con seis decimales")
+    void stillDerivesSummary() {
+      // Arrange
+      MetricDefinition definition = MetricCatalog.require("goals_per_match");
+      // Act
+      MetricValueNormalizer.NormalizedMetricValue result =
+          definition.normalizeFor(MetricSource.SCRAPING, "6", new BigDecimal("2"));
+      // Assert
+      assertThat(result.value()).isEqualTo(new BigDecimal("3.000000"));
+      assertThat(result.observedPrecision()).isEqualTo(6);
+    }
+  }
+
   @Nested
   @DisplayName("Normalización decimal y ausencias")
   class Normalization {

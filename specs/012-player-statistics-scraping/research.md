@@ -187,9 +187,60 @@ Síntomas aportados: rechazo decimal `PROVIDER_DATA_INCONSISTENT`, fases de 45�
   brecha registrada como TD-034. Persisten validación humana de DOM/proveedor y causas
   de paneles vacíos. T106/T107 siguen abiertas; no se declara resolución global.
 
+### Run=8 y siguiente evidencia mínima — 2026-10-29
+
+- JSON humano: campaña 2026-10-27, 1266 seleccionados, 0 completados, 0 NO_DATA,
+  1266 fallidos y pendientes, 2532 navegaciones observadas, estado FAILED. Se intentó
+  la población pendiente sin recuperar ningún jugador; no implica borrar éxitos previos.
+- `Logs.txt` del usuario: 6798 líneas, comienzo cortado, timestamps completos de
+  2026-10-28T22:41:47.227-03 a 22:56:46.417-03, unos 15 min de las 4 h 33 min del run.
+  70 fallos finales PROVIDER_TIMEOUT en el fragmento; 66 diagnósticos específicos de
+  acumulados 0→2, cambioTabla=false; 67 cambios a aerial completados. Cero eventos
+  invalid-decimal, pero falla antes del ensamblado: no prueba N/A funcionalmente en run=8.
+- Los tests DOM locales aportados por el usuario ejecutaron 4 casos sin omitidos/fallos;
+  demuestran los escenarios simulados, no que el proveedor real renderice como la fixture.
+  El timeout persiste en `select` tras la selección de acumulados; no se atribuye por
+  conjetura a bloqueo HTTP, a red auxiliar ni solo a una comparación de HTML.
+- Instrumentación autorizada de una ficha: request/response/finished/failed con
+  correlación local y feed distinguido de auxiliares; eventos input/change en captura y
+  burbuja, mutaciones de tabla/carga y estado final, sin IDs externos, URLs ni celdas.
+  Debe permitir distinguir ausencia de petición, petición fallida/en curso y actualización
+  DOM no reconocida. Un status 200 por sí solo no demuestra datos válidos ni render.
+- Tool independiente sin DB ni métrica persistida, una navegación de detalle y tentativa
+  aerial/acumulados, mismos timeouts/criterio productivos. Captura parcial explícita si
+  el buffer DOM supera 1000 eventos; último estado separado. La conservación de logs
+  de archivo evita depender del límite de la consola. Ejecución humana pendiente.
+- No se repite campaña larga ni se declara arreglado el proveedor por crear diagnóstico.
+
+### Confirmación y corrección de unidad nativa — 2026-10-29
+
+- Traza humana individual: category shots→aerial produce feed de estadísticas con
+  statsAccumulationType=0, HTTP 200, fin de petición y cambio de tabla/carga. Después,
+  selector 0→2 produce input/change en captura/burbuja pero ninguna nueva petición de
+  estadísticas ni render/carga; fwsc permanece en 2 durante 45 s. trusted=false también
+  ocurre en categoría que sí funciona, por lo que no se atribuye la causa a ese flag.
+- El usuario comprobó manualmente varios jugadores y todos los modos de acumulación
+  sin cambio de cifras. Se descarta usar el label Total como prueba de unidades y usar
+  la fila Total/Promedio como sustituto de competición/temporada. No es evidencia para
+  recortar timeouts a 2 s ni culpar a Chromium; se conserva confirmación por render.
+- Verificación local adicional, sin proveedor: HAR previo de categoría aerial/mode 0
+  contiene apps=6 y duelAerialTotal fraccionario; HTML de detalle correspondiente muestra
+  tasas por partido. Esto sustenta leer modo nativo 0 sin nueva división. El normalizador
+  sigue usando tokens originales del DOM, sin conversión flotante; la lectura auxiliar
+  del HAR no se usa para persistir métricas ni redondear sus valores.
+- Corrección autorizada: navigator no toca acumulación y valida 0 antes/después;
+  Model declara regla por canal y normaliza tasa publicada directamente; assembler no
+  exige apps para detalle. Las dos derivadas del resumen mantienen acumulado/apps y
+  seis decimales. Parser/selección de liga local, JSON, Writer y campañas existentes
+  intactos. TD-035 registra riesgo similar en JSON/histórico sin corrección no autorizada.
+- Nuevas regresiones numéricas incluyen 2.6 con apps nulo/0/2/6 (siempre 2.6) y resumen
+  6/2=3.000000; modo inesperado rechazado antes/después del render. Los seis casos DOM
+  actualizados requieren nueva ejecución humana; los cuatro anteriores no validan
+  automáticamente este nuevo alcance. No se vuelve a lanzar campaña por el agente.
+
 ## Ubicación de las reglas de dominio
 
-Normalización y derivación/alias se ubican en `models/` (`MetricValueNormalizer`, `MetricDerivationApplier`). Service obtiene datos y persiste resultados; la regla numérica no depende de Repository ni Integration. La tolerancia y clasificación de contraste se retiraron con el contraste entre canales el 2026-10-18, por lo que `MetricComparisonRule` no forma parte del modelo vigente.
+Normalización y derivación/alias se ubican en `models/` (`MetricValueNormalizer`, `MetricDerivationApplier` y la regla por canal de `MetricDefinition`). Service obtiene datos y persiste resultados; la regla numérica no depende de Repository ni Integration. La tolerancia y clasificación de contraste se retiraron con el contraste entre canales el 2026-10-18, por lo que `MetricComparisonRule` no forma parte del modelo vigente.
 
 ## Historial de aclaraciones superadas
 
@@ -211,3 +262,54 @@ están resumidas en la tabla de decisiones vigentes de `spec.md`.
   canales; quedó precisada el 2026-10-16, con lotes solo en scraping y recorrido completo
   de los pendientes del día en JSON (FR-012, FR-043).
 - 2026-10-16, scraping por lotes de 30 minutos, media de 20 muestras, máximo opcional y cliente `batch/campaign`: sustituido el 2026-10-27 por snapshot completo en un POST, sin máximo/deadline ni retries de scraping. Las aclaraciones originales se conservan en `spec.md` como bitácora histórica.
+# Evidencia adicional de inicialización — run 9 (2026-10-29)
+
+## Resultado final observado y retiro de instrumentación — 2026-10-30
+
+Tests humanos de protocolo y diez casos DOM satisfactorios, informados por usuario.
+Diagnóstico secuencial corregido 7 completó shots/aerial modo 0 y render en 378 ms.
+Segundo diagnóstico satisfactorio en 362 ms: etiqueta 308 invertida, referencia
+externa del 803 confirmada por usuario. Run 10: 520 seleccionados, 306 completados,
+214 NO_DATA y cero errores. Run 11 del 30/10: 2104 seleccionados, 1889 completados,
+214 NO_DATA, un PROVIDER_TIMEOUT/open-tab en 2449, 4208 llamadas, duración 3:08:13.
+Usuario considera satisfactoria la campaña y luego informa 2449 arreglado, sin
+nuevo resultado persistente aportado. No se infiere 100 % ni reparación general.
+Cruce SQL humano: entre 214 NO_DATA de scraping, JSON del 18/10 tenía 211 filas
+sin métricas y tres sin fila; fechas distintas, no evidencia de ausencia permanente.
+
+Se retira CLI/Integration diagnósticos, captura de red/DOM, hooks y Logback/tarea
+dedicados; también comparación HTML y volcado Unicode usados solo en investigación.
+Se conserva observer productivo, normalización, contexto, regresiones y archivo general.
+Las referencias a la herramienta en antecedentes son históricas; comandos vigentes
+en quickstart ya no dependen de ella. TD-035 sigue diferida por decisión del usuario.
+
+El diagnóstico secuencial 7 de 21:58 reprodujo el timeout con un worker. Resumen
+cargó; detalle recibió clic a 81 ms de la captura, con panel ya visible sin filtro.
+A 1132 ms la inicialización ocultó el panel; nunca hubo shots ni tabla detallada.
+El clic llegó a capture y bubble sin defaultPrevented. Esto apunta a interacción
+anterior a la inicialización, no acredita que todos los fallos tengan esa causa.
+Corrección autorizada: esperar resumen renderizado/seleccionado y detalle oculto
+antes del único clic, confirmar selección y visibilidad CSS tras él. Señales
+observables de HTML local, sin depender de APIs internas de jQuery ni networkidle,
+document.readyState, sleeps o retries. Chromium local debe comprobar inicialización
+tardía, bloqueo sin preparación y falsa apertura CSS; live secuencial aún pendiente.
+
+Diagnósticos humanos posteriores: 7 y 803 completan detalle y aerial modo 0,
+sin reproducir el timeout. Ambos registran error JS temprano sin impedir éxito.
+Revisión de código: diagnóstico anterior iba directo a detalle; campaña abre resumen
+y luego detalle en contextos separados del mismo Browser/worker, con hasta cuatro
+workers y reutilización del Browser entre fichas. Defaults locales coinciden en timeout
+45000, intervalo 1500 y filtrado desactivado; overrides históricos no comprobados.
+La prueba de apertura productiva solo inspecciona `style.display`, no inicialización
+de handlers; posible carrera, no causa probada. La instrumentación puede perturbar timing.
+Siguiente aislamiento autorizado: una ficha Resumen → Detallado/aerial, mismo Browser
+y worker, sin concurrencia, persistencia, retries o cambios de interacción. No equivale
+a validar población, dieciséis categorías ni una corrección funcional.
+
+Logs completos y auditoría humana: 361 fallos PROVIDER_TIMEOUT de detalle;
+360 en `await-detail-filter`, uno en `open-tab` (jugador local 803).
+En los 360 falta tabla/filtro dentro de un contenedor existente vacío.
+No acredita NO_DATA, bloqueo del proveedor ni fallo de acumulación. La captura
+anterior comenzaba después del filtro y no permite atribuir causa. Se amplía
+solo instrumentación para capturar desde navegación y antes del clic; resultados
+humanos pendientes. NO_DATA y TD-035 permanecen investigaciones independientes.

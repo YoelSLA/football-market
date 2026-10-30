@@ -60,6 +60,78 @@ class WhoScoredScrapingIntegrationTest {
   /** Categoría que el recorrido considera seleccionada en cada momento. */
   private final AtomicReference<String> selected = new AtomicReference<>("shots");
 
+  @Test
+  @DisplayName("Inicializa pestañas antes del único clic y conserva los timeouts de operación")
+  void waitsForInitializationBeforeClick() {
+    Page page = mock(Page.class);
+    configureDetail(page);
+    WhoScoredScrapingSectionNavigator navigator =
+        new WhoScoredScrapingSectionNavigator(
+            new PlayerStatisticsProperties(1, 1, 1500, 45000, 20000, false, true),
+            pacer(new AtomicLong()));
+    navigator.openTab(page, "detailed");
+    Locator link =
+        page.locator("#player-tournament-stats-options a[href='#player-tournament-stats-detailed']")
+            .first();
+    var order = inOrder(page, link);
+    ArgumentCaptor<Page.WaitForFunctionOptions> readiness =
+        ArgumentCaptor.forClass(Page.WaitForFunctionOptions.class);
+    order.verify(page).waitForFunction(contains("visible(summary)"), isNull(), readiness.capture());
+    order.verify(link).click(any(Locator.ClickOptions.class));
+    ArgumentCaptor<Page.WaitForFunctionOptions> activation =
+        ArgumentCaptor.forClass(Page.WaitForFunctionOptions.class);
+    order
+        .verify(page)
+        .waitForFunction(
+            contains("classList.contains('selected')"), eq("detailed"), activation.capture());
+    assertThat(readiness.getValue().timeout).isEqualTo(45000);
+    assertThat(activation.getValue().timeout).isEqualTo(8000);
+    verify(link, times(1)).click(any(Locator.ClickOptions.class));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  @DisplayName("Cierra el contexto tras fallo inicial sin parsear ni reintentar")
+  void closesContextOnInitializationFailure(boolean tabFailure) {
+    WhoScoredStatisticsPageStub stub = new WhoScoredStatisticsPageStub();
+    Page page = stub.enqueue(HTML, 200);
+    configureDetail(page);
+    if (tabFailure) {
+      doThrow(new TimeoutError("synthetic"))
+          .when(page)
+          .waitForFunction(anyString(), any(), any(Page.WaitForFunctionOptions.class));
+    } else {
+      doThrow(new TimeoutError("synthetic"))
+          .when(page)
+          .waitForSelector(anyString(), any(Page.WaitForSelectorOptions.class));
+    }
+    WhoScoredRequestPacer pacer = pacer(new AtomicLong());
+    WhoScoredScrapingSectionNavigator navigator =
+        new WhoScoredScrapingSectionNavigator(
+            new PlayerStatisticsProperties(4, 4, 2500, 45000, 45000, false, true), pacer);
+    Runnable parsed = mock(Runnable.class);
+    assertThatThrownBy(
+            () ->
+                navigator.read(
+                    stub.browser(),
+                    "https://www.whoscored.com/players/1/show",
+                    "detailed",
+                    null,
+                    7L,
+                    pacer.statisticsWorker(1500),
+                    () -> {},
+                    (p, html) -> {
+                      parsed.run();
+                      return null;
+                    }))
+        .isInstanceOf(WhoScoredStatisticsUnavailableException.class);
+    var order = inOrder(page, stub.contexts().getFirst());
+    order.verify(page).navigate(anyString(), any(Page.NavigateOptions.class));
+    order.verify(stub.contexts().getFirst()).close();
+    verify(page, times(1)).navigate(anyString(), any(Page.NavigateOptions.class));
+    verifyNoInteractions(parsed);
+  }
+
   private void configureSummary(Page page) {
     Locator tabs = mock(Locator.class);
     when(tabs.count()).thenReturn(1);
@@ -93,7 +165,7 @@ class WhoScoredScrapingIntegrationTest {
         .selectOption(anyString());
     Locator accumulation = mock(Locator.class);
     when(accumulation.count()).thenReturn(1);
-    when(accumulation.inputValue()).thenReturn("2");
+    when(accumulation.inputValue()).thenReturn("0");
     when(page.locator("#statistics-filter-detailed #category")).thenReturn(category);
     when(page.locator("#statistics-filter-detailed #statsAccumulationType"))
         .thenReturn(accumulation);
@@ -210,6 +282,29 @@ class WhoScoredScrapingIntegrationTest {
   @Nested
   @DisplayName("Recorrido headed en dos cargas")
   class Scraping {
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "2", "4", "unknown"})
+    @DisplayName("No interpreta como por partido un modo distinto del nativo")
+    void rejectsUnexpectedMode(String mode) {
+      // Arrange
+      Page page = mock(Page.class);
+      configureDetail(page);
+      Locator accumulation = page.locator("#statistics-filter-detailed #statsAccumulationType");
+      when(accumulation.inputValue()).thenReturn(mode);
+      AtomicLong time = new AtomicLong();
+      PlayerStatisticsProperties properties =
+          new PlayerStatisticsProperties(4, 4, 2500, 20000, 20000, false, true);
+      WhoScoredScrapingSectionNavigator navigator =
+          new WhoScoredScrapingSectionNavigator(properties, pacer(time));
+      // Act / Assert
+      assertThatThrownBy(() -> navigator.chooseCategory(page, "aerial"))
+          .isInstanceOf(WhoScoredStatisticsStructureChangedException.class);
+      // Verify
+      verify(accumulation, never()).selectOption(anyString());
+      verify(page.locator("#statistics-filter-detailed #category"), never())
+          .selectOption(anyString());
+    }
+
     @Test
     @DisplayName("Una categoría que agota su espera no se recarga ni cambia a otra categoría")
     void doesNotRetryCategory() {
@@ -236,14 +331,13 @@ class WhoScoredScrapingIntegrationTest {
     }
 
     @Test
-    @DisplayName("Arma el observer antes del acumulado y conserva el timeout sin comparar HTML")
-    void waitsForAccumulationRender() {
+    @DisplayName("Espera el render de categoría sin tocar acumulados y conserva el timeout")
+    void waitsForCategoryRender() {
       // Arrange
       Page page = mock(Page.class);
       configureDetail(page);
-      selected.set("aerial");
       Locator accumulation = page.locator("#statistics-filter-detailed #statsAccumulationType");
-      when(accumulation.inputValue()).thenReturn("0");
+      Locator category = page.locator("#statistics-filter-detailed #category");
       JSHandle render = mock(JSHandle.class);
       when(page.evaluateHandle(anyString())).thenReturn(render);
       AtomicLong time = new AtomicLong();
@@ -254,21 +348,21 @@ class WhoScoredScrapingIntegrationTest {
       // Act
       navigator.chooseCategory(page, "aerial");
       // Assert / Verify
-      org.mockito.InOrder order = inOrder(page, accumulation, render);
+      org.mockito.InOrder order = inOrder(page, category, render);
       order.verify(page).evaluateHandle(contains("MutationObserver"));
-      order.verify(accumulation).selectOption("2");
+      order.verify(category).selectOption("aerial");
       ArgumentCaptor<Page.WaitForFunctionOptions> options =
           ArgumentCaptor.forClass(Page.WaitForFunctionOptions.class);
       order
           .verify(page)
           .waitForFunction(
               contains("state.rendered"),
-              eq(List.of(render, "#statsAccumulationType", "2")),
+              eq(List.of(render, "#category", "aerial")),
               options.capture());
       assertThat(options.getValue().timeout).isEqualTo(20000);
       order.verify(render).evaluate("state => state.observer.disconnect()");
       order.verify(render).dispose();
-      verify(accumulation).selectOption("2");
+      verify(accumulation, never()).selectOption(anyString());
       verify(page, never()).reload();
     }
 

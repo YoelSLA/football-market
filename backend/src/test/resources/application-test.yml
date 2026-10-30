@@ -31,6 +31,8 @@ jwt:
   expiration: 43200000
 
 logging:
+  file:
+    name: ""
   level:
     org.flywaydb: DEBUG
     org.hibernate.tool.schema: DEBUG

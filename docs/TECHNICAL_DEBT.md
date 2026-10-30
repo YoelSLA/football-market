@@ -86,8 +86,42 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-032](#td-032--conteo-de-fallidos-de-estadísticas-incluye-no-data-y-fallos-ya-reconfirmados) | Conteo de fallidos de estadísticas incluye no-data y fallos ya reconfirmados | Backend / Contrato | Alta | Pendiente | 2026-10-27 13:45:51 |
 | [TD-033](#td-033--journeys-de-estadísticas-sustituyen-las-integrations-productivas) | Journeys de estadísticas sustituyen las Integrations productivas | Backend / Testing | Media | Pendiente | 2026-10-27 13:45:51 |
 | [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
+| [TD-035](#td-035--doble-división-potencial-de-estadísticas-json-y-auditoría-histórica-pendiente) | Doble división potencial de estadísticas JSON y auditoría histórica pendiente | Backend / Datos | Alta | Pendiente | 2026-10-29 12:59:24 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-035 — Doble división potencial de estadísticas JSON y auditoría histórica pendiente
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-035 |
+| **Fecha y hora de registro** | 2026-10-29 12:59:24 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Alta |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | — |
+
+**Evidencia estática/local:** `WhoScoredStatisticsIntegration` consulta modo `0`;
+`JsonMetricAssembler.apply` divide los campos de definiciones DIVIDE_BY_APPEARANCES
+(salvo alias de faltas) por apps. La captura HAR local previa contiene aerial en modo
+`0`, apps=6 y duelAerialTotal fraccionario, consistente con valor ya normalizado por
+partido, no con un acumulado entero de duelos. Riesgo real de volver a dividir esos
+campos. El scraping anterior también aplicaba división a detalle pese al modo observado.
+No se consultó DB ni se demuestra aquí qué filas históricas quedaron afectadas.
+
+**Impacto:** posible subestimación de métricas que consumen las valuaciones. La corrección
+autorizada del 2026-10-29 se limita al scraping y no valida ni modifica la semántica JSON.
+Las campañas ya completadas no se sobrescriben automáticamente para corregir esta deuda.
+
+**Solución propuesta:** auditar unidades por columna/categoría JSON con evidencia exacta,
+acordar su normalización y regresiones, evaluar filas de ambos canales y consumidores de
+valuación. Cualquier corrección JSON o modificación de datos requiere autorización propia.
+
+**Cierre:** reglas por origen coherentes con FR-027/028, pruebas numéricas ejecutadas por
+el usuario y diagnóstico del histórico con decisión explícita sobre su tratamiento.
+
+**Historial:** 2026-10-29 12:59:24 — identificada durante T106, registrada sin modificar
+JSON, recalcular métricas, reabrir campañas ni declarar resuelta la deuda.
 
 ### TD-034 — Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright
 
@@ -127,6 +161,34 @@ Ejercita el observer/predicado productivo para reemplazo idéntico, tabla vieja 
 carga pendiente y finalización diferida. Los casos negativos verifican que hubo selección
 y que la tabla está presente, evitando pasar por un timeout de preparación. No ejecutado
 por el agente: compilación y ejecución humanas pendientes; no se declara resuelta.
+
+**2026-10-29 21:53:40 — Alcance de la regresión secuencial:** los nuevos casos de
+diagnóstico Resumen → Detallado comprueban orden, identidad de Browser/worker,
+contextos separados y abandono sin retry. Siguen sustituyendo Page/Locator: no
+acreditan inicialización real de handlers ni visibilidad CSS. `panelVisibleWithin`
+solo comprueba `style.display`; el posible vínculo con run 9 no está demostrado.
+No se modifica ese predicado ni se declara resuelta la deuda en esta ampliación.
+
+**2026-10-29 22:07:26 — Corrección posterior autorizada:** el diagnóstico secuencial
+7 reprodujo el panel vacío con clic anterior a la inicialización. Navigator ahora
+espera resumen renderizado y estado inicial de pestañas, y confirma selección más
+visibilidad CSS; un único clic, sin retries. Se añaden cuatro escenarios DOM locales
+de apertura y un caso de protocolo. Build sin tests satisfactorio; ejecución humana
+de estas regresiones y contraste live pendientes. No se declara resuelta TD-034 ni
+se atribuyen todos los fallos de run 9 a esta causa.
+
+**2026-10-30 16:29:58 — Limpieza autorizada de instrumentación:** usuario informó
+protocolo y diez casos DOM satisfactorios antes de limpieza. Se conservan los casos
+DOM y el observer funcional; se retiran CLI y hooks temporales, no las regresiones.
+Campaña completa run 11 observada: 1889 completados, 214 NO_DATA, un timeout entre
+2104. Verificación posterior a limpieza pendiente; no resuelve automáticamente
+TD-034 ni las deudas de integridad/contrato independientes.
+
+**2026-10-30 16:34:51 — Retiro explícito de la suite DOM:** por solicitud del usuario
+se elimina WhoScoredScrapingDomTest y su activación por variable. Permanecen protocolo
+con dobles y pruebas Model, que no ejecutan el JavaScript productivo. La evidencia
+histórica se conserva; campañas reales no sustituyen escenarios deterministas de
+error/render. La deuda queda abierta, no resuelta ni dispensada por esta decisión.
 
 ### TD-032 — Conteo de fallidos de estadísticas incluye no-data y fallos ya reconfirmados
 

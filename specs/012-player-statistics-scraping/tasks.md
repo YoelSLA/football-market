@@ -322,6 +322,45 @@ siguen pendientes; esta corrección no aprueba ninguno de esos gates.
 
 ## Cambio del 2026-10-27 — tareas vigentes pendientes
 
+### Estado actualizado — limpieza autorizada 2026-10-30
+
+Solicitud posterior: retirar tests DOM y activación por variable. Clase eliminada,
+comandos y documentación vigente alineados; tests de protocolo/Model conservados.
+Los diez casos DOM históricos no son suite vigente. La campaña no sustituye esa
+cobertura determinista; TD-034 continúa abierta. No implica aprobación de cierre.
+
+- [X] T110 Retirar herramienta temporal, tarea/configuración y hooks de diagnóstico;
+  mantener sincronización productiva, regla nativa, N/A, regresiones y log general.
+  Alinear SPEC-012 y docs del backend sin borrar evidencia histórica ni aprobar cierre.
+  Implementación y build sin tests verificados (10 s); tests posteriores a limpieza
+  pendientes del usuario. No equivale a completar T100/T105 ni gates globales.
+
+T106: validación humana secuencial de 7 y referencia externa del 803 satisfactoria;
+etiqueta local 308 en el segundo log fue error de entrada confirmado por el usuario.
+Run 10: 520 intentados, 306 completados, 214 NO_DATA, cero fallos. Run 11 completo:
+2104 intentados, 1889 completados, 214 NO_DATA y un timeout de apertura (2449).
+Usuario informa ese caso arreglado, sin evidencia adicional de run; no se alteran conteos.
+T107: usuario confirmó protocolo y diez casos DOM satisfactorios antes de limpieza;
+la regresión posterior a T110 queda pendiente. T108–T109: alineación actualizada,
+no CODE REVIEW/TESTING globales ni CONVERGE. TD-032/033/034/035 no se cierran aquí.
+Los párrafos y tabla siguientes describen avances anteriores, superados por esta
+actualización solo en lo respaldado por evidencia; no son nuevas tareas de diagnóstico.
+
+Corrección de apertura autorizada 2026-10-29 (T106–T108): preparación por resumen
+renderizado y estado de pestañas inicializado, un clic y confirmación CSS/selección.
+Regresiones DOM locales de inicialización tardía y falsa apertura, más protocolo;
+ejecución humana y contraste live secuencial pendientes.
+
+Ampliación secuencial autorizada 2026-10-29 (T106–T108): diagnóstico de una ficha
+Resumen → Detallado, mismo navegador/worker, contextos independientes y aerial.
+Regresión de orden/identidad y abandono tras fallo de resumen; ejecución humana
+y reproducción secuencial pendientes, sin cierre de tareas o gates globales.
+
+Ampliación diagnóstica autorizada 2026-10-29 (T106–T108): observación previa a
+navegación/clic y finalización aun con fallo temprano; regresión de protocolo escrita
+para `open-tab` y filtro ausente. Ejecución de tests y diagnóstico humano pendientes;
+no acredita resolución del contenedor vacío ni cierre de gates.
+
 ### Avance técnico de IMPLEMENT — 2026-10-27
 
 | Tareas | Avance comprobado y pendiente |
@@ -333,8 +372,8 @@ siguen pendientes; esta corrección no aprueba ninguno de esos gates.
 | T103 | Añadido `ExtractionPopulationExecutorTest`, retirado el test de corte; cobertura de reloj/fecha, run vivo/huérfano, timeout individual y llamadas. Reconfirmación en Service/Repository. Falta caso explícito de nuevo elegible posterior al snapshot. |
 | T104 | CLI simplificado a un POST; opciones retiradas rechazadas; código 0 solo con cobertura completa. Build satisfactorio; ejecución del CLI exclusivamente humana. |
 | T105 | Journeys ajustados y escenario de resultado incompleto/reanudación manual escrito. Frontera E2E heredada incompleta (TD-033), por adaptar; no completada por registrar deuda. |
-| T106 | Run=7 confirma N/A en minsplayed; se incorpora como ausencia bajo autorización del 2026-10-28. Espera cambiada para reconocer render con HTML idéntico. Build sin tests satisfactorio; DOM/proveedor, paneles vacíos y causalidad global de timeouts pendientes. |
-| T107 | Regresiones de N/A/textos inválidos y protocolo de observer/timeout/limpieza escritas, no ejecutadas. Falta ejercicio del JavaScript real (TD-034), contraste del fallo de cierre y revisión completa del orden de cierre. |
+| T106 | N/A corregido; traza humana confirma acumulación sin petición/render. Corrección 2026-10-29: detalle nativo 0 sin selector Total ni segunda división, con guardas de modo/contexto y timeout. Build sin tests satisfactorio; comprobación live del nuevo recorrido y paneles vacíos pendientes. TD-035 registra riesgo JSON/histórico sin tocar datos. |
+| T107 | Pruebas previas reportadas satisfactorias por usuario; las afectadas por lectura nativa requieren nueva ejecución. Tests Model de regla/2.6 sin división y resumen intacto; protocolo sin tocar acumulación; DOM actualizado a categoría y seis casos con modo inválido. No ejecutados por agente; cierre global y fallo histórico de cleanup pendientes. |
 | T108–T109 | Documentación y reporte parcial actualizados; deudas TD-032/033 registradas sin resolver. Build `gradlew.bat build -x test` satisfactorio. Entrega parcial, no CODE REVIEW global ni CONVERGE; faltantes anteriores impiden marcar cierre técnico. |
 
 Las casillas marcadas acreditan implementación o escritura y revisión de fuentes, no tests ejecutados;
@@ -359,6 +398,33 @@ Prerrequisitos: Plan actualizado y evaluación asistida del checklist `checklist
 - [ ] T106 [US1] Investigar los valores rechazados y esperas observadas siguiendo `backend/src/main/java/footballmarket/integrations/WhoScoredScrapingTableParser.java`, `backend/src/main/java/footballmarket/integrations/WhoScoredStructuredDataParser.java`, `backend/src/main/java/footballmarket/services/internal/ScrapingMetricAssembler.java`, `backend/src/main/java/footballmarket/models/MetricValueNormalizer.java` y fases de `backend/src/main/java/footballmarket/integrations/WhoScoredScrapingSectionNavigator.java`. Contrastar capturas/logs locales; documentar causa confirmada y corregir solo los responsables afectados. Si falta token o reproducción, pedir evidencia mínima, no inventar formatos ni ceros. Preservar rechazo de datos realmente inválidos, precisión y ausencia, sin bajar timeouts a ciegas ni SLA nuevo. Registrar evidencia en `specs/012-player-statistics-scraping/research.md`. Depende de T100 para distinguir coste de retries retirados de esperas restantes. FR-020–FR-024/FR-027–FR-031/FR-039–FR-041.
 
 ### Tests backend a escribir/ajustar, nunca ejecutar por el agente
+
+**Corrección autorizada T106/T107 — lectura nativa (2026-10-29):** eliminar cambio y
+espera de acumulación en navigator; validar modo `0` antes/después de categoría,
+manteniendo render/timeout/contexto y tentativa única. Añadir regla Model por canal en
+`MetricDefinition`, aplicada por `ScrapingMetricAssembler`: detalle directo sin apps;
+resumen derivado intacto y JSON sin cambios. Adaptar `MetricCatalogTest`,
+`WhoScoredScrapingIntegrationTest` y `WhoScoredScrapingDomTest` (opt-in) a ese contrato,
+incluyendo modo inesperado, no render, carga pendiente y reemplazo idéntico. Mantener
+logging general; el diagnóstico individual fue retirado por T110. Sin DB/campaña ni tests del agente.
+Sin renumerar tareas ni cerrar T106/T107 por código escrito.
+
+**Histórico retirado por T110 — ampliación diagnóstica T106/T107/T108 (2026-10-29):** se preparó herramienta individual
+`backend/src/main/java/footballmarket/tools/WhoScoredScrapingDiagnostic.java` e Integration
+`WhoScoredScrapingDiagnosticIntegration.java` con metadatos de red/DOM saneados y criterio
+productivo sin cambios; entrada por entorno, sin Spring/DB/escritura ni campaña.
+Registrar tarea Gradle manual, logback específico y archivo general configurable del
+backend, con logs ignorados y perfil test sin archivo. Regresiones de validación/config
+en `backend/src/test/java/footballmarket/config/WhoScoredScrapingDiagnosticTest.java`;
+sin tests exclusivos de mensajes. Mantener T106/T107 abiertos hasta evidencia causal.
+No se crea spec, tarea humana ni canal nuevo; se conservan los IDs existentes.
+
+**Histórico retirado por T110 — avance diagnóstico individual T106 (2026-10-29):** tool/Integration, tarea manual y
+archivos de logging escritos. No modifica navigator, metric normalizer, Service,
+Repository ni endpoints. Regresiones de validación/configuración escritas; ejecución
+humana pendiente. Archivo de aplicación configurable y archivo diagnóstico separado,
+sin pérdida por límite de consola (conservar rotaciones del primero). T106/T107 siguen
+abiertos; no se afirma causa del bloqueo real ni se ejecuta la herramienta por el agente.
 
 **Alcance correctivo autorizado T106/T107 — 2026-10-28:** admitir el literal `N/A`
 tras recorte como ausencia conforme a FR-022; mantener inválidos los demás textos.

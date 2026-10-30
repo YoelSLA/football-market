@@ -2,6 +2,7 @@ package footballmarket.models;
 
 import static org.assertj.core.api.Assertions.*;
 
+import footballmarket.models.enums.DerivationRule;
 import footballmarket.models.enums.MetricSource;
 import footballmarket.models.exceptions.InvalidPlayerException;
 import java.util.List;
@@ -12,6 +13,39 @@ class MetricCatalogTest {
   @Nested
   @DisplayName("Catálogo cerrado y cobertura")
   class Catalog {
+    @Test
+    @DisplayName("Las veintinueve tasas de detalle son directas en scraping y el resumen se deriva")
+    void preservesNativeScrapingRates() {
+      // Act
+      List<MetricDefinition> nativeRates =
+          MetricCatalog.definitions().stream()
+              .filter(d -> d.sources().contains(MetricSource.SCRAPING))
+              .filter(d -> d.derivation() == DerivationRule.DIVIDE_BY_APPEARANCES)
+              .filter(d -> d.derivationFor(MetricSource.SCRAPING) == DerivationRule.NONE)
+              .toList();
+      // Assert
+      assertThat(nativeRates).hasSize(29);
+      assertThat(nativeRates)
+          .extracting(MetricDefinition::key)
+          .contains("total_aerial_duels_per_match", "fouls_committed_per_match", "saves_per_match");
+      assertThat(MetricCatalog.require("goals_per_match").derivationFor(MetricSource.SCRAPING))
+          .isEqualTo(DerivationRule.DIVIDE_BY_APPEARANCES);
+      assertThat(MetricCatalog.require("assists_per_match").derivationFor(MetricSource.SCRAPING))
+          .isEqualTo(DerivationRule.DIVIDE_BY_APPEARANCES);
+    }
+
+    @Test
+    @DisplayName("La regla por canal rechaza una métrica no disponible en ese origen")
+    void rejectsUnsupportedDerivationSource() {
+      // Arrange
+      MetricDefinition definition = MetricCatalog.require("shots_on_target_total");
+      // Act / Assert
+      assertThatThrownBy(() -> definition.derivationFor(MetricSource.JSON))
+          .isInstanceOf(InvalidPlayerException.class);
+      assertThatThrownBy(() -> definition.derivationFor(null))
+          .isInstanceOf(InvalidPlayerException.class);
+    }
+
     @Test
     @DisplayName("Conserva sesenta claves con cobertura 45, 57 y 42 compartidas")
     void validatesCoverage() {
