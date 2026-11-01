@@ -28,7 +28,7 @@ class ValuationSnapshotQueryTest {
           Statement statement = connection.createStatement();
           ResultSet rows =
               statement.executeQuery(
-                  "SELECT count(*) FROM pg_indexes WHERE schemaname='valuation_snapshot' AND indexname='ix_player_statistics_campaign'")) {
+                  "SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND indexname='ix_player_statistics_campaign'")) {
         rows.next();
         assertThat(rows.getInt(1)).isOne();
       }

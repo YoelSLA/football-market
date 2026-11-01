@@ -28,7 +28,7 @@ class PlayerValuationMigrationTest {
           Statement statement = connection.createStatement();
           ResultSet rows =
               statement.executeQuery(
-                  "SELECT count(*) FROM pg_indexes WHERE schemaname='valuation_migration' AND tablename IN ('player_positional_valuations','player_attribute_valuations')")) {
+                  "SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND tablename IN ('player_positional_valuations','player_attribute_valuations')")) {
         rows.next();
         assertThat(rows.getInt(1)).isGreaterThanOrEqualTo(8);
       }

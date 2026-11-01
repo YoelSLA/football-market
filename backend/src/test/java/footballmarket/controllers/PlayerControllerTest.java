@@ -332,7 +332,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
           .andExpect(
               jsonPath("$.message").value("No se pudo aplicar la sincronización del catálogo"))
-          .andExpect(jsonPath("$.path").value("/api/player/sync"));
+          .andExpect(jsonPath("$.path").value("/api/players/sync"));
     }
 
     @Test
@@ -363,7 +363,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.status").value(502))
           .andExpect(jsonPath("$.error").value("Bad Gateway"))
           .andExpect(jsonPath("$.code").value("FOOTBALL_DATA_UNAVAILABLE"))
-          .andExpect(jsonPath("$.path").value("/api/player/sync"))
+          .andExpect(jsonPath("$.path").value("/api/players/sync"))
           .andExpect(
               jsonPath("$.message")
                   .value("No se pudo completar la lectura del proveedor de jugadores"));
@@ -477,7 +477,7 @@ class PlayerControllerTest {
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.status").value(400))
-          .andExpect(jsonPath("$.path").value("/api/player"))
+          .andExpect(jsonPath("$.path").value("/api/players"))
           .andExpect(jsonPath("$.timestamp").exists())
           .andExpect(jsonPath("$.error").value("Bad Request"))
           .andExpect(
@@ -552,7 +552,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.error").value("Not Found"))
           .andExpect(jsonPath("$.code").value("PLAYER_NOT_FOUND"))
           .andExpect(jsonPath("$.message").value("No encontramos el jugador solicitado"))
-          .andExpect(jsonPath("$.path").value("/api/player/999999"))
+          .andExpect(jsonPath("$.path").value("/api/players/999999"))
           .andExpect(jsonPath("$.timestamp").exists());
     }
 
@@ -566,7 +566,7 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.*").value(hasSize(6)))
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.code").value("INVALID_PARAMETER_TYPE"))
-          .andExpect(jsonPath("$.path").value("/api/player/" + invalidId))
+          .andExpect(jsonPath("$.path").value("/api/players/" + invalidId))
           .andExpect(jsonPath("$.timestamp").exists());
       verifyNoInteractions(service);
     }

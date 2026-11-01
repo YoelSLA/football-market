@@ -52,7 +52,7 @@ class PlayerIdentityControllerTest {
   @MockitoBean private AuthenticationService authentication;
   private MockMvc mvc;
   private String authorization;
-  private static final String PATH = "/api/player/identities/whoscored/sync";
+  private static final String PATH = "/api/players/identities/whoscored/sync";
 
   @BeforeEach
   void setUp() {
@@ -73,7 +73,7 @@ class PlayerIdentityControllerTest {
   @DisplayName("POST histórico autenticado")
   class Historical {
     private static final String HISTORICAL_PATH =
-        "/api/player/identities/whoscored/sync-runs/1/historical";
+        "/api/players/identities/whoscored/sync-runs/1/historical";
 
     @ParameterizedTest
     @EnumSource(
@@ -167,7 +167,7 @@ class PlayerIdentityControllerTest {
     void rejectsInvalidId(String id) throws Exception {
       // Arrange
       boolean nonPositive = id.equals("0") || id.equals("-1");
-      String path = "/api/player/identities/whoscored/sync-runs/" + id + "/historical";
+      String path = "/api/players/identities/whoscored/sync-runs/" + id + "/historical";
       // Act / Assert
       mvc.perform(post(path).header("Authorization", authorization))
           .andExpect(status().isBadRequest())

@@ -22,29 +22,40 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  *
  * <p>V5 se aplicó en dos formas sucesivas en el historial del repositorio. Una instalación limpia
  * siempre obtiene la forma definitiva; esta prueba reconstruye la forma aditiva sobre una base
- * migrada y comprueba que V8 la lleva al mismo estado final, preservando los jugadores existentes.
+ * migrada y comprueba que la convergencia la lleva al mismo estado final, preservando los jugadores
+ * existentes.
  */
 @Testcontainers
 @org.junit.jupiter.api.Tag("integration")
 class TeamLeagueConvergenceMigrationTest {
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 
-  private void migrate(String schema, String target) {
+  private void migrate(String database, String target) throws SQLException {
     Flyway.configure()
-        .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-        .schemas(schema)
-        .defaultSchema(schema)
+        .dataSource(
+            ValuationDatabaseSupport.databaseUrl(DATABASE, database),
+            DATABASE.getUsername(),
+            DATABASE.getPassword())
         .target(target)
         .load()
         .migrate();
   }
 
-  private Connection open(String schema) throws Exception {
-    Connection connection =
-        DriverManager.getConnection(
-            DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
-    connection.createStatement().execute("SET search_path TO " + schema);
-    return connection;
+  private void migrateToLatest(String database) throws SQLException {
+    Flyway.configure()
+        .dataSource(
+            ValuationDatabaseSupport.databaseUrl(DATABASE, database),
+            DATABASE.getUsername(),
+            DATABASE.getPassword())
+        .load()
+        .migrate();
+  }
+
+  private Connection open(String database) throws Exception {
+    return DriverManager.getConnection(
+        ValuationDatabaseSupport.databaseUrl(DATABASE, database),
+        DATABASE.getUsername(),
+        DATABASE.getPassword());
   }
 
   private List<String> playerColumns(Connection connection) throws SQLException {
@@ -53,7 +64,7 @@ class TeamLeagueConvergenceMigrationTest {
         var rows =
             statement.executeQuery(
                 "SELECT column_name FROM information_schema.columns "
-                    + "WHERE table_schema = current_schema() AND table_name = 'player' "
+                    + "WHERE table_schema = current_schema() AND table_name = 'players' "
                     + "ORDER BY column_name")) {
       while (rows.next()) {
         names.add(rows.getString("column_name"));
@@ -86,8 +97,8 @@ class TeamLeagueConvergenceMigrationTest {
     }
   }
 
-  private int count(Connection connection, String schema, String query) throws SQLException {
-    try (var rows = connection.createStatement().executeQuery(query.replace("@schema@", schema))) {
+  private int count(Connection connection, String query) throws SQLException {
+    try (var rows = connection.createStatement().executeQuery(query)) {
       rows.next();
       return rows.getInt(1);
     }
@@ -100,24 +111,24 @@ class TeamLeagueConvergenceMigrationTest {
     @DisplayName("Deriva ligas y equipos del catálogo legacy sin perder jugadores")
     void derivaLigasYEquiposSinPerderJugadores() throws Exception {
       // Arrange
-      String schema = "v8_converge_deriva";
-      migrate(schema, "5");
-      try (Connection connection = open(schema)) {
+      String database = "v8_converge_deriva";
+      ValuationDatabaseSupport.createDatabase(DATABASE, database);
+      migrate(database, "5");
+      try (Connection connection = open(database)) {
         seedLegacyCatalog(connection);
 
         // Act
-        migrate(schema, "8");
+        migrateToLatest(database);
 
         // Assert
-        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.player")).isEqualTo(4);
-        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.team")).isEqualTo(3);
-        assertThat(count(connection, schema, "SELECT count(*) FROM @schema@.league")).isEqualTo(2);
+        assertThat(count(connection, "SELECT count(*) FROM players")).isEqualTo(4);
+        assertThat(count(connection, "SELECT count(*) FROM teams")).isEqualTo(3);
+        assertThat(count(connection, "SELECT count(*) FROM leagues")).isEqualTo(2);
         assertThat(
                 count(
                     connection,
-                    schema,
-                    "SELECT count(*) FROM @schema@.player p "
-                        + "LEFT JOIN @schema@.team t ON t.id = p.team_id WHERE t.id IS NULL"))
+                    "SELECT count(*) FROM players p "
+                        + "LEFT JOIN teams t ON t.id = p.team_id WHERE t.id IS NULL"))
             .isZero();
       }
     }
@@ -126,26 +137,22 @@ class TeamLeagueConvergenceMigrationTest {
     @DisplayName("La liga de cada equipo se deriva del texto legacy del jugador")
     void derivaLaLigaDeCadaEquipo() throws Exception {
       // Arrange
-      String schema = "v8_converge_liga";
-      migrate(schema, "5");
-      try (Connection connection = open(schema)) {
+      String database = "v8_converge_liga";
+      ValuationDatabaseSupport.createDatabase(DATABASE, database);
+      migrate(database, "5");
+      try (Connection connection = open(database)) {
         seedLegacyCatalog(connection);
 
         // Act
-        migrate(schema, "8");
+        migrateToLatest(database);
 
         // Assert
         try (var rows =
             connection
                 .createStatement()
                 .executeQuery(
-                    "SELECT t.name, l.name FROM "
-                        + schema
-                        + ".teams t "
-                        + "JOIN "
-                        + schema
-                        + ".leagues l ON l.id = t.league_id "
-                        + "ORDER BY t.name")) {
+                    "SELECT t.name, l.name FROM teams t "
+                        + "JOIN leagues l ON l.id = t.league_id ORDER BY t.name")) {
           assertThat(rows.next()).isTrue();
           assertThat(rows.getString(1)).isEqualTo("Arsenal");
           assertThat(rows.getString(2)).isEqualTo("Premier League");
@@ -164,13 +171,14 @@ class TeamLeagueConvergenceMigrationTest {
     @DisplayName("Retira los textos legacy y vuelve obligatoria la asociación con el equipo")
     void retiraTextosLegacyYVuelveObligatoriaLaAsociacion() throws Exception {
       // Arrange
-      String schema = "v8_converge_esquema";
-      migrate(schema, "5");
-      try (Connection connection = open(schema)) {
+      String database = "v8_converge_esquema";
+      ValuationDatabaseSupport.createDatabase(DATABASE, database);
+      migrate(database, "5");
+      try (Connection connection = open(database)) {
         seedLegacyCatalog(connection);
 
         // Act
-        migrate(schema, "8");
+        migrateToLatest(database);
 
         // Assert
         assertThat(playerColumns(connection)).contains("team_id").doesNotContain("team", "league");
@@ -179,9 +187,7 @@ class TeamLeagueConvergenceMigrationTest {
           assertThatThrownBy(
                   () ->
                       statement.execute(
-                          "INSERT INTO "
-                              + schema
-                              + ".players(name,position,active) "
+                          "INSERT INTO players(name,position,active) "
                               + "VALUES ('Sin equipo','Forward',true)"))
               .isInstanceOf(SQLException.class)
               .satisfies(
@@ -194,19 +200,19 @@ class TeamLeagueConvergenceMigrationTest {
     @DisplayName("Elimina la tabla de control manual de la forma aditiva")
     void eliminaLaTablaDeControlManual() throws Exception {
       // Arrange
-      String schema = "v8_converge_control";
-      migrate(schema, "5");
-      try (Connection connection = open(schema)) {
+      String database = "v8_converge_control";
+      ValuationDatabaseSupport.createDatabase(DATABASE, database);
+      migrate(database, "5");
+      try (Connection connection = open(database)) {
         seedLegacyCatalog(connection);
 
         // Act
-        migrate(schema, "8");
+        migrateToLatest(database);
 
         // Assert
         assertThat(
                 count(
                     connection,
-                    schema,
                     "SELECT count(*) FROM information_schema.tables WHERE table_schema ="
                         + " current_schema() AND table_name = 'catalog_transition'"))
             .isZero();
@@ -217,22 +223,21 @@ class TeamLeagueConvergenceMigrationTest {
     @DisplayName("Retira la categoría de revisión exclusiva de la forma aditiva")
     void retiraLaCategoriaLegacyDeRevision() throws Exception {
       // Arrange
-      String schema = "v8_converge_categoria";
-      migrate(schema, "5");
-      try (Connection connection = open(schema)) {
+      String database = "v8_converge_categoria";
+      ValuationDatabaseSupport.createDatabase(DATABASE, database);
+      migrate(database, "5");
+      try (Connection connection = open(database)) {
         seedLegacyCatalog(connection);
 
         // Act
-        migrate(schema, "8");
+        migrateToLatest(database);
 
         // Assert
         try (Statement statement = connection.createStatement()) {
           assertThatThrownBy(
                   () ->
                       statement.execute(
-                          "INSERT INTO "
-                              + schema
-                              + ".pending_review_cases(case_key,category,"
+                          "INSERT INTO pending_review_cases(case_key,category,"
                               + "subject_provider,subject_external_id,first_detected_at,"
                               + "last_detected_at) VALUES ('k1','LEGACY_TEAM_ASSOCIATION',"
                               + "'FOOTBALL_DATA','1',now(),now())"))
@@ -249,9 +254,10 @@ class TeamLeagueConvergenceMigrationTest {
     @DisplayName("No modifica una base que ya obtuvo el esquema definitivo en V5")
     void noModificaUnaBaseYaDefinitiva() throws Exception {
       // Arrange
-      String schema = "v8_converge_idempotente";
-      migrate(schema, "5");
-      try (Connection connection = open(schema);
+      String database = "v8_converge_idempotente";
+      ValuationDatabaseSupport.createDatabase(DATABASE, database);
+      migrate(database, "5");
+      try (Connection connection = open(database);
           Statement statement = connection.createStatement()) {
         statement.execute("INSERT INTO leagues(name) VALUES ('League')");
         statement.execute("INSERT INTO teams(name,league_id,current) VALUES ('Team',1,true)");
@@ -260,12 +266,11 @@ class TeamLeagueConvergenceMigrationTest {
                 + "VALUES ('Asociado','Forward',true,1)");
 
         // Act
-        migrate(schema, "8");
+        migrateToLatest(database);
 
         // Assert
         assertThat(playerColumns(connection)).contains("team_id").doesNotContain("team", "league");
-        try (var rows =
-            connection.createStatement().executeQuery("SELECT name FROM " + schema + ".players")) {
+        try (var rows = connection.createStatement().executeQuery("SELECT name FROM players")) {
           assertThat(rows.next()).isTrue();
           assertThat(rows.getString(1)).isEqualTo("Asociado");
           assertThat(rows.next()).isFalse();

@@ -71,7 +71,7 @@ public class PlayerStatisticsQueryData {
       Map<String, BigDecimal> values) {
     Player player = this.players.findById(playerId).orElseThrow();
     Instant time = date.atStartOfDay(ZoneOffset.UTC).toInstant();
-    PlayerStatisticsExtractionRun run = new PlayerStatisticsExtractionRun(date, source, time, null);
+    PlayerStatisticsExtractionRun run = new PlayerStatisticsExtractionRun(date, source, time);
     run.finish(
         ExtractionRunStatus.PARTIAL,
         time.plusSeconds(2),

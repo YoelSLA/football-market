@@ -30,9 +30,9 @@ class PlayerCatalogStatisticsTest {
       LocalDate date = LocalDate.of(2026, 10, 23);
       Instant time = Instant.parse("2026-10-23T00:00:00Z");
       PlayerStatisticsExtractionRun jsonRun =
-          new PlayerStatisticsExtractionRun(date, MetricSource.JSON, time, null);
+          new PlayerStatisticsExtractionRun(date, MetricSource.JSON, time);
       PlayerStatisticsExtractionRun scrapingRun =
-          new PlayerStatisticsExtractionRun(date, MetricSource.SCRAPING, time, null);
+          new PlayerStatisticsExtractionRun(date, MetricSource.SCRAPING, time);
       PlayerStatisticsRunItem jsonItem = new PlayerStatisticsRunItem(jsonRun, player, "123", time);
       PlayerStatisticsRunItem scrapingItem =
           new PlayerStatisticsRunItem(scrapingRun, player, "123", time);

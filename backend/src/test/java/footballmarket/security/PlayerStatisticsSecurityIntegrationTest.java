@@ -41,7 +41,7 @@ import org.springframework.web.context.WebApplicationContext;
 @ActiveProfiles("test")
 @org.junit.jupiter.api.Tag("lightweight")
 class PlayerStatisticsSecurityIntegrationTest {
-  private static final String BASE = "/api/player/statistics/whoscored";
+  private static final String BASE = "/api/players/statistics/whoscored";
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;

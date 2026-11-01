@@ -25,7 +25,7 @@ class PlayerStatisticsSnapshotTest {
   private PlayerStatistics row(
       MetricSource source, String competition, Map<String, BigDecimal> values) {
     Instant time = Instant.parse("2026-10-23T12:00:00Z");
-    PlayerStatisticsExtractionRun run = new PlayerStatisticsExtractionRun(DATE, source, time, null);
+    PlayerStatisticsExtractionRun run = new PlayerStatisticsExtractionRun(DATE, source, time);
     PlayerStatisticsRunItem item = new PlayerStatisticsRunItem(run, player, "123", time);
     PlayerStatistics row =
         new PlayerStatistics(player, DATE, source, PlayerStatistics.RESOLVED, item, time);

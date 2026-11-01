@@ -52,7 +52,7 @@ public class PlayerStatisticsController {
 
   @PostMapping("/sync/scraping")
   @Operation(
-      summary = "Recorrer todos los pendientes de scraping de estadísticas",
+      summary = "Actualizar métricas desde la interfaz web de Whoscored",
       description =
           "POST síncrono con body obligatorio y fecha opcional. Sin máximo ni deadline total; "
               + "intenta una vez cada pendiente inicial. maxPlayers, incluso null, se rechaza. No acepta identificadores "

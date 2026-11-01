@@ -1,4 +1,4 @@
-package footballmarket.integrations;
+package footballmarket.integrations.whoscored;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import com.microsoft.playwright.*;
 import footballmarket.features.statistics.infraestructure.config.PlayerStatisticsProperties;
-import footballmarket.integrations.whoscored.*;
 import footballmarket.integrations.whoscored.config.WhoScoredProperties;
 import footballmarket.support.WhoScoredStatisticsPageStub;
 import java.time.Clock;

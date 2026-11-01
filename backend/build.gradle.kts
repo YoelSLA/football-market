@@ -194,6 +194,10 @@ tasks.withType<Test>().configureEach {
     val runningInCi = ciTests.get()
     useJUnitPlatform()
     systemProperty("user.timezone", "UTC")
+    // La campaña completa mantiene varios contextos Spring y contenedores PostgreSQL vivos a la vez.
+    // El tamaño por defecto (512 MB) resulta insuficiente y provoca OutOfMemoryError al cargar
+    // contextos posteriores, aunque cada clase pase ejecutada de forma aislada.
+    maxHeapSize = "2g"
     // En CI se ejecutan tests frescos, sin invalidar compilación ni dependencias.
     outputs.upToDateWhen { !runningInCi }
     outputs.doNotCacheIf("Los tests deben ejecutarse efectivamente en CI") { runningInCi }

@@ -3,7 +3,6 @@ package footballmarket.repositories;
 import static org.assertj.core.api.Assertions.*;
 
 import java.sql.*;
-import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.*;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -15,17 +14,8 @@ class PlayerStatisticsMigrationTest {
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 
   private Connection connection(String schema) throws SQLException {
-    Flyway.configure()
-        .dataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword())
-        .schemas(schema)
-        .defaultSchema(schema)
-        .load()
-        .migrate();
-    Connection connection =
-        DriverManager.getConnection(
-            DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
+    Connection connection = ValuationDatabaseSupport.migratedEmpty(DATABASE, schema);
     try (Statement statement = connection.createStatement()) {
-      statement.execute("SET search_path TO " + schema);
       statement.execute("INSERT INTO leagues(id,name) VALUES(100,'League')");
       statement.execute("INSERT INTO teams(id,name,league_id,current) VALUES(100,'Team',100,true)");
       statement.execute(
@@ -72,7 +62,7 @@ class PlayerStatisticsMigrationTest {
         // Act
         try (ResultSet columns =
             statement.executeQuery(
-                "SELECT count(*) FROM information_schema.columns WHERE table_schema='statistics_no_maximum'"
+                "SELECT count(*) FROM information_schema.columns WHERE table_schema='public'"
                     + " AND table_name='player_statistics_extraction_runs' AND column_name='max_players'")) {
           // Assert
           columns.next();
@@ -171,7 +161,7 @@ class PlayerStatisticsMigrationTest {
             statement.executeQuery(
                 """
             SELECT column_name,data_type,numeric_precision,numeric_scale,column_default
-            FROM information_schema.columns WHERE table_schema='statistics_decimal'
+            FROM information_schema.columns WHERE table_schema='public'
             AND table_name='player_statistics' AND data_type='numeric'
             AND column_name NOT IN ('present_metrics','absent_metrics')
             ORDER BY column_name

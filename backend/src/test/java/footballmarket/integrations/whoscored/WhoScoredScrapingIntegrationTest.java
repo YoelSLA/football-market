@@ -1,17 +1,14 @@
-package footballmarket.integrations;
+package footballmarket.integrations.whoscored;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.microsoft.playwright.*;
 import footballmarket.features.statistics.infraestructure.config.PlayerStatisticsProperties;
-import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
-import footballmarket.integrations.whoscored.WhoScoredScrapingSectionNavigator;
-import footballmarket.integrations.whoscored.WhoScoredScrapingTableParser;
-import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
-import footballmarket.integrations.whoscored.WhoScoredStructuredDataParser;
 import footballmarket.integrations.whoscored.config.WhoScoredProperties;
 import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsException;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsStructureChangedException;
+import footballmarket.integrations.whoscored.exceptions.WhoScoredStatisticsUnavailableException;
 import footballmarket.integrations.whoscored.records.WhoScoredScrapedContextRow;
 import footballmarket.integrations.whoscored.records.WhoScoredScrapedPlayer;
 import footballmarket.support.WhoScoredStatisticsPageStub;

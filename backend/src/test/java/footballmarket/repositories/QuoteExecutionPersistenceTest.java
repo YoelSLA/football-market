@@ -90,10 +90,9 @@ class QuoteExecutionPersistenceTest {
   private static Connection connection(String schema) throws SQLException {
     Connection connection =
         java.sql.DriverManager.getConnection(
-            DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
-    try (Statement statement = connection.createStatement()) {
-      statement.execute("SET search_path TO " + schema);
-    }
+            ValuationDatabaseSupport.databaseUrl(DATABASE, schema),
+            DATABASE.getUsername(),
+            DATABASE.getPassword());
     return connection;
   }
 

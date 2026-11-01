@@ -119,7 +119,7 @@ class PlayerImageControllerTest {
       mvc.perform(post("/api/players/images/sync").header("Authorization", authorization))
           .andExpect(status().isConflict())
           .andExpect(jsonPath("$.code").value("PLAYER_IMAGE_SYNC_IN_PROGRESS"))
-          .andExpect(jsonPath("$.path").value("/api/player/images/sync"));
+          .andExpect(jsonPath("$.path").value("/api/players/images/sync"));
     }
 
     @Test

@@ -152,7 +152,7 @@ class ScoreRankingControllerTest {
           .andExpect(jsonPath("$.*").value(Matchers.hasSize(6)))
           .andExpect(jsonPath("$.status").value(500))
           .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
-          .andExpect(jsonPath("$.path").value("/api/player/ranking/score"))
+          .andExpect(jsonPath("$.path").value("/api/players/ranking/score"))
           .andExpect(jsonPath("$.ranking").doesNotExist())
           .andExpect(jsonPath("$.strategyVersion").doesNotExist());
     }
