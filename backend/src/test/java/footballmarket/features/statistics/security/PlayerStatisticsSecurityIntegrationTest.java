@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
-import footballmarket.features.statistics.application.PlayerStatisticsCoverageService;
 import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
@@ -47,7 +46,6 @@ class PlayerStatisticsSecurityIntegrationTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private PlayerStatisticsSynchronizationService synchronization;
-  @MockitoBean private PlayerStatisticsCoverageService coverage;
   @MockitoBean private AuthenticationService authenticationService;
   private MockMvc mvc;
   private String authorization;
@@ -98,11 +96,11 @@ class PlayerStatisticsSecurityIntegrationTest {
     }
 
     @Test
-    @DisplayName("La cobertura sin token no se consulta")
-    void coberturaSinToken() throws Exception {
-      mvc.perform(get(BASE + "/coverage").param("source", "SCRAPING"))
-          .andExpect(status().isUnauthorized());
-      verifyNoInteractions(coverage);
+    @DisplayName("La antigua ruta con token válido no existe ni ejecuta sincronizaciones")
+    void coverageRemovedWithValidToken() throws Exception {
+      mvc.perform(get(BASE + "/coverage").header("Authorization", authorization))
+          .andExpect(status().isNotFound());
+      verifyNoInteractions(synchronization);
     }
 
     @Test

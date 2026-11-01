@@ -1,12 +1,9 @@
 package footballmarket.features.statistics.presentation;
 
 import footballmarket.common.presentation.dtos.ErrorResponseDTO;
-import footballmarket.features.statistics.application.PlayerStatisticsCoverageService;
 import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
-import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncRequest;
 import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
-import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
 import footballmarket.features.statistics.presentation.exceptions.InvalidStatisticsRequestException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,18 +14,14 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Frontera HTTP de los dos canales de estadísticas y de la consulta de cobertura.
+ * Frontera HTTP de los dos canales de sincronización de estadísticas.
  *
  * <p>La ruta determina el canal: el body solo puede fijar la fecha de scraping y nunca cambia el
  * canal. El Controller valida estructura y transporte, y delega el caso de uso en la fachada.
@@ -41,13 +34,9 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "bearerAuth")
 public class PlayerStatisticsController {
   private final PlayerStatisticsSynchronizationService synchronization;
-  private final PlayerStatisticsCoverageService coverage;
 
-  public PlayerStatisticsController(
-      PlayerStatisticsSynchronizationService synchronization,
-      PlayerStatisticsCoverageService coverage) {
+  public PlayerStatisticsController(PlayerStatisticsSynchronizationService synchronization) {
     this.synchronization = synchronization;
-    this.coverage = coverage;
   }
 
   @PostMapping("/sync/scraping")
@@ -123,48 +112,6 @@ public class PlayerStatisticsController {
     this.rejectJsonInput(request);
     return ResponseEntity.ok(
         PlayerStatisticsSyncMapper.toResponse(this.synchronization.synchronizeJson()));
-  }
-
-  @GetMapping("/coverage")
-  @Operation(
-      summary = "Consultar la cobertura de la campaña",
-      description =
-          "Consulta cobertura por canal y fecha sin acceder al proveedor. Los fallidos permanecen "
-              + "incluidos en los pendientes. Una fecha sin ejecuciones devuelve el catálogo vigente.")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Cobertura del catálogo para la fecha y el canal consultados",
-      content =
-          @Content(schema = @Schema(implementation = PlayerStatisticsCoverageResponseDTO.class)))
-  @ApiResponse(
-      responseCode = "400",
-      description = "INVALID_STATISTICS_SOURCE o INVALID_STATISTICS_EXTRACTION_DATE",
-      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
-  @ApiResponse(
-      responseCode = "401",
-      description = "JWT ausente, expirado o inválido",
-      content = @Content)
-  public ResponseEntity<PlayerStatisticsCoverageResponseDTO> coverage(
-      @RequestParam String source,
-      @org.springframework.web.bind.annotation.RequestParam(required = false)
-          LocalDate extractionDate) {
-    LocalDate date = extractionDate == null ? LocalDate.now(ZoneOffset.UTC) : extractionDate;
-    if (date.isAfter(LocalDate.now(ZoneOffset.UTC))) {
-      throw new InvalidStatisticsRequestException(
-          "INVALID_STATISTICS_EXTRACTION_DATE", "La fecha de extracción no puede ser futura");
-    }
-    return ResponseEntity.ok(
-        PlayerStatisticsCoverageMapper.toResponse(
-            this.coverage.coverage(date, this.channel(source))));
-  }
-
-  private MetricSource channel(String source) {
-    try {
-      return MetricSource.valueOf(source.strip().toUpperCase(java.util.Locale.ROOT));
-    } catch (RuntimeException invalid) {
-      throw new InvalidStatisticsRequestException(
-          "INVALID_STATISTICS_SOURCE", "El canal debe ser SCRAPING o JSON");
-    }
   }
 
   /** La entrada JSON no admite parámetros ni body; el rechazo ocurre antes de la fachada. */

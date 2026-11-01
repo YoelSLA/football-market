@@ -90,9 +90,9 @@ class PlayerStatisticsContractFoundationTest {
   /**
    * Frontera MVC exclusiva de test para los errores controlados del advice.
    *
-   * <p>No replica las rutas de sincronización ni de cobertura: desde la incorporación del
-   * Controller de US02 las verifica {@link PlayerStatisticsControllerTest}, y duplicarlas
-   * provocaría mappings ambiguos al cargar el contexto completo.
+   * <p>No replica las rutas de sincronización: desde la incorporación del Controller de US02 las
+   * verifica {@link PlayerStatisticsControllerTest}, y duplicarlas provocaría mappings ambiguos al
+   * cargar el contexto completo.
    */
   @RestController
   static class ContractFixture {

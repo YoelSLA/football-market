@@ -12,7 +12,6 @@ import footballmarket.features.catalog.presentation.dtos.response.PlayerResponse
 import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
 import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
-import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
 import footballmarket.integrations.whoscored.WhoScoredRequestPacer;
 import footballmarket.integrations.whoscored.WhoScoredStatisticsIntegration;
@@ -157,7 +156,7 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
             .headers(headers -> headers.setBearerAuth(token))
             .retrieve()
             .body(PlayerIdentitySyncRunResponseDTO.class);
-    assertThat(identities.id()).isPositive();
+    assertThat(identities.referencedPlayers()).isPositive();
   }
 
   private PlayerStatisticsSyncResponseDTO postScraping(RestClient api, String token) {
@@ -175,30 +174,6 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
         .headers(headers -> headers.setBearerAuth(token))
         .retrieve()
         .body(PlayerStatisticsSyncResponseDTO.class);
-  }
-
-  private PlayerStatisticsCoverageResponseDTO coverage(
-      RestClient api, String token, String source) {
-    return coverage(api, token, source, LocalDate.now(CLOCK.withZone(ZoneOffset.UTC)));
-  }
-
-  /**
-   * Cobertura de una fecha concreta.
-   *
-   * <p>La fecha se declara de forma explícita porque el endpoint toma la fecha actual real cuando
-   * no se le pasa, y el reloj de campaña del test no es el reloj del sistema.
-   */
-  private PlayerStatisticsCoverageResponseDTO coverage(
-      RestClient api, String token, String source, LocalDate extractionDate) {
-    return api.get()
-        .uri(
-            "/api/players/statistics/whoscored/coverage?source="
-                + source
-                + "&extractionDate="
-                + extractionDate)
-        .headers(headers -> headers.setBearerAuth(token))
-        .retrieve()
-        .body(PlayerStatisticsCoverageResponseDTO.class);
   }
 
   @Nested
@@ -282,6 +257,25 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
     }
 
     @Test
+    @DisplayName("La antigua consulta de cobertura devuelve 404 sin acceder a los proveedores")
+    void removedCoverageDoesNotAccessProviders() {
+      // Arrange
+      RestClient api = api();
+      String token = authenticatedUser(api);
+
+      // Act
+      var status =
+          api.get()
+              .uri("/api/players/statistics/whoscored/coverage?source=JSON")
+              .headers(headers -> headers.setBearerAuth(token))
+              .exchange((request, response) -> response.getStatusCode());
+
+      // Assert / Verify
+      assertThat(status.value()).isEqualTo(404);
+      org.mockito.Mockito.verifyNoInteractions(scrapingIntegration, jsonIntegration);
+    }
+
+    @Test
     @DisplayName("La segunda llamada del mismo día omite confirmados y no consulta al proveedor")
     void omiteConfirmadosDelDia() {
       // Arrange
@@ -297,7 +291,9 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
       assertThat(summary.status()).isEqualTo("COMPLETED");
       assertThat(summary.players().selected()).isZero();
       assertThat(summary.providerCalls()).isZero();
-      assertThat(coverage(api, token, "JSON").completedPlayers()).isEqualTo(5);
+      assertThat(summary.players().eligible()).isEqualTo(5);
+      assertThat(summary.players().pending()).isZero();
+      assertThat(summary.coverageComplete()).isTrue();
     }
 
     @Test
@@ -333,10 +329,9 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
 
       // Assert
       assertThat(summary.extractionDate()).isEqualTo(LocalDate.of(2026, 10, 15));
-      // La campaña se inició el 15 y el reloj ya es el 16: la cobertura que se consulta es la del
-      // 15.
-      assertThat(coverage(api, token, "JSON", LocalDate.of(2026, 10, 15)).completedPlayers())
-          .isEqualTo(5);
+      assertThat(summary.players().completed()).isEqualTo(5);
+      assertThat(summary.players().pending()).isZero();
+      assertThat(summary.coverageComplete()).isTrue();
     }
 
     @Test
@@ -346,15 +341,18 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
       RestClient api = api();
       String token = authenticatedUser(api);
       confirmIdentities(api, token);
-      postScraping(api, token);
+      PlayerStatisticsSyncResponseDTO scraping = postScraping(api, token);
 
       // Act
       PlayerStatisticsSyncResponseDTO json = postJson(api, token);
 
       // Assert
       assertThat(json.players().completed()).isEqualTo(5);
-      assertThat(coverage(api, token, "SCRAPING").completedPlayers()).isEqualTo(5);
-      assertThat(coverage(api, token, "SCRAPING").pendingPlayers()).isZero();
+      assertThat(scraping.source()).isEqualTo("SCRAPING");
+      assertThat(scraping.players().completed()).isEqualTo(5);
+      assertThat(scraping.players().pending()).isZero();
+      assertThat(json.players().selected()).isEqualTo(5);
+      assertThat(json.players().pending()).isZero();
     }
 
     @Test

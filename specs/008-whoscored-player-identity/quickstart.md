@@ -1,5 +1,56 @@
 # Guía de validación — Identidad WhoScored
 
+## Guía vigente del cambio — 2026-11-01
+
+Esta sección sustituye la guía histórica conservada debajo. Implementación y tests adaptados; ejecución de tests pendiente del usuario. El build sin tests no acredita estos escenarios. Contrato vigente: [HTTP](contracts/http.md#contrato-vigente-del-cambio--2026-11-01).
+
+**Validación posterior**: el usuario confirmó todos los tests satisfactorios y aprobó revisión/testing del cambio; [Testing Report](testing-sync-simplification.md). El agente no ejecutó la suite. Cierre registrado en [convergencia](convergence-sync-simplification.md); los comandos siguientes siguen disponibles para verificaciones futuras.
+
+### Prerrequisitos y uso
+
+JDK 21, Wrapper y, para los tests que lo necesitan, Docker/PostgreSQL Testcontainers según normas backend. Para uso manual: catálogo persistido, bindings reales correctos, entorno configurado y JWT válido. No usar la DB de desarrollo para tests automatizados ni ejecutar consultas al proveedor como sustituto de tests controlados.
+
+Una sola invocación manual obtiene ambos pases:
+
+```bash
+curl --request POST 'http://localhost:8080/api/players/identities/whoscored/sync' --header "Authorization: Bearer $TOKEN"
+```
+
+Esperar una respuesta con `status`, `selectedPlayers`, `referencedPlayers`, `noMatchPlayers` y `unresolvedPlayers`. Debe cumplirse `selectedPlayers = referencedPlayers + noMatchPlayers + unresolvedPlayers`. No hay una segunda llamada histórica, `RUN_ID` ni consulta de auditoría. Relanzar conserva referencias previas sin duplicarlas.
+
+### Escenarios que deben cubrir los tests adaptados
+
+| Caso | Resultado esperado |
+| --- | --- |
+| Actual resuelve todo / ya referenciados | Histórico sin red; conteo único con referencias válidas. |
+| Actual sin coincidencia, histórico resuelve | Un jugador con referencia final, no dos resultados sumados. |
+| Sin coincidencia final | Categoría noMatchPlayers, sin confundir con error o ambigüedad. |
+| Ambigüedad, conflicto o error | Categoría unresolvedPlayers, sin sobrescribir referencias. |
+| Actual FAILED | No solicitudes históricas; global FAILED. |
+| Actual PARTIAL, histórico COMPLETED | Global PARTIAL. |
+| Histórico FAILED / PARTIAL | Global FAILED / PARTIAL respectivamente. |
+| Catálogo vacío | COMPLETED y cuatro totales cero, sin red. |
+| Liga incompleta / página inválida | Cero asociaciones con candidatos parciales; referencias de otras ligas conservadas. |
+| Concurrencia / relanzamiento | Constraints y locks mantienen unicidad e idempotencia; universo local sin doble conteo. |
+| Persistencia y catálogo | Sin tablas/escrituras de auditoría WhoScored; referencias y casos de revisión del catálogo preservados. |
+| HTTP | DTO exacto en estados COMPLETED/PARTIAL/FAILED/vacío; 401 de seguridad y 500 controlado conforme a contrato. |
+
+### Ejecución humana posterior a implementación
+
+Clases afectadas principales: `features.identity.domain.records.PlayerIdentitySyncSummaryTest` (totales/prioridad); `features.identity.domain.models.WhoScoredIdentityMatcherTest` (reglas preservadas); `features.identity.infraestructure.PlayerIdentityPersistenceTest` (esquema, consultas y concurrencia); `features.identity.application.PlayerIdentitySynchronizationServiceTest` (ambos pases); `features.identity.presentation.PlayerIdentityControllerTest` (contrato y seguridad); `features.identity.e2e.PlayerIdentityE2ETest` (HTTP completo). La prueba de auditoría `PlayerIdentityAuditModelTest` fue sustituida por la de resumen y por los escenarios vigentes del Service/Repository: no existe responsabilidad de auditoría que verificar.
+
+Desde `backend/`, usando los paquetes físicos vigentes:
+
+```powershell
+.\gradlew.bat test --tests "footballmarket.features.identity.*"
+.\gradlew.bat test --tests "footballmarket.integrations.whoscored.*"
+.\gradlew.bat test --tests "footballmarket.features.statistics.*"
+```
+
+Revisar pruebas de modelo/constraints/migración, Service real con Integration mock y sin acceso a persistencia fuera de Arrange permitido, Controller con seguridad real y pocos E2E mediante RestClient/DTO productivos. Los tests de estadísticas se incluyen porque preparan identidades mediante el Service o leen su respuesta HTTP. Ningún comando de tests fue ejecutado por el agente. El único build permitido tras cambios backend será `./gradlew build -x test`; el build no acredita testing.
+
+## Antecedente histórico — guía sustituida de dos endpoints y auditoría
+
 Guía para **después de implementar** [Plan](plan.md). Los endpoints, properties y clases de tests aquí nombrados son los implementados en `feat/008-whoscored-player-identity`; su ejecución sigue correspondiendo al usuario.
 
 Referencias: [modelo](data-model.md), [HTTP](contracts/http.md), [proveedor](contracts/whoscored.md), [evidencia](evidence/whoscored-catalog-contract.md).

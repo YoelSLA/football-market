@@ -67,11 +67,11 @@ class PlayerIdentityE2ETest {
   }
 
   @Nested
-  @DisplayName("Journey actual, histórico y repetición")
+  @DisplayName("Journey de sincronización completa y repetición")
   class HistoricalJourney {
     @Test
     @DisplayName(
-        "Resuelve únicamente el pendiente y repetir el histórico no consulta red ni duplica referencias")
+        "Una sola llamada resuelve actual e histórico y repetir conserva las referencias sin red")
     void resolvesPendingFromHttp() {
       // Arrange
       PROVIDER.historicalScenario(true);
@@ -109,40 +109,27 @@ class PlayerIdentityE2ETest {
               new WhoScoredProperties.Competition(local.leagueId(), tournaments.get(index - 1)));
         }
         doReturn(bindings).when(properties).competitions();
+        // Act
         PlayerIdentitySyncRunResponseDTO current =
             api.post()
                 .uri("/api/players/identities/whoscored/sync")
                 .headers(headers -> headers.setBearerAuth(token))
                 .retrieve()
                 .body(PlayerIdentitySyncRunResponseDTO.class);
-        // Act
-        PlayerIdentitySyncRunResponseDTO historical =
-            api.post()
-                .uri("/api/players/identities/whoscored/sync-runs/{id}/historical", current.id())
-                .headers(headers -> headers.setBearerAuth(token))
-                .retrieve()
-                .body(PlayerIdentitySyncRunResponseDTO.class);
         int requests = PROVIDER.historicalRequests();
         PlayerIdentitySyncRunResponseDTO repeated =
             api.post()
-                .uri("/api/players/identities/whoscored/sync-runs/{id}/historical", current.id())
+                .uri("/api/players/identities/whoscored/sync")
                 .headers(headers -> headers.setBearerAuth(token))
                 .retrieve()
                 .body(PlayerIdentitySyncRunResponseDTO.class);
         // Assert
-        assertThat(current.counters().resolved()).isEqualTo(4);
-        assertThat(current.counters().noMatch()).isEqualTo(1);
-        assertThat(historical.sourceRunId()).isEqualTo(current.id());
-        assertThat(historical.passType()).isEqualTo("HISTORICAL");
-        assertThat(historical.id()).isNotEqualTo(current.id());
-        assertThat(historical.status()).isEqualTo("COMPLETED");
-        assertThat(historical.counters().selectedPlayers()).isEqualTo(1);
-        assertThat(historical.counters().resolved()).isEqualTo(1);
-        assertThat(historical.counters().pendingPlayers()).isZero();
-        assertThat(repeated.id()).isNotEqualTo(historical.id());
-        assertThat(repeated.sourceRunId()).isEqualTo(current.id());
-        assertThat(repeated.counters().selectedPlayers()).isZero();
-        assertThat(repeated.counters().resolved()).isZero();
+        assertThat(current.status()).isEqualTo("COMPLETED");
+        assertThat(current.selectedPlayers()).isEqualTo(5);
+        assertThat(current.referencedPlayers()).isEqualTo(5);
+        assertThat(current.noMatchPlayers()).isZero();
+        assertThat(current.unresolvedPlayers()).isZero();
+        assertThat(repeated).isEqualTo(current);
         assertThat(repeated.status()).isEqualTo("COMPLETED");
         // Verify
         assertThat(requests).isEqualTo(5);
@@ -215,10 +202,11 @@ class PlayerIdentityE2ETest {
               .body(PlayerIdentitySyncRunResponseDTO.class);
       // Assert
       assertThat(first.status()).isEqualTo("COMPLETED");
-      assertThat(first.counters().resolved()).isEqualTo(5);
-      assertThat(repeated.id()).isNotEqualTo(first.id());
-      assertThat(repeated.counters().alreadyReferenced()).isEqualTo(5);
-      assertThat(repeated.counters().resolved()).isZero();
+      assertThat(first.selectedPlayers()).isEqualTo(5);
+      assertThat(first.referencedPlayers()).isEqualTo(5);
+      assertThat(first.noMatchPlayers()).isZero();
+      assertThat(first.unresolvedPlayers()).isZero();
+      assertThat(repeated).isEqualTo(first);
       // Verify
       PlayersPageResponseDTO after =
           api.get()

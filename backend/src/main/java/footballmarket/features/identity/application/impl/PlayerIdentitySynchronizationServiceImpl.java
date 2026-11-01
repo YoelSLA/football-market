@@ -1,78 +1,65 @@
 package footballmarket.features.identity.application.impl;
 
 import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
-import footballmarket.features.identity.application.exceptions.PlayerIdentitySourceNotEligibleException;
 import footballmarket.features.identity.application.exceptions.PlayerIdentitySynchronizationException;
-import footballmarket.features.identity.application.internal.*;
-import footballmarket.features.identity.domain.enums.*;
-import footballmarket.features.identity.domain.models.*;
-import footballmarket.features.identity.domain.records.*;
-import footballmarket.features.identity.infraestructure.*;
-import java.time.Instant;
-import java.util.EnumMap;
+import footballmarket.features.identity.application.internal.PlayerIdentityLeagueDiscoveryProcessor;
+import footballmarket.features.identity.application.internal.PlayerIdentityResolutionProcessor;
+import footballmarket.features.identity.application.internal.PlayerIdentitySnapshotCapture;
+import footballmarket.features.identity.domain.enums.PlayerIdentityItemResult;
+import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
+import footballmarket.features.identity.domain.records.PlayerIdentitySyncSummary;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
 
-/** Fachada de ambos pases; la red y el matching no mantienen transacciones de persistencia. */
+/** Ejecuta actual e histórico en una invocación y agrega un resultado por jugador local. */
 @Service
 public class PlayerIdentitySynchronizationServiceImpl
     implements PlayerIdentitySynchronizationService {
   private final PlayerIdentitySnapshotCapture snapshot;
   private final PlayerIdentityLeagueDiscoveryProcessor discovery;
   private final PlayerIdentityResolutionProcessor resolution;
-  private final PlayerIdentitySyncRunRepository runs;
-  private final PlayerIdentitySyncItemRepository items;
-  private final PlayerIdentityLeagueDiscoveryRepository leagues;
-  private final WhoScoredIdentityCandidateRepository candidates;
-  private final PlayerIdentityDiscardedRowRepository discarded;
-  private final TransactionTemplate transaction;
 
   public PlayerIdentitySynchronizationServiceImpl(
       PlayerIdentitySnapshotCapture snapshot,
       PlayerIdentityLeagueDiscoveryProcessor discovery,
-      PlayerIdentityResolutionProcessor resolution,
-      PlayerIdentitySyncRunRepository runs,
-      PlayerIdentitySyncItemRepository items,
-      PlayerIdentityLeagueDiscoveryRepository leagues,
-      WhoScoredIdentityCandidateRepository candidates,
-      PlayerIdentityDiscardedRowRepository discarded,
-      PlatformTransactionManager manager) {
+      PlayerIdentityResolutionProcessor resolution) {
     this.snapshot = snapshot;
     this.discovery = discovery;
     this.resolution = resolution;
-    this.runs = runs;
-    this.items = items;
-    this.leagues = leagues;
-    this.candidates = candidates;
-    this.discarded = discarded;
-    this.transaction = new TransactionTemplate(manager);
-    this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
   }
 
   @Override
-  public PlayerIdentitySyncSummary synchronizeCurrent() {
-    return this.synchronize(this.snapshot.current());
-  }
-
-  @Override
-  public PlayerIdentitySyncSummary synchronizeHistorical(Long sourceRunId) {
-    if (sourceRunId == null || sourceRunId < 1) {
-      throw new PlayerIdentitySourceNotEligibleException();
-    }
-    return this.synchronize(this.snapshot.historical(sourceRunId));
-  }
-
-  private PlayerIdentitySyncSummary synchronize(PlayerIdentitySnapshotCapture.Capture capture) {
+  public PlayerIdentitySyncSummary synchronize() {
     boolean interrupted = false;
     try {
-      interrupted = this.discovery.discover(capture);
-      interrupted = this.resolution.resolve(capture, interrupted);
-      boolean finalWasInterrupted = interrupted;
-      return this.transaction.execute(status -> this.finish(capture.runId(), finalWasInterrupted));
+      Pass current = this.execute(this.snapshot.current());
+      interrupted = current.interrupted();
+      Map<Long, PlayerIdentityItemResult> finalResults = new LinkedHashMap<>(current.results());
+      PlayerIdentityRunStatus status = current.status();
+      if (status != PlayerIdentityRunStatus.FAILED && !interrupted) {
+        List<Long> eligible =
+            finalResults.entrySet().stream()
+                .filter(
+                    entry ->
+                        entry.getValue() == PlayerIdentityItemResult.NO_MATCH
+                            || entry.getValue() == PlayerIdentityItemResult.AMBIGUOUS)
+                .map(Map.Entry::getKey)
+                .toList();
+        if (!eligible.isEmpty()) {
+          PlayerIdentitySnapshotCapture.Capture historical = this.snapshot.historical(eligible);
+          eligible.forEach(id -> finalResults.put(id, PlayerIdentityItemResult.PERSISTENCE_ERROR));
+          Pass complement = this.execute(historical);
+          interrupted |= complement.interrupted();
+          finalResults.putAll(complement.results());
+          status = status.combine(complement.status());
+          if (complement.results().size() < eligible.size()) {
+            status = status.combine(PlayerIdentityRunStatus.PARTIAL);
+          }
+        }
+      }
+      return PlayerIdentitySyncSummary.from(status, finalResults.values());
     } catch (RuntimeException failure) {
       throw new PlayerIdentitySynchronizationException();
     } finally {
@@ -82,42 +69,23 @@ public class PlayerIdentitySynchronizationServiceImpl
     }
   }
 
-  private PlayerIdentitySyncSummary finish(Long runId, boolean interrupted) {
-    PlayerIdentitySyncRun run = this.runs.findById(runId).orElseThrow();
-    List<PlayerIdentityLeagueDiscovery> scopes = this.leagues.findByRunIdOrderById(runId);
-    Map<PlayerIdentityItemResult, Long> results = new EnumMap<>(PlayerIdentityItemResult.class);
-    this.items
-        .countResults(runId)
-        .forEach(result -> results.put(result.getResult(), result.getAmount()));
-    long failed =
-        scopes.stream()
-            .filter(scope -> scope.getStatus() == PlayerIdentityLeagueStatus.FAILED)
-            .count();
-    long completed =
-        scopes.stream()
-            .filter(scope -> scope.getStatus() == PlayerIdentityLeagueStatus.COMPLETED)
-            .count();
-    PlayerIdentitySyncCounters counters =
-        PlayerIdentitySyncCounters.from(
-            results,
-            this.candidates.countByRunId(runId),
-            failed,
-            this.discarded.countByRunId(runId));
-    run.finish(
-        counters,
-        completed,
-        Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS),
-        interrupted ? "EXECUTION_INTERRUPTED" : null);
-    this.runs.flush();
-    return new PlayerIdentitySyncSummary(
-        run.getId(),
-        run.getPassType(),
-        run.getSourceRunId(),
-        run.getStartedAt(),
-        run.getFinishedAt(),
-        run.getStatus(),
-        run.getFailureReason(),
-        counters,
-        scopes);
+  private Pass execute(PlayerIdentitySnapshotCapture.Capture capture) {
+    PlayerIdentityLeagueDiscoveryProcessor.Discovery discovered = this.discovery.discover(capture);
+    PlayerIdentityResolutionProcessor.Resolution resolved =
+        this.resolution.resolve(capture, discovered);
+    boolean needsDiscovery =
+        capture.items().stream().anyMatch(item -> item.getInitialExternalIds().isEmpty());
+    PlayerIdentityRunStatus status =
+        PlayerIdentityRunStatus.forPass(
+            resolved.results().values(),
+            needsDiscovery ? capture.competitions().size() : 0,
+            discovered.completedLeagues().size(),
+            resolved.interrupted());
+    return new Pass(status, resolved.results(), resolved.interrupted());
   }
+
+  private record Pass(
+      PlayerIdentityRunStatus status,
+      Map<Long, PlayerIdentityItemResult> results,
+      boolean interrupted) {}
 }

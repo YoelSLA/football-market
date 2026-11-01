@@ -43,13 +43,6 @@ public interface PlayerStatisticsRunItemRepository
   long countDistinctPlayersByResult(
       LocalDate date, MetricSource source, PlayerExtractionResult result);
 
-  /** Jugadores distintos pendientes: sin confirmación satisfactoria de esa campaña. */
-  @Query(
-      "select count(distinct i.player.id) from PlayerStatisticsRunItem i"
-          + " where i.extractionDate = :date and i.source = :source and i.result <>"
-          + " footballmarket.features.statistics.domain.enums.PlayerExtractionResult.COMPLETED")
-  long countDistinctPlayersWithoutConfirmation(LocalDate date, MetricSource source);
-
   /** Identificadores de la población elegible del catálogo, en orden estable. */
   @Query(
       "select p.id from Player p where exists (select r.id from PlayerExternalReference r"

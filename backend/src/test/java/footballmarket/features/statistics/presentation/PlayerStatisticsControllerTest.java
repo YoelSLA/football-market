@@ -6,20 +6,17 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
-import footballmarket.features.statistics.application.PlayerStatisticsCoverageService;
 import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
-import footballmarket.features.statistics.domain.records.PlayerStatisticsCoverage;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncCounters;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
 import footballmarket.integrations.whoscored.exceptions.HeadedBrowserUnavailableException;
@@ -28,7 +25,6 @@ import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
-import java.util.List;
 import javax.crypto.SecretKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,7 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-/** Contrato HTTP de los dos canales de estadísticas y de la cobertura. */
+/** Contrato HTTP de los dos canales de estadísticas y ausencia de la consulta retirada. */
 @WebMvcTest(PlayerStatisticsController.class)
 @Import(SecurityConfig.class)
 @ActiveProfiles("test")
@@ -57,7 +53,6 @@ class PlayerStatisticsControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private PlayerStatisticsSynchronizationService synchronization;
-  @MockitoBean private PlayerStatisticsCoverageService coverage;
   @MockitoBean private AuthenticationService authenticationService;
   private MockMvc mvc;
   private String authorization;
@@ -90,22 +85,6 @@ class PlayerStatisticsControllerTest {
         new PlayerStatisticsSyncCounters(2100, 35, 105, 102, 1, 2, pending, 12000, 75, 4),
         2040,
         coverageComplete);
-  }
-
-  private PlayerStatisticsCoverage coverage(List<String> systemicallyAbsent, long pending) {
-    return new PlayerStatisticsCoverage(
-        MetricSource.JSON,
-        LocalDate.of(2026, 10, 15),
-        2135,
-        2100,
-        35,
-        102,
-        pending,
-        2,
-        pending == 0,
-        systemicallyAbsent,
-        42L,
-        Instant.parse("2026-10-15T12:29:48Z"));
   }
 
   @Nested
@@ -409,108 +388,15 @@ class PlayerStatisticsControllerTest {
   }
 
   @Nested
-  @DisplayName("Cobertura consultable")
+  @DisplayName("Consulta de cobertura retirada")
   class Coverage {
-    @Test
-    @DisplayName("La cobertura informa pendientes, fallidos y ausencia sistémica")
-    void coverageContract() throws Exception {
-      when(coverage.coverage(any(), any()))
-          .thenReturn(coverage(List.of("second_yellow_total"), 1998));
-      mvc.perform(
-              get(BASE + "/coverage")
-                  .header("Authorization", authorization)
-                  .param("source", "JSON")
-                  .param("extractionDate", "2026-10-15"))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.source").value("JSON"))
-          .andExpect(jsonPath("$.catalogPlayers").value(2135))
-          .andExpect(jsonPath("$.eligiblePlayers").value(2100))
-          .andExpect(jsonPath("$.excludedWithoutReference").value(35))
-          .andExpect(jsonPath("$.pendingPlayers").value(1998))
-          .andExpect(jsonPath("$.failedPlayers").value(2))
-          .andExpect(jsonPath("$.coverageComplete").value(false))
-          .andExpect(jsonPath("$.systemicallyAbsentMetrics[0]").value("second_yellow_total"))
-          .andExpect(jsonPath("$.lastRunId").value(42));
-    }
-
-    @Test
-    @DisplayName("La ausencia sistémica se devuelve vacía cuando ninguna clave carece de presencia")
-    void withoutSystemicAbsence() throws Exception {
-      when(coverage.coverage(any(), any())).thenReturn(coverage(List.of(), 0));
-      mvc.perform(
-              get(BASE + "/coverage")
-                  .header("Authorization", authorization)
-                  .param("source", "SCRAPING"))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.systemicallyAbsentMetrics").isEmpty())
-          .andExpect(jsonPath("$.coverageComplete").value(true));
-    }
-
-    @Test
-    @DisplayName("Un canal ausente se rechaza con INVALID_STATISTICS_SOURCE")
-    void missingSource() throws Exception {
-      mvc.perform(get(BASE + "/coverage").header("Authorization", authorization))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_SOURCE"));
-    }
-
-    @Test
-    @DisplayName("Un canal desconocido se rechaza con INVALID_STATISTICS_SOURCE")
-    void invalidSource() throws Exception {
-      mvc.perform(
-              get(BASE + "/coverage").header("Authorization", authorization).param("source", "CSV"))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_SOURCE"));
-    }
-
-    @Test
-    @DisplayName("Una fecha futura se rechaza con INVALID_STATISTICS_EXTRACTION_DATE")
-    void futureDate() throws Exception {
-      mvc.perform(
-              get(BASE + "/coverage")
-                  .header("Authorization", authorization)
-                  .param("source", "JSON")
-                  .param(
-                      "extractionDate",
-                      LocalDate.now(java.time.ZoneOffset.UTC).plusDays(1).toString()))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_EXTRACTION_DATE"));
-    }
-
-    @Test
-    @DisplayName("Una fecha con formato inválido se rechaza con INVALID_STATISTICS_EXTRACTION_DATE")
-    void malformedDate() throws Exception {
-      mvc.perform(
-              get(BASE + "/coverage")
-                  .header("Authorization", authorization)
-                  .param("source", "JSON")
-                  .param("extractionDate", "15-10-2026"))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("INVALID_STATISTICS_EXTRACTION_DATE"));
-    }
-
-    @Test
-    @DisplayName("Sin JWT la cobertura no se consulta")
-    void withoutToken() throws Exception {
-      mvc.perform(get(BASE + "/coverage").param("source", "JSON"))
-          .andExpect(status().isUnauthorized());
-      verifyNoInteractions(coverage);
-    }
-
-    @Test
-    @DisplayName("La respuesta de cobertura no expone valores individuales de métricas")
-    void coverageOmitsIndividualMetrics() throws Exception {
-      when(coverage.coverage(any(), any())).thenReturn(coverage(List.of(), 0));
-      mvc.perform(
-              get(BASE + "/coverage")
-                  .header("Authorization", authorization)
-                  .param("source", "JSON"))
-          .andExpect(status().isOk())
-          .andExpect(
-              content()
-                  .string(
-                      org.hamcrest.Matchers.not(
-                          org.hamcrest.Matchers.containsString("\"value\""))));
+    @ParameterizedTest
+    @ValueSource(strings = {"", "?source=JSON", "?source=CSV&extractionDate=invalid"})
+    @DisplayName("El GET retirado devuelve 404 sin validar filtros ni iniciar sincronizaciones")
+    void removedCoverageHasNoHandler(String query) throws Exception {
+      mvc.perform(get(BASE + "/coverage" + query).header("Authorization", authorization))
+          .andExpect(status().isNotFound());
+      verifyNoInteractions(synchronization);
     }
   }
 }

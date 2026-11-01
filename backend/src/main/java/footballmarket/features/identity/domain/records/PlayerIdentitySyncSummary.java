@@ -1,23 +1,42 @@
 package footballmarket.features.identity.domain.records;
 
-import footballmarket.features.identity.domain.enums.PlayerIdentityPassType;
+import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
+import footballmarket.features.identity.domain.enums.PlayerIdentityItemResult;
 import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
-import footballmarket.features.identity.domain.models.PlayerIdentityLeagueDiscovery;
-import java.time.Instant;
-import java.util.List;
+import java.util.Collection;
 
-/** Resumen interno de una ejecución registrada, sin detalle individual ni datos deportivos. */
+/** Resultado final de jugadores locales, sin duplicarlos entre los dos pases. */
 public record PlayerIdentitySyncSummary(
-    Long id,
-    PlayerIdentityPassType passType,
-    Long sourceRunId,
-    Instant startedAt,
-    Instant finishedAt,
     PlayerIdentityRunStatus status,
-    String failureReason,
-    PlayerIdentitySyncCounters counters,
-    List<PlayerIdentityLeagueDiscovery> leagues) {
+    long selectedPlayers,
+    long referencedPlayers,
+    long noMatchPlayers,
+    long unresolvedPlayers) {
   public PlayerIdentitySyncSummary {
-    leagues = List.copyOf(leagues);
+    if (status == null
+        || selectedPlayers < 0
+        || referencedPlayers < 0
+        || noMatchPlayers < 0
+        || unresolvedPlayers < 0
+        || referencedPlayers > selectedPlayers
+        || noMatchPlayers > selectedPlayers - referencedPlayers
+        || unresolvedPlayers != selectedPlayers - referencedPlayers - noMatchPlayers) {
+      throw new InvalidPlayerException("Los totales de jugadores no reconcilian");
+    }
+  }
+
+  public static PlayerIdentitySyncSummary from(
+      PlayerIdentityRunStatus status, Collection<PlayerIdentityItemResult> results) {
+    long referenced =
+        results.stream()
+            .filter(
+                result ->
+                    result == PlayerIdentityItemResult.RESOLVED
+                        || result == PlayerIdentityItemResult.ALREADY_REFERENCED)
+            .count();
+    long noMatch =
+        results.stream().filter(result -> result == PlayerIdentityItemResult.NO_MATCH).count();
+    return new PlayerIdentitySyncSummary(
+        status, results.size(), referenced, noMatch, results.size() - referenced - noMatch);
   }
 }

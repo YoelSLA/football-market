@@ -11,10 +11,7 @@ import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleEx
 import footballmarket.features.catalog.application.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.features.catalog.presentation.exceptions.InvalidPlayerIdException;
 import footballmarket.features.catalog.presentation.exceptions.InvalidPlayerPageException;
-import footballmarket.features.identity.application.exceptions.PlayerIdentityRunNotFoundException;
-import footballmarket.features.identity.application.exceptions.PlayerIdentitySourceNotEligibleException;
 import footballmarket.features.identity.application.exceptions.PlayerIdentitySynchronizationException;
-import footballmarket.features.identity.presentation.exceptions.InvalidPlayerIdentityIdException;
 import footballmarket.features.images.application.exceptions.PlayerImageResolutionPersistenceException;
 import footballmarket.features.images.application.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.features.images.application.exceptions.PlayerImageSyncInProgressException;
@@ -112,17 +109,7 @@ public class GlobalExceptionHandler {
       return this.buildResponse(
           "Falta la fecha de cotización", "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
     }
-    if (!request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
-      throw exception;
-    }
-    boolean statisticsSource =
-        request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")
-            && "source".equals(exception.getParameterName());
-    return this.buildResponse(
-        "Falta un parámetro obligatorio",
-        statisticsSource ? "INVALID_STATISTICS_SOURCE" : "INVALID_PARAMETER_TYPE",
-        HttpStatus.BAD_REQUEST,
-        request);
+    throw exception;
   }
 
   @ExceptionHandler(InvalidStatisticsRequestException.class)
@@ -263,30 +250,6 @@ public class GlobalExceptionHandler {
         request);
   }
 
-  @ExceptionHandler(InvalidPlayerIdentityIdException.class)
-  public ResponseEntity<ErrorResponseDTO> handleInvalidIdentityId(
-      InvalidPlayerIdentityIdException exception, HttpServletRequest request) {
-    return this.buildResponse(
-        exception.getMessage(), "INVALID_PLAYER_IDENTITY_ID", HttpStatus.BAD_REQUEST, request);
-  }
-
-  @ExceptionHandler(PlayerIdentityRunNotFoundException.class)
-  public ResponseEntity<ErrorResponseDTO> handleIdentityRunNotFound(
-      PlayerIdentityRunNotFoundException exception, HttpServletRequest request) {
-    return this.buildResponse(
-        exception.getMessage(), "PLAYER_IDENTITY_RUN_NOT_FOUND", HttpStatus.NOT_FOUND, request);
-  }
-
-  @ExceptionHandler(PlayerIdentitySourceNotEligibleException.class)
-  public ResponseEntity<ErrorResponseDTO> handleIdentitySourceNotEligible(
-      PlayerIdentitySourceNotEligibleException exception, HttpServletRequest request) {
-    return this.buildResponse(
-        exception.getMessage(),
-        "PLAYER_IDENTITY_SOURCE_NOT_ELIGIBLE",
-        HttpStatus.CONFLICT,
-        request);
-  }
-
   @ExceptionHandler(PlayerImageRunNotFoundException.class)
   public ResponseEntity<ErrorResponseDTO> handleImageRunNotFound(
       PlayerImageRunNotFoundException exception, HttpServletRequest request) {
@@ -414,14 +377,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(
       org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
       HttpServletRequest request) {
-    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
-      String code =
-          "source".equals(exception.getName())
-              ? "INVALID_STATISTICS_SOURCE"
-              : "INVALID_STATISTICS_EXTRACTION_DATE";
-      return this.buildResponse(
-          "El filtro de cobertura no es válido", code, HttpStatus.BAD_REQUEST, request);
-    }
     if (request.getRequestURI().equals("/api/quotes/executions")) {
       return this.buildResponse(
           "La fecha de cotización debe tener formato ISO",

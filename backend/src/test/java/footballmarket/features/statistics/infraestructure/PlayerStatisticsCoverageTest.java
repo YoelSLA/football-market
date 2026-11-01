@@ -9,8 +9,8 @@ import footballmarket.features.catalog.domain.models.team.Team;
 import footballmarket.features.catalog.infraestructure.LeagueRepository;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.catalog.infraestructure.TeamRepository;
-import footballmarket.features.statistics.application.internal.PlayerStatisticsCoverageQuery;
-import footballmarket.features.statistics.application.internal.PlayerStatisticsEligibilitySelector;
+import footballmarket.features.statistics.application.shared.internal.PlayerStatisticsCoverageQuery;
+import footballmarket.features.statistics.application.shared.internal.PlayerStatisticsEligibilitySelector;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.features.statistics.domain.models.PlayerStatisticsExtractionRun;
@@ -205,7 +205,7 @@ class PlayerStatisticsCoverageTest {
   @DisplayName("Cobertura de la campaña")
   class Coverage {
     @Test
-    @DisplayName("Una fecha sin ejecuciones devuelve el catálogo vigente con cero completados")
+    @DisplayName("Sin ejecuciones el cálculo interno conserva elegibles, excluidos y pendientes")
     void fechaSinEjecuciones() {
       // Arrange
       playerWithReference("100");
@@ -215,14 +215,10 @@ class PlayerStatisticsCoverageTest {
       var result = coverage.coverage(DATE, MetricSource.SCRAPING);
 
       // Assert
-      assertThat(result.catalogPlayers()).isEqualTo(2);
       assertThat(result.eligiblePlayers()).isEqualTo(1);
-      assertThat(result.completedPlayers()).isZero();
+      assertThat(result.excludedWithoutReference()).isEqualTo(1);
       assertThat(result.pendingPlayers()).isEqualTo(1);
-      assertThat(result.failedPlayers()).isZero();
       assertThat(result.coverageComplete()).isFalse();
-      assertThat(result.lastRunId()).isNull();
-      assertThat(result.lastRunFinishedAt()).isNull();
     }
 
     @Test
@@ -240,8 +236,7 @@ class PlayerStatisticsCoverageTest {
       var result = coverage.coverage(DATE, MetricSource.SCRAPING);
 
       // Assert
-      assertThat(result.completedPlayers()).isEqualTo(1);
-      assertThat(result.failedPlayers()).isEqualTo(1);
+      assertThat(result.eligiblePlayers()).isEqualTo(2);
       assertThat(result.pendingPlayers()).isEqualTo(1);
       assertThat(result.coverageComplete()).isFalse();
     }

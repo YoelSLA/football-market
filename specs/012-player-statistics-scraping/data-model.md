@@ -1,5 +1,17 @@
 # Data Model: Scraping de estadísticas de rendimiento
 
+## Cambio objetivo — retiro de consulta pública de cobertura (2026-11-01)
+
+No modifica tablas, entidades, índices, auditoría, histórico ni persistencia de métricas. Conserva fechas por canal y los contadores del run y del resumen POST. Es diseño pendiente de implementación.
+
+**Actualización T120**: record y cálculo interno reducidos según este diseño; `ExtractionRunManager` mantiene el cuerpo del cierre sin cambios porque solo consumía los cuatro campos conservados. La consulta de fallidos exclusiva del GET se retiró. `findMetricsByCampaign` y la consulta de runs por fecha/canal se mantienen por consumidores de persistencia y fixtures de cotizaciones, respectivamente. Verificación funcional humana pendiente.
+
+`PlayerStatisticsCoverage`, hoy usado tanto por el GET como por el cierre, queda como record interno reducido: `eligiblePlayers`, `excludedWithoutReference`, `pendingPlayers`, `coverageComplete`. El cálculo interno conserva elegibles vigentes y pendientes sin confirmación `COMPLETED` para la fecha/canal; `coverageComplete` es verdadero solo con cero pendientes. No es una nueva tabla ni DTO HTTP.
+
+Se retiran del resultado interno los campos exclusivos de la consulta eliminada: catálogo total expuesto, completados/fallidos del GET, diagnóstico `systemicallyAbsentMetrics` y datos de último run. Esto no elimina los conteos homónimos del run ni la selección de pendientes. Las consultas se eliminan solo después de comprobar ausencia de consumidores de sincronización y de otras features. No hay endpoint de consulta de este record.
+
+Las referencias posteriores al estado consultable y a la ausencia sistémica describen el diseño anterior, sustituido únicamente en ese punto por esta decisión. La ausencia individual de valores y la cobertura canónica 45/57/42 permanecen vigentes.
+
 > **Alineado con la implementación vigente (2026-10-18).** El modelo es aplanado: una fila por
 > jugador, campaña y canal con las 60 métricas en columnas. Describe lo que existe en
 > `V20261018191334__create_player_statistics.sql` más `V20261018191335__flatten_player_statistics.sql` y en las entidades

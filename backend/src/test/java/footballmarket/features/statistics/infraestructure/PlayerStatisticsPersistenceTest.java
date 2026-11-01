@@ -11,10 +11,10 @@ import footballmarket.features.catalog.infraestructure.LeagueRepository;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.catalog.infraestructure.TeamRepository;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsConfirmationException;
-import footballmarket.features.statistics.application.internal.ExtractionIncidentRecorder;
-import footballmarket.features.statistics.application.internal.PlayerMetricsContext;
-import footballmarket.features.statistics.application.internal.PlayerMetricsContext.MetricResult;
-import footballmarket.features.statistics.application.internal.PlayerStatisticsWriter;
+import footballmarket.features.statistics.application.shared.internal.ExtractionIncidentRecorder;
+import footballmarket.features.statistics.application.shared.internal.PlayerMetricsContext;
+import footballmarket.features.statistics.application.shared.internal.PlayerMetricsContext.MetricResult;
+import footballmarket.features.statistics.application.shared.internal.PlayerStatisticsWriter;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
@@ -509,6 +509,36 @@ class PlayerStatisticsPersistenceTest {
       assertThat(saved.metricValue("whoscored_rating_average"))
           .isEqualTo(new BigDecimal("6.9033333333333333"));
       assertThat(saved.metricValue("goals_per_match")).isEqualTo(new BigDecimal("0.333333"));
+    }
+
+    @Test
+    @DisplayName("Dos fechas JSON conservan filas distintas sin sobrescribir el histórico")
+    void preservesRowsAcrossJsonDates() {
+      // Arrange
+      Fixture first = prepare(MetricSource.JSON, DATE, null);
+      writer.confirm(
+          first.runId(), first.playerId(), "123", NOW, NOW.plusSeconds(1), values("6.5"));
+      finishRun(first.runId());
+      Fixture second = prepare(MetricSource.JSON, DATE.minusDays(1), first.playerId());
+
+      // Act
+      writer.confirm(
+          second.runId(), second.playerId(), "123", NOW, NOW.plusSeconds(1), values("7.5"));
+
+      // Assert
+      assertThat(statistics.findMetricsByCampaign(DATE, MetricSource.JSON))
+          .singleElement()
+          .satisfies(
+              row ->
+                  assertThat(row.metricValue("whoscored_rating_average"))
+                      .isEqualByComparingTo("6.5"));
+      assertThat(statistics.findMetricsByCampaign(DATE.minusDays(1), MetricSource.JSON))
+          .singleElement()
+          .satisfies(
+              row ->
+                  assertThat(row.metricValue("whoscored_rating_average"))
+                      .isEqualByComparingTo("7.5"));
+      assertThat(statistics.count()).isEqualTo(2);
     }
 
     @Test

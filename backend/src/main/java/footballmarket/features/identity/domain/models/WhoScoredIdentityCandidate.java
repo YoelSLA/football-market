@@ -4,45 +4,17 @@ import footballmarket.features.catalog.domain.enums.ExternalProvider;
 import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
 import footballmarket.features.catalog.domain.models.player.PlayerExternalReference;
 import footballmarket.features.identity.domain.records.WhoScoredIdentityContext;
-import jakarta.persistence.*;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.Getter;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
-/** Una identidad externa por ejecución con todas sus variantes de ligas completas. */
-@Entity
-@Table(
-    name = "whoscored_identity_candidates",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"run_id", "external_id"}))
-@Getter
-public class WhoScoredIdentityCandidate {
-  @Id
-  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "identity_candidate_ids")
-  @SequenceGenerator(
-      name = "identity_candidate_ids",
-      sequenceName = "whoscored_identity_candidates_id_seq",
-      allocationSize = 1)
-  private Long id;
+/** Identidad candidata transitoria con pares de nombre y equipo observados juntos. */
+public final class WhoScoredIdentityCandidate {
+  @Getter private final String externalId;
+  private final Set<WhoScoredIdentityContext> contexts = new LinkedHashSet<>();
 
-  @Column(nullable = false, updatable = false)
-  private Long runId;
-
-  @Column(nullable = false, updatable = false)
-  private String externalId;
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(nullable = false, columnDefinition = "jsonb")
-  private List<WhoScoredIdentityContext> contexts = new ArrayList<>();
-
-  protected WhoScoredIdentityCandidate() {}
-
-  public WhoScoredIdentityCandidate(Long runId, String externalId) {
-    if (runId == null || runId < 1) {
-      throw new InvalidPlayerException("El candidato requiere una ejecución persistida");
-    }
-    this.runId = runId;
+  public WhoScoredIdentityCandidate(String externalId) {
     this.externalId =
         PlayerExternalReference.canonicalExternalId(ExternalProvider.WHOSCORED, externalId);
   }
@@ -51,13 +23,12 @@ public class WhoScoredIdentityCandidate {
     return List.copyOf(this.contexts);
   }
 
-  /** Incorpora una observación completa, sin duplicar contextos iguales. */
   public void observe(WhoScoredIdentityContext context) {
-    if (context == null || context.leagueId() == null || context.tournamentId() < 1) {
-      throw new InvalidPlayerException("El contexto requiere un ámbito capturado");
+    if (context == null
+        || !WhoScoredIdentityNormalizer.validName(context.name())
+        || !WhoScoredIdentityNormalizer.validName(context.teamName())) {
+      throw new InvalidPlayerException("El candidato requiere nombre y equipo válidos");
     }
-    if (!this.contexts.contains(context)) {
-      this.contexts.add(context);
-    }
+    this.contexts.add(context);
   }
 }

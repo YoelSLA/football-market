@@ -1,19 +1,23 @@
 package footballmarket.features.identity.presentation.dtos.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.Instant;
-import java.util.List;
 
-/** Resumen de la ejecución provocada por el POST, sin detalle de auditoría individual. */
+/** Resultado único de ambos pases; cada jugador local pertenece a una sola categoría final. */
 @Schema(
-    description = "Ejecución terminada; COMPLETED describe finalización, sin umbral de cobertura")
+    description =
+        "Resultado global: selectedPlayers = referencedPlayers + noMatchPlayers + unresolvedPlayers")
 public record PlayerIdentitySyncRunResponseDTO(
-    Long id,
-    String passType,
-    Long sourceRunId,
-    Instant startedAt,
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant finishedAt,
-    @Schema(allowableValues = {"COMPLETED", "PARTIAL", "FAILED"}) String status,
-    String failureReason,
-    PlayerIdentitySyncCountersResponseDTO counters,
-    List<PlayerIdentityLeagueDiscoveryResponseDTO> leagues) {}
+    @Schema(
+            description = "Finalización del trabajo, independiente de la cobertura",
+            allowableValues = {"COMPLETED", "PARTIAL", "FAILED"})
+        String status,
+    @Schema(description = "Jugadores locales seleccionados al iniciar", minimum = "0")
+        long selectedPlayers,
+    @Schema(
+            description = "Jugadores con referencia válida preexistente o conseguida",
+            minimum = "0")
+        long referencedPlayers,
+    @Schema(description = "Jugadores sin coincidencia al finalizar", minimum = "0")
+        long noMatchPlayers,
+    @Schema(description = "Jugadores ambiguos, en conflicto o con errores", minimum = "0")
+        long unresolvedPlayers) {}

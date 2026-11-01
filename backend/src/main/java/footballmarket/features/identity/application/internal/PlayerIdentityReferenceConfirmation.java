@@ -5,12 +5,8 @@ import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.models.player.PlayerExternalReference;
 import footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
-import footballmarket.features.identity.application.exceptions.PlayerIdentitySynchronizationException;
-import footballmarket.features.identity.domain.enums.*;
-import footballmarket.features.identity.domain.models.*;
-import footballmarket.features.identity.domain.records.*;
-import footballmarket.features.identity.infraestructure.*;
-import java.time.Instant;
+import footballmarket.features.identity.domain.enums.PlayerIdentityItemResult;
+import footballmarket.features.identity.domain.models.WhoScoredIdentityMatcher;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,94 +16,62 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/**
- * Confirma referencia y decisión atómicamente; audita fallos después del rollback en otra
- * transacción.
- */
+/** Persiste solo referencias, con lock breve y rollback aislado por jugador. */
 @Component
 public class PlayerIdentityReferenceConfirmation {
   private final PlayerRepository players;
   private final PlayerExternalReferenceRepository references;
-  private final PlayerIdentitySyncItemRepository items;
   private final TransactionTemplate transaction;
 
   public PlayerIdentityReferenceConfirmation(
       PlayerRepository players,
       PlayerExternalReferenceRepository references,
-      PlayerIdentitySyncItemRepository items,
       PlatformTransactionManager manager) {
     this.players = players;
     this.references = references;
-    this.items = items;
     this.transaction = new TransactionTemplate(manager);
     this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
   }
 
-  public void confirm(Long itemId, WhoScoredIdentityMatcher.Decision decision) {
-    try {
-      this.transaction.executeWithoutResult(status -> this.apply(itemId, decision));
-    } catch (RuntimeException failedWrite) {
-      boolean unique = knownUniqueness(failedWrite);
-      try {
-        this.transaction.executeWithoutResult(
-            status -> {
-              PlayerIdentitySyncItem item = this.items.findById(itemId).orElseThrow();
-              if (unique && decision.externalId() != null) {
-                Player player = this.players.lockIdentityById(item.getPlayerId()).orElse(null);
-                if (player != null && this.classifyCurrent(item, player, decision)) {
-                  return;
-                }
-              }
-              item.decide(
-                  PlayerIdentityItemResult.PERSISTENCE_ERROR,
-                  "REFERENCE_CONFIRMATION_FAILED",
-                  "No se pudo confirmar la referencia",
-                  decision.candidates(),
-                  null,
-                  Instant.now());
-            });
-      } catch (RuntimeException failedAudit) {
-        throw new PlayerIdentitySynchronizationException();
-      }
-    }
-  }
-
-  private void apply(Long itemId, WhoScoredIdentityMatcher.Decision decision) {
-    PlayerIdentitySyncItem item = this.items.findById(itemId).orElseThrow();
+  public PlayerIdentityItemResult confirm(
+      Long playerId, WhoScoredIdentityMatcher.Decision decision) {
     if (decision.result() != PlayerIdentityItemResult.RESOLVED) {
-      item.decide(
-          decision.result(),
-          decision.reasonCode(),
-          "Resultado de identificación registrado",
-          decision.candidates(),
-          decision.externalId(),
-          Instant.now());
-      return;
+      return decision.result();
     }
-    Player player = this.players.lockIdentityById(item.getPlayerId()).orElse(null);
-    if (player == null) {
-      item.decide(
-          PlayerIdentityItemResult.PERSISTENCE_ERROR,
-          "PLAYER_NO_LONGER_EXISTS",
-          "El jugador ya no existe",
-          decision.candidates(),
-          null,
-          Instant.now());
-    } else if (!this.classifyCurrent(item, player, decision)) {
-      player.addExternalReference(ExternalProvider.WHOSCORED, decision.externalId());
-      item.decide(
-          PlayerIdentityItemResult.RESOLVED,
-          decision.reasonCode(),
-          "Coincidencia única por nombre y equipo",
-          decision.candidates(),
-          decision.externalId(),
-          Instant.now());
-      this.players.flush();
+    try {
+      return this.transaction.execute(
+          status -> {
+            Player player = this.players.lockIdentityById(playerId).orElse(null);
+            if (player == null) {
+              return PlayerIdentityItemResult.PERSISTENCE_ERROR;
+            }
+            PlayerIdentityItemResult current = this.classifyCurrent(player, decision.externalId());
+            if (current != null) {
+              return current;
+            }
+            player.addExternalReference(ExternalProvider.WHOSCORED, decision.externalId());
+            this.players.flush();
+            return PlayerIdentityItemResult.RESOLVED;
+          });
+    } catch (RuntimeException failedWrite) {
+      if (knownUniqueness(failedWrite)) {
+        try {
+          return this.transaction.execute(
+              status -> {
+                Player player = this.players.lockIdentityById(playerId).orElse(null);
+                PlayerIdentityItemResult current =
+                    player == null ? null : this.classifyCurrent(player, decision.externalId());
+                return current == null ? PlayerIdentityItemResult.PERSISTENCE_ERROR : current;
+              });
+        } catch (RuntimeException failedRead) {
+          return PlayerIdentityItemResult.PERSISTENCE_ERROR;
+        }
+      }
+      return PlayerIdentityItemResult.PERSISTENCE_ERROR;
     }
   }
 
-  private boolean classifyCurrent(
-      PlayerIdentitySyncItem item, Player player, WhoScoredIdentityMatcher.Decision decision) {
+  private PlayerIdentityItemResult classifyCurrent(Player player, String externalId) {
     List<String> current =
         player.getExternalReferences().stream()
             .filter(reference -> reference.getProvider() == ExternalProvider.WHOSCORED)
@@ -115,31 +79,15 @@ public class PlayerIdentityReferenceConfirmation {
             .distinct()
             .toList();
     if (!current.isEmpty()) {
-      boolean same = current.size() == 1 && current.getFirst().equals(decision.externalId());
-      item.decide(
-          same ? PlayerIdentityItemResult.ALREADY_REFERENCED : PlayerIdentityItemResult.CONFLICT,
-          same ? "REFERENCE_CONFIRMED_CONCURRENTLY" : "PLAYER_REFERENCE_CONFLICT",
-          "Referencia concurrente conservada",
-          decision.candidates(),
-          same ? decision.externalId() : null,
-          Instant.now());
-      return true;
+      return current.size() == 1 && current.getFirst().equals(externalId)
+          ? PlayerIdentityItemResult.ALREADY_REFERENCED
+          : PlayerIdentityItemResult.CONFLICT;
     }
-    PlayerExternalReference owner =
-        this.references
-            .findByProviderAndExternalId(ExternalProvider.WHOSCORED, decision.externalId())
-            .orElse(null);
-    if (owner != null) {
-      item.decide(
-          PlayerIdentityItemResult.CONFLICT,
-          "EXTERNAL_ID_ALREADY_OWNED",
-          "La identidad pertenece a otro jugador",
-          decision.candidates(),
-          null,
-          Instant.now());
-      return true;
-    }
-    return false;
+    return this.references
+            .findByProviderAndExternalId(ExternalProvider.WHOSCORED, externalId)
+            .isPresent()
+        ? PlayerIdentityItemResult.CONFLICT
+        : null;
   }
 
   private static boolean knownUniqueness(Throwable failure) {

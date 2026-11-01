@@ -53,11 +53,10 @@ class WhoScoredIdentityMatcherTest {
     void prioritizesInitialReferences() {
       // Arrange
       PlayerIdentitySyncItem referenced =
-          new PlayerIdentitySyncItem(1L, 1L, null, null, null, 1L, "League", List.of("10"));
+          new PlayerIdentitySyncItem(1L, null, null, 1L, List.of("10"));
       PlayerIdentitySyncItem inconsistent =
-          new PlayerIdentitySyncItem(1L, 2L, null, null, null, 1L, "League", List.of("10", "11"));
-      PlayerIdentitySyncItem invalid =
-          new PlayerIdentitySyncItem(1L, 3L, "---", null, "Team", 1L, "League", List.of());
+          new PlayerIdentitySyncItem(2L, null, null, 1L, List.of("10", "11"));
+      PlayerIdentitySyncItem invalid = new PlayerIdentitySyncItem(3L, "---", "Team", 1L, List.of());
       // Act
       Map<Long, WhoScoredIdentityMatcher.Decision> decisions =
           matcher.match(List.of(referenced, inconsistent, invalid), List.of(), Set.of(1L));
@@ -73,7 +72,7 @@ class WhoScoredIdentityMatcherTest {
       // Arrange
       PlayerIdentitySyncItem madrid = snapshot(1L, "Jose Perez", "Real Madrid CF");
       PlayerIdentitySyncItem barcelona = snapshot(2L, "Jose Perez", "FC Barcelona");
-      WhoScoredIdentityCandidate candidate = candidate("101", "Jose Perez", "Real Madrid", 1L);
+      WhoScoredIdentityCandidate candidate = candidate("101", "Jose Perez", "Real Madrid");
       candidate.observe(candidate.getContexts().getFirst());
       // Act
       Map<Long, WhoScoredIdentityMatcher.Decision> decisions =
@@ -89,10 +88,8 @@ class WhoScoredIdentityMatcherTest {
     void matchesAnObservedNameVariant() {
       // Arrange
       PlayerIdentitySyncItem item = snapshot(1L, "Jose Perez", "Real Madrid CF");
-      WhoScoredIdentityCandidate candidate = candidate("101", "Other Name", "Barcelona", 1L);
-      candidate.observe(
-          new WhoScoredIdentityContext(
-              "Jose Perez", null, "Real Madrid", 4, null, 1L, "League", null, null));
+      WhoScoredIdentityCandidate candidate = candidate("101", "Other Name", "Barcelona");
+      candidate.observe(new WhoScoredIdentityContext("Jose Perez", "Real Madrid"));
       // Act
       WhoScoredIdentityMatcher.Decision decision =
           matcher.match(List.of(item), List.of(candidate), Set.of(1L)).get(1L);
@@ -110,8 +107,8 @@ class WhoScoredIdentityMatcherTest {
     void rejectsGlobalAmbiguity() {
       // Arrange
       PlayerIdentitySyncItem item = snapshot(1L, "José Pérez", "Real Madrid CF");
-      WhoScoredIdentityCandidate first = candidate("101", "Jose Perez", "Real Madrid", 1L);
-      WhoScoredIdentityCandidate second = candidate("102", "José Pérez", "Real Madrid", 2L);
+      WhoScoredIdentityCandidate first = candidate("101", "Jose Perez", "Real Madrid");
+      WhoScoredIdentityCandidate second = candidate("102", "José Pérez", "Real Madrid");
       // Act
       Map<Long, WhoScoredIdentityMatcher.Decision> decisions =
           matcher.match(List.of(item), List.of(first, second), Set.of(1L, 2L));
@@ -128,10 +125,8 @@ class WhoScoredIdentityMatcherTest {
     void requiresOneCompleteContext() {
       // Arrange
       PlayerIdentitySyncItem item = snapshot(1L, "José Pérez", "Real Madrid CF");
-      WhoScoredIdentityCandidate candidate = candidate("101", "Jose Perez", "Barcelona", 1L);
-      candidate.observe(
-          new WhoScoredIdentityContext(
-              "Other", null, "Real Madrid", 4, null, 1L, "League", null, null));
+      WhoScoredIdentityCandidate candidate = candidate("101", "Jose Perez", "Barcelona");
+      candidate.observe(new WhoScoredIdentityContext("Other", "Real Madrid"));
       // Act
       WhoScoredIdentityMatcher.Decision decision =
           matcher.match(List.of(item), List.of(candidate), Set.of(1L)).get(1L);
@@ -146,7 +141,7 @@ class WhoScoredIdentityMatcherTest {
       // Arrange
       PlayerIdentitySyncItem first = snapshot(1L, "Jose Perez", "Real Madrid CF");
       PlayerIdentitySyncItem second = snapshot(2L, "Jose Perez", "Real Madrid CF");
-      WhoScoredIdentityCandidate candidate = candidate("101", "Jose Perez", "Real Madrid", 1L);
+      WhoScoredIdentityCandidate candidate = candidate("101", "Jose Perez", "Real Madrid");
       // Act
       Map<Long, WhoScoredIdentityMatcher.Decision> decisions =
           matcher.match(List.of(first, second), List.of(candidate), Set.of(1L));
@@ -172,14 +167,12 @@ class WhoScoredIdentityMatcherTest {
   }
 
   private static PlayerIdentitySyncItem snapshot(Long playerId, String name, String team) {
-    return new PlayerIdentitySyncItem(1L, playerId, name, 1L, team, 1L, "League", List.of());
+    return new PlayerIdentitySyncItem(playerId, name, team, 1L, List.of());
   }
 
-  private static WhoScoredIdentityCandidate candidate(
-      String id, String name, String team, Long leagueId) {
-    WhoScoredIdentityCandidate candidate = new WhoScoredIdentityCandidate(1L, id);
-    candidate.observe(
-        new WhoScoredIdentityContext(name, null, team, 4, null, leagueId, "League", null, null));
+  private static WhoScoredIdentityCandidate candidate(String id, String name, String team) {
+    WhoScoredIdentityCandidate candidate = new WhoScoredIdentityCandidate(id);
+    candidate.observe(new WhoScoredIdentityContext(name, team));
     return candidate;
   }
 }
