@@ -96,10 +96,11 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
   @Query("select distinct p from Player p where p.team.league.id in :leagueIds order by p.id")
   List<Player> findIdentitySnapshot(List<Long> leagueIds);
 
-  /** Materializa únicamente pendientes todavía existentes y sin ninguna identidad WhoScored. */
+  /**
+   * Recaptura los IDs elegibles, incluidas referencias concurrentes para conservar su resultado.
+   */
   @EntityGraph(attributePaths = {"team", "team.league", "externalReferences"})
-  @Query(
-      "select distinct p from Player p where p.id in :playerIds and not exists (select r.id from PlayerExternalReference r where r.player = p and r.provider = footballmarket.features.catalog.domain.enums.ExternalProvider.WHOSCORED) order by p.id")
+  @Query("select distinct p from Player p where p.id in :playerIds order by p.id")
   List<Player> findHistoricalIdentitySnapshot(List<Long> playerIds);
 
   /** Bloqueo breve de la identidad local, exclusivamente durante confirmación. */

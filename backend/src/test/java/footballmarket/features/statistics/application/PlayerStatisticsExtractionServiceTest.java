@@ -97,7 +97,7 @@ class PlayerStatisticsExtractionServiceTest {
                       1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
-    identities.synchronizeCurrent();
+    identities.synchronize();
     playerId = catalogue.getActivePlayers(0, 10).getContent().getFirst().getId();
     when(integration.openSession())
         .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));

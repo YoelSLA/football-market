@@ -132,7 +132,7 @@ class PlayerStatisticsSyncJourneyE2ETest {
             .headers(headers -> headers.setBearerAuth(token))
             .retrieve()
             .body(PlayerIdentitySyncRunResponseDTO.class);
-    assertThat(identities.id()).isPositive();
+    assertThat(identities.referencedPlayers()).isPositive();
   }
 
   @Nested

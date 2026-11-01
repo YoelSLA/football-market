@@ -1,5 +1,50 @@
 # Contrato HTTP — Identidad WhoScored
 
+## Contrato vigente del cambio — 2026-11-01
+
+Sustituye el contrato histórico conservado debajo. Fuente: [spec.md](../spec.md), FR-001/012/016/019–023/026. Implementado en Controller/DTO y cubierto por tests escritos; verificación humana pendiente.
+
+### Única operación
+
+`POST /api/players/identities/whoscored/sync`, síncrono, sin parámetros propios ni body requerido. Mantiene autenticación Bearer JWT y usuario persistido según seguridad existente; no introduce roles, CORS ni envío del JWT al proveedor.
+
+Ejecuta actual y después histórico sobre pendientes elegibles de esa misma invocación. Actual FAILED omite histórico; sin elegibles, complemento vacío sin solicitudes externas. No se expone `/sync-runs/{id}/historical`, ni consultas o edición manual de asociaciones. No requiere ni devuelve identificadores de runs.
+
+### Respuesta 200 — único DTO
+
+Se adapta `PlayerIdentitySyncRunResponseDTO` al siguiente contrato, sin DTO anidado de ligas ni contadores detallados:
+
+```json
+{
+  "status": "COMPLETED",
+  "selectedPlayers": 2600,
+  "referencedPlayers": 2450,
+  "noMatchPlayers": 100,
+  "unresolvedPlayers": 50
+}
+```
+
+Valores ilustrativos, no evidencia de cobertura. `selectedPlayers` cuenta los jugadores locales seleccionados inicialmente, no filas WhoScored. Los otros tres campos son categorías finales excluyentes y su suma coincide con `selectedPlayers`. Referencias válidas preexistentes cuentan en `referencedPlayers`; inconsistencias de referencias, ambigüedad, conflictos y errores cuentan en `unresolvedPlayers`. Un NO_MATCH provisional resuelto en histórico cuenta solo como referenciado. Vacío devuelve cuatro ceros.
+
+`status` solo admite COMPLETED, PARTIAL, FAILED. Si algún pase ejecutado termina FAILED, el global es FAILED; en otro caso PARTIAL si alguno es parcial; resto COMPLETED. 200 puede contener cualquiera de esos tres estados: finalización del flujo no garantiza identificación de todos los jugadores. Sin tiempos de auditoría, `id`, `passType`, `sourceRunId`, `counters` ni `leagues`.
+
+### Errores y seguridad
+
+| HTTP | code / comportamiento | Situación |
+| --- | --- | --- |
+| 401 | Cadena de seguridad existente, sin asumir ErrorResponseDTO en filtro | JWT ausente, expirado, inválido o usuario no admitido por seguridad vigente. |
+| 500 | `PLAYER_IDENTITY_SYNC_FAILED`, ErrorResponseDTO | Fallo de preparación/configuración o global que impide construir un resultado coherente; referencias ya confirmadas permanecen. |
+
+ErrorResponseDTO conserva `timestamp`, `status`, `error`, `code`, `message`, `path`, con mensaje español y sin secretos o cuerpos del proveedor. Fallos aislados de descubrimiento/confirmación se expresan mediante estado global y totales, no errores HTTP por jugador. Colisión de alias/binding interno inexistente se rechaza antes de red. El endpoint histórico y sus errores específicos de origen/ID se retiran; no se redefine el código de ruta inexistente de la infraestructura global.
+
+### Consumidores y documentación
+
+Cambio incompatible deliberado: el operador deja de invocar dos POST. Adaptar OpenAPI de Controller/DTO, Mapper y tests de Controller a todos los casos contractuales, E2E y consumidores de tests de estadísticas que preparan identidades o deserializan el DTO. No modificar listado/detalle, Football-Data, TheSportsDB ni frontend. No recuperar REST Docs/AsciiDoc retirados del proyecto: las fuentes son este contrato, anotaciones OpenAPI y tests funcionales de Controller.
+
+El reintento manual relanza la operación completa sin ID de origen; las referencias existentes se conservan por idempotencia. No se impone ejecución única irreversible ni scheduler.
+
+## Antecedente histórico — contrato sustituido de dos endpoints
+
 Diseño nuevo de [SPEC-008](../spec.md); endpoints aún no implementados. Prefijo `/api/`, DTO records y Mapper estático según normas vigentes. Tipos/resultados/campos de identidad definidos en [modelo](../data-model.md).
 
 ## Seguridad y operaciones

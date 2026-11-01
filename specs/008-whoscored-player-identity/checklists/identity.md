@@ -8,6 +8,8 @@
 **Review Ownership**: This checklist is a reviewer-owned requirements-quality review artifact. Mark an item `[x]` only when the reviewer determines the requirements-quality criterion is satisfied.
 **Marker Semantics**: `[x]` means the criterion has been reviewed and satisfied for requirements quality. It does not mean implementation work is complete.
 
+**Cambio 2026-11-01**: los marcadores son evidencia de la revisión de 2026-10-14 y no aprobación automática del nuevo alcance. Revalidar por impacto CHK004/022/028/029/040 junto con el [complemento de sincronización](sync-simplification.md): contextos transitorios, conteo único, captura sin persistencia, histórico automático y consistencia de artefactos. Las reglas de normalización, alias, unicidad y matching se conservan. No se modifican marcadores en nombre del revisor.
+
 ## Requirement Completeness
 
 - [x] CHK001 ¿Están definidos todos los pasos de la regla de identificación: normalización del nombre, normalización o alias del equipo, coincidencia simultánea y decisión resultante? [Completeness, Spec FR-005 a FR-007]

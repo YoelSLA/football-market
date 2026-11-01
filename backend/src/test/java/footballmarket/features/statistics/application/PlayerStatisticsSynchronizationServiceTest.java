@@ -97,7 +97,7 @@ class PlayerStatisticsSynchronizationServiceTest {
                       1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
-    identities.synchronizeCurrent();
+    identities.synchronize();
     session = mock(WhoScoredStatisticsScrapingIntegration.Session.class);
     when(integration.openSession()).thenReturn(session);
     when(integration.scrape(any(), any(), any(), any()))

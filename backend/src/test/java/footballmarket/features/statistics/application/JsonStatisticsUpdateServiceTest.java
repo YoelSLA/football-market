@@ -104,7 +104,7 @@ class JsonStatisticsUpdateServiceTest {
                       1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
-    identities.synchronizeCurrent();
+    identities.synchronize();
     this.playerId = catalogue.getActivePlayers(0, 10).getContent().getFirst().getId();
   }
 

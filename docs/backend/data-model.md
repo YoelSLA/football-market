@@ -15,7 +15,7 @@ dominio, consultar [arquitectura del backend](architecture.md) §1.5; para el fl
 | Aspecto | Valor |
 | --- | --- |
 | Motor | PostgreSQL |
-| Migraciones | `backend/src/main/resources/db/migration/` (15 archivos, Flyway) |
+| Migraciones | `backend/src/main/resources/db/migration/` (Flyway; inventario efectivo en esa carpeta) |
 | Validación de arranque | `spring.jpa.hibernate.ddl-auto: validate` |
 | Base de desarrollo | `football_market_dev` |
 
@@ -45,10 +45,6 @@ erDiagram
     TOKEN_LISTINGS ||--o| MARKET_TRANSACTIONS : "se liquida en"
     USERS ||--o{ MARKET_TRANSACTIONS : "interviene en"
     PLAYERS ||--o{ MARKET_TRANSACTIONS : "objeto transaccionado"
-
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ PLAYER_IDENTITY_LEAGUE_DISCOVERIES : "recorre"
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ WHOSCORED_IDENTITY_CANDIDATES : "publica"
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ PLAYER_IDENTITY_SYNC_ITEMS : "decide"
 
     PLAYER_STATISTICS_EXTRACTION_RUNS ||--o{ PLAYER_STATISTICS_RUN_ITEMS : "procesa"
     PLAYER_STATISTICS_RUN_ITEMS ||--o{ PLAYER_STATISTICS : "produce"
@@ -158,91 +154,19 @@ erDiagram
 
 ## 4. Dominio de identidad (WhoScored)
 
-Traza completa de una sincronización de identidades: la ejecución, el recorrido por liga, los
-candidatos observados en el proveedor, la decisión por jugador y las filas descartadas. Es un
-dominio de auditoría: su escritura no modifica el catálogo, solo lo referencia.
+La sincronización obtiene referencias WhoScored en una sola operación actual → histórico.
+Solo persiste referencias de catálogo en `player_external_references`; candidatos, snapshots,
+completitud de ligas y decisiones son datos transitorios durante la invocación.
 
-```mermaid
-erDiagram
-    PLAYER_IDENTITY_SYNC_RUNS {
-        bigint id PK
-        varchar pass_type
-        bigint source_run_id FK
-        timestamptz started_at
-        timestamptz finished_at
-        varchar status
-        varchar failure_reason
-        jsonb counters
-    }
-    PLAYER_IDENTITY_SYNC_RUNS ||--o| PLAYER_IDENTITY_SYNC_RUNS : "pase histórico de"
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ PLAYER_IDENTITY_LEAGUE_DISCOVERIES : "recorre"
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ WHOSCORED_IDENTITY_CANDIDATES : "publica"
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ PLAYER_IDENTITY_SYNC_ITEMS : "decide"
-    PLAYER_IDENTITY_SYNC_RUNS ||--o{ PLAYER_IDENTITY_DISCARDED_ROWS : "descarta"
+`V20261101000000__remove_player_identity_audit.sql` retira las cinco tablas de auditoría de V9
+y sus secuencias, sin modificar V9. Se conserva el índice parcial
+`uk_player_external_references_whoscored_player`, que impide dos identidades WhoScored para un
+mismo jugador, y la unicidad `(provider, external_id)`. Los casos de revisión del catálogo en
+`pending_review_cases` permanecen intactos.
 
-    PLAYER_IDENTITY_LEAGUE_DISCOVERIES {
-        bigint id PK
-        bigint run_id FK
-        bigint league_id FK
-        varchar league_name
-        int tournament_id
-        varchar status
-        timestamptz started_at
-        timestamptz finished_at
-        bigint pages_read
-        int last_page
-        int total_pages
-        bigint total_results
-        bigint rows_read
-        bigint discarded_rows
-        varchar error_code
-        varchar error_message
-        int failed_page
-        int http_status
-    }
-    PLAYER_IDENTITY_LEAGUE_DISCOVERIES ||--o{ PLAYER_IDENTITY_DISCARDED_ROWS : "detalla"
-
-    WHOSCORED_IDENTITY_CANDIDATES {
-        bigint id PK
-        bigint run_id FK
-        varchar external_id
-        jsonb contexts
-    }
-    PLAYER_IDENTITY_SYNC_ITEMS {
-        bigint id PK
-        bigint run_id FK
-        bigint player_id FK
-        varchar player_name
-        bigint team_id
-        varchar team_name
-        bigint league_id
-        varchar league_name
-        varchar initial_external_id
-        jsonb initial_external_ids
-        varchar result
-        varchar reason_code
-        varchar reason_message
-        jsonb candidate_external_ids
-        varchar confirmed_external_id
-        timestamptz decided_at
-    }
-    PLAYER_IDENTITY_DISCARDED_ROWS {
-        bigint id PK
-        bigint run_id FK
-        bigint discovery_id FK
-        int page
-        int row_position
-        varchar reason_code
-    }
-```
-
-| Tabla | Qué representa | Notas |
-| --- | --- | --- |
-| `player_identity_sync_runs` | Una ejecución de sincronización, con su pase (`CURRENT`/`HISTORICAL`), estado y contadores agregados. | `source_run_id` apunta al run `CURRENT` que origina un pase histórico. `counters` es un `jsonb` con el agregado de la ejecución. |
-| `player_identity_league_discoveries` | El recorrido del proveedor para **una** liga dentro de una ejecución: páginas leídas, filas y error. | Único por `(run_id, league_id)`. Es el nivel en el que se aísla un fallo de proveedor: una liga bloqueada no impide recorrer las demás. |
-| `whoscored_identity_candidates` | Candidatos observados en WhoScored, con todos sus contextos (nombre, equipo, liga, temporada). | Único por `(run_id, external_id)`. `contexts` es una lista porque un mismo `external_id` puede aparecer en varias ambigüedades. |
-| `player_identity_sync_items` | La decisión tomada para **cada** jugador del catálogo: resultado, motivo y candidato confirmado. | Único por `(run_id, player_id)`. Es la traza auditable del matching. |
-| `player_identity_discarded_rows` | Filas del proveedor que se descartaron por datos inválidos, con su página y posición. | Único por run y descubrimiento; conserva el motivo (`reason_code`). |
+La respuesta global cuenta cada jugador local una vez según su resultado final, no filas del
+proveedor ni resultados duplicados por pase. No existen tablas propias de ejecuciones de
+identidad que consultar o recuperar. Contrato: [SPEC-008](../../specs/008-whoscored-player-identity/contracts/http.md).
 
 ## 5. Dominio de mercado
 

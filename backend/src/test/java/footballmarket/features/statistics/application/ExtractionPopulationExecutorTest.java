@@ -103,7 +103,7 @@ class ExtractionPopulationExecutorTest {
                   new WhoScoredPaging(1, 1, 1, 1, 1, 1),
                   "page-" + tournament);
             });
-    identities.synchronizeCurrent();
+    identities.synchronize();
     when(integration.openSession())
         .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));
     when(integration.scrape(any(), any(), any(), any()))

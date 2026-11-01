@@ -157,7 +157,7 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
             .headers(headers -> headers.setBearerAuth(token))
             .retrieve()
             .body(PlayerIdentitySyncRunResponseDTO.class);
-    assertThat(identities.id()).isPositive();
+    assertThat(identities.referencedPlayers()).isPositive();
   }
 
   private PlayerStatisticsSyncResponseDTO postScraping(RestClient api, String token) {

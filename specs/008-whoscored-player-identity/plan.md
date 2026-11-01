@@ -1,5 +1,67 @@
 # Plan de implementación: Identidad externa de jugadores en WhoScored
 
+## Diseño vigente — simplificación 2026-11-01
+
+Rama: `refactor/008-whoscored-player-identity`. Fuente: [spec.md](spec.md), sesión 2026-11-01 y [clarificación](clarify-sync-simplification.md). Este apartado sustituye el diseño de auditoría y endpoints separados que se conserva abajo como antecedente histórico. Preparación completada tras revisión del checklist por el usuario, Tasks y ANALYZE; implementación y build sin tests entregados en [reporte de revisión](code-review-sync-simplification.md), pendientes de revisión y testing humanos.
+
+**Estado posterior**: revisión y testing aprobados por el usuario, tests satisfactorios informados por él y convergencia final sin pendientes. Cambio cerrado por autorización humana; [evidencia de cierre](convergence-sync-simplification.md). La rama general de integración es `refactor/feature-implementation-cleanup`; el alcance de esta spec no se extiende a otras features por compartir esa rama.
+
+### Resumen y contexto técnico
+
+Una sola operación `POST /api/players/identities/whoscored/sync` obtiene referencias actuales y después históricas, devolviendo totales finales de jugadores locales. Se reutilizan Java 21, Spring Boot 4.1.1, JPA/PostgreSQL, TransactionTemplate, RestClient y Flyway efectivos en el backend. No se agregan dependencias ni se modifica la configuración del proveedor. La red y el matching permanecen fuera de transacciones.
+
+### Constitution Check anterior al diseño
+
+- Simplicidad y alcance: retirar persistencia exclusivamente de auditoría; no eliminar reglas de identidad, unicidad ni protección frente a consultas incompletas.
+- Contratos: cambio incompatible explícito de dos operaciones a una; actualizar Controller, Mapper, DTO, handler, consumidores y tests afectados, contrato y guía en el mismo alcance.
+- Autorización: el usuario autorizó spec y código; mantener estructura y clases de `application`, adaptando sus responsabilidades. Casos de revisión de catálogo y matcher de imágenes quedan intactos.
+- Arquitectura: interfaz/implementación de Service obligatorias; componentes internos componen ese caso de uso, sin introducir Service → Service ni un Orchestrator innecesario. DTO y Mapper se limitan a presentación.
+- Verificación: escribir o adaptar tests backend, sin ejecutarlos. Solo build de backend sin tests después de cambios de código; no build durante esta fase documental.
+- Requisitos externos: preservar catálogo, referencias y observabilidad existentes. La retirada de auditoría WhoScored no afecta auditoría financiera del enunciado ni requisitos futuros de auditoría de servicios.
+
+### Diseño del flujo y responsabilidades conservadas
+
+1. `PlayerIdentitySynchronizationService` ofrece una operación `synchronize()`; su implementación coordina el flujo completo y calcula el estado global. Eliminar de su API la ejecución independiente de pases y su selección por ID de origen; adaptar consumidores internos de tests de estadísticas.
+2. `PlayerIdentitySnapshotCapture` captura en transacción corta REPEATABLE_READ jugadores locales de las cinco ligas y referencias iniciales. No crea runs, items ni ámbitos persistidos. La selección inicial fija el universo contabilizado una sola vez. El histórico recaptura solo IDs elegibles de ese universo para respetar FR-025.
+3. `PlayerIdentityLeagueDiscoveryProcessor` consulta páginas secuencialmente. Valida paginación, estabilidad y progreso como antes, publica en memoria solo candidatos de ligas completas y descarta datos parciales de ligas fallidas. Mantiene internamente la completitud necesaria para clasificar errores y el estado del pase, no tiempos, contadores de auditoría o resultados por liga para HTTP. Se conserva el ritmo y los límites del cliente existente.
+4. `PlayerIdentityResolutionProcessor` invoca el matcher sobre candidatos de todas las ligas válidas, fuera de transacción, antes de confirmar referencias. Mantiene decisiones finales por ID local en memoria. Conserva desambiguación y detección de varios propietarios antes de escribir.
+5. `PlayerIdentityReferenceConfirmation` confirma solo referencias de catálogo, en REQUIRES_NEW por jugador con lock breve. Relee referencias actuales y propietario externo; misma identidad concurrente es idempotente, otra identidad es conflicto. Clasifica violaciones conocidas por SQLSTATE/constraint después del rollback en transacción nueva; errores técnicos dejan al jugador sin resolver, sin escritura de auditoría. No guarda snapshots detached ni sobrescribe atributos del catálogo.
+6. Actual FAILED omite histórico. En otro caso el histórico recibe solo NO_MATCH/AMBIGUOUS aún sin referencia. Cero elegibles completa sin red. Un elegible resuelto concurrentemente conserva su referencia y se cuenta con referencia válida; borrado durante el proceso queda sin resolver, sin desaparecer del denominador. Referencias contradictorias quedan como conflicto. El resultado histórico sustituye al provisional del actual por ID local; nunca se suman totales de pases.
+7. El resumen de dominio contiene estado global, `selectedPlayers`, `referencedPlayers`, `noMatchPlayers` y `unresolvedPlayers`; debe reconciliar `selectedPlayers = referencedPlayers + noMatchPlayers + unresolvedPlayers`. Los mismos campos pasan a un único Response DTO por Mapper estructural.
+8. Estado de cada pase conserva la semántica de FR-016: vacío o trabajo completo sin errores técnicos → COMPLETED; trabajo incompleto con alguna liga completada o resultado no técnico → PARTIAL; resto → FAILED. Global: FAILED > PARTIAL > COMPLETED. Interrupción conserva referencias confirmadas, clasifica lo pendiente como sin resolver, no inicia nuevas llamadas y restaura el indicador de interrupción al salir.
+
+`PendingReviewRecorder`, `PendingReviewCaseRepository` y sus tipos permanecen sin modificación funcional. También `PlayerIdentityMatcher` y `PlayerIdentityAliases`, utilizados por imágenes. Se mantienen nombres/ubicaciones de componentes de `application`; se elimina únicamente código que deja de tener responsabilidad (incluidas excepciones del antiguo origen histórico).
+
+### Modelo, persistencia y retirada de código
+
+- Mantener `PlayerExternalReference` y sus constraints en ambos sentidos para WhoScored.
+- Retirar cinco repositorios de auditoría WhoScored: ejecuciones, items, candidatos, descubrimiento por liga y descartes. Retirar `PlayerIdentitySyncRun` y `PlayerIdentityDiscardedRow`; reemplazar las representaciones de items/candidatos/descubrimiento por valores transitorios mínimos allí donde el matching todavía los necesita. El nombre exacto del tipo no justifica una abstracción adicional.
+- Reducir contextos de candidato a los datos efectivamente utilizados en la comparación, sin mezclar nombre/equipo de filas distintas. No reutilizar contratos externos como Model.
+- Mantener resultados internos necesarios para elegibilidad, conflicto y agregación; simplificar enums sin uso y los records de contadores/resumen de auditoría. Eliminar DTO por liga y contadores detallados.
+- Retirar handlers/excepciones de ID de ejecución, origen inexistente/no elegible; conservar error controlado de fallo de preparación que impida producir un resumen coherente.
+- Crear una migración aditiva posterior a las existentes, sin editar V9 ni ejecutar la base: retirar exclusivamente cinco tablas de auditoría y sus secuencias, en orden de dependencias, sin CASCADE amplio y preservando el índice WhoScored. La versión concreta debe revalidarse en implementación. Esta eliminación expresa el alcance autorizado, no una migración de compatibilidad o conservación de datos de desarrollo.
+
+### Cobertura prevista y pruebas
+
+| Alcance | Responsabilidad y verificación |
+| --- | --- |
+| FR-001/012/016/021, SC-004/007 | Service real con Integration mock: secuencia automática, actual FAILED, histórico FAILED/PARTIAL, vacío y cero elegibles. Controller: único endpoint, DTO exacto y todos los resultados contractuales. |
+| FR-003–010/013–014/025/027–029, SC-001/003 | Preservar pruebas de normalización/alias/matching; adaptar fixtures de snapshots/candidatos transitorios y confirmación de referencias. |
+| FR-011, SC-005 | Retirada de entidades/repositorios; pruebas Repository de esquema y constraints con Flyway real; preservar tests de revisión de catálogo. |
+| FR-019–020, SC-002 | Agregación por jugador local, referencia preexistente, resolución en histórico, NO_MATCH final, ambigüedad/conflictos/errores, universo vacío, sin doble conteo. |
+| FR-002/015/017–018, SC-006 | Mantener pruebas de Integration/pacer; Service comprueba ausencia de transacción durante red y conservación de commits ante fallos. |
+| FR-022–024/026, SC-008 | Controller/seguridad, E2E de una llamada y relanzamiento; sin fugas, estadísticas, cotizaciones ni cambios de otros proveedores. |
+
+Tests afectados: `backend/src/test/java/footballmarket/features/identity/` (domain, application, infraestructure, presentation, e2e), helpers de `support` que limpian auditoría y consumidores de estadísticas. Sustituir cobertura de auditoría retirada por la del nuevo contrato, preservando regresiones de unicidad, concurrencia y atomicidad relevantes. No tests dedicados de Mapper, no APIs productivas exclusivas de tests.
+
+### Constitution Check posterior al diseño
+
+No se propone excepción ni nueva dependencia. Se preservan invariantes, seguridad y aislamiento; solo desaparece persistencia sin función en el nuevo objetivo. Modelo, HTTP, proveedor y quickstart siguen siendo aplicables y se actualizan por impacto. Checklists seleccionados: general existente, identidad existente por invariantes preservadas y complemento de API/datos/estados del cambio; no checklist frontend/UX ni roles nuevos.
+
+**Evidencia posterior**: [checklist del cambio](checklists/sync-simplification.md) marcado por el usuario y releído; Tasks T058–T066 y ANALYZE sin blockers realizados antes de implementar. La revisión de requisitos no acredita CODE REVIEW ni TESTING del resultado implementado.
+
+## Antecedente histórico de Plan — 2026-10-14 (no vigente para este cambio)
+
 **Rama actual**: `feat/008-whoscored-player-identity`, creada y seleccionada el 2026-10-14 desde `origin/dev` (`8b3b292`) | **Fecha**: 2026-10-14 | **Spec**: [spec.md](spec.md)
 
 **Identidad Git resuelta**: la rama asociada prevista ya existe y está seleccionada; la anterior `feat/008-whoscored-player-statistics` pertenecía al alcance estadístico abandonado y queda obsoleta. La selección se hizo sin stash ni descarte de los cambios locales preexistentes.

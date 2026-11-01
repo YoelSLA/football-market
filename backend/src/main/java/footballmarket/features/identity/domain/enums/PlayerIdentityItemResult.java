@@ -2,7 +2,6 @@ package footballmarket.features.identity.domain.enums;
 
 /** Resultados mutuamente excluyentes por jugador seleccionado. */
 public enum PlayerIdentityItemResult {
-  PENDING,
   RESOLVED,
   ALREADY_REFERENCED,
   CONFLICT,

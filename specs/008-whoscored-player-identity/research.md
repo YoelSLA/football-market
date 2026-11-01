@@ -1,5 +1,24 @@
 # Investigación de Plan — SPEC-008
 
+## Decisiones vigentes del cambio — 2026-11-01
+
+Los apartados de 2026-10-14 conservados abajo son investigación histórica. Para el cambio actual, las decisiones de auditoría durable, origen persistido y endpoints separados quedan sustituidas por lo siguiente:
+
+| Decisión | Justificación | Alternativa descartada |
+| --- | --- | --- |
+| Una operación síncrona actual → histórico sobre pendientes | Decisión humana; mantiene prioridad del catálogo actual sin exigir coordinación al operador. | Solo histórico: no está demostrada inclusión completa del actual y puede cambiar ambigüedades. |
+| Datos de trabajo en memoria; solo referencias finales persistidas | No hay necesidad funcional aprobada de auditoría de sincronización. | Conservar tablas por una necesidad hipotética de trazabilidad. |
+| Agregación por ID local del universo inicial | Un jugador puede participar en ambos pases y debe contar una vez por resultado final. | Sumar contadores de pases o usar filas externas como denominador. |
+| Mantener control interno de ligas completas, sin detalle HTTP/persistido | Evitar asociaciones desde datos incompletos y distinguir error de NO_MATCH sigue siendo obligatorio. | Quitar validación junto con la auditoría. |
+| Preservar estructura de application y sus responsabilidades | Restricción expresa del usuario y arquitectura de composición interna. | Consolidar arbitrariamente clases o añadir otro Service/Orchestrator. |
+| Conservar locks, constraints y confirmación aislada | La eliminación de auditoría no elimina carreras ni autoriza sobrescrituras. | Guardar snapshots detached o validar solo en memoria. |
+| Retirar esquema propio mediante migración posterior acotada | V9 ya forma parte del historial local; no romper checksums ni borrar índices de catálogo. | Editar V9 aplicada o ejecutar limpieza de la DB durante la tarea. |
+| Conservar revisión de catálogo y matcher de imágenes | Consumidores reales fuera del endpoint inspeccionados. | Eliminar por ubicación física dentro de identity. |
+
+Fuentes: código de `features/identity/application`, `features/catalog/infraestructure/PlayerRepository`, adaptador WhoScored, consumidores de imágenes/estadísticas, migraciones disponibles y normas de testing backend. No se hicieron requests al proveedor ni validaciones ejecutables. No hay desconocidos técnicos que exijan nueva investigación externa; la evaluación del checklist del cambio sigue pendiente.
+
+## Investigación histórica — 2026-10-14
+
 **Fecha**: 2026-10-14. **Estado**: OK; Phase 0 completa tras incorporar la evidencia del contrato. El bloqueo inicial se conserva como antecedente en [plan-evidence.md](plan-evidence.md).
 
 ## 1. Cliente HTTP

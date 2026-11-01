@@ -11,10 +11,7 @@ import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleEx
 import footballmarket.features.catalog.application.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.features.catalog.presentation.exceptions.InvalidPlayerIdException;
 import footballmarket.features.catalog.presentation.exceptions.InvalidPlayerPageException;
-import footballmarket.features.identity.application.exceptions.PlayerIdentityRunNotFoundException;
-import footballmarket.features.identity.application.exceptions.PlayerIdentitySourceNotEligibleException;
 import footballmarket.features.identity.application.exceptions.PlayerIdentitySynchronizationException;
-import footballmarket.features.identity.presentation.exceptions.InvalidPlayerIdentityIdException;
 import footballmarket.features.images.application.exceptions.PlayerImageResolutionPersistenceException;
 import footballmarket.features.images.application.exceptions.PlayerImageRunNotFoundException;
 import footballmarket.features.images.application.exceptions.PlayerImageSyncInProgressException;
@@ -260,30 +257,6 @@ public class GlobalExceptionHandler {
         "No se pudo completar la sincronización de identidad WhoScored",
         "PLAYER_IDENTITY_SYNC_FAILED",
         HttpStatus.INTERNAL_SERVER_ERROR,
-        request);
-  }
-
-  @ExceptionHandler(InvalidPlayerIdentityIdException.class)
-  public ResponseEntity<ErrorResponseDTO> handleInvalidIdentityId(
-      InvalidPlayerIdentityIdException exception, HttpServletRequest request) {
-    return this.buildResponse(
-        exception.getMessage(), "INVALID_PLAYER_IDENTITY_ID", HttpStatus.BAD_REQUEST, request);
-  }
-
-  @ExceptionHandler(PlayerIdentityRunNotFoundException.class)
-  public ResponseEntity<ErrorResponseDTO> handleIdentityRunNotFound(
-      PlayerIdentityRunNotFoundException exception, HttpServletRequest request) {
-    return this.buildResponse(
-        exception.getMessage(), "PLAYER_IDENTITY_RUN_NOT_FOUND", HttpStatus.NOT_FOUND, request);
-  }
-
-  @ExceptionHandler(PlayerIdentitySourceNotEligibleException.class)
-  public ResponseEntity<ErrorResponseDTO> handleIdentitySourceNotEligible(
-      PlayerIdentitySourceNotEligibleException exception, HttpServletRequest request) {
-    return this.buildResponse(
-        exception.getMessage(),
-        "PLAYER_IDENTITY_SOURCE_NOT_ELIGIBLE",
-        HttpStatus.CONFLICT,
         request);
   }
 

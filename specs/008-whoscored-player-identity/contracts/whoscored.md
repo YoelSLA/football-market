@@ -1,5 +1,7 @@
 # Contrato de integración — Catálogo WhoScored
 
+**Ajuste vigente 2026-11-01**: las solicitudes, validaciones de identidad/paginación, límites y ritmo de este contrato se conservan. La sincronización propia ejecuta actual y luego histórico elegible en una sola invocación. Toda referencia inferior a «auditar», «auditable», guardar diagnóstico o contexto se limita ahora al procesamiento transitorio necesario: MUST NOT persistir candidatos, descartes, resultados ni ámbitos de sincronización. Se conservan validaciones sobre filas originales aunque los descartes no se almacenen ni se cuenten en la respuesta propia. No se incorpora comunicación adicional ni se cambia el proveedor; este ajuste no acredita nuevas observaciones.
+
 Fuente: [spec](../spec.md), [observación fechada](../evidence/whoscored-catalog-contract.md) y cuatro JSON en `evidence/`. Contrato interno observado, no API oficial ni garantía de disponibilidad. Este documento diseña la validación del adaptador, no acredita requests nuevos.
 
 ## Solicitud
