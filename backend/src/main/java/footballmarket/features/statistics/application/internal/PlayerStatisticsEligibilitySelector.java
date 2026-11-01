@@ -46,7 +46,7 @@ public class PlayerStatisticsEligibilitySelector {
     return this.items.findPendingPlayerIds(extractionDate, source, PageRequest.of(0, limit));
   }
 
-  /** Instantánea completa de pendientes del día, en ID local ascendente, para el canal JSON. */
+  /** Instantánea completa de pendientes del día en ID local ascendente, para ambos canales. */
   public List<Long> allPendingPlayerIds(LocalDate extractionDate, MetricSource source) {
     return this.items.findPendingPlayerIds(
         extractionDate, source, org.springframework.data.domain.Pageable.unpaged());

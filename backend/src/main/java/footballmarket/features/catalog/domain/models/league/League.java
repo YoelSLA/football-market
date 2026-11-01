@@ -19,7 +19,7 @@ import lombok.Getter;
 
 /** Liga con identidad interna estable y nombre actual independiente del proveedor. */
 @Entity
-@Table(name = "league")
+@Table(name = "leagues")
 @Getter
 public class League {
   @Id

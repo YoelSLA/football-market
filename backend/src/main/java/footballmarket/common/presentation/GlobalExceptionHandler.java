@@ -112,11 +112,11 @@ public class GlobalExceptionHandler {
       return this.buildResponse(
           "Falta la fecha de cotización", "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
     }
-    if (!request.getRequestURI().equals("/api/player/statistics/whoscored/coverage")) {
+    if (!request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
       throw exception;
     }
     boolean statisticsSource =
-        request.getRequestURI().equals("/api/player/statistics/whoscored/coverage")
+        request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")
             && "source".equals(exception.getParameterName());
     return this.buildResponse(
         "Falta un parámetro obligatorio",
@@ -136,14 +136,14 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleUnreadableBody(
       org.springframework.http.converter.HttpMessageNotReadableException exception,
       HttpServletRequest request) {
-    if (!request.getRequestURI().equals("/api/player/statistics/whoscored/sync/scraping")
-        && !request.getRequestURI().equals("/api/player/statistics/whoscored/sync/json")) {
+    if (!request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")
+        && !request.getRequestURI().equals("/api/players/statistics/whoscored/sync/json")) {
       return this.buildResponse(
           "Solicitud inválida", "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
     }
     String code = "INVALID_REQUEST";
     String message = "El cuerpo de la solicitud está ausente o no es JSON válido";
-    if (request.getRequestURI().equals("/api/player/statistics/whoscored/sync/scraping")) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")) {
       for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
         if (cause instanceof InvalidStatisticsRequestException invalid) {
           return this.handleStatisticsRequest(invalid, request);
@@ -154,9 +154,6 @@ public class GlobalExceptionHandler {
           if ("extractionDate".equals(field)) {
             code = "INVALID_STATISTICS_EXTRACTION_DATE";
             message = "La fecha de extracción debe tener formato ISO y no ser futura";
-          } else if ("maxPlayers".equals(field)) {
-            code = "INVALID_STATISTICS_MAX_PLAYERS";
-            message = "El máximo de jugadores debe ser un entero positivo de 32 bits";
           }
         }
       }
@@ -417,7 +414,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(
       org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
       HttpServletRequest request) {
-    if (request.getRequestURI().equals("/api/player/statistics/whoscored/coverage")) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
       String code =
           "source".equals(exception.getName())
               ? "INVALID_STATISTICS_SOURCE"
@@ -455,7 +452,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ErrorResponseDTO> handleValidation(
       MethodArgumentNotValidException ex, HttpServletRequest request) {
-    if (request.getRequestURI().equals("/api/player")) {
+    if (request.getRequestURI().equals("/api/players")) {
       org.springframework.validation.FieldError field = ex.getBindingResult().getFieldError();
       String code =
           field != null && field.isBindingFailure()
@@ -470,15 +467,13 @@ public class GlobalExceptionHandler {
           HttpStatus.BAD_REQUEST,
           request);
     }
-    if (request.getRequestURI().equals("/api/player/statistics/whoscored/sync/scraping")) {
+    if (request.getRequestURI().equals("/api/players/statistics/whoscored/sync/scraping")) {
       org.springframework.validation.FieldError field = ex.getBindingResult().getFieldError();
       if (field != null) {
         String code =
             "extractionDate".equals(field.getField())
                 ? "INVALID_STATISTICS_EXTRACTION_DATE"
-                : "maxPlayers".equals(field.getField())
-                    ? "INVALID_STATISTICS_MAX_PLAYERS"
-                    : "INVALID_REQUEST";
+                : "INVALID_REQUEST";
         return this.buildResponse(field.getDefaultMessage(), code, HttpStatus.BAD_REQUEST, request);
       }
     }

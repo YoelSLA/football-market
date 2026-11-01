@@ -23,6 +23,7 @@ public class ExtractionIncidentRecorder {
           "PROVIDER_STRUCTURE_CHANGED",
           "PROVIDER_COLUMN_NOT_CATALOGED",
           "PROVIDER_DATA_INCONSISTENT",
+          "HEADED_BROWSER_UNAVAILABLE",
           "EXTRACTION_INTERRUPTED");
 
   /**

@@ -20,8 +20,9 @@ import org.springframework.stereotype.Component;
  * Traduce las filas externas y aplica exclusivamente las reglas numéricas de Model.
  *
  * <p>El resumen inicial aporta las nueve métricas de contexto y de totales de temporada, y cada
- * subcategoría de detalle aporta las suyas por división de apariciones. Las siete métricas que solo
- * publicaba la pestaña defensiva se obtienen por la interfaz JSON y no forman parte del recorrido.
+ * subcategoría de detalle aporta tasas nativas por partido, sin dividir otra vez. Las siete
+ * métricas que solo publicaba la pestaña defensiva se obtienen por la interfaz JSON y no forman
+ * parte del recorrido.
  */
 @Component
 public class ScrapingMetricAssembler {
@@ -122,7 +123,7 @@ public class ScrapingMetricAssembler {
                   definition.key(),
                   null,
                   MetricAvailability.ABSENT,
-                  definition.derivation(),
+                  definition.derivationFor(MetricSource.SCRAPING),
                   null,
                   context.observedAt()));
         }
@@ -132,7 +133,7 @@ public class ScrapingMetricAssembler {
         row.cells()
             .forEach(
                 cell -> fields.put(cell.providerField().toLowerCase(Locale.ROOT), cell.text()));
-        BigDecimal apps = appearances(fields.get("apps"));
+        BigDecimal apps = row.section().equals("initial") ? appearances(fields.get("apps")) : null;
         for (WhoScoredScrapedMetricCell cell : row.cells()) {
           String field = cell.providerField().toLowerCase(Locale.ROOT);
           if (row.section().equals("initial") && !INITIAL.contains(field)) {
@@ -145,34 +146,24 @@ public class ScrapingMetricAssembler {
             continue;
           }
           MetricDefinition definition = MetricCatalog.require(key);
-          boolean derived = definition.derivation() == DerivationRule.DIVIDE_BY_APPEARANCES;
-          if (!row.section().equals("initial") && !derived) {
+          if (!definition.sources().contains(MetricSource.SCRAPING)) {
+            continue;
+          }
+          if (!row.section().equals("initial")
+              && definition.derivation() != DerivationRule.DIVIDE_BY_APPEARANCES) {
             continue;
           }
           String published = field.equals("apps") ? appearancesText(cell.text()) : cell.text();
-          MetricValueNormalizer.NormalizedMetricValue normalized = publishedValue(published);
-          MetricValue value;
-          if (derived) {
-            MetricDerivationApplier.DerivedMetricValue quotient =
-                MetricDerivationApplier.perAppearance(normalized.value(), apps);
-            value =
-                new MetricValue(
-                    key,
-                    quotient.value(),
-                    quotient.availability(),
-                    DerivationRule.DIVIDE_BY_APPEARANCES,
-                    quotient.observedPrecision(),
-                    row.observedAt());
-          } else {
-            value =
-                new MetricValue(
-                    key,
-                    normalized.value(),
-                    normalized.availability(),
-                    DerivationRule.NONE,
-                    normalized.observedPrecision(),
-                    row.observedAt());
-          }
+          MetricValueNormalizer.NormalizedMetricValue normalized =
+              definition.normalizeFor(MetricSource.SCRAPING, published, apps);
+          MetricValue value =
+              new MetricValue(
+                  key,
+                  normalized.value(),
+                  normalized.availability(),
+                  definition.derivationFor(MetricSource.SCRAPING),
+                  normalized.observedPrecision(),
+                  row.observedAt());
           MetricValue previous = metrics.get(key);
           if (previous != null
               && (value.availability() == MetricAvailability.PRESENT
@@ -254,19 +245,10 @@ public class ScrapingMetricAssembler {
   /**
    * Valor publicado en una tabla del proveedor.
    *
-   * <p>El guion y el vacío son el cero del proveedor: escribe {@code -} cuando el jugador notiene
-   * ese dato porque no ocurrió, y no cuando lo omite. Leerlo como ausencia perdería la diferencia
-   * entre "no marcó ningún gol" y "no lo sabemos", que es justamente la que necesita la valuación.
-   * La ausencia queda reservada a lo que el proveedor no declara, como las métricas del bloque
-   * estructurado o las que solo publica el canal JSON.
+   * <p>El guion y el vacío son ausencias, nunca ceros inferidos (FR-022/FR-031).
    */
   private static MetricValueNormalizer.NormalizedMetricValue publishedValue(String raw) {
-    String value = raw == null ? null : raw.strip();
-    if (value == null || value.isEmpty() || value.equals("-")) {
-      return new MetricValueNormalizer.NormalizedMetricValue(
-          BigDecimal.ZERO, MetricAvailability.PRESENT, 0);
-    }
-    return MetricValueNormalizer.normalize(value);
+    return MetricValueNormalizer.normalize(raw);
   }
 
   /**

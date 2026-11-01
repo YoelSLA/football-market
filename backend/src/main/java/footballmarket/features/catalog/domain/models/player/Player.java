@@ -27,7 +27,7 @@ import lombok.Getter;
  * Jugador con identidad local; los identificadores de proveedores se conservan como referencias.
  */
 @Entity
-@Table(name = "player")
+@Table(name = "players")
 @Getter
 public class Player {
   @Id

@@ -24,9 +24,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Apertura y cierre de ejecuciones de un canal con sus invariantes de contadores.
  *
- * <p>Una ejecución activa del mismo canal impide abrir otra. Solo una ejecución anterior cuyo
- * inicio excede el presupuesto del lote se considera interrumpida y se recupera como tal, porque
- * ninguna petición viva puede lasting ese tiempo; sus datos confirmados se conservan.
+ * <p>Scraping se abre bajo exclusión de la fachada: cualquier run persistido restante es huérfano.
+ * JSON conserva su recuperación histórica por antigüedad.
  */
 @Component
 public class ExtractionRunManager {
@@ -49,16 +48,16 @@ public class ExtractionRunManager {
 
   /** Abre una ejecución del canal, recuperando únicamente ejecuciones ya inviables. */
   public PlayerStatisticsExtractionRun open(
-      LocalDate extractionDate, MetricSource source, Integer maxPlayers, long budgetMillis) {
+      LocalDate extractionDate, MetricSource source, long budgetMillis) {
     Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
     return this.transaction.execute(
         status -> {
           this.recover(
               this.runs.findBySourceAndStatus(source, ExtractionRunStatus.RUNNING).orElse(null),
-              now.minusMillis(budgetMillis));
+              source == MetricSource.SCRAPING ? null : now.minusMillis(budgetMillis));
           PlayerStatisticsExtractionRun run =
               this.runs.saveAndFlush(
-                  new PlayerStatisticsExtractionRun(extractionDate, source, now, maxPlayers));
+                  new PlayerStatisticsExtractionRun(extractionDate, source, now));
           return run;
         });
   }
@@ -67,7 +66,7 @@ public class ExtractionRunManager {
     if (active == null) {
       return;
     }
-    if (active.getStartedAt().isAfter(recoverableSince)) {
+    if (recoverableSince != null && active.getStartedAt().isAfter(recoverableSince)) {
       throw new PlayerStatisticsSyncInProgressException();
     }
     this.finish(active, "EXECUTION_INTERRUPTED", true, 0);
@@ -104,7 +103,8 @@ public class ExtractionRunManager {
     PlayerStatisticsCoverage current =
         this.coverage.coverage(run.getExtractionDate(), run.getSource());
     ExtractionRunStatus status =
-        selected == 0 && current.pendingPlayers() > 0
+        (interrupted && run.getSource() == MetricSource.SCRAPING)
+                || (selected == 0 && current.pendingPlayers() > 0)
             ? ExtractionRunStatus.INTERRUPTED
             : resolve(selected, completed, withoutData, failed, interrupted);
     run.finish(
@@ -121,7 +121,9 @@ public class ExtractionRunManager {
         absent,
         notDerivable,
         providerCalls,
-        selected == 0 && current.pendingPlayers() > 0 ? "BUDGET_EXHAUSTED" : failureCode);
+        selected == 0 && current.pendingPlayers() > 0 && failureCode == null
+            ? (run.getSource() == MetricSource.JSON ? "BUDGET_EXHAUSTED" : "EXECUTION_INTERRUPTED")
+            : failureCode);
     this.runs.flush();
     return new PlayerStatisticsSyncSummary(
         run.getId(),

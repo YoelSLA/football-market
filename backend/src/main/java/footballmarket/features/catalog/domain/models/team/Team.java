@@ -23,7 +23,7 @@ import lombok.Getter;
 
 /** Equipo con liga actual obligatoria y vigencia explícita, sin eliminación histórica. */
 @Entity
-@Table(name = "team")
+@Table(name = "teams")
 @Getter
 public class Team {
   @Id

@@ -2,12 +2,16 @@ package footballmarket.features.statistics.presentation;
 
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
+import footballmarket.features.statistics.presentation.exceptions.StatisticsMappingException;
 
 /** Transformación del resumen de sincronización a DTO HTTP sin lógica de negocio. */
 public final class PlayerStatisticsSyncMapper {
   private PlayerStatisticsSyncMapper() {}
 
   public static PlayerStatisticsSyncResponseDTO toResponse(PlayerStatisticsSyncSummary summary) {
+    if (summary == null || summary.counters() == null) {
+      throw new StatisticsMappingException();
+    }
     return new PlayerStatisticsSyncResponseDTO(
         summary.runId(),
         summary.source().name(),

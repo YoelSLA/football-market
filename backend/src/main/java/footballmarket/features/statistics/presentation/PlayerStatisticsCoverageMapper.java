@@ -2,12 +2,16 @@ package footballmarket.features.statistics.presentation;
 
 import footballmarket.features.statistics.domain.records.PlayerStatisticsCoverage;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
+import footballmarket.features.statistics.presentation.exceptions.StatisticsMappingException;
 
 /** Transformación de la consulta de cobertura a DTO HTTP sin lógica de negocio. */
 public final class PlayerStatisticsCoverageMapper {
   private PlayerStatisticsCoverageMapper() {}
 
   public static PlayerStatisticsCoverageResponseDTO toResponse(PlayerStatisticsCoverage coverage) {
+    if (coverage == null) {
+      throw new StatisticsMappingException();
+    }
     return new PlayerStatisticsCoverageResponseDTO(
         coverage.source().name(),
         coverage.extractionDate(),

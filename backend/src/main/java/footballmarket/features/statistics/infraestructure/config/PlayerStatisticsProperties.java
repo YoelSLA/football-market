@@ -9,7 +9,6 @@ public record PlayerStatisticsProperties(
     int scrapingWorkers,
     int jsonWorkers,
     long requestIntervalMs,
-    long scrapingBatchTimeoutMs,
     long navigationTimeoutMs,
     long queryTimeoutMs,
     boolean filterThirdPartyResources,
@@ -19,7 +18,6 @@ public record PlayerStatisticsProperties(
     if (scrapingWorkers < 1
         || jsonWorkers < 1
         || requestIntervalMs < 1
-        || scrapingBatchTimeoutMs < 1
         || navigationTimeoutMs < 1
         || queryTimeoutMs < 1
         || !headed) {
