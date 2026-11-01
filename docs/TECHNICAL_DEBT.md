@@ -216,6 +216,8 @@ coherencia `failedPlayers <= pendingPlayers` según el contrato aprobado, con ej
 
 **Historial:** 2026-10-27 13:45:51 — registrada durante T108 de SPEC-012; sin corrección ni tests atribuidos.
 
+**Actualización 2026-11-01 19:07:26 (`America/Argentina/Buenos_Aires`)**: en T118–T124 se retira el GET de cobertura por decisión humana, junto con su contador `failedPlayers` y la consulta exclusiva `countDistinctPlayersWithoutConfirmation`. El cierre conserva sus contadores por resultado del run; no se sustituye por la antigua fórmula defectuosa. El síntoma público queda sin consumidor en el código preparado, pero no se declara la deuda resuelta: revisión y ejecución humana del retiro/contratos POST pendientes. El criterio histórico anterior se conserva; la alternativa de cierre por eliminación del contrato debe validarse con evidencia humana, no mediante un resultado de tests inventado.
+
 ### TD-033 — Journeys de estadísticas sustituyen las Integrations productivas
 
 | Campo | Valor |

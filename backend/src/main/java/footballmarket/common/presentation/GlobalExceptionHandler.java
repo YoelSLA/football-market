@@ -109,17 +109,7 @@ public class GlobalExceptionHandler {
       return this.buildResponse(
           "Falta la fecha de cotización", "INVALID_REQUEST", HttpStatus.BAD_REQUEST, request);
     }
-    if (!request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
-      throw exception;
-    }
-    boolean statisticsSource =
-        request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")
-            && "source".equals(exception.getParameterName());
-    return this.buildResponse(
-        "Falta un parámetro obligatorio",
-        statisticsSource ? "INVALID_STATISTICS_SOURCE" : "INVALID_PARAMETER_TYPE",
-        HttpStatus.BAD_REQUEST,
-        request);
+    throw exception;
   }
 
   @ExceptionHandler(InvalidStatisticsRequestException.class)
@@ -387,14 +377,6 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleInvalidParameter(
       org.springframework.web.method.annotation.MethodArgumentTypeMismatchException exception,
       HttpServletRequest request) {
-    if (request.getRequestURI().equals("/api/players/statistics/whoscored/coverage")) {
-      String code =
-          "source".equals(exception.getName())
-              ? "INVALID_STATISTICS_SOURCE"
-              : "INVALID_STATISTICS_EXTRACTION_DATE";
-      return this.buildResponse(
-          "El filtro de cobertura no es válido", code, HttpStatus.BAD_REQUEST, request);
-    }
     if (request.getRequestURI().equals("/api/quotes/executions")) {
       return this.buildResponse(
           "La fecha de cotización debe tener formato ISO",

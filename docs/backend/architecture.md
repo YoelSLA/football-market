@@ -83,16 +83,23 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 
 ### 3.1. Capas
 
-- Controller: `PlayerStatisticsController` expone únicamente `POST /api/players/statistics/whoscored/sync/scraping`,
-  `POST /api/players/statistics/whoscored/sync/json` y `GET /api/players/statistics/whoscored/coverage`.
+- Controller: `PlayerStatisticsController` expone únicamente `POST /api/players/statistics/whoscored/sync/scraping`
+  y `POST /api/players/statistics/whoscored/sync/json`. El antiguo GET de coverage se retiró, sin alias.
   La ruta determina el canal; el body de scraping admite fecha opcional `extractionDate`, rechaza
   `maxPlayers` incluso null, y la
   entrada JSON rechaza cualquier parámetro o cuerpo.
 - Services: `PlayerStatisticsSynchronizationService` es la fachada que abre y cierra la campaña;
   `PlayerStatisticsExtractionService` ejecuta un jugador de scraping; `JsonStatisticsUpdateService`
-  ejecuta un jugador por JSON; `PlayerStatisticsCoverageService` responde la cobertura sin acceder
-  al proveedor. Los componentes internos de `services/internal/` resuelven selección, recorrido,
-  ritmo, ensamblado y confirmación por jugador.
+  ejecuta un jugador por JSON. Dentro de `features/statistics/application/`, `scraping/` reúne la implementación
+  de extracción y sus componentes exclusivos (`ExtractionBatchExecutor`,
+  `HeadedBrowserAvailabilityChecker`, `ScrapingMetricAssembler`); `json/` reúne
+  `JsonStatisticsUpdateServiceImpl` y `JsonMetricAssembler`. `shared/` contiene las implementaciones
+  de sincronización y los componentes comunes de selección, pool, contexto,
+  confirmación y auditoría. Cada grupo conserva `impl/` e `internal/`; las interfaces públicas
+  permanecen en `application/` y la consulta individual en su ubicación existente. La fachada
+  conserva ambos recorridos sin unificar sus políticas. Esta organización no crea roles ni
+  habilita dependencias nuevas. El mapa y el orden de lectura están en el plan de SPEC-012,
+  sección «Estructura objetivo del refactor organizativo — 2026-11-01».
 - Model: `MetricCatalog` y `MetricDefinition` materializan el catálogo cerrado de 60 métricas con
   cobertura 45/57/42 por canal; `MetricValueNormalizer` y `MetricDerivationApplier` encapsulan
   normalización, alias y derivación por partido sin dependencias hacia fuera de Model.
@@ -125,9 +132,11 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 - Ambos devuelven el mismo resumen: identificación del run, estado, contadores de jugadores, de
   métricas y de llamadas al proveedor, y `coverageComplete`. Las ausencias se informan solo como
   conteo agregado.
-- `GET /coverage` exige `source` y admite `extractionDate` opcional; devuelve conteos por fecha y
-  canal, `systemicallyAbsentMetrics` y el último run. No accede al proveedor.
-- Errores controlados: `INVALID_STATISTICS_SOURCE`, `INVALID_STATISTICS_EXTRACTION_DATE`,
+- La población y pendientes se calculan internamente al cerrar el run; los POST conservan
+  `coverageComplete` y todos sus contadores. No se calcula ni expone ausencia sistémica por clave
+  ni último run como consulta independiente. Se conservan las consultas usadas por auditoría,
+  catálogo, valuaciones y tests de persistencia.
+- Errores controlados: `INVALID_STATISTICS_EXTRACTION_DATE`,
   `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
   `PLAYER_STATISTICS_SYNC_FAILED` y `HEADED_BROWSER_UNAVAILABLE`, este último solo para scraping.
 

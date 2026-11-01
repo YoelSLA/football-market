@@ -1,5 +1,13 @@
 # Contrato HTTP: extracción de estadísticas WhoScored
 
+## Cambio objetivo autorizado — 2026-11-01
+
+Se retira `GET /api/players/statistics/whoscored/coverage`, sin alias ni sustituto. Para usuario autenticado la ruta no tiene handler y devuelve 404, sin consultar al proveedor ni iniciar sincronización. La seguridad global puede rechazar antes solicitudes no autenticadas; no se redefine su política. Contrato pendiente de implementación.
+
+**Actualización T118–T124**: el handler y sus componentes exclusivos ya se retiraron; los tests de 404 y no acceso a proveedores están escritos y pendientes de ejecución humana. El contrato POST no cambió. No se acredita 404 observado mediante ejecución de tests por el agente.
+
+Ambos POST mantienen íntegros sus requests, respuestas, errores, autenticación y semántica, incluidos `players.pending`, `coverageComplete`, `source`, fecha, estado y contadores. No incorporan `systemicallyAbsentMetrics` ni datos de último run. `INVALID_STATISTICS_SOURCE` deja de formar parte de estas operaciones, porque sus canales están fijados por ruta.
+
 ## Reglas comunes
 
 - Base: `/api/players/statistics/whoscored`.
@@ -103,15 +111,17 @@ El ejemplo ilustra un recorrido completo de scraping con tres pendientes no resu
 
 Los fallos individuales se reflejan en el resumen `200` si la ejecución pudo cerrarse y auditarse. `JSON` no depende del entorno gráfico y nunca produce `HEADED_BROWSER_UNAVAILABLE`.
 
-`INVALID_STATISTICS_SOURCE` corresponde exclusivamente al filtro de `GET /coverage`, no a los POST con canal fijo. La operación de ambos POST está destinada al cliente del desarrollador y conserva la autenticación de catálogo, sin un rol nuevo.
+Los POST fijan el canal por ruta y no producen `INVALID_STATISTICS_SOURCE`. Su operación está destinada al cliente del desarrollador y conserva autenticación de catálogo, sin rol nuevo.
 
 ## Cliente operativo de scraping: una petición
 
 El cliente usa exclusivamente `/sync/scraping`, resuelve la fecha una vez y envía solo `extractionDate`. Hace un único POST; desaparecen `--mode` y `--max-players` y se rechazan localmente antes de HTTP. JWT desde entorno, nunca impreso. JSON conserva su POST directo sin entrada.
 
-Solo `coverageComplete = true` acredita éxito de campaña (salida 0 del CLI). Si quedan pendientes, hay error HTTP/transporte o interrupción, salida distinta de cero sin repetir el POST, aunque haya progreso. El operador puede invocar otra petición para la misma fecha. Cliente y proxy deben permitir una conexión prolongada; perder la respuesta no implica que el servidor no haya confirmado datos. Consultar cobertura antes de decidir una nueva petición, sin reintento automático.
+Solo `coverageComplete = true` acredita éxito de campaña (salida 0 del CLI). Si quedan pendientes, hay error HTTP/transporte o interrupción, salida distinta de cero sin repetir el POST, aunque haya progreso. El operador puede invocar otra petición para la misma fecha. Cliente y proxy deben permitir una conexión prolongada; perder la respuesta no implica que el servidor no haya confirmado datos. Ante pérdida de respuesta, revisar la auditoría operativa disponible y decidir manualmente otra petición; no hay GET de cobertura ni reintento automático.
 
-## GET `/coverage`
+## Antecedente retirado — GET `/coverage`
+
+El contenido siguiente conserva el contrato histórico; desde la decisión del 2026-11-01 no es una operación vigente ni guía de implementación. Sus DTO y validaciones exclusivos deben retirarse. No se mantienen estos campos en otra ruta.
 
 Consulta cobertura sin acceder al proveedor.
 

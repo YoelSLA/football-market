@@ -12,7 +12,6 @@ import footballmarket.features.catalog.presentation.dtos.response.PlayerResponse
 import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
 import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
-import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsCoverageResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
 import footballmarket.integrations.whoscored.WhoScoredStatisticsScrapingIntegration;
 import footballmarket.integrations.whoscored.config.WhoScoredProperties;
@@ -175,8 +174,8 @@ class PlayerStatisticsSyncJourneyE2ETest {
     }
 
     @Test
-    @DisplayName("Un POST recorre la población y deja cobertura completa consultable")
-    void loteDeUnJugadorYCoverage() {
+    @DisplayName("Un POST recorre la población y devuelve todos los conteos de campaña")
+    void populationSummary() {
       // Arrange
       RestClient api = api();
       String token = authenticatedUser(api);
@@ -191,12 +190,6 @@ class PlayerStatisticsSyncJourneyE2ETest {
               .body(new PlayerStatisticsSyncRequestDTO(today))
               .retrieve()
               .body(PlayerStatisticsSyncResponseDTO.class);
-      PlayerStatisticsCoverageResponseDTO coverage =
-          api.get()
-              .uri("/api/players/statistics/whoscored/coverage?source=SCRAPING")
-              .headers(headers -> headers.setBearerAuth(token))
-              .retrieve()
-              .body(PlayerStatisticsCoverageResponseDTO.class);
 
       // Assert
       assertThat(summary.source()).isEqualTo("SCRAPING");
@@ -204,11 +197,10 @@ class PlayerStatisticsSyncJourneyE2ETest {
       assertThat(summary.players().selected()).isEqualTo(5);
       assertThat(summary.players().completed()).isEqualTo(5);
       assertThat(summary.coverageComplete()).isTrue();
-      assertThat(coverage.source()).isEqualTo("SCRAPING");
-      assertThat(coverage.extractionDate()).isEqualTo(today);
-      assertThat(coverage.completedPlayers()).isEqualTo(5);
-      assertThat(coverage.pendingPlayers()).isZero();
-      assertThat(coverage.lastRunId()).isEqualTo(summary.runId());
+      assertThat(summary.extractionDate()).isEqualTo(today);
+      assertThat(summary.players().eligible()).isEqualTo(5);
+      assertThat(summary.players().pending()).isZero();
+      assertThat(summary.runId()).isNotNull();
     }
 
     @Test

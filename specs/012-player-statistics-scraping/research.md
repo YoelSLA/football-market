@@ -1,5 +1,25 @@
 # Research: Scraping de estadísticas de rendimiento de jugadores
 
+## Retiro del endpoint coverage — 2026-11-01
+
+**Decision**: retirar únicamente la consulta HTTP independiente y sus exclusivos. Conservar un cálculo interno reducido para los POST: elegibles, excluidos sin referencia, pendientes y `coverageComplete`; eliminar diagnóstico por clave y último run no consumidos por sincronización. No cambiar fórmulas de cierre, catálogos ni esquema.
+
+**Rationale**: `ExtractionRunManager.finish` utiliza esos cuatro datos para cerrar run, determinar ciertos estados y construir el resumen. No utiliza `systemicallyAbsentMetrics`, `lastRunId`, `lastRunFinishedAt` ni el conteo de fallidos del GET. Los tests de Service y E2E también consumen el endpoint o su Service; necesitan reemplazar su forma de observación, no perder las garantías comprobadas.
+
+**Alternatives considered**: borrar todo Coverage rompería ambos POST; conservar GET como alias contradice el retiro; trasladar el diagnóstico por clave a los POST amplía su respuesta sin autorización; crear endpoints o APIs exclusivas para tests viola el alcance mínimo. Se elige conservar los nombres internos para evitar otro refactor de naming, reduciendo su contenido a lo necesario.
+
+**Resultado**: sin desconocidos funcionales para el diseño; la implementación deberá confirmar consumidores en todo el backend antes de eliminar consultas. Investigación local de lectura, sin proveedor, DB, tests ni build. Decisiones históricas siguientes preservadas en su contexto.
+
+## Reorganización por canal — PLAN acotado del 2026-11-01
+
+**Decision**: mantener `features/statistics` como única feature. Agrupar implementaciones y componentes internos exclusivos en `application/scraping` y `application/json`; ubicar fachada, cobertura y componentes usados por ambos en `application/shared`, conservando las subdivisiones `impl` e `internal`. Las interfaces públicas, excepciones, consulta individual, dominio, repositorios, presentación e integraciones mantienen sus ubicaciones. El mapa completo de archivos y recorridos está en [plan.md](plan.md#estructura-objetivo-del-refactor-organizativo--2026-11-01).
+
+**Rationale**: la lectura de la fachada, ejecutor de scraping, actualizador JSON y ensambladores muestra dos recorridos distintos que convergen en selección de contexto, confirmación y auditoría comunes. El pool, selector, escritor y gestor de runs ya son compartidos. `ExtractionBatchExecutor` solo participa en scraping pese a su nombre genérico. Separar físicamente estos grupos facilita localizar el código sin duplicar reglas ni transformar el algoritmo. Mantener interfaces evita renombrar contratos públicos por motivos organizativos. La consulta individual es un consumidor de datos persistidos, no un paso de adquisición común a los canales; permanece fuera de los movimientos.
+
+**Alternatives considered**: dos features duplicarían conceptos canónicos; una plantilla de ejecución común obligaría a armonizar políticas diferentes; dos ejecutores nuevos ampliarían un encargo limitado a estructura; mover todo el dominio y la persistencia bajo `shared` duplicaría la clasificación por capas sin beneficio para seguir el flujo. Se conserva la fachada con ambos métodos y se documenta expresamente ese límite.
+
+**Investigación necesaria**: inspección del código y sus consumidores locales, sin proveedor, tests, tecnologías nuevas ni investigación externa. No quedan decisiones técnicas desconocidas para este diseño; las verificaciones de comportamiento siguen pendientes de la implementación y de la ejecución humana. Las decisiones y evidencias históricas siguientes se conservan.
+
 ## Catálogo y cobertura observada
 
 **Decision**: Tratar como evidencia validada el catálogo cerrado de 60 métricas: 45 disponibles por scraping, 57 por JSON, 42 compartidas y tres exclusivas del scraping (`shots_on_target_total`, `second_yellow_total`, `starts_total`). Las quince combinaciones JSON recorridas forman parte del contrato externo.

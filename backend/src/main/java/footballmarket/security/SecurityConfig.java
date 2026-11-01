@@ -105,7 +105,6 @@ public class SecurityConfig {
                     .requestMatchers(
                         "/api/players/statistics/whoscored/sync/scraping",
                         "/api/players/statistics/whoscored/sync/json",
-                        "/api/players/statistics/whoscored/coverage",
                         "/api/valuations/evaluate")
                     .authenticated()
                     .anyRequest()

@@ -1,12 +1,75 @@
 # Implementation Plan: Scraping de estadísticas de rendimiento de jugadores
 
+## Diseño objetivo — retiro del endpoint coverage (2026-11-01)
+
+**Implementación autorizada T118–T124**: retiro del GET, simplificación interna y tests adaptados según este diseño; se conserva como antecedente la preparación siguiente. El cierre no requiere editar `ExtractionRunManager` porque su consumo coincide con el record reducido. No hay migraciones ni cambios de contrato POST. Revisión, testing y cierre pendientes; evidencia técnica en el reporte de entrega del retiro.
+
+Este cambio es posterior a T111–T117 y no los reescribe. Rige sobre las referencias anteriores a la consulta HTTP de cobertura; los inventarios del refactor se conservan como evidencia de su alcance. Preparación documental autorizada por el usuario, sin código ni tests modificados por este retiro. Specify y Clarify acotados registrados en `spec.md`; setup de Plan conserva artefactos existentes y resuelve SPEC-012. Rama Git: `refactor/012-player-statistics-scraping`; no hay hooks de extensión configurados.
+
+**Evidencia de resolución**: el script oficial con `--reuse --type refactor --short-name 012-player-statistics-scraping` devolvió `SPEC_ACTION=reused`, `FEATURE_NUM=012` y `BRANCH_STATUS=already-current`, con `SPEC_FILE` en esta carpeta. La invocación exterior terminó con código 1 por interpretar el fragmento descriptivo posterior a un punto y coma como comando (`solo` no encontrado); no se repitió la materialización ni se atribuye éxito al comando completo. La lectura posterior de `.specify/feature.json`, el resolver de Clarify y `setup-plan.sh --json` confirmó SPEC-012 y la conservación del plan. Ningún cambio de rama, descarte de archivos ni nueva spec.
+
+### Phase 0: decisión e investigación
+
+La lectura de Controller, Services, `ExtractionRunManager.finish`, repositorios y tests confirma que el endpoint tiene piezas exclusivas y un cálculo compartido con los POST. La alternativa de borrar todas las clases con nombre Coverage rompería el cierre de runs; la alternativa de conservar su diagnóstico completo mantendría trabajo sin consumidores. La decisión y alternativas quedan en `research.md`. No se necesitan tecnologías, proveedor externo ni decisiones funcionales adicionales.
+
+### Phase 1: diseño mínimo
+
+Rutas relativas a `backend/src/main/java/footballmarket/features/statistics/`:
+
+| Componente actual | Cambio previsto |
+| --- | --- |
+| `presentation/PlayerStatisticsController.java` | Retirar el método GET, inyección del Service de cobertura, validación de `source` y imports exclusivos. Conservar ambos POST y su documentación OpenAPI. |
+| `presentation/PlayerStatisticsCoverageMapper.java` | Eliminar: exclusivo de respuesta GET. |
+| `presentation/dtos/response/PlayerStatisticsCoverageResponseDTO.java` | Eliminar: contrato retirado, sin trasladar sus campos a los POST. |
+| `application/PlayerStatisticsCoverageService.java` y `application/shared/impl/PlayerStatisticsCoverageServiceImpl.java` | Eliminar; migrar primero sus consumidores de tests a fronteras válidas. |
+| `application/shared/internal/PlayerStatisticsCoverageQuery.java` | Conservar como cálculo interno reducido de población y pendientes. Retirar diagnóstico de métricas ausentes y búsqueda del último run, que los POST no usan; no cambiar nombre por una preferencia estética. |
+| `domain/records/PlayerStatisticsCoverage.java` | Reducir al resultado interno requerido por el cierre: `eligiblePlayers`, `excludedWithoutReference`, `pendingPlayers` y `coverageComplete`. No es nuevo DTO público ni entidad persistida. |
+| `application/shared/internal/ExtractionRunManager.java` | Adaptar únicamente al resultado interno reducido, manteniendo estados, contadores, atomicidad, recuperación y resumen. |
+| `infraestructure/*Repository.java` | Revisar todos los consumidores del repositorio. Retirar solo métodos que queden exclusivamente ligados al GET y sin uso; preservar consultas de valuaciones, cotizaciones, catálogo, auditoría y sincronización. |
+
+El cierre conserva las fórmulas actuales de población, pendientes y `coverageComplete`; no se usa el contador de intentos fallidos del GET como sustituto de los fallidos del run. El retiro no modifica selección del snapshot ni comportamiento frente a nuevos elegibles, no-data o reanudación. No hay migraciones ni cambios de entidades/tablas, Clock, propiedades, navegador o integraciones.
+
+### Tests afectados y fronteras
+
+Raíz `backend/src/test/java/footballmarket/features/statistics/`:
+
+- `presentation/PlayerStatisticsControllerTest.java`: retirar fixtures/mocks/casos exitosos de coverage; conservar casos completos de POST y comprobar 404 del GET con JWT válido, sin invocar sincronización.
+- `presentation/PlayerStatisticsContractFoundationTest.java` y `security/PlayerStatisticsSecurityIntegrationTest.java`: adaptar wiring si depende del Service eliminado; conservar seguridad de ambos POST. No fijar una respuesta alternativa para visitantes de una ruta inexistente.
+- `application/shared/PlayerStatisticsSynchronizationServiceTest.java`: sustituir la lectura del Service retirado por los resúmenes de los POST. No perder pendientes, reanudación, cero trabajo ni fallos.
+- `application/scraping/PlayerStatisticsExtractionServiceTest.java` y `application/json/JsonStatisticsUpdateServiceTest.java`: retirar dependencia del contrato de cobertura eliminado. Verificar los resultados existentes por las APIs productivas de extracción/actualización, cierre del run y consulta individual disponibles, conservando Arrange y fronteras de categoría. No añadir endpoint ni API de Service exclusiva para tests; si falta observación pública, cubrir el detalle persistido en categoría Repository ya existente, sin borrar la garantía.
+- `infraestructure/PlayerStatisticsCoverageTest.java`: conservar casos de elegibilidad, pendientes e invariantes que sigan vigentes; adaptar el resultado interno reducido y retirar solo diagnóstico exclusivo. `PlayerStatisticsPersistenceTest.java` y consultas relacionadas: actualizar solo consumidores realmente afectados.
+- `e2e/PlayerStatisticsSyncJourneyE2ETest.java` y `e2e/PlayerStatisticsCrossChannelJourneyE2ETest.java`: retirar helper/GET de coverage y reemplazar las comprobaciones por resúmenes POST y lectura individual HTTP existente cuando corresponda. Conservar independencia entre canales y fechas, reanudación y métricas, sin usar repositorios para Assert/Verify ni nuevas sincronizaciones solo para observar un dato histórico.
+- Buscar dependencias adicionales en `backend/src/test/java/` antes de eliminar piezas; preservar los tests del refactor ya realizado y las demás features.
+
+### Constitution Check pre/post diseño
+
+Alcance mínimo: retiro aprobado por usuario, sin ampliar requisitos. Contrato incompatible explícito: ruta retirada, 404 autenticado y consumidores adaptados; no se agrega deprecación, alias o redirección. Seguridad y secretos sin cambios. Se preservan reglas de dominio, esquema, datos y fuentes académicas: el enunciado exige scraping, no este GET. Las pruebas se ajustan sin bajar sus garantías ni cruzar sus fronteras; ejecución humana. No se ejecutan tests ni build en preparación documental. No hay excepciones arquitectónicas nuevas. La evaluación documental no es Analyze ni aprobación humana de implementación.
+
+`data-model.md` documenta el resultado interno reducido y la ausencia de cambios persistidos. `contracts/http.md` retira el GET conservando el antecedente identificado. `contracts/whoscored.md` no requiere cambios: no se altera comunicación externa. `quickstart.md` deja de usar el GET como instrucción vigente. Siguiente paso: checklist mínimo del retiro evaluado, Tasks y Analyze; no se reutiliza la aceptación del checklist del movimiento para este cambio funcional.
+
 **Branch**: `feat/012-player-statistics-scraping` | **Date**: 2026-10-15 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `specs/012-player-statistics-scraping/spec.md`
 
+**Estado del refactor organizativo — 2026-11-01**: PLAN documental completado en `refactor/012-player-statistics-scraping`, sin implementación. Rige la sección «PLAN acotado» y su estructura objetivo. El Planning Status siguiente se conserva como antecedente del alcance del 2026-10-27, no describe la rama activa de esta ejecución.
+
+**Actualización posterior de implementación — 2026-11-01**: T111–T117 implementadas bajo autorización explícita registrada en `tasks.md`; la estructura objetivo se materializó sin cambios de cuerpos funcionales. Build sin tests satisfactorio; CODE REVIEW, TESTING y cierre pendientes. El estado PLAN anterior describe la preparación, no invalida esta actualización. Evidencia y archivos en [code-review-channel-structure.md](code-review-channel-structure.md).
+
 **Planning Status**: Diseño actualizado el 2026-10-27 para la sesión de Clarify de esa fecha; pendiente de Analyze. Es comportamiento objetivo, no implementación acreditada. Se conserva cobertura 45/57/42, quince combinaciones JSON, fila por campaña/canal y navegador por worker. La rama de la spec es `feat/012-player-statistics-scraping`; la rama activa `fix/012-scraping-parallel-workers` contiene un cambio correctivo/refactor relacionado con esta misma SPEC-012, no una feature independiente. Las autorizaciones históricas están en `sdd-gates.md`, sin autorización para implementar este nuevo alcance. Seguimiento remoto no verificado.
 
 ## Summary
+
+### PLAN acotado — reorganización por canal (2026-11-01)
+
+**Rama de trabajo**: `refactor/012-player-statistics-scraping`. Esta sección y la estructura objetivo de abajo gobiernan únicamente el refactor organizativo solicitado; el resto del documento conserva las decisiones funcionales y sus antecedentes. No se vuelve a planificar ni a aprobar el alcance histórico.
+
+**Autorización de preparación**: el usuario invocó `/speckit.plan` para actualizar exclusivamente el diseño de SPEC-012, manteniendo una feature, comportamiento y contratos, sin modificar código. Esta ejecución no genera Tasks ni acredita autorización de implementación, CODE REVIEW, TESTING o cierre.
+
+**Objetivo**: localizar los componentes exclusivos de scraping y JSON junto a su canal, y distinguir los componentes usados por ambos. El cambio futuro se limita a paquetes, rutas, imports y referencias afectadas, incluidos tests. No se extraen nuevos ejecutores, no se dividen Services, no se renombran clases ni métodos y no se unifican políticas de los canales.
+
+**Estado de esta preparación**: Phase 0 y Phase 1 documentales completadas para este alcance; checklists por evaluar, Tasks y Analyze posteriores pendientes. Seguimiento remoto no consultado ni actualizado. Las aprobaciones históricas no se transfieren al refactor.
+
+**Setup verificado**: `setup-plan.sh --json`, con `SPECIFY_FEATURE_DIRECTORY=specs/012-player-statistics-scraping`, conservó el plan existente y resolvió esta carpeta. Persistió ese contexto en `.specify/feature.json`, que antes apuntaba a SPEC-008; no se modificó ningún artefacto de SPEC-008. El campo `BRANCH` del script devolvió el nombre de spec sin prefijo; la rama Git real se verifica por separado y es la indicada arriba. No había `.specify/extensions.yml`, por lo que no existen hooks previos/posteriores que despachar en esta ejecución.
 
 Dos vías independientes y síncronas, cada una sobre todos sus pendientes en un POST: scraping con fecha opcional en body y JSON sin parámetros ni body. Sin lotes, `maxPlayers` ni deadline total. Scraping intenta cada jugador una vez, sin retries de navegación, sección o categoría; JSON conserva su retry técnico existente. Playwright headed mantiene el recorrido de 45 métricas y JSON sus quince combinaciones para 57 métricas. Se conserva catálogo cerrado de 60 y persistencia por jugador/fecha/canal. Fallidos y no-data siguen pendientes; no se repiten completados ni se reintenta automáticamente el POST.
 
@@ -228,6 +291,98 @@ Post-design: sin tecnologías nuevas ni roles/dependencias nuevos; timeouts exte
 
 ## Project Structure
 
+### Estructura objetivo del refactor organizativo — 2026-11-01
+
+Esta propuesta sustituye para este refactor el árbol horizontal histórico de más abajo, no sus decisiones funcionales. Raíz: `backend/src/main/java/footballmarket/features/statistics/`.
+
+```text
+statistics/
+├── application/
+│   ├── PlayerStatisticsSynchronizationService.java
+│   ├── PlayerStatisticsExtractionService.java
+│   ├── JsonStatisticsUpdateService.java
+│   ├── PlayerStatisticsCoverageService.java
+│   ├── PlayerStatisticsQueryService.java
+│   ├── exceptions/                         # Sin movimientos
+│   ├── impl/
+│   │   └── PlayerStatisticsQueryServiceImpl.java  # Lectura existente, fuera del refactor
+│   ├── scraping/
+│   │   ├── impl/
+│   │   │   └── PlayerStatisticsExtractionServiceImpl.java
+│   │   └── internal/
+│   │       ├── ExtractionBatchExecutor.java
+│   │       ├── HeadedBrowserAvailabilityChecker.java
+│   │       └── ScrapingMetricAssembler.java
+│   ├── json/
+│   │   ├── impl/
+│   │   │   └── JsonStatisticsUpdateServiceImpl.java
+│   │   └── internal/
+│   │       └── JsonMetricAssembler.java
+│   └── shared/
+│       ├── impl/
+│       │   ├── PlayerStatisticsSynchronizationServiceImpl.java
+│       │   └── PlayerStatisticsCoverageServiceImpl.java
+│       └── internal/
+│           ├── ExtractionRunManager.java
+│           ├── ExtractionWorkerPool.java
+│           ├── PlayerStatisticsEligibilitySelector.java
+│           ├── PlayerStatisticsWriter.java
+│           ├── ExtractionIncidentRecorder.java
+│           ├── LeagueContextSelection.java
+│           ├── PlayerMetricsContext.java
+│           └── PlayerStatisticsCoverageQuery.java
+├── domain/                                # Sin movimientos ni reglas nuevas
+├── infraestructure/                        # Nombre existente preservado
+└── presentation/                           # Contratos y rutas sin cambios
+```
+
+Las interfaces públicas de aplicación permanecen en `application/` para preservar sus nombres cualificados y los consumidores ajenos al refactor. `impl` e `internal` conservan la distinción existente entre implementación de Service y composición interna; no se crean roles arquitectónicos nuevos. `shared` solo reúne componentes efectivamente compartidos por los canales, no cualquier utilidad de la feature. El dominio y los repositorios ya compartidos permanecen en sus capas actuales, sin duplicarlos bajo `shared`.
+
+#### Mapa de movimientos previsto
+
+Todos los orígenes y destinos siguientes son relativos a `application/`; los nombres de archivo se conservan.
+
+| Origen actual | Destino | Archivos |
+| --- | --- | --- |
+| `impl/` | `scraping/impl/` | `PlayerStatisticsExtractionServiceImpl.java` |
+| `internal/` | `scraping/internal/` | `ExtractionBatchExecutor.java`, `HeadedBrowserAvailabilityChecker.java`, `ScrapingMetricAssembler.java` |
+| `impl/` | `json/impl/` | `JsonStatisticsUpdateServiceImpl.java` |
+| `internal/` | `json/internal/` | `JsonMetricAssembler.java` |
+| `impl/` | `shared/impl/` | `PlayerStatisticsSynchronizationServiceImpl.java`, `PlayerStatisticsCoverageServiceImpl.java` |
+| `internal/` | `shared/internal/` | `ExtractionRunManager.java`, `ExtractionWorkerPool.java`, `PlayerStatisticsEligibilitySelector.java`, `PlayerStatisticsWriter.java`, `ExtractionIncidentRecorder.java`, `LeagueContextSelection.java`, `PlayerMetricsContext.java`, `PlayerStatisticsCoverageQuery.java` |
+
+Los tests exclusivos de un componente movido reflejarán su ubicación bajo `backend/src/test/java/footballmarket/features/statistics/`, conservando sus casos. Los tests HTTP, persistencia, seguridad, dominio y E2E permanecen en sus categorías actuales; solo cambian imports/referencias si resulta necesario. No se diseñan escenarios funcionales nuevos por un movimiento de paquetes. No se modifica la estructura de `footballmarket.integrations.whoscored`, compartida con otros alcances, ni el cliente operativo.
+
+#### Orden de lectura del flujo de scraping
+
+1. `presentation/PlayerStatisticsController.synchronizeScraping` recibe la petición y llama a la interfaz pública.
+2. `application/shared/impl/PlayerStatisticsSynchronizationServiceImpl.synchronizeScraping` conserva resolución de fecha, exclusión, apertura/cierre del run y gestión de recursos/fallos. Usa `shared/internal/ExtractionRunManager` y `PlayerStatisticsEligibilitySelector`.
+3. `scraping/impl/PlayerStatisticsExtractionServiceImpl.openBatch` abre la sesión mediante `scraping/internal/HeadedBrowserAvailabilityChecker`.
+4. `scraping/internal/ExtractionBatchExecutor.execute` recorre el snapshot mediante `shared/internal/ExtractionWorkerPool` y llama al batch para cada jugador.
+5. `scraping/impl/PlayerStatisticsExtractionServiceImpl` resuelve la referencia y llama a `WhoScoredStatisticsScrapingIntegration`, que sigue fuera de la feature.
+6. `scraping/internal/ScrapingMetricAssembler` produce `shared/internal/PlayerMetricsContext` aplicando las reglas existentes del dominio.
+7. `shared/internal/PlayerStatisticsWriter` selecciona contexto mediante `LeagueContextSelection` y confirma los datos; `ExtractionIncidentRecorder` registra incidencias cuando corresponde. La fachada cierra recursos y run y devuelve el resumen.
+
+#### Orden de lectura del flujo JSON
+
+1. `presentation/PlayerStatisticsController.synchronizeJson` rechaza entrada no permitida y llama a la interfaz pública.
+2. `application/shared/impl/PlayerStatisticsSynchronizationServiceImpl.synchronizeJson` conserva fecha UTC, apertura del run y selección mediante los mismos componentes compartidos.
+3. Ese método conserva su bucle concurrente con `shared/internal/ExtractionWorkerPool`, creación de workers de la integración y condiciones de interrupción propias de JSON.
+4. `json/impl/JsonStatisticsUpdateServiceImpl.update` resuelve la referencia y llama a `WhoScoredStatisticsIntegration`, sin navegador.
+5. `json/internal/JsonMetricAssembler` produce los contextos del jugador usando las reglas existentes del dominio.
+6. Se utilizan los mismos `PlayerStatisticsWriter`, `LeagueContextSelection` y `ExtractionIncidentRecorder`; la fachada cierra el run y devuelve el resumen.
+
+**Límite deliberado**: la fachada conserva ambos métodos. Mover paquetes mejora la localización sin prometer separar sus algoritmos. Extraer el recorrido de cada canal a clases nuevas sería otro refactor, no está incluido en este diseño. Se preservan diferencias de bloqueo, recuperación, conteo de llamadas, errores, reintentos y limpieza; no se corrigen ni armonizan aprovechando los movimientos.
+
+#### Constitution Check del alcance acotado (pre y post diseño)
+
+- Simplicidad y proporcionalidad: agrupación por responsabilidad real; ninguna dependencia, interfaz, algoritmo o componente nuevo. No hay `NEEDS CLARIFICATION` pendiente para decidir los destinos.
+- Arquitectura: los movimientos no autorizan dependencias nuevas. Se conservan roles y contratos públicos; la composición interna permanece dentro del caso de uso, conforme a arquitectura backend §1.4. No se añaden Services independientes ni Orchestrator.
+- Contratos e integridad: no cambian endpoints, DTO, seguridad, reglas numéricas, catálogo 45/57/42, persistencia, transacciones, pacing ni ciclo de vida del navegador. No se modifican requisitos de `spec.md` ni requisitos académicos.
+- Artefactos: `research.md` documenta la elección; `quickstart.md` agrega la revisión estructural futura. `data-model.md` y `contracts/` siguen vigentes y no necesitan modificaciones: no hay entidades, estados, esquema ni interfaces externas nuevos.
+- Evidencia: evaluación documental antes y después del diseño sin contradicciones identificadas en este alcance, no aprobación humana ni Analyze. No se ejecutaron tests ni build. Las verificaciones de la implementación quedan pendientes; no se acredita resolución de deuda previa.
+- Siguiente paso permitido: checklists evaluados para esta reorganización. `tasks.md` no se modifica durante PLAN; tampoco se implementa código ni se cambia el estado operativo remoto.
+
 ### Documentation (this feature)
 
 ```text
@@ -242,6 +397,8 @@ specs/012-player-statistics-scraping/
 ```
 
 ### Source Code (repository root)
+
+**Antecedente histórico conservado**: el árbol siguiente precede a la organización actual por features; para el refactor del 2026-11-01 rige la estructura objetivo anterior.
 
 ```text
 backend/

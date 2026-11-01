@@ -79,7 +79,7 @@ public interface PlayerStatisticsRepository extends JpaRepository<PlayerStatisti
       @Param("date") LocalDate date,
       @Param("source") MetricSource source);
 
-  /** Solo métricas y contexto: evita cargar el jugador para el cálculo de cobertura. */
+  /** Filas de métricas y contexto de una campaña, sin cargar el jugador. */
   @Query("select s from PlayerStatistics s where s.extractionDate = :date and s.source = :source")
   List<PlayerStatistics> findMetricsByCampaign(LocalDate date, MetricSource source);
 

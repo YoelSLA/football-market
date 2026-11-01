@@ -2,6 +2,54 @@
 
 Esta guía define escenarios posteriores a la implementación. Los tests los ejecuta el usuario; el agente no los ejecuta.
 
+## Validación objetivo — retiro del endpoint coverage (2026-11-01)
+
+Retiro implementado bajo autorización T118–T124, pendiente de validación humana. Dejar de utilizar GET `/coverage`; los resultados y pendientes se obtienen de las respuestas finales de los dos POST, cuyo contrato no cambia. Con JWT válido, la antigua ruta debe devolver 404 sin llamadas al proveedor ni sincronizaciones. No se exige ese resultado a visitantes si seguridad rechaza antes la solicitud.
+
+Tests afectados para ejecución humana desde `backend/`, en PowerShell; integración/E2E requieren Docker:
+
+```powershell
+.\gradlew.bat lightweightTest --tests '*PlayerStatisticsControllerTest*' --tests '*PlayerStatisticsContractFoundationTest*' --tests '*PlayerStatisticsSecurityIntegrationTest*'
+.\gradlew.bat integrationTest --tests '*PlayerStatisticsExtractionServiceTest*' --tests '*JsonStatisticsUpdateServiceTest*' --tests '*PlayerStatisticsSynchronizationServiceTest*' --tests '*PlayerStatisticsCoverageTest*' --tests '*PlayerStatisticsPersistenceTest*'
+.\gradlew.bat e2eTest --tests '*PlayerStatisticsSyncJourneyE2ETest*' --tests '*PlayerStatisticsCrossChannelJourneyE2ETest*'
+```
+
+Los journeys conservan la limitación preexistente TD-033: sustituyen Integration en vez del proveedor, no acreditan una frontera E2E completa. Este retiro no la resuelve ni presenta tests como ejecutados.
+
+Con proveedor controlado, conservar los escenarios de un POST por canal, no-data/fallo, reanudación, cero pendientes y campañas independientes; no reemplazar el GET por lecturas directas de Repository en tests de Service o E2E. Los comandos de tests se precisarán tras ajustar las clases afectadas; no se ejecutan en esta preparación. Si se pierde una respuesta, la auditoría operativa puede ayudar al operador, pero no existe consulta HTTP de cobertura ni retry automático.
+
+## Revisión futura del refactor de estructura — 2026-11-01
+
+La organización de [plan.md](plan.md#estructura-objetivo-del-refactor-organizativo--2026-11-01) se implementa bajo la autorización T111–T117 registrada en `tasks.md`. Esta sección no autoriza ejecución de escenarios contra WhoScored ni acredita testing.
+
+Después del movimiento de paquetes autorizado:
+
+1. Seguir los dos órdenes de lectura documentados en el plan y contrastar los destinos con el mapa de movimientos. Verificar que no quedaron copias en las rutas anteriores.
+2. Revisar que el diff solo mueve componentes y adapta paquetes, imports y referencias necesarias; no modifica cuerpos funcionales, reglas, configuración, contratos ni migraciones. Las interfaces públicas y la consulta individual conservan su ubicación.
+3. Revisar la correspondencia de los tests afectados sin ampliar sus escenarios por el mero movimiento. Mantener tests HTTP, dominio, seguridad, persistencia y E2E en sus categorías.
+4. Si se modificó código backend, el agente puede ejecutar únicamente `./gradlew build -x test` desde `backend/`, después de inspeccionar la configuración efectiva y confirmar que no dispara tests. Un build no acredita equivalencia funcional ni TESTING.
+5. La ejecución de los tests backend afectados corresponde al usuario. Los comandos concretos se presentarán en el Testing Report de la implementación, según los nombres y categorías que existan entonces. No se exige una nueva campaña real de larga duración para verificar un movimiento de paquetes.
+
+Los escenarios funcionales existentes de esta guía y los contratos permanecen vigentes, sin afirmar que hayan sido ejecutados en PLAN.
+
+### Ubicaciones de los tests tras el movimiento
+
+Rutas relativas a `backend/src/test/java/footballmarket/features/statistics/`:
+
+- `application/scraping/`: `PlayerStatisticsExtractionServiceTest`, `ExtractionPopulationExecutorTest` y `HeadedBrowserStartupTest`.
+- `application/json/`: `JsonStatisticsUpdateServiceTest`.
+- `application/shared/`: `PlayerStatisticsSynchronizationServiceTest`; `application/shared/internal/`: `ExtractionWorkerPoolTest`.
+- `infraestructure/`: `PlayerStatisticsCoverageTest` y `PlayerStatisticsPersistenceTest` conservan ubicación y solo adaptan imports.
+
+Los selectores existentes por nombre simple continúan siendo válidos. Para revisión humana del movimiento, desde `backend/` en PowerShell:
+
+```powershell
+.\gradlew.bat unitTest --tests 'footballmarket.features.statistics.application.shared.internal.ExtractionWorkerPoolTest*'
+.\gradlew.bat integrationTest --tests 'footballmarket.features.statistics.application.scraping.*' --tests 'footballmarket.features.statistics.application.json.*' --tests 'footballmarket.features.statistics.application.shared.*' --tests 'footballmarket.features.statistics.infraestructure.PlayerStatisticsCoverageTest*' --tests 'footballmarket.features.statistics.infraestructure.PlayerStatisticsPersistenceTest*'
+```
+
+El segundo comando requiere Docker para PostgreSQL/Testcontainers; ambos usan proveedores controlados. No fueron ejecutados por el agente. El build sin tests no compila ni ejecuta estas pruebas.
+
 ## Prerrequisitos
 
 - Java 21 y PostgreSQL según la configuración del backend.
@@ -71,9 +119,11 @@ curl -X POST http://localhost:8080/api/players/statistics/whoscored/sync/scrapin
 
 Verificar Chromium visible por worker, contextos independientes, recorrido de 45 métricas sin omitir carga inicial, resumen defensivo ni detalle. Los workers pueden solaparse sin monitor global; al cerrar no deben quedar recursos huérfanos. La petición intenta todos los pendientes iniciales una vez, sin retries de sección/categoría, sin corte a los 30 minutos ni reselección de fallidos. Para probar un solo jugador usar catálogo controlado, no un parámetro de selección.
 
-Scraping conserva body obligatorio: `{}` resuelve UTC actual; fecha explícita nunca futura y fija durante todo el POST. `maxPlayers` se retira: enviarlo, incluso null, debe devolver `400 INVALID_REQUEST` antes del Service. Cliente y proxy deben permitir horas de espera; no repetir automáticamente si se pierde la respuesta. Consultar cobertura y decidir manualmente otra petición. JSON no cambia su entrada.
+Scraping conserva body obligatorio: `{}` resuelve UTC actual; fecha explícita nunca futura y fija durante todo el POST. `maxPlayers` se retira: enviarlo, incluso null, debe devolver `400 INVALID_REQUEST` antes del Service. Cliente y proxy deben permitir horas de espera; no repetir automáticamente si se pierde la respuesta. Usar el resumen recibido y la auditoría operativa disponible para decidir manualmente otra petición. JSON no cambia su entrada.
 
-### Cómo consultar los pendientes de scraping
+### Antecedente retirado: consulta de pendientes por GET
+
+Ejemplo histórico, no ejecutar como validación del nuevo contrato. Los pendientes siguen presentes en el resumen POST; la ruta siguiente se retira.
 
 ```bash
 curl "http://localhost:8080/api/players/statistics/whoscored/coverage?source=SCRAPING&extractionDate=2026-10-15" \
@@ -132,7 +182,9 @@ la precisión variable de almacenamiento no modifica FR-027. El modelo vigente n
 precisión observada por métrica ni tolerancias de contraste, de modo que no hay caso de contraste
 que verificar. Son pruebas pendientes del usuario tras su implementación, no resultados observados.
 
-## Escenario 6: cobertura independiente
+## Escenario 6 histórico retirado: consulta de cobertura independiente
+
+El GET siguiente queda retirado. Para la validación vigente, comprobar independencia de conteos y `coverageComplete` en los resúmenes de los POST controlados de cada canal, no mediante esta consulta.
 
 ```bash
 curl "http://localhost:8080/api/players/statistics/whoscored/coverage?source=JSON&extractionDate=2026-10-15" \
@@ -144,7 +196,7 @@ Repetir con `source=SCRAPING`. Los conteos y `coverageComplete` deben ser indepe
 ## Escenario 7: fallos y seguridad
 
 - Sin JWT: 401 antes de acceder al proveedor.
-- En GET `/coverage`, fuente inválida o ausente: `INVALID_STATISTICS_SOURCE`; los POST fijan su canal por ruta.
+- Antigua ruta GET `/coverage` con JWT válido: 404, sin acceder al proveedor; no conserva validaciones de fuente/fecha. Los POST fijan su canal por ruta y conservan su seguridad.
 - Scraping: cualquier presencia de `maxPlayers`, body ausente o JSON malformado produce `INVALID_REQUEST`; fecha futura produce `INVALID_STATISTICS_EXTRACTION_DATE`.
 - POST JSON con query parameters o body no vacío (incluso `{}`): `INVALID_REQUEST`; sin entrada es el uso válido.
 - Segunda ejecución simultánea del mismo canal: `PLAYER_STATISTICS_SYNC_IN_PROGRESS`.
