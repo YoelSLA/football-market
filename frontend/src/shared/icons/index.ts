@@ -8,7 +8,7 @@
  *
  * Convenciones:
  * - Se exporta cada icono una sola vez, con su nombre canonico.
- * - El consumidor da su significato al icono en su propio contexto:
+ * - El consumidor da su significado al icono en su propio contexto:
  *   la etiqueta, el texto alternativo y el rol en la interfaz.
  * - `LucideIcon` es el tipo de un icono y se exporta junto a ellos,
  *   para que ningun consumidor dependa de la biblioteca.
@@ -19,6 +19,7 @@
 export {
 	Activity,
 	ArrowRight,
+	Award,
 	BarChart3,
 	CalendarDays,
 	ChartNoAxesCombined,
@@ -32,6 +33,7 @@ export {
 	CircleX,
 	Clock,
 	Coins,
+	Crown,
 	Database,
 	FileText,
 	Footprints,
@@ -43,12 +45,15 @@ export {
 	IdCard,
 	Info,
 	Layers3,
+	LayoutDashboard,
 	LayoutGrid,
 	List,
 	LoaderCircle,
 	Lock,
 	type LucideIcon,
+	Medal,
 	Minus,
+	MoreVertical,
 	Package,
 	Plus,
 	Puzzle,
