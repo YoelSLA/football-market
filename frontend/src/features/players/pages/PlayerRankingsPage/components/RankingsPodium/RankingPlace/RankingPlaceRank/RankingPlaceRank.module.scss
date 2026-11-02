@@ -1,0 +1,23 @@
+.rank {
+	// Posicionamiento
+	position: relative;
+	z-index: 1;
+
+	// Layout
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	// Dimensiones
+	width: 62px;
+
+	&__icon {
+		display: block;
+
+		width: 62px;
+		height: 62px;
+
+		object-fit: contain;
+	}
+}

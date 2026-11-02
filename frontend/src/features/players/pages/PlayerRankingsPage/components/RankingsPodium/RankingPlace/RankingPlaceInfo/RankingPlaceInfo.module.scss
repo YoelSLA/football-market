@@ -1,0 +1,15 @@
+.info {
+	// Posicionamiento
+	position: relative;
+	z-index: 1;
+
+	// Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	justify-content: space-between;
+
+	// Dimensiones
+	min-width: 0;
+	height: 128px;
+}

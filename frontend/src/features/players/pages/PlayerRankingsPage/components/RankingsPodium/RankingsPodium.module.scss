@@ -1,0 +1,53 @@
+.podiumSection {
+	// Layout
+	display: flex;
+	flex: 0 0 176px;
+	flex-direction: column;
+
+	// Dimensiones
+	width: 100%;
+	min-width: 0;
+	height: 176px;
+}
+
+.podiumGrid {
+	// Layout
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: stretch;
+	gap: 16px;
+
+	// Dimensiones
+	width: 100%;
+	height: 100%;
+}
+
+.podiumColumn {
+	// Layout
+	display: flex;
+
+	// Dimensiones
+	width: 100%;
+	min-width: 0;
+
+	&_center {
+		z-index: 2;
+	}
+}
+
+// Responsive
+@media (max-width: 1100px) {
+	.podiumSection {
+		height: auto;
+		flex-basis: auto;
+	}
+
+	.podiumGrid {
+		grid-template-columns: 1fr;
+		gap: 12px;
+	}
+
+	.podiumColumn_center {
+		order: -1;
+	}
+}

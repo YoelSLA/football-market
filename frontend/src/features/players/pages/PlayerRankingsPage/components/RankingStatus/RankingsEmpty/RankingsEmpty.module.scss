@@ -1,0 +1,50 @@
+@use "@/styles/abstracts" as ds;
+
+.emptyState {
+	// Layout
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	height: 100%;
+
+	// Espaciado
+	padding: 48px 24px;
+
+	// Apariencia
+	background: ds.$surface-finance-tile;
+	border: 1px solid ds.$border-finance;
+	border-radius: 12px;
+	text-align: center;
+
+	&__iconWrapper {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 72px;
+		height: 72px;
+		margin-bottom: 8px;
+		background: rgba(245, 158, 11, 0.1);
+		border-radius: 50%;
+	}
+
+	&__icon {
+		color: #f59e0b;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 18px;
+		font-weight: 700;
+		color: ds.$text-on-dark;
+	}
+
+	&__description {
+		max-width: 480px;
+		margin: 0;
+		font-size: 14px;
+		line-height: 1.5;
+		color: ds.$text-on-dark-muted;
+	}
+}
