@@ -3,7 +3,11 @@ import { AppLayout, AuthGuard } from "@/app/layouts";
 import MarketBuyRoute from "@/app/market/MarketBuyRoute";
 import MarketSellRoute from "@/app/market/MarketSellRoute";
 import { HomePage, LoginPage, RegisterPage } from "@/features/auth";
-import { PlayerDetailPage, PlayersPage } from "@/features/players";
+import {
+	PlayerDetailPage,
+	PlayerRankingsPage,
+	PlayersPage,
+} from "@/features/players";
 import {
 	PortfolioHoldingsPage,
 	PortfolioSummaryPage,
@@ -31,6 +35,7 @@ export default function AppRouter() {
 						element={<PortfolioHoldingsPage />}
 					/>
 					<Route path="/players" element={<PlayersPage />} />
+					<Route path="/players/ranking" element={<PlayerRankingsPage />} />
 					<Route path="/players/:id" element={<PlayerDetailPage />} />
 					<Route path="/market/buy" element={<MarketBuyRoute />} />
 					<Route path="/market/sell" element={<MarketSellRoute />} />

@@ -3,10 +3,14 @@ import {
 	BarChart3,
 	FileText,
 	History,
+	LayoutDashboard,
 	Package,
 	Puzzle,
 	ShoppingCart,
 	Tag,
+	TrendingUp,
+	Trophy,
+	UsersRound,
 } from "@/shared/icons";
 
 /**
@@ -25,7 +29,14 @@ export const NAV_SECTIONS: NavSection[] = [
 		label: "Inicio",
 		icon: "home",
 		path: "/home",
-		tabs: [{ key: "home-dashboard", label: "Dashboard", path: "/home" }],
+		tabs: [
+			{
+				key: "home-dashboard",
+				label: "Dashboard",
+				icon: LayoutDashboard,
+				path: "/home",
+			},
+		],
 	},
 	{
 		key: "players",
@@ -33,11 +44,22 @@ export const NAV_SECTIONS: NavSection[] = [
 		icon: "players",
 		path: "/players",
 		tabs: [
-			{ key: "players-catalog", label: "Catálogo", path: "/players" },
-			{ key: "players-ranking", label: "Ranking", path: null },
+			{
+				key: "players-catalog",
+				label: "Catálogo",
+				icon: UsersRound,
+				path: "/players",
+			},
+			{
+				key: "players-ranking",
+				label: "Ranking",
+				icon: Trophy,
+				path: "/players/ranking",
+			},
 			{
 				key: "players-quote-history",
 				label: "Historial de cotizaciones",
+				icon: TrendingUp,
 				path: null,
 			},
 		],
@@ -60,7 +82,12 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: Tag,
 				path: "/market/sell",
 			},
-			{ key: "market-orders", label: "Mis órdenes", icon: Puzzle, path: null },
+			{
+				key: "market-orders",
+				label: "Mis órdenes",
+				icon: Puzzle,
+				path: null,
+			},
 			{
 				key: "market-history",
 				label: "Historial de operaciones",
@@ -78,14 +105,14 @@ export const NAV_SECTIONS: NavSection[] = [
 			{
 				key: "portfolio-overview",
 				label: "Mi portfolio",
-				path: "/portfolio",
 				icon: BarChart3,
+				path: "/portfolio",
 			},
 			{
 				key: "portfolio-holdings",
 				label: "Mis tenencias",
-				path: "/portfolio/holdings",
 				icon: Package,
+				path: "/portfolio/holdings",
 			},
 			{
 				key: "portfolio-transactions",
