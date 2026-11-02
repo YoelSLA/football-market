@@ -43,18 +43,21 @@ inputs:
     prompt: "US formal existente (SPEC-nnn | USnn); dejar vacío si aún no existe, sin predecir identidad"
 
 steps:
+  # Specify (Nivel 2): Principal GPT Sol | Respaldo Gemini 4 Argon (contratos y borrador inicial)
   - id: specify
     command: speckit.specify
     integration: "{{ inputs.integration }}"
     input:
       args: "{{ inputs.spec }}"
 
+  # Revisión/Corrección spec (Nivel 2): Principal Claude Sonnet 5.5 | Respaldo GPT Sol (pulido y consistencia terminológica)
   - id: review-spec
     type: gate
     message: "Acreditar Specify satisfactorio antes de Clarify; un archivo no es aprobación."
     options: [approve, reject]
     on_reject: abort
 
+  # Clarify (Nivel 1): Principal GPT Astra | Respaldo Claude Opus 5.5 (análisis profundo y detección de huecos)
   - id: clarify
     command: speckit.clarify
     integration: "{{ inputs.integration }}"
@@ -67,6 +70,7 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
+  # Plan (Nivel 1): Principal Claude Opus 5.5 | Respaldo GPT Astra (arquitectura estructural y APIs)
   - id: plan
     command: speckit.plan
     integration: "{{ inputs.integration }}"
@@ -79,6 +83,7 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
+  # Checklist (Nivel 2): Principal Claude Sonnet 5.5 | Respaldo GPT Sol (verificación sin ambigüedades)
   - id: checklists
     command: speckit.checklist
     integration: "{{ inputs.integration }}"
@@ -91,6 +96,7 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
+  # Tasks (Nivel 2): Principal Gemini 4 Argon | Respaldo GPT Sol (desglose atómico de tareas y contexto largo)
   - id: tasks
     command: speckit.tasks
     integration: "{{ inputs.integration }}"
@@ -103,6 +109,7 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
+  # Analyze (Nivel 2): Principal Claude Sonnet 5.5 | Respaldo GPT Astra (auditoría estática integral)
   - id: analyze
     command: speckit.analyze
     integration: "{{ inputs.integration }}"
@@ -121,6 +128,7 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
+  # Implement (Nivel 2): Principal Claude Sonnet 5.5 | Respaldo GPT Sol (código React, hooks y servicios)
   - id: implement
     command: speckit.implement
     integration: "{{ inputs.integration }}"
@@ -145,6 +153,7 @@ steps:
     options: [approve, reject]
     on_reject: abort
 
+  # Converge (Nivel 3): Principal Gemini 3.8 Flash | Respaldo GPT Luna (Biome, linter, builds y commits semánticos; escalamiento a Opus/Astra solo por bloqueos críticos)
   - id: converge
     command: speckit.converge
     integration: "{{ inputs.integration }}"

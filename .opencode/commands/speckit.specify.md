@@ -1,6 +1,6 @@
 ---
 description: Create or update the feature specification from a natural language feature description.
-model: opencode/deepseek-v4.1-flash-free
+model: opencode/gpt-6.1-sol
 handoffs:
   - label: Clarify Spec Requirements
     agent: speckit.clarify
@@ -13,6 +13,8 @@ handoffs:
 ## Reglas locales obligatorias
 
 MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo la fase autorizada; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. MUST registrar evidencia de fase sin inferir aceptación por existencia de archivos. El seguimiento operativo solo se modifica con autorización operativa.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `GPT Sol` (`opencode/gpt-6.1-sol`) | Respaldo `Gemini 4 Argon` (`opencode/gemini-4-argon`) para contratos y borrador inicial.
 
 ```text
 $ARGUMENTS

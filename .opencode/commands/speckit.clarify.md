@@ -1,6 +1,6 @@
 ---
 description: Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec.
-model: opencode/glm-5.3-flash-free
+model: opencode/gpt-6-astra
 handoffs:
   - label: Build Technical Plan
     agent: speckit.plan
@@ -12,6 +12,8 @@ handoffs:
 ## Reglas locales obligatorias
 
 MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Clarify autorizado; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. Una omisión de Clarify no completa la fase ni habilita Plan en el lifecycle normativo.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 1)**: Principal `GPT Astra` (`opencode/gpt-6-astra`) | Respaldo `Claude Opus 5.5` (`opencode/claude-opus-5-5`) para análisis profundo y detección de huecos.
 
 ```text
 $ARGUMENTS

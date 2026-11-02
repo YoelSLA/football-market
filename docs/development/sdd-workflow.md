@@ -128,6 +128,34 @@ Faltantes de implementación requerida: reabrir el trabajo afectado y repetir CO
 
 **FEATURE COMPLETION AUTHORIZATION:** CONVERGE exitoso prepara el cierre, no lo autoriza. Presentar el resultado final y pedir autorización humana inequívoca referida a la funcionalidad y al resultado evaluado. Una modificación con impacto en la base del cierre invalida la autorización afectada; reevaluar, repetir los pasos necesarios y obtener nueva autorización. No aceptar `ok`, `dale` o `seguí` como cierre.
 
+### 6.1 Matriz normativa de asignación de modelos por fase (Arquitectura de 3 niveles)
+
+El flujo SDD implementa una arquitectura de modelos organizada en 3 niveles de capacidad y propósito:
+
+- **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5` y `GPT Astra`. Razonamiento exhaustivo, resolución de ambigüedades críticas, detección de huecos, arquitectura estructural y diseño de contratos/APIs; reservado además para escalamiento ante bloqueos críticos.
+- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol` y `Gemini 4 Argon`. Redacción inicial de especificaciones y contratos, pulido y consistencia terminológica, checklists de requisitos sin ambigüedad, desglose atómico de tareas en contexto largo, auditoría estática integral (ANALYZE) e implementación de componentes React, hooks y servicios.
+- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash` y `GPT Luna`. Tareas operativas de alta velocidad y append-only en CONVERGE: Biome, linter, compilación/builds y generación de commits semánticos.
+
+#### Tabla de asignaciones por etapa
+
+| Etapa / Fase | Archivo / Comando | Nivel | Modelo Principal | Modelo de Respaldo | Alcance y Propósito |
+| --- | --- | --- | --- | --- | --- |
+| Specify | `speckit.specify.md` | Nivel 2 | `GPT Sol` | `Gemini 4 Argon` | Contratos y borrador inicial. |
+| Clarify | `speckit.clarify.md` | Nivel 1 | `GPT Astra` | `Claude Opus 5.5` | Análisis profundo y detección de huecos. |
+| Revisión/Corrección spec | Revisión documental / refinamiento | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Pulido y consistencia terminológica. |
+| Plan | `speckit.plan.md` | Nivel 1 | `Claude Opus 5.5` | `GPT Astra` | Arquitectura estructural y APIs. |
+| Checklist | `speckit.checklist.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Verificación sin ambigüedades. |
+| Tasks | `speckit.tasks.md` | Nivel 2 | `Gemini 4 Argon` | `GPT Sol` | Desglose atómico de tareas y contexto largo. |
+| Analyze | `speckit.analyze.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Astra` | Auditoría estática integral. |
+| Implement | `speckit.implement.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Código React, hooks y servicios. |
+| Converge | `speckit.converge.md` | Nivel 3 | `Gemini 3.8 Flash` | `GPT Luna` | Biome, linter, builds y commits semánticos; escalamiento a Opus/Astra solo por bloqueos críticos. |
+
+#### Reglas de operación, respaldo y escalamiento
+
+1. **Modelo Principal:** Es el predeterminado configurado en cada comando (`.opencode/commands/speckit.*.md`).
+2. **Modelo de Respaldo:** Se activa ante indisponibilidad operativa, límites de cuota de API o necesidad de contraste cruzado.
+3. **Escalamiento restringido en Converge:** En la fase CONVERGE opera Nivel 3 (`Gemini 3.8 Flash` / `GPT Luna`). El escalamiento a Nivel 1 (`Claude Opus 5.5` / `GPT Astra`) está estrictamente condicionado a la existencia de bloqueos críticos o contradicciones estructurales insalvables.
+
 ## 7. Ejecución del trabajo autorizado
 
 1. Identificar la SPEC real, su carpeta, la rama y el alcance autorizado. Requisitos sin SPEC, `Backlog` sin autorización y tareas técnicas no son entradas ejecutables.

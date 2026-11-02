@@ -1,6 +1,6 @@
 ---
 description: Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation.
-model: openai/gpt-6.1-sol
+model: opencode/claude-sonnet-5-5
 ---
 
 ## User Input
@@ -8,6 +8,8 @@ model: openai/gpt-6.1-sol
 ## Reglas locales obligatorias
 
 MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks. MUST ejecutar solo Analyze autorizado, estrictamente de lectura. MUST NOT ejecutar tests ni hooks incompatibles. CRITICAL, HIGH o cualquier incertidumbre fundamental son bloqueantes; MUST NOT autorizar la implementación con ellos. El informe se registra como evidencia fuera del análisis cuando el seguimiento esté autorizado; corregir artefactos requiere otro paso autorizado y repetir Analyze.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `Claude Sonnet 5.5` (`opencode/claude-sonnet-5-5`) | Respaldo `GPT Astra` (`opencode/gpt-6-astra`) para auditoría estática integral.
 
 ```text
 $ARGUMENTS
