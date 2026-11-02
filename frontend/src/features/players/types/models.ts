@@ -141,3 +141,45 @@ export type PlayerStatisticsState =
 	| { status: "idle" | "loading"; data: null; errorMessage: null }
 	| { status: "error"; data: null; errorMessage: string }
 	| { status: "ready"; data: PlayerStatistics; errorMessage: string | null };
+
+export type TacticalPosition = "DEL" | "MED" | "DEF" | "POR";
+
+export type RankingMode = "PERFORMANCE" | "VALUATION";
+
+export interface PlayerRankingItem {
+	position: number;
+	playerId: number;
+	playerName: string;
+	playerAvatar: string | null;
+	teamName: string;
+	teamBadge: string | null;
+	leagueName: string;
+	leagueFlag: string | null;
+	tacticalPosition: TacticalPosition;
+	score?: number;
+	price?: number;
+	formattedDate: string;
+	origin?: "RECOMPUTED" | "CARRIED_FORWARD";
+}
+
+export interface RankingMetadata {
+	mode: RankingMode;
+	strategyName: string | null;
+	strategyLabel: string;
+	referenceDate: string | null;
+	totalClassified: number;
+	quoteOriginSummary?: string;
+}
+
+export interface RankingFilterCriteria {
+	searchTerm: string;
+	selectedLeague: string;
+	selectedPosition: string;
+}
+
+export interface RankingPaginationState {
+	currentPage: number;
+	pageSize: number;
+	totalItems: number;
+	totalPages: number;
+}
