@@ -38,6 +38,26 @@ Prohibido el loop autónomo `analyze → fix → analyze → fix`; ese ciclo lo 
 
 Una idea o requisito sin SPEC puede pre-clarificarse mínimamente antes de SPECIFY. Dividir el alcance de una funcionalidad requiere **aprobación humana**: proponer la división y esperar confirmación de los límites. Una épica o un agrupamiento solo se crean cuando exista una necesidad real de coordinación.
 
+## Matriz normativa de asignación de modelos (Arquitectura de 3 niveles)
+
+El flujo SDD asigna modelos de IA según la arquitectura de tres niveles de especialización:
+
+- **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5`, `GPT Astra`. Alta complejidad: análisis profundo, detección de huecos, arquitectura de datos y APIs, escalamiento por bloqueos críticos.
+- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol`, `Gemini 4 Argon`. Especificación, contratos iniciales, pulido y consistencia, checklists sin ambigüedades, desglose atómico en contexto largo, auditoría estática integral e implementación React/hooks/servicios.
+- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash`, `GPT Luna`. Velocidad y diagnóstico append-only en Converge: Biome, linter, builds y commits semánticos; escalamiento a Nivel 1 solo ante bloqueos críticos.
+
+| Etapa / Fase | Operación / Contexto | Nivel | Principal | Respaldo | Alcance |
+| --- | --- | --- | --- | --- | --- |
+| Specify | `/speckit.specify` | Nivel 2 | `GPT Sol` | `Gemini 4 Argon` | Contratos y borrador inicial |
+| Clarify | `/speckit.clarify` | Nivel 1 | `GPT Astra` | `Claude Opus 5.5` | Análisis profundo y detección de huecos |
+| Revisión/Corrección spec | Revisión documental | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Pulido y consistencia terminológica |
+| Plan | `/speckit.plan` | Nivel 1 | `Claude Opus 5.5` | `GPT Astra` | Arquitectura estructural y APIs |
+| Checklist | `/speckit.checklist` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Verificación sin ambigüedades |
+| Tasks | `/speckit.tasks` | Nivel 2 | `Gemini 4 Argon` | `GPT Sol` | Desglose atómico de tareas y contexto largo |
+| Analyze | `/speckit.analyze` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Astra` | Auditoría estática integral |
+| Implement | `/speckit.implement` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Código React, hooks y servicios |
+| Converge | `/speckit.converge` | Nivel 3 | `Gemini 3.8 Flash` | `GPT Luna` | Biome, linter, builds y commits; escalamiento a Opus/Astra solo por bloqueos críticos |
+
 ## Identidad de la Feature
 
 Determinar la Feature antes de actuar:

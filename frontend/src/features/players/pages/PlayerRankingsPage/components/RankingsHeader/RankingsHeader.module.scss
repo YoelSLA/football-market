@@ -1,0 +1,225 @@
+@use "@/styles/abstracts" as ds;
+
+.header {
+	display: grid;
+	grid-template-columns: minmax(0, 852px) minmax(0, 1fr);
+	align-items: center;
+	gap: 16px;
+	flex: 0 0 72px;
+	width: 100%;
+	min-width: 0;
+	height: 72px;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 14px;
+		min-width: 0;
+	}
+
+	&__iconBox {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 10px;
+		background: rgba(0, 201, 136, 0.08);
+		border: 1px solid rgba(0, 201, 136, 0.28);
+		flex-shrink: 0;
+	}
+
+	&__trophy {
+		color: #00c988;
+	}
+
+	&__titleGroup {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 22px;
+		font-weight: 700;
+		color: #ffffff;
+		letter-spacing: -0.01em;
+	}
+
+	&__subtitle {
+		margin: 0;
+		font-size: 13px;
+		color: #8fa2b4;
+	}
+
+	&__right {
+		display: grid;
+		grid-template-columns: 440px 580px;
+		align-items: center;
+		gap: 16px;
+		min-width: 0;
+	}
+
+	&__toggle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: stretch;
+		background: #061524;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		padding: 4px;
+		gap: 4px;
+		width: 100%;
+
+		.toggleButton {
+			flex: 1;
+			justify-content: center;
+		}
+	}
+}
+
+.toggleButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	background: transparent;
+	border: 1.5px solid transparent;
+	color: #8fa2b4;
+	padding: 7px 18px;
+	border-radius: 6px;
+	font-size: 13px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+	svg {
+		color: #8fa2b4;
+		transition: color 0.15s ease;
+	}
+
+	&:hover:not(&_active) {
+		color: #ffffff;
+		background: rgba(255, 255, 255, 0.04);
+
+		svg {
+			color: #ffffff;
+		}
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-on-dark;
+		outline-offset: 1px;
+	}
+
+	&_active {
+		background: #072a2f;
+		border-color: #00c988;
+		color: #ffffff;
+		font-weight: 700;
+
+		svg {
+			color: #00c988;
+		}
+	}
+}
+
+.metricsBar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #071928;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	border-radius: 8px;
+	padding: 6px 18px;
+	gap: 20px;
+	width: 100%;
+	min-width: 0;
+}
+
+.metricColumn {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.metricLabel {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 10px;
+	font-weight: 500;
+	color: #7a91a6;
+	white-space: nowrap;
+}
+
+.metricValue {
+	font-size: 12px;
+	font-weight: 700;
+	color: #ffffff;
+	white-space: nowrap;
+}
+
+.metricDivider {
+	width: 1px;
+	height: 22px;
+	background: rgba(255, 255, 255, 0.08);
+	flex-shrink: 0;
+}
+
+.infoIcon {
+	color: #7a91a6;
+}
+
+@media (max-width: 1100px) {
+	.header {
+		display: flex;
+		height: auto;
+		flex-basis: auto;
+		flex-wrap: wrap;
+
+		&__right {
+			display: flex;
+			width: 100%;
+			justify-content: flex-start;
+			margin-left: 0;
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	.header {
+		flex-direction: column;
+		align-items: flex-start;
+
+		&__left {
+			width: 100%;
+		}
+
+		&__right {
+			flex-direction: column;
+			align-items: stretch;
+			width: 100%;
+		}
+
+		&__toggle {
+			width: 100%;
+
+			.toggleButton {
+				flex: 1;
+				justify-content: center;
+			}
+		}
+
+		.metricsBar {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 8px;
+		}
+
+		.metricDivider {
+			width: 100%;
+			height: 1px;
+		}
+	}
+}

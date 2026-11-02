@@ -1,0 +1,352 @@
+@use "@/styles/abstracts" as ds;
+
+.tableWrapper {
+	flex: 0 0 413px;
+	width: 100%;
+	min-width: 0;
+	height: 413px;
+	overflow: hidden;
+	background: #071928;
+	border-radius: 8px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	scrollbar-width: thin;
+	scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.table {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	border-collapse: separate;
+	border-spacing: 0;
+	text-align: left;
+	font-size: 13px;
+	color: #ffffff;
+
+	thead {
+		display: block;
+		height: 32px;
+		margin-bottom: 4px;
+		background: #061320;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+		tr {
+			height: 32px;
+		}
+
+		th {
+			display: flex;
+			align-items: center;
+			min-width: 0;
+			padding: 0 8px;
+			font-size: 11px;
+			font-weight: 600;
+			color: #7a91a6;
+			white-space: nowrap;
+		}
+	}
+
+	tbody {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		height: 377px;
+		padding: 4px 0;
+		overflow: hidden;
+
+		tr {
+			height: 44px;
+			flex: 0 0 44px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+			transition: background-color 0.15s ease;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			&:hover {
+				background-color: rgba(255, 255, 255, 0.03);
+			}
+		}
+
+		td {
+			display: flex;
+			align-items: center;
+			min-width: 0;
+			padding: 0 8px;
+			vertical-align: middle;
+		}
+	}
+
+	thead tr,
+	tbody tr {
+		display: grid;
+		align-items: center;
+		column-gap: 8px;
+		width: 100%;
+		min-width: 0;
+	}
+
+	&_valuation {
+		thead tr,
+		tbody tr {
+			grid-template-columns: 80px 364px 300px 300px 160px 180px 260px 204px;
+		}
+	}
+
+	&_performance {
+		thead tr,
+		tbody tr {
+			grid-template-columns: 80px minmax(0, 1fr) 300px 300px 160px 180px 260px;
+		}
+	}
+}
+
+// Columns width & alignment
+.th_pos,
+.td_pos {
+	width: auto;
+	text-align: center;
+	justify-content: center;
+}
+
+.th_player,
+.td_player {
+	min-width: 0;
+}
+
+.th_team,
+.td_team {
+	min-width: 0;
+}
+
+.th_league,
+.td_league {
+	min-width: 0;
+}
+
+.th_role,
+.td_role {
+	width: auto;
+	text-align: center;
+	justify-content: center;
+}
+
+.th_value,
+.td_value {
+	min-width: 0;
+	text-align: left;
+}
+
+.th_date,
+.td_date {
+	min-width: 0;
+	text-align: left;
+}
+
+.th_origin,
+.td_origin {
+	width: auto;
+	text-align: center;
+	justify-content: center;
+}
+
+// Active sort header
+.th_activeSort {
+	color: #00c988 !important;
+	align-items: center;
+	gap: 4px;
+}
+
+.sortArrow {
+	font-size: 11px;
+}
+
+// Position medals and numbers
+.medalWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.posNumber {
+	font-size: 13px;
+	font-weight: 700;
+	color: #ffffff;
+}
+
+// Player cell
+.playerLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	color: #ffffff;
+	text-decoration: none;
+	font-weight: 700;
+
+	&:hover {
+		color: #00c988;
+
+		.playerName {
+			text-decoration: underline;
+		}
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-on-dark;
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+}
+
+.playerAvatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 4px;
+	object-fit: cover;
+	background: #0a1a2b;
+	flex-shrink: 0;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.playerName {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 180px;
+	font-size: 13px;
+	font-weight: 700;
+	color: #ffffff;
+}
+
+// Team cell
+.teamContainer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.teamBadge {
+	width: 18px;
+	height: 18px;
+	object-fit: contain;
+	flex-shrink: 0;
+}
+
+.badgePlaceholder {
+	font-size: 12px;
+	color: #7a91a6;
+}
+
+.teamName {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 140px;
+	color: #ffffff;
+	font-size: 13px;
+}
+
+// League cell
+.leagueContainer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.leagueFlag {
+	width: 16px;
+	height: 16px;
+	object-fit: contain;
+	flex-shrink: 0;
+	border-radius: 2px;
+}
+
+.leagueName {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 140px;
+	color: #cbd5e1;
+	font-size: 13px;
+}
+
+// Position solid badges
+.positionBadge {
+	display: inline-block;
+	padding: 2px 7px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+
+	&_DEL {
+		background: #ef4444;
+		color: #ffffff;
+	}
+
+	&_MED {
+		background: #f59e0b;
+		color: #1e1b18;
+	}
+
+	&_DEF {
+		background: #3b82f6;
+		color: #ffffff;
+	}
+
+	&_POR {
+		background: #10b981;
+		color: #ffffff;
+	}
+}
+
+// Value strong
+.valueStrong {
+	font-size: 13px;
+	font-weight: 700;
+	color: #ffffff;
+	font-variant-numeric: tabular-nums;
+}
+
+// Date
+.dateText {
+	font-size: 12px;
+	color: #8fa2b4;
+	white-space: nowrap;
+}
+
+// Origin chips
+.originChip {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	white-space: nowrap;
+
+	&_recomputed {
+		background: rgba(0, 201, 136, 0.12);
+		border: 1px solid rgba(0, 201, 136, 0.35);
+		color: #00c988;
+	}
+
+	&_carried {
+		background: rgba(59, 130, 246, 0.12);
+		border: 1px solid rgba(59, 130, 246, 0.35);
+		color: #60a5fa;
+	}
+}
+
+@media (max-width: 1200px) {
+	.tableWrapper {
+		overflow-x: auto;
+	}
+
+	.table {
+		min-width: 1200px;
+	}
+}

@@ -1,6 +1,6 @@
 ---
 description: Execute the implementation planning workflow using the plan template to generate design artifacts.
-model: openai/gpt-6.1-sol
+model: opencode/claude-opus-5-5
 handoffs:
   - label: Create Checklist
     agent: speckit.checklist
@@ -12,6 +12,8 @@ handoffs:
 ## Reglas locales obligatorias
 
 MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Plan autorizado; el siguiente paso es Checklists evaluados, no Tasks automáticamente. MUST NOT ejecutar tests ni hooks incompatibles. MUST preservar artefactos existentes fuera del alcance y registrar evidencia de fase.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 1)**: Principal `Claude Opus 5.5` (`opencode/claude-opus-5-5`) | Respaldo `GPT Astra` (`opencode/gpt-6-astra`) para arquitectura estructural y APIs.
 
 ```text
 $ARGUMENTS

@@ -61,3 +61,29 @@ export interface PlayerStatisticsResponseDTO {
 	competitionName: string | null;
 	metrics: PlayerMetricResponseDTO[];
 }
+
+export interface ScoreRankingEntryDTO {
+	position: number;
+	playerId: number;
+	score: number;
+	valuationDate: string;
+}
+
+export interface ScoreRankingResponseDTO {
+	strategy: string | null;
+	quoteDate: string | null;
+	ranking: ScoreRankingEntryDTO[];
+}
+
+export interface QuoteRankingEntryDTO {
+	position: number;
+	playerId: number;
+	price: number;
+	effectiveDate: string;
+	origin: "RECOMPUTED" | "CARRIED_FORWARD";
+	calculatedAt: string;
+}
+
+export interface QuoteRankingResponseDTO {
+	ranking: QuoteRankingEntryDTO[];
+}

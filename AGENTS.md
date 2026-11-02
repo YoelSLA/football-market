@@ -14,6 +14,7 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
 | Creación o nombre de una rama | [Convenciones de Git](docs/development/git-workflow.md): formato, tipos y reglas obligatorias. |
 | Paso de Spec Kit | Definición del comando correspondiente en `.opencode/commands/`, subordinada al workflow SDD y Constitution; ejecutar solo el paso solicitado. |
+| Asignación de modelos SDD | [Matriz normativa de modelos](#matriz-normativa-de-asignación-de-modelos-por-fase-arquitectura-de-3-niveles): arquitectura de 3 niveles y asignaciones por etapa. |
 | Inicio de un issue | [Comando `/start-issue`](.opencode/commands/start-issue.md) y [§5.1 del workflow operativo SDD + Git](docs/development/sdd-workflow.md). |
 
 No cargar instrucciones ni documentación del backend para una tarea exclusivamente frontend ni viceversa. Una tarea que afecte ambas áreas debe consultar ambos archivos específicos.
@@ -24,6 +25,7 @@ No cargar instrucciones ni documentación del backend para una tarea exclusivame
 - Construir el nombre según las [convenciones de Git](docs/development/git-workflow.md): `<type>/<spec-id>-<scope>` cuando hay spec relacionada, `<type>/<scope>` cuando el cambio es pequeño, técnico o independiente. El `<scope>` va en `kebab-case`.
 - El nombre de la rama y el nombre del directorio de la spec son cosas distintas: el directorio usa solo `<spec-id>-<scope>`, sin el prefijo de tipo. Para derivar uno del otro, quitar el prefijo `<type>/`.
 - Cuando la tarea incluya el nombre de una rama, mantener la trazabilidad spec → rama → commits → Pull Request.
+- Creación del Pull Request: al finalizar la etapa de CLARIFY (tras consolidar las respuestas en la especificación, confirmar los cambios y subirlos a la rama remota), crear siempre el Pull Request hacia la rama de integración (`dev`), vinculando el issue de origen y reportando su URL.
 
 ### Inicio de un issue
 
@@ -43,6 +45,34 @@ Una spec nueva se crea con el flujo normal, sin `--reuse`. Para retomar trabajo 
 - `--reuse` es distinto de `--allow-existing-branch`: el primero localiza una spec existente por scope; el segundo solo permite que el flujo de creación caiga sobre un directorio ya existente.
 - Ninguno de los dos descarta, sobrescribe ni hace `stash` de cambios locales. Si hay cambios rastreados pendientes o `HEAD` está separado, el paso de rama se aborta con un mensaje y deja el estado de trabajo intacto; la spec se crea o se reutiliza igual.
 - Comprobar el resultado con `SPEC_ACTION` y `BRANCH_STATUS` en la salida en vez de asumirlo por el texto.
+
+## Matriz normativa de asignación de modelos por fase (Arquitectura de 3 niveles)
+
+El flujo SDD (Spec-Driven Development) estructura la asignación de modelos de lenguaje en una **arquitectura de 3 niveles**:
+
+- **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5` y `GPT Astra`. Modelos de máxima capacidad cognitiva para análisis profundo, detección de huecos, arquitectura estructural, contratos/APIs complejos y resolución de bloqueos críticos.
+- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol` y `Gemini 4 Argon`. Modelos especializados en redacción de especificaciones, contratos iniciales, pulido terminológico, checklists sin ambigüedades, descomposición atómica de tareas en ventanas largas de contexto, auditoría estática integral e implementación de código React, hooks y servicios.
+- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash` y `GPT Luna`. Modelos de alta velocidad para ejecución append-only en Converge, Biome, linter, builds y generación de commits semánticos.
+
+### Asignaciones por etapa
+
+| Etapa / Fase | Archivo / Contexto | Nivel | Modelo Principal | Modelo de Respaldo | Alcance y Propósito |
+| --- | --- | --- | --- | --- | --- |
+| Specify | `speckit.specify.md` | Nivel 2 | `GPT Sol` | `Gemini 4 Argon` | Contratos y borrador inicial. |
+| Clarify | `speckit.clarify.md` | Nivel 1 | `GPT Astra` | `Claude Opus 5.5` | Análisis profundo y detección de huecos. |
+| Revisión/Corrección spec | Revisión documental / refinamiento | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Pulido y consistencia terminológica. |
+| Plan | `speckit.plan.md` | Nivel 1 | `Claude Opus 5.5` | `GPT Astra` | Arquitectura estructural y APIs. |
+| Checklist | `speckit.checklist.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Verificación sin ambigüedades. |
+| Tasks | `speckit.tasks.md` | Nivel 2 | `Gemini 4 Argon` | `GPT Sol` | Desglose atómico de tareas y contexto largo. |
+| Analyze | `speckit.analyze.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Astra` | Auditoría estática integral. |
+| Implement | `speckit.implement.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Código React, hooks y servicios. |
+| Converge | `speckit.converge.md` | Nivel 3 | `Gemini 3.8 Flash` | `GPT Luna` | Biome, linter, builds y commits semánticos; escalamiento a Opus/Astra solo por bloqueos críticos. |
+
+### Reglas de uso, respaldo y escalamiento
+
+- **Invocación predeterminada:** Cada fase o comando ejecuta por defecto su **Modelo Principal**.
+- **Activación de respaldo:** El **Modelo de Respaldo** se activa ante indisponibilidad del proveedor, agotamiento de cuota de API o necesidad de contraste cruzado.
+- **Escalamiento restringido en Converge:** Converge opera con modelos de Nivel 3 (`Gemini 3.8 Flash` / `GPT Luna`) para garantizar velocidad y bajo costo en tareas de higiene, linter y commits. El escalamiento a Nivel 1 (`Claude Opus 5.5` o `GPT Astra`) está permitido **únicamente** ante bloqueos críticos o contradicciones estructurales insalvables.
 
 ## Antes y durante el cambio
 

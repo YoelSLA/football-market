@@ -1,9 +1,7 @@
 import type { Location } from "react-router-dom";
 import styles from "./Navbar.module.scss";
-import NavbarAccount from "./NavbarAccount";
-import NavbarBrand from "./NavbarBrand";
-import NavbarSections from "./NavbarSections";
 import NavbarTabs from "./NavbarTabs";
+import NavbarTop from "./NavbarTop";
 import type { NavigationResolver, NavSection } from "./types";
 
 interface Props {
@@ -17,8 +15,8 @@ interface Props {
 /**
  * Barra de navegación global de Football Market.
  *
- * Componen la identidad de marca, la navegación principal,
- * la navegación secundaria (pestañas) y la cuenta de usuario.
+ * Compone la franja superior (NavbarTop: marca, navegación principal y cuenta)
+ * y la navegación secundaria (NavbarTabs: pestañas de sección).
  * Utiliza una única identidad visual (estilo financiero) en toda la aplicación.
  */
 export default function Navbar({
@@ -35,14 +33,12 @@ export default function Navbar({
 
 	return (
 		<header className={styles.navbar}>
-			<div className={styles.navbar__top}>
-				<NavbarBrand />
-				<NavbarSections
-					sections={sections}
-					activeSectionKey={active.sectionKey}
-				/>
-				<NavbarAccount userName={userName} onLogout={onLogout} />
-			</div>
+			<NavbarTop
+				sections={sections}
+				activeSectionKey={active.sectionKey}
+				userName={userName}
+				onLogout={onLogout}
+			/>
 			{activeSection && activeSection.tabs.length > 0 && (
 				<NavbarTabs tabs={activeSection.tabs} activeTabKey={active.tabKey} />
 			)}

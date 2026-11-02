@@ -1,6 +1,6 @@
 ---
 description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
-model: opencode/glm-5.3-flash-free
+model: opencode/gemini-4-argon
 handoffs:
   - label: Analyze For Consistency
     agent: speckit.analyze
@@ -13,6 +13,8 @@ handoffs:
 ## Reglas locales obligatorias
 
 MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Tasks autorizado, tras Checklists evaluados; luego corresponde Analyze, no implementación automática. MUST preservar IDs y avance existente al reanudar. Las Tasks se registran exclusivamente en `tasks.md`; MUST NOT convertirse en Issues ni duplicar su estado en el seguimiento operativo. MUST NOT ejecutar tests ni hooks incompatibles.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `Gemini 4 Argon` (`opencode/gemini-4-argon`) | Respaldo `GPT Sol` (`opencode/gpt-6.1-sol`) para desglose atómico de tareas y contexto largo.
 
 ```text
 $ARGUMENTS

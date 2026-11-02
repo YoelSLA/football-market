@@ -1,7 +1,9 @@
 export { useAllPlayersQuery } from "./useAllPlayersQuery";
 export { usePlayerCatalogFiltersQuery } from "./usePlayerCatalogFiltersQuery";
 export { usePlayerDetailQuery } from "./usePlayerDetailQuery";
+export { usePlayerQuoteRankingQuery } from "./usePlayerQuoteRankingQuery";
 export { usePlayerSampleSeasonQuery } from "./usePlayerSampleSeasonQuery";
+export { usePlayerScoreRankingQuery } from "./usePlayerScoreRankingQuery";
 export { usePlayerStatisticsQuery } from "./usePlayerStatisticsQuery";
 export { PLAYERS_PAGE_SIZE, usePlayersQuery } from "./usePlayersQuery";
 export { usePlayerTokenQuoteQuery } from "./usePlayerTokenQuoteQuery";

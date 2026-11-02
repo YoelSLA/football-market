@@ -1,0 +1,54 @@
+.meta {
+	// Layout
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+
+	&__clubRow,
+	&__leagueRow {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+
+		min-width: 0;
+
+		font-size: 12px;
+		color: #cbd5e1;
+	}
+
+	&__shield {
+		flex-shrink: 0;
+
+		width: 15px;
+		height: 15px;
+
+		object-fit: contain;
+	}
+
+	&__shieldPlaceholder {
+		font-size: 12px;
+		color: #64748b;
+	}
+
+	&__flag {
+		flex-shrink: 0;
+
+		width: 18px;
+		height: 12px;
+
+		object-fit: cover;
+
+		border-radius: 2px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+	}
+
+	&__teamName,
+	&__leagueName {
+		color: #cbd5e1;
+		font-weight: 500;
+
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}

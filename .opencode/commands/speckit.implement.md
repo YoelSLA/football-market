@@ -1,6 +1,6 @@
 ---
 description: Implementar el alcance autorizado de la funcionalidad y sus prerrequisitos explicitos desde tasks.md.
-model: opencode/deepseek-v4.1-flash-free
+model: opencode/claude-sonnet-5-5
 ---
 
 ## User Input
@@ -8,6 +8,8 @@ model: opencode/deepseek-v4.1-flash-free
 ## Reglas locales obligatorias
 
 MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST comprobar que la preparación está completa, ANALYZE vigente sin blockers, y que existe IMPLEMENT AUTHORIZATION humana explícita, vigente y persistida para el alcance y sus prerrequisitos autorizados. Dependency ≠ Blocker: dependencias conocidas se resuelven por orden técnico, sin inventar alcance. Autorización ≠ inicio: el registro de seguimiento pasa a In Progress solo cuando el trabajo comienza realmente. Un requisito sin spec, un registro en Backlog y una tarea técnica aislada no son entradas ejecutables; MUST NOT consumir todas las Tasks por defecto. MUST NOT ejecutar tests ni indirectamente mediante hooks. Implementación completa habilita CODE REVIEW con report completo (incluidos tests), no DONE: CODE REVIEW y TESTING son gates humanos separados. CONVERGE final y FEATURE COMPLETION AUTHORIZATION corresponden a cierre de Feature, fuera de esta ejecución. Invalidar gates solo por impacto sobre alcance evaluado, conservando aprobaciones no afectadas.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `Claude Sonnet 5.5` (`opencode/claude-sonnet-5-5`) | Respaldo `GPT Sol` (`opencode/gpt-6.1-sol`) para código React, hooks y servicios.
 
 ```text
 $ARGUMENTS

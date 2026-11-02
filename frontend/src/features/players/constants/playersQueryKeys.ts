@@ -10,4 +10,6 @@ export const playersQueryKeys = {
 	tokenQuote: (id: number) => ["players", "demo-quotes", id] as const,
 	statistics: (id: number, seasonKey: string | null) =>
 		["players", "statistics", id, seasonKey ?? "auto"] as const,
+	scoreRanking: ["players", "ranking", "score"] as const,
+	quoteRanking: ["players", "ranking", "quote"] as const,
 };

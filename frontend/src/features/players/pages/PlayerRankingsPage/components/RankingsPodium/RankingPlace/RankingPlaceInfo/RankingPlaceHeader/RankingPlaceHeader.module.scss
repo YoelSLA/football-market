@@ -1,0 +1,78 @@
+@use "@/styles/abstracts" as ds;
+
+.header {
+	// Layout
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+
+	&__nameLink {
+		min-width: 0;
+		max-width: 100%;
+
+		color: #ffffff;
+		text-decoration: none;
+
+		&:hover {
+			color: #38bdf8;
+		}
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-on-dark;
+			outline-offset: 1px;
+			border-radius: 4px;
+		}
+	}
+
+	&__name {
+		margin: 0;
+
+		font-size: 15px;
+		font-weight: 700;
+		line-height: 1.2;
+
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.positionBadge {
+	// Layout
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	// Espaciado
+	padding: 2px 7px;
+
+	// Tipografía
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+
+	// Apariencia
+	border-radius: 4px;
+
+	&_DEL {
+		background: #ef4444;
+		color: #ffffff;
+	}
+
+	&_MED {
+		background: #f59e0b;
+		color: #0f172a;
+	}
+
+	&_DEF {
+		background: #2563eb;
+		color: #ffffff;
+	}
+
+	&_POR {
+		background: #10b981;
+		color: #ffffff;
+	}
+}

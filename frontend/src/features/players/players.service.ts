@@ -11,6 +11,8 @@ import type {
 	PlayerStatistics,
 	PlayersPage,
 	PlayersPageResponseDTO,
+	QuoteRankingResponseDTO,
+	ScoreRankingResponseDTO,
 } from "./types";
 
 async function getPage(
@@ -77,4 +79,31 @@ async function getFilters(
 	return toPlayerCatalogFilters(data);
 }
 
-export const playersService = { getPage, getById, getStatistics, getFilters };
+async function getScoreRanking(
+	signal: AbortSignal,
+): Promise<ScoreRankingResponseDTO> {
+	const { data } = await http.get<ScoreRankingResponseDTO>(
+		"/players/ranking/score",
+		{ authenticated: true, signal },
+	);
+	return data;
+}
+
+async function getQuoteRanking(
+	signal: AbortSignal,
+): Promise<QuoteRankingResponseDTO> {
+	const { data } = await http.get<QuoteRankingResponseDTO>("/players/ranking", {
+		authenticated: true,
+		signal,
+	});
+	return data;
+}
+
+export const playersService = {
+	getPage,
+	getById,
+	getStatistics,
+	getFilters,
+	getScoreRanking,
+	getQuoteRanking,
+};

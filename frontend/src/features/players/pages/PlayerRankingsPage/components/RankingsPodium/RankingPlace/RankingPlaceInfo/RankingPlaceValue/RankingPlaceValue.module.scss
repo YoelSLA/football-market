@@ -1,0 +1,21 @@
+.value {
+	// Layout
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 1px;
+
+	&__label {
+		font-size: 10px;
+		line-height: 1;
+		color: #94a3b8;
+	}
+
+	&__number {
+		font-size: 16px;
+		font-weight: 800;
+		font-variant-numeric: tabular-nums;
+		line-height: 1.2;
+		color: #ffffff;
+	}
+}

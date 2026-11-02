@@ -110,7 +110,7 @@ El título del registro de seguimiento que este comando establece es el formato 
 Leer la definición del comando correspondiente y ejecutar solo la operación autorizada. Inspeccionar hooks; nunca activar ejecución directa o indirecta de tests.
 
 - **SPECIFY:** materializar intención, US, criterios, escenarios, requisitos y límites; evaluar calidad. Artefacto no equivale a fase completada. Ambigüedades pendientes se explicitan para CLARIFY.
-- **CLARIFY:** siempre obligatorio después de SPECIFY. Resolver decisiones funcionales y registrarlas en spec, no solo chat. Cero preguntas es válido si el escaneo acredita claridad; omitir no equivale a completar.
+- **CLARIFY:** siempre obligatorio después de SPECIFY. Resolver decisiones funcionales y registrarlas en spec, no solo chat. Cero preguntas es válido si el escaneo acredita claridad; omitir no equivale a completar. Al finalizar la fase CLARIFY (con la especificación clarificada, confirmada y subida a la rama remota), MUST crearse siempre el Pull Request hacia `dev` vinculando el issue correspondiente si aún no existe, para asegurar visibilidad temprana y trazabilidad continua.
 - **PLAN:** diseño implementable, Constitution Check antes y después, contratos y consumidores. Mantener plan, research, data-model, contracts y quickstart pertinentes, justificando no aplicabilidad. Corregir requisitos upstream, no ocultarlos en diseño. La documentación del contrato HTTP de una feature se sostiene en sus `contracts/`, en las anotaciones OpenAPI de Controllers y DTO y en los tests funcionales de Controller; ninguna tarea de entrega puede depender de una herramienta de documentación retirada sin sustituirla por esas fuentes.
 - **CHECKLIST:** obligatorio; general de calidad más especializados aplicables, selección justificada. Generación no es evaluación; respetar propiedad del revisor, no marcar para avanzar.
 - **TASKS:** preservar IDs y avance; cobertura, dependencias, rutas, tareas compartidas y verificabilidad. Incluir creación o modificación de tests backend cuando las normas aplicables lo exijan; no tests frontend ni tareas humanas de autorización. Tareas completas significan implementación completa, no cierre.
@@ -127,6 +127,34 @@ Si ANALYZE no reporta blockers, la preparación queda completa. **No existe un g
 Faltantes de implementación requerida: reabrir el trabajo afectado y repetir CODE REVIEW y TESTING según impacto. Reimplementar el alcance autorizado y repetir solo los pasos afectados antes de otro CONVERGE. Comportamiento no definido: detener, decisión humana upstream, artefactos afectados y nuevo ANALYZE. Corrección documental mecánica inequívoca MAY ocurrir **fuera de CONVERGE** como operación separada, seguida por nueva ejecución.
 
 **FEATURE COMPLETION AUTHORIZATION:** CONVERGE exitoso prepara el cierre, no lo autoriza. Presentar el resultado final y pedir autorización humana inequívoca referida a la funcionalidad y al resultado evaluado. Una modificación con impacto en la base del cierre invalida la autorización afectada; reevaluar, repetir los pasos necesarios y obtener nueva autorización. No aceptar `ok`, `dale` o `seguí` como cierre.
+
+### 6.1 Matriz normativa de asignación de modelos por fase (Arquitectura de 3 niveles)
+
+El flujo SDD implementa una arquitectura de modelos organizada en 3 niveles de capacidad y propósito:
+
+- **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5` y `GPT Astra`. Razonamiento exhaustivo, resolución de ambigüedades críticas, detección de huecos, arquitectura estructural y diseño de contratos/APIs; reservado además para escalamiento ante bloqueos críticos.
+- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol` y `Gemini 4 Argon`. Redacción inicial de especificaciones y contratos, pulido y consistencia terminológica, checklists de requisitos sin ambigüedad, desglose atómico de tareas en contexto largo, auditoría estática integral (ANALYZE) e implementación de componentes React, hooks y servicios.
+- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash` y `GPT Luna`. Tareas operativas de alta velocidad y append-only en CONVERGE: Biome, linter, compilación/builds y generación de commits semánticos.
+
+#### Tabla de asignaciones por etapa
+
+| Etapa / Fase | Archivo / Comando | Nivel | Modelo Principal | Modelo de Respaldo | Alcance y Propósito |
+| --- | --- | --- | --- | --- | --- |
+| Specify | `speckit.specify.md` | Nivel 2 | `GPT Sol` | `Gemini 4 Argon` | Contratos y borrador inicial. |
+| Clarify | `speckit.clarify.md` | Nivel 1 | `GPT Astra` | `Claude Opus 5.5` | Análisis profundo y detección de huecos. |
+| Revisión/Corrección spec | Revisión documental / refinamiento | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Pulido y consistencia terminológica. |
+| Plan | `speckit.plan.md` | Nivel 1 | `Claude Opus 5.5` | `GPT Astra` | Arquitectura estructural y APIs. |
+| Checklist | `speckit.checklist.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Verificación sin ambigüedades. |
+| Tasks | `speckit.tasks.md` | Nivel 2 | `Gemini 4 Argon` | `GPT Sol` | Desglose atómico de tareas y contexto largo. |
+| Analyze | `speckit.analyze.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Astra` | Auditoría estática integral. |
+| Implement | `speckit.implement.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Código React, hooks y servicios. |
+| Converge | `speckit.converge.md` | Nivel 3 | `Gemini 3.8 Flash` | `GPT Luna` | Biome, linter, builds y commits semánticos; escalamiento a Opus/Astra solo por bloqueos críticos. |
+
+#### Reglas de operación, respaldo y escalamiento
+
+1. **Modelo Principal:** Es el predeterminado configurado en cada comando (`.opencode/commands/speckit.*.md`).
+2. **Modelo de Respaldo:** Se activa ante indisponibilidad operativa, límites de cuota de API o necesidad de contraste cruzado.
+3. **Escalamiento restringido en Converge:** En la fase CONVERGE opera Nivel 3 (`Gemini 3.8 Flash` / `GPT Luna`). El escalamiento a Nivel 1 (`Claude Opus 5.5` / `GPT Astra`) está estrictamente condicionado a la existencia de bloqueos críticos o contradicciones estructurales insalvables.
 
 ## 7. Ejecución del trabajo autorizado
 
@@ -168,7 +196,8 @@ reset y no hacer stash de cambios ajenos.
 
 Declarar en el commit la spec, las User Stories o las tareas correspondientes y el alcance
 compartido, con hashes reales cuando existan. Vincular el Pull Request a la funcionalidad y a su
-registro de seguimiento; vincularlo no acredita implementación, revisión ni cierre.
+registro de seguimiento; vincularlo no acredita implementación, revisión ni cierre. El Pull Request
+se abre obligatoriamente al concluir la fase CLARIFY tras publicar el commit de la especificación.
 
 No inventar URL ni hash de Pull Request. El diff local revisable basta para revisión; aprobar el
 estado exacto no implica merge ni publicación. No hacer commit, crear ramas ni push sin encargo.
