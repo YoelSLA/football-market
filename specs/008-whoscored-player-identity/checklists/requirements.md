@@ -5,8 +5,10 @@
 **Feature**: [spec.md](../spec.md)
 **Evaluación**: Revisión documental del agente, 2026-10-13; una iteración, 16/16 criterios satisfechos. Revalidado tras el recorte de alcance, 2026-10-14; 16/16 criterios satisfechos. No acredita gates humanos ni READY global.
 
-**Revalidación vigente, 2026-10-14**: 16/16 tras integrar las decisiones humanas
+**Revalidación histórica, 2026-10-14**: 16/16 tras integrar las decisiones humanas
 de identidad; especializada 40/40, evidencia en [evaluation.md](evaluation.md).
+
+**Cambio 2026-11-01**: La evaluación y los marcadores siguientes se conservan como evidencia del alcance histórico; no acreditan el cambio actual. La nueva spec define operación única actual → histórico, ausencia de auditoría persistida y totales finales locales sin doble conteo (FR-001, FR-011–012, FR-016, FR-019–021 y SC-002/004/005/007). Escenarios US2 6–8 cubren omisión y prioridad de estados. No quedan marcadores de aclaración; plan, contrato, tareas y checklists especializados requieren actualización y evaluación por impacto antes de ANALYZE. No se modifican marcadores de revisión ni se atribuye aceptación humana.
 
 ## Calidad del contenido
 

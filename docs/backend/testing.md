@@ -131,7 +131,7 @@ No realizar requests a proveedores reales. Verificar según el contrato: URL, pa
 
 ## 10. Security
 
-Verificar ausencia de token, token válido, firma inválida, expiración y flujos registro/login/JWT/acceso protegido según corresponda. Se permite un endpoint mínimo exclusivo del test para infraestructura de seguridad en lugar de un Controller productivo. Ubicar estos tests en `security`, nunca en `integrations`.
+Verificar ausencia de token, token válido, firma inválida, expiración y flujos registro/login/JWT/acceso protegido según corresponda. Se permite un endpoint mínimo exclusivo del test para infraestructura de seguridad en lugar de un Controller productivo. Ubicar estos tests en `features/<feature>/security` cuando verifican permisos de una funcionalidad, o en `security` para seguridad transversal; nunca en `integrations`.
 
 ## 11. Configuración
 
@@ -171,7 +171,11 @@ Considerar happy path, entradas inválidas, ausencia, límites, estado previo/in
 
 ## 16. Organización y legibilidad
 
-Bajo `src/test/java/footballmarket/`, ubicar por responsabilidad: `models`, `repositories`, `services`, `orchestrators`, `controllers`, `integrations`, `security`, `config` o `e2e`. `integrations` significa adaptadores externos, no cualquier prueba técnicamente de integración.
+Bajo `src/test/java/footballmarket/`, reflejar la estructura efectiva de `src/main/java/footballmarket/`: agrupar primero por funcionalidad en `features/<feature>/` y luego por el paquete del componente probado (`application`, `domain`, `infraestructure`, `presentation` y sus subpaquetes). Se conserva la grafía `infraestructure` del código productivo. La ubicación no cambia la categoría del test ni sus fronteras de §2.
+
+Los journeys se ubican en `features/<feature>/e2e` y los tests de seguridad propios en `features/<feature>/security`. Las integraciones externas se organizan por proveedor en `integrations/<provider>/`, como en producción; `integrations` no significa cualquier prueba técnicamente de integración. La seguridad transversal permanece en `security` y la configuración transversal en `common/config`. Los helpers reutilizables permanecen en `support`; los exclusivos de una funcionalidad pueden ubicarse junto a ella. No crear directorios vacíos para completar un árbol.
+
+La correspondencia de funcionalidades con sus SPEC y los comandos de selección por paquete se documentan en [la guía de tests](../../backend/src/test/README.md). Las rutas en informes históricos conservan su valor como evidencia de su momento; no se reescriben como nuevas aprobaciones.
 
 El uso de `@Nested` de JUnit es obligatorio en todos los tests del backend, en todas las categorías de §2, tanto existentes como nuevos. Agrupar los casos en clases anidadas por funcionalidad o caso de uso; todos los métodos de prueba, incluidos los parametrizados, deben pertenecer a un grupo `@Nested`, sin métodos de prueba directamente en la clase contenedora. Esta regla también aplica cuando solo exista una funcionalidad o un caso de prueba. Nombrar cada grupo de forma que identifique la funcionalidad que verifica.
 
@@ -234,7 +238,7 @@ el sufijo `Test` o `Tests`, también para tests que hereden métodos de prueba.
 | `unit` | Sin contexto Spring, DB ni servidor | Model, Orchestrator, pacers, parsing y componentes instanciados directamente. |
 | `lightweight` | Contexto reducido, slice MVC o proveedor controlado; sin PostgreSQL, Docker ni navegador real | Controller, `ApplicationContextRunner`, clientes con `MockRestServiceServer` o HTTP local y Playwright sustituido. |
 | `integration` | Contexto completo o PostgreSQL/Testcontainers | Service, persistencia, migraciones, seguridad completa y startup con DB. |
-| `e2e` | Journey desde HTTP con servidor completo | Tests de `e2e/`, conservando las reglas de §13. |
+| `e2e` | Journey desde HTTP con servidor completo | Tests de `features/<feature>/e2e/`, conservando las reglas de §13. |
 
 `validateTestClassification` inspecciona fuentes Java sin cargar ni ejecutar clases. Detecta
 tests por el sufijo del archivo o por anotaciones estándar de JUnit, exige un tag explícito en
@@ -302,4 +306,4 @@ Elegir el nivel más específico capaz de demostrar la responsabilidad (§2), si
 
 Aplicar la constitución §6 (Verificación): el agente escribe o modifica tests del backend cuando corresponda, pero su ejecución queda a cargo del usuario. No modificar controles para ocultar fallos. Informar resultados disponibles y comprobaciones pendientes sin presentar el build como prueba de comportamiento.
 
-**Versión**: 2.1.0 | **Última enmienda**: 2026-10-19 (suites de ejecución y clasificación explícita autorizadas por el usuario; sin cambios en las fronteras funcionales de los tests)
+**Versión**: 3.0.0 | **Última enmienda**: 2026-11-01 (organización física por funcionalidad, reflejando producción, autorizada expresamente por el usuario; sin cambios en categorías, fronteras, casos ni autorización de ejecución)

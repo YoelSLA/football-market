@@ -1,7 +1,7 @@
 package footballmarket.security;
 
-import footballmarket.services.AuthenticationService;
-import footballmarket.services.exceptions.CurrentUserNotFoundException;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

@@ -13,6 +13,7 @@ public final class WhoScoredStatisticsPageStub {
   private final Queue<Section> sections = new ArrayDeque<>();
 
   public WhoScoredStatisticsPageStub() {
+    when(browser.isConnected()).thenReturn(true);
     when(browser.newContext()).thenAnswer(invocation -> openSection());
     when(browser.newContext(any(Browser.NewContextOptions.class)))
         .thenAnswer(invocation -> openSection());

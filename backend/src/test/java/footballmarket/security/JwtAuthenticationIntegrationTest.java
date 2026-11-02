@@ -6,9 +6,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.models.User;
-import footballmarket.repositories.UserRepository;
-import footballmarket.services.AuthenticationService;
+import footballmarket.features.auth.application.AuthenticationService;
+import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.infraestructure.UserRepository;
+import footballmarket.features.auth.security.JWTProvider;
 import footballmarket.support.TestcontainersConfiguration;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;

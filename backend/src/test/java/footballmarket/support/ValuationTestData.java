@@ -1,18 +1,18 @@
 package footballmarket.support;
 
-import footballmarket.models.MetricCatalog;
-import footballmarket.models.Player;
-import footballmarket.models.PlayerStatistics;
-import footballmarket.models.PlayerStatisticsExtractionRun;
-import footballmarket.models.PlayerStatisticsRunItem;
-import footballmarket.models.enums.ExternalProvider;
-import footballmarket.models.enums.ExtractionRunStatus;
-import footballmarket.models.enums.MetricSource;
-import footballmarket.models.enums.PlayerExtractionResult;
-import footballmarket.repositories.PlayerRepository;
-import footballmarket.repositories.PlayerStatisticsExtractionRunRepository;
-import footballmarket.repositories.PlayerStatisticsRepository;
-import footballmarket.repositories.PlayerStatisticsRunItemRepository;
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
+import footballmarket.features.statistics.domain.models.MetricCatalog;
+import footballmarket.features.statistics.domain.models.PlayerStatistics;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsExtractionRun;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsRunItem;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsExtractionRunRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRunItemRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,8 +43,7 @@ public class ValuationTestData {
   public void prepareConfirmedJsonCampaign(LocalDate date) {
     List<Player> population = this.players.findAll();
     PlayerStatisticsExtractionRun run =
-        this.runs.save(
-            new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null));
+        this.runs.save(new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH));
     for (Player player : population) {
       String externalId = externalId(player);
       player.addExternalReference(ExternalProvider.WHOSCORED, externalId);
@@ -63,7 +62,8 @@ public class ValuationTestData {
               Instant.EPOCH.plusSeconds(1));
       row.resolveContext("2", "team", "2026", "2026/27");
       Map<String, BigDecimal> metrics = new LinkedHashMap<>();
-      for (footballmarket.models.MetricDefinition definition : MetricCatalog.definitions()) {
+      for (footballmarket.features.statistics.domain.records.MetricDefinition definition :
+          MetricCatalog.definitions()) {
         if (definition.sources().contains(MetricSource.JSON))
           metrics.put(definition.key(), BigDecimal.ONE);
       }
@@ -95,8 +95,7 @@ public class ValuationTestData {
   public void preparePartialJsonCampaign(LocalDate date) {
     List<Player> population = this.eligiblePopulation();
     PlayerStatisticsExtractionRun run =
-        this.runs.save(
-            new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null));
+        this.runs.save(new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH));
     Player withoutData = population.get(0);
     Player withoutSnapshot = population.get(population.size() - 1);
     for (Player player : population.subList(1, population.size() - 1)) {
@@ -141,8 +140,7 @@ public class ValuationTestData {
   public void prepareStructurallyFailedJsonCampaign(LocalDate date) {
     List<Player> population = this.eligiblePopulation();
     PlayerStatisticsExtractionRun run =
-        this.runs.save(
-            new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH, null));
+        this.runs.save(new PlayerStatisticsExtractionRun(date, MetricSource.JSON, Instant.EPOCH));
     Player blocked = population.get(0);
     for (Player player : population.subList(1, population.size())) {
       PlayerStatisticsRunItem item = this.completedItem(run, player);
@@ -205,7 +203,8 @@ public class ValuationTestData {
             Instant.EPOCH.plusSeconds(1));
     row.resolveContext("2", "team", "2026", "2026/27");
     Map<String, BigDecimal> metrics = new LinkedHashMap<>();
-    for (footballmarket.models.MetricDefinition definition : MetricCatalog.definitions()) {
+    for (footballmarket.features.statistics.domain.records.MetricDefinition definition :
+        MetricCatalog.definitions()) {
       if (definition.sources().contains(MetricSource.JSON))
         metrics.put(definition.key(), BigDecimal.ONE);
     }

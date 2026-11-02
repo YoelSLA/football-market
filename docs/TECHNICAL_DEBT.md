@@ -83,8 +83,166 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-029](#td-029--cobertura-de-tests-incompleta-para-el-recálculo-de-cotizaciones) | Cobertura de tests incompleta para el recálculo de cotizaciones | Backend / Testing | Media | Pendiente | 2026-10-21 22:20:53 |
 | [TD-030](#td-030--cobertura-parcial-del-control-de-imports-scss) | Cobertura parcial del control de imports SCSS | Frontend / Herramientas | Media | Pendiente | 2026-10-22 14:32:17 |
 | [TD-031](#td-031--cobertura-de-tests-incompleta-para-el-ranking-por-score) | Cobertura de tests incompleta para el ranking por score | Backend / Testing | Media | En curso | 2026-10-23 19:39:54 |
+| [TD-032](#td-032--conteo-de-fallidos-de-estadísticas-incluye-no-data-y-fallos-ya-reconfirmados) | Conteo de fallidos de estadísticas incluye no-data y fallos ya reconfirmados | Backend / Contrato | Alta | Pendiente | 2026-10-27 13:45:51 |
+| [TD-033](#td-033--journeys-de-estadísticas-sustituyen-las-integrations-productivas) | Journeys de estadísticas sustituyen las Integrations productivas | Backend / Testing | Media | Pendiente | 2026-10-27 13:45:51 |
+| [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
+| [TD-035](#td-035--doble-división-potencial-de-estadísticas-json-y-auditoría-histórica-pendiente) | Doble división potencial de estadísticas JSON y auditoría histórica pendiente | Backend / Datos | Alta | Pendiente | 2026-10-29 12:59:24 |
+| [TD-036](#td-036--acoplamiento-de-paquete-entre-referencias-del-catálogo-e-identidad-whoscored) | Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored | Backend / Arquitectura | Media | Pendiente | 2026-10-28 16:08:35 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-035 — Doble división potencial de estadísticas JSON y auditoría histórica pendiente
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-035 |
+| **Fecha y hora de registro** | 2026-10-29 12:59:24 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Alta |
+| **Área afectada** | Backend / Datos |
+| **Fecha de resolución** | — |
+
+**Evidencia estática/local:** `WhoScoredStatisticsIntegration` consulta modo `0`;
+`JsonMetricAssembler.apply` divide los campos de definiciones DIVIDE_BY_APPEARANCES
+(salvo alias de faltas) por apps. La captura HAR local previa contiene aerial en modo
+`0`, apps=6 y duelAerialTotal fraccionario, consistente con valor ya normalizado por
+partido, no con un acumulado entero de duelos. Riesgo real de volver a dividir esos
+campos. El scraping anterior también aplicaba división a detalle pese al modo observado.
+No se consultó DB ni se demuestra aquí qué filas históricas quedaron afectadas.
+
+**Impacto:** posible subestimación de métricas que consumen las valuaciones. La corrección
+autorizada del 2026-10-29 se limita al scraping y no valida ni modifica la semántica JSON.
+Las campañas ya completadas no se sobrescriben automáticamente para corregir esta deuda.
+
+**Solución propuesta:** auditar unidades por columna/categoría JSON con evidencia exacta,
+acordar su normalización y regresiones, evaluar filas de ambos canales y consumidores de
+valuación. Cualquier corrección JSON o modificación de datos requiere autorización propia.
+
+**Cierre:** reglas por origen coherentes con FR-027/028, pruebas numéricas ejecutadas por
+el usuario y diagnóstico del histórico con decisión explícita sobre su tratamiento.
+
+**Historial:** 2026-10-29 12:59:24 — identificada durante T106, registrada sin modificar
+JSON, recalcular métricas, reabrir campañas ni declarar resuelta la deuda.
+
+### TD-034 — Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-034 |
+| **Fecha y hora de registro** | 2026-10-28 11:39:59 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `En curso` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Testing |
+| **Fecha de resolución** | — |
+
+**Evidencia:** `WhoScoredScrapingIntegrationTest` sustituye `Page`, `Locator` y
+`JSHandle`. Las regresiones de T107 verifican orden, timeout, selección única y limpieza,
+pero `waitForFunction`/`evaluateHandle` no ejecutan el JavaScript de producción. Esto ya
+limitaba la comparación anterior de HTML; también limita la nueva observación de render.
+
+**Impacto:** esas pruebas no demuestran por sí solas renderizado de tabla idéntica,
+rechazo de tabla vieja/spinner, actualización tardía ni ausencia real de mutaciones.
+Un build sin tests tampoco lo acredita. T106/T107 no se cierran por esas pruebas.
+
+**Solución en curso:** regresión de DOM contra HTML local controlado que ejercite el
+JavaScript real, sin Internet ni WhoScored. La excepción de T107 para navegador local
+se autorizó y registró en tasks/plan: Chromium ya instalado, headed y opt-in. No se
+agregan dependencias ni se amplían controles ejecutables del agente.
+
+**Cierre:** demostrar los escenarios anteriores con la implementación real de la espera
+y evidencia de ejecución humana satisfactoria, sin convertir un selector cambiado o una
+respuesta auxiliar en prueba de datos actualizados.
+
+**Historial:** 2026-10-28 11:39:59 — registrada durante la corrección autorizada de
+T106/T107 de SPEC-012; no resuelta ni dispensada por su registro.
+
+**Avance autorizado — 2026-10-28:** se escribe `WhoScoredScrapingDomTest`, opt-in con
+Chromium headed local y HTML en memoria, sin mocks del navegador ni acceso a WhoScored.
+Ejercita el observer/predicado productivo para reemplazo idéntico, tabla vieja sin render,
+carga pendiente y finalización diferida. Los casos negativos verifican que hubo selección
+y que la tabla está presente, evitando pasar por un timeout de preparación. No ejecutado
+por el agente: compilación y ejecución humanas pendientes; no se declara resuelta.
+
+**2026-10-29 21:53:40 — Alcance de la regresión secuencial:** los nuevos casos de
+diagnóstico Resumen → Detallado comprueban orden, identidad de Browser/worker,
+contextos separados y abandono sin retry. Siguen sustituyendo Page/Locator: no
+acreditan inicialización real de handlers ni visibilidad CSS. `panelVisibleWithin`
+solo comprueba `style.display`; el posible vínculo con run 9 no está demostrado.
+No se modifica ese predicado ni se declara resuelta la deuda en esta ampliación.
+
+**2026-10-29 22:07:26 — Corrección posterior autorizada:** el diagnóstico secuencial
+7 reprodujo el panel vacío con clic anterior a la inicialización. Navigator ahora
+espera resumen renderizado y estado inicial de pestañas, y confirma selección más
+visibilidad CSS; un único clic, sin retries. Se añaden cuatro escenarios DOM locales
+de apertura y un caso de protocolo. Build sin tests satisfactorio; ejecución humana
+de estas regresiones y contraste live pendientes. No se declara resuelta TD-034 ni
+se atribuyen todos los fallos de run 9 a esta causa.
+
+**2026-10-30 16:29:58 — Limpieza autorizada de instrumentación:** usuario informó
+protocolo y diez casos DOM satisfactorios antes de limpieza. Se conservan los casos
+DOM y el observer funcional; se retiran CLI y hooks temporales, no las regresiones.
+Campaña completa run 11 observada: 1889 completados, 214 NO_DATA, un timeout entre
+2104. Verificación posterior a limpieza pendiente; no resuelve automáticamente
+TD-034 ni las deudas de integridad/contrato independientes.
+
+**2026-10-30 16:34:51 — Retiro explícito de la suite DOM:** por solicitud del usuario
+se elimina WhoScoredScrapingDomTest y su activación por variable. Permanecen protocolo
+con dobles y pruebas Model, que no ejecutan el JavaScript productivo. La evidencia
+histórica se conserva; campañas reales no sustituyen escenarios deterministas de
+error/render. La deuda queda abierta, no resuelta ni dispensada por esta decisión.
+
+### TD-032 — Conteo de fallidos de estadísticas incluye no-data y fallos ya reconfirmados
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-032 |
+| **Fecha y hora de registro** | 2026-10-27 13:45:51 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Alta |
+| **Área afectada** | Backend / Contrato |
+| **Fecha de resolución** | — |
+
+**Evidencia estática:** `PlayerStatisticsCoverageQuery.coverage` asigna a `failedPlayers` el
+resultado de `countDistinctPlayersWithoutConfirmation`. La consulta en
+`PlayerStatisticsRunItemRepository` cuenta cualquier item distinto de `COMPLETED`, incluidos
+`NO_DATA`, y no excluye jugadores que luego tengan una confirmación satisfactoria. Puede informar
+fallidos aun con cero pendientes. Es preexistente al cambio de scraping del 2026-10-27.
+
+**Impacto:** el resumen del run conserva contadores por resultado, pero el GET de cobertura puede
+inflar su contador de fallidos. No se corrige fuera de alcance: requiere decisión y pruebas por impacto.
+
+**Cierre:** demostrar no-data separado, exclusión de fallos posteriormente reconfirmados y
+coherencia `failedPlayers <= pendingPlayers` según el contrato aprobado, con ejecución humana.
+
+**Historial:** 2026-10-27 13:45:51 — registrada durante T108 de SPEC-012; sin corrección ni tests atribuidos.
+
+**Actualización 2026-11-01 19:07:26 (`America/Argentina/Buenos_Aires`)**: en T118–T124 se retira el GET de cobertura por decisión humana, junto con su contador `failedPlayers` y la consulta exclusiva `countDistinctPlayersWithoutConfirmation`. El cierre conserva sus contadores por resultado del run; no se sustituye por la antigua fórmula defectuosa. El síntoma público queda sin consumidor en el código preparado, pero no se declara la deuda resuelta: revisión y ejecución humana del retiro/contratos POST pendientes. El criterio histórico anterior se conserva; la alternativa de cierre por eliminación del contrato debe validarse con evidencia humana, no mediante un resultado de tests inventado.
+
+### TD-033 — Journeys de estadísticas sustituyen las Integrations productivas
+
+| Campo | Valor |
+| --- | --- |
+| **ID** | TD-033 |
+| **Fecha y hora de registro** | 2026-10-27 13:45:51 (`America/Argentina/Buenos_Aires`) |
+| **Estado** | `Pendiente` |
+| **Prioridad** | Media |
+| **Área afectada** | Backend / Testing |
+| **Fecha de resolución** | — |
+
+**Evidencia:** `PlayerStatisticsSyncJourneyE2ETest`, `PlayerStatisticsCampaignClientE2ETest` y
+`PlayerStatisticsCrossChannelJourneyE2ETest` usan HTTP propio real pero declaran
+`@MockitoBean WhoScoredStatisticsScrapingIntegration` (y JSON en el último). Ya existía antes de
+este cambio. No cumplen íntegramente `docs/backend/testing.md` §13, que exige Integrations reales
+y sustitución del proveedor; no prueban la conexión Service → adaptador productivo.
+
+**Estado de SPEC-012:** se adaptaron sus contratos y escenarios al único POST, sin presentar esas
+pruebas como E2E normativamente completas. T105 no se marca completa; registrar deuda no dispensa
+el requisito ni permite cerrar la feature. Falta adaptar a proveedor Playwright/HTTP controlado con
+componentes internos reales, no renombrar las pruebas para ocultar la brecha.
+
+**Cierre:** frontera E2E conforme, sin Internet/navegador real, y ejecución humana satisfactoria.
+
+**Historial:** 2026-10-27 13:45:51 — registrada durante T105/T108; no se declara resuelta.
 
 ### TD-022 — Ranking de cotizaciones sin desempate determinista: un jugador puede aparecer dos veces
 
@@ -2151,6 +2309,20 @@ documentación de arquitectura para que la deuda vuelva a tener seguimiento.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 17:48:44 | Registro inicial en `docs/TECHNICAL_DEBT.md`, tras auditoría técnica de solo lectura del 2026-10-14. La divergencia ya estaba declarada en la documentación de arquitectura con un ancla que ya no existe, por lo que la fecha registrada es la de su incorporación a este documento. |
+
+### TD-036 — Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored
+
+Identificador anterior en `dev`: TD-032; renumerado por colisión durante la integración con SPEC-012.
+
+- **Estado:** Pendiente.
+- **Prioridad:** Media.
+- **Registro:** 2026-10-28 16:08:35 (`America/Argentina/Buenos_Aires`).
+- **Origen:** migración organizativa a Package by Feature, limitada a `catalog` y sin cambios de implementación.
+- **Evidencia:** `backend/src/main/java/footballmarket/models/PlayerExternalReference.java` declara `canonicalExternalId` con acceso de paquete; `WhoScoredIdentityCandidate.java`, en el mismo directorio, lo invoca. `Player.java` usa el constructor de paquete de `PlayerExternalReference`.
+- **Impacto:** trasladar solo `PlayerExternalReference` a `catalog/domain/models` rompe ambos accesos; trasladar `Player` sin la referencia también rompe el acceso al constructor. Las dos clases permanecen pendientes, sin ampliar visibilidad ni trasladar el dominio de identidad.
+- **Resolución propuesta:** decidir explícitamente la pertenencia y el contrato de esa colaboración antes de completar ambos traslados; no duplicar la canonicalización ni cambiar visibilidad como ajuste implícito de imports.
+- **Criterio de cierre:** separación acordada e implementada, accesos de paquete resueltos sin migrar otra feature sin autorización, build backend permitido satisfactorio y verificación funcional aportada por el usuario si cambia el contrato.
+- **Historial:** 2026-10-28 16:08:35 — registro del acoplamiento comprobado; no resuelto en la migración organizativa.
 
 ## 7. Historial de actualizaciones del registro
 

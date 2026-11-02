@@ -4,6 +4,72 @@ description: "Task list for feature implementation"
 
 # Tasks: Scraping de estadísticas de rendimiento de jugadores
 
+## Preparación del cambio funcional — retiro de GET coverage (2026-11-01)
+
+Spec, clarificaciones, plan, research, modelo de datos, contrato HTTP y quickstart actualizados como diseño objetivo autorizado, sin cambios de código/tests por este retiro. T111–T117 y sus marcas se conservan como refactor anterior, no autorizan la eliminación funcional. Las referencias históricas de tareas al GET describen el contrato anterior y no habilitan conservarlo frente a FR-014/FR-061 actualizados; su avance histórico no se reescribe.
+
+La preparación inicial dejó Tasks pendiente del checklist mínimo `checklists/coverage-removal.md`. El usuario aprobó CHK001–CHK003 y autorizó continuar con Tasks y Analyze. `setup-tasks.sh --json` resolvió SPEC-012 y la plantilla oficial; se agregan T118–T124 sin modificar IDs ni avance de T001–T117. No hay hooks de extensión configurados. CODE REVIEW y TESTING del refactor anterior siguen pendientes. Estas tareas no están autorizadas para implementación.
+
+### US2 — retirar consulta de cobertura, preservando sincronización
+
+**IMPLEMENT AUTHORIZATION — 2026-11-01**: el usuario indicó «Autorizo implementar T118-T124.» sobre el diseño, checklist aprobado y Analyze sin bloqueantes del alcance (cuatro criterios de aceptación cubiertos por siete tareas). Se inicia la implementación en `refactor/012-player-statistics-scraping`, preservando el árbol e índice existentes. Autorización limitada al retiro del GET, simplificación de exclusivos y adaptación de tests/documentación; no autoriza tests ejecutados por el agente, CODE REVIEW, TESTING ni cierre. Seguimiento remoto no verificado ni modificado.
+
+- [X] T118 [US2] Ajustar `backend/src/test/java/footballmarket/features/statistics/presentation/PlayerStatisticsControllerTest.java`, `PlayerStatisticsContractFoundationTest.java` de la misma carpeta y `backend/src/test/java/footballmarket/features/statistics/security/PlayerStatisticsSecurityIntegrationTest.java`: reemplazar contrato GET exitoso por 404 autenticado sin invocar sincronización/proveedor, eliminar fixtures y mocks exclusivos de coverage, conservar contratos y seguridad de ambos POST. FR-014/FR-061 y aceptación 1–2; escribir sin ejecutar.
+- [X] T119 [US2] Retirar GET y sus dependencias exclusivas de `backend/src/main/java/footballmarket/features/statistics/presentation/PlayerStatisticsController.java`; eliminar `presentation/PlayerStatisticsCoverageMapper.java`, `presentation/dtos/response/PlayerStatisticsCoverageResponseDTO.java`, `application/PlayerStatisticsCoverageService.java` y `application/shared/impl/PlayerStatisticsCoverageServiceImpl.java` bajo la misma raíz. Conservar los POST, DTO, validación de fecha, OpenAPI, seguridad y respuesta. Revisar referencias globales antes de borrar; no implementar handler/alias del GET retirado. Depende de T118; FR-061 y aceptación 1/4.
+
+### Fundamento compartido — US1, US2 y US3
+
+**Consumidor transversal de T119**: retirar también las ramas exclusivas del antiguo GET en `backend/src/main/java/footballmarket/common/presentation/GlobalExceptionHandler.java` (`handleMissingParameter` y clasificación de error de tipo), tras comprobar sus consumidores. Preservar el tratamiento de `/api/quotes/executions` y errores compartidos de ambos POST y de otras features. T118 incluye adaptar los tests del advice afectados, sin crear pruebas que exijan mantener validaciones de un handler eliminado. Este ajuste es parte de la búsqueda global de exclusivos, no un cambio a la política general de errores.
+
+- [X] T120 Reducir `backend/src/main/java/footballmarket/features/statistics/domain/records/PlayerStatisticsCoverage.java` a elegibles, excluidos sin referencia, pendientes y cobertura completa; simplificar `application/shared/internal/PlayerStatisticsCoverageQuery.java` y adaptar `application/shared/internal/ExtractionRunManager.java` bajo la misma raíz de estadísticas. Preservar fórmulas de población/pendientes y todos los contadores, estados, recuperación, transacciones y resúmenes POST. Retirar cálculo de ausencia sistémica y último run que ya no tienen consumidor. Revisar `infraestructure/PlayerStatisticsRepository.java`, `PlayerStatisticsRunItemRepository.java` y `PlayerStatisticsExtractionRunRepository.java` y consumidores en todo `backend/src/`; eliminar solo consultas verdaderamente sin uso, sin afectar catálogo, valuaciones, cotizaciones o auditoría. No cambiar entidades ni migraciones. Depende de T119; FR-014/FR-061/FR-066 y aceptación 2/4.
+
+### US1 y US3 — adaptar observación de resultados
+
+- [X] T121 [US1] Ajustar `backend/src/test/java/footballmarket/features/statistics/application/shared/PlayerStatisticsSynchronizationServiceTest.java`, `application/scraping/PlayerStatisticsExtractionServiceTest.java`, `infraestructure/PlayerStatisticsCoverageTest.java` y `infraestructure/PlayerStatisticsPersistenceTest.java` bajo la misma raíz de tests: reemplazar dependencia del Service GET retirado y adaptar resultado interno reducido, conservando casos de extracción, elegibilidad, no-data, fallos, pendientes, reanudación y cero trabajo. Usar APIs productivas y resumen de cierre; comprobar detalles persistidos solo en categoría Repository si no hay observación pública, sin añadir APIs exclusivas de test. Depende de T120; no ejecutar tests. Aceptación 2–3, no regresión US1/US2.
+- [X] T122 [US3] Ajustar `backend/src/test/java/footballmarket/features/statistics/application/json/JsonStatisticsUpdateServiceTest.java`, `e2e/PlayerStatisticsSyncJourneyE2ETest.java` y `e2e/PlayerStatisticsCrossChannelJourneyE2ETest.java` bajo la misma raíz de tests: quitar helper y llamadas GET coverage; mantener independencia de canales/fechas, valores, ausencia distinta de cero y reanudación mediante resúmenes POST y lectura individual HTTP existente cuando corresponda. No usar Repository en Act/Assert/Verify de Service/E2E ni iniciar nuevas sincronizaciones solo para leer resultados históricos. Conservar fixtures controlados y verificar otros consumidores en `backend/src/test/java/`; no ejecutar tests. Depende de T120–T121; aceptación 2–3 y FR-043/FR-045/FR-061.
+
+### Coherencia y entrega transversal
+
+- [X] T123 Actualizar `docs/backend/architecture.md` §3, `specs/012-player-statistics-scraping/contracts/http.md`, `plan.md`, `data-model.md` y `quickstart.md` según el cambio implementado: distinguir antecedentes del GET de instrucciones vigentes, conservar contratos POST y registrar ubicaciones/comandos efectivos de tests. No reescribir aprobaciones o resultados históricos ni declarar resueltas deudas previas. Depende de T119–T122; aceptación 4.
+- [X] T124 Revisar diff final y referencias en `backend/src/` y `specs/012-player-statistics-scraping/`; ejecutar `git diff --check` y `git status --short`. Si se modificó código backend, inspeccionar antes `backend/build.gradle.kts` y ejecutar únicamente el build autorizado `./gradlew build -x test` desde `backend/`, sin tests directos/indirectos. Preparar reporte de código, inventario de tests afectados y comandos exactos para ejecución humana; registrar resultados y pendientes en `specs/012-player-statistics-scraping/tasks.md`. Depende de T123; no ejecutar tests ni cerrar la feature.
+
+**Orden**: T118 → T119 → T120 → T121 → T122 → T123 → T124. Sin `[P]`: hay wiring y consumidores compartidos. No se autoriza delegación. Alcance mínimo coherente: las siete tareas juntas; no un MVP que elimine el GET sin adaptar consumidores/tests. Aceptación 1 → T118/T119; 2 → T118/T120–T122; 3 → T121/T122; 4 → T119/T120/T123/T124. Todas las verificaciones funcionales quedan a cargo del usuario. Analyze pendiente de ejecución posterior a esta generación, sin implementación automática.
+
+**Entrega técnica T118–T124 — 2026-11-01**: tareas implementadas y fuentes revisadas, no tests ejecutados. El primer build compiló producción pero falló por formato introducido en el cambio; corregido por patch. Segundo `gradlew.bat build -x test`: BUILD SUCCESSFUL en 10 s, clasificación estática de 137 clases, sin compilación/ejecución de tests. Se mantiene la nota deprecated preexistente de la fachada. Sin cambios de datos, proveedor, commit o push. Los únicos usos Java de `/coverage` restantes son regresiones de ruta eliminada; sin referencias a Service/Mapper/DTO retirados ni `systemicallyAbsentMetrics`. TD-032 actualizada sin declararla resuelta; TD-033 permanece como límite preexistente. Reporte e inventario en [code-review-coverage-removal.md](code-review-coverage-removal.md). CODE REVIEW, TESTING y cierre pendientes; estado remoto no verificado. El texto de Analyze pendiente anterior describe la generación; el análisis posterior sin bloqueantes se registró al autorizar IMPLEMENT.
+
+**Corrección posterior de T121 — 2026-11-01**: el usuario informa que solo falla `PlayerStatisticsExtractionServiceTest.Extraction.confirmaJugadorYContextos` y aporta assertion de rating null. Lectura causal: el fixture publicaba rating en la tabla `initial` (campo descartado por `ScrapingMetricAssembler.INITIAL`) y dejaba vacío el bloque estructurado del que realmente se obtiene ese indicador. Se corrige únicamente `scraped(...)` del test para publicar el decimal exacto en `WhoScoredStructuredDataBlock.Entry`, coincidiendo competición/temporada/equipo de la fila. No se elimina ni relaja la assertion, no cambia producción. Revisión del fixture y rerun humano pendientes; no se atribuye aprobación de CODE REVIEW/TESTING a la ejecución parcial aportada.
+
+## Refactor organizativo por canales — 2026-11-01
+
+**Alcance**: reorganización interna de `features/statistics` según [plan.md](plan.md#estructura-objetivo-del-refactor-organizativo--2026-11-01), manteniendo comportamiento y contratos. La generación de estas tareas no inicia ni autoriza implementación. Se conserva íntegro el avance histórico de T001–T110; las tareas siguientes son nuevas y pendientes.
+
+**Preparación**: checklist mínimo [channel-structure.md](checklists/channel-structure.md), CHK001–CHK003 evaluados y aprobados por el usuario; `setup-tasks.sh --json` resolvió SPEC-012 y la plantilla de tareas. No existe `.specify/extensions.yml` y no se despachan hooks. Próximo paso: Analyze en operación separada; no se ejecutan tests ni implementación en Tasks. Las tareas compartidas dan soporte a US1, US2 y US3 sin dividir la funcionalidad ni redefinir sus aprobaciones.
+
+**IMPLEMENT AUTHORIZATION — 2026-11-01**: el usuario de esta conversación expresó «Autorizo a implementar T111-T117.» sobre el plan y las siete tareas precedidas por Analyze de solo lectura sin bloqueantes: seis compromisos organizativos cubiertos, cero ambigüedades, duplicaciones y hallazgos críticos en el alcance. Se autoriza exclusivamente mover archivos y adaptar paquetes, imports, referencias, tests afectados y documentación, sin cambios de comportamiento. CODE REVIEW, TESTING y cierre no están aprobados. Implementación iniciada en `refactor/012-player-statistics-scraping`; seguimiento remoto no consultado ni actualizado, sin afirmar sincronización. Se conserva toda evidencia y deuda histórica ajena al movimiento.
+
+### Componentes compartidos — fundamento para US1, US2 y US3
+
+- [X] T111 Mover desde `backend/src/main/java/footballmarket/features/statistics/application/internal/` a `backend/src/main/java/footballmarket/features/statistics/application/shared/internal/` las clases `ExtractionRunManager.java`, `ExtractionWorkerPool.java`, `PlayerStatisticsEligibilitySelector.java`, `PlayerStatisticsWriter.java`, `ExtractionIncidentRecorder.java`, `LeagueContextSelection.java`, `PlayerMetricsContext.java` y `PlayerStatisticsCoverageQuery.java`; adaptar solo declaraciones de paquete e imports necesarios, sin cambiar firmas ni lógica. Conservar `domain/`, `infraestructure/`, interfaces y excepciones en sus ubicaciones.
+
+### US1 y US2 — recorrido de scraping
+
+- [X] T112 [US1] Mover `backend/src/main/java/footballmarket/features/statistics/application/impl/PlayerStatisticsExtractionServiceImpl.java` a `backend/src/main/java/footballmarket/features/statistics/application/scraping/impl/` y `ExtractionBatchExecutor.java`, `HeadedBrowserAvailabilityChecker.java`, `ScrapingMetricAssembler.java` desde `backend/src/main/java/footballmarket/features/statistics/application/internal/` a `backend/src/main/java/footballmarket/features/statistics/application/scraping/internal/`; ajustar paquetes e imports, sin modificar navegación, navegador, ensamblado, ritmo, fallos ni limpieza. Depende de T111.
+
+### US3 — recorrido JSON
+
+- [X] T113 [US3] Mover `backend/src/main/java/footballmarket/features/statistics/application/impl/JsonStatisticsUpdateServiceImpl.java` a `backend/src/main/java/footballmarket/features/statistics/application/json/impl/` y `backend/src/main/java/footballmarket/features/statistics/application/internal/JsonMetricAssembler.java` a `backend/src/main/java/footballmarket/features/statistics/application/json/internal/`; ajustar paquetes e imports, sin modificar consultas, ensamblado, reintentos ni tratamiento de fallos. Depende de T111.
+
+### Coordinación, consumidores y verificación transversal
+
+- [X] T114 Mover `PlayerStatisticsSynchronizationServiceImpl.java` y `PlayerStatisticsCoverageServiceImpl.java` desde `backend/src/main/java/footballmarket/features/statistics/application/impl/` a `backend/src/main/java/footballmarket/features/statistics/application/shared/impl/`; adaptar imports y referencias en `backend/src/main/java/` y consumidores afectados, conservando la fachada con ambos métodos y las interfaces públicas existentes. No extraer clases ni alterar selección, exclusión, transacciones o cierre. Depende de T111–T113 y cubre US1–US3.
+- [X] T115 Ajustar paquetes e imports de los tests afectados en `backend/src/test/java/footballmarket/features/statistics/` y demás consumidores de `backend/src/test/java/`; mover los tests exclusivos junto al paquete objetivo cuando corresponda y conservar sin cambios sus escenarios, dobles y aserciones. Mantener tests HTTP, persistencia, dominio, seguridad y E2E en sus categorías. No crear pruebas funcionales nuevas solo por el movimiento ni ejecutar tests. Depende de T111–T114.
+- [X] T116 Actualizar los nombres de paquete y ubicaciones afectadas en `docs/backend/architecture.md` y referencias vigentes en `specs/012-player-statistics-scraping/quickstart.md` si corresponde; preservar contratos HTTP y externos, historial y las normas arquitectónicas. Revisar que el mapa de `specs/012-player-statistics-scraping/plan.md` coincide con los movimientos reales. Depende de T111–T115.
+- [X] T117 Revisar el diff y las referencias de `backend/src/main/java/footballmarket/features/statistics/` y `backend/src/test/java/footballmarket/features/statistics/`, con `git diff --check` y `git status --short`; tras inspeccionar configuración efectiva y solo si no ejecuta tests, realizar desde `backend/` el build permitido `./gradlew build -x test`. Preparar los tests afectados para ejecución por el usuario y registrar pendientes sin declarar testing aprobado. Depende de T115–T116.
+
+**Orden y dependencia**: T111 → T112 y T113 → T114 → T115 → T116 → T117. T112 y T113 afectan clases distintas, pero requieren coordinar sus imports compartidos; no se asigna `[P]` ni se autoriza delegación. Los tres recorridos se comprueban con los tests existentes: extracción individual de US1, sincronización/cobertura de US2 y actualización independiente de US3; la ejecución es exclusivamente humana. El alcance es transversal: no se entrega un MVP parcial de una historia que deje la reorganización compartida incompleta.
+
+**Entrega técnica — 2026-11-01**: T111–T117 implementadas. Se movieron 16 clases productivas y seis tests; otros dos tests solo adaptaron imports. La comparación textual con HEAD, excluyendo exclusivamente declaraciones de paquete/imports, conservó íntegros los cuerpos de las 24 clases afectadas. Build permitido `gradlew.bat build -x test` satisfactorio en 32 s: compilación productiva, formato y clasificación estática de 137 clases; no hubo compilación ni ejecución de tests. Nota de API deprecated en la fachada: cuerpo preexistente sin cambios. Sin cambios generados incorporados, commit, push, migraciones ni acceso al proveedor. Tests humanos, CODE REVIEW y cierre pendientes; las marcas no acreditan esos gates. Reporte completo y comandos en [code-review-channel-structure.md](code-review-channel-structure.md). Estado remoto no verificado; no se afirma `In Review` remoto ni cierre global de SPEC-012.
+
 **Input**: Design documents from `/specs/012-player-statistics-scraping/`
 
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/http.md, contracts/whoscored.md, quickstart.md
@@ -15,6 +81,10 @@ description: "Task list for feature implementation"
 **Workflow local**: MUST seguir `docs/development/sdd-workflow.md`. Tasks nacen del SDD y viven en este archivo; no se exportan automáticamente a tarjetas. Generar Tasks no completa implementación ni habilita Ready: requiere Analyze OK. MUST conservar IDs y avance al reanudar.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+
+**Estado vigente — 2026-10-27**: IMPLEMENT T097–T109 autorizado e iniciado tras Analyze sin blockers y aceptación del checklist. Avance técnico y pendientes en la tabla del cambio vigente; no se declara el alcance completo ni revisión aprobada. T001–T096 conservan IDs, texto y avance histórico. Las descripciones anteriores de lotes, máximo, deadline, retries de scraping y `batch/campaign` quedan **sustituidas** por T097–T109 y los artefactos vigentes. Build sin tests satisfactorio; ninguna marca acredita ejecución de pruebas. Evidencia y autorización en `sdd-gates.md`.
+
+**Correspondencia por impacto**: T003/T005/T010/T023/T029–T030 → T097; T044/T052/T054/T055/T087 → T098–T100; T026 → T101; T046/T047/T049/T090 → T102–T103; T091/T092 → T104/T105; T035/T038–T041/T094/T095 → T099/T100/T106/T107; T073–T078/T093/T096 → T108/T109. No se borran ni se vuelven a marcar las tareas históricas; las nuevas permanecen pendientes hasta implementación y verificación correspondiente.
 
 **Estado vigente — 2026-10-18**: alineación documental autorizada por el usuario entre el código y los artefactos de la spec. El modelo implementado es aplanado: `V20261018191335__flatten_player_statistics.sql` sustituye las tablas de contextos, observaciones y comparaciones por una fila `player_statistics` por jugador, fecha y canal con las 60 métricas en columnas. En consecuencia: cobertura efectiva 45/57/42, quince combinaciones JSON, sin contraste entre canales, sin disponibilidad ni precisión por métrica. Las tareas de contraste (T061, T062, T069, T070) quedan retiradas y desmarcadas; las de entidades normalizadas se declaran superadas por `PlayerStatisticsWriter`. Los IDs y el resto de las casillas se conservan sin renumerar. Ninguna casilla acredita ejecución de tests.
 
@@ -292,9 +362,193 @@ continuar IMPLEMENT; esta corrección documental no acredita tests ni resuelve T
 
 **Aclaración JSON del 2026-10-16**: conserva los 93 IDs existentes. T030 define request solo para scraping; T046/T057 separan las entradas HTTP; T064/T072 cubren la población JSON completa pendiente del día UTC en un POST sin parámetros/body, sin repetir confirmados del día y sin corte temporal/cantidad. T091/T092 quedan limitadas al cliente de scraping. Las casillas permanecen sin avance; nuevo Analyze sigue pendiente.
 
+**Corrección de concurrencia autorizada del 2026-10-25 (T094–T096)**: conserva los IDs
+T001–T093 y añade T094–T096, sin renumerar tareas existentes.
+
+- [X] T094 [US1] Reemplazar el navegador compartido por un ciclo de vida por worker en
+  `WhoScoredStatisticsScrapingIntegration` (`ThreadLocal<BrowserHandle>`, sondeo headed al abrir
+  la sesión y `releaseWorker()`), retirar `synchronized (browser)` de
+  `WhoScoredScrapingSectionNavigator.read`, añadir limpieza por hilo y `awaitTermination` acotado
+  en `ExtractionWorkerPool`, exponer `releaseWorker()` en `PlayerStatisticsExtractionService.Batch`
+  y abrirlo desde `ExtractionBatchExecutor`; comentarios de `application.yml` alineados sin cambiar
+  valores.
+- [X] T095 [P] [US1] Ajustar `WhoScoredScrapingIntegrationTest` al sondeo + navegador de worker y
+  crear `WhoScoredScrapingConcurrencyTest` (dos lecturas simultáneas con navegadores distintos y
+  liberación por hilo) y `ExtractionWorkerPoolTest` (primer fallo, limpieza por hilo, cierre
+  acotado, lista vacía y workers inválidos). Tests escritos y clasificados; su ejecución es humana
+  y permanece pendiente.
+- [X] T096 [P] Alinear `research.md`, `plan.md`, `contracts/whoscored.md`, `quickstart.md` y
+  `docs/backend/technologies.md` con el navegador por worker, y registrar autorización, alcance y
+  exclusiones en `sdd-gates.md`.
+
+T094 y T095 acreditan escritura y revisión de sus fuentes, no ejecución. CODE REVIEW y TESTING
+siguen pendientes; esta corrección no aprueba ninguno de esos gates.
+
 ---
 
-## Dependencies & Execution Order
+## Cambio del 2026-10-27 — tareas vigentes pendientes
+
+### Estado actualizado — limpieza autorizada 2026-10-30
+
+Solicitud posterior: retirar tests DOM y activación por variable. Clase eliminada,
+comandos y documentación vigente alineados; tests de protocolo/Model conservados.
+Los diez casos DOM históricos no son suite vigente. La campaña no sustituye esa
+cobertura determinista; TD-034 continúa abierta. No implica aprobación de cierre.
+
+- [X] T110 Retirar herramienta temporal, tarea/configuración y hooks de diagnóstico;
+  mantener sincronización productiva, regla nativa, N/A, regresiones y log general.
+  Alinear SPEC-012 y docs del backend sin borrar evidencia histórica ni aprobar cierre.
+  Implementación y build sin tests verificados (10 s); tests posteriores a limpieza
+  pendientes del usuario. No equivale a completar T100/T105 ni gates globales.
+
+T106: validación humana secuencial de 7 y referencia externa del 803 satisfactoria;
+etiqueta local 308 en el segundo log fue error de entrada confirmado por el usuario.
+Run 10: 520 intentados, 306 completados, 214 NO_DATA, cero fallos. Run 11 completo:
+2104 intentados, 1889 completados, 214 NO_DATA y un timeout de apertura (2449).
+Usuario informa ese caso arreglado, sin evidencia adicional de run; no se alteran conteos.
+T107: usuario confirmó protocolo y diez casos DOM satisfactorios antes de limpieza;
+la regresión posterior a T110 queda pendiente. T108–T109: alineación actualizada,
+no CODE REVIEW/TESTING globales ni CONVERGE. TD-032/033/034/035 no se cierran aquí.
+Los párrafos y tabla siguientes describen avances anteriores, superados por esta
+actualización solo en lo respaldado por evidencia; no son nuevas tareas de diagnóstico.
+
+Corrección de apertura autorizada 2026-10-29 (T106–T108): preparación por resumen
+renderizado y estado de pestañas inicializado, un clic y confirmación CSS/selección.
+Regresiones DOM locales de inicialización tardía y falsa apertura, más protocolo;
+ejecución humana y contraste live secuencial pendientes.
+
+Ampliación secuencial autorizada 2026-10-29 (T106–T108): diagnóstico de una ficha
+Resumen → Detallado, mismo navegador/worker, contextos independientes y aerial.
+Regresión de orden/identidad y abandono tras fallo de resumen; ejecución humana
+y reproducción secuencial pendientes, sin cierre de tareas o gates globales.
+
+Ampliación diagnóstica autorizada 2026-10-29 (T106–T108): observación previa a
+navegación/clic y finalización aun con fallo temprano; regresión de protocolo escrita
+para `open-tab` y filtro ausente. Ejecución de tests y diagnóstico humano pendientes;
+no acredita resolución del contenedor vacío ni cierre de gates.
+
+### Avance técnico de IMPLEMENT — 2026-10-27
+
+| Tareas | Avance comprobado y pendiente |
+| --- | --- |
+| T097–T099 | Código implementado y compilado: retiro contractual/configuración/modelo, migración generada sin DB, snapshot completo, continuidad individual, conteos observados y exclusión de run vivo. Verificación funcional humana pendiente. |
+| T100 | Retirados retries/deadlines; corregido cierre normal sin shutdownNow y limpieza previa al Future. Falta contrastar stacktrace del fallo real de cierre; no se atribuye su resolución. |
+| T101 | Código implementado y compilado: no-data sin valores/contexto, reconfirmación sin éxito anterior y ausencia distinta de cero. Tests de Service/persistencia escritos; ejecución humana pendiente. |
+| T102 | Contrato y configuración ajustados; rechazo del campo retirado incluso null, fecha, seguridad y errores cubiertos por fuentes de tests. No se duplicó el fixture HTTP de Foundation, que sigue verificando advice. Ejecución pendiente. |
+| T103 | Añadido `ExtractionPopulationExecutorTest`, retirado el test de corte; cobertura de reloj/fecha, run vivo/huérfano, timeout individual y llamadas. Reconfirmación en Service/Repository. Falta caso explícito de nuevo elegible posterior al snapshot. |
+| T104 | CLI simplificado a un POST; opciones retiradas rechazadas; código 0 solo con cobertura completa. Build satisfactorio; ejecución del CLI exclusivamente humana. |
+| T105 | Journeys ajustados y escenario de resultado incompleto/reanudación manual escrito. Frontera E2E heredada incompleta (TD-033), por adaptar; no completada por registrar deuda. |
+| T106 | N/A corregido; traza humana confirma acumulación sin petición/render. Corrección 2026-10-29: detalle nativo 0 sin selector Total ni segunda división, con guardas de modo/contexto y timeout. Build sin tests satisfactorio; comprobación live del nuevo recorrido y paneles vacíos pendientes. TD-035 registra riesgo JSON/histórico sin tocar datos. |
+| T107 | Pruebas previas reportadas satisfactorias por usuario; las afectadas por lectura nativa requieren nueva ejecución. Tests Model de regla/2.6 sin división y resumen intacto; protocolo sin tocar acumulación; DOM actualizado a categoría y seis casos con modo inválido. No ejecutados por agente; cierre global y fallo histórico de cleanup pendientes. |
+| T108–T109 | Documentación y reporte parcial actualizados; deudas TD-032/033 registradas sin resolver. Build `gradlew.bat build -x test` satisfactorio. Entrega parcial, no CODE REVIEW global ni CONVERGE; faltantes anteriores impiden marcar cierre técnico. |
+
+Las casillas marcadas acreditan implementación o escritura y revisión de fuentes, no tests ejecutados;
+el build no compila ni ejecuta tests. La falta de evidencia de T106 detiene esa corrección, no autoriza a
+suponer una causa. No se modifican marcadores de checklists ni aprobaciones humanas.
+
+Prerrequisitos: Plan actualizado y evaluación asistida del checklist `checklists/synchronous-scraping.md` (16 criterios con soporte documental, marcadores propiedad del revisor). Tasks no implica aceptación del checklist, Analyze favorable ni autorización IMPLEMENT. Sin dependencias o tecnologías nuevas. El alcance mínimo coherente es el recorrido de US2 con los ajustes de US1 que consume; US3 solo requiere no regresión.
+
+### Fundamento compartido: retiro del límite contractual
+
+- [X] T097 Retirar `maxPlayers` de `backend/src/main/java/footballmarket/controllers/dtos/requests/PlayerStatisticsSyncRequestDTO.java`, `backend/src/main/java/footballmarket/models/records/PlayerStatisticsSyncRequest.java`, `backend/src/main/java/footballmarket/controllers/mappers/PlayerStatisticsMapper.java` y `backend/src/main/java/footballmarket/models/PlayerStatisticsExtractionRun.java`; adaptar Controller/advice para rechazar presencia del campo retirado incluso null con `INVALID_REQUEST` antes del Service, retirar deserializador/errores exclusivos sin consumidores, sincronizar OpenAPI y quitar `scrapingBatchTimeoutMs` de `backend/src/main/java/footballmarket/config/PlayerStatisticsProperties.java`, `backend/src/main/resources/application.yml` y `backend/src/test/resources/application-test.yml`. Retirar columna `max_players` y sus checks con nueva migración de drop mínimo en `backend/src/main/resources/db/migration/`, generada conforme a `docs/development/flyway-migrations.md`, sin editar migraciones aplicadas, preservar datos obsoletos ni ejecutar DB. Adaptar constructores/consumidores en código y tests afectados en el mismo alcance, manteniendo JSON. FR-012/FR-049/FR-053.
+
+### US2: recorrido completo y reanudación
+
+- [X] T098 [US2] Sustituir corte/media/capacidad de `backend/src/main/java/footballmarket/services/internal/ExtractionBatchExecutor.java` y su invocación en `backend/src/main/java/footballmarket/services/impl/PlayerStatisticsSynchronizationServiceImpl.java` por snapshot único de `allPendingPlayerIds` ascendente, sin máximo ni deadline total; usar `backend/src/main/java/footballmarket/services/internal/PlayerStatisticsEligibilitySelector.java` y pool existente, sin reselección de fallidos/no-data. Conservar fecha inicial, cero pendientes sin navegador, nuevos elegibles para otro POST y cobertura vigente al cierre. Continuar tras fallo atribuible a un jugador (incluidos timeout/transporte/403/404 o respuesta no interpretable), registrándolo y sin reintentar al jugador. Clasificar como fallo global solo cuando el proveedor o el entorno impida iniciar/continuar operaciones para los restantes o no se pueda mantener/cerrar de forma segura la auditoría del run; cerrar entonces por interrupción/fallo global con pendientes explícitos y sin reiniciar HTTP. Respetar `Retry-After`: si el pacing permite continuar tras la espera, reanudar con los restantes sin reintentar al jugador afectado; si impide continuar, cerrar como fallo global. Propagar conteos reales de navegación aun en fallos en vez del número teórico de secciones; no cambiar conteos JSON. Depende de T097 y contratos de T099/T100. FR-010–FR-014/FR-037–FR-042/FR-050–FR-051/FR-061.
+- [X] T099 [US2] Adaptar `backend/src/main/java/footballmarket/services/internal/ExtractionRunManager.java` y la entrada scraping de `backend/src/main/java/footballmarket/services/impl/PlayerStatisticsSynchronizationServiceImpl.java`: exclusión por canal en instancia única hasta finalizar workers/limpieza; no recuperar por antigüedad, ni introducir deadline oculto de 24 h. Recuperar solo run sin ejecución viva propia, incluido reinicio, como `INTERRUPTED`, con índice de run activo como respaldo y sin perder confirmaciones. Mantener recuperación JSON existente y auditoría final aun ante excepción de limpieza. Depende de T097; coordinar secuencialmente con T098/T100. FR-011/FR-036–FR-037/FR-050.
+- [X] T101 [US2] Adaptar `backend/src/main/java/footballmarket/services/internal/PlayerStatisticsWriter.java` y, si requiere encapsular invariante, `backend/src/main/java/footballmarket/models/PlayerStatistics.java`: en scraping contar valores numéricos no nulos del canal, no tamaño del mapa; sin valores o contexto, `NO_DATA` pendiente. Permitir reconfirmar fila sin éxito previo aunque tenga contexto resuelto, protegiendo item `COMPLETED`, unicidad y atomicidad. No alterar semántica JSON ni invalidar ausencia opcional aislada. Depende de T097. FR-013/FR-022/FR-031–FR-036/FR-063/SC-003.
+
+### US1: tentativa única e investigación de síntomas
+
+- [ ] T100 [US1] Retirar deadline total y bucles de retry/recarga de scraping en `backend/src/main/java/footballmarket/services/PlayerStatisticsExtractionService.java`, `backend/src/main/java/footballmarket/services/impl/PlayerStatisticsExtractionServiceImpl.java`, `backend/src/main/java/footballmarket/integrations/WhoScoredStatisticsScrapingIntegration.java` y `backend/src/main/java/footballmarket/integrations/WhoScoredScrapingSectionNavigator.java`; preservar timeouts por operación, pacing por sección, dieciséis categorías, headed y contexto independiente. Ajustar uso de `backend/src/main/java/footballmarket/integrations/WhoScoredRequestPacer.java` sin cambiar identidad ni JSON. Corregir ciclo de vida en `backend/src/main/java/footballmarket/services/internal/ExtractionWorkerPool.java` solo tras seguir afinidad/orden/contextos → Browser → Playwright con evidencia local del fallo de cierre; no cerrar desde otro hilo mientras el worker opera ni ocultar fallo principal/conteos. Registrar evidencia causal y pendientes en `specs/012-player-statistics-scraping/research.md`; no suponer que quitar el deadline corrige la excepción. Depende de T097, investigación estática/local previa a la corrección causal; consume T099 para cierre del run. FR-011–FR-012/FR-016–FR-019/FR-038–FR-042 y Clarify 2026-10-27.
+- [ ] T106 [US1] Investigar los valores rechazados y esperas observadas siguiendo `backend/src/main/java/footballmarket/integrations/WhoScoredScrapingTableParser.java`, `backend/src/main/java/footballmarket/integrations/WhoScoredStructuredDataParser.java`, `backend/src/main/java/footballmarket/services/internal/ScrapingMetricAssembler.java`, `backend/src/main/java/footballmarket/models/MetricValueNormalizer.java` y fases de `backend/src/main/java/footballmarket/integrations/WhoScoredScrapingSectionNavigator.java`. Contrastar capturas/logs locales; documentar causa confirmada y corregir solo los responsables afectados. Si falta token o reproducción, pedir evidencia mínima, no inventar formatos ni ceros. Preservar rechazo de datos realmente inválidos, precisión y ausencia, sin bajar timeouts a ciegas ni SLA nuevo. Registrar evidencia en `specs/012-player-statistics-scraping/research.md`. Depende de T100 para distinguir coste de retries retirados de esperas restantes. FR-020–FR-024/FR-027–FR-031/FR-039–FR-041.
+
+### Tests backend a escribir/ajustar, nunca ejecutar por el agente
+
+**Corrección autorizada T106/T107 — lectura nativa (2026-10-29):** eliminar cambio y
+espera de acumulación en navigator; validar modo `0` antes/después de categoría,
+manteniendo render/timeout/contexto y tentativa única. Añadir regla Model por canal en
+`MetricDefinition`, aplicada por `ScrapingMetricAssembler`: detalle directo sin apps;
+resumen derivado intacto y JSON sin cambios. Adaptar `MetricCatalogTest`,
+`WhoScoredScrapingIntegrationTest` y `WhoScoredScrapingDomTest` (opt-in) a ese contrato,
+incluyendo modo inesperado, no render, carga pendiente y reemplazo idéntico. Mantener
+logging general; el diagnóstico individual fue retirado por T110. Sin DB/campaña ni tests del agente.
+Sin renumerar tareas ni cerrar T106/T107 por código escrito.
+
+**Histórico retirado por T110 — ampliación diagnóstica T106/T107/T108 (2026-10-29):** se preparó herramienta individual
+`backend/src/main/java/footballmarket/tools/WhoScoredScrapingDiagnostic.java` e Integration
+`WhoScoredScrapingDiagnosticIntegration.java` con metadatos de red/DOM saneados y criterio
+productivo sin cambios; entrada por entorno, sin Spring/DB/escritura ni campaña.
+Registrar tarea Gradle manual, logback específico y archivo general configurable del
+backend, con logs ignorados y perfil test sin archivo. Regresiones de validación/config
+en `backend/src/test/java/footballmarket/config/WhoScoredScrapingDiagnosticTest.java`;
+sin tests exclusivos de mensajes. Mantener T106/T107 abiertos hasta evidencia causal.
+No se crea spec, tarea humana ni canal nuevo; se conservan los IDs existentes.
+
+**Histórico retirado por T110 — avance diagnóstico individual T106 (2026-10-29):** tool/Integration, tarea manual y
+archivos de logging escritos. No modifica navigator, metric normalizer, Service,
+Repository ni endpoints. Regresiones de validación/configuración escritas; ejecución
+humana pendiente. Archivo de aplicación configurable y archivo diagnóstico separado,
+sin pérdida por límite de consola (conservar rotaciones del primero). T106/T107 siguen
+abiertos; no se afirma causa del bloqueo real ni se ejecuta la herramienta por el agente.
+
+**Alcance correctivo autorizado T106/T107 — 2026-10-28:** admitir el literal `N/A`
+tras recorte como ausencia conforme a FR-022; mantener inválidos los demás textos.
+En navigator sustituir desigualdad de HTML por observación de renderizado posterior a
+la selección, incluso con contenido idéntico; no aceptar solo el valor del control,
+spinners o eliminación de filas. Conservar timeout y tentativa única y liberar observer.
+Ampliar `MetricValuePipelineTest` y `WhoScoredScrapingIntegrationTest` para la regla y
+protocolo/lifecycle; DOM real y efecto sobre el proveedor pendientes de validación humana.
+No se crean tareas ni tests de mensajes de diagnóstico. T106/T107 siguen abiertos hasta
+completar sus alcances y verificaciones restantes.
+
+**Ampliación autorizada T107 — DOM local (2026-10-28):** preparar
+`backend/src/test/java/footballmarket/integrations/WhoScoredScrapingDomTest.java`,
+con navigator, Playwright y Chromium headed reales y HTML simulado en memoria, sin red,
+Spring ni DB. Excepción acotada a la restricción anterior de navegador sustituido de
+T107: solo esta regresión puede usar navegador local. Activación humana explícita con
+`FOOTBALL_MARKET_DOM_TESTS=true`, tag `integration`, fuera de suites rápidas.
+Cubrir reemplazo idéntico, tabla anterior sin render y render con carga pendiente;
+comprobar también finalización diferida. No cambiar producción ni ejecutar tests por
+el agente; no declarar TD-034 resuelta antes de evidencia humana satisfactoria.
+
+**Avance DOM local T107:** clase escrita con cuatro escenarios (idéntico, sin render,
+carga visible que no termina y finalización diferida por frames). Sin mocks de Page,
+Locator ni JSHandle; se invoca el navigator productivo. Preparación/cierre de recursos
+por caso, sin descarga automática. Código productivo aprobado sin cambios. Compilación
+y ejecución del test pendientes del usuario; TD-034 en curso, no resuelta. Comando
+opt-in y precaución de caché documentados en quickstart. T107 conserva casilla abierta.
+
+**Avance parcial T106 — diagnóstico autorizado tras run=6:** instrumentación de filtros,
+metadatos de red/errores JavaScript y celdas decimales rechazadas, correlacionada con run y
+jugador local; consultas manuales de solo lectura en `scraping-diagnostics.sql`. No se
+cambian esperas, normalización ni resultados. Captura humana y corrección causal pendientes;
+T106 permanece sin completar. No se agregan tests exclusivos de mensajes diagnósticos.
+
+- [X] T102 [US2] Actualizar contrato en `backend/src/test/java/footballmarket/controllers/PlayerStatisticsControllerTest.java` y `backend/src/test/java/footballmarket/controllers/PlayerStatisticsContractFoundationTest.java`: fecha/default, `{}`, body ausente/malformado, campo `maxPlayers` retirado incluso null rechazado sin Service, todos los estados y errores HTTP vigentes y JSON sin cambios. Ajustar `backend/src/test/java/footballmarket/security/PlayerStatisticsSecurityIntegrationTest.java` a body válido conservando rechazo JWT. Actualizar `backend/src/test/java/footballmarket/config/PlayerStatisticsConfigurationTest.java` al retiro de property, sin reducir controles ajenos. Depende de T097.
+- [ ] T103 [US2] Adaptar `backend/src/test/java/footballmarket/services/PlayerStatisticsSynchronizationServiceTest.java` y sustituir expectativas de corte de `backend/src/test/java/footballmarket/services/ExtractionBatchExecutorCutoffTest.java` por recorrido completo (renombrar a `ExtractionPopulationExecutorTest.java` si corresponde): más población que el antiguo corte, Clock/tiempo controlado más allá de 30 min y medianoche, tentativa única ante fallos, no-data sin valores aun con contexto resuelto, segundo POST solo pendientes, cero pendientes sin navegador, nuevos elegibles y exclusión de run vivo antiguo frente a recuperación huérfana. Service real + PostgreSQL/Testcontainers + Integration doblada, Arrange por helper compartido permitido y Act/Assert/Verify solo API pública Service. Ajustar `backend/src/test/java/footballmarket/repositories/PlayerStatisticsMigrationTest.java` y `PlayerStatisticsPersistenceTest.java` al esquema/constraints y reconfirmación; no acceder a DB desde Service para assertions. Depende de T098–T101.
+- [ ] T107 [US1] Ajustar `backend/src/test/java/footballmarket/integrations/WhoScoredScrapingIntegrationTest.java`, `WhoScoredScrapingConcurrencyTest.java` y `backend/src/test/java/footballmarket/services/internal/ExtractionWorkerPoolTest.java` para ausencia de retries de navegación/categoría, timeouts de operación preservados, recorrido obligatorio y cierre por hilo/orden/error; ampliar `backend/src/test/java/footballmarket/integrations/WhoScoredStatisticsRequestPacerTest.java` para preservar pacing y no regresión de JSON/identidad. Añadir regresión de tokens o ensamblado solo para causas confirmadas en `backend/src/test/java/footballmarket/models/MetricValuePipelineTest.java` y/o `backend/src/test/java/footballmarket/services/PlayerStatisticsExtractionServiceTest.java`, según la frontera responsable; nunca copiar síntoma de log como causa ni escribir tests exclusivos de mensajes. Dobles controlados, sin Internet/navegador real; clasificación por dependencias reales. Depende de T100/T106.
+
+### US2: cliente y journeys
+
+- [X] T104 [US2] Simplificar `backend/src/main/java/footballmarket/tools/PlayerStatisticsSyncClient.java` a un POST sin bucle `batch/campaign`, retirar/rechazar `--mode` y `--max-players` antes de HTTP, conservar fecha/base URL y JWT desde entorno; resultado 0 solo con cobertura completa, sin retry aun con progreso o error de transporte incierto. Revisar timeout del cliente para no reinstaurar corte total. Conservar tarea `statisticsSyncClient` en `backend/build.gradle.kts`; no dependencias nuevas ni ejecución por agente. Depende de T097/T098.
+- [ ] T105 [US2] Adaptar `backend/src/test/java/footballmarket/e2e/PlayerStatisticsSyncJourneyE2ETest.java` y `PlayerStatisticsCampaignClientE2ETest.java` (renombrar este último si corresponde) al único POST del cliente con población controlada y respuesta incompleta sin otra petición, rechazo local de opciones retiradas y reanudación manual; ajustar `backend/src/test/java/footballmarket/e2e/PlayerStatisticsCrossChannelJourneyE2ETest.java` para demostrar JSON intacto sin duplicar casos de Controller. E2E desde HTTP real con RestClient, perfil test, servidor RANDOM_PORT y proveedor controlado; sin max de un jugador. Depende de T098–T104.
+
+### Coherencia y entrega técnica
+
+- [ ] T108 Actualizar `docs/backend/architecture.md` §3 (contrato/cliente/recorrido sin lotes), `docs/backend/technologies.md` solo en el texto de ciclo de vida de Playwright afectado y `specs/012-player-statistics-scraping/quickstart.md` con comandos efectivos tras implementación, sin afirmar éxito de pruebas. Revisar consumidores y retirar código muerto dentro de alcance; registrar deuda real adicional en `docs/TECHNICAL_DEBT.md`, sin resolver deudas ajenas. Depende de T097–T107.
+- [ ] T109 Revisar diff/contratos/OpenAPI y preparar informe de código y tests con cobertura y comandos exactos para el usuario en `specs/012-player-statistics-scraping/sdd-gates.md`; actualizar este `tasks.md` solo por trabajo verificado. Control permitido solo al modificar backend: build sin tests de `backend/AGENTS.md`, tras inspeccionar configuración para no dispararlos indirectamente; revisión documental de enlaces, `git diff --check` y `git status --short`. No ejecutar tests, campaña, DB ni hooks prohibidos; no aprobar gates. Depende de T108.
+
+### Orden técnico y verificabilidad vigentes
+
+1. T097 → T099 → T100 → T098 → T101. Los contratos internos afectados deben cambiar coherentemente, no entregar un estado compilable solo parcial.
+2. T106 antes de fijar corrección/regresión causal; si falta evidencia se detiene esa corrección, no se inventa resultado.
+3. T102 tras T097; T103 tras T098–T101; T107 tras T100/T106; T104 tras T098; T105 tras T104 y ajuste Service.
+4. T108 → T109. No paralelizar ediciones de archivos compartidos. Oportunidad independiente: T102 (Controller/Config) y T106 (investigación de parser) después de sus prerrequisitos, sin modificar la misma fuente.
+
+US1 se verifica con catálogo controlado de un jugador y errores de extracción/limpieza; US2 con snapshot controlado, resultados mixtos y segunda petición solo de pendientes; US3 mantiene recorrido JSON y separación de campañas/canales, sin cambio funcional. No introducir un MVP recortado que conserve el límite retirado o elimine el scraping exigido. Implementación solo con autorización explícita posterior a Analyze y aceptación de calidad pendiente.
+
+## Dependencies & Execution Order — antecedente histórico de T001–T096
 
 ### Phase Dependencies
 
@@ -350,7 +604,7 @@ Task: "Crear HeadedBrowserAvailabilityChecker en backend/src/main/java/footballm
 4. **STOP y validar**: build permitido y evidencia de tests del usuario disponible
 5. Deliver/demo if ready
 
-### Incremental Delivery
+### Incremental Delivery (sustituida por el workflow vigente)
 
 1. Complete Setup + Foundational → Foundation ready
 2. US1 autorizada → IMPLEMENT efectivo → CODE REVIEW humano → TESTING humano → DONE
@@ -358,7 +612,7 @@ Task: "Crear HeadedBrowserAvailabilityChecker en backend/src/main/java/footballm
 4. US3 autorizada → IMPLEMENT efectivo → CODE REVIEW humano → TESTING humano → DONE
 5. Each story adds value without breaking previous stories
 
-READY y IMPLEMENT AUTHORIZATION no implican inicio. Gates humanos no son Tasks técnicas. Todas las US requeridas DONE y trabajo necesario completo → Feature TESTING/CONVERGE → FEATURE COMPLETION AUTHORIZATION humana → Feature DONE. Build/entrega no acreditan TESTING; tests aplicables pendientes impiden DONE.
+Las instrucciones históricas de cierre por US no aplican al cambio vigente: no existe gate READY; las autorizaciones se consolidan por alcance explícito, no por historia. Analyze sin blockers prepara la autorización IMPLEMENT, luego CODE REVIEW y TESTING humanos por alcance; CONVERGE final y autorización humana de cierre solo cuando corresponda. Ninguna casilla, build o entrega acredita esos gates.
 
 ---
 

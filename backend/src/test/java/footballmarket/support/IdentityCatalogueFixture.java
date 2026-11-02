@@ -1,11 +1,11 @@
 package footballmarket.support;
 
-import footballmarket.models.Player;
-import footballmarket.models.records.LeagueCandidate;
-import footballmarket.models.records.PlayerCandidate;
-import footballmarket.models.records.PlayerSnapshot;
-import footballmarket.models.records.TeamCandidate;
-import footballmarket.services.PlayerCatalogService;
+import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.records.LeagueCandidate;
+import footballmarket.features.catalog.domain.records.PlayerCandidate;
+import footballmarket.features.catalog.domain.records.PlayerSnapshot;
+import footballmarket.features.catalog.domain.records.TeamCandidate;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.transaction.annotation.Transactional;

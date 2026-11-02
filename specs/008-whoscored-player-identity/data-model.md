@@ -1,5 +1,45 @@
 # Modelo de datos — Identidad WhoScored
 
+## Modelo vigente — 2026-11-01
+
+Este apartado sustituye las tablas y auditoría del diseño histórico conservado debajo. Fuente: FR-009/011/012/019–021/025 de [spec.md](spec.md).
+
+### Persistencia permanente
+
+Se conservan `Player`, `Team`, `League` y `PlayerExternalReference`, con unicidad `(provider, external_id)` y el índice parcial `uk_player_external_references_whoscored_player`. No se amplía la cardinalidad de otros proveedores ni se sobrescriben atributos del catálogo. `PendingReviewCase` y su flujo de catálogo se preservan; no se añaden casos de auditoría WhoScored.
+
+Se retiran las tablas `player_identity_sync_runs`, `player_identity_sync_items`, `player_identity_league_discoveries`, `whoscored_identity_candidates` y `player_identity_discarded_rows`, sus secuencias y los repositorios propios. V9 histórico no se edita: una migración posterior elimina explícitamente solo esos objetos, respetando dependencias y preservando las referencias de catálogo y sus constraints.
+
+### Estado transitorio de una invocación
+
+- Snapshot local: ID del jugador, nombre, equipo, liga y referencias WhoScored iniciales. Se captura en transacción corta por pase, no se persiste como entidad adicional.
+- Candidato: ID externo canónico y conjunto deduplicado de contextos con nombre y equipo observados juntos. Unión de candidatos de ligas completamente descubiertas; no se mezclan atributos de contextos distintos. Sin ID de entidad/run ni JSONB propio.
+- Descubrimiento: candidatos y ligas completas/incompletas necesarios para decidir; no hay detalle persistido ni respuesta por liga.
+- Decisión por ID local: RESOLVED, ALREADY_REFERENCED, NO_MATCH, AMBIGUOUS, CONFLICT, LOCAL_DATA_ERROR, DISCOVERY_ERROR, PERSISTENCE_ERROR o INTERRUPTED, solo durante el proceso. La clasificación distingue elegibles NO_MATCH/AMBIGUOUS de errores/conflictos.
+- Universo inicial de jugadores: fija el denominador. Resultados de cada pase se combinan por ID local reemplazando el provisional. Jugador eliminado durante procesamiento permanece en ese universo como sin resolver; referencia válida concurrente cuenta con referencia, sin rematching.
+
+### Resultado global
+
+`PlayerIdentitySyncSummary` y el único DTO representan:
+
+| Campo | Regla |
+| --- | --- |
+| `status` | COMPLETED, PARTIAL o FAILED; prioridad FAILED > PARTIAL > COMPLETED entre pases ejecutados. |
+| `selectedPlayers` | Total de jugadores locales del snapshot inicial. |
+| `referencedPlayers` | Resultado RESOLVED o ALREADY_REFERENCED, referencia única válida. |
+| `noMatchPlayers` | Resultado NO_MATCH final después del complemento cuando corresponde. |
+| `unresolvedPlayers` | Ambigüedad, conflicto y errores/interrupción; incluye referencias preexistentes contradictorias. |
+
+Todos los totales son longs no negativos. `selectedPlayers = referencedPlayers + noMatchPlayers + unresolvedPlayers`. Vacío: cuatro ceros y COMPLETED. Sin contadores de ligas, páginas, candidatos o descartes, tiempos, IDs ni vínculo de ejecuciones.
+
+Cada pase calcula su estado con FR-016; actual FAILED omite histórico. Cero elegibles completa el complemento sin red. Una interrupción se refleja en resultados finales sin perder commits anteriores; no quedan registros RUNNING que recuperar.
+
+### Transacciones y concurrencia
+
+Se preservan captura REPEATABLE_READ corta, red y matching sin transacción y confirmación REQUIRES_NEW por jugador con lock. Solo se persiste la referencia confirmada. Tras rollback no se reutiliza una transacción inválida; se clasifican carreras conocidas mediante constraint/SQLSTATE y relectura. Se mantienen las reglas de identidad y normalización del antecedente salvo toda exigencia de guardar auditoría o consultar un origen histórico persistido.
+
+## Antecedente histórico — 2026-10-14 (modelo sustituido)
+
 Diseño de Phase 1 de [SPEC-008](spec.md). Identificadores/campos propuestos en inglés; no constituye implementación ni script de migración.
 
 ## 1. Catálogo y referencias existentes

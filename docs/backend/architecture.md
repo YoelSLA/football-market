@@ -83,22 +83,36 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 
 ### 3.1. Capas
 
-- Controller: `PlayerStatisticsController` expone únicamente `POST /api/players/statistics/whoscored/sync/scraping`,
-  `POST /api/players/statistics/whoscored/sync/json` y `GET /api/players/statistics/whoscored/coverage`.
-  La ruta determina el canal; el body de scraping solo admite `extractionDate` y `maxPlayers`, y la
+- Controller: `PlayerStatisticsController` expone únicamente `POST /api/players/statistics/whoscored/sync/scraping`
+  y `POST /api/players/statistics/whoscored/sync/json`. El antiguo GET de coverage se retiró, sin alias.
+  La ruta determina el canal; el body de scraping admite fecha opcional `extractionDate`, rechaza
+  `maxPlayers` incluso null, y la
   entrada JSON rechaza cualquier parámetro o cuerpo.
 - Services: `PlayerStatisticsSynchronizationService` es la fachada que abre y cierra la campaña;
   `PlayerStatisticsExtractionService` ejecuta un jugador de scraping; `JsonStatisticsUpdateService`
-  ejecuta un jugador por JSON; `PlayerStatisticsCoverageService` responde la cobertura sin acceder
-  al proveedor. Los componentes internos de `services/internal/` resuelven selección, lotes,
-  ritmo, ensamblado y confirmación por jugador.
+  ejecuta un jugador por JSON. Dentro de `features/statistics/application/`, `scraping/` reúne la implementación
+  de extracción y sus componentes exclusivos (`ExtractionBatchExecutor`,
+  `HeadedBrowserAvailabilityChecker`, `ScrapingMetricAssembler`); `json/` reúne
+  `JsonStatisticsUpdateServiceImpl` y `JsonMetricAssembler`. `shared/` contiene las implementaciones
+  de sincronización y los componentes comunes de selección, pool, contexto,
+  confirmación y auditoría. Cada grupo conserva `impl/` e `internal/`; las interfaces públicas
+  permanecen en `application/` y la consulta individual en su ubicación existente. La fachada
+  conserva ambos recorridos sin unificar sus políticas. Esta organización no crea roles ni
+  habilita dependencias nuevas. El mapa y el orden de lectura están en el plan de SPEC-012,
+  sección «Estructura objetivo del refactor organizativo — 2026-11-01».
 - Model: `MetricCatalog` y `MetricDefinition` materializan el catálogo cerrado de 60 métricas con
   cobertura 45/57/42 por canal; `MetricValueNormalizer` y `MetricDerivationApplier` encapsulan
   normalización, alias y derivación por partido sin dependencias hacia fuera de Model.
+  `MetricDefinition.derivationFor/normalizeFor` explicita la regla del canal: detalle
+  nativo de scraping directo, dos derivadas del resumen por apps; JSON permanece intacto.
 - Integrations: `WhoScoredStatisticsIntegration` consulta la interfaz JSON pública sobre el
   `RestClient` seguro ya existente; `WhoScoredStatisticsScrapingIntegration` recorre la ficha
   headed con Playwright. Ambas reutilizan `WhoScoredRequestPacer`, que no se duplica. El navegador se
   inicializa de forma perezosa: el arranque de la aplicación no abre Chromium.
+  Detalle de scraping conserva modo `0`, confirma render/carga de categoría y no opera
+  el selector Total; un modo inesperado se rechaza. No se usa la fila Total/Promedio.
+  La apertura espera resumen renderizado/seleccionado y detalle oculto antes de un
+  solo clic; confirma selección del enlace y visibilidad CSS del panel, sin retries.
 - Persistencia: una fila `player_statistics` por jugador, fecha de campaña y canal, con las 60
   métricas en columnas `NUMERIC` sin precisión ni escala fijas. `player_statistics_extraction_runs`,
   `player_statistics_run_items` y `player_statistics_incidents` conservan la auditoría de la
@@ -107,25 +121,33 @@ Componentes añadidos por SPEC-012. El inventario de dependencias y versiones vi
 
 ### 3.2. Contrato HTTP
 
-- `POST /sync/scraping` acepta `extractionDate` opcional no futura y `maxPlayers` entero positivo
-  opcional; el límite es global entre workers y el alcance temporal lo acota el ritmo de campaña.
+- `POST /sync/scraping` exige body (`{}` o `extractionDate` opcional no futura) e intenta una vez
+  todos los pendientes del snapshot inicial ascendente, sin máximo, deadline total ni retries.
+  Conserva timeouts por operación y pacing, y continúa tras fallos individuales. La exclusión de
+  instancia única se mantiene hasta terminar workers y limpieza; solo un run huérfano se recupera,
+  nunca uno vivo por antigüedad. Sin valores numéricos o contexto, el jugador queda `NO_DATA` y
+  puede reconfirmarse en otro POST sin sobrescribir éxitos anteriores.
 - `POST /sync/json` no admite query parameters ni body; fija la fecha UTC al iniciar y recorre
   todos los pendientes de esa campaña sin corte temporal ni límite de cantidad.
 - Ambos devuelven el mismo resumen: identificación del run, estado, contadores de jugadores, de
   métricas y de llamadas al proveedor, y `coverageComplete`. Las ausencias se informan solo como
   conteo agregado.
-- `GET /coverage` exige `source` y admite `extractionDate` opcional; devuelve conteos por fecha y
-  canal, `systemicallyAbsentMetrics` y el último run. No accede al proveedor.
-- Errores controlados: `INVALID_STATISTICS_SOURCE`, `INVALID_STATISTICS_EXTRACTION_DATE`,
-  `INVALID_STATISTICS_MAX_PLAYERS`, `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
+- La población y pendientes se calculan internamente al cerrar el run; los POST conservan
+  `coverageComplete` y todos sus contadores. No se calcula ni expone ausencia sistémica por clave
+  ni último run como consulta independiente. Se conservan las consultas usadas por auditoría,
+  catálogo, valuaciones y tests de persistencia.
+- Errores controlados: `INVALID_STATISTICS_EXTRACTION_DATE`,
+  `INVALID_REQUEST`, `PLAYER_STATISTICS_SYNC_IN_PROGRESS`,
   `PLAYER_STATISTICS_SYNC_FAILED` y `HEADED_BROWSER_UNAVAILABLE`, este último solo para scraping.
 
-### 3.3. Cliente operativo
+### 3.3. Observabilidad operativa
 
-`tools/PlayerStatisticsSyncClient` es un cliente CLI de scraping ejecutado por el desarrollador,
-fuera del contexto Spring, con modos `batch` y `campaign`. No consulta WhoScored ni la
-persistencia directamente, no expone opciones de canal y obtiene el JWT del entorno. JSON se invoca
-por POST autenticado sin entrada.
+La aplicación conserva logs de campaña, jugador, sección y errores, además de archivo
+UTF-8 configurable con rotación estándar. El perfil test desactiva ese archivo.
+Se retiraron el CLI diagnóstico individual, su tarea Gradle, su Logback y los hooks
+temporales de captura de red/DOM; no existe una segunda vía de scraping manual.
+El MutationObserver de renderizado permanece: es parte de la sincronización productiva,
+no de la auditoría temporal.
 
 ## 4. Valoraciones estadísticas de jugadores (SPEC-013)
 

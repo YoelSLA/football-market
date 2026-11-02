@@ -1,8 +1,20 @@
 package footballmarket.support;
 
-import footballmarket.models.*;
-import footballmarket.models.enums.*;
-import footballmarket.repositories.*;
+import footballmarket.features.catalog.domain.models.league.League;
+import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
+import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
+import footballmarket.features.statistics.domain.models.PlayerStatistics;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsExtractionRun;
+import footballmarket.features.statistics.domain.models.PlayerStatisticsRunItem;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsExtractionRunRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRepository;
+import footballmarket.features.statistics.infraestructure.PlayerStatisticsRunItemRepository;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.Map;
@@ -59,7 +71,7 @@ public class PlayerStatisticsQueryData {
       Map<String, BigDecimal> values) {
     Player player = this.players.findById(playerId).orElseThrow();
     Instant time = date.atStartOfDay(ZoneOffset.UTC).toInstant();
-    PlayerStatisticsExtractionRun run = new PlayerStatisticsExtractionRun(date, source, time, null);
+    PlayerStatisticsExtractionRun run = new PlayerStatisticsExtractionRun(date, source, time);
     run.finish(
         ExtractionRunStatus.PARTIAL,
         time.plusSeconds(2),

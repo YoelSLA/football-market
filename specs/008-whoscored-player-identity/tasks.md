@@ -4,6 +4,39 @@ description: "Tareas de implementación de identidad externa WhoScored — SPEC-
 
 # Tasks: Identidad externa de jugadores en WhoScored
 
+## Cambio vigente — sincronización única sin auditoría (2026-11-01)
+
+El usuario marcó CHK041–048 y autorizó continuar la implementación. Se preservan marcadores e IDs históricos; las tareas siguientes sustituyen para este cambio el diseño de auditoría anterior, no su evidencia histórica. API/datos/estados y criterios de identidad afectados se revisan contra las decisiones explícitas del usuario. Ejecución de tests, CODE REVIEW, TESTING y cierre permanecen humanos.
+
+### Preparación y fundación compartida
+
+- [X] T058 Adaptar los modelos transitorios y resumen de `backend/src/main/java/footballmarket/features/identity/domain/`, preservando matcher, normalización, alias y referencias; retirar entidades y cinco repositorios de auditoría en `features/identity/infraestructure/` (FR-003–011/019–020/025/027–029).
+- [X] T059 Retirar exclusivamente tablas/secuencias de auditoría con migración posterior en `backend/src/main/resources/db/migration/`, preservando V9, catálogo e índice de unicidad WhoScored; adaptar helpers de limpieza en `backend/src/test/java/footballmarket/support/` (FR-011, SC-005). Helpers inspeccionados: recrean con Flyway y no requieren cambios. Migración escrita, no aplicada por el agente.
+
+### US1 — identificación segura y respuesta global
+
+- [X] T060 [US1] Adaptar captura, descubrimiento, resolución y confirmación en `backend/src/main/java/footballmarket/features/identity/application/internal/` sin cambiar estructura; datos de trabajo en memoria, red sin transacción y confirmación aislada, sin auditoría (FR-002–010/014–018/025/027–029).
+- [X] T061 [US1] Adaptar `features/identity/presentation/PlayerIdentityController.java`, `PlayerIdentityMapper.java`, DTO y `common/presentation/GlobalExceptionHandler.java` al único contrato, OpenAPI, errores aplicables y totales locales; retirar excepciones de origen histórico sin uso (FR-019–024/026).
+- [X] T062 [US1] Adaptar tests de `backend/src/test/java/footballmarket/features/identity/domain/`, `infraestructure/` y `presentation/` para matching transitorio, esquema/constraints, respuesta exacta y seguridad; conservar regresiones de integridad y retirar solo pruebas de auditoría sin responsabilidad vigente (SC-001/002/003/005/006/007/008). Escritura y revisión estática realizadas; ejecución pendiente del usuario.
+
+### US2 — complemento automático y conteo único
+
+- [X] T063 [US2] Unificar `features/identity/application/PlayerIdentitySynchronizationService.java` y `impl/PlayerIdentitySynchronizationServiceImpl.java`: actual → histórico elegible, omisión FAILED/vacío, prioridad global y reemplazo por ID local sin doble conteo (FR-001/012/013/016/019–021/026).
+- [X] T064 [US2] Adaptar `backend/src/test/java/footballmarket/features/identity/application/PlayerIdentitySynchronizationServiceTest.java` y `e2e/PlayerIdentityE2ETest.java`, consumidores de `features/statistics/` y helpers de `support/` a una llamada; cubrir estados de ambos pases, vacío, referencias previas/concurrentes, errores, idempotencia y ausencia de transacción en red (SC-002/003/004/006/007). Ejecución pendiente del usuario; helpers existentes sin cambios necesarios.
+
+### Entrega transversal
+
+- [X] T065 Actualizar `docs/backend/technologies.md`, `docs/backend/data-model.md` y referencias vigentes afectadas por la retirada de auditoría; mantener `specs/008-whoscored-player-identity/quickstart.md` y contrato HTTP alineados con fuentes implementadas.
+- [X] T066 Revisar diff y consumidores, ejecutar únicamente build backend sin tests permitido, y registrar evidencia y reporte de revisión en `specs/008-whoscored-player-identity/`; tests pendientes de ejecución humana.
+
+Evidencia de entrega: [Code Review Report](code-review-sync-simplification.md). `build -x test` satisfactorio tras corregir formato; sin tests ejecutados ni migraciones aplicadas. Las casillas de escritura/implementación no acreditan revisión humana, testing ni cierre de Feature. Estado remoto sin verificar; no se modificó seguimiento operativo.
+
+**Cierre posterior del cambio**: usuario confirma CODE REVIEW y TESTING aprobados y suite satisfactoria; CONVERGE sin remediaciones, sin anexar tareas nuevas. Autorización de cierre explícita condicionada al resultado, cumplida. Ver [convergencia y cierre](convergence-sync-simplification.md). La ejecución de tests fue humana, no del agente; sin cambios funcionales después de su revisión.
+
+Orden: T058 → T059/T060 → T063 → T061 → T062/T064 → T065 → T066. No paralelizar cambios de archivos compartidos; no se requiere delegación. Cobertura: T058/T060/T062 conservan FR-002–010/013–018/025/027–029; T059/T065 cubren retirada de persistencia; T061/T063/T064 cubren FR-001/012/019–024/026 y SC-001–008. El MVP entregado en este cambio es el alcance completo autorizado, no un endpoint actual separado.
+
+## Antecedentes históricos — tareas del alcance anterior
+
 **Entrada**: [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md), [data-model.md](data-model.md), [HTTP](contracts/http.md), [WhoScored](contracts/whoscored.md), [quickstart.md](quickstart.md) y [evaluación de Checklists](checklists/evaluation.md).
 
 **Fecha**: 2026-10-14. Primera generación para `008-whoscored-player-identity`: no existe avance anterior en este archivo que reemplazar. Los IDs del alcance estadístico abandonado son antecedentes y no se trasladan a estas tareas.
