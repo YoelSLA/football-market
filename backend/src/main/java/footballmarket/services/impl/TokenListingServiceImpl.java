@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TokenListingServiceImpl implements TokenListingService {
   private final UserRepository users;
-  private final PlayerRepository players;
+  private final PlayerRepository playerRepository;
   private final PlayerTokenRepository holdings;
   private final TokenListingRepository listings;
   private final QuoteSource quoteSource;
@@ -55,10 +55,10 @@ public class TokenListingServiceImpl implements TokenListingService {
       throw new InvalidQuantityException();
     }
     Player player =
-        this.players
+        this.playerRepository
             .findById(order.playerId())
             .orElseThrow(() -> new PlayerNotFoundException("No encontramos el jugador solicitado"));
-    if (this.players.findVisibleById(player.getId()).isEmpty()) {
+    if (this.playerRepository.findVisibleById(player.getId()).isEmpty()) {
       throw new PlayerNotVisibleException();
     }
     // El mercado debe existir antes de operar: el rechazo ocurre antes de leer la cotización y
@@ -153,7 +153,7 @@ public class TokenListingServiceImpl implements TokenListingService {
     OffsetDateTime now = OffsetDateTime.now(this.marketClock);
     if (!listing.getSeller().getId().equals(viewer.getId())
         && (!listing.isActiveAndValid(now)
-            || this.players.findVisibleById(listing.getPlayer().getId()).isEmpty())) {
+            || this.playerRepository.findVisibleById(listing.getPlayer().getId()).isEmpty())) {
       throw new ListingNotFoundException();
     }
     return listing.snapshot(now);

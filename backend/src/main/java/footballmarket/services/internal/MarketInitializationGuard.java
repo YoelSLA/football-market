@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MarketInitializationGuard {
 
-  private final PlayerQuoteRepository quotes;
+  private final PlayerQuoteRepository playerQuoteRepository;
 
   /**
    * Rechaza la operación cuando el mercado todavía no fue inicializado.
@@ -31,7 +31,7 @@ public class MarketInitializationGuard {
    * @throws MarketNotInitializedException si no existe ninguna cotización de origen {@code INITIAL}
    */
   public void requireInitialized() {
-    if (!this.quotes.existsByOrigin(QuoteOrigin.INITIAL)) {
+    if (!this.playerQuoteRepository.existsByOrigin(QuoteOrigin.INITIAL)) {
       throw new MarketNotInitializedException();
     }
   }
