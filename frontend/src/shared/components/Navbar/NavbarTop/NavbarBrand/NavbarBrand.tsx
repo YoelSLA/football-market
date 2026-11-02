@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import NavIcon from "../NavIcon";
-
+import NavbarIcon from "@/shared/components/Navbar/NavbarIcon";
 import styles from "./NavbarBrand.module.scss";
 
 interface Props {
@@ -22,7 +21,7 @@ export default function NavbarBrand({ to = "/home" }: Props) {
 			className={styles.navbarBrand}
 			aria-label="Football Market - Inicio"
 		>
-			<NavIcon name="brand" />
+			<NavbarIcon name="brand" />
 			<span>Football Market</span>
 		</Link>
 	);

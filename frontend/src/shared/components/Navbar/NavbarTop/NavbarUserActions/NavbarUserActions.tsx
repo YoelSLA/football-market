@@ -1,6 +1,5 @@
 import Button from "@/shared/components/Button";
-
-import styles from "./NavbarAccount.module.scss";
+import styles from "./NavbarUserActions.module.scss";
 
 interface Props {
 	userName: string | null;
@@ -11,7 +10,7 @@ interface Props {
  * Área de cuenta del usuario en la navegación.
  * Muestra avatar, nombre de usuario y botón de cierre de sesión.
  */
-export default function NavbarAccount({ userName, onLogout }: Props) {
+export default function NavbarUserActions({ userName, onLogout }: Props) {
 	const userInitial = userName?.trim().charAt(0).toUpperCase() || "U";
 
 	return (

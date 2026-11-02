@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import SoonBadge from "@/shared/components/Navbar/SoonBadge";
+import SoonBadge from "@/shared/components/Navbar/ComingSoonBadge";
 import type { NavTab } from "@/shared/components/Navbar/types";
 import styles from "./TabLink.module.scss";
 

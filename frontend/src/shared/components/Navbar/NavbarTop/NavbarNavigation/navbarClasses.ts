@@ -1,4 +1,4 @@
-import styles from "../NavbarSections/NavbarSections.module.scss";
+import styles from "./NavbarNavigation.module.scss";
 
 /** Estados visuales de los accesos principales. */
 export function sectionClasses(active: boolean): string {

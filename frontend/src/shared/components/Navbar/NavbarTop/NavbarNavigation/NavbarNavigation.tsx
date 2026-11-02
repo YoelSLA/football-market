@@ -1,10 +1,9 @@
 import { NavLink } from "react-router-dom";
+import SoonBadge from "@/shared/components/Navbar/ComingSoonBadge";
+import NavbarIcon from "@/shared/components/Navbar/NavbarIcon";
 import type { NavSection } from "@/shared/components/Navbar/types";
-import NavIcon from "../NavIcon";
-import SoonBadge from "../SoonBadge";
-import { disabledSectionClasses, sectionClasses } from "../utils";
-
-import styles from "./NavbarSections.module.scss";
+import styles from "./NavbarNavigation.module.scss";
+import { disabledSectionClasses, sectionClasses } from "./navbarClasses";
 
 interface Props {
 	sections: NavSection[];
@@ -15,7 +14,10 @@ interface Props {
  * Navegación principal de la aplicación.
  * Renderiza las secciones principales con sus estados activos y deshabilitados.
  */
-export default function NavbarSections({ sections, activeSectionKey }: Props) {
+export default function NavbarNavigation({
+	sections,
+	activeSectionKey,
+}: Props) {
 	return (
 		<nav className={styles.navbarSections} aria-label="Secciones principales">
 			<ul className={styles.navbarSectionList}>
@@ -29,12 +31,12 @@ export default function NavbarSections({ sections, activeSectionKey }: Props) {
 									section.key === activeSectionKey ? "page" : undefined
 								}
 							>
-								<NavIcon name={section.icon} />
+								<NavbarIcon name={section.icon} />
 								<span>{section.label}</span>
 							</NavLink>
 						) : (
 							<span className={disabledSectionClasses()} aria-disabled="true">
-								<NavIcon name={section.icon} />
+								<NavbarIcon name={section.icon} />
 								<span>{section.label}</span>
 								<SoonBadge />
 							</span>

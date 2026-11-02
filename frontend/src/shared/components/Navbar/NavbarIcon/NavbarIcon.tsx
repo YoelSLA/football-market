@@ -7,7 +7,7 @@ import {
 	UsersRound,
 	Wallet,
 } from "@/shared/icons";
-import styles from "./NavIcon.module.scss";
+import styles from "./NavbarIcon.module.scss";
 
 interface Props {
 	name: NavIconKey;
@@ -23,7 +23,7 @@ const NAV_ICONS: Record<NavIconKey, LucideIcon> = {
 };
 
 /** Centraliza los iconos decorativos, que heredan el color de su etiqueta. */
-export default function NavIcon({ name, className }: Props) {
+export default function NavbarIcon({ name, className }: Props) {
 	const Icon = NAV_ICONS[name];
 	return (
 		<Icon
