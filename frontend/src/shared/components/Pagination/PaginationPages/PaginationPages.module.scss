@@ -1,0 +1,12 @@
+.pages {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: nowrap;
+
+	gap: var(--pagination-pages-gap);
+
+	width: 100%;
+	min-width: 0;
+	height: 36px;
+}

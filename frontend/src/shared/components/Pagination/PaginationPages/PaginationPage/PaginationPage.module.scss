@@ -1,0 +1,54 @@
+@use "@/styles/abstracts" as ds;
+
+.page {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	width: var(--pagination-control-size);
+	height: var(--pagination-control-size);
+	min-height: var(--pagination-control-size);
+	padding: 0;
+
+	border: 1px solid var(--pagination-page-border);
+	border-radius: var(--pagination-control-radius);
+
+	background: var(--pagination-page-background);
+	color: var(--pagination-page-color);
+
+	font-size: var(--pagination-page-font-size);
+	font-weight: 600;
+	line-height: 1;
+
+	cursor: pointer;
+
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease;
+
+	&:hover:not(.page_active) {
+		background: rgb(255 255 255 / 6%);
+		color: #ffffff;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-on-dark;
+		outline-offset: 1px;
+	}
+
+	&_active {
+		background: var(--pagination-active-background);
+		border-color: var(--pagination-active-border);
+		color: var(--pagination-active-color);
+
+		font-weight: 700;
+
+		&:hover {
+			background: var(--pagination-active-background);
+			border-color: var(--pagination-active-border);
+			color: var(--pagination-active-color);
+		}
+	}
+}

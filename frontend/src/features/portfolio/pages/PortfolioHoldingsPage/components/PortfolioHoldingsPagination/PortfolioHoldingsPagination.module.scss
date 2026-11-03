@@ -1,0 +1,60 @@
+@use "@/styles/abstracts" as ds;
+
+.pagination {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-lg;
+	flex-wrap: wrap;
+	margin-top: 0;
+	padding: ds.$space-2xs ds.$space-md;
+	border-top: 1px solid ds.$border-finance;
+
+	&__info {
+		grid-area: 1 / 1;
+		justify-self: start;
+		max-width: calc(50% - 150px);
+		flex: 1;
+		min-width: 0;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__center {
+		grid-area: 1 / 1;
+		justify-self: center;
+		display: flex;
+		align-items: center;
+		gap: ds.$space-sm;
+		flex: 0 1 auto;
+	}
+
+	@include ds.down(ds.$bp-detail) {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: ds.$space-md;
+
+		&__center {
+			order: 2;
+			width: 100%;
+			justify-content: center;
+		}
+
+		&__info {
+			max-width: 100%;
+			order: 1;
+			text-align: center;
+		}
+	}
+
+	@include ds.down(ds.$bp-sm) {
+		&__center {
+			gap: ds.$space-2xs;
+		}
+	}
+}

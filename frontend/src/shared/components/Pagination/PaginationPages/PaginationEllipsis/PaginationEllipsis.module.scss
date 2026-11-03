@@ -1,0 +1,17 @@
+.ellipsis {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	width: var(--pagination-ellipsis-width);
+	height: var(--pagination-control-size);
+
+	color: var(--pagination-ellipsis-color);
+
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+
+	user-select: none;
+}
