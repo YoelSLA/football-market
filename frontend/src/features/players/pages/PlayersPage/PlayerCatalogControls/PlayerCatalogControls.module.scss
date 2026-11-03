@@ -1,0 +1,17 @@
+@use "@/styles/abstracts" as ds;
+.playerCatalogControls {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+	gap: 8px;
+	padding: 10px;
+	border: 1px solid ds.$border-surface-dark;
+	border-radius: 10px;
+	background: ds.$surface-finance-panel-from;
+	label { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 8px; border-right: 1px solid ds.$border-surface-dark; > svg { flex-shrink: 0; color: ds.$text-on-dark; } > span { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; font-size: 11px; } }
+	select { width: 100%; min-width: 0; padding: 6px 8px; color: ds.$text-on-dark; background: ds.$surface-finance-panel-to; border: 1px solid ds.$border-surface-dark; border-radius: 5px; font: inherit; font-size: 11px; cursor: pointer; &:disabled { opacity: .6; cursor: wait; } }
+	button { display: flex; align-items: center; justify-content: center; align-self: center; gap: 6px; padding: 8px 12px; color: ds.$accent-nav; border: 1px solid ds.$accent-nav; border-radius: 6px; background: transparent; font: inherit; font-size: 11px; cursor: pointer; &:hover { background: ds.$surface-nav-active; } }
+	select:focus-visible, button:focus-visible { outline: 2px solid ds.$focus-ring-on-dark; outline-offset: 2px; }
+}
+@media (max-width: 1300px) { .playerCatalogControls { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@include ds.down(ds.$bp-tablet) { .playerCatalogControls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; label { border-right: 0; padding: 0; } } }
+@media (max-width: 480px) { .playerCatalogControls { grid-template-columns: minmax(0, 1fr); } }

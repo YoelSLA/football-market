@@ -1,0 +1,6 @@
+{
+  "playerTableStats": [
+    {"playerId": 104, "name": "Pedro López", "teamId": 13, "teamName": "Sevilla", "tournamentId": 4}
+  ],
+  "paging": {"currentPage": 2, "totalPages": 2, "resultsPerPage": 3, "totalResults": 4, "firstRecordIndex": 4, "lastRecordIndex": 4}
+}

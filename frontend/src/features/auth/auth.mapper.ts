@@ -6,14 +6,29 @@ import type {
 	CurrentUserDTO,
 	LoginForm,
 	LoginResponseDTO,
+	RegisterForm,
+	RegisterRequestDTO,
 } from "./types";
 
 export function toCredentialsDTO(form: LoginForm): CredentialsDTO {
 	return { email: form.email, password: form.password };
 }
 
+export function toRegisterRequestDTO(form: RegisterForm): RegisterRequestDTO {
+	return {
+		username: form.username,
+		email: form.email,
+		password: form.password,
+	};
+}
+
 export function toCurrentUser(dto: CurrentUserDTO): CurrentUser {
-	return { id: dto.id, email: dto.email };
+	return {
+		id: dto.id,
+		username: dto.username,
+		email: dto.email,
+		role: dto.role,
+	};
 }
 
 export function toAuthSession(dto: LoginResponseDTO): AuthSession {

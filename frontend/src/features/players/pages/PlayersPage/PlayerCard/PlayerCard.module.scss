@@ -1,0 +1,23 @@
+@use "@/styles/abstracts" as ds;
+.playerCard {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	border: 1px solid ds.$border-surface-dark;
+	border-radius: 10px;
+	overflow: hidden;
+	color: ds.$text-on-dark;
+	background: ds.$surface-finance-panel-from;
+	transition: transform .15s, border-color .15s;
+	&:hover, &:focus-within { border-color: ds.$accent-nav; transform: translateY(-2px); }
+	&__visual { position: relative; min-height: 96px; padding: 5px 8px 0; overflow: hidden; background: ds.$surface-finance-panel-from; flex: 1 1 auto; display: flex; align-items: stretch; gap: 8px; }
+	&__identityPanel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 8px 6px; width: 46px; flex-shrink: 0; border: 1px solid ds.$border-surface-dark; border-radius: 8px; background: ds.$surface-finance-tile; z-index: 1; }
+	&__position { min-width: 2.4rem; padding: 3px 5px; border-radius: 4px; background: ds.$surface-nav-active; color: ds.$accent-nav; font-size: 10px; font-weight: 700; white-space: nowrap; text-align: center; }
+	&__leagueIcon { width: 24px; height: 24px; object-fit: contain; }
+	&__header { padding: 6px 10px 4px; min-width: 0; h2 { margin: 0 0 4px; font-size: 14px; line-height: 1.15; overflow-wrap: anywhere; } a { color: ds.$text-on-dark; text-decoration: none; &:focus-visible { outline: 2px solid ds.$focus-ring-on-dark; outline-offset: 3px; } } p { font-size: 11px; margin: 0 0 3px; color: ds.$text-on-dark-soft; } small { display: block; font-size: 9px; margin-top: 3px; color: ds.$text-on-dark-muted; } }
+	&__league { display: flex; align-items: center; gap: 4px; font-size: 10px; img { width: 18px; height: 18px; object-fit: contain; } }
+	&__statistics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; margin: 0 8px; padding: 5px 0 4px; border-top: 1px solid ds.$border-surface-dark; text-align: center; div + div { border-left: 1px solid ds.$border-surface-dark; } dt { margin-top: 2px; font-size: 9px; } dd { margin: 0; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; } }
+	&__context { padding: 0 8px 5px; margin: 0; text-align: center; font-size: 8px; color: ds.$text-on-dark-muted; }
+}
+@media (prefers-reduced-motion: reduce) { .playerCard { transition: none; &:hover, &:focus-within { transform: none; } } }

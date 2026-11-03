@@ -1,0 +1,102 @@
+@use "@/styles/abstracts" as ds;
+
+.marketFilterFields {
+	display: flex;
+	flex-direction: column;
+	gap: .9rem;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	min-width: 0;
+
+	&__search {
+		@media (max-width: 639px) {
+			grid-column: 1 / -1;
+		}
+	}
+
+	&__direction {
+		display: grid;
+		gap: .65rem;
+		font-size: .8rem;
+		color: ds.$text-portfolio-label;
+
+		label {
+			display: flex;
+			align-items: center;
+			gap: .65rem;
+		}
+
+		input {
+			appearance: none;
+			width: 1.25rem;
+			height: 1.25rem;
+			border-radius: 50%;
+			border: 1px solid ds.$accent-finance-cyan;
+			flex-shrink: 0;
+
+			&:checked {
+				border-color: ds.$accent-finance-green;
+				background: radial-gradient(ds.$accent-finance-green 0 30%, transparent 35%);
+			}
+
+			&:disabled {
+				cursor: not-allowed;
+			}
+		}
+	}
+
+	&__apply {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: .5rem;
+		margin-top: 1.2rem;
+		padding: .7rem;
+		border: 1px solid ds.$accent-finance-green;
+		border-radius: .5rem;
+		background: linear-gradient(120deg, ds.$surface-finance-active, ds.$surface-finance-panel-to);
+		color: ds.$accent-finance-green;
+		font-size: .8rem;
+		font-weight: 700;
+		cursor: pointer;
+
+		svg {
+			width: 1.2rem;
+			height: 1.2rem;
+		}
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+	}
+
+	@media (min-width: 640px) and (max-height: 900px) {
+		gap: .6rem;
+
+		&__apply {
+			margin-top: .45rem;
+			padding-block: .5rem;
+		}
+
+		&__direction {
+			gap: .4rem;
+		}
+	}
+
+	@media (max-width: 639px) {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: .55rem;
+
+		&__direction {
+			gap: .35rem;
+		}
+
+		&__apply {
+			margin-top: 0;
+			align-self: end;
+		}
+	}
+}

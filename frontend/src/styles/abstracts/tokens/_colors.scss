@@ -1,0 +1,575 @@
+// ============================================================
+// PRIMITIVOS CROMATICOS DE FOOTBALL MARKET
+// ============================================================
+//
+// Este archivo es el UNICO origen de valores cromaticos del
+// frontend. Cada color documenta:
+//
+//   1. Que color es.
+//   2. Que funcion visual cumple.
+//   3. Donde debe utilizarse.
+//   4. Que restricciones tiene (con la razon).
+//
+// REGLAS:
+//
+// - Los componentes NO deben escribir valores hexadecimales: deben
+//   consumir los roles semanticos de abstracts/themes/_default.scss.
+// - Este archivo no define conceptos de interfaz (no sabe que es un
+//   boton ni un borde de campo). Solo describe colores.
+// - No se inventan tonalidades: todos los valores provienen de
+//   colores que ya estan en uso en la aplicacion.
+//
+// ============================================================
+
+// ============================================================
+// NEUTRALES — superficies, bordes y textos
+// ============================================================
+
+// Blanco puro.
+// Funcion: fondo de tarjetas y paneles claros, texto inverso.
+// Uso: Card de HomePage, SessionChecking, botones de marca.
+// Restricciones: sobre superficies oscuras usarlo solo si el
+// contraste del texto adyacente lo permite.
+$color-white: #ffffff;
+
+// Gris azulado muy claro.
+// Funcion: fondo de pantallas de estadofullscreen.
+// Uso: SessionChecking (pantalla de verificacion de sesion).
+// Contraste: texto #162240 sobre este fondo = 13.98:1 (AAA).
+$color-neutral-025: #eef2f8;
+
+// Gris muy suave.
+// Funcion: fondo de campos de formulario.
+// Uso: fondo de input y select de PlayerCatalogControls.
+// Contraste: texto #17213b sobre este fondo = 15.14:1 (AAA).
+$color-neutral-050: #f8f9fc;
+
+// Gris casi blanco.
+// Funcion: fondo de inputs deshabilitados.
+// Uso: estado deshabilitado de Field.
+// Nota: no confundir con $color-neutral-050.
+$color-neutral-100: #f0f3f9;
+
+// Gris muy claro.
+// Funcion: texto y bordes sobre superficies oscuras.
+// Uso: textos de PlayerQuotePanel, PlayerSportsSummary,
+//      PlayerQuoteEvolutionChart.
+// Contraste: sobre #0f172a = 14.48:1 (AAA).
+$color-neutral-200: #e2e8f0;
+
+// Gris claro.
+// Funcion: texto principal sobre superficies oscuras.
+// Uso: botones de paginacion, textos sobre #1e293b.
+// Contraste: sobre #1e293b = 9.85:1 (AAA).
+$color-neutral-300: #cbd5e1;
+
+// Gris claro secundario.
+// Funcion: variantes del PlayerCard (no reutilizar).
+// Uso: exclusivamente dentro de PlayerCard.
+$color-neutral-305: #cbd5f5;
+
+// Gris medio claro.
+// Funcion: ejes y etiquetas de graficos, texto deshabilitado.
+// Uso: ejes del grafico de evolucion de precio.
+// RESTRICCION: sobre blanco da 2.56:1. No usarlo como texto
+// legible; solo elementos graficos o decorativos.
+$color-neutral-400: #94a3b8;
+
+// Gris medio.
+// Funcion: texto secundario y separadores.
+// Uso: elipsis de paginacion, bordes y textos atenuados.
+// Contraste: sobre blanco = 4.76:1 (WCAG AA para texto normal).
+$color-neutral-500: #64748b;
+
+// Gris medio oscuro.
+// Funcion: bordes y estados hover.
+// Uso: bordes de botones de paginacion, hover del navbar.
+$color-neutral-600: #475569;
+
+// Gris oscuro.
+// Funcion: superficies oscuras compactas.
+// Uso: fondo de la barra y de la capsula de paginacion,
+//      botones de navegacion de paginacion.
+$color-neutral-700: #334155;
+
+// Gris muy oscuro.
+// Funcion: fondo de superficies oscuras compactas.
+// Uso: fondo principal de la paginacion.
+// Contraste: con $color-brand-300 = 8.11:1 (AAA).
+$color-neutral-800: #1e293b;
+
+// Negro azulado.
+// Funcion: superficie oscura de paneles.
+// Uso: PlayerQuotePanel, PlayerSportsSummary,
+//      PlayerQuoteEvolutionChart, mensajes del detalle.
+$color-neutral-950: #0f172a;
+
+// Azul casi negro.
+// Funcion: fondo de la barra de navegacion.
+// Uso: Navbar.
+// Contraste: con el anillo de foco claro = 8.73:1 (AAA).
+$color-neutral-900: #172338;
+
+// ============================================================
+// SUPERFICIES DE LA APLICACION
+// ============================================================
+
+// Gris muy claro de aplicacion.
+// Funcion: fondo global del shell.
+// Uso: AppLayout.
+// Contraste: texto #64748b sobre este fondo = 4.43:1 (no cumple
+// AA para texto normal; evitar textos pequenos con este color).
+$color-app-surface: #f5f7fa;
+
+// Azul medio vivo.
+// Funcion: tinte superior de los degradados de fondo.
+// Uso: primer stop del degradado del catalogo y de AuthLayout.
+// RESTRICCION: decorativo. Sobre #111b40 da 2.16:1, por lo que
+// nunca debe usarse como texto ni como indicador de estado.
+$color-catalog-accent: #354d9e;
+
+// Azul profundo.
+// Funcion: fondo del catalogo de jugadores.
+// Uso: PlayersPage.
+// Nota: se mantiene separado de $color-app-surface-home
+// (HomePage) porque cada superficie tiene su propia identidad
+// historica y ambos conviven en pantalla.
+$color-app-surface-catalog: #111b40;
+
+// Azul profundo alterno.
+// Funcion: fondo de la pagina de bienvenida.
+// Uso: HomePage.
+// Restricciones: no sustituir por el fondo del catalogo: ambos
+// coexisten en pantalla y son deliberadamente distintos.
+$color-app-surface-home: #111f43;
+
+// ============================================================
+// MARCA — azul de Football Market
+// ============================================================
+
+// Azul muy profundo.
+// Funcion: tinte profundo de degradados de marca.
+// Uso: stop final del degradado de PlayerOverview.
+// Contraste: texto #f8fafc sobre este color = 9.90:1 (AAA).
+$color-brand-deep: #1e3a8a;
+
+// Azul casi blanco.
+// Funcion: texto legible sobre superficies de marca.
+// Uso: texto de PlayerOverview sobre su degradado.
+// Contraste: 6.41:1 sobre #1d4ed8 y 9.90:1 sobre #1e3a8a (AA/AAA).
+// RESTRICCION: casi blanco, no blanco puro. Sobre superficies
+// claras su contraste cae por debajo de 4.5:1.
+$color-brand-text: #f8fafc;
+
+// Azul intenso.
+// Funcion: estado hover/active de acciones de marca y acento
+//         informativo.
+// Uso: hover del boton de envio de AuthForm, degradado de
+//      PlayerOverview.
+// Contrasto: blanco sobre este color = 6.70:1 (AA).
+$color-brand-secondary: #1d4ed8;
+
+// Azul oscuro.
+// Funcion: enlaces, botones y acentos sobre fondos claros.
+// Uso: enlaces de PlayerDetailPage, badge de total de jugadores,
+//      botones del mensaje de detalle.
+// Contraste: blanco sobre este color = 9.29:1 (AAA).
+$color-brand-high-contrast: #243f9b;
+
+// Azul marca alterno.
+// Funcion: marca grafica del AuthLayout.
+// Uso: monograma del AuthLayout.
+// RESTRICCIONES: reservado. No mezclar con $color-brand-primary
+// en la misma pantalla: son dos decisiones de marca separadas.
+$color-brand-alt: #213ac3;
+
+// Azul principal de Football Market.
+// Funcion: color de marca de la aplicacion.
+// Uso: botones primarios (Button, AuthForm, HomePage), enlaces de
+//      accion.
+// Contraste: blanco sobre este color = 8.49:1 (AAA).
+// RESTRICCIONES: no usarlo para texto de parrafo ni para
+// estados deshabilitados; el contraste se agota en textos largos.
+$color-brand-primary: #203ac5;
+
+// Azul profundo.
+// Funcion: estado hover del azul principal.
+// Uso: hover del boton de envio de AuthForm.
+// Contrasto: blanco sobre este color = 11.40:1 (AAA).
+$color-brand-primary-hover: #172b99;
+
+// Azul vivido.
+// Funcion: estado seleccionado de controles paginados.
+// Uso: pagina activa de Pagination.
+// Contraste: blanco sobre este color = 5.17:1 (AA).
+$color-brand-selected: #2563eb;
+
+// Azul casi blanco.
+// Funcion: texto de interaccion sobre fondos oscuros.
+// Uso: hover del logotipo del Navbar.
+// Contraste: sobre #172338 = 12.90:1 (AAA).
+$color-on-dark-soft: #dbeafe;
+
+// Azul claro.
+// Funcion: anillos de foco sobre superficies oscuras.
+// Uso: :focus-visible de Navbar, Pagination y PlayerDetailPage.
+// RESTRICCION: sobre blanco da 1.80:1. NUNCA usarlo sobre
+// superficies claras: alli corresponde $color-focus-light.
+$color-focus-dark: #93c5fd;
+
+// Azul medio.
+// Funcion: anillos de foco sobre superficies claras.
+// Uso: :focus-visible global de styles/base/_reset.scss.
+// RESTRICCION: sobre blanco da 3.47:1. Cumple el minimo de 3:1
+// para indicadores de foco, pero NO usarlo como texto.
+$color-focus-light: #6484ec;
+
+// Cian informativo.
+// Funcion: acento de informacion.
+// Uso: foco del desplegable del grafico de evolucion de precio.
+// Contrasto: sobre #0f172a = 8.33:1 (AAA).
+$color-info: #38bdf8;
+
+// Verde de acento de la navegacion.
+// Funcion: estado activo de las secciones y pestañas del Navbar.
+// Uso: seccion activa, pestaña activa y marca grafica de marca.
+// Contraste: sobre #172338 = 9.07:1 (AAA).
+// RESTRICCIONES: es un acento de navegacion, no un color de marca
+// general. No usarlo para texto de parrafo ni para estados
+// deshabilitados: el contraste se agota en textos largos.
+$color-accent-green: #4ade80;
+
+// Verde profundo.
+// Funcion: fondo del estado activo de una seccion de navegacion.
+// Uso: tarjeta de la seccion activa del Navbar.
+// Contraste: #4ade80 sobre este color = 7.66:1 (AAA).
+// RESTRICCION: comunica estado activo. No es decorativo ni
+// identifica un error o una advertencia.
+$color-accent-green-surface: #14352a;
+
+// ============================================================
+// ESTADOS SEMANTICOS
+// ============================================================
+
+// Azul lavanda muy claro.
+// Funcion: fondo de acciones secundarias sobre superficie clara.
+// Uso: boton secundario de HomePage.
+// Contraste: texto #20305b sobre este fondo = 10.88:1 (AAA).
+$color-secondary-action-surface: #e8ecf8;
+
+// Verde de exito.
+// Funcion: confirmaciones.
+// Uso: badge de sesion verificada en HomePage.
+// Contraste: sobre $color-success-surface = 6.24:1 (AA).
+$color-success-strong: #19653a;
+
+// Verde de exito (texto).
+// Funcion: mensajes de exito.
+// Uso: AuthForm, texto de confirmacion.
+// Contrasto: sobre blanco = 7.47:1 (AAA).
+$color-success: #17613b;
+
+// Verde muy claro.
+// Funcion: fondo de badges de exito.
+// Uso: badge de HomePage.
+$color-success-surface: #dcf7e7;
+
+// Verde punto.
+// Funcion: indicador decorativo.
+// Uso: punto del pie del panel visual de AuthLayout.
+// RESTRICCION: decorativo, nunca informativo por si solo.
+$color-success-dot: #b1f9c8;
+
+// Rojo de error (texto).
+// Funcion: mensajes de error.
+// Uso: AuthForm, Field, mensajes de PlayerDetailPage.
+// Contrasto: sobre blanco = 7.22:1 (AAA).
+$color-error: #a32739;
+
+// Rojo de error (borde).
+// Funcion: borde de campos en estado invalido.
+// Uso: Field con aria-invalid.
+// Contrasto: sobre blanco = 5.54:1 (AA).
+$color-error-border: #bd3743;
+
+// Ambar de advertencia.
+// Funcion: estados de advertencia.
+// Uso: RESERVADO. Ningun componente lo utiliza todavia.
+// Contraste: sobre blanco = 5.02:1 (AA).
+// Nota: deliberadamente distinto del dorado de las ligas para que
+// nunca se confunda con la identidad de PlayerCard.
+$color-warning: #b45309;
+
+// Estados de Cartera sobre superficies oscuras (#1e293b, #111b40, #0f172a).
+// No sustituyen los estados existentes diseñados para superficies claras.
+// Resultado positivo: contraste mínimo 8,40:1 sobre #1e293b.
+$color-positive-on-dark: #4ade80;
+// Pérdida financiera: contraste mínimo 5,29:1 sobre #1e293b.
+$color-negative-on-dark: #f87171;
+// Cotización ausente: contraste mínimo 8,76:1 sobre #1e293b.
+$color-caution-on-dark: #fbbf24;
+// Error técnico, no pérdida financiera: contraste mínimo 7,74:1.
+$color-error-on-dark: #fda4af;
+// Límite de superficie: 3,07:1 sobre tarjeta y 3,52:1 sobre fondo.
+$color-border-dark: #64748b;
+
+// ============================================================
+// GRISES DE BORDE
+// ============================================================
+
+// Se conservan cuatro grises de borde distintos que hoy coexisten
+// en la aplicacion. No son intercambiables: cada uno pertenece a un
+// componente con su propio peso visual. No unificarlos aqui.
+
+// Borde de tarjeta clara.
+// Funcion: separacion de tarjetas y paneles claros.
+// Uso: AuthLayout, HomePage, SessionChecking.
+$color-border-card: #d9deea;
+
+// Borde de input.
+// Funcion: contorno de campos de formulario.
+// Uso: input y select de PlayerCatalogControls, SessionChecking.
+$color-border-field: #bbc4d6;
+
+// Borde de campo.
+// Funcion: contorno de campos de formulario.
+// Uso: Field (componente compartido).
+$color-border-input: #d4dae7;
+
+// Borde de PlayerCard.
+// Funcion: marco metalico de la carta.
+// Uso: exclusivamente PlayerCard.
+// Contraste: sobre el fondo de la carta = 9.76:1 (AAA).
+$color-border-card-frame: #b7c4d4;
+
+// ============================================================
+// TINTAS DE TEXTO CLARO
+// ============================================================
+
+// Tinta principal sobre fondos claros.
+// Funcion: color de texto principal.
+// Uso: textos de formularios y del catalogo.
+// Contraste: sobre blanco = 15.94:1 (AAA).
+$color-ink-primary: #17213b;
+
+// Tinta de autenticacion.
+// Funcion: color de texto del area de acceso.
+// Uso: AuthLayout, SessionChecking.
+// Contraste: sobre blanco = 15.71:1 (AAA).
+$color-ink-auth: #162240;
+
+// Tinta de etiquetas.
+// Funcion: texto de labels de formulario.
+// Uso: PlayerCatalogControls.
+// Contrasto: sobre blanco = 10.34:1 (AAA).
+$color-ink-label: #34405b;
+
+// Tinta secundaria.
+// Funcion: textos descriptivos secundarios.
+// Uso: AuthLayout, SessionChecking.
+// Contraste: sobre blanco = 4.98:1 (AA).
+$color-ink-muted: #657087;
+
+// Tinta de la accion secundaria.
+// Funcion: texto del boton secundario de HomePage.
+// Contraste: sobre #e8ecf8 = 10.88:1 (AAA).
+$color-ink-secondary-action: #20305b;
+
+// ============================================================
+// PANTALLAS DE COLOR AUXILIARES
+// ============================================================
+
+// Fondo de cards del PlayerCard (sin liga).
+// Uso: exclusivo de PlayerCard.
+// ESTOS VALORES PERTENECEN A LA IDENTIDAD VISUAL DE LAS CARTAS:
+// se documentan para que nadie los reutilice por accidente. La
+// identidad de cada liga vive en su variante dentro de
+// PlayerCard.module.scss y NO se extrae a tokens: no hay reutilizacion
+// que lo justifique.
+$color-card-surface: #26374c;
+$color-card-surface-deep: #101b2c;
+$color-card-highlight: #667a92;
+$color-card-text: #f2f5ff;
+$color-card-text-strong: #f4f6ff;
+
+// ============================================================
+// CARTERA — PALETA DE LAS REFERENCIAS VISUALES
+// ============================================================
+//
+// Esta seccion reproduce la paleta de las referencias de diseno de
+// la seccion Cartera (referencias-imagenes/01-mi-portfolio.png y
+// 02-mis-tenencias.svg). Cada valor conserva su funcion exacta:
+// los componentes de Cartera los consumen a traves de los roles
+// semanticos de themes/_default.scss y nunca directamente.
+//
+// Se mantienen como primitivos separados de la paleta general
+// porque cumplen una funcion visual propia y no deben mezclarse
+// con las superficies y estados del resto de la aplicacion.
+
+// --- Superficies ---
+
+// Fondo de la pantalla de resumen de portfolio.
+$color-portfolio-page: #1b2545;
+// Extremos del degradado vertical del fondo de la pantalla de tenencias.
+$color-portfolio-page-from: #101f37;
+$color-portfolio-page-to: #0c1930;
+// Panel contenedor del resumen.
+$color-portfolio-content: #1d2948;
+// Tarjetas de indicador y paneles del resumen.
+$color-portfolio-panel: #243354;
+// Extremos del degradado vertical de la tarjeta de posicion.
+$color-portfolio-card-from: #12243f;
+$color-portfolio-card-to: #101f39;
+// Fondo del avatar del jugador en la tarjeta de posicion.
+$color-portfolio-avatar: #3b5378;
+// Fondo del mosaico de icono del indicador del resumen.
+$color-portfolio-tile: #314563;
+// Fondo del mosaico de icono de los paneles del resumen.
+$color-portfolio-tile-soft: #304467;
+// Fondo de la etiqueta de posicion abierta.
+$color-portfolio-open-surface: #103c34;
+// Fondo de la etiqueta de posicion cerrada.
+$color-portfolio-closed-surface: #431f31;
+// Fondo del filtro de estado activo.
+$color-portfolio-filter-active-surface: #10382f;
+// Fondo del filtro de estado inactivo.
+$color-portfolio-filter-surface: #101f38;
+// Fondo de la pastilla con la cantidad de posiciones.
+$color-portfolio-pill-surface: #203553;
+// Fondo de la etiqueta de estado pendiente.
+$color-portfolio-soon-surface: #273c59;
+// Fondo de la accion principal de la seccion.
+$color-portfolio-action-surface: #144837;
+// Fondo de los controles de paginacion inactivos.
+$color-portfolio-pagination-surface: #13243e;
+// Fondo del control de paginacion activo.
+$color-portfolio-pagination-active-surface: #10382f;
+// Fondo de la barra de distribucion de tokens.
+$color-portfolio-track-surface: #445271;
+// Fondo del avatar generico de la persona, para el retrato de respaldo.
+$color-portfolio-person-skin: #d4bba6;
+$color-portfolio-person-shirt: #e18d55;
+
+// --- Bordes ---
+
+// Contorno del panel contenedor del resumen.
+$color-portfolio-content-border: #384b70;
+// Contorno de las tarjetas de indicador y de los paneles del resumen.
+$color-portfolio-panel-border: #40557c;
+// Contorno de la tarjeta de posicion.
+$color-portfolio-card-border: #2b4466;
+// Contorno de la etiqueta de posicion abierta.
+$color-portfolio-open-border: #0cce91;
+// Contorno de la etiqueta de posicion cerrada.
+$color-portfolio-closed-border: #ef526e;
+// Contorno del filtro de estado activo.
+$color-portfolio-filter-active-border: #10d995;
+// Contorno del filtro de estado inactivo.
+$color-portfolio-filter-border: #304768;
+// Contorno de la accion principal de la seccion.
+$color-portfolio-action-border: #35d48d;
+// Contorno de los controles de paginacion inactivos.
+$color-portfolio-pagination-border: #34516f;
+// Contorno del control de paginacion activo.
+$color-portfolio-pagination-active-border: #14d493;
+// Separador horizontal dentro de la tarjeta y de los paneles.
+$color-portfolio-separator: #283c5b;
+// Relleno de la barra de distribucion de tokens.
+$color-portfolio-track-fill: #41d69a;
+
+// --- Textos ---
+
+// Titulo principal de la seccion.
+$color-portfolio-title: #f2f6ff;
+// Texto de los titulos de tarjeta y de los valores destacados.
+$color-portfolio-strong: #eaf1ff;
+// Texto de los valores de las filas del resumen.
+$color-portfolio-value: #eef4ff;
+// Texto de los importes de la tarjeta de posicion.
+$color-portfolio-amount: #f4f7ff;
+// Etiqueta de los indicadores del resumen.
+$color-portfolio-label: #b7c5dc;
+// Etiqueta de las filas del resumen.
+$color-portfolio-row-label: #a9b8d4;
+// Etiqueta de las celdas de la tarjeta de posicion.
+$color-portfolio-cell-label: #b3c2d8;
+// Descripcion secundaria del jugador en la tarjeta de posicion.
+$color-portfolio-cell-sub: #b3c4dc;
+// Texto atenuado de las pestañas inactivas y de los textos auxiliares.
+$color-portfolio-muted: #9eafc9;
+// Texto de los elementos de la navegacion.
+$color-portfolio-nav: #c3d0e2;
+// Titulo de la leyenda de la distribucion de tokens.
+$color-portfolio-legend-title: #b6c5dd;
+// Texto de la leyenda y del pie de la distribucion de tokens.
+$color-portfolio-legend: #a7b6d0;
+// Texto de la etiqueta de estado pendiente.
+$color-portfolio-soon: #bdc9df;
+
+// --- Acentos y estados ---
+
+// Icono de la cabecera de la pantalla de tenencias.
+$color-portfolio-accent: #15e1a0;
+// Enlace de accion, como "Ver detalles".
+$color-portfolio-link: #22e8a8;
+// Resultado positivo de una posicion.
+$color-portfolio-positive: #22e2a2;
+// Texto de la etiqueta de posicion abierta.
+$color-portfolio-open-text: #1aeba5;
+// Leyenda de tokens disponibles.
+$color-portfolio-available: #67e3ae;
+// Resultado total del resumen.
+$color-portfolio-total: #45df9d;
+// Valor del capital invertido.
+$color-portfolio-invested: #c5a2ff;
+// Valor del valor actual del portfolio.
+$color-portfolio-current: #80c5ff;
+// Valor de la cantidad de posiciones.
+$color-portfolio-positions: #8ddcf0;
+// Filtro de estado activo.
+$color-portfolio-filter-active-text: #16eaa5;
+// Icono de tokens totales.
+$color-portfolio-icon-tokens: #51c4ff;
+// Icono de tokens disponibles.
+$color-portfolio-icon-available: #33d9b3;
+// Icono de tokens reservados.
+$color-portfolio-icon-reserved: #ffb75c;
+// Icono del precio promedio.
+$color-portfolio-icon-average: #ffc05c;
+// Icono del precio actual.
+$color-portfolio-icon-current: #b493ff;
+// Icono del valor actual.
+$color-portfolio-icon-value: #9a8dff;
+// Icono de los paneles del resumen.
+$color-portfolio-icon-panel: #7bc4ef;
+// Resultado negativo de una posicion.
+$color-portfolio-negative: #ff778b;
+// Texto de la etiqueta de posicion cerrada.
+$color-portfolio-closed-text: #ff7388;
+// Aviso de cotizacion ausente.
+$color-portfolio-no-quote: #ffcd55;
+// Leyenda de tokens reservados.
+$color-portfolio-reserved: #c4a5ff;
+
+// Superficies profundas y acentos del dashboard financiero (referencia PNG).
+// Separados de la paleta anterior para no alterar tenencias ni sus diálogos.
+$color-finance-base: #03172c;
+$color-finance-panel-from: #0c233e;
+$color-finance-panel-to: #071a30;
+$color-finance-border: #2b5378;
+$color-finance-tile: #123658;
+$color-finance-cyan: #0dbbfa;
+$color-finance-violet: #b363ff;
+$color-finance-green: #00dfa0;
+$color-finance-active: #00382e;
+
+// ============================================================
+// NO TOKENIZADO (a proposito)
+// ============================================================
+//
+// - Colores de las cinco variantes de liga de PlayerCard: identidad
+//   visual, unicos por componente.
+// - Sombras y superposiciones (rgb() con alfa): dependen del
+//   contexto, no de un color de marca.
+// - Degradados de AuthVisualPanel: composición especifica.
+// - Variables CSS locales de variantes: su valor se deriva de estos roles en el componente.

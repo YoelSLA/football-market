@@ -1,0 +1,67 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioHoldingsContent {
+	&__error {
+		padding: ds.$space-lg ds.$space-xl;
+		color: ds.$state-error-on-dark;
+
+		button {
+			margin-top: ds.$space-sm;
+			padding: ds.$space-sm ds.$space-md;
+			border: 0;
+			border-radius: 8px;
+			background: ds.$surface-portfolio-action;
+			color: ds.$accent-portfolio-link;
+			font-weight: 700;
+			cursor: pointer;
+		}
+	}
+
+	&__loading {
+		padding: ds.$space-lg ds.$space-xl;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__empty {
+		margin: ds.$space-md 0 0;
+		padding: 0 ds.$space-xl;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__summary {
+		margin: ds.$space-2xs 0 0;
+		padding: 0 ds.$space-md;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		align-content: start;
+		align-items: start;
+		flex-shrink: 0;
+		gap: ds.$space-sm;
+		margin: ds.$space-2xs 0 0;
+		padding: 0 ds.$space-md ds.$space-sm;
+		list-style: none;
+
+		li {
+			min-width: 0;
+		}
+	}
+
+	@include ds.down(ds.$bp-grid-md) {
+		&__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@include ds.down(ds.$bp-grid-sm) {
+		&__grid {
+			grid-template-columns: 1fr;
+		}
+	}
+}

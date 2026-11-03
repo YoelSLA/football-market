@@ -1,0 +1,48 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioSummaryContent {
+	display: flex;
+	flex: 1 0 auto;
+	flex-direction: column;
+	gap: var(--portfolio-summary-content-gap, 18px);
+	margin-top: var(--portfolio-summary-content-margin, #{ds.$space-md});
+
+	&__error {
+		padding: 22px 23px;
+		color: ds.$state-error-on-dark;
+
+		button {
+			margin-top: 12px;
+			padding: 10px 16px;
+			border: 0;
+			border-radius: 8px;
+			background: ds.$surface-portfolio-action;
+			color: ds.$accent-portfolio-link;
+			font-weight: 700;
+			cursor: pointer;
+		}
+	}
+
+	&__loading {
+		padding: 22px 23px;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__retryButton {
+		margin-top: 12px;
+		padding: 10px 16px;
+		border: 0;
+		border-radius: 8px;
+		background: ds.$surface-portfolio-action;
+		color: ds.$accent-portfolio-link;
+		font-weight: 700;
+		cursor: pointer;
+	}
+}

@@ -1,69 +1,92 @@
-import {
-	PlayerCard,
-	PlayerCatalogControls,
-	PlayersPagination,
-} from "../../components";
-import { usePlayersPage } from "../../hooks";
+import { PaginatedPageLayout } from "@/app/layouts";
+import { usePlayersPage } from "@/features/players/hooks";
+import { Search } from "@/shared/icons";
+import PlayerCard from "./PlayerCard";
+import PlayerCatalogControls from "./PlayerCatalogControls";
 import styles from "./PlayersPage.module.scss";
 
-export function PlayersPage() {
+export default function PlayersPage() {
 	const page = usePlayersPage();
 	const players = page.playersPage?.players ?? [];
-
-	return (
-		<main className={styles["players-page"]} aria-busy={page.isLoading}>
-			<header className={styles["players-page__header"]}>
-				<div>
-					<p>FOOTBALL MARKET</p>
-					<h1>Catálogo de jugadores</h1>
-				</div>
+	const header = (
+		<div className={styles.playersPage__toolbar}>
+			<div className={styles.playersPage__heading}>
+				<h1>Catálogo de jugadores</h1>
 				{page.playersPage && (
 					<span>{page.playersPage.totalElements} jugadores activos</span>
 				)}
-			</header>
-
+				<label className={styles.playersPage__search}>
+					<Search size={18} aria-hidden="true" />
+					<input
+						type="search"
+						aria-label="Buscar jugador por nombre"
+						placeholder="Buscar jugador…"
+						value={page.searchText}
+						onChange={(event) => page.setSearchText(event.target.value)}
+						maxLength={255}
+					/>
+				</label>
+			</div>
 			<PlayerCatalogControls
-				searchText={page.searchText}
-				selectedLeague={page.selectedLeague}
-				selectedPosition={page.selectedPosition}
-				onSearchTextChange={page.setSearchText}
-				onLeagueChange={page.setSelectedLeague}
-				onPositionChange={page.setSelectedPosition}
+				criteria={page.criteria}
+				options={page.options}
+				disabled={page.optionsLoading || !page.options}
+				onChange={page.changeFilter}
+				onClear={page.clearFilters}
 			/>
-
-			{page.errorMessage ? (
-				<section className={styles["players-page__message"]} role="alert">
-					<p>{page.errorMessage}</p>
-					<button type="button" onClick={() => page.retry()}>
-						Reintentar
+			{page.optionsError && (
+				<div role="alert">
+					{page.optionsError}{" "}
+					<button type="button" onClick={() => page.retryOptions()}>
+						Reintentar filtros
 					</button>
-				</section>
-			) : page.isLoading ? (
-				<p className={styles["players-page__message"]} role="status">
-					Cargando jugadores...
-				</p>
-			) : players.length === 0 ? (
-				<p className={styles["players-page__message"]} role="status">
-					No hay jugadores disponibles.
-				</p>
-			) : (
-				<section
-					className={styles["players-page__grid"]}
-					aria-label="Jugadores"
-				>
-					{players.map((player) => (
-						<PlayerCard key={player.id} player={player} />
-					))}
-				</section>
+				</div>
 			)}
-
-			{page.playersPage && players.length > 0 && (
-				<PlayersPagination
-					currentPage={page.selectedPage}
-					totalPages={page.playersPage.totalPages}
-					onPageChange={page.selectPage}
-				/>
-			)}
-		</main>
+		</div>
+	);
+	return (
+		<div className={styles.playersPage} aria-busy={page.isLoading}>
+			<PaginatedPageLayout
+				header={header}
+				page={
+					page.playersPage && players.length ? page.selectedPage : undefined
+				}
+				totalPages={
+					page.playersPage && players.length
+						? page.playersPage.totalPages
+						: undefined
+				}
+				onPageChange={page.selectPage}
+			>
+				{page.errorMessage ? (
+					<section className={styles.playersPage__message} role="alert">
+						<p>{page.errorMessage}</p>
+						<button type="button" onClick={() => page.retry()}>
+							Reintentar
+						</button>
+					</section>
+				) : page.isLoading ? (
+					<p className={styles.playersPage__message} role="status">
+						Cargando jugadores…
+					</p>
+				) : players.length === 0 ? (
+					<p className={styles.playersPage__message} role="status">
+						{page.criteria.name ||
+						page.criteria.leagueId ||
+						page.criteria.teamId ||
+						page.criteria.position ||
+						page.criteria.nationality
+							? "No hay jugadores que coincidan con los filtros."
+							: "No hay jugadores disponibles."}
+					</p>
+				) : (
+					<section className={styles.playersPage__grid} aria-label="Jugadores">
+						{players.map((player) => (
+							<PlayerCard key={player.id} player={player} />
+						))}
+					</section>
+				)}
+			</PaginatedPageLayout>
+		</div>
 	);
 }

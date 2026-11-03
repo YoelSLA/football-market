@@ -1,0 +1,92 @@
+@use "@/styles/abstracts" as ds;
+
+.imageSelect {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	font-size: 11px;
+}
+
+.imageSelect__label {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: ds.$text-on-dark;
+	> svg { flex-shrink: 0; color: ds.$text-on-dark; }
+}
+
+.imageSelect__button {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: 100%;
+	min-width: 0;
+	padding: 6px 8px;
+	color: ds.$text-on-dark;
+	background: ds.$surface-finance-panel-to;
+	border: 1px solid ds.$border-surface-dark;
+	border-radius: 5px;
+	font: inherit;
+	font-size: 11px;
+	cursor: pointer;
+	text-align: left;
+	&:disabled { opacity: .6; cursor: wait; }
+	&:focus-visible { outline: 2px solid ds.$focus-ring-on-dark; outline-offset: 2px; }
+}
+
+.imageSelect__thumb,
+.imageSelect__optionImage {
+	width: 18px;
+	height: 18px;
+	object-fit: contain;
+	flex-shrink: 0;
+	border-radius: 2px;
+}
+
+.imageSelect__value {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.imageSelect__caret {
+	flex-shrink: 0;
+	opacity: .7;
+}
+
+.imageSelect__list {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	right: 0;
+	z-index: 20;
+	max-height: 220px;
+	overflow-y: auto;
+	margin: 0;
+	padding: 4px 0;
+	list-style: none;
+	background: ds.$surface-finance-panel-from;
+	border: 1px solid ds.$border-surface-dark;
+	border-radius: 6px;
+	box-shadow: 0 6px 16px rgb(0 0 0 / 35%);
+}
+
+.imageSelect__option {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 8px;
+	cursor: pointer;
+	color: ds.$text-on-dark;
+	&:hover, &.imageSelect__option_active {
+		background: ds.$surface-nav-active;
+	}
+}
+
+.imageSelect__option[aria-selected="true"] {
+	font-weight: 600;
+}

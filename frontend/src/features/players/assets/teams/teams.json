@@ -1,0 +1,678 @@
+{
+	"source": "teams JOIN leagues; PostgreSQL de desarrollo; consulta de solo lectura",
+	"consultedAt": "2026-10-13T17:38:48.468Z",
+	"teams": [
+		{
+			"id": 1,
+			"name": "Arsenal FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 2,
+			"name": "Aston Villa FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 3,
+			"name": "Chelsea FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 4,
+			"name": "Everton FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 5,
+			"name": "Fulham FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 6,
+			"name": "Liverpool FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 7,
+			"name": "Manchester City FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 8,
+			"name": "Manchester United FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 9,
+			"name": "Newcastle United FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 10,
+			"name": "Sunderland AFC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 11,
+			"name": "Tottenham Hotspur FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 12,
+			"name": "Hull City AFC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 13,
+			"name": "Leeds United FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 14,
+			"name": "Ipswich Town FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 15,
+			"name": "Nottingham Forest FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 16,
+			"name": "Crystal Palace FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 17,
+			"name": "Brighton & Hove Albion FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 18,
+			"name": "Brentford FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 19,
+			"name": "AFC Bournemouth",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 20,
+			"name": "Coventry City FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true
+		},
+		{
+			"id": 21,
+			"name": "1. FC Köln",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 22,
+			"name": "TSG 1899 Hoffenheim",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 23,
+			"name": "Bayer 04 Leverkusen",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 24,
+			"name": "Borussia Dortmund",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 25,
+			"name": "FC Bayern München",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 26,
+			"name": "FC Schalke 04",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 27,
+			"name": "Hamburger SV",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 28,
+			"name": "VfB Stuttgart",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 29,
+			"name": "SV Werder Bremen",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 30,
+			"name": "1. FSV Mainz 05",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 31,
+			"name": "FC Augsburg",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 32,
+			"name": "SC Freiburg",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 33,
+			"name": "Borussia Mönchengladbach",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 34,
+			"name": "Eintracht Frankfurt",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 35,
+			"name": "1. FC Union Berlin",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 36,
+			"name": "SC Paderborn 07",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 37,
+			"name": "SV 07 Elversberg",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 38,
+			"name": "RB Leipzig",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true
+		},
+		{
+			"id": 39,
+			"name": "Athletic Club",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 40,
+			"name": "Club Atlético de Madrid",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 41,
+			"name": "CA Osasuna",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 42,
+			"name": "RCD Espanyol de Barcelona",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 43,
+			"name": "FC Barcelona",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 44,
+			"name": "Getafe CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 45,
+			"name": "Málaga CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 46,
+			"name": "Real Madrid CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 47,
+			"name": "Rayo Vallecano de Madrid",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 48,
+			"name": "Levante UD",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 49,
+			"name": "Real Betis Balompié",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 50,
+			"name": "Real Sociedad de Fútbol",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 51,
+			"name": "Villarreal CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 52,
+			"name": "Valencia CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 53,
+			"name": "Deportivo Alavés",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 54,
+			"name": "Elche CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 55,
+			"name": "RC Celta de Vigo",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 56,
+			"name": "Sevilla FC",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 57,
+			"name": "RC Deportivo La Coruña",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 58,
+			"name": "Real Racing Club de Santander",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true
+		},
+		{
+			"id": 59,
+			"name": "AC Milan",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 60,
+			"name": "ACF Fiorentina",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 61,
+			"name": "AS Roma",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 62,
+			"name": "Atalanta BC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 63,
+			"name": "Bologna FC 1909",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 64,
+			"name": "Cagliari Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 65,
+			"name": "Genoa CFC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 66,
+			"name": "FC Internazionale Milano",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 67,
+			"name": "Juventus FC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 68,
+			"name": "SS Lazio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 69,
+			"name": "Parma Calcio 1913",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 70,
+			"name": "SSC Napoli",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 71,
+			"name": "Udinese Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 72,
+			"name": "Venezia FC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 73,
+			"name": "Frosinone Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 74,
+			"name": "US Sassuolo Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 75,
+			"name": "Torino FC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 76,
+			"name": "US Lecce",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 77,
+			"name": "AC Monza",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 78,
+			"name": "Como 1907",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true
+		},
+		{
+			"id": 79,
+			"name": "Toulouse FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 80,
+			"name": "Stade Brestois 29",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 81,
+			"name": "Olympique de Marseille",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 82,
+			"name": "AJ Auxerre",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 83,
+			"name": "Lille OSC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 84,
+			"name": "OGC Nice",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 85,
+			"name": "Olympique Lyonnais",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 86,
+			"name": "Paris Saint-Germain FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 87,
+			"name": "FC Lorient",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 88,
+			"name": "Stade Rennais FC 1901",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 89,
+			"name": "ES Troyes AC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 90,
+			"name": "Angers SCO",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 91,
+			"name": "Le Havre AC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 92,
+			"name": "Le Mans FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 93,
+			"name": "Racing Club de Lens",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 94,
+			"name": "AS Monaco FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 95,
+			"name": "RC Strasbourg Alsace",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		},
+		{
+			"id": 96,
+			"name": "Paris FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true
+		}
+	]
+}

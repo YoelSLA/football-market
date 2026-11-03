@@ -1,17 +1,20 @@
 ---
 description: Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts.
+model: opencode/gemini-4-argon
 handoffs:
   - label: Analyze For Consistency
     agent: speckit.analyze
     prompt: Run a project analysis for consistency
-    send: true
-  - label: Implement Project
-    agent: speckit.implement
-    prompt: Start the implementation in phases
-    send: true
+    send: false
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Tasks autorizado, tras Checklists evaluados; luego corresponde Analyze, no implementación automática. MUST preservar IDs y avance existente al reanudar. Las Tasks se registran exclusivamente en `tasks.md`; MUST NOT convertirse en Issues ni duplicar su estado en el seguimiento operativo. MUST NOT ejecutar tests ni hooks incompatibles.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `Gemini 4 Argon` (`opencode/gemini-4-argon`) | Respaldo `GPT Sol` (`opencode/gpt-6.1-sol`) para desglose atómico de tareas y contexto largo.
 
 ```text
 $ARGUMENTS
@@ -140,7 +143,7 @@ The tasks.md should be immediately executable - each task must be specific enoug
 
 **CRITICAL**: Tasks MUST be organized by user story to enable independent implementation and testing.
 
-**Tests are OPTIONAL**: Only generate test tasks if explicitly requested in the feature specification or if user requests TDD approach.
+**Tests del proyecto:** MUST incluir creación/modificación de tests backend cuando lo requieren las normas aplicables, aunque la SPEC no lo repita. Su ejecución corresponde al usuario; MUST NOT generar tareas de ejecución por agente. Frontend está exento: MUST NOT crear tests ni infraestructura. Los ejemplos genéricos de tests se adaptan a esas reglas.
 
 ### Checklist Format (REQUIRED)
 

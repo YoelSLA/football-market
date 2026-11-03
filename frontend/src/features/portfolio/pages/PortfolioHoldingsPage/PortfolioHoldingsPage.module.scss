@@ -1,0 +1,34 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioHoldings {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+	background: radial-gradient(ellipse at 80% 20%, rgba(ds.$accent-finance-cyan, 0.035), transparent 60%), ds.$surface-finance-base;
+	color: ds.$text-portfolio-strong;
+
+	:focus-visible {
+		outline: 3px solid ds.$focus-ring-on-dark;
+		outline-offset: 2px;
+	}
+
+	@include ds.compact() {
+		--portfolio-holdings-density: clamp(0px, calc((941px - 100dvh) / 15), 4px);
+		--portfolio-holdings-header-height: calc(76px - 3 * var(--portfolio-holdings-density));
+		--portfolio-holdings-card-height: calc(320px - 6 * var(--portfolio-holdings-density));
+		--portfolio-holdings-content-gap: calc(18px - 1.5 * var(--portfolio-holdings-density));
+		--portfolio-holdings-content-margin: calc(#{ds.$space-md} - 2 * var(--portfolio-holdings-density));
+		--portfolio-holdings-card-inset: calc(#{ds.$space-sm} - var(--portfolio-holdings-density));
+
+		&__panel {
+			padding-block: ds.$space-2xs;
+		}
+	}
+}
+
+:focus-visible {
+	outline: 3px solid ds.$focus-ring-on-dark;
+	outline-offset: 2px;
+}

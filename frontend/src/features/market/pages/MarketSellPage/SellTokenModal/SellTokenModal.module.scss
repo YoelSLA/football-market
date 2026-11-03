@@ -1,0 +1,29 @@
+@use "@/styles/abstracts" as ds;
+
+.sellModal {
+	display: grid;
+	gap: 1rem;
+	max-height: min(85vh, 52rem);
+	overflow-y: auto;
+	color: ds.$text-portfolio-title;
+
+	&__header, &__footer, &__quantity span { display: flex; align-items: center; gap: .75rem; }
+	&__header { color: ds.$accent-finance-cyan; }
+	&__header h2, &__header p { margin: .2rem 0; }
+	&__holding, &__error, &__success, &__estimate { padding: .75rem; border-radius: .5rem; background: rgba(ds.$surface-finance-panel-to, .8); }
+	&__error { color: ds.$state-error; }
+	&__success { border: 1px solid ds.$accent-finance-green; }
+	&__quantity span { justify-content: center; }
+	&__quantity span > * { min-width: 2.5rem; }
+	&__presets { display: flex; gap: .5rem; flex-wrap: wrap; }
+	&__presets button { padding: .5rem .8rem; }
+	&__estimate { display: grid; gap: .5rem; }
+	&__footer { justify-content: flex-end; }
+	&__spinner { animation: sellModalSpin 1s linear infinite; }
+}
+
+@keyframes sellModalSpin { to { transform: rotate(360deg); } }
+
+@media (max-width: 639px) {
+	.sellModal { max-width: calc(100vw - 2rem); }
+}

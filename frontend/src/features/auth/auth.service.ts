@@ -1,6 +1,11 @@
 import { http } from "@/infrastructure/http";
 import type { AuthSession } from "@/infrastructure/storage";
-import { toAuthSession, toCredentialsDTO, toCurrentUser } from "./auth.mapper";
+import {
+	toAuthSession,
+	toCredentialsDTO,
+	toCurrentUser,
+	toRegisterRequestDTO,
+} from "./auth.mapper";
 import type {
 	CurrentUser,
 	CurrentUserDTO,
@@ -10,7 +15,7 @@ import type {
 } from "./types";
 
 async function register(form: RegisterForm): Promise<void> {
-	await http.post<void>("/auth/register", toCredentialsDTO(form));
+	await http.post<void>("/auth/register", toRegisterRequestDTO(form));
 }
 
 async function login(form: LoginForm): Promise<AuthSession> {

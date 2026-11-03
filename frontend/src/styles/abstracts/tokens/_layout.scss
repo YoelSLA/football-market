@@ -1,0 +1,17 @@
+/*
+ * Valores compartidos por mas de un archivo de estilos.
+ *
+ * Aqui viven unicamente los numeros que representan un contrato entre
+ * componentes: la banda inferior de la paginacion y su reserva deben
+ * coincidir para que la pagina flotante nunca se superponga.
+ */
+
+$pagination-band: 40px;
+
+/*
+ * Navbar: altura de sus dos franjas segun el diseno (60px + 48px = 108px).
+ * Cada franja incluye su borde inferior (box-sizing: border-box).
+ */
+$navbar-top-height: 60px;
+$navbar-tabs-height: 48px;
+$navbar-border-width: 1px;

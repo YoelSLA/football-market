@@ -1,1 +1,1 @@
-export { SessionChecking } from "./SessionChecking";
+export { default } from "./SessionChecking";

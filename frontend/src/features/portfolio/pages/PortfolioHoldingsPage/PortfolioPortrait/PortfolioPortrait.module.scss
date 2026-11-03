@@ -1,0 +1,12 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioPortrait {
+	width: 72px;
+	height: 72px;
+	box-sizing: border-box;
+	flex-shrink: 0;
+	padding: 4px;
+	border-radius: 12px;
+	background: ds.$surface-portfolio-avatar;
+	object-fit: cover;
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Obtener usuario con token inválido (401)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer token-invalido
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

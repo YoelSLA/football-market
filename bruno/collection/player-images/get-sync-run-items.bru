@@ -1,0 +1,26 @@
+meta {
+  name: Consultar detalle de una sincronización
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/players/images/sync-runs/1/items?page=0&size=20
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

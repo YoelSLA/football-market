@@ -1,16 +1,19 @@
 ---
 description: Execute the implementation planning workflow using the plan template to generate design artifacts.
+model: opencode/claude-opus-5-5
 handoffs:
-  - label: Create Tasks
-    agent: speckit.tasks
-    prompt: Break the plan into tasks
-    send: true
   - label: Create Checklist
     agent: speckit.checklist
     prompt: Create a checklist for the following domain...
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Plan autorizado; el siguiente paso es Checklists evaluados, no Tasks automáticamente. MUST NOT ejecutar tests ni hooks incompatibles. MUST preservar artefactos existentes fuera del alcance y registrar evidencia de fase.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 1)**: Principal `Claude Opus 5.5` (`opencode/claude-opus-5-5`) | Respaldo `GPT Astra` (`opencode/gpt-6-astra`) para arquitectura estructural y APIs.
 
 ```text
 $ARGUMENTS
@@ -57,7 +60,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 1. **Setup**: Run `.specify/scripts/bash/setup-plan.sh --json` from repo root and parse JSON for FEATURE_SPEC, IMPL_PLAN, SPECS_DIR, BRANCH. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Load IMPL_PLAN template (already copied).
+2. **Load context**: Read FEATURE_SPEC and `.specify/memory/constitution.md`. Read IMPL_PLAN: setup-plan copia la plantilla solo si falta el plan y conserva un plan existente; MUST actualizar únicamente el alcance autorizado.
 
 3. **Execute plan workflow**: Follow the structure in IMPL_PLAN template to:
    - Fill Technical Context (mark unknowns as "NEEDS CLARIFICATION")

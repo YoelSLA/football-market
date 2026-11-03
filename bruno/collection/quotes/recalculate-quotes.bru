@@ -1,0 +1,37 @@
+meta {
+  name: Recalcular cotizaciones
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/quotes/recalculate
+  body: json
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  content-type: application/json
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "strategy": "POSITIONAL_PERFORMANCE",
+    "adjustmentFactor": 0.10,
+    "variationCap": 0.10,
+    "minPriceFloor": 1
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

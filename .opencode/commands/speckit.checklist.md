@@ -1,5 +1,6 @@
 ---
 description: Generate a custom checklist for the current feature based on user requirements.
+model: opencode/claude-sonnet-5-5
 ---
 
 ## Checklist Purpose: "Unit Tests for English"
@@ -33,6 +34,12 @@ description: Generate a custom checklist for the current feature based on user r
 - `checklists/requirements.md` is a separate built-in spec-quality checklist maintained by `/speckit.specify` and `/speckit.clarify`; do not treat that exception as applying to custom checklists generated here.
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. El comando singular `speckit.checklist` sirve a la fase conceptual Checklists. Generación no equivale a evaluación ni aceptación; MUST registrar revisión de criterios aplicables antes de Tasks. MUST ejecutar solo el paso autorizado y MUST NOT ejecutar tests ni hooks incompatibles.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `Claude Sonnet 5.5` (`opencode/claude-sonnet-5-5`) | Respaldo `GPT Sol` (`opencode/gpt-6.1-sol`) para verificación sin ambigüedades.
 
 ```text
 $ARGUMENTS

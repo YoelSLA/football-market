@@ -1,8 +1,15 @@
 ---
 description: Assess the current codebase against the feature's spec, plan, and tasks, then append any remaining unbuilt work as new tasks to tasks.md so implement can complete it.
+model: opencode/gemini-3.8-flash
 ---
 
 ## User Input
+
+## Reglas locales obligatorias
+
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks. Este comando corresponde al gate final tras Implement de SPEC satisfactorio y todas las US requeridas Done. MUST NOT ejecutar tests ni hooks incompatibles. Su evaluación SDD/código y escritura append-only no acreditan por sí solas cierre: la revisión complementaria de checklists, documentación, evidencia y trazabilidad entre el seguimiento operativo, los artefactos SDD y Git ocurre fuera del comando. Con hallazgos MUST mantener abierta la funcionalidad y reabrir el ciclo autorizado de US afectadas, no ejecutar Tasks automáticamente.
+
+**Modelo normativo (Arquitectura de 3 niveles - Nivel 3)**: Principal `Gemini 3.8 Flash` (`opencode/gemini-3.8-flash`) | Respaldo `GPT Luna` (`opencode/gpt-6-luna`) para Biome, linter, builds y commits semánticos; escalamiento a Opus (`opencode/claude-opus-5-5`) / Astra (`opencode/gpt-6-astra`) solo por bloqueos críticos.
 
 ```text
 $ARGUMENTS

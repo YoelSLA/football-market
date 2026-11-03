@@ -1,0 +1,110 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioValueSection {
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+	min-width: 0;
+	padding: 16px 22px 0;
+	border: 1px solid ds.$border-portfolio-panel;
+	border-radius: 12px;
+	background: ds.$surface-portfolio-panel;
+
+	&__body {
+		display: grid;
+		grid-template-columns: 1fr;
+		flex: 1;
+
+		&_withAside {
+			grid-template-columns: 332px 1fr;
+			column-gap: 55px;
+		}
+	}
+
+	&__bodyText {
+		margin: 0;
+		font-size: 13px;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__aside {
+		min-width: 0;
+	}
+
+	&__footer {
+		margin-top: auto;
+		padding: 20px 0 19px;
+	}
+
+	// Variante explícita: el diálogo de tenencias conserva sus estilos existentes.
+	&_dashboard {
+		padding: 18px 20px;
+		border-color: ds.$border-finance;
+		border-radius: 14px;
+		background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
+		box-shadow: inset 0 1px rgba(ds.$text-inverse, 0.04), 0 4px 20px rgba(ds.$surface-finance-base, 0.15);
+
+		.portfolioValueSection__body {
+			align-items: center;
+			min-width: 0;
+		}
+
+		.portfolioValueSection__body_withAside {
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+			gap: ds.$space-lg;
+		}
+
+		.portfolioValueSection__bodyText {
+			font-size: 16px;
+			line-height: 1.6;
+		}
+
+		.portfolioValueSection__aside_divided {
+			padding-left: ds.$space-lg;
+			border-left: 1px solid ds.$border-finance;
+		}
+	}
+
+	&_action {
+		position: relative;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		column-gap: ds.$space-md;
+		background: repeating-linear-gradient(135deg, transparent 0 24px, rgba(ds.$accent-finance-cyan, 0.015) 24px 40px), linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
+
+		.portfolioValueSection__body {
+			grid-column: 1;
+		}
+
+		.portfolioValueSection__footer {
+			grid-column: 2;
+			margin: 0;
+			padding: ds.$space-xs 0;
+		}
+	}
+
+	@include ds.down(ds.$bp-sm) {
+		&_dashboard {
+			padding: ds.$space-sm;
+
+			.portfolioValueSection__body_withAside {
+				grid-template-columns: minmax(0, 1fr);
+				gap: ds.$space-md;
+			}
+
+			.portfolioValueSection__aside_divided {
+				padding: ds.$space-md 0 0;
+				border-left: 0;
+				border-top: 1px solid ds.$border-finance;
+			}
+		}
+
+		&_action {
+			grid-template-columns: minmax(0, 1fr);
+
+			.portfolioValueSection__footer {
+				grid-column: 1;
+			}
+		}
+	}
+}

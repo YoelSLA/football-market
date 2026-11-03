@@ -1,9 +1,13 @@
-.home-page {
-	min-height: 100svh;
+@use "@/styles/abstracts" as ds;
+
+.homePage {
+	/* Ocupa el alto disponible dentro de AppLayout en vez del viewport
+	   completo, para no quedar recortado por el Navbar. */
+	min-height: 100%;
 	display: grid;
 	place-items: center;
-	background: #111f43;
-	padding: 1.5rem;
+	background: ds.$surface-home;
+	padding: ds.$space-sm;
 
 	&__card {
 		width: min(100%, 36rem);
@@ -12,8 +16,8 @@
 		gap: 1.5rem;
 		padding: clamp(1.5rem, 6vw, 4rem);
 		border-radius: 1.5rem;
-		background: #fff;
-		color: #162240;
+		background: ds.$surface-card;
+		color: ds.$text-on-auth;
 	}
 
 	&__brand {
@@ -23,8 +27,8 @@
 	}
 
 	&__badge {
-		background: #dcf7e7;
-		color: #19653a;
+		background: ds.$surface-success;
+		color: ds.$state-success-strong;
 		border-radius: 2rem;
 		padding: .4rem .8rem;
 		font-size: .85rem;
@@ -36,7 +40,7 @@
 		gap: .75rem;
 	}
 
-	&__players-link,
+	&__playersLink,
 	&__logout {
 		padding: .85rem 1.5rem;
 		border: 0;
@@ -47,13 +51,13 @@
 		cursor: pointer;
 	}
 
-	&__players-link {
-		background: #203ac5;
-		color: white;
+	&__playersLink {
+		background: ds.$action-primary;
+		color: ds.$text-inverse;
 	}
 
 	&__logout {
-		background: #e8ecf8;
-		color: #20305b;
+		background: ds.$surface-secondary-action;
+		color: ds.$text-secondary-action;
 	}
 }

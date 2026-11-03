@@ -1,0 +1,42 @@
+@use "@/styles/abstracts" as ds;
+
+.loadingState {
+	// Layout
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+
+	// Dimensiones
+	min-height: 280px;
+
+	// Espaciado
+	padding: 32px;
+
+	// Apariencia
+	background: ds.$surface-finance-tile;
+	border: 1px solid ds.$border-finance;
+	border-radius: 12px;
+
+	&__text {
+		margin: 0;
+		font-size: 14px;
+		color: ds.$text-on-dark-muted;
+	}
+}
+
+.loadingSpinner {
+	color: ds.$accent-nav;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+
+	to {
+		transform: rotate(360deg);
+	}
+}

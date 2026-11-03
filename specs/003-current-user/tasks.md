@@ -184,3 +184,63 @@ Task T012: JWT integration tests en backend/src/test/java/footballmarket/securit
 - No reutilizar `UserNotFoundException` ni `InvalidCredentialsException` porque poseen contratos observables distintos.
 - Los tests de Service no pueden acceder a Repository; deben utilizar Service real y Testcontainers.
 - No versionar artefactos generados bajo `backend/build/`.
+
+---
+
+## Phase 6: Actualización documental del contrato (2026-10-14)
+
+**Purpose**: Reflejar en esta spec el contrato vigente de `GET /api/auth/me` tras la ampliación de
+SPEC-001, que añadió `username` y `role` a la respuesta.
+
+**Alcance**: Exclusivamente documental. La implementación de `username` y `role` pertenece a
+`specs/001-user-auth-registration/` (Phase 6) y no se reimplementa aquí.
+
+**Estado de las tareas anteriores**: las 19 tareas de las fases 1 a 5 conservan su estado original
+y no se modifican. Ninguna tarea de esta fase se marca como completada sin evidencia de ejecución.
+Los *checkpoints* de las fases anteriores describen el contrato vigente en su momento y quedan
+superados, en lo que respecta a la forma de la respuesta, por la amendment de `spec.md`.
+
+- [X] T020 Actualizar `spec.md`: escenario 4 nuevo y ajuste de `FR-006`, `FR-007`, `SC-001`, `SC-002`, `Key Entities` y `Out of Scope`, conservando los identificadores.
+- [X] T021 Actualizar `data-model.md` con las filas `username` y `role` del User y la tabla de la respuesta actual.
+- [X] T022 Actualizar `contracts/api.md` con el cuerpo de cuatro campos y su tabla.
+- [X] T023 Actualizar `quickstart.md` para el registro con `username` y la verificación de los cuatro campos.
+- [X] T024 Registrar la sección `## Amendments` con la redacción anterior preservada.
+- [ ] T025 Verificar mediante la suite del backend que `/api/auth/me` devuelve `id`, `username`, `email` y `role` con la comparación JSON estricta. Sin acreditar en este repositorio.
+- [ ] T026 Verificar en un entorno de desarrollo que la respuesta expone el `username` normalizado a minúsculas. Sin acreditar en este repositorio.
+- [ ] T027 Confirmar que el contrato documentado, la especificación OpenAPI y el comportamiento HTTP de `GET /api/auth/me` son coherentes entre sí respecto del cuerpo de cuatro campos. Reformulada el 2026-10-14 al retirar la colección Postman; conserva su identificador y sigue sin acreditar en el repositorio.
+
+**Checkpoint**: la documentación de esta spec es coherente con el contrato implementado. Queda
+pendiente la verificación por parte del usuario de los controles T025 a T027.
+
+### Dependencias de Phase 6
+
+- Requiere la ampliación de SPEC-001 implementada y documentada.
+- No depende de Phase 1 a 5, que permanecen sin cambios.
+
+---
+
+## Retiro de herramientas de documentación (2026-10-14)
+
+**Decisión del proyecto.** Se retiraron del repositorio la colección Postman y las integraciones de
+Spring REST Docs y Asciidoctor. El contrato de `GET /api/auth/me` no dependía de ellas: vive en
+`contracts/api.md`, en las anotaciones OpenAPI de `AuthenticationController` y `CurrentUserResponseDTO`,
+y en los tests funcionales de Controller. El retiro no altera ningún requisito funcional de esta spec
+ni el comportamiento del endpoint.
+
+**Efecto sobre las tareas de este archivo.**
+
+- `T017` permanece `[X]` como registro histórico de una tarea cumplida cuando la colección todavía
+  formaba parte del proyecto.
+- `T019` permanece `[X]`; la tarea `asciidoctor` que incluía se retiró y ya no está disponible.
+- `T025` y `T026` conservan su estado `- [ ]` y su redacción, sin cambios.
+- `T027` conserva su identificador y su estado `- [ ]`, y se reformuló el 2026-10-14 para verificar
+  la coherencia entre contrato documentado, OpenAPI y comportamiento HTTP.
+
+**Documentos actualizados.** `quickstart.md` (prerrequisitos, comandos de validación, journey manual,
+escenarios de rechazo y documentación verificable) y `tasks.md` (`T027`).
+
+**Documentos conservados sin reescribir por contener decisiones o estados históricos:** `plan.md`,
+`research.md`, `spec.md`, `data-model.md`, `contracts/api.md` y `checklists/requirements.md`. El
+registro de "Validación ejecutada durante la implementación" de `quickstart.md` se conserva con una
+nota que delimita su alcance histórico. Sus referencias a las herramientas retiradas se mantienen
+como registro de las decisiones tomadas en su momento.

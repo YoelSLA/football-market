@@ -1,9 +1,11 @@
-.auth-layout {
+@use "@/styles/abstracts" as ds;
+
+.authLayout {
 	min-height: 100svh;
 	display: grid;
 	place-items: center;
-	background: radial-gradient(ellipse at 10% 0%, #354d9e, transparent 55%), #111b40;
-	color: #162240;
+	background: radial-gradient(ellipse at 10% 0%, ds.$surface-auth-accent, transparent 55%), ds.$surface-auth;
+	color: ds.$text-on-auth;
 
 	&__shell {
 		width: min(100%, 76rem);
@@ -12,7 +14,7 @@
 		grid-template-columns: 1fr 1fr;
 		gap: 1rem;
 		padding: 1rem;
-		background: #fff;
+		background: ds.$surface-card;
 		border-radius: 1.5rem;
 		box-shadow: 0 2rem 6rem #070c2940;
 	}
@@ -27,7 +29,7 @@
 	&__footer {
 		margin-top: 3rem;
 		font-size: .75rem;
-		color: #657087;
+		color: ds.$text-secondary;
 	}
 
 	&__brand {
@@ -39,16 +41,16 @@
 		letter-spacing: -.03em;
 	}
 
-	&__brand-mark {
+	&__brandMark {
 		padding: .3rem .45rem;
 		border-radius: .35rem;
-		background: #213ac3;
-		color: white;
+		background: ds.$brand-mark-surface;
+		color: ds.$text-inverse;
 		font-size: .9rem;
 		font-style: italic;
 	}
 
-	&__form-area {
+	&__formArea {
 		margin: auto 0;
 		padding-top: 3.5rem;
 	}
@@ -65,7 +67,7 @@
 
 	&__description {
 		margin-top: .7rem;
-		color: #657087;
+		color: ds.$text-secondary;
 		font-size: .9rem;
 	}
 
@@ -79,7 +81,7 @@
 			padding: 1.25rem;
 		}
 
-		&__form-area {
+		&__formArea {
 			padding-top: 2rem;
 		}
 	}

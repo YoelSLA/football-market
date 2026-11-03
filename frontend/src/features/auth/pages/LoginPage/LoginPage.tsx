@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
+import styles from "@/features/auth/AuthForm.module.scss";
+import { AuthLayout } from "@/features/auth/components";
+import { useLoginPage } from "@/features/auth/hooks";
 import { Button, Field } from "@/shared/components";
-import styles from "../../AuthForm.module.scss";
-import { AuthLayout } from "../../components";
-import { useLoginPage } from "../../hooks";
 
-export function LoginPage() {
+export default function LoginPage() {
 	const { form, onSubmit, error, registrationComplete, isPending } =
 		useLoginPage();
 	return (
@@ -13,12 +13,12 @@ export function LoginPage() {
 			description="Inicia sesión y da el siguiente paso con tu equipo."
 		>
 			<form
-				className={styles["auth-form"]}
+				className={styles.authForm}
 				onSubmit={onSubmit}
 				noValidate
 				aria-busy={isPending}
 			>
-				<fieldset className={styles["auth-form__fields"]} disabled={isPending}>
+				<fieldset className={styles.authForm__fields} disabled={isPending}>
 					<Field
 						id="login-email"
 						label="Tu email"
@@ -38,30 +38,30 @@ export function LoginPage() {
 						error={form.formState.errors.password?.message}
 					/>
 				</fieldset>
-				<div className={styles["auth-form__feedback"]}>
+				<div className={styles.authForm__feedback}>
 					{error ? (
-						<p className={styles["auth-form__error"]} role="alert">
+						<p className={styles.authForm__error} role="alert">
 							{error}
 						</p>
 					) : (
 						registrationComplete && (
-							<p className={styles["auth-form__success"]} role="status">
+							<p className={styles.authForm__success} role="status">
 								Cuenta creada correctamente. Ya puedes iniciar sesión.
 							</p>
 						)
 					)}
 				</div>
 				<Button
-					className={styles["auth-form__submit"]}
+					className={styles.authForm__submit}
 					type="submit"
 					disabled={isPending}
 				>
 					{isPending ? "Iniciando sesión…" : "Iniciar sesión"}
 				</Button>
-				<p className={styles["auth-form__switch"]}>
+				<p className={styles.authForm__switch}>
 					¿Aún no tienes cuenta?{" "}
 					<Link
-						className={styles["auth-form__link"]}
+						className={styles.authForm__link}
 						to="/register"
 						aria-disabled={isPending}
 						onClick={(event) => {

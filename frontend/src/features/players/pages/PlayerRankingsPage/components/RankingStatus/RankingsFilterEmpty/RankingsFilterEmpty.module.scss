@@ -1,0 +1,47 @@
+@use "@/styles/abstracts" as ds;
+
+.filterEmptyState {
+	// Layout
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+
+	// Espaciado
+	padding: 36px 20px;
+
+	// Apariencia
+	background: ds.$surface-finance-tile;
+	border: 1px dashed ds.$border-finance;
+	border-radius: 10px;
+
+	&__text {
+		margin: 0;
+		font-size: 14px;
+		color: ds.$text-on-dark-muted;
+	}
+
+	&__button {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 14px;
+		background: ds.$surface-nav-active;
+		border: 1px solid ds.$accent-nav;
+		border-radius: 6px;
+		color: ds.$accent-nav;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			background: rgba(46, 213, 115, 0.25);
+		}
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-on-dark;
+		}
+	}
+}

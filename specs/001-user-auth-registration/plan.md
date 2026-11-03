@@ -141,3 +141,125 @@ Los errores de aplicación utilizan `ErrorResponseDTO`.
 ## Complexity Tracking
 
 No se identifican violaciones a la Constitution que requieran justificar complejidad adicional.
+
+---
+
+# Implementation Plan: Ampliación — Nombre de usuario y roles
+
+**Branch**: `feat/001-user-roles-username` | **Fecha**: 2026-10-14 | **Spec**: `specs/001-user-auth-registration/spec.md`
+
+> Documento de ampliación aprobado el 2026-10-14. Las secciones anteriores describen la implementación
+> original y se conservan sin cambios, igual que el estado original de `tasks.md`.
+
+## Summary
+
+Incorporar al agregado `User` un nombre de usuario público y único, y un rol de dominio con dos
+valores, `USER` y `SUPERUSER`. El registro público asigna siempre `USER`; el `SUPERUSER` es una
+cuenta singular del dominio de mercado que se crea mediante un mecanismo interno de arranque,
+idempotente y configurado por el entorno. La ampliación no modifica el JWT ni el inicio de sesión.
+
+## Technical Context
+
+Sin cambios respecto de la sección original. Se reutilizan Java 21, Spring Boot, Spring Security,
+Spring Data JPA, Jakarta Validation, Flyway y PostgreSQL. No se incorporan dependencias nuevas.
+
+**Constraints de la ampliación**: la configuración del `SUPERUSER` proviene exclusivamente del
+entorno y no admite valores por defecto en el repositorio; el repositorio no contiene credenciales;
+la inicialización está deshabilitada por defecto; `username` es obligatorio e inmutable; el rol no
+se recibe del cliente; toda autorización futura se evalúa en el backend.
+
+## Constitution Check (ampliación)
+
+- **Idioma**: PASS — Documentación y código en español; identificadores técnicos sin traducir.
+- **Stack tecnológico**: PASS — Sin dependencias nuevas.
+- **Arquitectura por capas**: PASS — Invariantes de `username` y `role` en el Model; unicidad,
+  normalización, hashing e idempotencia en el Service; acceso a datos en el Repository; HTTP en el Controller.
+- **Responsabilidad del Controller**: PASS — Sin hashing, sin persistencia, sin lógica de roles.
+- **Lógica de negocio**: PASS — La asignación del rol es una invariante del agregado.
+- **Persistencia**: PASS — Solo Repository; las migraciones son versionadas y no modifican las históricas.
+- **Seguridad**: PASS — Contraseña del `SUPERUSER` hasheada y provista por el entorno; sin secretos en el repositorio; arranque fallido ante configuración incompleta.
+- **DTOs y mapeo**: PASS — `RegisterRequestDTO` no contiene rol; `CurrentUserResponseDTO` expone rol y nombre de usuario; `UserMapper` mantiene el mapeo estático sin estado.
+- **Testing**: PASS — Cada categoría afectada recibe pruebas propias según [testing del backend](../../../docs/backend/testing.md); perfil `test` y Testcontainers.
+- **Configuración**: PASS — Propiedades con validación; sin valores por defecto.
+- **Alcance**: PASS — No se implementa mercado, autorización por rol ni modificación del nombre de usuario.
+- **Postman**: PASS — Se actualiza la colección existente, no se crea una nueva.
+
+**Resultado**: PASS — Sin violaciones a la Constitution.
+
+## Cambios de estructura
+
+Archivos nuevos:
+
+```text
+backend/src/main/java/footballmarket/
+├── models/enums/UserRole.java
+├── models/exceptions/UsernameEmptyException.java
+├── models/exceptions/UsernameInvalidException.java
+├── services/exceptions/UsernameAlreadyRegisteredException.java
+├── services/SuperuserProvisioningService.java
+├── services/impl/SuperuserProvisioningServiceImpl.java
+└── config/SuperuserProperties.java
+
+backend/src/main/resources/db/migration/
+├── V6__add_username_and_role_to_users.sql
+└── V7__restrict_single_superuser.sql
+
+backend/src/test/java/footballmarket/
+├── repositories/UserRoleMigrationTest.java
+├── services/SuperuserProvisioningServiceTest.java
+└── config/SuperuserInitializationTest.java
+
+specs/001-user-auth-registration/checklists/
+└── requirements-amendment.md
+```
+
+Archivos modificados: `models/User.java`, `repositories/UserRepository.java`,
+`controllers/dtos/requests/RegisterRequestDTO.java`, `controllers/dtos/responses/CurrentUserResponseDTO.java`,
+`controllers/mappers/UserMapper.java`, `services/AuthenticationService.java`,
+`services/impl/AuthenticationServiceImpl.java`, `controllers/AuthenticationController.java`,
+`controllers/exceptions/GlobalExceptionHandler.java`, `application.yml`, `application-test.yml`,
+la colección Postman y las pruebas existentes de la funcionalidad.
+
+**Estructura sin cambios**: `security/JWTProvider.java`, `config/SecurityConfig.java`,
+`security/PersistedUserJwtAuthenticationConverter.java`, `controllers/dtos/requests/LoginRequestDTO.java`,
+`controllers/dtos/responses/LoginResponseDTO.java`, `services/UserService.java` y su implementación.
+La decisión se sustenta en [research.md](research.md).
+
+## Migraciones
+
+- `V6__add_username_and_role_to_users.sql`: añade `username` y `role`, rellena los usuarios
+  existentes con un nombre de usuario determinista derivado de sus datos actuales y con el rol
+  `USER`, y declara `NOT NULL`, unicidad e índice. Preserva `id`, `email` y `password`.
+- `V7__restrict_single_superuser.sql`: índice único parcial sobre `role = 'SUPERUSER'`.
+
+`V1` a `V5` no se modifican. `ddl-auto: validate` exige que cada columna declarada en el modelo
+exista en el esquema, por lo que toda migración de esta ampliación se ejecuta antes del arranque de
+la aplicación y las pruebas de integración la validan con migraciones reales sobre Testcontainers.
+
+## Endpoints
+
+| Method | Path | Cambio |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | **Incompatible**: exige `username`. Sigue sin body en `201`. |
+| `POST` | `/api/auth/login` | Sin cambios. |
+| `GET` | `/api/auth/me` | **Aditivo**: suma `username` y `role`. |
+
+## Testing Strategy
+
+- **Model** (`UserTest`): username vacío, con formato inválido, por debajo y por encima del rango de longitud, válido; rol `USER` por defecto; ausencia de cambios parciales tras un rechazo.
+- **Service** (`AuthenticationServiceTest`): normalización a minúsculas, duplicado exacto y duplicado por mayúsculas y minúsculas, asignación de `USER`, rechazo del login con nombre de usuario.
+- **Service** (`SuperuserProvisioningServiceTest`): creación cuando no existe, idempotencia cuando ya existe, asignación de `SUPERUSER`, hasheado de la contraseña, fallo ante configuración incompleta.
+- **Repository** (`UserRoleMigrationTest`): relleno de `username` y `role` desde el estado previo, unicidad del nombre de usuario, rechazo de un segundo `SUPERUSER` por el índice único parcial.
+- **Controller** (`AuthenticationControllerTest`): `201` con `username`, `400` por username vacío o inválido, `409` por username duplicado, `role` enviado en el registro ignorado, `GET /me` con los cuatro campos, snippets REST Docs.
+- **Security** (`JwtAuthenticationIntegrationTest`): login y acceso protegido sin cambios; el rol no altera la validación del JWT.
+- **E2E** (`AuthenticationJourneyE2ETest`): registro con `username`, login, identidad actual y recurso protegido.
+- **Config** (`SuperuserInitializationTest`): arranque sin creación cuando está deshabilitado, creación idempotente cuando está habilitado, fallo de arranque con configuración incompleta.
+
+## Dependencias con funcionalidades futuras
+
+- El mercado de tokens necesita identificar al `SUPERUSER` como contraparte de las compras: el
+  mecanismo de provisión entrega esa identificación sin requerir un endpoint de consulta.
+- El mercado necesitará autorización por rol. Esta ampliación no la implementa; el rol persistido
+  queda disponible para esas reglas cuando existan endpoints que las necesiten.
+- La cotización y la distribución inicial de tokens no se incluye aquí. Ningún componente de esta
+  ampliación asume su existencia.

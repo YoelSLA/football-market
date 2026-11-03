@@ -1,0 +1,68 @@
+/*
+ * Breakpoints de Football Market.
+ *
+ * Los cortes derivan de las necesidades reales del diseno (numero de
+ * columnas de la grilla, paso a scroll natural y modo compacto por
+ * altura), no de resoluciones fisicas de dispositivos.
+ *
+ * Se conservan exactamente los valores que usa hoy cada archivo: los
+ * limites proximos pero distintos (760/767/768, 1099/1100,
+ * 1439/1440) siguen separados a proposito para no alterar el
+ * comportamiento responsive vigente.
+ *
+ * Uso:
+ *   @use ".../styles/abstracts" as ds;
+ *   @include ds.down(ds.$bp-md) { ... }
+ *   @include ds.compact() { ... }
+ */
+
+$bp-xs: 419px; // 1 columna
+$bp-2xs: 480px; // mobile angosto
+$bp-sm: 600px; // mobile
+$bp-mobile: 700px; // AppLayout pasa a scroll natural
+$bp-auth: 760px; // layouts de autenticacion
+$bp-grid-sm: 767px; // 2 columnas
+$bp-tablet: 768px; // tablet / scroll natural del contenido
+$bp-detail: 900px; // detalle a una columna
+$bp-grid-md: 959px; // 3 columnas
+$bp-navbar: 1024px; // navbar colapsable
+$bp-grid-lg: 1099px; // 4 columnas
+$bp-detail-lg: 1100px; // padding del detalle
+$bp-grid-xl: 1439px; // 5 columnas
+$bp-catalog-compact: 1440px; // 6 columnas + modo compacto
+
+$bp-compact-height: 880px; // altura minima para el modo compacto
+
+// Modo compacto del detalle de jugador. Umbral propio, mas bajo que el
+// del catalogo: la ficha tiene menos bloques verticales y puede
+// absorber la diferencia en el grafico, que se adapta a la altura.
+$bp-detail-compact-height: 860px;
+
+@mixin down($breakpoint) {
+	@media (max-width: $breakpoint) {
+		@content;
+	}
+}
+
+@mixin up($breakpoint) {
+	@media (min-width: $breakpoint) {
+		@content;
+	}
+}
+
+/* Modo compacto del catalogo: solo con viewport ancho y alto.
+   Es la condicion que permite mostrar las 12 cartas en dos filas. */
+@mixin compact() {
+	@media (min-height: $bp-compact-height) and (min-width: $bp-catalog-compact) {
+		@content;
+	}
+}
+
+/* Modo compacto de la ficha de jugador: exige ancho suficiente para la
+   distribucion en dos columnas y altura suficiente para que la fila
+   inferior absorba el grafico. Por debajo se conserva el scroll natural. */
+@mixin compact-detail() {
+	@media (min-height: $bp-detail-compact-height) and (min-width: $bp-detail) {
+		@content;
+	}
+}

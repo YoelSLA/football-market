@@ -1,0 +1,2480 @@
+{
+	"source": "teams JOIN leagues; PostgreSQL de desarrollo; consulta de solo lectura",
+	"entries": [
+		{
+			"id": 1,
+			"name": "Arsenal FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:38:53.925Z"
+		},
+		{
+			"id": 2,
+			"name": "Aston Villa FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:38:55.931Z"
+		},
+		{
+			"id": 3,
+			"name": "Chelsea FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:38:58.268Z"
+		},
+		{
+			"id": 4,
+			"name": "Everton FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:00.685Z"
+		},
+		{
+			"id": 5,
+			"name": "Fulham FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:02.688Z"
+		},
+		{
+			"id": 6,
+			"name": "Liverpool FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Wordmark L.F.C.; no es el escudo del club (revisión del recurso)",
+			"consultedAt": "2026-10-13T17:44:12.767Z",
+			"file": "premier-league/liverpool-fc-6.png",
+			"commonsTitle": "File:Logo Liverpool FC (2024).png",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_Liverpool_FC_(2024).png",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/Logo_Liverpool_FC_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+			"author": "Liverpool FC",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://seeklogo.com/vector-logo/547647/liverpool-f-c\">https://seeklogo.com/vector-logo/547647/liverpool-f-c</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Logo_Liverpool_FC_(2024).png",
+			"restrictions": "trademarked",
+			"metadata": {
+				"DateTime": {
+					"value": "2024-11-27 22:26:50",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Logo Liverpool FC (2024)",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "Text logos|Liverpool FC|With trademark|PD textlogo",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo Liverpool FC (2024).",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2024-11-27",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://seeklogo.com/vector-logo/547647/liverpool-f-c\">https://seeklogo.com/vector-logo/547647/liverpool-f-c</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Liverpool FC",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"sha256": "04f88255cb186d6739bd7071d9502e4474450c3d819595bc5701055d5d953d8c"
+		},
+		{
+			"id": 7,
+			"name": "Manchester City FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:22.345Z"
+		},
+		{
+			"id": 8,
+			"name": "Manchester United FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:24.424Z"
+		},
+		{
+			"id": 9,
+			"name": "Newcastle United FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:26.552Z"
+		},
+		{
+			"id": 10,
+			"name": "Sunderland AFC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:28.827Z"
+		},
+		{
+			"id": 11,
+			"name": "Tottenham Hotspur FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:31.073Z"
+		},
+		{
+			"id": 12,
+			"name": "Hull City AFC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:33.175Z"
+		},
+		{
+			"id": 13,
+			"name": "Leeds United FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:35.128Z"
+		},
+		{
+			"id": 14,
+			"name": "Ipswich Town FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:37.594Z"
+		},
+		{
+			"id": 15,
+			"name": "Nottingham Forest FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:39.687Z"
+		},
+		{
+			"id": 16,
+			"name": "Crystal Palace FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:39:41.918Z"
+		},
+		{
+			"id": 17,
+			"name": "Brighton & Hove Albion FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:44.055Z"
+		},
+		{
+			"id": 18,
+			"name": "Brentford FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:46.319Z"
+		},
+		{
+			"id": 19,
+			"name": "AFC Bournemouth",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:48.626Z"
+		},
+		{
+			"id": 20,
+			"name": "Coventry City FC",
+			"leagueId": 1,
+			"leagueName": "Premier League",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:39:50.630Z"
+		},
+		{
+			"id": 21,
+			"name": "1. FC Köln",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:39:53.412Z"
+		},
+		{
+			"id": 22,
+			"name": "TSG 1899 Hoffenheim",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:39:55.457Z"
+		},
+		{
+			"id": 23,
+			"name": "Bayer 04 Leverkusen",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:39:57.600Z"
+		},
+		{
+			"id": 24,
+			"name": "Borussia Dortmund",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "downloaded",
+			"file": "bundesliga/borussia-dortmund-24.svg",
+			"entityId": "Q41420",
+			"commonsTitle": "File:Borussia Dortmund logo.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Borussia_Dortmund_logo.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/6/67/Borussia_Dortmund_logo.svg",
+			"author": "<a href=\"//commons.wikimedia.org/wiki/User:Lispir\" title=\"User:Lispir\">Lispir</a> (<a href=\"https://pl.wikipedia.org/wiki/Wikipedysta:Lispir\" class=\"extiw\" title=\"pl:Wikipedysta:Lispir\">Lispir</a>)",
+			"credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://s1.fbcdn.pl/1/clubs/58541/data/images/n/29e43bc2c870d016c3aa9060833f3cb5.jpg\">azulgrana.futbolowo.pl/</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Borussia_Dortmund_logo.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "e517d63b08b5310310a867b8412a9cdb7d4f8e45cfed07e3d7e2e78e41b639c9",
+			"metadata": {
+				"DateTime": {
+					"value": "2023-08-26 13:19:04",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Borussia Dortmund logo",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "SVG association football logos of Germany|With trademark|PD textlogo|SVG text logos|Valid SVG created with Inkscape:Text logos|Borussia Dortmund logos|User:Imalipusram - Gallery/Logos",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo of Borussia Dortmund, German football team.",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external text\" href=\"http://s1.fbcdn.pl/1/clubs/58541/data/images/n/29e43bc2c870d016c3aa9060833f3cb5.jpg\">azulgrana.futbolowo.pl/</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "<a href=\"//commons.wikimedia.org/wiki/User:Lispir\" title=\"User:Lispir\">Lispir</a> (<a href=\"https://pl.wikipedia.org/wiki/Wikipedysta:Lispir\" class=\"extiw\" title=\"pl:Wikipedysta:Lispir\">Lispir</a>)",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:40:05.136Z",
+			"aliases": [
+				"Borussia Dortmund",
+				"BV 09 Borussia Dortmund",
+				"Ballspiel-Verein Borussia 1909 Dortmund",
+				"Dortmund",
+				"BVB Dortmund",
+				"BVB",
+				"FC Dortmund",
+				"BVB 09",
+				"Ballspiel-Verein Borussia 09 e. V. Dortmund",
+				"Borussia Dortmund VB",
+				"Ballspielverein Borussia 09 Dortmund",
+				"Ballspielverein Borussia Dortmund",
+				"BV Borussia 09 Dortmund",
+				"BVB 09 Dortmund",
+				"Ballspiel-Verein Borussia 1909",
+				"BV Borussia Dortmund",
+				"BVB09",
+				"Borussia 09",
+				"Ballspielverein Borussia 09 e. V. Dortmund",
+				"Borussia Dortmund GmbH & Co. KGaA",
+				"Ballspielverein Borussia 09 e.V. Dortmund",
+				"Die Borussen",
+				"Die Schwarzgelben",
+				"The Black and Yellows"
+			]
+		},
+		{
+			"id": 25,
+			"name": "FC Bayern München",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:08.124Z"
+		},
+		{
+			"id": 26,
+			"name": "FC Schalke 04",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:10.269Z"
+		},
+		{
+			"id": 27,
+			"name": "Hamburger SV",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (3 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:12.628Z"
+		},
+		{
+			"id": 28,
+			"name": "VfB Stuttgart",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:14.998Z"
+		},
+		{
+			"id": 29,
+			"name": "SV Werder Bremen",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:17.025Z"
+		},
+		{
+			"id": 30,
+			"name": "1. FSV Mainz 05",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:19.198Z"
+		},
+		{
+			"id": 31,
+			"name": "FC Augsburg",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:21.453Z"
+		},
+		{
+			"id": 32,
+			"name": "SC Freiburg",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:23.749Z"
+		},
+		{
+			"id": 33,
+			"name": "Borussia Mönchengladbach",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "downloaded",
+			"file": "bundesliga/borussia-monchengladbach-33.svg",
+			"entityId": "Q101959",
+			"commonsTitle": "File:Borussia Mönchengladbach logo.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Borussia_M%C3%B6nchengladbach_logo.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/8/81/Borussia_M%C3%B6nchengladbach_logo.svg",
+			"author": "Borussia Mönchengladbach",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.borussia.de/\">https://www.borussia.de/</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Borussia_M%C3%B6nchengladbach_logo.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "6b03b0d2b9820c9b19282ced0ede51603de5dc892967357c179a4181867b8b71",
+			"metadata": {
+				"DateTime": {
+					"value": "2020-10-17 00:50:06",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Borussia Mönchengladbach logo",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "SVG association football logos of Germany|With trademark|PD textlogo|SVG text logos|Black and white logos|Files uploaded with For the Common Good|Rhombic logos (taller than wide)|Borussia Mönchengladbach logos",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Borussia Mönchengladbach Logo",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "1961",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.borussia.de/\">https://www.borussia.de/</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Borussia Mönchengladbach",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:40:27.907Z",
+			"aliases": [
+				"Borussia Mönchengladbach",
+				"Borussia Verein für Leibesübungen 1900 Mönchengladbach",
+				"Borussia Monchengladbach",
+				"Borussia Moenchengladbach",
+				"Borussia M'Gladbach",
+				"VfTuR Mönchengladbach",
+				"VfL Borussia Mönchengladbach",
+				"Borussia Verein für Leibesübungen 1900 e.V. Mönchengladbach",
+				"VfTuR München-Gladbach",
+				"Borussia VfL 1900",
+				"Fohlen-Elf",
+				"Fohlenelf",
+				"Bor. Mönchengladbach"
+			]
+		},
+		{
+			"id": 34,
+			"name": "Eintracht Frankfurt",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:40:30.391Z"
+		},
+		{
+			"id": 35,
+			"name": "1. FC Union Berlin",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (3 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:32.296Z"
+		},
+		{
+			"id": 36,
+			"name": "SC Paderborn 07",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:34.765Z"
+		},
+		{
+			"id": 37,
+			"name": "SV 07 Elversberg",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "downloaded",
+			"file": "bundesliga/sv-07-elversberg-37.svg",
+			"entityId": "Q692691",
+			"commonsTitle": "File:SV Elversberg Logo 2021.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:SV_Elversberg_Logo_2021.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/SV_Elversberg_Logo_2021.svg",
+			"author": "SV Elversberg",
+			"credit": "SV Elversberg - extracted from <a rel=\"nofollow\" class=\"external text\" href=\"https://sv07elversberg.de/wp-content/uploads/SVE_Stadionmagazin2122_Kickers_Offenbach_A4_4c_RZ_Ansicht.pdf\">PDF</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:SV_Elversberg_Logo_2021.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "b4ee1ac18d60c66d00fd0cd6cea84462b47f53413bf80ec73f52e03c7ce909f2",
+			"metadata": {
+				"DateTime": {
+					"value": "2022-04-23 12:13:31",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "SV Elversberg Logo 2021",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "SVG association football logos of Germany|SV Elversberg|With trademark|PD textlogo|SVG text logos",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "SV Elversberg Logo ab 2021",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "07.2021",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "SV Elversberg - extracted from <a rel=\"nofollow\" class=\"external text\" href=\"https://sv07elversberg.de/wp-content/uploads/SVE_Stadionmagazin2122_Kickers_Offenbach_A4_4c_RZ_Ansicht.pdf\">PDF</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "SV Elversberg",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:40:38.623Z",
+			"aliases": [
+				"SV Elversberg",
+				"SV Elversberg 07",
+				"Sportvereinigung Elversberg",
+				"SV 07 Elversberg",
+				"Sportvereinigung 07 Elversberg",
+				"Sportvereinigung 07 Elversberg e.V.",
+				"SVE",
+				"SpVgg 07 Elversberg Saar",
+				"Sportvereinigung 07 Elversberg Saar",
+				"Elversberg"
+			]
+		},
+		{
+			"id": 38,
+			"name": "RB Leipzig",
+			"leagueId": 2,
+			"leagueName": "Bundesliga",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (4 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:40.969Z"
+		},
+		{
+			"id": 39,
+			"name": "Athletic Club",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:43.583Z"
+		},
+		{
+			"id": 40,
+			"name": "Club Atlético de Madrid",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:45.906Z"
+		},
+		{
+			"id": 41,
+			"name": "CA Osasuna",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:40:47.624Z"
+		},
+		{
+			"id": 42,
+			"name": "RCD Espanyol de Barcelona",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:40:49.738Z"
+		},
+		{
+			"id": 43,
+			"name": "FC Barcelona",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:40:53.912Z"
+		},
+		{
+			"id": 44,
+			"name": "Getafe CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Licencia no autorizada automáticamente: CC BY-SA 4.0",
+			"consultedAt": "2026-10-13T17:40:56.554Z"
+		},
+		{
+			"id": 45,
+			"name": "Málaga CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:40:58.792Z"
+		},
+		{
+			"id": 46,
+			"name": "Real Madrid CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:01.242Z"
+		},
+		{
+			"id": 47,
+			"name": "Rayo Vallecano de Madrid",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:03.710Z"
+		},
+		{
+			"id": 48,
+			"name": "Levante UD",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:41:05.556Z"
+		},
+		{
+			"id": 49,
+			"name": "Real Betis Balompié",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:07.776Z"
+		},
+		{
+			"id": 50,
+			"name": "Real Sociedad de Fútbol",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:09.850Z"
+		},
+		{
+			"id": 51,
+			"name": "Villarreal CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:12.090Z"
+		},
+		{
+			"id": 52,
+			"name": "Valencia CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:14.550Z"
+		},
+		{
+			"id": 53,
+			"name": "Deportivo Alavés",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:16.494Z"
+		},
+		{
+			"id": 54,
+			"name": "Elche CF",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:19.371Z"
+		},
+		{
+			"id": 55,
+			"name": "RC Celta de Vigo",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Licencia no autorizada automáticamente: CC BY-SA 3.0",
+			"consultedAt": "2026-10-13T17:41:31.417Z"
+		},
+		{
+			"id": 56,
+			"name": "Sevilla FC",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:41:33.692Z"
+		},
+		{
+			"id": 57,
+			"name": "RC Deportivo La Coruña",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (0 coincidencias)",
+			"consultedAt": "2026-10-13T17:41:35.773Z"
+		},
+		{
+			"id": 58,
+			"name": "Real Racing Club de Santander",
+			"leagueId": 3,
+			"leagueName": "Primera Division",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:41:38.078Z"
+		},
+		{
+			"id": 59,
+			"name": "AC Milan",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/ac-milan-59.svg",
+			"entityId": "Q1543",
+			"commonsTitle": "File:Logo of AC Milan.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_of_AC_Milan.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Logo_of_AC_Milan.svg",
+			"author": "<p><a href=\"//commons.wikimedia.org/wiki/A.C._Milan\" class=\"mw-redirect\" title=\"A.C. Milan\">A.C. Milan</a><br>\n</p>\nUploaded by <a href=\"https://en.wikipedia.org/wiki/User:Vargklo\" class=\"extiw\" title=\"en:User:Vargklo\">Vargklo</a> at en.wikipedia",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.acmilan.com/\">https://www.acmilan.com/</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Logo_of_AC_Milan.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "d11bde0aeb9c8df24eb10ed08133ac2125eb414fcdca81c5b9335a90a84bfde3",
+			"metadata": {
+				"DateTime": {
+					"value": "2023-02-25 18:31:11",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Logo of AC Milan",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG text logos|Black, red, white logos|Valid SVG created with Adobe Illustrator:Text logos|TOO-Italy|Oval logos (vertically)|SVG logos of AC Milan",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo dell'AC Milan",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2007-09-07",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.acmilan.com/\">https://www.acmilan.com/</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "<p><a href=\"//commons.wikimedia.org/wiki/A.C._Milan\" class=\"mw-redirect\" title=\"A.C. Milan\">A.C. Milan</a><br>\n</p>\nUploaded by <a href=\"https://en.wikipedia.org/wiki/User:Vargklo\" class=\"extiw\" title=\"en:User:Vargklo\">Vargklo</a> at en.wikipedia",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:41:42.340Z",
+			"aliases": [
+				"AC Milan",
+				"A.C. Milan",
+				"A.C.Milan",
+				"Milan",
+				"Associazione Calcio Milan",
+				"A.C.M.",
+				"Associazione Milan",
+				"Il Milan",
+				"ACMilan",
+				"ACM",
+				"Milan A.C.",
+				"Milan Football Club",
+				"Le Milan A.C.",
+				"Le Milan AC",
+				"Milan Associazione Sportiva",
+				"Milan AC",
+				"Association Football Milan",
+				"A. C. Milan",
+				"AC Mailand"
+			]
+		},
+		{
+			"id": 60,
+			"name": "ACF Fiorentina",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/acf-fiorentina-60.svg",
+			"entityId": "Q2052",
+			"commonsTitle": "File:ACF Fiorentina - logo (Italy, 2022).svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:ACF_Fiorentina_-_logo_(Italy,_2022).svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8c/ACF_Fiorentina_-_logo_%28Italy%2C_2022%29.svg",
+			"author": "FutureBrand Creative Agency / ACF Fiorentina S.r.l. a socio unico",
+			"credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.acffiorentina.com/images/logo.svg\">acffiorentina.com</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:ACF_Fiorentina_-_logo_(Italy,_2022).svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "c86b29464c5533e7b77ff89f265a118de20eb39d91be7869f23e986b76e0cfc4",
+			"metadata": {
+				"DateTime": {
+					"value": "2023-10-17 19:17:29",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "ACF Fiorentina - logo (Italy, 2022)",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG simple text logos|V in logos|SVG logos of ACF Fiorentina",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "2022 logo of ACF Fiorentina.",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2022-03-25",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.acffiorentina.com/images/logo.svg\">acffiorentina.com</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "FutureBrand Creative Agency / ACF Fiorentina S.r.l. a socio unico",
+					"source": "commons-desc-page"
+				},
+				"Permission": {
+					"value": "<i>This logo image consists only of simple geometric shapes or text. It <b>does not meet the <a href=\"//commons.wikimedia.org/wiki/Commons:Threshold_of_originality\" title=\"Commons:Threshold of originality\">threshold of originality</a></b> needed for copyright protection, and is therefore in the <b><a href=\"https://en.wikipedia.org/wiki/public_domain\" class=\"extiw\" title=\"w:public domain\">public domain</a></b>. Although it is free of copyright restrictions, this image may still be subject to <a href=\"//commons.wikimedia.org/wiki/Commons:Non-copyright_restrictions\" title=\"Commons:Non-copyright restrictions\">other restrictions</a>. See <a href=\"https://en.wikipedia.org/wiki/Wikipedia:Public_domain#Fonts_and_typefaces\" class=\"extiw\" title=\"w:Wikipedia:Public domain\">WP:PD § Fonts and typefaces</a> or <a href=\"//commons.wikimedia.org/wiki/Template_talk:PD-textlogo\" title=\"Template talk:PD-textlogo\">Template talk:PD-textlogo</a> for more information.</i>",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:41:53.685Z",
+			"aliases": [
+				"ACF Fiorentina",
+				"AC Florenz",
+				"Associazione Calcio Fiorentina",
+				"AC Fiorentina",
+				"A.C. Fiorentina",
+				"Florentia Viola",
+				"Associazione Calcio Firenze Fiorentina",
+				"Fiorentina",
+				"A.C.F.Fiorentina",
+				"ACF",
+				"A.C.F."
+			]
+		},
+		{
+			"id": 61,
+			"name": "AS Roma",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"file": "serie-a/as-roma-61.svg",
+			"entityId": "Q2739",
+			"commonsTitle": "File:AS ROMA Text Logo 2020 - 2021 .svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:AS_ROMA_Text_Logo_2020_-_2021_.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b9/AS_ROMA_Text_Logo_2020_-_2021_.svg",
+			"author": "Associazione Sportiva Roma S.p.A.",
+			"credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.footyheadlines.com/2020/09/all-new-as-roma-2020-branding-revealed.html\">All-New AS Roma 2020 Branding Revealed</a> <span style=\"font-size: 0.95em; font-weight: bold; color:#555; position: relative;\">(english)</span>. <i>footyheadlines.com</i> (<span class=\"mw-formatted-date\" title=\"2020-09-17\">September 17, 2020</span>).",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:AS_ROMA_Text_Logo_2020_-_2021_.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "2c7c80014f4318aeae52295360ad3ea9bcbad497218649db06eb817dd52a30da",
+			"metadata": {
+				"DateTime": {
+					"value": "2020-09-24 12:50:20",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "AS ROMA Text Logo 2020 - 2021 ",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG text logos|Red and yellow text logos|SVG logos of AS Roma",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Wordmark of A.S. Roma (2020–).",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "Summer 2020<div style=\"display: none;\">date QS:P,+2020-00-00T00:00:00Z/9,P4241,Q40720564</div>",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.footyheadlines.com/2020/09/all-new-as-roma-2020-branding-revealed.html\">All-New AS Roma 2020 Branding Revealed</a> <span style=\"font-size: 0.95em; font-weight: bold; color:#555; position: relative;\">(english)</span>. <i>footyheadlines.com</i> (<span class=\"mw-formatted-date\" title=\"2020-09-17\">September 17, 2020</span>).",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Associazione Sportiva Roma S.p.A.",
+					"source": "commons-desc-page"
+				},
+				"Permission": {
+					"value": "<i>This logo image consists only of simple geometric shapes or text. It <b>does not meet the <a href=\"//commons.wikimedia.org/wiki/Commons:Threshold_of_originality\" title=\"Commons:Threshold of originality\">threshold of originality</a></b> needed for copyright protection, and is therefore in the <b><a href=\"https://en.wikipedia.org/wiki/public_domain\" class=\"extiw\" title=\"w:public domain\">public domain</a></b>. Although it is free of copyright restrictions, this image may still be subject to <a href=\"//commons.wikimedia.org/wiki/Commons:Non-copyright_restrictions\" title=\"Commons:Non-copyright restrictions\">other restrictions</a>. See <a href=\"https://en.wikipedia.org/wiki/Wikipedia:Public_domain#Fonts_and_typefaces\" class=\"extiw\" title=\"w:Wikipedia:Public domain\">WP:PD § Fonts and typefaces</a> or <a href=\"//commons.wikimedia.org/wiki/Template_talk:PD-textlogo\" title=\"Template talk:PD-textlogo\">Template talk:PD-textlogo</a> for more information.</i>",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:01.380Z",
+			"aliases": [
+				"AS Roma",
+				"AS Rom",
+				"AS Rome",
+				"A.S. Roma",
+				"ASRoma",
+				"ASR",
+				"La Roma",
+				"Associazione Sportiva Roma",
+				"A.S.Roma",
+				"A.S.R",
+				"A.S.R 1927",
+				"Roma 1927",
+				"ASR 1927",
+				"A.S. Rome",
+				"ASRome",
+				"Associazione Sportiva Rome",
+				"The Wolfs",
+				"Rome Sport Association",
+				"A.S.Rome"
+			],
+			"reason": "Logo tipográfico, no escudo"
+		},
+		{
+			"id": 62,
+			"name": "Atalanta BC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/atalanta-bc-62.png",
+			"entityId": "Q1886",
+			"commonsTitle": "File:Atalanta BC.png",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Atalanta_BC.png",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Atalanta_BC.png",
+			"author": "Atalanta BC",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.atalanta.it/\">https://www.atalanta.it/</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Atalanta_BC.png",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "b391df36be110e7a019a67f81aa52ef0fb5d3df1e64fb6512c7cdbe88d41119f",
+			"metadata": {
+				"DateTime": {
+					"value": "2026-05-25 12:04:28",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Atalanta BC",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "Atalanta BC|With trademark|PD shape|Association football logos of Italy|TOO-Italy",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "New logo of Atalanta BC, from Italy.",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2026-05-22",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.atalanta.it/\">https://www.atalanta.it/</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Atalanta BC",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:06.275Z",
+			"aliases": [
+				"Atalanta Bergamasca Calcio",
+				"Atalanta BC",
+				"Atalanta Bergame",
+				"Atalanta Bergamo",
+				"Atalanta",
+				"Atalanta B.C.",
+				"AtalantaBC",
+				"AtalantaB.C.",
+				"A.B.C.",
+				"Atalanta Bergame Calcio"
+			]
+		},
+		{
+			"id": 63,
+			"name": "Bologna FC 1909",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:07.965Z"
+		},
+		{
+			"id": 64,
+			"name": "Cagliari Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:10.129Z"
+		},
+		{
+			"id": 65,
+			"name": "Genoa CFC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:12.242Z"
+		},
+		{
+			"id": 66,
+			"name": "FC Internazionale Milano",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/fc-internazionale-milano-66.svg",
+			"entityId": "Q631",
+			"commonsTitle": "File:FC Internazionale Milano 2021.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:FC_Internazionale_Milano_2021.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg",
+			"author": "FC Internazionale Milano <a href=\"https://en.wikipedia.org/wiki/Societ%C3%A0_per_azioni\" class=\"extiw\" title=\"w:Società per azioni\">S.p.A.</a> / Bureau Borsche",
+			"credit": "<b><a rel=\"nofollow\" class=\"external text\" href=\"https://im.inter.it/en/?ifFromInter\">im.inter.it</a></b> and <b><a rel=\"nofollow\" class=\"external text\" href=\"https://www.facebook.com/Inter/photos/a.139132572803557/4215269351856505/\">@Inter</a></b>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:FC_Internazionale_Milano_2021.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "6fb4c9bb1b3297c6d72ed87206caa5f0c77576d379595f374fef089382e230b6",
+			"metadata": {
+				"DateTime": {
+					"value": "2023-05-15 14:55:08",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "FC Internazionale Milano 2021",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "Monograms|With trademark|PD textlogo|IM letter combinations|SVG text logos|Files with derivative versions|No tincture specified|Tinctures (Palette unknown)|TOO-Italy|SVG logos of FC Internazionale Milano|Valid SVG created with Text Editor:Text logos|2021 logos|SVG circle logos with transparent background",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "New logo of <b>Inter Milano</b> (<i>since 2021</i>).",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2021-03-30",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<b><a rel=\"nofollow\" class=\"external text\" href=\"https://im.inter.it/en/?ifFromInter\">im.inter.it</a></b> and <b><a rel=\"nofollow\" class=\"external text\" href=\"https://www.facebook.com/Inter/photos/a.139132572803557/4215269351856505/\">@Inter</a></b>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "FC Internazionale Milano <a href=\"https://en.wikipedia.org/wiki/Societ%C3%A0_per_azioni\" class=\"extiw\" title=\"w:Società per azioni\">S.p.A.</a> / Bureau Borsche",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:16.656Z",
+			"aliases": [
+				"Inter Milan",
+				"FC Inter",
+				"FC Internazionale Milano",
+				"Inter de Milán",
+				"Inter Mailand",
+				"Internazionale Milano",
+				"The Inter",
+				"Internazionale",
+				"Football Club Inter Milan",
+				"I M",
+				"FCIM",
+				"F.C. Inter Milan",
+				"Inter Milano",
+				"F.C. Inter",
+				"Football Club Inter",
+				"Inter of Milan",
+				"Football Club Internazionale Milano",
+				"FCInter",
+				"IM",
+				"Inter soccer club",
+				"F.C.I.M.",
+				"Inter",
+				"Inter Club",
+				"Inter FC",
+				"Inter Football Club",
+				"Internazionale Mailand",
+				"FC Internazionale Mailand",
+				"Fußball-Club Inter Mailand",
+				"Fußball-Club Internazionale Mailand",
+				"Fußball-Club Inter",
+				"FC Internazionale",
+				"Inter de Milan",
+				"FC Inter de Milan",
+				"L'Inter",
+				"Football Club Inter de Milan",
+				"Internazionale de Milan",
+				"Ambrosiana-Inter",
+				"FC Internazionale Milan"
+			]
+		},
+		{
+			"id": 67,
+			"name": "Juventus FC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:22.391Z"
+		},
+		{
+			"id": 68,
+			"name": "SS Lazio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:24.541Z"
+		},
+		{
+			"id": 69,
+			"name": "Parma Calcio 1913",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:26.548Z"
+		},
+		{
+			"id": 70,
+			"name": "SSC Napoli",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/ssc-napoli-70.svg",
+			"entityId": "Q2641",
+			"commonsTitle": "File:SSC Napoli 2024 (deep blue navy).svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:SSC_Napoli_2024_(deep_blue_navy).svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/0/00/SSC_Napoli_2024_%28deep_blue_navy%29.svg",
+			"author": "<ul><li><b>Logo: </b> SSC Napoli S.p.A.</li>\n<li><b>Upload: </b> <a href=\"//commons.wikimedia.org/wiki/User:The_White_Lion\" title=\"User:The White Lion\">The White Lion</a></li></ul>",
+			"credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:SSC_Napoli_2024_(deep_blue_navy).svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "7803405813e3bea74a6a72d1abecab0f6402eabbb64d6ac58a6b331c7659c3c3",
+			"metadata": {
+				"DateTime": {
+					"value": "2024-07-05 18:06:17",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "SSC Napoli 2024 (deep blue navy)",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG text logos|TOO-Italy|SVG logos of SSC Napoli",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo of SSC Napoli (2024), new version",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2024-07-05",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "<ul><li><b>Logo: </b> SSC Napoli S.p.A.</li>\n<li><b>Upload: </b> <a href=\"//commons.wikimedia.org/wiki/User:The_White_Lion\" title=\"User:The White Lion\">The White Lion</a></li></ul>",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:30.921Z",
+			"aliases": [
+				"SSC Napoli",
+				"Società Sportiva Calcio Napoli",
+				"SSC Neapel",
+				"Napoli",
+				"S.S.C. Napoli",
+				"Napoli Soccer",
+				"SSCN",
+				"S.S.C.Napoli",
+				"S.S.C.N.",
+				"SSCNapoli",
+				"Societa Sportiva Calcio Napoli",
+				"SSC Naples",
+				"Società Sportiva Calcio Naples",
+				"S.S.C. Naples"
+			]
+		},
+		{
+			"id": 71,
+			"name": "Udinese Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/udinese-calcio-71.svg",
+			"entityId": "Q2798",
+			"commonsTitle": "File:Udinese Calcio 2010.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Udinese_Calcio_2010.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Udinese_Calcio_2010.svg",
+			"author": "Unknown author<span style=\"display: none;\">Unknown author</span>",
+			"credit": "<a class=\"external free\" href=\"https://it.wikipedia.org/wiki/File:Logo_Udinese_Calcio_2010.svg\">https://it.wikipedia.org/wiki/File:Logo_Udinese_Calcio_2010.svg</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Udinese_Calcio_2010.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "94201b5d8e169176705df6c564527a6d4de95155682fc18b271e31116400073f",
+			"metadata": {
+				"DateTime": {
+					"value": "2022-09-25 13:35:19",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Udinese Calcio 2010",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG text logos|Template Unknown (author)|SVG association football logos of Italy|Udinese Calcio logos",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "<a href=\"https://de.wikipedia.org/wiki/Firmenlogo\" class=\"extiw\" title=\"de:Firmenlogo\">Logo</a> des italienischen Fußballvereins <a href=\"https://de.wikipedia.org/wiki/Udinese_Calcio\" class=\"extiw\" title=\"de:Udinese Calcio\">Udinese Calcio</a>",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a class=\"external free\" href=\"https://it.wikipedia.org/wiki/File:Logo_Udinese_Calcio_2010.svg\">https://it.wikipedia.org/wiki/File:Logo_Udinese_Calcio_2010.svg</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Unknown author<span style=\"display: none;\">Unknown author</span>",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:38.486Z",
+			"aliases": [
+				"Udinese Calcio",
+				"Udinese",
+				"Udinese Football Club",
+				"I Primi Bianconeri d'Italia",
+				"I Bianconeri",
+				"Le Zebrette",
+				"Udinese Football",
+				"Udinese FC",
+				"First Bianconeri of Italy"
+			]
+		},
+		{
+			"id": 72,
+			"name": "Venezia FC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:42.018Z"
+		},
+		{
+			"id": 73,
+			"name": "Frosinone Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:44.933Z"
+		},
+		{
+			"id": 74,
+			"name": "US Sassuolo Calcio",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:46.509Z"
+		},
+		{
+			"id": 75,
+			"name": "Torino FC",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:48.865Z"
+		},
+		{
+			"id": 76,
+			"name": "US Lecce",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:42:51.319Z"
+		},
+		{
+			"id": 77,
+			"name": "AC Monza",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/ac-monza-77.png",
+			"entityId": "Q289482",
+			"commonsTitle": "File:Logo of AC Monza.png",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Logo_of_AC_Monza.png",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/3/37/Logo_of_AC_Monza.png",
+			"author": "<p><a href=\"//commons.wikimedia.org/wiki/AC_Monza\" title=\"AC Monza\">AC Monza</a><br>\n</p>\nUploaded by <a href=\"https://it.wikipedia.org/wiki/User:Giorgio_Pallavicini\" class=\"extiw\" title=\"it:User:Giorgio Pallavicini\">Giorgio Pallavicini</a>",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.acmonza.com/it/\">https://www.acmonza.com/it/</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Logo_of_AC_Monza.png",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "e1c9fcaafe9f4b848ea0654fc3009ef69005dbc8d7491cd4739de0c42bcce02a",
+			"metadata": {
+				"DateTime": {
+					"value": "2022-06-15 14:44:19",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Logo of AC Monza",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "Text logos|With trademark|PD textlogo|TOO-Italy|AC Monza logos",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo dell'AC Monza",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2019",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.acmonza.com/it/\">https://www.acmonza.com/it/</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "<p><a href=\"//commons.wikimedia.org/wiki/AC_Monza\" title=\"AC Monza\">AC Monza</a><br>\n</p>\nUploaded by <a href=\"https://it.wikipedia.org/wiki/User:Giorgio_Pallavicini\" class=\"extiw\" title=\"it:User:Giorgio Pallavicini\">Giorgio Pallavicini</a>",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:42:55.707Z",
+			"aliases": [
+				"AC Monza",
+				"A.C. Monza",
+				"Associazione Calcio Monza Brianza 1912",
+				"Associazione Calcio Monza",
+				"A.C. Monza Brianza",
+				"A C Monza Brianza 1912",
+				"A. C. Monza Brianza 1912",
+				"AC Monza Brianza 1912",
+				"Monza Calcio",
+				"A.C. Monza Brianza 1912",
+				"S.S. Monza 1912 Srl",
+				"Società Sportiva Monza 1912",
+				"Monza",
+				"S.S. Monza",
+				"Società Sportiva Monza 1912 Srl",
+				"A.C.M.",
+				"ACM",
+				"ACMonza",
+				"Biancorossi",
+				"Calcio Monza",
+				"Associazione Calcio Monza Brianza",
+				"Monza Brianza",
+				"Associazione Calcio Monza e Brianza 1912",
+				"A.C.M",
+				"Monza Brianza 1912",
+				"Associazione Calcio Monza 1912",
+				"Simmenthal Monza",
+				"Associazione Sportiva Simmenthal Monza"
+			]
+		},
+		{
+			"id": 78,
+			"name": "Como 1907",
+			"leagueId": 4,
+			"leagueName": "Serie A",
+			"current": true,
+			"status": "downloaded",
+			"file": "serie-a/como-1907-78.svg",
+			"entityId": "Q1120838",
+			"commonsTitle": "File:Calcio Como - logo (Italy, 2019-).svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Calcio_Como_-_logo_(Italy,_2019-).svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/9/99/Calcio_Como_-_logo_%28Italy%2C_2019-%29.svg",
+			"author": "Como 1907 srl",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.corrieredicomo.it/como-1907-la-societa-ha-presentato-il-nuovo-logo/\">https://www.corrieredicomo.it/como-1907-la-societa-ha-presentato-il-nuovo-logo/</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Calcio_Como_-_logo_(Italy,_2019-).svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "8af8fa536a88d66700fe9be89250df2ec79f030dd5d8c27400617283f1be2bb3",
+			"metadata": {
+				"DateTime": {
+					"value": "2022-07-11 20:40:32",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Calcio Como - logo (Italy, 2019-)",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "With trademark|PD textlogo|SVG text logos|SVG logos of Como 1907",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Como 1907 logo, 2019",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2019-07-25",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.corrieredicomo.it/como-1907-la-societa-ha-presentato-il-nuovo-logo/\">https://www.corrieredicomo.it/como-1907-la-societa-ha-presentato-il-nuovo-logo/</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Como 1907 srl",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:43:00.000Z",
+			"aliases": [
+				"Côme 1907",
+				"Como 1907",
+				"Calcio Como 1907",
+				"Côme Calcio",
+				"AC Comense",
+				"AC Côme",
+				"Calcio Como",
+				"Como Calcio",
+				"F.C. Como",
+				"Calcio Côme",
+				"Côme Calcio 1907",
+				"Associazione Calcio Como",
+				"Associazione Calcio Comense",
+				"Comense",
+				"Como Foot-Ball Club",
+				"Associazione Sportiva Como",
+				"Como Calcio 1907",
+				"Como"
+			]
+		},
+		{
+			"id": 79,
+			"name": "Toulouse FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:43:02.391Z"
+		},
+		{
+			"id": 80,
+			"name": "Stade Brestois 29",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:04.593Z"
+		},
+		{
+			"id": 81,
+			"name": "Olympique de Marseille",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "downloaded",
+			"file": "ligue-1/olympique-de-marseille-81.svg",
+			"entityId": "Q132885",
+			"commonsTitle": "File:Olympique de Marseille 2026 logo.svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:Olympique_de_Marseille_2026_logo.svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Olympique_de_Marseille_2026_logo.svg",
+			"author": "Olympique de Marseille",
+			"credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://billetterie.om.fr/media/2026/04/olympique_de_marseille_2026.png\">https://billetterie.om.fr/media/2026/04/olympique_de_marseille_2026.png</a>",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:Olympique_de_Marseille_2026_logo.svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "f1db8c3a7688f6e40deb4aab021d442a6172b56df5359692848f4e5f0a7829dc",
+			"metadata": {
+				"DateTime": {
+					"value": "2026-07-18 05:14:53",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "Olympique de Marseille 2026 logo",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "Logos of Olympique de Marseille|With trademark|Valid SVG|PD textlogo|SVG text logos|TOO-France",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo of the Olympique de Marseille since 8 April 2026.",
+					"source": "commons-desc-page"
+				},
+				"DateTimeOriginal": {
+					"value": "2026-04-10",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://billetterie.om.fr/media/2026/04/olympique_de_marseille_2026.png\">https://billetterie.om.fr/media/2026/04/olympique_de_marseille_2026.png</a>",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Olympique de Marseille",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:43:09.928Z",
+			"aliases": [
+				"Olympique de Marsella",
+				"Olympique de Marseille",
+				"Olympique Marseille",
+				"Olympique Marsella",
+				"OM",
+				"OM Marseille",
+				"Olympique Étoile Bleue",
+				"Olimpique Marsiglia",
+				"Olympique Marsiglia",
+				"Olympique Marsilien",
+				"Marseille",
+				"Olympic of Marseille",
+				"Olympic Marseille",
+				"O Marseille"
+			]
+		},
+		{
+			"id": 82,
+			"name": "AJ Auxerre",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:12.106Z"
+		},
+		{
+			"id": 83,
+			"name": "Lille OSC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:14.472Z"
+		},
+		{
+			"id": 84,
+			"name": "OGC Nice",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "downloaded",
+			"file": "ligue-1/ogc-nice-84.svg",
+			"entityId": "Q185163",
+			"commonsTitle": "File:OGC Nice (simplified logo).svg",
+			"sourceUrl": "https://commons.wikimedia.org/wiki/File:OGC_Nice_(simplified_logo).svg",
+			"downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/13/OGC_Nice_%28simplified_logo%29.svg",
+			"author": "Unknown author<span style=\"display: none;\">Unknown author</span>",
+			"credit": "files.ogcnice.com/pdf/acces-global-allianzRiviera.pdf",
+			"license": "Public domain",
+			"licenseUrl": "https://commons.wikimedia.org/wiki/File:OGC_Nice_(simplified_logo).svg",
+			"rights": "Public domain",
+			"restrictions": "trademarked",
+			"trademarkNotice": "La licencia de copyright no concede derechos de marca ni implica respaldo del club.",
+			"sha256": "58c7d24c67bf4ab928d740a3eacfef825720c522afb89eda8e8f2ec282902eb4",
+			"metadata": {
+				"DateTime": {
+					"value": "2014-06-03 10:45:26",
+					"source": "mediawiki-metadata",
+					"hidden": ""
+				},
+				"ObjectName": {
+					"value": "OGC Nice (simplified logo)",
+					"source": "mediawiki-metadata"
+				},
+				"CommonsMetadataExtension": {
+					"value": 1.2,
+					"source": "extension",
+					"hidden": ""
+				},
+				"Categories": {
+					"value": "OGC Nice|With trademark|PD textlogo|SVG text logos|Argent, gules, sable in heraldry|Template Unknown (author)|4 bars gules|SVG association football logos of France|Names in heraldry|Files uploaded by MB-one",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"Assessments": {
+					"value": "",
+					"source": "commons-categories",
+					"hidden": ""
+				},
+				"ImageDescription": {
+					"value": "Logo of <b>OGC Nice</b> without eagle and banner",
+					"source": "commons-desc-page"
+				},
+				"Credit": {
+					"value": "files.ogcnice.com/pdf/acces-global-allianzRiviera.pdf",
+					"source": "commons-desc-page"
+				},
+				"Artist": {
+					"value": "Unknown author<span style=\"display: none;\">Unknown author</span>",
+					"source": "commons-desc-page"
+				},
+				"LicenseShortName": {
+					"value": "Public domain",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"UsageTerms": {
+					"value": "Public domain",
+					"source": "commons-desc-page"
+				},
+				"AttributionRequired": {
+					"value": "false",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Copyrighted": {
+					"value": "False",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"Restrictions": {
+					"value": "trademarked",
+					"source": "commons-desc-page",
+					"hidden": ""
+				},
+				"License": {
+					"value": "pd",
+					"source": "commons-templates",
+					"hidden": ""
+				}
+			},
+			"consultedAt": "2026-10-13T17:43:28.157Z",
+			"aliases": [
+				"OGC Nice",
+				"OGC Niza",
+				"Olympique Gymnaste Club de Nice Côte d'Azur",
+				"OGC Nizza",
+				"OGCN",
+				"Olympique Gymnaste Club Nice Cote d'Azur",
+				"Olympique Gymnaste Club Nice Côte d'Azur",
+				"Gymnaste Club de Nice",
+				"Olympique Gymnaste Club de Nice",
+				"Olímpico de Niza",
+				"Olympique Niza",
+				"Olimpico de Niza",
+				"SL OGC Nice",
+				"Olympique de Niza",
+				"Olympique Gymnaste Club de Nice Cote d'Azur",
+				"FCA Nice",
+				"O.G.C. Nice",
+				"OGC Nice Côte d'Azur"
+			]
+		},
+		{
+			"id": 85,
+			"name": "Olympique Lyonnais",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:34.752Z"
+		},
+		{
+			"id": 86,
+			"name": "Paris Saint-Germain FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:36.661Z"
+		},
+		{
+			"id": 87,
+			"name": "FC Lorient",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:38.774Z"
+		},
+		{
+			"id": 88,
+			"name": "Stade Rennais FC 1901",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Sin entidad candidata",
+			"consultedAt": "2026-10-13T17:43:41.245Z"
+		},
+		{
+			"id": 89,
+			"name": "ES Troyes AC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Command failed: python3 -c \nimport sys, re, xml.etree.ElementTree as ET\ndata = sys.stdin.buffer.read()\nif re.search(rb'<!DOCTYPE|<!ENTITY|<\\?xml-stylesheet', data, re.I): raise ValueError('XML externo')\nroot = ET.fromstring(data)\nif root.tag != '{http://www.w3.org/2000/svg}svg': raise ValueError('No es SVG')\nif not root.get('viewBox') and not (root.get('width') and root.get('height')): raise ValueError('Sin dimensiones')\nfor node in root.iter():\n if node.tag.split('}')[-1].lower() in ('script', 'foreignobject', 'image', 'iframe', 'animate', 'set'): raise ValueError('SVG activo o externo')\n for key, value in node.attrib.items():\n  key = key.split('}')[-1].lower()\n  if key.startswith('on') or (key == 'href' and not value.startswith('#')): raise ValueError('Referencia externa')\n  if re.search(r'url\\(\\s*[^#]|@import|javascript:', value, re.I): raise ValueError('CSS externo')\n if node.tag.split('}')[-1] == 'style' and re.search(r'url\\(\\s*[^#]|@import', node.text or '', re.I): raise ValueError('CSS externo')\n\nTraceback (most recent call last):\n  File \"<string>\", line 4, in <module>\n    if re.search(rb'<!DOCTYPE|<!ENTITY|<\\?xml-stylesheet', data, re.I): raise ValueError('XML externo')\n                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: XML externo\n",
+			"consultedAt": "2026-10-13T17:43:48.459Z"
+		},
+		{
+			"id": 90,
+			"name": "Angers SCO",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Identidad no confirmada (2 coincidencias)",
+			"consultedAt": "2026-10-13T17:43:53.943Z"
+		},
+		{
+			"id": 91,
+			"name": "Le Havre AC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:56.039Z"
+		},
+		{
+			"id": 92,
+			"name": "Le Mans FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:43:58.190Z"
+		},
+		{
+			"id": 93,
+			"name": "Racing Club de Lens",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:44:00.851Z"
+		},
+		{
+			"id": 94,
+			"name": "AS Monaco FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:44:03.003Z"
+		},
+		{
+			"id": 95,
+			"name": "RC Strasbourg Alsace",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Licencia no autorizada automáticamente: CC BY-SA 4.0",
+			"consultedAt": "2026-10-13T17:44:06.270Z"
+		},
+		{
+			"id": 96,
+			"name": "Paris FC",
+			"leagueId": 5,
+			"leagueName": "Ligue 1",
+			"current": true,
+			"status": "pending",
+			"reason": "Logo actual no identificado inequívocamente en P154",
+			"consultedAt": "2026-10-13T17:44:08.307Z"
+		}
+	]
+}

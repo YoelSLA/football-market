@@ -1,0 +1,21 @@
+meta {
+  name: Actuator metrics
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/actuator/metrics
+  auth: none
+}
+
+headers {
+  accept: application/json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

@@ -1,0 +1,35 @@
+meta {
+  name: Publicar tokens para la venta
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/orders/sell
+  body: json
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  content-type: application/json
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+body:json {
+  {
+    "playerId": 7821,
+    "quantity": 5
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

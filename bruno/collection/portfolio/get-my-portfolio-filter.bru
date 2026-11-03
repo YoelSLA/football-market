@@ -1,0 +1,26 @@
+meta {
+  name: Consultar mi portfolio con filtro
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/portfolio/me?page=0&size=20&status=OPEN
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

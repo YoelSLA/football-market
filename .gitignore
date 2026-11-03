@@ -5,6 +5,8 @@ target/
 *.jar
 !**/gradle/wrapper/gradle-wrapper.jar
 *.log
+/logs/
+/backend/logs/
 .env*
 !.env.example
 .idea/
@@ -13,3 +15,7 @@ target/
 Thumbs.db
 *.tmp
 *.swp
+
+# Capturas y artefactos de analisis de scraping (WhoScored)
+RecorridoHTML/
+*.har

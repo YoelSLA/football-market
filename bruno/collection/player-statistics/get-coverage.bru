@@ -1,0 +1,26 @@
+meta {
+  name: Consultar cobertura de la campaña
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/players/statistics/whoscored/coverage?source=SCRAPING
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

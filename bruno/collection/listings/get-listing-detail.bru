@@ -1,0 +1,26 @@
+meta {
+  name: Consultar publicación
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/listings/25
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

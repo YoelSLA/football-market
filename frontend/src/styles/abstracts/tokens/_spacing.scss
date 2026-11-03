@@ -1,0 +1,16 @@
+/*
+ * Escala de espaciado de Football Market.
+ *
+ * Base de 4px sobre una raiz de 16px, por lo que 1rem equivale a 16px.
+ * Solo se declaran los escalones que realmente se usan en mas de un
+ * componente; los valores especificos de un unico componente se
+ * mantienen como literales junto a el.
+ */
+
+$space-3xs: 0.25rem; //  4px
+$space-2xs: 0.5rem; //   8px
+$space-xs: 0.75rem; //  12px
+$space-sm: 1rem; //    16px
+$space-md: 1.5rem; //  24px
+$space-lg: 2rem; //    32px
+$space-xl: 3rem; //    48px

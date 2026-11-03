@@ -33,4 +33,4 @@
 
 - La spec incluye deliberadamente detalles de contrato aprobados durante la sincronización: JWT Bearer, códigos HTTP y `ErrorResponseDTO`. Por eso no cumple los controles que exigen ausencia total de detalles técnicos.
 - Los resultados de éxito expresados como porcentajes absolutos o ausencia total de exposición no pueden acreditarse únicamente con los tests existentes.
-- `tasks.md` registra como pendientes la verificación explícita de persistencia y la ejecución manual del quickstart con Postman.
+- `tasks.md` registra como pendientes la verificación explícita de persistencia y la ejecución manual del quickstart contra el backend en desarrollo mediante HTTP directo o Swagger UI.

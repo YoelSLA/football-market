@@ -1,0 +1,139 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioMetric {
+	--metric-accent: #{ds.$accent-finance-cyan};
+	position: relative;
+	display: grid;
+	grid-template-columns: 88px minmax(0, 1fr);
+	align-content: start;
+	row-gap: ds.$space-2xs;
+	min-width: 0;
+	min-height: var(--portfolio-summary-metric-height, 152px);
+	padding: var(--portfolio-summary-metric-top, 28px) ds.$space-sm ds.$space-sm 0;
+	border: 1px solid ds.$border-finance;
+	border-left: 4px solid var(--metric-accent);
+	border-radius: 12px;
+	background: radial-gradient(ellipse at 100% 100%, rgba(ds.$accent-finance-cyan, 0.07), transparent 70%), linear-gradient(120deg, ds.$surface-finance-panel-to, ds.$surface-finance-panel-from);
+	box-shadow: inset 0 1px rgba(ds.$text-inverse, 0.08), 0 4px 16px rgba(ds.$surface-finance-base, 0.22);
+	color: var(--metric-accent);
+
+	&::before {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 84px;
+		border-radius: 8px 0 0 8px;
+		background: linear-gradient(160deg, rgba(ds.$accent-finance-cyan, 0.12), ds.$surface-finance-base);
+		content: "";
+	}
+
+	&::after {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 84px;
+		height: 6px;
+		border-radius: 0 3px 3px 8px;
+		background: linear-gradient(90deg, var(--metric-accent) 60%, transparent);
+		box-shadow: 0 -2px 12px rgba(ds.$accent-finance-cyan, 0.12);
+		content: "";
+	}
+
+	&_invested {
+		--metric-accent: #{ds.$accent-finance-violet};
+		border-color: rgba(ds.$accent-finance-violet, 0.55);
+		background: linear-gradient(120deg, rgba(ds.$accent-finance-violet, 0.16), ds.$surface-finance-panel-to);
+	}
+
+	&_current::after {
+		background: linear-gradient(90deg, ds.$accent-finance-green 60%, transparent);
+	}
+
+	&_invested::before {
+		background: linear-gradient(160deg, rgba(ds.$accent-finance-violet, 0.15), ds.$surface-finance-base);
+	}
+
+	&_profit::before {
+		background: linear-gradient(160deg, rgba(ds.$accent-finance-green, 0.12), ds.$surface-finance-base);
+	}
+
+	&_profit {
+		--metric-accent: #{ds.$accent-finance-green};
+	}
+
+	&_positions {
+		--metric-accent: #{ds.$accent-finance-cyan};
+	}
+
+	&_negative {
+		--metric-accent: #{ds.$state-portfolio-negative};
+	}
+
+	&__tile {
+		position: absolute;
+		top: ds.$space-sm;
+		left: ds.$space-sm;
+		z-index: 1;
+		display: grid;
+		place-items: center;
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--metric-accent) 22%, ds.$surface-finance-panel-to);
+	}
+
+	&__icon {
+		width: 34px;
+		height: 34px;
+		stroke-width: 2.5;
+		filter: drop-shadow(0 2px 3px rgba(ds.$surface-finance-base, 0.6));
+	}
+
+	&__label {
+		grid-column: 2;
+		margin: 0;
+		font-size: 16px;
+		line-height: 1.25;
+		font-weight: 400;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__value {
+		grid-column: 2;
+		margin-top: var(--portfolio-summary-value-gap, #{ds.$space-xs});
+		font-size: clamp(24px, 1.8vw, 30px);
+		line-height: 1.2;
+		font-weight: 750;
+		letter-spacing: -0.025em;
+		overflow-wrap: anywhere;
+	}
+
+	&_positions &__value {
+		color: ds.$text-portfolio-value;
+	}
+
+	&__amount {
+		color: ds.$text-portfolio-value;
+	}
+
+	&__description {
+		grid-column: 2;
+		margin: 0;
+		padding-right: ds.$space-lg;
+		font-size: 14px;
+		line-height: 1.35;
+		color: ds.$text-portfolio-cell-sub;
+	}
+
+	&__indicator {
+		position: absolute;
+		right: ds.$space-md;
+		bottom: ds.$space-md;
+		width: 28px;
+		height: 28px;
+	}
+
+	&_positions &__indicator {
+		width: 44px;
+		height: 44px;
+	}
+}

@@ -1,8 +1,11 @@
 # API Contract: Current Authenticated User
 
+> **Actualizado 2026-10-14** conforme a la ampliación de SPEC-001. Ver
+> [spec.md](../spec.md) §Amendments.
+
 ## GET `/api/auth/me`
 
-Devuelve la identidad básica actual del usuario asociado a la sesión JWT.
+Devuelve la identidad actual del usuario asociado a la sesión JWT.
 
 ### Seguridad
 
@@ -24,16 +27,22 @@ Content-Type: `application/json`
 ```json
 {
   "id": 123,
-  "email": "usuario@email.com"
+  "username": "juan.perez",
+  "email": "usuario@email.com",
+  "role": "USER"
 }
 ```
 
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---|---|
 | `id` | integer (`int64`) | Sí | Identificador del usuario persistido actual. |
+| `username` | string | Sí | Nombre de usuario actual, normalizado a minúsculas. |
 | `email` | string (`email`) | Sí | Email actual del usuario persistido identificado por el `sub`. |
+| `role` | string (enumeración) | Sí | Rol del usuario: `USER` o `SUPERUSER`. Informativo para el cliente. |
 
-La respuesta contiene exactamente esos dos campos. No incluye password, token ni datos provenientes de claims como sustituto de la consulta persistida.
+La respuesta contiene exactamente esos cuatro campos. No incluye password, token ni datos provenientes de claims como sustituto de la consulta persistida.
+
+`role` describe la capacidad del usuario en el dominio y se expone únicamente como información: el cliente no lo utiliza para autorizar, y toda autorización se evalúa en el backend.
 
 ### `401 Unauthorized`
 
@@ -51,10 +60,11 @@ No se devuelve ErrorResponseDTO ni información que permita distinguir el motivo
 ### Respuestas no aplicables
 
 - `404 Not Found`: no se usa para una identidad de token sin usuario; ese caso es `401`.
-- `403 Forbidden`: no hay reglas adicionales de rol o permiso en esta feature.
+- `403 Forbidden`: no hay reglas de rol o permiso en esta feature. La exposición del `role` no introduce autorización por rol.
 
 ## Compatibilidad
 
 - `POST /api/auth/register` conserva su contrato actual.
 - `POST /api/auth/login` conserva su contrato actual.
 - El formato y duración del JWT no cambian.
+- El campo `role` es aditivo e informativo. Los clientes que ignoren los dos campos nuevos siguen interpretando correctamente `id` y `email`.

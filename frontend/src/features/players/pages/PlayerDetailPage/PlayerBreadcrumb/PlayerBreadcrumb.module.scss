@@ -1,0 +1,45 @@
+@use "@/styles/abstracts" as ds;
+
+.playerBreadcrumb {
+  color: ds.$text-breadcrumb;
+  font-size: 0.9rem;
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    color: ds.$link;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: ds.$link-hover;
+    }
+
+    &:focus-visible {
+      border-radius: 4px;
+      outline: 2px solid ds.$focus-ring-breadcrumb;
+      outline-offset: 3px;
+    }
+  }
+
+  li + li::before {
+    margin-right: 0.4rem;
+    color: ds.$text-separator;
+    content: ">";
+    opacity: 0.75;
+  }
+
+  li[aria-current="page"] {
+    color: ds.$text-strong;
+    font-weight: 700;
+    overflow-wrap: break-word;
+  }
+}

@@ -1,1 +1,1 @@
-export { PlayersPage } from "./PlayersPage";
+export { default } from "./PlayersPage";

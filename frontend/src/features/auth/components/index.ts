@@ -1,3 +1,2 @@
-export { AuthLayout } from "./AuthLayout";
-export { LogoutButton } from "./LogoutButton";
-export { SessionChecking } from "./SessionChecking";
+export { default as AuthLayout } from "./AuthLayout";
+export { default as SessionChecking } from "./SessionChecking";
