@@ -5,10 +5,10 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,7 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
 import footballmarket.features.auth.application.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.features.auth.application.exceptions.InvalidCredentialsException;
 import footballmarket.features.auth.application.exceptions.UsernameAlreadyRegisteredException;
@@ -25,6 +24,7 @@ import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -65,12 +65,14 @@ class AuthenticationControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey jwtSecretKey;
   @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mockMvc;
 
   @BeforeEach
   void setUp() {
     mockMvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
+    when(identityValidator.exists(anyString())).thenReturn(true);
   }
 
   @Nested
@@ -127,15 +129,18 @@ class AuthenticationControllerTest {
               .compact();
       // JJWT omite el claim cuando recibe una cadena vacía o en blanco.
       String expectedSubject = subject == null || subject.isBlank() ? null : subject;
-      when(authenticationService.getCurrentUser(expectedSubject))
-          .thenThrow(new CurrentUserNotFoundException());
+      if (expectedSubject != null) {
+        when(identityValidator.exists(expectedSubject)).thenReturn(false);
+      }
 
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
           .andExpect(status().isUnauthorized())
           .andExpect(content().string(""));
-      verify(authenticationService).getCurrentUser(expectedSubject);
-      verifyNoMoreInteractions(authenticationService);
+      if (expectedSubject != null) {
+        verify(identityValidator).exists(expectedSubject);
+      }
+      verifyNoInteractions(authenticationService);
     }
 
     @Test
