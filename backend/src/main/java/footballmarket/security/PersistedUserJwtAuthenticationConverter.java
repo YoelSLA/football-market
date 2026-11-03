@@ -27,7 +27,7 @@ public final class PersistedUserJwtAuthenticationConverter
   public AbstractAuthenticationToken convert(Jwt jwt) {
     String subject = jwt.getSubject();
     if (subject == null || subject.isBlank() || !this.identityValidator.exists(subject)) {
-      throw new InvalidBearerTokenException("La identidad de la sesión no es válida.");
+      throw new InvalidBearerTokenException("La identidad de la sesion no es valida.");
     }
     return this.delegate.convert(jwt);
   }

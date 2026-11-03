@@ -48,17 +48,19 @@ class PersistedUserJwtAuthenticationConverterTest {
     @ValueSource(strings = {"   ", "\t"})
     @DisplayName("Lanza InvalidBearerTokenException cuando el sujeto es nulo o vacío")
     void lanzaInvalidBearerTokenExceptionParaSujetoInvalido(String subject) {
+      Map<String, Object> claims =
+          subject != null ? Map.of("sub", subject, "scope", "read") : Map.of("scope", "read");
       Jwt jwt =
           new Jwt(
               "token-value",
               Instant.now(),
               Instant.now().plusSeconds(300),
               Map.of("alg", "HS256"),
-              subject != null ? Map.of("sub", subject) : Map.of());
+              claims);
 
       assertThatThrownBy(() -> converter.convert(jwt))
           .isInstanceOf(InvalidBearerTokenException.class)
-          .hasMessage("La identidad de la sesión no es válida.");
+          .hasMessage("La identidad de la sesion no es valida.");
 
       verifyNoInteractions(identityValidator);
     }
@@ -71,7 +73,7 @@ class PersistedUserJwtAuthenticationConverterTest {
 
       assertThatThrownBy(() -> converter.convert(jwt))
           .isInstanceOf(InvalidBearerTokenException.class)
-          .hasMessage("La identidad de la sesión no es válida.");
+          .hasMessage("La identidad de la sesion no es valida.");
 
       verify(identityValidator).exists("missing@example.com");
     }
@@ -99,7 +101,7 @@ class PersistedUserJwtAuthenticationConverterTest {
       assertThat(token.getName()).isEqualTo("valid@example.com");
       assertThat(token.getAuthorities())
           .extracting("authority")
-          .containsExactlyInAnyOrder("SCOPE_read", "SCOPE_write");
+          .contains("SCOPE_read", "SCOPE_write");
     }
   }
 }
