@@ -28,9 +28,11 @@ Consultar el [punto de entrada](../architecture.md), la [interpretación normati
 <a id="articulo-10"></a>
 ### Artículo 10.º — Responsabilidades de Page
 
-Una Page representa una pantalla asociada a una ruta o a la composición de una funcionalidad. Su responsabilidad principal es componer Components y Hooks.
+Una Page representa una pantalla asociada a una ruta o a la composición de una funcionalidad. Su responsabilidad principal es orquestar declarativamente Components y Hooks.
 
-**MAY:** Una Page utiliza Components, Hooks, Models y lógica estrictamente de presentación o renderizado, incluidas decisiones visuales basadas en loading, colecciones vacías u otros estados de UI.
+**MAY:** Una Page utiliza Components, Hooks, Models y lógica estrictamente de presentación o renderizado, incluidas decisiones visuales basadas en loading, colecciones vacías u otros estados de UI. En pantallas simples, compone sus elementos declarativamente de forma directa.
+
+**MUST:** Cuando una Page presenta múltiples preocupaciones visuales o estados, delega en Components locales propios conforme a los criterios de SRP, cohesión y bajo acoplamiento del [Artículo 4.º](../presentation.md#articulo-4), evitando convertirse en un componente monolítico.
 
 **MUST NOT:** Una Page contiene lógica de negocio o acceso externo, o utiliza directamente Services, HTTP o DTO.
 

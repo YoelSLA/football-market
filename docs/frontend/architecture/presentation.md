@@ -22,9 +22,9 @@ Consultar el [punto de entrada](../architecture.md), la [interpretación normati
 <a id="articulo-3"></a>
 ### Artículo 3.º — Ubicación de Components de página
 
-**MUST:** Los Components creados exclusivamente para una Page se ubican **dentro de la carpeta de esa Page** (`pages/<Page>/<Component>/`).
+**MUST:** Los Components creados exclusivamente para una Page se ubican bajo la subcarpeta de componentes locales de esa Page (`pages/<Page>/components/<Component>/`).
 
-**MUST NOT:** Esos Components se colocan en `features/<feature>/components/`.
+**MUST NOT:** Esos Components se colocan en `features/<feature>/components/` ni se dispersan en la raíz de `pages/<Page>/`.
 
 **MUST:** La carpeta `components/` de la feature queda reservada para Components **compartidos entre distintas Pages o funcionalidades** de la feature.
 
@@ -44,27 +44,47 @@ Ejemplo ilustrativo: véase el [Anexo A](examples.md#anexo-a).
 <a id="articulo-4"></a>
 ### Artículo 4.º — Delegación visual y Components locales
 
-**MUST:** Las Pages se encargan principalmente de:
-
-- Componer componentes.
-- Conectar hooks.
+**MUST:** Las Pages actúan como orquestadores declarativos de la vista. Se encargan principalmente de:
+- Componer la estructura visual declarativa de la pantalla.
+- Conectar hooks y estado cuando corresponda.
 - Configurar layouts.
-- Coordinar las Props de sus componentes hijos.
+- Coordinar el flujo unidireccional de Props hacia sus componentes hijos.
 
-**MUST:** Cuando una Page tiene responsabilidades visuales diferenciadas, las delega a Components locales propios (dentro de `pages/<Page>/`). Criterios de extracción:
+**MAY:** Cuando una Page presenta una estructura sencilla sin responsabilidades visuales complejas, compone sus elementos declarativamente de forma directa, sin obligatoriedad de extraer componentes ni crear hooks artificiales.
 
-- **Headers** complejos con controles y estado.
-- **Listados y grids** con lógica de renderizado condicional.
-- **Secciones de contenido** independientes (métricas, paneles, formularios).
-- **Estados de carga, error y vacío** cuando tienen UI propia.
+**MUST:** Cuando una Page presenta responsabilidades visuales, estructurales o interactivas diferenciadas, las delega a Components locales propios bajo `pages/<Page>/components/<Component>/` conforme al principio de responsabilidad única (SRP), manteniendo alta cohesión y bajo acoplamiento.
 
-**MUST NOT:** Se extraen elementos triviales sin responsabilidad clara.
+Criterios de extracción basados en SRP:
+- **Responsabilidad visual o funcional independiente:** Áreas con comportamiento, presentación o interacción delimitada (por ejemplo, encabezados contextuales, paneles de métricas o formularios).
+- **Lógica condicional o iterativa:** Cuadrículas, tablas o listados con renderizado condicional de colecciones.
+- **Encapsulación de estilos:** Necesidad de aislar reglas CSS/BEM en su propio módulo SCSS para evitar selectores profundamente anidados o clases masivas en el contenedor superior.
+- **Sub-elementos con identidad propia:** Componentes locales complejos descomponen recursivamente sus partes privadas en subcomponentes locales cuando cada una gestiona una preocupación visual específica (por ejemplo, filas, tarjetas, avatares o desgloses).
 
-Evitar sobrecomponentización es el propósito de esta restricción.
+**MUST NOT:** Se crean componentes monolíticos que concentren maquetado DOM intrincado, múltiples ramas condicionales no triviales y responsabilidades dispares en un único archivo.
 
-**MUST:** Los Components locales de Page siguen SRP (responsabilidad única): cada uno gestiona una preocupación visual diferenciada y recibe datos mediante Props.
+**MUST NOT:** Se extraen elementos triviales, contenedores vacíos o abstracciones sin responsabilidad clara. Evitar la fragmentación excesiva y la indirección cognitiva innecesaria es el propósito de esta restricción.
 
-**MUST NOT:** Los Components locales de Page gestionan estados de carga/error de la Page o conectan Hooks directamente.
+#### Arquetipos funcionales orientativos
+
+A título puramente ilustrativo y orientativo, las responsabilidades diferenciadas de una Page suelen agruparse conceptualmente en:
+- **Contenedores de layout o estructura:** Gestionan el encuadre visual, la cadena de altura o el scroll.
+- **Encabezados:** Proporcionan contexto, títulos, resumen o acciones globales.
+- **Controles y filtros:** Capturan criterios de búsqueda, selección o parámetros de visualización.
+- **Visualización principal:** Presentan los datos nominales (tablas, cuadrículas, listados, formularios).
+- **Paginación y rangos:** Navegación entre conjuntos de datos segmentados.
+- **Representación de estados:** Información visual de carga, errores o vacíos.
+
+**MUST NOT:** Estos arquetipos se interpretan como estructuras obligatorias, nombres fijos o jerarquías rígidas. Cada pantalla determina qué componentes requiere según su necesidad funcional real.
+
+#### Modularización de estados de UI
+
+**SHOULD:** La representación de estados transitorios o no nominales (carga, error con opción de reintento, ausencia de registros o filtros sin coincidencias) se modulariza según las necesidades de la pantalla y la experiencia de usuario:
+- Mediante un componente coordinador de estados cuando los estados alternativos reemplazan globalmente la vista principal.
+- Mediante componentes de estado localizados en la región visual afectada cuando otros elementos (como encabezados o barras de filtros) deban permanecer visibles e interactivos.
+
+**MUST:** Los Components locales de Page siguen SRP: cada uno gestiona una preocupación visual diferenciada y recibe datos y acciones mediante Props.
+
+**MUST NOT:** Los Components locales de presentación gestionan por sí mismos el estado global o de carga/error de la Page, o conectan directamente Services o HTTP evadiendo el flujo `Page / Component → Hook → Service`.
 
 <a id="articulo-5"></a>
 ### Artículo 5.º — Imports del Design System
