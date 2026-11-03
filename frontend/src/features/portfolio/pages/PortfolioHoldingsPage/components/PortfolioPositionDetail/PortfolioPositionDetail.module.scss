@@ -30,7 +30,25 @@
 		background: linear-gradient(110deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
 		h2 { margin: 0; font-size: 24px; line-height: 1.3; }
 		p { margin-top: ds.$space-3xs; font-size: 13px; color: ds.$text-portfolio-cell-sub; }
-		button { flex-shrink: 0; width: 44px; height: 44px; border: 1px solid ds.$border-finance; border-radius: 10px; background: ds.$surface-finance-tile; color: ds.$text-inverse; font-size: 28px; }
+		button,
+		&__closeButton {
+			flex-shrink: 0;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 44px;
+			height: 44px;
+			border: 1px solid ds.$border-finance;
+			border-radius: 10px;
+			background: ds.$surface-finance-tile;
+			color: ds.$text-inverse;
+			cursor: pointer;
+			transition: background-color 0.15s ease;
+
+			&:hover {
+				background: ds.$surface-finance-panel-from;
+			}
+		}
 	}
 	// El espacio sobrante amplía los paneles, no las separaciones.
 	// La base intrínseca sin contracción conserva el scroll cuando hace falta.

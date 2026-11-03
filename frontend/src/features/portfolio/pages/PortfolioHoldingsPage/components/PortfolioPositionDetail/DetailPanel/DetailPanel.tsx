@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import styles from "@/features/portfolio/pages/PortfolioHoldingsPage/PortfolioPositionDetail/DetailPanel/DetailPanel.module.scss";
 import type { LucideIcon } from "@/shared/icons";
+import styles from "./DetailPanel.module.scss";
 
 interface Props {
 	title: string;

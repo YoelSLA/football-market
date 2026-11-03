@@ -1,12 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { portfolioLabels } from "@/features/portfolio/constants";
-import styles from "@/features/portfolio/pages/PortfolioHoldingsPage/PortfolioPositionDetail/PortfolioPositionDetail.module.scss";
 import type { PortfolioPosition } from "@/features/portfolio/types";
 import {
 	formatCredits,
 	formatDateTime,
 	formatPercentage,
 } from "@/features/portfolio/utils";
+import { Button, Drawer, PlayerPortrait } from "@/shared/components";
 import {
 	Activity,
 	BarChart3,
@@ -14,9 +14,10 @@ import {
 	FileText,
 	Package,
 	TrendingUp,
+	X,
 } from "@/shared/icons";
-import PortfolioPortrait from "../PortfolioPortrait";
 import DetailPanel from "./DetailPanel";
+import styles from "./PortfolioPositionDetail.module.scss";
 
 interface Props {
 	position: PortfolioPosition;
@@ -27,22 +28,7 @@ export default function PortfolioPositionDetail({
 	position: p,
 	onClose,
 }: Props) {
-	const dialogRef = useRef<HTMLDialogElement>(null);
 	const closeRef = useRef<HTMLButtonElement>(null);
-
-	useEffect(() => {
-		const dialog = dialogRef.current;
-		const opener = document.activeElement;
-		const previousOverflow = document.body.style.overflow;
-		dialog?.showModal();
-		closeRef.current?.focus();
-		document.body.style.overflow = "hidden";
-		return () => {
-			dialog?.close();
-			document.body.style.overflow = previousOverflow;
-			if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-		};
-	}, []);
 
 	const quote =
 		p.valuationStatus === "UNVALUED"
@@ -59,15 +45,13 @@ export default function PortfolioPositionDetail({
 				: styles.portfolioDetail__negative;
 
 	return (
-		<dialog
-			ref={dialogRef}
+		<Drawer
+			isOpen
+			onClose={onClose}
+			title="Detalle de la posición"
+			ariaLabel="Detalle de la posición"
+			initialFocusRef={closeRef}
 			className={styles.portfolioDetail}
-			aria-labelledby="portfolio-detail-title"
-			aria-describedby="portfolio-detail-description"
-			onCancel={(event) => {
-				event.preventDefault();
-				onClose();
-			}}
 		>
 			<header className={styles.portfolioDetail__header}>
 				<div>
@@ -76,14 +60,16 @@ export default function PortfolioPositionDetail({
 						Información financiera y actividad del jugador
 					</p>
 				</div>
-				<button
+				<Button
+					unstyled
 					ref={closeRef}
 					type="button"
 					onClick={onClose}
 					aria-label="Cerrar detalle de la posición"
+					className={styles.portfolioDetail__closeButton}
 				>
-					×
-				</button>
+					<X size={20} aria-hidden="true" />
+				</Button>
 			</header>
 			<div className={styles.portfolioDetail__body}>
 				<section
@@ -92,7 +78,7 @@ export default function PortfolioPositionDetail({
 				>
 					<div className={styles.portfolioDetail__player}>
 						<div className={styles.portfolioDetail__portrait}>
-							<PortfolioPortrait imageUrl={p.imageUrl} name={p.playerName} />
+							<PlayerPortrait src={p.imageUrl} name={p.playerName} />
 						</div>
 						<div>
 							<h3>{p.playerName ?? portfolioLabels.missing}</h3>
@@ -260,6 +246,6 @@ export default function PortfolioPositionDetail({
 					posición.
 				</p>
 			</div>
-		</dialog>
+		</Drawer>
 	);
 }
