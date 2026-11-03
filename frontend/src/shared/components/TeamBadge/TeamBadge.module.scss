@@ -1,0 +1,21 @@
+.teamBadge {
+	width: 2rem;
+	height: 2.3rem;
+	object-fit: contain;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.teamBadge_placeholder {
+	display: inline-grid;
+	place-items: center;
+	width: 2rem;
+	height: 2.3rem;
+	border: 1px solid currentColor;
+	border-radius: 0.25rem 0.25rem 50% 50%;
+	font-size: 1.3rem;
+	opacity: 0.8;
+	user-select: none;
+	vertical-align: middle;
+}
+

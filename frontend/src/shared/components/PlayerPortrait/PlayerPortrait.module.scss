@@ -1,0 +1,38 @@
+.playerPortrait {
+	display: block;
+	max-width: 100%;
+
+	&_cover {
+		object-fit: cover;
+		object-position: center top;
+	}
+
+	&_contain {
+		object-fit: contain;
+		object-position: center bottom;
+	}
+
+	&_sm {
+		width: 24px;
+		height: 24px;
+		border-radius: 4px;
+	}
+
+	&_md {
+		width: 48px;
+		height: 48px;
+		border-radius: 8px;
+	}
+
+	&_lg {
+		width: 64px;
+		height: 64px;
+		border-radius: 12px;
+	}
+
+	&_xl {
+		width: 96px;
+		height: 96px;
+		border-radius: 12px;
+	}
+}

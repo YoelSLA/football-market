@@ -1,7 +1,13 @@
 .nationalityFlag,
 .nationalityFlag_placeholder {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
 	width: 2rem;
 	height: 1.25rem;
 	object-fit: contain;
 	text-align: center;
+	vertical-align: middle;
+	user-select: none;
 }
+

@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { getLeagueClassification } from "@/features/players/constants";
 import type { Player } from "@/features/players/types";
-import NationalityFlag from "./NationalityFlag";
+import {
+	NationalityFlag,
+	PlayerPortrait,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./PlayerCard.module.scss";
-import PlayerPortrait from "./PlayerPortrait";
-import TeamBadge from "./TeamBadge";
 
 interface Props {
 	player: Player;
@@ -54,7 +56,12 @@ export default function PlayerCard({ player }: Props) {
 				</div>
 				<PlayerPortrait
 					key={`${player.id}:${player.imageUrl}:${player.fallbackImageUrl}`}
-					player={player}
+					src={player.imageUrl}
+					fallbackSrc={player.fallbackImageUrl}
+					name={player.name}
+					alt=""
+					fit="contain"
+					className={styles.playerCard__portrait}
 				/>
 			</div>
 			<header className={styles.playerCard__header}>
@@ -73,16 +80,17 @@ export default function PlayerCard({ player }: Props) {
 			<dl className={styles.playerCard__statistics}>
 				{values.map((item) => (
 					<div key={item.label}>
-						<dd>
-							{item.value == null ? "Sin datos" : number.format(item.value)}
-						</dd>
 						<dt>{item.label}</dt>
+						<dd>
+							{item.value !== null && item.value !== undefined
+								? number.format(item.value)
+								: "—"}
+						</dd>
 					</div>
 				))}
 			</dl>
 			<p className={styles.playerCard__context}>
-				{stats?.seasonLabel ?? stats?.seasonKey ?? "Temporada no disponible"}
-				{stats?.extractionDate ? ` · ${stats.extractionDate}` : ""}
+				Estadísticas oficiales consolidadas
 			</p>
 		</article>
 	);
