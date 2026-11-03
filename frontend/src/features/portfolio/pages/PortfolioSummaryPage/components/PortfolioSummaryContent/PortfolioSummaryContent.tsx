@@ -1,5 +1,6 @@
 import { portfolioLabels } from "@/features/portfolio/constants";
 import type { PortfolioSummary } from "@/features/portfolio/types";
+import { Button } from "@/shared/components";
 import styles from "./PortfolioSummaryContent.module.scss";
 import PortfolioSummaryMetrics from "./PortfolioSummaryMetrics";
 import PortfolioSummaryPanels from "./PortfolioSummaryPanels";
@@ -23,13 +24,13 @@ export default function PortfolioSummaryContent({
 		return (
 			<div role="alert" className={styles.portfolioSummaryContent__error}>
 				<p>{errorMessage}</p>
-				<button
+				<Button
 					type="button"
 					onClick={onRetry}
 					className={styles.portfolioSummaryContent__retryButton}
 				>
 					Reintentar
-				</button>
+				</Button>
 			</div>
 		);
 	}

@@ -4,6 +4,7 @@ import type {
 	PlayerCatalogFilters,
 } from "@/features/players/types";
 import { getNationalityFlag } from "@/features/players/utils";
+import { Button } from "@/shared/components";
 import { Globe, List, Shield, UsersRound, X } from "@/shared/icons";
 import { getLeagueShield } from "@/shared/utils/leagueShield";
 import { getTeamShield } from "@/shared/utils/teamShield";
@@ -133,10 +134,10 @@ export default function PlayerCatalogControls({
 				disabled={false}
 				onChange={(value) => onChange("sort", value)}
 			/>
-			<button type="button" onClick={onClear}>
+			<Button unstyled type="button" onClick={onClear}>
 				<X size={14} aria-hidden="true" />
 				Limpiar filtros
-			</button>
+			</Button>
 		</section>
 	);
 }

@@ -1,4 +1,5 @@
 @use "@/styles/abstracts" as ds;
+
 .playersPage {
 	display: flex;
 	flex: 1;
@@ -9,15 +10,12 @@
 	padding: 12px 20px 8px;
 	background: ds.$surface-finance-panel-to;
 	color: ds.$text-on-dark;
-	&__toolbar { display: grid; gap: 10px; padding-bottom: 10px; }
-	&__heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; h1 { margin: 0; font-size: 22px; } > span { padding: 4px 10px; border-radius: 16px; font-size: 11px; background: ds.$surface-nav-active; } }
-	&__search { display: flex; align-items: center; gap: 8px; min-width: 200px; width: 50%; margin-left: auto; padding: 6px 12px; border: 1px solid ds.$border-surface-dark; border-radius: 6px; input { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; color: inherit; font: inherit; font-size: 12px; } &:focus-within { outline: 2px solid ds.$focus-ring-on-dark; } }
-	&__grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); align-content: start; align-items: stretch; gap: 10px; min-width: 0; padding-bottom: 6px; grid-template-rows: auto; }
-	&__message { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 80px; padding: 12px; border: 1px solid ds.$border-surface-dark; border-radius: 8px; button { cursor: pointer; background: ds.$surface-nav-active; color: ds.$accent-nav; padding: 7px 12px; border: 1px solid ds.$accent-nav; border-radius: 5px; } }
-	button:focus-visible { outline: 2px solid ds.$focus-ring-on-dark; outline-offset: 3px; }
+
+	@media (max-width: 1000px) {
+		padding: 15px;
+	}
+
+	@media (max-width: 480px) {
+		padding: 10px;
+	}
 }
-@media (max-width: 1500px) { .playersPage__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (max-width: 1000px) { .playersPage { padding: 15px; &__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } &__search { width: 100%; margin: 0; min-width: 0; } } }
-@include ds.down(ds.$bp-tablet) { .playersPage__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 480px) { .playersPage { padding: 10px; &__grid { grid-template-columns: minmax(0, 1fr); } &__heading h1 { font-size: 24px; } } }
-@include ds.compact() { .playersPage__grid { flex: 1 1 auto; min-height: 0; grid-template-rows: repeat(2, minmax(0, 1fr)); align-content: stretch; } }

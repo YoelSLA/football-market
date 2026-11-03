@@ -1,5 +1,6 @@
 import { portfolioLabels } from "@/features/portfolio/constants";
 import type { PortfolioPosition } from "@/features/portfolio/types";
+import { Button } from "@/shared/components";
 import styles from "./PortfolioHoldingsContent.module.scss";
 import PortfolioPositionCard from "./PortfolioPositionCard";
 
@@ -24,13 +25,13 @@ export default function PortfolioHoldingsContent({
 		return (
 			<div role="alert" className={styles.portfolioHoldingsContent__error}>
 				<p>{errorMessage}</p>
-				<button
+				<Button
 					type="button"
 					onClick={onRetry}
 					className={styles.portfolioHoldingsContent__retryButton}
 				>
 					Reintentar
-				</button>
+				</Button>
 			</div>
 		);
 	}

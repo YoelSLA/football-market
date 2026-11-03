@@ -1,10 +1,10 @@
 import { PageLayout } from "@/app/layouts";
 import { usePortfolioHoldingsPage } from "@/features/portfolio/hooks";
-import PortfolioHoldingsContent from "./PortfolioHoldingsContent";
-import PortfolioHoldingsHeader from "./PortfolioHoldingsHeader";
+import PortfolioHoldingsContent from "./components/PortfolioHoldingsContent";
+import PortfolioHoldingsHeader from "./components/PortfolioHoldingsHeader";
+import PortfolioHoldingsPagination from "./components/PortfolioHoldingsPagination";
+import PortfolioPositionDetail from "./components/PortfolioPositionDetail";
 import styles from "./PortfolioHoldingsPage.module.scss";
-import PortfolioHoldingsPagination from "./PortfolioHoldingsPagination";
-import PortfolioPositionDetail from "./PortfolioPositionDetail";
 
 export default function PortfolioHoldingsPage() {
 	const page = usePortfolioHoldingsPage();

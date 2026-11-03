@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
+import LogoutButton from "./components/LogoutButton";
 import styles from "./HomePage.module.scss";
-import LogoutButton from "./LogoutButton";
 
 export default function HomePage() {
 	return (

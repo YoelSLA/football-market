@@ -1,0 +1,70 @@
+@use "@/styles/abstracts" as ds;
+
+.sellCard {
+	display: grid;
+	align-content: start;
+	gap: .75rem;
+	min-width: 0;
+	padding: .85rem;
+	border: 1px solid ds.$border-finance;
+	border-radius: .65rem;
+	background: linear-gradient(135deg, rgba(ds.$surface-finance-panel-from, .55), rgba(ds.$surface-finance-panel-to, .7));
+
+	&__amounts {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: .45rem;
+
+		span {
+			min-width: 0;
+			padding: .45rem .35rem;
+			border-radius: .45rem;
+			background: rgba(ds.$surface-finance-tile, .4);
+			color: ds.$text-portfolio-label;
+			font-size: .67rem;
+		}
+
+		strong {
+			display: block;
+			margin-top: .2rem;
+			color: ds.$text-portfolio-title;
+			font-size: .8rem;
+		}
+	}
+
+	&__offer {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: end;
+		gap: .55rem;
+
+		p {
+			min-width: 0;
+			margin: 0;
+			color: ds.$text-portfolio-label;
+			font-size: .67rem;
+		}
+
+		p strong {
+			display: block;
+			margin-top: .3rem;
+			color: ds.$text-portfolio-title;
+			font-size: 1rem;
+		}
+
+		button {
+			min-height: 2.5rem;
+			padding: .55rem .75rem;
+			border: 1px solid ds.$accent-finance-green;
+			background: linear-gradient(120deg, ds.$surface-finance-active, ds.$surface-finance-panel-to);
+			color: ds.$accent-finance-green;
+			font-size: .78rem;
+			white-space: nowrap;
+		}
+	}
+
+	&__quoteStatus {
+		grid-column: 1 / -1;
+	}
+}
+

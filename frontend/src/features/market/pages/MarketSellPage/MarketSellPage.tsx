@@ -1,16 +1,13 @@
 import MarketFilters from "@/features/market/components/MarketFilters";
-import MarketPageHeading from "@/features/market/components/MarketPageHeading";
 import MarketPagination from "@/features/market/components/MarketPagination";
-import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
 import { useMarketSellPage } from "@/features/market/hooks";
 import type { MarketPlayer } from "@/features/market/types";
-import { formatCredits } from "@/features/market/utils";
-import { Button } from "@/shared/components";
-import { Tag } from "@/shared/icons";
+import MarketSellCatalog from "./components/MarketSellCatalog";
+import MarketSellHeader from "./components/MarketSellHeader";
+import SellTokenModal from "./components/SellTokenModal";
 import styles from "./MarketSellPage.module.scss";
-import SellTokenModal from "./SellTokenModal";
 
-interface PlayerHolding extends MarketPlayer {
+export interface PlayerHolding extends MarketPlayer {
 	totalQuantity: number;
 	availableQuantity: number;
 	reservedQuantity: number;
@@ -36,34 +33,11 @@ export default function MarketSellPage({
 	onRefreshHoldings,
 }: Props) {
 	const sell = useMarketSellPage({ players, onSellSuccess, onRefreshHoldings });
-	const totals = players.reduce(
-		(accumulator, player) => ({
-			total: accumulator.total + player.totalQuantity,
-			available: accumulator.available + player.availableQuantity,
-			reserved: accumulator.reserved + player.reservedQuantity,
-		}),
-		{ total: 0, available: 0, reserved: 0 },
-	);
+
 	return (
 		<div className={styles.sellPage}>
-			<header className={styles.sellPage__header}>
-				<MarketPageHeading
-					title="Vender tokens"
-					description="Publicá tus tokens en el mercado secundario."
-					icon={Tag}
-				/>
-				<div className={styles.sellPage__totals}>
-					<p>
-						Total<strong>{totals.total}</strong>
-					</p>
-					<p>
-						Disponibles<strong>{totals.available}</strong>
-					</p>
-					<p>
-						Reservados<strong>{totals.reserved}</strong>
-					</p>
-				</div>
-			</header>
+			<MarketSellHeader players={players} />
+
 			<div className={styles.sellPage__content}>
 				<MarketFilters
 					active
@@ -84,75 +58,18 @@ export default function MarketSellPage({
 					onApply={sell.applyFilters}
 					onClear={sell.clearFilters}
 				/>
-				<main className={styles.sellPage__main}>
-					{isLoadingPlayers && (
-						<p role="status" className={styles.sellPage__status}>
-							Cargando jugadores y tenencias…
-						</p>
-					)}
-					{!isLoadingPlayers && isPlayersError && (
-						<div role="alert" className={styles.sellPage__status}>
-							<p>{errorMessage ?? "No se pudo cargar el mercado."}</p>
-							{onRetryPlayers && (
-								<Button onClick={onRetryPlayers}>Reintentar</Button>
-							)}
-						</div>
-					)}
-					{!isLoadingPlayers &&
-						!isPlayersError &&
-						sell.players.length === 0 && (
-							<p className={styles.sellPage__status}>
-								No hay jugadores con tenencias para publicar.
-							</p>
-						)}
-					{!isLoadingPlayers && !isPlayersError && sell.players.length > 0 && (
-						<div className={styles.sellPage__grid}>
-							{sell.players.map((player) => {
-								const quote = sell.quoteQuery.getQuoteState(player.id);
-								return (
-									<article className={styles.sellPage__card} key={player.id}>
-										<MarketPlayerSummary player={player} />
-										<div className={styles.sellPage__amounts}>
-											<span>
-												Total<strong>{player.totalQuantity}</strong>
-											</span>
-											<span>
-												Disponibles<strong>{player.availableQuantity}</strong>
-											</span>
-											<span>
-												Reservados<strong>{player.reservedQuantity}</strong>
-											</span>
-										</div>
-										<div className={styles.sellPage__offer}>
-											{quote.status === "available" && quote.quote ? (
-												<p>
-													<span>Precio actual de referencia</span>
-													<strong>{formatCredits(quote.quote.price)}</strong>
-												</p>
-											) : (
-												<p className={styles.sellPage__quoteStatus}>
-													{quote.status === "missing"
-														? "Cotización no disponible"
-														: "Cotización pendiente"}
-												</p>
-											)}
-											<Button
-												disabled={player.availableQuantity <= 0}
-												aria-label={`Vender tokens de ${player.name}`}
-												onClick={(event) =>
-													sell.open(player, event.currentTarget)
-												}
-											>
-												<Tag aria-hidden="true" /> Publicar venta
-											</Button>
-										</div>
-									</article>
-								);
-							})}
-						</div>
-					)}
-				</main>
+
+				<MarketSellCatalog
+					isLoading={isLoadingPlayers}
+					isError={isPlayersError}
+					errorMessage={errorMessage}
+					onRetry={onRetryPlayers}
+					players={sell.players}
+					getQuoteState={sell.quoteQuery.getQuoteState}
+					onSell={sell.open}
+				/>
 			</div>
+
 			{!isLoadingPlayers && !isPlayersError && sell.totalPlayers > 0 && (
 				<div className={styles.sellPage__footer}>
 					<MarketPagination
@@ -165,6 +82,7 @@ export default function MarketSellPage({
 					/>
 				</div>
 			)}
+
 			<SellTokenModal
 				isOpen={sell.isOpen}
 				player={sell.selectedPlayer}

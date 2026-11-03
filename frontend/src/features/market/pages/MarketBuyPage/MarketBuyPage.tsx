@@ -2,11 +2,10 @@ import MarketFilters from "@/features/market/components/MarketFilters";
 import MarketPagination from "@/features/market/components/MarketPagination";
 import { useMarketBuyPage } from "@/features/market/hooks";
 import type { MarketPlayer } from "@/features/market/types";
-import { Button } from "@/shared/components";
-import BuyTokenModal from "./BuyTokenModal";
+import BuyTokenModal from "./components/BuyTokenModal";
+import MarketBuyCatalog from "./components/MarketBuyCatalog";
+import MarketHeader from "./components/MarketHeader";
 import styles from "./MarketBuyPage.module.scss";
-import MarketHeader from "./MarketHeader";
-import MarketPlayerCard from "./MarketPlayerCard";
 
 interface Props {
 	players: MarketPlayer[];
@@ -26,7 +25,7 @@ interface Props {
  * Página principal de compra de tokens en el mercado (SPEC-019).
  * Recibe el catálogo paginado y callbacks desde app (compositor).
  * Conecta el hook de coordinación useMarketBuyPage y distribuye datos
- * a MarketPlayerCard y BuyTokenModal exclusivamente por props.
+ * a MarketHeader, MarketBuyCatalog y BuyTokenModal exclusivamente por props.
  */
 export default function MarketBuyPage({
 	players,
@@ -53,58 +52,15 @@ export default function MarketBuyPage({
 			</div>
 			<div className={styles.page__content}>
 				<MarketFilters />
-				<main className={styles.page__main}>
-					{isLoadingPlayers && (
-						<div role="status" className={styles.page__status}>
-							<p>Cargando catálogo del mercado...</p>
-						</div>
-					)}
-
-					{!isLoadingPlayers && isPlayersError && (
-						<div role="alert" className={styles.page__errorState}>
-							<p>
-								{errorMessage || "No se pudo cargar el listado del mercado."}
-							</p>
-							{onRetryPlayers && (
-								<Button
-									type="button"
-									onClick={onRetryPlayers}
-									className={styles.page__retryBtn}
-								>
-									Reintentar
-								</Button>
-							)}
-						</div>
-					)}
-
-					{!isLoadingPlayers && !isPlayersError && players.length === 0 && (
-						<div className={styles.page__status}>
-							<p>No hay jugadores disponibles en el mercado actualmente.</p>
-						</div>
-					)}
-
-					{!isLoadingPlayers && !isPlayersError && players.length > 0 && (
-						<div className={styles.page__grid}>
-							{players.map((player) => {
-								const quoteState = marketBuy.quotesQuery.getQuoteState(
-									player.id,
-								);
-								return (
-									<MarketPlayerCard
-										key={player.id}
-										player={player}
-										quote={quoteState.quote}
-										quoteStatus={quoteState.status}
-										quoteHttpStatus={quoteState.httpStatus}
-										canRetryQuote={quoteState.canRetry}
-										onRetryQuote={quoteState.onRetry}
-										onBuyClick={marketBuy.openBuyModal}
-									/>
-								);
-							})}
-						</div>
-					)}
-				</main>
+				<MarketBuyCatalog
+					isLoading={isLoadingPlayers}
+					isError={isPlayersError}
+					errorMessage={errorMessage}
+					onRetry={onRetryPlayers}
+					players={players}
+					getQuoteState={marketBuy.quotesQuery.getQuoteState}
+					onBuyClick={marketBuy.openBuyModal}
+				/>
 			</div>
 			<div className={styles.page__footer}>
 				<MarketPagination

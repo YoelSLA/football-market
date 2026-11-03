@@ -1,0 +1,84 @@
+@use "@/styles/abstracts" as ds;
+
+.playersToolbar {
+	display: grid;
+	gap: 10px;
+	padding-bottom: 10px;
+
+	&__heading {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+
+		h1 {
+			margin: 0;
+			font-size: 22px;
+		}
+
+		> span {
+			padding: 4px 10px;
+			border-radius: 16px;
+			font-size: 11px;
+			background: ds.$surface-nav-active;
+		}
+	}
+
+	&__search {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 200px;
+		width: 50%;
+		margin-left: auto;
+		padding: 6px 12px;
+		border: 1px solid ds.$border-surface-dark;
+		border-radius: 6px;
+
+		input {
+			flex: 1;
+			min-width: 0;
+			background: transparent;
+			border: 0;
+			outline: 0;
+			color: inherit;
+			font: inherit;
+			font-size: 12px;
+		}
+
+		&:focus-within {
+			outline: 2px solid ds.$focus-ring-on-dark;
+		}
+	}
+
+	&__optionsError {
+		button {
+			cursor: pointer;
+			background: ds.$surface-nav-active;
+			color: ds.$accent-nav;
+			padding: 7px 12px;
+			border: 1px solid ds.$accent-nav;
+			border-radius: 5px;
+
+			&:focus-visible {
+				outline: 2px solid ds.$focus-ring-on-dark;
+				outline-offset: 3px;
+			}
+		}
+	}
+
+	@media (max-width: 1000px) {
+		&__search {
+			width: 100%;
+			margin: 0;
+			min-width: 0;
+		}
+	}
+
+	@media (max-width: 480px) {
+		&__heading h1 {
+			font-size: 24px;
+		}
+	}
+}
+

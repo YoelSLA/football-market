@@ -1,8 +1,8 @@
 import { PageLayout } from "@/app/layouts";
 import { usePortfolioSummaryPage } from "@/features/portfolio/hooks";
 import type { PortfolioSummary } from "@/features/portfolio/types";
-import PortfolioSummaryContent from "./PortfolioSummaryContent";
-import PortfolioSummaryHeader from "./PortfolioSummaryHeader";
+import PortfolioSummaryContent from "./components/PortfolioSummaryContent";
+import PortfolioSummaryHeader from "./components/PortfolioSummaryHeader";
 import styles from "./PortfolioSummaryPage.module.scss";
 
 export default function PortfolioSummaryPage() {

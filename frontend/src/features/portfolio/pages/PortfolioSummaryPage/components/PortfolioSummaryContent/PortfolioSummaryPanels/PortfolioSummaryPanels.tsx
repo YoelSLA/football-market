@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { PortfolioValueSection } from "@/features/portfolio/components";
 import type { PortfolioSummary } from "@/features/portfolio/types";
 import { formatCredits, formatPercentage } from "@/features/portfolio/utils";
 import {
@@ -20,6 +19,7 @@ import {
 } from "@/shared/icons";
 import styles from "./PortfolioSummaryPanels.module.scss";
 import PortfolioTokenDistribution from "./PortfolioTokenDistribution";
+import PortfolioValueSection from "./PortfolioValueSection";
 
 interface Props {
 	summary: PortfolioSummary;

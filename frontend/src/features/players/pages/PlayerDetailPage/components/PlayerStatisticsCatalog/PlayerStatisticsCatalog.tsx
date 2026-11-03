@@ -4,6 +4,7 @@ import {
 	formatStatisticsValue,
 	getPlayerStatisticsCatalog,
 } from "@/features/players/utils";
+import { Button } from "@/shared/components";
 import {
 	Activity,
 	CircleDot,
@@ -78,9 +79,9 @@ export default function PlayerStatisticsCatalog({
 						<SlidersHorizontal size={21} aria-hidden="true" />
 						Filtros
 					</h2>
-					<button type="button" onClick={onClear}>
+					<Button unstyled type="button" onClick={onClear}>
 						Limpiar filtros
-					</button>
+					</Button>
 				</header>
 				<label className={styles.playerStatisticsCatalog__search}>
 					<Search size={17} aria-hidden="true" />

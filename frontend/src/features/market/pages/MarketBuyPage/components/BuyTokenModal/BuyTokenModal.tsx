@@ -127,7 +127,8 @@ export default function BuyTokenModal({
 						<h3 className={styles.modal__title}>Comprar tokens</h3>
 						<p>Adquirí tokens del jugador seleccionado.</p>
 					</div>
-					<button
+					<Button
+						unstyled
 						type="button"
 						aria-label="Cerrar ventana de compra"
 						onClick={onClose}
@@ -135,7 +136,7 @@ export default function BuyTokenModal({
 						className={styles.modal__closeButton}
 					>
 						<X aria-hidden="true" />
-					</button>
+					</Button>
 				</header>
 
 				<div className={styles.modal__content}>
