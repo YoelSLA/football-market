@@ -1,4 +1,4 @@
-import MarketPageHeading from "@/features/market/components/MarketPageHeading";
+import { PageHeading } from "@/shared/components";
 import { Clock, Layers3, ShoppingCart, Wallet } from "@/shared/icons";
 import styles from "./MarketHeader.module.scss";
 
@@ -9,7 +9,7 @@ interface Props {
 export default function MarketHeader({ totalPlayers }: Props) {
 	return (
 		<header className={styles.marketHeader}>
-			<MarketPageHeading
+			<PageHeading
 				title="Comprar tokens"
 				description="Explorá el mercado y adquirí tokens de futbolistas."
 				icon={ShoppingCart}
