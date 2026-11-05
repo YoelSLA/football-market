@@ -90,6 +90,9 @@ cotización y no altera el resumen ya registrado (FR-060).
 ```json
 {
   "quoteDate": "2026-10-20",
+  "origin": "MANUAL",
+  "result": "SUCCESS",
+  "failureReason": null,
   "strategy": "POSITIONAL_PERFORMANCE",
   "strategyVersion": "v1",
   "adjustmentFactor": 0.10,
@@ -107,6 +110,9 @@ cotización y no altera el resumen ya registrado (FR-060).
 
 | Campo | Semántica |
 | --- | --- |
+| `origin` | `MANUAL` en este POST; `MANUAL` o `AUTOMATIC` en la consulta por fecha (SPEC-023) |
+| `result` | `SUCCESS` cuando `failedPlayers = 0`; `FAILED` si hubo fallos individuales |
+| `failureReason` | `null` con `SUCCESS`; `INDIVIDUAL_PLAYER_FAILURES` con `FAILED`. Catálogo cerrado, sin mensajes técnicos |
 | `pricedPlayers` | Jugadores cotizados en la ejecución: la población cotizable evaluada, incluidos los que no se repreciaron |
 | `recomputedRows` | Filas `RECOMPUTED` escritas |
 | `carriedForwardRows` | Filas `CARRIED_FORWARD` escritas |
@@ -144,12 +150,18 @@ Consulta el resumen de las ejecuciones de cotización por fecha de cotización (
 **Response 200**:
 
 ```json
-{ "executions": [ { "quoteDate": "2026-10-20", "strategy": "POSITIONAL_PERFORMANCE", "strategyVersion": "v1", "adjustmentFactor": 0.10, "variationCap": 0.10, "minPriceFloor": 1, "pricedPlayers": 42, "recomputedRows": 30, "carriedForwardRows": 12, "notRepricedPlayers": 3, "failedPlayers": 0, "startedAt": "2026-10-20T18:00:00Z", "finishedAt": "2026-10-20T18:00:12Z" } ] }
+{ "executions": [ { "quoteDate": "2026-10-20", "origin": "AUTOMATIC", "result": "SUCCESS", "failureReason": null, "strategy": "POSITIONAL_PERFORMANCE", "strategyVersion": "v1", "adjustmentFactor": 0.10, "variationCap": 0.10, "minPriceFloor": 1, "pricedPlayers": 42, "recomputedRows": 30, "carriedForwardRows": 12, "notRepricedPlayers": 3, "failedPlayers": 0, "startedAt": "2026-10-20T18:00:00Z", "finishedAt": "2026-10-20T18:00:12Z" } ] }
 ```
 
 Como máximo hay una ejecución por fecha de cotización (FR-060), de modo que la lista contiene un
 único elemento cuando la fecha tiene ejecución. Una fecha sin ejecuciones devuelve una lista vacía,
 no un error.
+
+Los objetos incluyen los mismos campos `origin`, `result` y `failureReason` descritos para el POST.
+Los campos son aditivos (SPEC-023) y no cambian rutas, request ni códigos de error. Una ejecución
+completada con fallos individuales queda registrada y consume la fecha; un intento que no dejó
+registro permite reintentar según el comportamiento existente. El scheduler solo registra los
+errores recibidos: no compensa cotizaciones ya confirmadas (TD-024).
 
 **Errores**: `400 INVALID_REQUEST` (fecha ausente o malformada), `401`.
 

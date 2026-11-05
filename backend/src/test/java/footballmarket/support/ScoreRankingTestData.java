@@ -2,6 +2,7 @@ package footballmarket.support;
 
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteExecution;
@@ -120,6 +121,7 @@ public class ScoreRankingTestData {
     this.executions.save(
         new QuoteExecution(
             quoteDate,
+            QuoteExecutionOrigin.MANUAL,
             strategy,
             "v1",
             new BigDecimal("0.10"),

@@ -31,8 +31,8 @@
 
 ## Notes
 
-- Las cinco decisiones abiertas del issue #40 se difieren intencionalmente a CLARIFY, conforme a `docs/development/sdd-workflow.md` §6, y se registran en la sección "Decisiones pendientes para CLARIFY" de `spec.md`. No se usan marcadores `[NEEDS CLARIFICATION]` porque el workflow local asigna su resolución a CLARIFY.
-- FR-006 y FR-012 fijan invariantes verificables (no superposición y no alteración de datos) mientras su política exacta de resolución queda pendiente de CLARIFY.
+- Las cinco decisiones abiertas del issue #40 quedaron resueltas en CLARIFY (sesión 2026-11-03) y se registran en las secciones "Clarifications" y "Decisiones de CLARIFY" de `spec.md`. No se usan marcadores `[NEEDS CLARIFICATION]` porque el workflow local asigna su resolución a CLARIFY.
+- FR-006 y FR-012 fijan invariantes verificables (unicidad por fecha y rechazo sin alterar datos ante mercado no inicializado); no se añade exclusión global.
 - La ejecución manual (SPEC-016) se asume operativa y no se verifica en esta especificación; CA-06 queda cubierto por supuesto, no por un requisito funcional.
 - Los criterios de éxito se verifican por resultado observable (cumple o no cumple), sin porcentajes, tasas ni umbrales estadísticos, para no fijar métricas que correspondan a PLAN o TASKS.
 - La especificación no impone tecnologías, frameworks ni estructura de código.

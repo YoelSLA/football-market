@@ -421,6 +421,36 @@ cotización queda libre para una segunda ejecución que ya no puede reproducir e
 alcances transaccionales distintos, sin una decisión sobre qué ocurre cuando el segundo nivel falla
 después de que el primero confirmó.
 
+**Reevaluación en IMPLEMENT de SPEC-023 (2026-11-04).** La deuda sigue pendiente. Las rutas actuales
+son `backend/src/main/java/footballmarket/features/quote/application/internal/QuotePlayerPublisher.java`
+(`publish`, `REQUIRES_NEW`) y
+`backend/src/main/java/footballmarket/features/quote/application/impl/QuoteRecalculationServiceImpl.java`
+(`recalculate`, transacción externa y guardado final del resumen). FR-013 y US3 de SPEC-023 exigen
+conservar las cotizaciones válidas previas ante fallo completo; el diseño de `research.md` §16 mantiene
+las confirmaciones independientes, por lo que no garantiza esa conservación si falla el guardado del
+resumen. IMPLEMENT se detuvo tras T001–T010: resolver esa contradicción requiere decisión upstream y
+nuevo ANALYZE. No se cambió la política transaccional ni se ejecutaron tests para dar la deuda por
+resuelta.
+
+**Decisión de alcance en SPEC-023 (2026-11-04).** El equipo resolvió que la ejecución automática **no**
+es responsable de las cotizaciones que ya quedaron confirmadas por jugadores individuales cuando falla
+el guardado del resumen: compensarlas excede su alcance. SPEC-023 ajustó FR-013, SC-003 y sus supuestos
+para declarar ese límite explícitamente, sin cambiar la política transaccional. La deuda **sigue
+pendiente**: la decisión acota la responsabilidad de la feature, no resuelve la falta de atomicidad
+entre las cotizaciones confirmadas y su resumen de ejecución. La lectura previa de FR-013 como exigencia
+de conservar también las cotizaciones confirmadas durante la corrida fallida queda superada por esta
+decisión de alcance.
+
+**Evidencia humana adicional (2026-11-04).** En
+`QuoteAutomaticRecalculationFailureTest.retriesManuallyWhenAutomaticAttemptLeavesNoExecution`, el
+fallo técnico inducido al cerrar la corrida deja la fecha sin resumen, pero conserva las cinco
+filas `CARRIED_FORWARD` ya confirmadas. La salida aportada por el usuario muestra que el reintento
+manual se acepta y termina con `failedPlayers=5` por `uq_player_quote` (SQLSTATE `23505`): intenta
+insertar nuevamente esas filas. `findReferenceDatesByPlayerId` excluye las filas arrastradas, por lo
+que no evita esos intentos repetidos. Poder reintentar no implica recuperar exitosamente los datos.
+Se corrigió la expectativa adicional de cero fallos del test de SPEC-023, no el comportamiento
+productivo; TD-024 permanece pendiente.
+
 **Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
 consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.
 
@@ -447,6 +477,8 @@ distinga "en curso" de "terminada" y permita reconciliar las filas confirmadas c
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-11-04 | Reevaluación durante IMPLEMENT de SPEC-023; se registró el bloqueo y la detención tras T001–T010. |
+| 2026-11-04 | Decisión de alcance de SPEC-023: la ejecución automática no compensa cotizaciones ya confirmadas por jugadores individuales. La deuda permanece `Pendiente`; no se modificó código ni se declara resuelta. |
 
 ### TD-025 — `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada
 
