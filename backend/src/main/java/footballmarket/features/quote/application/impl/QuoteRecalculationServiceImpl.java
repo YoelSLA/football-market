@@ -10,6 +10,7 @@ import footballmarket.features.quote.application.exceptions.InvalidVariationCapE
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.application.internal.QuotePopulationSelector;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
@@ -27,7 +28,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Implementación del recálculo manual con una reserva única por fecha UTC. */
+/** Recálculo compartido por las entradas manual y automática, con reserva única por fecha UTC. */
 @Service
 @Transactional
 public class QuoteRecalculationServiceImpl implements QuoteRecalculationService {
@@ -61,6 +62,30 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       BigDecimal requestedFactor,
       BigDecimal requestedCap,
       Long requestedFloor) {
+    return this.recalculate(
+        requestedStrategy,
+        requestedFactor,
+        requestedCap,
+        requestedFloor,
+        QuoteExecutionOrigin.MANUAL);
+  }
+
+  @Override
+  public QuoteExecution recalculateAutomatic() {
+    return this.recalculate(
+        this.properties.strategy().name(),
+        this.properties.adjustmentFactor(),
+        this.properties.variationCap(),
+        this.properties.minPriceFloor(),
+        QuoteExecutionOrigin.AUTOMATIC);
+  }
+
+  private QuoteExecution recalculate(
+      String requestedStrategy,
+      BigDecimal requestedFactor,
+      BigDecimal requestedCap,
+      Long requestedFloor,
+      QuoteExecutionOrigin origin) {
     ValuationStrategy strategy = this.parseStrategy(requestedStrategy);
     if (!this.quotes.existsByOrigin(QuoteOrigin.INITIAL)) {
       throw new MarketNotInitializedException();
@@ -83,15 +108,17 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
     Instant startedAt = Instant.now(this.marketClock);
     LOG.info(
         "quote_execution_started quoteDate={} strategy={} strategyVersion=v1 adjustmentFactor={}"
-            + " variationCap={} minPriceFloor={}",
+            + " variationCap={} minPriceFloor={} origin={}",
         quoteDate,
         strategy,
         factor,
         cap,
-        floor);
+        floor,
+        origin);
     QuoteExecution execution =
         new QuoteExecution(
-            quoteDate, strategy, "v1", factor, cap, floor, 0, 0, 0, 0, 0, startedAt, startedAt);
+            quoteDate, origin, strategy, "v1", factor, cap, floor, 0, 0, 0, 0, 0, startedAt,
+            startedAt);
     try {
       this.executions.saveAndFlush(execution);
     } catch (DataIntegrityViolationException exception) {
@@ -125,14 +152,15 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
         players.size(), recomputed, carried, notRepriced, failed, Instant.now(this.marketClock));
     LOG.info(
         "quote_execution_completed quoteDate={} strategy={} strategyVersion=v1 pricedPlayers={}"
-            + " recomputedRows={} carriedForwardRows={} notRepricedPlayers={} failedPlayers={}",
+            + " recomputedRows={} carriedForwardRows={} notRepricedPlayers={} failedPlayers={} origin={}",
         quoteDate,
         strategy,
         players.size(),
         recomputed,
         carried,
         notRepriced,
-        failed);
+        failed,
+        origin);
     return this.executions.save(execution);
   }
 

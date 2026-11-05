@@ -67,6 +67,27 @@ Las excepciones pertenecientes a Java, Spring o librerías externas no están al
 - Validación estructural HTTP en Controller/DTO; negocio en Service/Model; contratos externos en Integration.
 - Capturar errores estructurales de Jakarta Validation en presentación. Todo error HTTP controlado por la aplicación utiliza `ErrorResponseDTO` con `timestamp`, `status`, `error`, `code`, `message` y `path`; `status` coincide con el código HTTP, `code` identifica establemente el tipo de error y `path` identifica la ruta solicitada. `message` es legible y no sirve como identificador programático. Ante múltiples errores de validación, `message` contiene el primer mensaje disponible.
 
+### 1.8. Punto de entrada batch de cotizaciones (SPEC-023)
+
+`AutomaticQuoteRecalculationScheduler`, en `features/quote/infraestructure/scheduling`, es un
+punto de entrada de infraestructura hacia el caso de uso existente, no un Controller ni un Service
+adicional. Solo depende de la interfaz `QuoteRecalculationService` y de `QuoteProperties` para
+comprobar `schedule.enabled`. No accede a Repository, Integration, DTO, Mapper ni Controller, y no
+inspecciona ni transforma el resultado de dominio.
+
+El disparador invoca `recalculateAutomatic()` y traduce los rechazos o errores recibidos a eventos
+operativos, sin propagarlos ni impedir disparos futuros. No contiene lógica de negocio, fórmulas,
+validaciones del mercado ni gestión de transacciones, persistencia, compensación, recuperación o
+reintentos. Esas responsabilidades permanecen en el recálculo existente; la unicidad por fecha UTC
+se conserva sin añadir un lock global y TD-024 permanece pendiente.
+
+La programación se habilita una sola vez con `@EnableScheduling` en `FootballMarketApplication` y
+utiliza el `TaskScheduler` autoconfigurado por Spring Boot, con un hilo y prefijo `market-batch-`.
+El método `@Scheduled` usa cron configurable y zona fija UTC; el perfil `test` deja el disparador
+inerte. Otro proceso batch puede añadir su propio disparador en el módulo de su funcionalidad y
+reutilizar esta infraestructura, sin duplicar la habilitación ni crear un registro central de jobs.
+SPEC-023 no implementa la sincronización automática de datos deportivos (#41).
+
 ## 2. Integraciones externas del backend
 
 Toda comunicación externa pasa por Integration, que encapsula configuración, comunicación, contratos externos, transformación y errores técnicos. Model no conoce proveedores, clientes, HTTP ni protocolos. Los contratos externos permanecen separados de los DTO HTTP propios y de los Model internos; estos tipos no se reutilizan como contratos externos aunque coincidan estructuralmente.

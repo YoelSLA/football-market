@@ -22,6 +22,7 @@ import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFac
 import footballmarket.features.quote.application.exceptions.InvalidMinPriceFloorException;
 import footballmarket.features.quote.application.exceptions.InvalidVariationCapException;
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.security.SecurityConfig;
@@ -142,7 +143,14 @@ class QuoteControllerTest {
                   .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.quoteDate").value("2026-10-21"))
+          .andExpect(jsonPath("$.origin").value("MANUAL"))
+          .andExpect(jsonPath("$.result").value("SUCCESS"))
+          .andExpect(jsonPath("$.failureReason").value(org.hamcrest.Matchers.nullValue()))
           .andExpect(jsonPath("$.strategy").value("POSITIONAL_PERFORMANCE"))
+          .andExpect(jsonPath("$.strategyVersion").value("v1"))
+          .andExpect(jsonPath("$.adjustmentFactor").value(0.10))
+          .andExpect(jsonPath("$.variationCap").value(0.10))
+          .andExpect(jsonPath("$.minPriceFloor").value(1))
           .andExpect(jsonPath("$.pricedPlayers").value(5))
           .andExpect(jsonPath("$.recomputedRows").value(3))
           .andExpect(jsonPath("$.carriedForwardRows").value(2))
@@ -164,7 +172,89 @@ class QuoteControllerTest {
                   .queryParam("date", "2026-10-21"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.executions.length()").value(1))
+          .andExpect(jsonPath("$.executions[0].quoteDate").value("2026-10-21"))
+          .andExpect(jsonPath("$.executions[0].strategy").value("POSITIONAL_PERFORMANCE"))
+          .andExpect(jsonPath("$.executions[0].adjustmentFactor").value(0.10))
+          .andExpect(jsonPath("$.executions[0].variationCap").value(0.10))
+          .andExpect(jsonPath("$.executions[0].minPriceFloor").value(1))
+          .andExpect(jsonPath("$.executions[0].pricedPlayers").value(5))
+          .andExpect(jsonPath("$.executions[0].recomputedRows").value(3))
+          .andExpect(jsonPath("$.executions[0].carriedForwardRows").value(2))
+          .andExpect(jsonPath("$.executions[0].notRepricedPlayers").value(1))
+          .andExpect(jsonPath("$.executions[0].failedPlayers").value(0))
+          .andExpect(jsonPath("$.executions[0].startedAt").value("2026-10-21T10:00:00Z"))
+          .andExpect(jsonPath("$.executions[0].finishedAt").value("2026-10-21T10:00:05Z"))
+          .andExpect(jsonPath("$.executions[0].origin").value("MANUAL"))
+          .andExpect(jsonPath("$.executions[0].result").value("SUCCESS"))
+          .andExpect(
+              jsonPath("$.executions[0].failureReason").value(org.hamcrest.Matchers.nullValue()))
           .andExpect(jsonPath("$.executions[0].strategyVersion").value("v1"));
+    }
+
+    @Test
+    @DisplayName("Expone un motivo cerrado para fallos individuales sin detalles internos")
+    void returnsFailedExecutionWithoutInternalDetails() throws Exception {
+      // Arrange
+      QuoteExecution failed = execution();
+      failed.complete(5, 2, 2, 0, 1, Instant.parse("2026-10-21T10:00:05Z"));
+      when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(failed);
+      // Act / Assert
+      mvc.perform(
+              post("/api/quotes/recalculate")
+                  .header("Authorization", authorization)
+                  .contentType("application/json")
+                  .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.origin").value("MANUAL"))
+          .andExpect(jsonPath("$.result").value("FAILED"))
+          .andExpect(jsonPath("$.failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
+          .andExpect(jsonPath("$.failedPlayers").value(1))
+          .andExpect(jsonPath("$.id").doesNotExist())
+          .andExpect(jsonPath("$.cause").doesNotExist())
+          .andExpect(jsonPath("$.stackTrace").doesNotExist());
+    }
+
+    @Test
+    @DisplayName(
+        "Consulta una ejecución automática con fallos y devuelve vacío para una fecha sin registro")
+    void returnsAutomaticFailureAndEmptyDate() throws Exception {
+      // Arrange
+      QuoteExecution automatic =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.AUTOMATIC,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              0,
+              1,
+              Instant.parse("2026-10-21T10:00:00Z"),
+              Instant.parse("2026-10-21T10:00:05Z"));
+      when(recalculationService.executions(LocalDate.of(2026, 10, 21)))
+          .thenReturn(List.of(automatic));
+      when(recalculationService.executions(LocalDate.of(2026, 10, 22))).thenReturn(List.of());
+      // Act / Assert
+      mvc.perform(
+              get("/api/quotes/executions")
+                  .header("Authorization", authorization)
+                  .queryParam("date", "2026-10-21"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executions.length()").value(1))
+          .andExpect(jsonPath("$.executions[0].origin").value("AUTOMATIC"))
+          .andExpect(jsonPath("$.executions[0].result").value("FAILED"))
+          .andExpect(jsonPath("$.executions[0].failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
+          .andExpect(jsonPath("$.executions[0].id").doesNotExist());
+      mvc.perform(
+              get("/api/quotes/executions")
+                  .header("Authorization", authorization)
+                  .queryParam("date", "2026-10-22"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executions").isEmpty());
     }
 
     @Test
@@ -222,6 +312,7 @@ class QuoteControllerTest {
     private QuoteExecution execution() {
       return new QuoteExecution(
           LocalDate.of(2026, 10, 21),
+          QuoteExecutionOrigin.MANUAL,
           ValuationStrategy.POSITIONAL_PERFORMANCE,
           "v1",
           new BigDecimal("0.10"),

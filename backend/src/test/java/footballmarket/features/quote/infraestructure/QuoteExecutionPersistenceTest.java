@@ -30,6 +30,67 @@ class QuoteExecutionPersistenceTest {
   class ExecutionUniqueness {
 
     @Test
+    @DisplayName("Exige un origen explícito sin valor por defecto y conserva el catálogo cerrado")
+    void requiresExplicitValidOrigin() throws Exception {
+      // Arrange
+      try (Connection connection = ValuationDatabaseSupport.migrated(DATABASE, "execution_origin");
+          Statement statement = connection.createStatement()) {
+        String columns =
+            "quote_date, strategy_name, strategy_version, adjustment_factor, variation_cap,"
+                + " min_price_floor, priced_players, recomputed_rows, carried_forward_rows,"
+                + " not_repriced_players, failed_players, started_at, finished_at";
+        String values =
+            "DATE '2026-10-21', 'POSITIONAL_PERFORMANCE', 'v1', 0.10, 0.10, 1,"
+                + " 0, 0, 0, 0, 0, now(), now()";
+        // Act / Assert
+        assertThatThrownBy(
+                () ->
+                    statement.execute(
+                        "INSERT INTO quote_executions (" + columns + ") VALUES (" + values + ")"))
+            .isInstanceOf(SQLException.class)
+            .satisfies(
+                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23502"));
+        assertThatThrownBy(
+                () ->
+                    statement.execute(
+                        "INSERT INTO quote_executions ("
+                            + columns
+                            + ", origin) VALUES ("
+                            + values
+                            + ", NULL)"))
+            .isInstanceOf(SQLException.class)
+            .satisfies(
+                error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23502"));
+        assertThatThrownBy(
+                () ->
+                    statement.execute(
+                        "INSERT INTO quote_executions ("
+                            + columns
+                            + ", origin) VALUES ("
+                            + values
+                            + ", 'OTHER')"))
+            .isInstanceOf(SQLException.class)
+            .satisfies(
+                error -> {
+                  assertThat(((SQLException) error).getSQLState()).isEqualTo("23514");
+                  assertThat(
+                          ((org.postgresql.util.PSQLException) error)
+                              .getServerErrorMessage()
+                              .getConstraint())
+                      .isEqualTo("ck_quote_execution_origin");
+                });
+        statement.execute(
+            "INSERT INTO quote_executions ("
+                + columns
+                + ", origin) VALUES ("
+                + values
+                + ", 'AUTOMATIC')");
+        // Verify
+        assertThat(countExecutions(statement)).isEqualTo(1L);
+      }
+    }
+
+    @Test
     @DisplayName("Rechaza una segunda ejecución para la misma fecha")
     void rejectsDuplicateDate() throws Exception {
       try (Connection connection = ValuationDatabaseSupport.migrated(DATABASE, "execution_unique");
@@ -103,11 +164,11 @@ class QuoteExecutionPersistenceTest {
         "INSERT INTO quote_executions (quote_date, strategy_name, strategy_version,"
             + " adjustment_factor, variation_cap, min_price_floor, priced_players,"
             + " recomputed_rows, carried_forward_rows, not_repriced_players, failed_players,"
-            + " started_at, finished_at) VALUES (DATE '"
+            + " origin, started_at, finished_at) VALUES (DATE '"
             + date
             + "', 'POSITIONAL_PERFORMANCE', 'v1', "
             + factor
-            + ", 0.10, 1, 0, 0, 0, 0, 0, now(), now())");
+            + ", 0.10, 1, 0, 0, 0, 0, 0, 'MANUAL', now(), now())");
   }
 
   private static long countExecutions(Statement statement) throws SQLException {

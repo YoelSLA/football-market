@@ -39,4 +39,5 @@ se corrige con una fila nueva que la referencie.
 | SPEC-020 | Consultar historial de operaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/21 | REQ-S2-10 | feat/020-view-operation-history | 2026-10-24 |
 | SPEC-009 | Rediseñar detalle individual y estadísticas reales del jugador (dashboard WhoScored) | YoelSLA | #72 | REQ-S2-12 | feat/009-player-detail-whoscored-stats-dashboard | 2026-10-25 |
 | SPEC-022 | Visualizar ranking de jugadores | YoelSLA | #25 | REQ-S2-13 | feat/022-view-player-rankings | 2026-10-27 |
+| SPEC-023 | Programar recálculo automático de cotizaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/40 | REQ-S2-11-B | feat/023-scheduler-quote-recalculation | 2026-11-03 |
 
