@@ -2,6 +2,7 @@ import axios from "axios";
 import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toBuyResult,
+	toMarketListings,
 	toMarketQuote,
 	toOrderBuyRequestDTO,
 	toOrderSellRequestDTO,
@@ -9,6 +10,7 @@ import {
 } from "./market.mapper";
 import type {
 	BuyResult,
+	MarketListing,
 	MarketQuote,
 	OrderBuyResponseDTO,
 	OrderSellResponseDTO,
@@ -80,8 +82,30 @@ async function sellTokens(request: {
 	return toSellResult(data);
 }
 
+async function getListings(signal?: AbortSignal): Promise<MarketListing[]> {
+	const { data } = await http.get<unknown>("/listings", {
+		authenticated: true,
+		signal,
+	});
+	return toMarketListings(data);
+}
+
+async function buyListing(listingId: number): Promise<BuyResult> {
+	const { data } = await http.post<OrderBuyResponseDTO>(
+		"/orders/buy",
+		{ listingId },
+		{ authenticated: true },
+	);
+	const result = toBuyResult(data);
+	if (result.listingId !== listingId)
+		throw new Error("INVALID_BUY_LISTING_RESPONSE");
+	return result;
+}
+
 export const marketService = {
 	getCurrentQuote,
 	buyTokens,
 	sellTokens,
+	getListings,
+	buyListing,
 };

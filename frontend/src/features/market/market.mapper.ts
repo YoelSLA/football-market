@@ -1,5 +1,8 @@
+import type { Player } from "@/features/players";
 import type {
 	BuyResult,
+	MarketListing,
+	MarketPlayer,
 	MarketQuote,
 	OrderBuyRequestDTO,
 	OrderBuyResponseDTO,
@@ -57,6 +60,18 @@ export function toMarketQuote(dto: unknown): MarketQuote {
 }
 
 export function toBuyResult(dto: OrderBuyResponseDTO): BuyResult {
+	if (
+		!isSafePositiveInteger(dto.transactionId) ||
+		!isSafePositiveInteger(dto.playerId) ||
+		!isSafePositiveInteger(dto.quantity) ||
+		!isSafePositiveInteger(dto.unitPrice) ||
+		!isSafePositiveInteger(dto.totalAmount) ||
+		dto.totalAmount !== dto.quantity * dto.unitPrice ||
+		!isIsoInstant(dto.executedAt) ||
+		(dto.listingId !== undefined && !isSafePositiveInteger(dto.listingId))
+	) {
+		throw new Error("INVALID_BUY_RESPONSE");
+	}
 	return {
 		transactionId: dto.transactionId,
 		playerId: dto.playerId,
@@ -66,6 +81,54 @@ export function toBuyResult(dto: OrderBuyResponseDTO): BuyResult {
 		executedAt: dto.executedAt,
 		listingId: dto.listingId,
 	};
+}
+
+function isSafePositiveInteger(value: unknown): value is number {
+	return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function isIsoInstant(value: unknown): value is string {
+	return (
+		typeof value === "string" &&
+		/^\d{4}-\d{2}-\d{2}T.+(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
+		Number.isFinite(Date.parse(value))
+	);
+}
+
+export function toMarketListings(value: unknown): MarketListing[] {
+	if (typeof value !== "object" || value === null)
+		throw new Error("INVALID_LISTINGS_RESPONSE");
+	const envelope = value as Record<string, unknown>;
+	if (!Array.isArray(envelope.listings))
+		throw new Error("INVALID_LISTINGS_RESPONSE");
+	return envelope.listings.map((item) => {
+		if (typeof item !== "object" || item === null)
+			throw new Error("INVALID_LISTING_RESPONSE");
+		const dto = item as Record<string, unknown>;
+		if (
+			!isSafePositiveInteger(dto.listingId) ||
+			!isSafePositiveInteger(dto.sellerId) ||
+			!isSafePositiveInteger(dto.playerId) ||
+			!isSafePositiveInteger(dto.quantity) ||
+			!isSafePositiveInteger(dto.unitPrice) ||
+			!isSafePositiveInteger(dto.totalAmount) ||
+			dto.totalAmount !== dto.quantity * dto.unitPrice ||
+			dto.status !== "ACTIVE" ||
+			!isIsoInstant(dto.createdAt) ||
+			!isIsoInstant(dto.expiresAt)
+		)
+			throw new Error("INVALID_LISTING_RESPONSE");
+		return {
+			listingId: dto.listingId,
+			sellerId: dto.sellerId,
+			playerId: dto.playerId,
+			quantity: dto.quantity,
+			unitPrice: dto.unitPrice,
+			totalAmount: dto.totalAmount,
+			createdAt: dto.createdAt,
+			expiresAt: dto.expiresAt,
+		};
+	});
 }
 
 export function toOrderBuyRequestDTO(params: {
@@ -96,4 +159,16 @@ export function toOrderSellRequestDTO(params: {
 	quantity: number;
 }): OrderSellRequestDTO {
 	return { playerId: params.playerId, quantity: params.quantity };
+}
+
+export function toMarketPlayer(player: Player): MarketPlayer {
+	return {
+		id: player.id,
+		name: player.name,
+		teamName: player.teamName,
+		leagueName: player.leagueName,
+		position: player.position,
+		imageUrl: player.imageUrl,
+		fallbackImageUrl: player.fallbackImageUrl,
+	};
 }

@@ -4,9 +4,13 @@ import styles from "./MarketHeader.module.scss";
 
 interface Props {
 	totalPlayers?: number;
+	availableCredits?: number;
 }
 
-export default function MarketHeader({ totalPlayers }: Props) {
+export default function MarketHeader({
+	totalPlayers,
+	availableCredits,
+}: Props) {
 	return (
 		<header className={styles.marketHeader}>
 			<PageHeading
@@ -21,7 +25,11 @@ export default function MarketHeader({ totalPlayers }: Props) {
 					</span>
 					<div>
 						<p>Saldo disponible</p>
-						<strong>No disponible</strong>
+						<strong>
+							{availableCredits != null
+								? `${availableCredits.toLocaleString("es-AR")} créditos`
+								: "No disponible"}
+						</strong>
 					</div>
 				</div>
 				<div
