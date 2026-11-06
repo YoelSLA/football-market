@@ -225,7 +225,6 @@ export default function PortfolioPositionCard({
 						<polyline
 							points="23 6 9 18 4 13"
 							fill="none"
-							stroke="currentColor"
 							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round"
@@ -252,7 +251,6 @@ export default function PortfolioPositionCard({
 						<path
 							d="M5 12h14M12 5l7 7-7 7"
 							fill="none"
-							stroke="currentColor"
 							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round"

@@ -1,367 +1,531 @@
 @use "@/styles/abstracts" as ds;
 
 .portfolioPosition {
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
+
+	// 4. 📦 Box Model
 	min-width: 0;
 	padding: ds.$space-sm ds.$space-sm ds.$space-2xs;
-	border: 1px solid ds.$border-finance;
-	border-radius: 14px;
-	background: linear-gradient(
-		180deg,
-		ds.$surface-finance-panel-from,
-		ds.$surface-finance-panel-to
-	);
-	box-shadow: inset 0 1px rgba(ds.$text-inverse, 0.06), 0 2px 12px rgba(ds.$surface-finance-base, 0.12);
-	color: ds.$text-portfolio-strong;
 
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 14px;
+	background-color: ds.$surface-panel-from;
+	box-shadow: inset 0 1px ds.$surface-glass-soft, 0 2px 12px ds.$shadow-soft;
+	color: ds.$text-strong-on-dark;
 	&__header {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: flex-start;
 		gap: ds.$space-md;
+
+		// 4. 📦 Box Model
 		margin-bottom: 0;
 	}
 
 	&__portrait {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 52px;
 		height: 52px;
-		border-radius: 50%;
 		object-fit: cover;
-		flex-shrink: 0;
-		background: ds.$surface-finance-panel-from;
-		border: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border-radius: 50%;
+		background-color: ds.$surface-panel-from;
+		border: 1px solid ds.$border-panel;
 	}
 
 	&__identity {
-		min-width: 0;
+		// 3. 🧩 Layout
 		flex: 1;
-		padding-top: ds.$space-3xs;
 
+		// 4. 📦 Box Model
+		min-width: 0;
+		padding-top: ds.$space-3xs;
 		h2 {
+			// 4. 📦 Box Model
 			margin: 0;
+
+			// 5. 🔤 Typography
 			font-size: 17px;
 			font-weight: 700;
-			color: ds.$text-portfolio-strong;
 			overflow-wrap: anywhere;
 			line-height: 1.25;
+
+			// 6. 🎨 Visual
+			color: ds.$text-strong-on-dark;
 		}
 	}
 
 	&__meta {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		gap: ds.$space-3xs;
+
+		// 4. 📦 Box Model
 		margin-top: ds.$space-3xs;
 	}
 
 	&__meta p {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 12px;
-		color: ds.$text-portfolio-cell-sub;
 		line-height: 1.35;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__ball {
+		// 4. 📦 Box Model
 		margin-right: ds.$space-2xs;
 	}
 
 	&__headerActions {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		margin-left: auto;
 	}
 
 	&__status {
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
+
+		// 4. 📦 Box Model
 		padding: 4px 10px;
-		border-radius: 999px;
+
+		// 5. 🔤 Typography
 		font-size: 10px;
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		white-space: nowrap;
 
+		// 6. 🎨 Visual
+		border-radius: 999px;
 		&_open {
-			border: 1px solid ds.$border-portfolio-open;
-			background: ds.$surface-portfolio-open;
-			color: ds.$accent-portfolio-open;
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-status-open;
+			background-color: ds.$surface-status-open;
+			color: ds.$accent-open;
 		}
 
 		&_closed {
-			border: 1px solid ds.$border-portfolio-closed;
-			background: ds.$surface-portfolio-closed;
-			color: ds.$state-portfolio-closed;
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-status-closed;
+			background-color: ds.$surface-status-closed;
+			color: ds.$state-closed;
+		}
+
+		&_open .portfolioPosition__statusDot {
+			// 6. 🎨 Visual
+			background-color: ds.$accent-open;
+		}
+
+		&_closed .portfolioPosition__statusDot {
+			// 6. 🎨 Visual
+			background-color: ds.$state-closed;
 		}
 	}
 
 	&__statusDot {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 5px;
 		height: 5px;
+
+		// 6. 🎨 Visual
 		border-radius: 50%;
-		background: currentColor;
-		flex-shrink: 0;
 	}
 
 	/* ==================== MÉTRICAS DE TOKENS - HORIZONTAL ==================== */
 
 	&__tokenMetrics {
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: ds.$space-sm;
+
+		// 4. 📦 Box Model
 		margin: ds.$space-2xs 0 0;
 		padding: 0;
 	}
 
 	&__tokenMetric {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: row;
 		align-items: center;
 		justify-content: flex-start;
 		gap: ds.$space-2xs;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 		padding: ds.$space-2xs;
-		background: rgba(ds.$surface-finance-base, 0.4);
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-panel-from;
 		border-radius: 10px;
 	}
 
 	&__tokenIcon {
+		// 3. 🧩 Layout
 		display: grid;
 		place-items: center;
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 40px;
 		height: 40px;
-		border-radius: 10px;
-		background: rgba(ds.$accent-finance-cyan, 0.12);
 
+		// 6. 🎨 Visual
+		border-radius: 10px;
+		background-color: ds.$surface-highlight-glow;
 		&_available {
-			background: rgba(ds.$accent-finance-green, 0.15);
+			// 6. 🎨 Visual
+			background-color: ds.$surface-gain-soft;
 		}
 
 		&_reserved {
-			background: rgba(ds.$accent-finance-violet, 0.15);
+			// 6. 🎨 Visual
+			background-color: ds.$surface-investment-glow;
 		}
 	}
 
 	&__tokenIconSvg {
+		// 4. 📦 Box Model
 		width: 22px;
 		height: 22px;
-		color: ds.$accent-finance-cyan;
 
+		// 6. 🎨 Visual
+		color: ds.$accent-highlight;
 		.portfolioPosition__tokenMetric_available & {
-			color: ds.$accent-finance-green;
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
 		}
 
 		.portfolioPosition__tokenMetric_reserved & {
-			color: ds.$accent-finance-violet;
+			// 6. 🎨 Visual
+			color: ds.$accent-investment;
 		}
 	}
 
 	&__tokenInfo {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 	}
 
 	&__tokenValue {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 16px;
 		font-weight: 700;
-		color: ds.$text-portfolio-value;
 		overflow-wrap: anywhere;
 		white-space: normal;
+
+		// 6. 🎨 Visual
+		color: ds.$text-value-on-dark;
 	}
 
 	&__tokenLabel {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 11px;
 		font-weight: 500;
-		color: ds.$text-portfolio-cell-sub;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	/* ==================== MÉTRICAS FINANCIERAS - HORIZONTAL ==================== */
 
 	&__financialMetrics {
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: ds.$space-sm;
+
+		// 4. 📦 Box Model
 		margin: ds.$space-2xs 0 0;
 		padding: 0;
 	}
 
 	&__financialMetric {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: row;
 		align-items: center;
 		justify-content: flex-start;
 		gap: ds.$space-2xs;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 		padding: ds.$space-2xs;
-		background: rgba(ds.$surface-finance-base, 0.4);
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-panel-from;
 		border-radius: 10px;
 	}
 
 	&__icon {
 		svg {
+			// 4. 📦 Box Model
 			width: 100%;
 			height: 100%;
 		}
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 18px;
 		height: 18px;
-		flex-shrink: 0;
-		stroke-width: 2;
 		margin-right: ds.$space-2xs;
+
+		// 6. 🎨 Visual
+		stroke-width: 2;
 	}
 
 	&__financialInfo {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 	}
 
 	&__financialValue {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 14px;
 		font-weight: 700;
-		color: ds.$text-portfolio-value;
 		overflow-wrap: anywhere;
 		white-space: normal;
+
+		// 6. 🎨 Visual
+		color: ds.$text-value-on-dark;
 	}
 
 	&__financialLabel {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 11px;
 		font-weight: 500;
-		color: ds.$text-portfolio-cell-sub;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__metric_warning dd {
-		color: ds.$state-portfolio-no-quote;
+		// 5. 🔤 Typography
 		font-size: 12px;
+
+		// 6. 🎨 Visual
+		color: ds.$state-no-quote;
 	}
 
 	/* ==================== ICONOS ESPECÍFICOS ==================== */
 
 	&__icon_tokens {
-		color: ds.$icon-portfolio-tokens;
+		// 6. 🎨 Visual
+		color: ds.$icon-metric-tokens;
 	}
 
 	&__icon_available {
-		color: ds.$icon-portfolio-available;
+		// 6. 🎨 Visual
+		color: ds.$icon-metric-available;
 	}
 
 	&__icon_reserved {
-		color: ds.$icon-portfolio-reserved;
+		// 6. 🎨 Visual
+		color: ds.$icon-metric-reserved;
 	}
 
 	&__icon_average {
-		color: ds.$icon-portfolio-average;
+		// 6. 🎨 Visual
+		color: ds.$icon-metric-average;
 	}
 
 	&__icon_current {
-		color: ds.$icon-portfolio-current;
+		// 6. 🎨 Visual
+		color: ds.$icon-metric-current;
 	}
 
 	&__icon_value {
-		color: ds.$icon-portfolio-value;
+		// 6. 🎨 Visual
+		color: ds.$icon-metric-value;
 	}
 
 	/* ==================== FOOTER ==================== */
 
 	&__footer {
+		// 3. 🧩 Layout
 		flex-wrap: wrap;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: ds.$space-md;
+
+		// 4. 📦 Box Model
 		margin-top: ds.$space-2xs;
 		padding-top: ds.$space-2xs;
-		border-top: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
 	}
 
 	&__result {
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
+
+		// 5. 🔤 Typography
 		font-size: 14px;
 		font-weight: 700;
-
 		&_positive {
-			color: ds.$accent-finance-green;
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
 		}
 
 		&_negative {
-			color: ds.$state-portfolio-negative;
+			// 6. 🎨 Visual
+			color: ds.$state-loss;
 		}
 
 		&_neutral {
-			color: ds.$text-portfolio-muted;
+			// 6. 🎨 Visual
+			color: ds.$text-dimmed-on-dark;
 		}
 	}
 
 	&__resultIcon {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 16px;
 		height: 16px;
+		.portfolioPosition__result_positive & {
+			// 6. 🎨 Visual
+			stroke: ds.$state-gain;
+		}
+
+		.portfolioPosition__result_negative & {
+			// 6. 🎨 Visual
+			stroke: ds.$state-loss;
+		}
+
+		.portfolioPosition__result_neutral & {
+			// 6. 🎨 Visual
+			stroke: ds.$text-dimmed-on-dark;
+		}
 	}
 
 	&__resultValue {
+		// 5. 🔤 Typography
 		white-space: nowrap;
 	}
 
 	&__arrowIcon {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 16px;
 		height: 16px;
+
+		// 6. 🎨 Visual
+		stroke: ds.$action-link;
 	}
 
 	&__details {
-		margin-left: auto;
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		margin-left: auto;
 		padding: 10px 18px;
-		border: 1px solid ds.$accent-finance-green;
-		border-radius: 8px;
-		background: linear-gradient(120deg, ds.$surface-finance-active, rgba(ds.$surface-finance-active, 0.7));
-		box-shadow: 0 0 0 2px rgba(ds.$surface-finance-base, 0.6), inset 0 1px rgba(ds.$accent-finance-green, 0.1);
-		color: ds.$accent-finance-green;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
 		font-weight: 700;
 		text-decoration: none;
 		white-space: nowrap;
-		transition: all 0.18s ease;
 
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-gain;
+		border-radius: 8px;
+		background-color: ds.$surface-control-active;
+		box-shadow: 0 0 0 2px ds.$shadow-intense, inset 0 1px ds.$surface-gain-tint;
+		color: ds.$accent-gain;
+
+		// 8. ✨ Animation
+		transition: all 0.18s ease;
 		&:hover {
-			background: ds.$surface-finance-active;
-			box-shadow: 0 0 12px rgba(ds.$accent-finance-green, 0.15);
+			// 6. 🎨 Visual
+			background-color: ds.$surface-control-active;
+			box-shadow: 0 0 12px ds.$surface-gain-soft;
 		}
 
 		&:focus-visible {
-			outline: 2px solid ds.$focus-ring-on-dark;
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
 			outline-offset: 2px;
 		}
 
 		svg {
+			// 3. 🧩 Layout
 			flex-shrink: 0;
+
+			// 4. 📦 Box Model
 			width: 16px;
 			height: 16px;
 		}
 	}
 
 	:focus-visible {
-		outline: 3px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 3px solid ds.$focus-ring-dark;
 		outline-offset: 2px;
 	}
 
@@ -370,6 +534,7 @@
 	@include ds.down(ds.$bp-grid-md) {
 		&__tokenMetrics,
 		&__financialMetrics {
+			// 3. 🧩 Layout
 			grid-template-columns: repeat(3, 1fr);
 		}
 	}
@@ -377,11 +542,13 @@
 	@include ds.down(ds.$bp-grid-sm) {
 		&__tokenMetrics,
 		&__financialMetrics {
+			// 3. 🧩 Layout
 			grid-template-columns: 1fr;
 		}
 
 		&__tokenMetric,
 		&__financialMetric {
+			// 3. 🧩 Layout
 			justify-content: flex-start;
 		}
 	}

@@ -1,78 +1,108 @@
 @use "@/styles/abstracts" as ds;
 
 .header {
+	// 3. 🧩 Layout
 	display: grid;
 	grid-template-columns: minmax(0, 852px) minmax(0, 1fr);
 	align-items: center;
 	gap: 16px;
 	flex: 0 0 72px;
+
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 	height: 72px;
-
 	&__left {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		gap: 14px;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 	}
 
 	&__iconBox {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 44px;
 		height: 44px;
+
+		// 6. 🎨 Visual
 		border-radius: 10px;
-		background: rgba(0, 201, 136, 0.08);
-		border: 1px solid rgba(0, 201, 136, 0.28);
-		flex-shrink: 0;
+		background-color: ds.$action-selected-accent-subtle;
+		border: 1px solid ds.$action-selected-accent-subtle-border;
 	}
 
 	&__trophy {
-		color: #00c988;
+		// 6. 🎨 Visual
+		color: ds.$action-selected-accent;
 	}
 
 	&__titleGroup {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
 	}
 
 	&__title {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 22px;
 		font-weight: 700;
-		color: #ffffff;
 		letter-spacing: -0.01em;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
 	}
 
 	&__subtitle {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: #8fa2b4;
+
+		// 6. 🎨 Visual
+		color: ds.$text-auxiliary-on-dark;
 	}
 
 	&__right {
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: 440px 580px;
 		align-items: center;
 		gap: 16px;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 	}
 
 	&__toggle {
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		justify-content: stretch;
-		background: #061524;
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 8px;
-		padding: 4px;
 		gap: 4px;
+
+		// 4. 📦 Box Model
+		padding: 4px;
 		width: 100%;
 
+		// 6. 🎨 Visual
+		background-color: ds.$surface-data-control-soft;
+		border: 1px solid ds.$border-glass;
+		border-radius: 8px;
 		.toggleButton {
+			// 3. 🧩 Layout
 			flex: 1;
 			justify-content: center;
 		}
@@ -80,108 +110,151 @@
 }
 
 .toggleButton {
+	// 3. 🧩 Layout
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;
-	background: transparent;
-	border: 1.5px solid transparent;
-	color: #8fa2b4;
+
+	// 4. 📦 Box Model
 	padding: 7px 18px;
-	border-radius: 6px;
+
+	// 5. 🔤 Typography
 	font-size: 13px;
 	font-weight: 500;
-	cursor: pointer;
-	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
+	// 6. 🎨 Visual
+	background-color: ds.$surface-transparent;
+	border: 1.5px solid ds.$border-transparent;
+	color: ds.$text-auxiliary-on-dark;
+	border-radius: 6px;
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+
+	// 8. ✨ Animation
+	transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 	svg {
-		color: #8fa2b4;
+		// 6. 🎨 Visual
+		color: ds.$text-auxiliary-on-dark;
+
+		// 8. ✨ Animation
 		transition: color 0.15s ease;
 	}
 
 	&:hover:not(&_active) {
-		color: #ffffff;
-		background: rgba(255, 255, 255, 0.04);
-
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+		background-color: ds.$surface-glass-subtle;
 		svg {
-			color: #ffffff;
+			// 6. 🎨 Visual
+			color: ds.$text-primary-on-dark;
 		}
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 		outline-offset: 1px;
 	}
 
 	&_active {
-		background: #072a2f;
-		border-color: #00c988;
-		color: #ffffff;
+		// 5. 🔤 Typography
 		font-weight: 700;
 
+		// 6. 🎨 Visual
+		background-color: ds.$surface-data-control-active;
+		border-color: ds.$action-selected-accent;
+		color: ds.$text-primary-on-dark;
 		svg {
-			color: #00c988;
+			// 6. 🎨 Visual
+			color: ds.$action-selected-accent;
 		}
 	}
 }
 
 .metricsBar {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	background: #071928;
-	border: 1px solid rgba(255, 255, 255, 0.08);
-	border-radius: 8px;
-	padding: 6px 18px;
 	gap: 20px;
+
+	// 4. 📦 Box Model
+	padding: 6px 18px;
 	width: 100%;
 	min-width: 0;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-data-table;
+	border: 1px solid ds.$border-glass-subtle;
+	border-radius: 8px;
 }
 
 .metricColumn {
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
 .metricLabel {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 4px;
+
+	// 5. 🔤 Typography
 	font-size: 10px;
 	font-weight: 500;
-	color: #7a91a6;
 	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	color: ds.$text-header-table;
 }
 
 .metricValue {
+	// 5. 🔤 Typography
 	font-size: 12px;
 	font-weight: 700;
-	color: #ffffff;
 	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
 }
 
 .metricDivider {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
 	width: 1px;
 	height: 22px;
-	background: rgba(255, 255, 255, 0.08);
-	flex-shrink: 0;
+
+	// 6. 🎨 Visual
+	background-color: ds.$border-glass-subtle;
 }
 
 .infoIcon {
-	color: #7a91a6;
+	// 6. 🎨 Visual
+	color: ds.$text-header-table;
 }
 
 @media (max-width: 1100px) {
 	.header {
+		// 3. 🧩 Layout
 		display: flex;
-		height: auto;
 		flex-basis: auto;
 		flex-wrap: wrap;
 
+		// 4. 📦 Box Model
+		height: auto;
 		&__right {
+			// 3. 🧩 Layout
 			display: flex;
-			width: 100%;
 			justify-content: flex-start;
+
+			// 4. 📦 Box Model
+			width: 100%;
 			margin-left: 0;
 		}
 	}
@@ -189,35 +262,42 @@
 
 @media (max-width: 768px) {
 	.header {
+		// 3. 🧩 Layout
 		flex-direction: column;
 		align-items: flex-start;
-
 		&__left {
+			// 4. 📦 Box Model
 			width: 100%;
 		}
 
 		&__right {
+			// 3. 🧩 Layout
 			flex-direction: column;
 			align-items: stretch;
+
+			// 4. 📦 Box Model
 			width: 100%;
 		}
 
 		&__toggle {
+			// 4. 📦 Box Model
 			width: 100%;
-
 			.toggleButton {
+				// 3. 🧩 Layout
 				flex: 1;
 				justify-content: center;
 			}
 		}
 
 		.metricsBar {
+			// 3. 🧩 Layout
 			flex-direction: column;
 			align-items: stretch;
 			gap: 8px;
 		}
 
 		.metricDivider {
+			// 4. 📦 Box Model
 			width: 100%;
 			height: 1px;
 		}

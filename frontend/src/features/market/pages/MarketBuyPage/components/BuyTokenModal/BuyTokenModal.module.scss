@@ -1,70 +1,104 @@
 @use "@/styles/abstracts" as ds;
 
 .modal {
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
-	min-width: 0;
-	color: ds.$text-portfolio-title;
 
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	// 6. 🎨 Visual
+	color: ds.$text-title-on-dark;
 	&__header {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		gap: .8rem;
+
+		// 4. 📦 Box Model
 		padding: 1rem 1.2rem;
-		border-bottom: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-panel;
 	}
 
 	&__symbol {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 2.4rem;
 		height: 2.4rem;
-		flex-shrink: 0;
-		color: ds.$accent-finance-green;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
 	}
 
 	&__heading {
+		// 3. 🧩 Layout
 		flex: 1;
-		min-width: 0;
 
+		// 4. 📦 Box Model
+		min-width: 0;
 		p {
-			font-size: .75rem;
-			color: ds.$text-portfolio-label;
+			// 4. 📦 Box Model
 			margin-top: .25rem;
+
+			// 5. 🔤 Typography
+			font-size: .75rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
 		}
 	}
 
 	&__title {
+		// 5. 🔤 Typography
 		font-size: 1.2rem;
 		line-height: 1.3;
 	}
 
 	&__closeButton {
+		// 3. 🧩 Layout
 		display: grid;
 		place-items: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 2.6rem;
 		height: 2.6rem;
-		flex-shrink: 0;
 		padding: .5rem;
-		border: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
 		border-radius: .45rem;
-		background: ds.$surface-finance-tile;
-		color: ds.$text-portfolio-title;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$text-title-on-dark;
 	}
 
 	&__content {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		gap: .65rem;
+
+		// 4. 📦 Box Model
 		padding: .65rem 1.1rem;
 		min-width: 0;
 	}
 
 	&__player {
+		// 4. 📦 Box Model
 		padding: .5rem;
-		border: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
 		border-radius: .55rem;
 	}
 
 	&__prices {
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		gap: .65rem;
@@ -72,29 +106,43 @@
 
 	&__quoteCard,
 	&__variation {
+		// 2. 📍 Positioning
 		position: relative;
+
+		// 4. 📦 Box Model
 		padding: .6rem;
-		border: 1px solid ds.$border-finance;
-		border-radius: .5rem;
-		background: rgba(ds.$surface-finance-tile, .2);
 		min-width: 0;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: .5rem;
+		background-color: ds.$surface-card-subtle;
 	}
 
 	&__quoteLabel,
 	&__variation p {
+		// 5. 🔤 Typography
 		font-size: .75rem;
-		color: ds.$text-portfolio-label;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	&__quoteIcon {
+		// 2. 📍 Positioning
 		float: left;
+
+		// 4. 📦 Box Model
 		width: 1.6rem;
 		height: 1.6rem;
 		margin: .2rem .5rem .2rem 0;
+
+		// 6. 🎨 Visual
 		color: ds.$state-caution;
 	}
 
 	&__quotePriceRow {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-wrap: wrap;
 		align-items: baseline;
@@ -102,170 +150,254 @@
 	}
 
 	&__quoteCredits {
+		// 5. 🔤 Typography
 		font-size: 1.1rem;
 		font-weight: 750;
 	}
 
 	&__quoteCentimes,
 	&__quoteCalculated {
+		// 5. 🔤 Typography
 		font-size: .65rem;
-		color: ds.$text-portfolio-label;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	&__quoteCalculated {
+		// 2. 📍 Positioning
 		clear: both;
+
+		// 4. 📦 Box Model
 		margin-top: .25rem;
 	}
 
 	&__variation strong {
+		// 3. 🧩 Layout
 		display: block;
-		font-size: .85rem;
+
+		// 4. 📦 Box Model
 		margin-top: .3rem;
-		color: ds.$text-portfolio-label;
+
+		// 5. 🔤 Typography
+		font-size: .85rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	&__form {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		gap: .5rem;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 		padding-top: .4rem;
-		border-top: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
 	}
 
 	&__quantity {
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 2.6rem 4.8rem 2.6rem;
 		align-items: start;
 		gap: .3rem;
-
 		button {
+			// 3. 🧩 Layout
 			display: grid;
 			place-items: center;
+
+			// 4. 📦 Box Model
 			height: 2.6rem;
 			padding: .5rem;
-			border: 1px solid ds.$border-finance;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-panel;
 			border-radius: .4rem;
-			background: ds.$surface-finance-tile;
-			color: ds.$text-portfolio-title;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-title-on-dark;
+
+			// 7. ⚙️ Behavior
 			cursor: not-allowed;
 		}
 
 		label {
+			// 2. 📍 Positioning
 			position: absolute;
+
+			// 4. 📦 Box Model
 			width: 1px;
 			height: 1px;
 			padding: 0;
-			overflow: hidden;
-			clip-path: inset(50%);
+
+			// 5. 🔤 Typography
 			white-space: nowrap;
+
+			// 6. 🎨 Visual
+			clip-path: inset(50%);
+
+			// 7. ⚙️ Behavior
+			overflow: hidden;
 		}
 
 		.modal__quantityInput {
+			// 4. 📦 Box Model
 			height: 2.6rem;
 			padding: .35rem;
-			border-color: ds.$border-finance;
-			background: ds.$surface-finance-base;
-			color: ds.$text-portfolio-title;
+
+			// 5. 🔤 Typography
 			text-align: center;
 			font-size: 1.1rem;
+
+			// 6. 🎨 Visual
+			border-color: ds.$border-panel;
+			background-color: ds.$surface-page;
+			color: ds.$text-title-on-dark;
 		}
 
 		.modal__quantityInput:disabled {
-			background: ds.$surface-finance-panel-from;
-			color: ds.$text-portfolio-label;
+			// 6. 🎨 Visual
+			background-color: ds.$surface-panel-from;
+			color: ds.$text-label-on-dark;
 		}
 	}
 
 	&__quantityLabel {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		gap: .65rem;
-		font-size: .77rem;
-		font-weight: 700;
+
+		// 4. 📦 Box Model
 		min-height: 2.6rem;
 
+		// 5. 🔤 Typography
+		font-size: .77rem;
+		font-weight: 700;
 		svg {
+			// 3. 🧩 Layout
 			flex-shrink: 0;
+
+			// 4. 📦 Box Model
 			width: 2.6rem;
 			height: 2.6rem;
 			padding: .6rem;
-			background: ds.$surface-finance-tile;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-card-subtle;
 			border-radius: .5rem;
-			color: ds.$accent-finance-cyan;
+			color: ds.$accent-highlight;
 		}
 	}
 
 	&__quickAmounts {
+		// 3. 🧩 Layout
 		display: flex;
 		justify-content: flex-end;
 		gap: .4rem;
-
 		button {
+			// 4. 📦 Box Model
 			min-width: 3.1rem;
 			padding: .3rem .65rem;
-			border: 1px solid ds.$border-finance;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-panel;
 			border-radius: .35rem;
-			background: ds.$surface-finance-panel-from;
-			color: ds.$text-portfolio-label;
+			background-color: ds.$surface-panel-from;
+			color: ds.$text-label-on-dark;
+
+			// 7. ⚙️ Behavior
 			cursor: not-allowed;
 		}
 	}
 
 	&__pending {
+		// 5. 🔤 Typography
 		font-size: .65rem;
+
+		// 6. 🎨 Visual
 		color: ds.$state-caution;
 	}
 
 	&__quickAmountsLegend {
+		// 2. 📍 Positioning
 		position: absolute;
+
+		// 4. 📦 Box Model
 		width: 1px;
 		height: 1px;
 		padding: 0;
-		overflow: hidden;
-		clip-path: inset(50%);
+
+		// 5. 🔤 Typography
 		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		clip-path: inset(50%);
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
 	}
 
 	&__estimation {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		gap: .4rem;
+
+		// 4. 📦 Box Model
 		padding: .8rem;
-		border: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
 		border-radius: .5rem;
-		background: rgba(ds.$surface-finance-tile, .2);
+		background-color: ds.$surface-card-subtle;
 	}
 
 	&__detailRow {
+		// 3. 🧩 Layout
 		display: flex;
 		justify-content: space-between;
 		gap: .5rem;
-		font-size: .8rem;
-		color: ds.$text-portfolio-label;
 
+		// 5. 🔤 Typography
+		font-size: .8rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 		strong {
-			color: ds.$text-portfolio-title;
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
 		}
 	}
 
 	&__estimationRow {
+		// 3. 🧩 Layout
 		display: flex;
 		justify-content: space-between;
 		align-items: baseline;
 		flex-wrap: wrap;
 		gap: .3rem;
+
+		// 4. 📦 Box Model
 		margin-top: .15rem;
 		padding-top: .55rem;
-		border-top: 1px solid ds.$border-finance;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
 	}
 
 	&__estimationLabel {
+		// 5. 🔤 Typography
 		font-size: .9rem;
 		font-weight: 700;
 	}
 
 	&__estimationValues {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: baseline;
 		flex-wrap: wrap;
@@ -273,114 +405,165 @@
 	}
 
 	&__estimationCredits {
+		// 5. 🔤 Typography
 		font-size: 1.15rem;
 		font-weight: 750;
-		color: ds.$accent-finance-green;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
 	}
 
 	&__estimationCentimes,
 	&__estimationDisclaimer {
+		// 5. 🔤 Typography
 		font-size: .65rem;
-		color: ds.$text-portfolio-label;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	&__footer {
+		// 3. 🧩 Layout
 		display: flex;
 		gap: .65rem;
+
+		// 4. 📦 Box Model
 		padding: .25rem 1.1rem 1rem;
 	}
 
 	&__blockReason {
+		// 4. 📦 Box Model
 		padding: .35rem 1.1rem .65rem;
+
+		// 5. 🔤 Typography
 		font-size: .75rem;
+
+		// 6. 🎨 Visual
 		color: ds.$state-caution;
 	}
 
 	&__btnPrimary,
 	&__btnSecondary {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		gap: .45rem;
+
+		// 4. 📦 Box Model
 		min-width: 0;
 		padding: .75rem .5rem;
-		border-radius: .45rem;
+
+		// 5. 🔤 Typography
 		font-weight: 700;
 		font-size: .85rem;
 
+		// 6. 🎨 Visual
+		border-radius: .45rem;
 		&:disabled {
+			// 7. ⚙️ Behavior
 			opacity: .55;
 			cursor: not-allowed;
 		}
 
 		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
 			width: 1.4rem;
 			height: 1.4rem;
-			flex-shrink: 0;
 		}
 	}
 
 	&__btnPrimary {
+		// 3. 🧩 Layout
 		flex: 1.4;
-		background: ds.$accent-finance-green;
-		color: ds.$surface-finance-base;
-		border: 1px solid ds.$accent-finance-green;
+
+		// 6. 🎨 Visual
+		background-color: ds.$accent-gain;
+		color: ds.$surface-page;
+		border: 1px solid ds.$accent-gain;
 	}
 
 	&__btnSecondary {
+		// 3. 🧩 Layout
 		flex: 1;
-		background: ds.$surface-finance-base;
-		border: 1px solid ds.$text-portfolio-label;
-		color: ds.$text-portfolio-title;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-page;
+		border: 1px solid ds.$text-label-on-dark;
+		color: ds.$text-title-on-dark;
 	}
 
 	&__errorAlert,
 	&__successCard {
+		// 3. 🧩 Layout
 		display: grid;
 		gap: .5rem;
+
+		// 4. 📦 Box Model
 		padding: .8rem;
-		border: 1px solid ds.$border-finance;
-		border-radius: .5rem;
+
+		// 5. 🔤 Typography
 		font-size: .85rem;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: .5rem;
 	}
 
 	&__errorAlert {
+		// 6. 🎨 Visual
 		color: ds.$state-caution;
 	}
 
 	&__successTitle {
+		// 5. 🔤 Typography
 		font-size: 1.1rem;
-		color: ds.$accent-finance-green;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
 	}
 
 	&__successSub {
+		// 5. 🔤 Typography
 		font-size: .8rem;
-		color: ds.$text-portfolio-label;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	&__successDetails {
+		// 3. 🧩 Layout
 		display: grid;
 		gap: .4rem;
 	}
 
 	&__spinner {
+		// 8. ✨ Animation
 		animation: marketSpin 1s linear infinite;
 	}
 
 	@media (max-width: 400px) {
 		&__content {
+			// 4. 📦 Box Model
 			padding-inline: .65rem;
 		}
 
 		&__quantity {
+			// 3. 🧩 Layout
 			grid-template-columns: minmax(0, 1fr) 2rem 3.3rem 2rem;
 		}
 
 		&__quantityLabel {
-			font-size: .7rem;
+			// 3. 🧩 Layout
 			gap: .3rem;
 
+			// 5. 🔤 Typography
+			font-size: .7rem;
 			svg {
+				// 4. 📦 Box Model
 				width: 1.7rem;
 				height: 1.7rem;
 				padding: .3rem;
@@ -390,6 +573,7 @@
 
 	@media (prefers-reduced-motion: reduce) {
 		&__spinner {
+			// 8. ✨ Animation
 			animation: none;
 		}
 	}
@@ -397,6 +581,7 @@
 
 @keyframes marketSpin {
 	to {
+		// 8. ✨ Animation
 		transform: rotate(360deg);
 	}
 }

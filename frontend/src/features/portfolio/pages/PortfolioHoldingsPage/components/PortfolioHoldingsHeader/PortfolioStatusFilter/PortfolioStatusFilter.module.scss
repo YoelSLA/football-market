@@ -1,93 +1,117 @@
 @use "@/styles/abstracts" as ds;
 
 .portfolioFilter {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: ds.$space-2xs;
+
+	// 4. 📦 Box Model
 	min-width: 0;
 	margin: 0;
 	padding: 0;
-	border: 0;
 
+	// 6. 🎨 Visual
+	border: 0;
 	&__option {
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		box-sizing: border-box;
+
+		// 4. 📦 Box Model
 		height: 36px;
 		padding: 0 14px;
-		border: 1px solid transparent;
-		border-radius: 999px;
+
+		// 5. 🔤 Typography
 		font-size: 12px;
 		font-weight: 500;
-		cursor: pointer;
 		white-space: nowrap;
-		transition: all 0.18s ease;
 
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-transparent;
+		border-radius: 999px;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		// 8. ✨ Animation
+		transition: all 0.18s ease;
 		// Todas: verde oscuro, borde verde
 		&[data-filter="ALL"] {
-			border-color: ds.$accent-finance-green;
-			background: rgba(ds.$accent-finance-green, 0.12);
-			color: ds.$accent-finance-green;
-
+			// 6. 🎨 Visual
+			border-color: ds.$accent-gain;
+			background-color: ds.$surface-gain-tint;
+			color: ds.$accent-gain;
 			&:hover:not(:disabled) {
-				background: rgba(ds.$accent-finance-green, 0.2);
+				// 6. 🎨 Visual
+				background-color: ds.$surface-gain-emphasis;
 			}
 		}
 
 		// Abiertas: azul/cian oscuro, borde sutil
 		&[data-filter="OPEN"] {
-			border-color: rgba(ds.$accent-finance-cyan, 0.35);
-			background: rgba(ds.$accent-finance-cyan, 0.08);
-			color: ds.$accent-finance-cyan;
-
+			// 6. 🎨 Visual
+			border-color: ds.$border-highlight-subtle;
+			background-color: ds.$surface-highlight-tint;
+			color: ds.$accent-highlight;
 			&:hover {
-				background: rgba(ds.$accent-finance-cyan, 0.15);
+				// 6. 🎨 Visual
+				background-color: ds.$surface-highlight-emphasis;
 			}
 		}
 
 		// Cerradas: violeta oscuro, borde sutil
 		&[data-filter="CLOSED"] {
-			border-color: rgba(ds.$accent-finance-violet, 0.35);
-			background: rgba(ds.$accent-finance-violet, 0.08);
-			color: ds.$accent-finance-violet;
-
+			// 6. 🎨 Visual
+			border-color: ds.$border-investment-subtle;
+			background-color: ds.$surface-investment-tint;
+			color: ds.$accent-investment;
 			&:hover {
-				background: rgba(ds.$accent-finance-violet, 0.15);
+				// 6. 🎨 Visual
+				background-color: ds.$surface-investment-glow;
 			}
 		}
 
 		// Estado activo
 		&_active {
+			// 5. 🔤 Typography
 			font-weight: 700;
-
 			&[data-filter="ALL"] {
-				background: ds.$accent-finance-green;
-				border-color: ds.$accent-finance-green;
+				// 6. 🎨 Visual
+				background-color: ds.$accent-gain;
+				border-color: ds.$accent-gain;
 				color: ds.$text-inverse;
 			}
 
 			&[data-filter="OPEN"] {
-				background: rgba(ds.$accent-finance-cyan, 0.25);
-				border-color: ds.$accent-finance-cyan;
-				color: ds.$accent-finance-cyan;
+				// 6. 🎨 Visual
+				background-color: ds.$surface-highlight-badge;
+				border-color: ds.$accent-highlight;
+				color: ds.$accent-highlight;
 			}
 
 			&[data-filter="CLOSED"] {
-				background: rgba(ds.$accent-finance-violet, 0.25);
-				border-color: ds.$accent-finance-violet;
-				color: ds.$accent-finance-violet;
+				// 6. 🎨 Visual
+				background-color: ds.$surface-investment-badge;
+				border-color: ds.$accent-investment;
+				color: ds.$accent-investment;
 			}
 		}
 
 		&:focus-visible {
-			outline: 2px solid ds.$focus-ring-on-dark;
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
 			outline-offset: 2px;
 		}
 	}
 
 	&__icon {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 14px;
 		height: 14px;
 	}

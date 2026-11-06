@@ -1,65 +1,96 @@
 @use "@/styles/abstracts" as ds;
 
 .portfolioValueHeader {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	margin-bottom: 20px;
 
+	// 4. 📦 Box Model
+	margin-bottom: 20px;
 	&__tile {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
+
+		// 4. 📦 Box Model
 		width: 34px;
 		height: 34px;
+
+		// 6. 🎨 Visual
 		border-radius: 9px;
-		background: ds.$surface-portfolio-tile-soft;
-		color: ds.$icon-portfolio-panel;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$icon-panel;
 	}
 
 	&__icon {
+		// 4. 📦 Box Model
 		width: 20px;
 		height: 20px;
 	}
 
 	&__title {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 17px;
 		font-weight: 700;
-		color: ds.$text-portfolio-title;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
 	}
 
 	&__chevron {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 20px;
 		height: 20px;
 		margin-left: auto;
-		color: ds.$icon-portfolio-panel;
+
+		// 6. 🎨 Visual
+		color: ds.$icon-panel;
+
+		// 7. ⚙️ Behavior
 		opacity: 0.65;
 	}
 
 	&_prominent {
+		// 3. 🧩 Layout
 		grid-column: 1 / -1;
-		min-width: 0;
 		gap: 18px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 		margin-bottom: ds.$space-2xs;
 		padding-bottom: ds.$space-3xs;
-		border-bottom: 1px solid ds.$border-finance;
 
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-panel;
 		.portfolioValueHeader__tile {
+			// 3. 🧩 Layout
 			flex-shrink: 0;
+
+			// 4. 📦 Box Model
 			width: 48px;
 			height: 48px;
-			background: linear-gradient(135deg, ds.$surface-finance-tile, ds.$surface-finance-panel-from);
-			color: ds.$accent-finance-cyan;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-card-subtle;
+			color: ds.$accent-highlight;
 		}
 
 		.portfolioValueHeader__icon {
+			// 4. 📦 Box Model
 			width: 28px;
 			height: 28px;
 		}
 
 		.portfolioValueHeader__title {
+			// 5. 🔤 Typography
 			font-size: 20px;
 			line-height: 1.3;
 		}

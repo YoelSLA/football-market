@@ -1,29 +1,106 @@
 @use "@/styles/abstracts" as ds;
 
 .sellModal {
+	// 3. 🧩 Layout
 	display: grid;
 	gap: 1rem;
-	max-height: min(85vh, 52rem);
-	overflow-y: auto;
-	color: ds.$text-portfolio-title;
 
-	&__header, &__footer, &__quantity span { display: flex; align-items: center; gap: .75rem; }
-	&__header { color: ds.$accent-finance-cyan; }
-	&__header h2, &__header p { margin: .2rem 0; }
-	&__holding, &__error, &__success, &__estimate { padding: .75rem; border-radius: .5rem; background: rgba(ds.$surface-finance-panel-to, .8); }
-	&__error { color: ds.$state-error; }
-	&__success { border: 1px solid ds.$accent-finance-green; }
-	&__quantity span { justify-content: center; }
-	&__quantity span > * { min-width: 2.5rem; }
-	&__presets { display: flex; gap: .5rem; flex-wrap: wrap; }
-	&__presets button { padding: .5rem .8rem; }
-	&__estimate { display: grid; gap: .5rem; }
-	&__footer { justify-content: flex-end; }
-	&__spinner { animation: sellModalSpin 1s linear infinite; }
+	// 4. 📦 Box Model
+	max-height: min(85vh, 52rem);
+
+	// 6. 🎨 Visual
+	color: ds.$text-title-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow-y: auto;
+	&__header,
+	&__footer,
+	&__quantity span {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	&__header {
+		// 6. 🎨 Visual
+		color: ds.$accent-highlight;
+		h2,
+		p {
+			// 4. 📦 Box Model
+			margin: 0.2rem 0;
+		}
+	}
+
+	&__holding,
+	&__error,
+	&__success,
+	&__estimate {
+		// 4. 📦 Box Model
+		padding: 0.75rem;
+
+		// 6. 🎨 Visual
+		border-radius: 0.5rem;
+		background-color: ds.$surface-panel-to;
+	}
+
+	&__error {
+		// 6. 🎨 Visual
+		color: ds.$state-error;
+	}
+
+	&__success {
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-gain;
+	}
+
+	&__quantity span {
+		// 3. 🧩 Layout
+		justify-content: center;
+		> * {
+			// 4. 📦 Box Model
+			min-width: 2.5rem;
+		}
+	}
+
+	&__presets {
+		// 3. 🧩 Layout
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		button {
+			// 4. 📦 Box Model
+			padding: 0.5rem 0.8rem;
+		}
+	}
+
+	&__estimate {
+		// 3. 🧩 Layout
+		display: grid;
+		gap: 0.5rem;
+	}
+
+	&__footer {
+		// 3. 🧩 Layout
+		justify-content: flex-end;
+	}
+
+	&__spinner {
+		// 8. ✨ Animation
+		animation: sellModalSpin 1s linear infinite;
+	}
 }
 
-@keyframes sellModalSpin { to { transform: rotate(360deg); } }
+@keyframes sellModalSpin {
+	to {
+		// 8. ✨ Animation
+		transform: rotate(360deg);
+	}
+}
 
 @media (max-width: 639px) {
-	.sellModal { max-width: calc(100vw - 2rem); }
+	.sellModal {
+		// 4. 📦 Box Model
+		max-width: calc(100vw - 2rem);
+	}
 }

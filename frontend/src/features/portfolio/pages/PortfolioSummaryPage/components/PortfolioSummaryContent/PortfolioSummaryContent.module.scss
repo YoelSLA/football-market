@@ -1,48 +1,76 @@
 @use "@/styles/abstracts" as ds;
 
 .portfolioSummaryContent {
+	// 3. 🧩 Layout
 	display: flex;
 	flex: 1 0 auto;
 	flex-direction: column;
 	gap: var(--portfolio-summary-content-gap, 18px);
+
+	// 4. 📦 Box Model
 	margin-top: var(--portfolio-summary-content-margin, #{ds.$space-md});
-
 	&__error {
+		// 4. 📦 Box Model
 		padding: 22px 23px;
-		color: ds.$state-error-on-dark;
 
+		// 6. 🎨 Visual
+		color: ds.$state-error-on-dark;
 		button {
+			// 4. 📦 Box Model
 			margin-top: 12px;
 			padding: 10px 16px;
+
+			// 5. 🔤 Typography
+			font-weight: 700;
+
+			// 6. 🎨 Visual
 			border: 0;
 			border-radius: 8px;
-			background: ds.$surface-portfolio-action;
-			color: ds.$accent-portfolio-link;
-			font-weight: 700;
+			background-color: ds.$surface-action-subtle;
+			color: ds.$action-link;
+
+			// 7. ⚙️ Behavior
 			cursor: pointer;
 		}
 	}
 
 	&__loading {
+		// 4. 📦 Box Model
 		padding: 22px 23px;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: ds.$text-portfolio-cell-sub;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__empty {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: ds.$text-portfolio-cell-sub;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__retryButton {
+		// 4. 📦 Box Model
 		margin-top: 12px;
 		padding: 10px 16px;
+
+		// 5. 🔤 Typography
+		font-weight: 700;
+
+		// 6. 🎨 Visual
 		border: 0;
 		border-radius: 8px;
-		background: ds.$surface-portfolio-action;
-		color: ds.$accent-portfolio-link;
-		font-weight: 700;
+		background-color: ds.$surface-action-subtle;
+		color: ds.$action-link;
+
+		// 7. ⚙️ Behavior
 		cursor: pointer;
 	}
 }

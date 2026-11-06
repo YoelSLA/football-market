@@ -1,67 +1,62 @@
 @use "@/styles/abstracts" as ds;
 
 .page {
+	// 3. 🧩 Layout
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+
+	// 4. 📦 Box Model
 	min-height: 0;
 	min-width: 0;
-	overflow: hidden;
 	width: 100%;
-	padding: 1.3rem 1.75rem 1rem;
-	background: radial-gradient(ellipse at 45% 0%, rgba(ds.$surface-finance-tile, .25), transparent 65%), ds.$surface-finance-base;
-	color: ds.$text-portfolio-title;
+	padding: 8px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page;
+	color: ds.$text-title-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 
 	&__header {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		padding-bottom: 1.2rem;
 	}
 
-	&__footer {
+	&__selector {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
-		padding-top: 1rem;
-	}
 
-	&__content {
-		display: grid;
-		flex: 1;
-		min-height: 0;
-		grid-template-columns: minmax(15rem, .86fr) minmax(0, 3.14fr);
-		grid-template-rows: minmax(0, 1fr);
-		align-items: stretch;
-		gap: 1rem;
-		min-width: 0;
+		// 4. 📦 Box Model
+		padding-bottom: 1.2rem;
 	}
 
 	@media (max-width: 1099px) {
+		// 4. 📦 Box Model
 		padding: 1rem;
-
-		&__content {
-			grid-template-columns: 13.5rem minmax(0, 1fr);
-		}
-	}
-
-	@media (max-width: 850px) {
-		&__content {
-			grid-template-columns: 12rem minmax(0, 1fr);
-		}
 	}
 
 	@media (max-width: 639px) {
+		// 4. 📦 Box Model
+		height: auto;
+		min-height: 100%;
 		padding: .55rem;
 
+		// 7. ⚙️ Behavior
+		overflow: visible;
+
 		&__header {
+			// 4. 📦 Box Model
 			padding-bottom: .5rem;
 		}
 
-		&__footer {
-			padding-top: .45rem;
-		}
-
-		&__content {
-			grid-template-columns: 1fr;
-			grid-template-rows: auto minmax(0, 1fr);
-			gap: .5rem;
+		&__selector {
+			// 4. 📦 Box Model
+			padding-bottom: .5rem;
 		}
 	}
 }

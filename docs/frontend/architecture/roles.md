@@ -30,7 +30,7 @@ Consultar el [punto de entrada](../architecture.md), la [interpretación normati
 
 Una Page representa una pantalla asociada a una ruta o a la composición de una funcionalidad. Su responsabilidad principal es orquestar declarativamente Components y Hooks.
 
-**MAY:** Una Page utiliza Components, Hooks, Models y lógica estrictamente de presentación o renderizado, incluidas decisiones visuales basadas en loading, colecciones vacías u otros estados de UI. En pantallas simples, compone sus elementos declarativamente de forma directa.
+**MAY:** Una Page utiliza Components, Hooks, Models y lógica estrictamente de presentación o renderizado, incluidas decisiones visuales basadas en loading, colecciones vacías u otros estados de UI. En pantallas simples, compone sus elementos declarativamente de forma directa. Puede consumir Hooks o Models provenientes de las APIs públicas de otras features cuando el caso de uso de la pantalla lo requiera.
 
 **MUST:** Cuando una Page presenta múltiples preocupaciones visuales o estados, delega en Components locales propios conforme a los criterios de SRP, cohesión y bajo acoplamiento del [Artículo 4.º](../presentation.md#articulo-4), evitando convertirse en un componente monolítico.
 
@@ -69,7 +69,7 @@ Un Component representa UI y comportamiento local.
 
 Los Page Hooks coordinan estado y comportamiento de una Page cuando la complejidad justifica la extracción.
 
-**MAY:** Los Page Hooks componen Form Hooks, Query Hooks, Mutation Hooks y APIs de navegación según corresponda.
+**MAY:** Los Page Hooks componen Form Hooks, Query Hooks, Mutation Hooks y APIs de navegación según corresponda, incluyendo Query Hooks o query keys públicas de otras features para coordinar datos o invalidaciones necesarias para el caso de uso.
 
 **MUST:** Los Page Hooks interpretan los errores funcionales del flujo de UI y entregan estado y acciones a la Page, sin HTTP directo ni DTO. Los Query Hooks encapsulan `useQuery` y la lectura remota mediante Service, sin coordinación de Page. Los Mutation Hooks encapsulan `useMutation` y la operación remota mediante Service, sin formularios, navegación, mensajes ni coordinación de UI.
 

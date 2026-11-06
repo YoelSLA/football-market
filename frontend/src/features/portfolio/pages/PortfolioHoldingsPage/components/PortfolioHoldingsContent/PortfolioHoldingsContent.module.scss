@@ -2,65 +2,96 @@
 
 .portfolioHoldingsContent {
 	&__error {
+		// 4. 📦 Box Model
 		padding: ds.$space-lg ds.$space-xl;
-		color: ds.$state-error-on-dark;
 
+		// 6. 🎨 Visual
+		color: ds.$state-error-on-dark;
 		button {
+			// 4. 📦 Box Model
 			margin-top: ds.$space-sm;
 			padding: ds.$space-sm ds.$space-md;
+
+			// 5. 🔤 Typography
+			font-weight: 700;
+
+			// 6. 🎨 Visual
 			border: 0;
 			border-radius: 8px;
-			background: ds.$surface-portfolio-action;
-			color: ds.$accent-portfolio-link;
-			font-weight: 700;
+			background-color: ds.$surface-action-subtle;
+			color: ds.$action-link;
+
+			// 7. ⚙️ Behavior
 			cursor: pointer;
 		}
 	}
 
 	&__loading {
+		// 4. 📦 Box Model
 		padding: ds.$space-lg ds.$space-xl;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: ds.$text-portfolio-cell-sub;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__empty {
+		// 4. 📦 Box Model
 		margin: ds.$space-md 0 0;
 		padding: 0 ds.$space-xl;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: ds.$text-portfolio-cell-sub;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__summary {
+		// 4. 📦 Box Model
 		margin: ds.$space-2xs 0 0;
 		padding: 0 ds.$space-md;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: ds.$text-portfolio-cell-sub;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__grid {
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		align-content: start;
 		align-items: start;
 		flex-shrink: 0;
 		gap: ds.$space-sm;
+
+		// 4. 📦 Box Model
 		margin: ds.$space-2xs 0 0;
 		padding: 0 ds.$space-md ds.$space-sm;
-		list-style: none;
 
+		// 7. ⚙️ Behavior
+		list-style: none;
 		li {
+			// 4. 📦 Box Model
 			min-width: 0;
 		}
 	}
 
 	@include ds.down(ds.$bp-grid-md) {
 		&__grid {
+			// 3. 🧩 Layout
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
 
 	@include ds.down(ds.$bp-grid-sm) {
 		&__grid {
+			// 3. 🧩 Layout
 			grid-template-columns: 1fr;
 		}
 	}

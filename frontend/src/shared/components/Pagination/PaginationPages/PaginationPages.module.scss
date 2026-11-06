@@ -1,11 +1,12 @@
 .pages {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-wrap: nowrap;
-
 	gap: var(--pagination-pages-gap);
 
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 	height: 36px;

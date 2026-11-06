@@ -1,50 +1,69 @@
 @use "@/styles/abstracts" as ds;
 
 .emptyState {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 12px;
+
+	// 4. 📦 Box Model
 	height: 100%;
-
 	// Espaciado
+	// 4. 📦 Box Model
 	padding: 48px 24px;
-
 	// Apariencia
-	background: ds.$surface-finance-tile;
-	border: 1px solid ds.$border-finance;
-	border-radius: 12px;
+	// 5. 🔤 Typography
 	text-align: center;
 
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-subtle;
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
 	&__iconWrapper {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
+
+		// 4. 📦 Box Model
 		width: 72px;
 		height: 72px;
 		margin-bottom: 8px;
-		background: rgba(245, 158, 11, 0.1);
+
+		// 6. 🎨 Visual
+		background-color: ds.$status-empty-badge;
 		border-radius: 50%;
 	}
 
 	&__icon {
-		color: #f59e0b;
+		// 6. 🎨 Visual
+		color: ds.$status-empty-text;
 	}
 
 	&__title {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 18px;
 		font-weight: 700;
-		color: ds.$text-on-dark;
+
+		// 6. 🎨 Visual
+		color: ds.$text-body-on-dark;
 	}
 
 	&__description {
+		// 4. 📦 Box Model
 		max-width: 480px;
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 14px;
 		line-height: 1.5;
-		color: ds.$text-on-dark-muted;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
 	}
 }

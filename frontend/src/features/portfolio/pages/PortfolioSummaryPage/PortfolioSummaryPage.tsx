@@ -10,8 +10,8 @@ export default function PortfolioSummaryPage() {
 	const s: PortfolioSummary | null | undefined = page.summary;
 
 	return (
-		<div className={styles.portfolioSummary} aria-busy={page.isLoading}>
-			<PageLayout>
+		<PageLayout>
+			<div className={styles.portfolioSummary} aria-busy={page.isLoading}>
 				<div className={styles.portfolioSummary__panel}>
 					<PortfolioSummaryHeader
 						title="Mi portfolio"
@@ -25,7 +25,7 @@ export default function PortfolioSummaryPage() {
 						onRetry={page.retry}
 					/>
 				</div>
-			</PageLayout>
-		</div>
+			</div>
+		</PageLayout>
 	);
 }

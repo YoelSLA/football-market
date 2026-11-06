@@ -1,52 +1,60 @@
 @use "@/styles/abstracts" as ds;
 
 .page {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
 
+	// 4. 📦 Box Model
 	width: var(--pagination-control-size);
 	height: var(--pagination-control-size);
 	min-height: var(--pagination-control-size);
 	padding: 0;
 
-	border: 1px solid var(--pagination-page-border);
-	border-radius: var(--pagination-control-radius);
-
-	background: var(--pagination-page-background);
-	color: var(--pagination-page-color);
-
+	// 5. 🔤 Typography
 	font-size: var(--pagination-page-font-size);
 	font-weight: 600;
 	line-height: 1;
 
+	// 6. 🎨 Visual
+	border: 1px solid var(--pagination-page-border);
+	border-radius: var(--pagination-control-radius);
+	background-color: var(--pagination-page-background);
+	color: var(--pagination-page-color);
+
+	// 7. ⚙️ Behavior
 	cursor: pointer;
 
+	// 8. ✨ Animation
 	transition:
 		background-color 0.15s ease,
 		border-color 0.15s ease,
 		color 0.15s ease;
-
 	&:hover:not(.page_active) {
-		background: rgb(255 255 255 / 6%);
-		color: #ffffff;
+		// 6. 🎨 Visual
+		background-color: ds.$surface-glass-soft;
+		color: ds.$text-inverse;
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 		outline-offset: 1px;
 	}
 
 	&_active {
-		background: var(--pagination-active-background);
-		border-color: var(--pagination-active-border);
-		color: var(--pagination-active-color);
-
+		// 5. 🔤 Typography
 		font-weight: 700;
 
+		// 6. 🎨 Visual
+		background-color: var(--pagination-active-background);
+		border-color: var(--pagination-active-border);
+		color: var(--pagination-active-color);
 		&:hover {
-			background: var(--pagination-active-background);
+			// 6. 🎨 Visual
+			background-color: var(--pagination-active-background);
 			border-color: var(--pagination-active-border);
 			color: var(--pagination-active-color);
 		}

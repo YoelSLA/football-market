@@ -21,41 +21,44 @@ export default function PlayersPage() {
 		(page.playersPage?.totalPages ?? 0) > 0;
 
 	return (
-		<div className={styles.playersPage} aria-busy={page.isLoading}>
-			<PageLayout
-				header={
-					<PlayersToolbar
-						totalElements={page.playersPage?.totalElements}
-						searchText={page.searchText}
-						onSearchChange={page.setSearchText}
-						criteria={page.criteria}
-						options={page.options}
-						optionsLoading={page.optionsLoading}
-						optionsError={page.optionsError}
-						onChangeFilter={page.changeFilter}
-						onClearFilters={page.clearFilters}
-						onRetryOptions={page.retryOptions}
+		<PageLayout>
+			<div
+				className={`${styles.playersPage} ${showPagination ? styles.playersPage_withFloatingPagination : ""}`}
+				aria-busy={page.isLoading}
+			>
+				<PlayersToolbar
+					totalElements={page.playersPage?.totalElements}
+					searchText={page.searchText}
+					onSearchChange={page.setSearchText}
+					criteria={page.criteria}
+					options={page.options}
+					optionsLoading={page.optionsLoading}
+					optionsError={page.optionsError}
+					onChangeFilter={page.changeFilter}
+					onClearFilters={page.clearFilters}
+					onRetryOptions={page.retryOptions}
+				/>
+
+				<div className={styles.playersPage__scrollRegion}>
+					<PlayersCatalog
+						isLoading={page.isLoading}
+						errorMessage={page.errorMessage}
+						onRetry={page.retry}
+						players={players}
+						hasActiveFilters={hasActiveFilters}
 					/>
-				}
-				footer={
-					showPagination && page.playersPage ? (
+				</div>
+
+				{showPagination && page.playersPage && (
+					<div className={styles.playersPage__pagination}>
 						<Pagination
 							page={page.selectedPage}
 							totalPages={page.playersPage.totalPages}
 							onChange={page.selectPage}
 						/>
-					) : undefined
-				}
-				floatingFooter
-			>
-				<PlayersCatalog
-					isLoading={page.isLoading}
-					errorMessage={page.errorMessage}
-					onRetry={page.retry}
-					players={players}
-					hasActiveFilters={hasActiveFilters}
-				/>
-			</PageLayout>
-		</div>
+					</div>
+				)}
+			</div>
+		</PageLayout>
 	);
 }

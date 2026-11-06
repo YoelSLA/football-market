@@ -136,12 +136,24 @@ export default function PlayerQuoteEvolutionChart({
 			>
 				<defs>
 					<linearGradient id={`${gradientId}-line`} x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0%" stopColor="#7dd3fc" />
-						<stop offset="100%" stopColor="#38bdf8" />
+						<stop
+							className={styles.playerQuoteChart__lineStopStart}
+							offset="0%"
+						/>
+						<stop
+							className={styles.playerQuoteChart__lineStopEnd}
+							offset="100%"
+						/>
 					</linearGradient>
 					<linearGradient id={`${gradientId}-area`} x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0%" stopColor="#38bdf8" stopOpacity="0.28" />
-						<stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+						<stop
+							className={styles.playerQuoteChart__areaStopStart}
+							offset="0%"
+						/>
+						<stop
+							className={styles.playerQuoteChart__areaStopEnd}
+							offset="100%"
+						/>
 					</linearGradient>
 				</defs>
 
@@ -161,11 +173,11 @@ export default function PlayerQuoteEvolutionChart({
 					return (
 						<g key={value}>
 							<line
+								className={styles.playerQuoteChart__gridLine}
 								x1={PAD_LEFT}
 								y1={y}
 								x2={WIDTH - PAD_RIGHT}
 								y2={y}
-								stroke="#1e293b"
 								strokeWidth={1}
 								strokeDasharray="3 4"
 							/>
@@ -182,11 +194,11 @@ export default function PlayerQuoteEvolutionChart({
 				})}
 
 				<line
+					className={styles.playerQuoteChart__axisLine}
 					x1={PAD_LEFT}
 					y1={baselineY}
 					x2={WIDTH - PAD_RIGHT}
 					y2={baselineY}
-					stroke="#334155"
 					strokeWidth={1}
 				/>
 
@@ -236,12 +248,11 @@ export default function PlayerQuoteEvolutionChart({
 						point: TokenQuoteSeries["points"][0];
 					}) => (
 						<circle
+							className={styles.playerQuoteChart__marker}
 							key={point.date}
 							cx={x}
 							cy={y}
 							r={3}
-							fill="#0f172a"
-							stroke="#38bdf8"
 							strokeWidth={1.5}
 						/>
 					),
@@ -249,11 +260,10 @@ export default function PlayerQuoteEvolutionChart({
 
 				{last ? (
 					<circle
+						className={styles.playerQuoteChart__lastMarker}
 						cx={last.x}
 						cy={last.y}
 						r={4.5}
-						fill="#38bdf8"
-						stroke="#e0f2fe"
 						strokeWidth={1.5}
 					/>
 				) : null}

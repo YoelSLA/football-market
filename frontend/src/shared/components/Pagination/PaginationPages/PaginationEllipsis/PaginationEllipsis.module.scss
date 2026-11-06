@@ -1,17 +1,22 @@
 .ellipsis {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
 
+	// 4. 📦 Box Model
 	width: var(--pagination-ellipsis-width);
 	height: var(--pagination-control-size);
 
-	color: var(--pagination-ellipsis-color);
-
+	// 5. 🔤 Typography
 	font-size: 12px;
 	font-weight: 700;
 	line-height: 1;
 
+	// 6. 🎨 Visual
+	color: var(--pagination-ellipsis-color);
+
+	// 7. ⚙️ Behavior
 	user-select: none;
 }

@@ -1,25 +1,28 @@
 import { Link } from "react-router-dom";
+import { PageLayout } from "@/app/layouts";
 import LogoutButton from "./components/LogoutButton";
 import styles from "./HomePage.module.scss";
 
 export default function HomePage() {
 	return (
-		<main className={styles.homePage}>
-			<section className={styles.homePage__card}>
-				<p className={styles.homePage__brand}>FOOTBALL MARKET</p>
-				<span className={styles.homePage__badge}>Sesión verificada</span>
-				<h1>¡Ya estás dentro!</h1>
-				<p>
-					Has accedido correctamente a Football Market. Este es tu espacio de
-					bienvenida temporal.
-				</p>
-				<div className={styles.homePage__actions}>
-					<Link className={styles.homePage__playersLink} to="/players">
-						Ver jugadores
-					</Link>
-					<LogoutButton className={styles.homePage__logout} />
-				</div>
-			</section>
-		</main>
+		<PageLayout>
+			<main className={styles.homePage}>
+				<section className={styles.homePage__card}>
+					<p className={styles.homePage__brand}>FOOTBALL MARKET</p>
+					<span className={styles.homePage__badge}>Sesión verificada</span>
+					<h1>¡Ya estás dentro!</h1>
+					<p>
+						Has accedido correctamente a Football Market. Este es tu espacio de
+						bienvenida temporal.
+					</p>
+					<div className={styles.homePage__actions}>
+						<Link className={styles.homePage__playersLink} to="/players">
+							Ver jugadores
+						</Link>
+						<LogoutButton className={styles.homePage__logout} />
+					</div>
+				</section>
+			</main>
+		</PageLayout>
 	);
 }

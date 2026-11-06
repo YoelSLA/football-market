@@ -104,7 +104,7 @@ Ejemplos ilustrativos: véase el [Anexo B](examples.md#anexo-b).
 <a id="articulo-31"></a>
 ### Artículo 31.º — Cadena de altura
 
-Para garantizar un comportamiento consistente y prevenir regresiones visuales en las páginas que usan `PageLayout` y `PaginatedPageLayout`, se establecen las siguientes reglas:
+Para garantizar un comportamiento consistente y prevenir regresiones visuales en las páginas privadas que usan `PageLayout`, se establecen las siguientes reglas:
 
 Cadena de altura (height chain):
 
@@ -112,42 +112,42 @@ a) **MUST:** `AppLayout` fija la altura al viewport (`height: 100vh / 100dvh`) y
 
 b) **MUST:** `AppLayout__content` es un flex container columna con `flex: 1`, `min-height: 0`, `overflow: hidden`.
 
-c) **MUST:** Cada Page contenedora (wrapper) tiene `display: flex`, `flex: 1`, `flex-direction: column`, `min-height: 0`, `min-width: 0` para participar en la cadena de altura.
+c) **MUST:** `PageLayout` envuelve la totalidad de cada Page privada dentro de `AppLayout`, recibe únicamente `children` y participa en la cadena de altura con `display: flex`, `flex: 1`, `flex-direction: column`, `min-height: 0` y `min-width: 0`.
 
-d) **MUST:** `PageLayout` (`.layout`) recibe `flex: 1` y `flex-direction: column`; reparte el espacio entre header (flex-shrink: 0), content (flex: 1) y footer (flex-shrink: 0).
+d) **MUST NOT:** `PageLayout` impone regiones de cabecera, contenido o pie, variantes de composición, paginación ni semántica de documento. Cada Page define esas responsabilidades en su propio wrapper.
 
-e) **MUST:** `PageLayout__content` es el **único contenedor con scroll vertical** en desktop (`overflow-y: auto`, `min-height: 0`) y es transparente para heredar el fondo del wrapper de la Page.
+e) **MUST:** El wrapper de cada Page tiene `display: flex`, `flex: 1`, `flex-direction: column`, `min-height: 0` y `min-width: 0`. La Page define una única autoridad principal de scroll vertical cuando la necesita y puede mantener fuera de ella sus regiones fijas.
 
-f) **MUST NOT:** `PageLayout__content` tiene fondo propio.
+f) **MUST:** `PageLayout` limita el overflow en desktop para preservar el espacio asignado por `AppLayout`; en móvil libera ese límite para permitir el scroll documental natural.
 
 <a id="articulo-32"></a>
 ### Artículo 32.º — Fondos y responsabilidad visual
 
 a) **MUST:** El fondo de Page (sólido, gradiente o imagen) se declara en el wrapper de la Page.
 
-b) **MUST NOT:** `PageLayout` y sus elementos internos (header, content, footer) definen fondos propios; son transparentes para dejar ver el fondo del wrapper.
+b) **MUST NOT:** `PageLayout` define fondo propio. El wrapper y las regiones internas de cada Page conservan su responsabilidad visual.
 
-c) **MUST:** En modo compacto (`@include ds.compact()`), el footer flotante (paginación capsule) tiene su propio fondo semitransparente con `backdrop-filter`; no hereda el fondo de Page.
+c) **MUST:** El posicionamiento, la reserva de espacio y el fondo de una paginación pertenecen a la Page que la compone; no se implementan mediante variantes de `PageLayout`.
 
 Ejemplos ilustrativos de wrappers: véase el [Anexo A](examples.md#anexo-a).
 
 <a id="articulo-33"></a>
 ### Artículo 33.º — Scroll y responsive
 
-a) **MUST:** En desktop (≥ tablet), el scroll vertical vive exclusivamente en `PageLayout__content`. El documento no scrollea.
+a) **MUST:** En desktop (≥ tablet), el documento no scrollea. Cada Page que lo necesite define una única región vertical principal dentro de `PageLayout`; overlays y controles con desplazamiento independiente justificado no alteran esa autoridad.
 
-b) **MUST:** En móvil (< tablet), `PageLayout__content` pasa a `overflow: visible`; el scroll vuelve al documento natural.
+b) **MUST:** En móvil (< tablet), `PageLayout` y la región vertical principal de la Page liberan el overflow para que el scroll vuelva al documento natural.
 
-c) **MUST:** El modo compacto se activa solo con viewport ancho (`≥ $bp-catalog-compact`) **y** alto (`≥ $bp-compact-height`). El footer se ancla absolutamente y el contenido reserva su banda (`padding-bottom: $pagination-band`).
+c) **MUST:** Las Pages que posicionan una paginación en modo compacto son responsables de anclarla y reservar su banda sin superponer el contenido.
 
 <a id="articulo-34"></a>
 ### Artículo 34.º — Prevención de regresiones visuales
 
-a) **MUST NOT:** Se agrega `background-color` en `PageLayout__content` o en `.layout__header`/`.layout__footer`.
+a) **MUST NOT:** Se agrega fondo, padding o composición específica de una feature en `PageLayout`.
 
 b) **MUST NOT:** Se usan alturas fijas (`height: Xpx`) en contenedores de Page.
 
-c) **MUST:** Se utiliza la cadena de flex con `min-height: 0`. Al crear una nueva Page con `PageLayout` o `PaginatedPageLayout`, el wrapper sigue la cadena de altura (`flex: 1`, `flex-direction: column`, `min-height: 0`).
+c) **MUST:** Se utiliza la cadena de flex con `min-height: 0`. Al crear una nueva Page privada, `PageLayout` envuelve su wrapper completo y este sigue la cadena de altura (`flex: 1`, `flex-direction: column`, `min-height: 0`).
 
 d) **MUST:** Se verifica visualmente en desktop, tablet, móvil y modo compacto tras cualquier cambio en layouts compartidos.
 

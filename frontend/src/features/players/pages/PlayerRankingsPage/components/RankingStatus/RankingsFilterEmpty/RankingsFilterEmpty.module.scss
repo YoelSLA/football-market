@@ -1,47 +1,63 @@
 @use "@/styles/abstracts" as ds;
 
 .filterEmptyState {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 12px;
-
 	// Espaciado
+	// 4. 📦 Box Model
 	padding: 36px 20px;
-
 	// Apariencia
-	background: ds.$surface-finance-tile;
-	border: 1px dashed ds.$border-finance;
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-subtle;
+	border: 1px dashed ds.$border-panel;
 	border-radius: 10px;
-
 	&__text {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 14px;
-		color: ds.$text-on-dark-muted;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
 	}
 
 	&__button {
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
+
+		// 4. 📦 Box Model
 		padding: 7px 14px;
-		background: ds.$surface-nav-active;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		font-weight: 600;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-nav-active;
 		border: 1px solid ds.$accent-nav;
 		border-radius: 6px;
 		color: ds.$accent-nav;
-		font-size: 13px;
-		font-weight: 600;
-		cursor: pointer;
-		transition: background-color 0.15s ease;
 
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		// 8. ✨ Animation
+		transition: background-color 0.15s ease;
 		&:hover {
-			background: rgba(46, 213, 115, 0.25);
+			// 6. 🎨 Visual
+			background-color: ds.$status-filter-empty-badge;
 		}
 
 		&:focus-visible {
-			outline: 2px solid ds.$focus-ring-on-dark;
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
 		}
 	}
 }

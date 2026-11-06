@@ -1,58 +1,80 @@
 @use "@/styles/abstracts" as ds;
 
 .pageHeading {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 1.15rem;
-	min-width: 0;
-	color: ds.$text-portfolio-title;
 
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	// 6. 🎨 Visual
+	color: ds.$text-title-on-dark;
 	&__icon {
+		// 3. 🧩 Layout
 		display: grid;
 		place-items: center;
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 4rem;
 		height: 4rem;
-		border-radius: 0.65rem;
-		background: ds.$surface-finance-active;
-		color: ds.$accent-finance-green;
 
+		// 6. 🎨 Visual
+		border-radius: 0.65rem;
+		background-color: ds.$surface-control-active;
+		color: ds.$accent-gain;
 		svg {
+			// 4. 📦 Box Model
 			width: 2.4rem;
 			height: 2.4rem;
 		}
 	}
 
 	&__content {
-		min-width: 0;
+		// 3. 🧩 Layout
 		flex: 1;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 	}
 
 	&__title {
+		// 4. 📦 Box Model
 		margin: 0 0 0.35rem;
+
+		// 5. 🔤 Typography
 		font-size: clamp(1.3rem, 1.8vw, 1.75rem);
 		line-height: 1.25;
 		font-weight: 700;
 	}
 
 	&__description {
+		// 4. 📦 Box Model
 		margin: 0;
-		color: ds.$text-portfolio-label;
+
+		// 5. 🔤 Typography
 		font-size: 0.9rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	@media (max-width: 639px) {
+		// 3. 🧩 Layout
 		gap: 0.65rem;
-
 		&__description {
+			// 5. 🔤 Typography
 			font-size: 0.75rem;
 		}
 
 		&__icon {
+			// 4. 📦 Box Model
 			width: 2.7rem;
 			height: 2.7rem;
-
 			svg {
+				// 4. 📦 Box Model
 				width: 1.8rem;
 				height: 1.8rem;
 			}

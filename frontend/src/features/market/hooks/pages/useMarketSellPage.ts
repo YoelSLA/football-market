@@ -6,18 +6,26 @@ import { useSellQuantityForm } from "@/features/market/form";
 import { useSellTokensMutation } from "@/features/market/hooks/mutations";
 import { useMarketQuotesQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
-import type { MarketPlayer, SellResult } from "@/features/market/types";
-import { getApiError, getErrorCode } from "@/infrastructure/http";
+import { toMarketPlayer } from "@/features/market/market.mapper";
+import type { PlayerHolding, SellResult } from "@/features/market/types";
+import { useAllPlayersQuery } from "@/features/players";
+import {
+	portfolioQueryKeys,
+	usePortfolioAllOpenHoldingsQuery,
+} from "@/features/portfolio";
+import {
+	getApiError,
+	getErrorCode,
+	getErrorMessage,
+} from "@/infrastructure/http";
 import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 
-interface Holding extends MarketPlayer {
-	totalQuantity: number;
-	availableQuantity: number;
-	reservedQuantity: number;
-}
-
 interface Params {
-	players: Holding[];
+	players?: PlayerHolding[];
+	isLoadingPlayers?: boolean;
+	isPlayersError?: boolean;
+	errorMessage?: string | null;
+	onRetryPlayers?: () => void;
 	onSellSuccess?: (playerId: number) => void;
 	onRefreshHoldings?: (playerId: number) => void;
 }
@@ -44,20 +52,97 @@ function safeMessage(error: unknown): string {
 }
 
 export function useMarketSellPage({
-	players,
+	players: externalPlayers,
+	isLoadingPlayers: externalIsLoading,
+	isPlayersError: externalIsError,
+	errorMessage: externalErrorMessage,
+	onRetryPlayers,
 	onSellSuccess,
 	onRefreshHoldings,
-}: Params) {
+}: Params = {}) {
 	const queryClient = useQueryClient();
 	const { notifySellSuccess } = useMarketToast();
 	const authenticated = useAuthStore(
 		(state) =>
 			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
 	);
-	const [selectedPlayer, setSelectedPlayer] = useState<Holding | null>(null);
+
+	const playersQuery = useAllPlayersQuery();
+	const holdingsQuery = usePortfolioAllOpenHoldingsQuery();
+
+	const holdingsById = useMemo(
+		() =>
+			new Map(
+				(holdingsQuery.data?.positions ?? []).map((position) => [
+					position.playerId,
+					position,
+				]),
+			),
+		[holdingsQuery.data],
+	);
+
+	const internalHoldings: PlayerHolding[] = useMemo(() => {
+		return (playersQuery.data?.players ?? []).flatMap((player) => {
+			const holding = holdingsById.get(player.id);
+			return holding
+				? [
+						{
+							...toMarketPlayer(player),
+							totalQuantity: holding.quantity,
+							availableQuantity: holding.availableQuantity,
+							reservedQuantity: holding.reservedQuantity,
+						},
+					]
+				: [];
+		});
+	}, [playersQuery.data?.players, holdingsById]);
+
+	const allHoldings = externalPlayers ?? internalHoldings;
+
+	const refreshHoldings = useCallback(() => {
+		const prefix = portfolioQueryKeys.holdings("OPEN", 0, 1).slice(0, 2);
+		void queryClient.invalidateQueries({ queryKey: prefix });
+	}, [queryClient]);
+
+	const isLoadingPlayers =
+		externalIsLoading ??
+		(!externalPlayers &&
+			(playersQuery.isPending ||
+				playersQuery.isFetching ||
+				holdingsQuery.isPending ||
+				holdingsQuery.isFetching));
+
+	const isPlayersError =
+		externalIsError ??
+		(!externalPlayers && (playersQuery.isError || holdingsQuery.isError));
+
+	const playersErrorMessage =
+		externalErrorMessage !== undefined
+			? externalErrorMessage
+			: isPlayersError
+				? getErrorMessage(
+						playersQuery.error ?? holdingsQuery.error,
+						"No se pudo cargar el mercado y las tenencias.",
+					)
+				: null;
+
+	const retryPlayers = useCallback(() => {
+		if (onRetryPlayers) {
+			onRetryPlayers();
+		} else {
+			void playersQuery.refetch();
+			void holdingsQuery.refetch();
+		}
+	}, [onRetryPlayers, playersQuery, holdingsQuery]);
+
+	const [selectedPlayer, setSelectedPlayer] = useState<PlayerHolding | null>(
+		null,
+	);
 	useEffect(() => {
 		if (!selectedPlayer) return;
-		const refreshed = players.find((player) => player.id === selectedPlayer.id);
+		const refreshed = allHoldings.find(
+			(player) => player.id === selectedPlayer.id,
+		);
 		if (
 			refreshed &&
 			(refreshed.totalQuantity !== selectedPlayer.totalQuantity ||
@@ -65,7 +150,8 @@ export function useMarketSellPage({
 				refreshed.reservedQuantity !== selectedPlayer.reservedQuantity)
 		)
 			setSelectedPlayer(refreshed);
-	}, [players, selectedPlayer]);
+	}, [allHoldings, selectedPlayer]);
+
 	const [result, setResult] = useState<SellResult | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [searchInput, setSearchInput] = useState("");
@@ -84,16 +170,17 @@ export function useMarketSellPage({
 	const form = useSellQuantityForm(selectedPlayer?.availableQuantity ?? 0);
 	const mutation = useSellTokensMutation();
 	const quantity = form.validatedQuantity;
+
 	const leagues = useMemo(
-		() => [...new Set(players.map((player) => player.leagueName))].sort(),
-		[players],
+		() => [...new Set(allHoldings.map((player) => player.leagueName))].sort(),
+		[allHoldings],
 	);
 	const positions = useMemo(
-		() => [...new Set(players.map((player) => player.position))].sort(),
-		[players],
+		() => [...new Set(allHoldings.map((player) => player.position))].sort(),
+		[allHoldings],
 	);
 	const filteredPlayers = useMemo(() => {
-		const filtered = players.filter((player) => {
+		const filtered = allHoldings.filter((player) => {
 			const search = filters.search.trim().toLocaleLowerCase("es-AR");
 			return (
 				(!search ||
@@ -133,7 +220,8 @@ export function useMarketSellPage({
 			return direction === "desc" ? -comparison : comparison;
 		});
 		return filtered;
-	}, [players, filters]);
+	}, [allHoldings, filters]);
+
 	const pageSize = 12;
 	const totalPages = Math.ceil(filteredPlayers.length / pageSize);
 	const visiblePlayers = filteredPlayers.slice(
@@ -159,17 +247,20 @@ export function useMarketSellPage({
 				: null,
 		[selectedQuote, quantity],
 	);
+
 	const open = useCallback(
-		(player: Holding, trigger: HTMLElement | null) => {
+		(player: PlayerHolding, trigger: HTMLElement | null) => {
 			triggerRef.current = trigger;
 			setSelectedPlayer(player);
 			setResult(null);
 			setErrorMessage(null);
 			form.resetQuantity();
+			refreshHoldings();
 			onRefreshHoldings?.(player.id);
 		},
-		[form, onRefreshHoldings],
+		[form, onRefreshHoldings, refreshHoldings],
 	);
+
 	const close = useCallback(() => {
 		if (mutation.isPending || submittingRef.current) return;
 		setSelectedPlayer(null);
@@ -177,6 +268,7 @@ export function useMarketSellPage({
 		setErrorMessage(null);
 		form.resetQuantity();
 	}, [form, mutation.isPending]);
+
 	const confirm = useCallback(async () => {
 		if (
 			!authenticated ||
@@ -214,6 +306,10 @@ export function useMarketSellPage({
 			queryClient.invalidateQueries({
 				queryKey: marketQueryKeys.currentQuote(selectedPlayer.id),
 			});
+			queryClient.invalidateQueries({
+				queryKey: portfolioQueryKeys.summary,
+			});
+			refreshHoldings();
 			onSellSuccess?.(selectedPlayer.id);
 		} catch (error: unknown) {
 			setErrorMessage(
@@ -229,8 +325,10 @@ export function useMarketSellPage({
 				postStarted &&
 				!(axios.isAxiosError(error) && error.response?.status === 401) &&
 				getApiError(error)?.status !== 401
-			)
+			) {
+				refreshHoldings();
 				onRefreshHoldings?.(selectedPlayer.id);
+			}
 		} finally {
 			submittingRef.current = false;
 			setIsRevalidating(false);
@@ -245,11 +343,14 @@ export function useMarketSellPage({
 		mutation,
 		result,
 		queryClient,
+		refreshHoldings,
 		onSellSuccess,
 		onRefreshHoldings,
 		notifySellSuccess,
 	]);
+
 	return {
+		allHoldings,
 		players: visiblePlayers,
 		totalPlayers: filteredPlayers.length,
 		page,
@@ -314,5 +415,9 @@ export function useMarketSellPage({
 		open,
 		close,
 		confirm,
+		isLoadingPlayers,
+		isPlayersError,
+		playersErrorMessage,
+		retryPlayers,
 	};
 }

@@ -1,29 +1,347 @@
 @use "@/styles/abstracts" as ds;
 
 .playerStatisticsSummary {
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
+
+	// 4. 📦 Box Model
 	min-width: 0;
-	color: ds.$text-on-dark;
-	&__cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-	&__card { display: flex; gap: 18px; align-items: center; padding: 16px; border: 1px solid ds.$border-surface-dark; border-radius: 9px; background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to); min-width: 0;
-		h2 { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
-		strong { font-size: 29px; line-height: 1.15; font-variant-numeric: tabular-nums; }
-		small { display: block; font-size: 10px; margin-top: 3px; color: ds.$text-on-dark-muted; }
+
+	// 6. 🎨 Visual
+	color: ds.$text-body-on-dark;
+	&__cards {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 16px;
 	}
-	&__icon { display: grid; place-items: center; width: 62px; height: 62px; flex-shrink: 0; border-radius: 8px; color: ds.$accent-finance-cyan; background: ds.$surface-nav-active; border: 1px solid ds.$border-surface-dark; }
-	&__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
-	&__panel { min-width: 0; padding: 14px; border: 1px solid ds.$border-surface-dark; border-radius: 9px; background: linear-gradient(120deg, ds.$surface-finance-panel-from, ds.$surface-finance-panel-to);
-		h3 { display: flex; align-items: center; gap: 10px; font-size: 14px; margin: 0 0 14px; svg { color: ds.$accent-nav; flex-shrink: 0; } small { margin-left: auto; font-size: 10px; font-weight: 400; color: ds.$text-on-dark-muted; } }
+
+	&__card {
+		// 3. 🧩 Layout
+		display: flex;
+		gap: 18px;
+		align-items: center;
+
+		// 4. 📦 Box Model
+		padding: 16px;
+		min-width: 0;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 9px;
+		background-color: ds.$surface-panel-from;
+		h2 {
+			// 4. 📦 Box Model
+			margin: 0 0 6px;
+
+			// 5. 🔤 Typography
+			font-size: 14px;
+			font-weight: 500;
+		}
+
+		strong {
+			// 5. 🔤 Typography
+			font-size: 29px;
+			line-height: 1.15;
+			font-variant-numeric: tabular-nums;
+		}
+
+		small {
+			// 3. 🧩 Layout
+			display: block;
+
+			// 4. 📦 Box Model
+			margin-top: 3px;
+
+			// 5. 🔤 Typography
+			font-size: 10px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
 	}
-	&__rows { margin: 0; div { display: flex; gap: 12px; align-items: center; min-height: 29px; padding: 4px 0; border-bottom: 1px solid ds.$border-surface-dark; &:last-child { border: 0; } } dt { display: flex; align-items: center; gap: 9px; flex: 1; font-size: 12px; min-width: 0; svg { flex-shrink: 0; color: ds.$accent-finance-cyan; } } dd { margin: 0; text-align: right; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; } }
-	&__track { width: 26%; height: 8px; border-radius: 9px; background: ds.$surface-dark; overflow: hidden; span { display: block; height: 100%; border-radius: inherit; background: ds.$accent-nav; } }
-	&__pitch { position: relative; min-height: 150px; margin: 8px 12px 0; padding: 18px 8px 8px; border: 1px solid ds.$accent-nav; border-radius: 4px; background: linear-gradient(0deg, ds.$surface-nav-active, transparent); }
-	&__goal { position: absolute; inset: 0 0 auto; height: 16px; border: 3px solid ds.$text-on-dark-muted; background: repeating-linear-gradient(90deg, transparent, transparent 11px, ds.$border-surface-dark 12px); }
-	&__zones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 125px; div { display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 8px; border-right: 1px solid ds.$border-surface-dark; &:last-child { border: 0; } } strong { font-size: 22px; } span { font-size: 12px; } small { font-size: 10px; color: ds.$text-on-dark-muted; } }
-	&__rating { min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: ds.$accent-nav; strong { font-size: 38px; color: ds.$text-on-dark; } span { color: ds.$text-on-dark-muted; font-size: 12px; } }
-	&__note { color: ds.$text-on-dark-muted; font-size: 11px; margin: 8px 0; }
+
+	&__icon {
+		// 3. 🧩 Layout
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 62px;
+		height: 62px;
+
+		// 6. 🎨 Visual
+		border-radius: 8px;
+		color: ds.$accent-highlight;
+		background-color: ds.$surface-nav-active;
+		border: 1px solid ds.$border-subtle;
+	}
+
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 14px;
+		align-items: stretch;
+	}
+
+	&__panel {
+		// 4. 📦 Box Model
+		min-width: 0;
+		padding: 14px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 9px;
+		background-color: ds.$surface-panel-from;
+		h3 {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 10px;
+
+			// 4. 📦 Box Model
+			margin: 0 0 14px;
+
+			// 5. 🔤 Typography
+			font-size: 14px;
+			svg {
+				// 3. 🧩 Layout
+				flex-shrink: 0;
+
+				// 6. 🎨 Visual
+				color: ds.$accent-nav;
+			}
+
+			small {
+				// 4. 📦 Box Model
+				margin-left: auto;
+
+				// 5. 🔤 Typography
+				font-size: 10px;
+				font-weight: 400;
+
+				// 6. 🎨 Visual
+				color: ds.$text-muted-on-dark;
+			}
+		}
+	}
+
+	&__rows {
+		// 4. 📦 Box Model
+		margin: 0;
+		div {
+			// 3. 🧩 Layout
+			display: flex;
+			gap: 12px;
+			align-items: center;
+
+			// 4. 📦 Box Model
+			min-height: 29px;
+			padding: 4px 0;
+
+			// 6. 🎨 Visual
+			border-bottom: 1px solid ds.$border-subtle;
+			&:last-child {
+				// 6. 🎨 Visual
+				border: 0;
+			}
+		}
+
+		dt {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 9px;
+			flex: 1;
+
+			// 4. 📦 Box Model
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font-size: 12px;
+			svg {
+				// 3. 🧩 Layout
+				flex-shrink: 0;
+
+				// 6. 🎨 Visual
+				color: ds.$accent-highlight;
+			}
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			text-align: right;
+			font-size: 12px;
+			font-weight: 600;
+			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	&__track {
+		// 4. 📦 Box Model
+		width: 26%;
+		height: 8px;
+
+		// 6. 🎨 Visual
+		border-radius: 9px;
+		background-color: ds.$surface-dark;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+		span {
+			// 3. 🧩 Layout
+			display: block;
+
+			// 4. 📦 Box Model
+			height: 100%;
+
+			// 6. 🎨 Visual
+			border-radius: inherit;
+			background-color: ds.$accent-nav;
+		}
+	}
+
+	&__pitch {
+		// 2. 📍 Positioning
+		position: relative;
+
+		// 4. 📦 Box Model
+		min-height: 150px;
+		margin: 8px 12px 0;
+		padding: 18px 8px 8px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-nav;
+		border-radius: 4px;
+		background-color: ds.$surface-nav-active;
+	}
+
+	&__goal {
+		// 2. 📍 Positioning
+		position: absolute;
+		inset: 0 0 auto;
+
+		// 4. 📦 Box Model
+		height: 16px;
+
+		// 6. 🎨 Visual
+		border: 3px solid ds.$text-muted-on-dark;
+		background-color: ds.$surface-transparent;
+	}
+
+	&__zones {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+
+		// 4. 📦 Box Model
+		min-height: 125px;
+		div {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-direction: column;
+			gap: 8px;
+
+			// 5. 🔤 Typography
+			text-align: center;
+
+			// 6. 🎨 Visual
+			border-right: 1px solid ds.$border-subtle;
+			&:last-child {
+				// 6. 🎨 Visual
+				border: 0;
+			}
+		}
+
+		strong {
+			// 5. 🔤 Typography
+			font-size: 22px;
+		}
+
+		span {
+			// 5. 🔤 Typography
+			font-size: 12px;
+		}
+
+		small {
+			// 5. 🔤 Typography
+			font-size: 10px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__rating {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-height: 130px;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-nav;
+		strong {
+			// 5. 🔤 Typography
+			font-size: 38px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-body-on-dark;
+		}
+
+		span {
+			// 5. 🔤 Typography
+			font-size: 12px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__note {
+		// 4. 📦 Box Model
+		margin: 8px 0;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
 }
-@include ds.down(ds.$bp-tablet) { .playerStatisticsSummary { &__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } &__grid { grid-template-columns: minmax(0, 1fr); } } }
-@media (max-width: 480px) { .playerStatisticsSummary { &__cards { grid-template-columns: minmax(0, 1fr); } } }
+
+@include ds.down(ds.$bp-tablet) {
+	.playerStatisticsSummary {
+		&__cards {
+			// 3. 🧩 Layout
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+}
+
+@media (max-width: 480px) {
+	.playerStatisticsSummary {
+		&__cards {
+			// 3. 🧩 Layout
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+}

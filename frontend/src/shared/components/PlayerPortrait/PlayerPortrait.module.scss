@@ -1,38 +1,54 @@
 .playerPortrait {
+	// 3. 🧩 Layout
 	display: block;
-	max-width: 100%;
 
+	// 4. 📦 Box Model
+	max-width: 100%;
 	&_cover {
+		// 4. 📦 Box Model
 		object-fit: cover;
 		object-position: center top;
 	}
 
 	&_contain {
+		// 4. 📦 Box Model
 		object-fit: contain;
 		object-position: center bottom;
 	}
 
 	&_sm {
+		// 4. 📦 Box Model
 		width: 24px;
 		height: 24px;
+
+		// 6. 🎨 Visual
 		border-radius: 4px;
 	}
 
 	&_md {
+		// 4. 📦 Box Model
 		width: 48px;
 		height: 48px;
+
+		// 6. 🎨 Visual
 		border-radius: 8px;
 	}
 
 	&_lg {
+		// 4. 📦 Box Model
 		width: 64px;
 		height: 64px;
+
+		// 6. 🎨 Visual
 		border-radius: 12px;
 	}
 
 	&_xl {
+		// 4. 📦 Box Model
 		width: 96px;
 		height: 96px;
+
+		// 6. 🎨 Visual
 		border-radius: 12px;
 	}
 }
