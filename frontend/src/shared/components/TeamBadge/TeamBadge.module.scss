@@ -1,0 +1,36 @@
+@use "@/styles/abstracts" as ds;
+
+.teamBadge {
+	// 3. 🧩 Layout
+	display: inline-block;
+	vertical-align: middle;
+
+	// 4. 📦 Box Model
+	width: 2rem;
+	height: 2.3rem;
+	object-fit: contain;
+}
+
+.teamBadge_placeholder {
+	// 3. 🧩 Layout
+	display: inline-grid;
+	place-items: center;
+	vertical-align: middle;
+
+	// 4. 📦 Box Model
+	width: 2rem;
+	height: 2.3rem;
+
+	// 5. 🔤 Typography
+	font-size: 1.3rem;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-subtle;
+	color: ds.$text-muted-on-dark;
+	border-radius: 0.25rem 0.25rem 50% 50%;
+
+	// 7. ⚙️ Behavior
+	opacity: 0.8;
+	user-select: none;
+}
+

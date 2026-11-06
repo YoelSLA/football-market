@@ -1,0 +1,56 @@
+@use "@/styles/abstracts" as ds;
+.tableMedal {
+	// 3. 🧩 Layout
+	display: block;
+	flex-shrink: 0;
+	&__ring {
+		// 6. 🎨 Visual
+		stroke: ds.$medal-ring-highlight;
+	}
+
+	&__text {
+		// 5. 🔤 Typography
+		font-size: 10px;
+		font-weight: 900;
+		font-family: system-ui, -apple-system, sans-serif;
+
+		// 6. 🎨 Visual
+		fill: ds.$text-inverse;
+	}
+
+	&_rank1 {
+		.tableMedal__circle {
+			// 6. 🎨 Visual
+			fill: ds.$medal-gold-circle;
+		}
+
+		.tableMedal__ribbon {
+			// 6. 🎨 Visual
+			fill: ds.$medal-gold-ribbon;
+		}
+	}
+
+	&_rank2 {
+		.tableMedal__circle {
+			// 6. 🎨 Visual
+			fill: ds.$medal-silver-circle;
+		}
+
+		.tableMedal__ribbon {
+			// 6. 🎨 Visual
+			fill: ds.$medal-silver-ribbon;
+		}
+	}
+
+	&_rank3 {
+		.tableMedal__circle {
+			// 6. 🎨 Visual
+			fill: ds.$medal-bronze-circle;
+		}
+
+		.tableMedal__ribbon {
+			// 6. 🎨 Visual
+			fill: ds.$medal-bronze-ribbon;
+		}
+	}
+}

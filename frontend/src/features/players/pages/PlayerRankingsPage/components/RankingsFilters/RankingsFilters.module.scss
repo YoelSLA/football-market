@@ -1,164 +1,223 @@
 @use "@/styles/abstracts" as ds;
 
 .filtersBar {
+	// 3. 🧩 Layout
 	display: grid;
 	grid-template-columns: minmax(0, 990px) 320px 320px 170px;
 	align-items: center;
 	gap: 24px;
 	flex: 0 0 60px;
+
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 	height: 60px;
-	background: #071928;
-	border-radius: 8px;
 	padding: 0 16px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-data-table;
+	border-radius: 8px;
 }
 
 .searchContainer {
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 }
 
 .searchInputWrapper {
+	// 2. 📍 Positioning
 	position: relative;
+
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
+
+	// 4. 📦 Box Model
 	width: 100%;
 }
 
 .searchInput {
+	// 4. 📦 Box Model
 	height: 34px;
 	width: 100%;
 	padding: 0 12px;
-	border-radius: 6px;
-	background: #05121e;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	color: #ffffff;
-	font-size: 13px;
-	transition: border-color 0.15s ease;
 
+	// 5. 🔤 Typography
+	font-size: 13px;
+
+	// 6. 🎨 Visual
+	border-radius: 6px;
+	background-color: ds.$surface-data-control;
+	border: 1px solid ds.$border-glass;
+	color: ds.$text-primary-on-dark;
+
+	// 8. ✨ Animation
+	transition: border-color 0.15s ease;
 	&::placeholder {
-		color: #7a91a6;
+		// 6. 🎨 Visual
+		color: ds.$text-header-table;
 	}
 
 	&:focus {
+		// 6. 🎨 Visual
 		outline: none;
-		border-color: #00c988;
-		box-shadow: 0 0 0 1px #00c988;
+		border-color: ds.$action-selected-accent;
+		box-shadow: 0 0 0 1px ds.$action-selected-accent;
 	}
 }
 
 .filterControl {
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+
+	// 4. 📦 Box Model
 	min-width: 0;
 }
 
 .filterLabel {
+	// 5. 🔤 Typography
 	font-size: 10px;
 	font-weight: 500;
-	color: #7a91a6;
 	letter-spacing: 0.02em;
+
+	// 6. 🎨 Visual
+	color: ds.$text-header-table;
 }
 
 .selectWrapper {
+	// 2. 📍 Positioning
 	position: relative;
 }
 
 .select {
+	// 4. 📦 Box Model
 	height: 34px;
-	background: #05121e;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	color: #ffffff;
 	padding: 0 32px 0 10px;
-	border-radius: 6px;
-	font-size: 13px;
-	cursor: pointer;
 	width: 100%;
 	min-width: 0;
-	transition: border-color 0.15s ease;
 
+	// 5. 🔤 Typography
+	font-size: 13px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-data-control;
+	border: 1px solid ds.$border-glass;
+	color: ds.$text-primary-on-dark;
+	border-radius: 6px;
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+
+	// 8. ✨ Animation
+	transition: border-color 0.15s ease;
 	&:focus {
+		// 6. 🎨 Visual
 		outline: none;
-		border-color: #00c988;
-		box-shadow: 0 0 0 1px #00c988;
+		border-color: ds.$action-selected-accent;
+		box-shadow: 0 0 0 1px ds.$action-selected-accent;
 	}
 
 	option {
-		background: #05121e;
-		color: #ffffff;
+		// 6. 🎨 Visual
+		background-color: ds.$surface-data-control;
+		color: ds.$text-primary-on-dark;
 	}
 }
 
 .actionsContainer {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
+
+	// 4. 📦 Box Model
 	min-width: 0;
 }
 
 .clearButton {
-	height: 34px;
+	// 3. 🧩 Layout
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.12);
-	color: #8fa2b4;
+
+	// 4. 📦 Box Model
+	height: 34px;
 	padding: 0 14px;
-	border-radius: 6px;
+
+	// 5. 🔤 Typography
 	font-size: 13px;
 	font-weight: 500;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-glass-subtle;
+	border: 1px solid ds.$border-glass-subtle;
+	color: ds.$text-auxiliary-on-dark;
+	border-radius: 6px;
+
+	// 7. ⚙️ Behavior
 	cursor: pointer;
+
+	// 8. ✨ Animation
 	transition: all 0.15s ease;
-
 	&_active {
-		color: #ffffff;
-		border-color: rgba(255, 255, 255, 0.25);
-
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+		border-color: ds.$border-glass-strong;
 		&:hover {
-			background: rgba(255, 255, 255, 0.08);
-			border-color: #ffffff;
+			// 6. 🎨 Visual
+			background-color: ds.$surface-glass-interactive;
+			border-color: ds.$text-primary-on-dark;
 		}
 	}
 
 	&:disabled {
+		// 7. ⚙️ Behavior
 		opacity: 0.35;
 		cursor: not-allowed;
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 	}
 }
 
 @media (max-width: 768px) {
 	.filtersBar {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		align-items: stretch;
 		gap: 12px;
-		height: auto;
 		flex-basis: auto;
+
+		// 4. 📦 Box Model
+		height: auto;
 		padding-block: 8px;
 	}
 
 	.filterControl {
+		// 4. 📦 Box Model
 		width: 100%;
-
 		.select {
+			// 4. 📦 Box Model
 			width: 100%;
 		}
 	}
 
 	.actionsContainer {
+		// 4. 📦 Box Model
 		width: 100%;
 		margin-left: 0;
-
 		.clearButton {
-			width: 100%;
+			// 3. 🧩 Layout
 			justify-content: center;
+
+			// 4. 📦 Box Model
+			width: 100%;
 		}
 	}
 }

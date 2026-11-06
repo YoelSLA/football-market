@@ -1,0 +1,430 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsCatalog {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: 285px minmax(0, 1fr);
+	gap: 16px;
+	align-items: start;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	// 6. 🎨 Visual
+	color: ds.$text-body-on-dark;
+	&__filters,
+	&__panel {
+		// 4. 📦 Box Model
+		padding: 14px;
+		min-width: 0;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 8px;
+		background-color: ds.$surface-panel-from;
+	}
+
+	&__filters {
+		header {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+
+			// 4. 📦 Box Model
+			margin-bottom: 14px;
+			button {
+				// 5. 🔤 Typography
+				font-size: 11px;
+
+				// 6. 🎨 Visual
+				color: ds.$accent-highlight;
+			}
+		}
+
+		h2 {
+			// 3. 🧩 Layout
+			display: flex;
+			gap: 10px;
+
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 16px;
+			svg {
+				// 6. 🎨 Visual
+				color: ds.$accent-highlight;
+			}
+		}
+
+		h3 {
+			// 4. 📦 Box Model
+			margin: 20px 0 8px;
+
+			// 5. 🔤 Typography
+			font-size: 13px;
+		}
+
+		button {
+			// 4. 📦 Box Model
+			padding: 5px;
+
+			// 5. 🔤 Typography
+			text-align: left;
+			font: inherit;
+			font-size: 12px;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-transparent;
+			border: 0;
+			color: inherit;
+
+			// 7. ⚙️ Behavior
+			cursor: pointer;
+		}
+
+		> button {
+			// 4. 📦 Box Model
+			width: 100%;
+			padding: 9px;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-subtle;
+			border-radius: 5px;
+		}
+	}
+
+	&__search {
+		// 3. 🧩 Layout
+		display: flex;
+		gap: 9px;
+		align-items: center;
+
+		// 4. 📦 Box Model
+		padding: 9px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 5px;
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+		}
+
+		input {
+			// 4. 📦 Box Model
+			width: 100%;
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font: inherit;
+			font-size: 12px;
+
+			// 6. 🎨 Visual
+			border: 0;
+			outline: 0;
+			background-color: ds.$surface-transparent;
+			color: inherit;
+		}
+
+		&:focus-within {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+		}
+	}
+
+	&__options {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+
+		// 4. 📦 Box Model
+		margin-top: 8px;
+		button {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 10px;
+
+			// 4. 📦 Box Model
+			width: 100%;
+			min-height: 29px;
+
+			// 6. 🎨 Visual
+			border-radius: 4px;
+			svg {
+				// 6. 🎨 Visual
+				color: ds.$accent-highlight;
+			}
+
+			small {
+				// 4. 📦 Box Model
+				margin-left: auto;
+				min-width: 23px;
+				padding: 2px 5px;
+
+				// 5. 🔤 Typography
+				text-align: center;
+
+				// 6. 🎨 Visual
+				background-color: ds.$surface-dark;
+				border-radius: 20px;
+			}
+
+			&[aria-pressed="true"] {
+				// 6. 🎨 Visual
+				color: ds.$accent-nav;
+				background-color: ds.$surface-nav-active;
+			}
+		}
+	}
+
+	&__check {
+		// 3. 🧩 Layout
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 16px;
+		height: 16px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-strong;
+		border-radius: 3px;
+	}
+
+	&__heading {
+		// 3. 🧩 Layout
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 10px;
+
+		// 4. 📦 Box Model
+		margin: 0 0 12px;
+		h2 {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 12px;
+
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 21px;
+			svg {
+				// 6. 🎨 Visual
+				color: ds.$accent-highlight;
+			}
+		}
+
+		p {
+			// 4. 📦 Box Model
+			margin: 5px 0 0;
+
+			// 5. 🔤 Typography
+			font-size: 12px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+
+		> span {
+			// 5. 🔤 Typography
+			font-size: 12px;
+			white-space: nowrap;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-nav;
+		}
+	}
+
+	&__table {
+		// 3. 🧩 Layout
+		border-collapse: collapse;
+		table-layout: fixed;
+
+		// 4. 📦 Box Model
+		width: 100%;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		thead {
+			// 6. 🎨 Visual
+			background-color: ds.$surface-nav-active;
+			th {
+				// 4. 📦 Box Model
+				padding: 11px 10px;
+
+				// 5. 🔤 Typography
+				text-align: left;
+			}
+		}
+
+		th:first-child {
+			// 4. 📦 Box Model
+			width: 38px;
+		}
+
+		th:nth-child(2) {
+			// 4. 📦 Box Model
+			width: 37%;
+		}
+
+		th:last-child {
+			// 4. 📦 Box Model
+			width: 110px;
+
+			// 5. 🔤 Typography
+			text-align: right;
+		}
+
+		tbody {
+			tr {
+				// 6. 🎨 Visual
+				border-bottom: 1px solid ds.$border-subtle;
+				&:nth-child(even) {
+					// 6. 🎨 Visual
+					background-color: ds.$surface-nav-active;
+				}
+			}
+
+			th {
+				// 5. 🔤 Typography
+				font-weight: 400;
+				text-align: left;
+				svg {
+					// 3. 🧩 Layout
+					vertical-align: middle;
+
+					// 4. 📦 Box Model
+					margin-right: 10px;
+
+					// 6. 🎨 Visual
+					color: ds.$accent-highlight;
+				}
+			}
+
+			td,
+			th {
+				// 4. 📦 Box Model
+				padding: 8px 10px;
+
+				// 5. 🔤 Typography
+				overflow-wrap: anywhere;
+			}
+
+			td:last-child {
+				// 5. 🔤 Typography
+				text-align: right;
+				font-weight: 600;
+				font-variant-numeric: tabular-nums;
+			}
+		}
+	}
+
+	&__caption {
+		// 4. 📦 Box Model
+		padding: 0 0 10px;
+
+		// 5. 🔤 Typography
+		text-align: left;
+		font-size: 11px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__badge {
+		// 3. 🧩 Layout
+		display: inline-block;
+
+		// 4. 📦 Box Model
+		padding: 2px 7px;
+
+		// 6. 🎨 Visual
+		border-radius: 4px;
+		background-color: ds.$surface-nav-active;
+		color: ds.$accent-highlight;
+	}
+
+	&__absent {
+		// 5. 🔤 Typography
+		font-style: italic;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	button:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+}
+
+@media (max-width: 1100px) {
+	.playerStatisticsCatalog {
+		// 3. 🧩 Layout
+		grid-template-columns: 220px minmax(0, 1fr);
+		&__table {
+			th:nth-child(2) {
+				// 4. 📦 Box Model
+				width: 30%;
+			}
+
+			th:last-child {
+				// 4. 📦 Box Model
+				width: 90px;
+			}
+		}
+	}
+}
+
+@include ds.down(ds.$bp-tablet) {
+	.playerStatisticsCatalog {
+		// 3. 🧩 Layout
+		grid-template-columns: minmax(0, 1fr);
+		&__filters {
+			// 4. 📦 Box Model
+			padding: 12px;
+		}
+
+		&__options {
+			// 3. 🧩 Layout
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		&__heading {
+			// 3. 🧩 Layout
+			flex-wrap: wrap;
+		}
+
+		&__table {
+			// 5. 🔤 Typography
+			font-size: 11px;
+			th:first-child {
+				// 4. 📦 Box Model
+				width: 22px;
+			}
+
+			th:last-child {
+				// 4. 📦 Box Model
+				width: 60px;
+			}
+
+			thead th,
+			tbody td,
+			tbody th {
+				// 4. 📦 Box Model
+				padding: 7px 4px;
+			}
+		}
+	}
+}

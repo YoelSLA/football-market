@@ -1,0 +1,69 @@
+@use "@/styles/abstracts" as ds;
+
+.sellCatalog {
+	// 4. 📦 Box Model
+	min-height: 0;
+	min-width: 0;
+	padding-right: .2rem;
+
+	// 7. ⚙️ Behavior
+	overflow: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: ds.$border-panel ds.$surface-page;
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: .85rem;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__status {
+		// 3. 🧩 Layout
+		display: grid;
+		place-items: center;
+
+		// 4. 📦 Box Model
+		min-height: 16rem;
+		padding: 1.5rem;
+
+		// 5. 🔤 Typography
+		text-align: center;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+}
+
+@media (max-width: 1099px) {
+	.sellCatalog {
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+}
+
+@media (max-width: 850px) {
+	.sellCatalog {
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: 1fr;
+		}
+	}
+}
+
+@media (max-width: 639px) {
+	.sellCatalog {
+		// 7. ⚙️ Behavior
+		overflow: visible;
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: 1fr;
+		}
+	}
+}
+

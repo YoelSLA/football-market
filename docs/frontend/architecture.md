@@ -86,7 +86,7 @@ Estas carpetas representan posibilidades, no una estructura obligatoria.
 
 **MUST:** La creación o división de Components y demás elementos se rige por las [reglas arquitectónicas comunes](../architecture.md) §1: responde a responsabilidades, cohesión, reutilización o necesidad arquitectónica, no a cantidad de líneas ni tamaño visual.
 
-**MUST:** `app` se reserva para composición y configuración global: router, layouts y providers globales, store global, configuración global de TanStack Query y composición entre features. `main.tsx` es un bootstrap mínimo. Configuraciones globales como `queryClient` pertenecen conceptualmente a `app`, no a la raíz de `src` como contenedor arbitrario.
+**MUST:** `app` se reserva para composición y configuración global: router, layouts y providers globales, store global, configuración global de TanStack Query y composición transversal de la aplicación. `main.tsx` es un bootstrap mínimo. Configuraciones globales como `queryClient` pertenecen conceptualmente a `app`, no a la raíz de `src` como contenedor arbitrario.
 
 **MUST NOT:** `app` contiene lógica específica de una feature.
 
@@ -112,15 +112,19 @@ Estas carpetas representan posibilidades, no una estructura obligatoria.
 **MUST:** Cada feature expone explícitamente su API pública mediante `index.ts`, aunque actualmente no tenga consumidores externos. Un consumidor externo importa exclusivamente desde esa API y no desde archivos internos. La API pública exporta únicamente lo que corresponda exponer; no obliga a publicar elementos internos.
 
 <a id="articulo-7"></a>
-### Artículo 7.º — Aislamiento entre features
+### Artículo 7.º — Dependencias controladas entre features
 
-**MUST NOT:** Una feature depende directa o indirectamente de otra feature, incluso mediante la API pública de esta última.
+**MAY:** Una feature consume APIs públicas expuestas por otra feature exclusivamente a través del `index.ts` raíz de esta última.
 
-**MUST:** La composición de múltiples features se realiza desde `app` utilizando sus APIs públicas.
+**MUST NOT:** Una feature accede a archivos internos o subcarpetas (*deep imports*) de otra feature.
 
-**MAY:** `app` compone múltiples features.
+**MUST NOT:** Se introducen dependencias circulares directas o indirectas entre features. El grafo de dependencias entre features debe ser estrictamente acíclico.
 
-**MUST NOT:** `app` absorbe su lógica interna.
+**MUST NOT:** Una feature invade responsabilidades, altera el estado privado ni modifica la lógica interna de la feature consumida.
+
+**MAY:** La coordinación entre múltiples features perteneciente al caso de uso de una página o flujo de negocio se realiza directamente en la feature responsable (mediante su Page, Page Hook o Mapper).
+
+**MUST:** `app` se reserva para router global, providers y layouts globales, store global y composición transversal a nivel de aplicación que no pertenezca conceptualmente a ninguna feature individual.
 
 <a id="articulo-8"></a>
 ### Artículo 8.º — APIs de carpetas modulares
@@ -169,7 +173,7 @@ La correspondencia siguiente identifica la única ubicación de cada artículo. 
 | <a id="artículo-4º--delegación-visual-y-components-locales"></a><a id="articulo-4"></a>4.º | [Delegación visual y Components locales](architecture/presentation.md#articulo-4) |
 | <a id="artículo-5º--imports-del-design-system"></a><a id="articulo-5"></a>5.º | [Imports del Design System](architecture/presentation.md#articulo-5) |
 | 6.º | [API pública de features](#articulo-6) |
-| 7.º | [Aislamiento entre features](#articulo-7) |
+| 7.º | [Dependencias controladas entre features](#articulo-7) |
 | 8.º | [APIs de carpetas modulares](#articulo-8) |
 | 9.º | [APIs de shared](#articulo-9) |
 | <a id="artículo-10º--responsabilidades-de-page"></a><a id="articulo-10"></a>10.º | [Responsabilidades de Page](architecture/roles.md#articulo-10) |
@@ -237,7 +241,7 @@ Estas observaciones son informativas: no crean permisos, excepciones ni preceden
 | --- | --- |
 | [10.º](architecture/roles.md#articulo-10) y [41.º](architecture/dependencies.md#articulo-41) | **Pendiente de decisión humana.** La Page sin Page Hook utiliza los Hooks correspondientes según el texto, pero su fila solo enumera Page Hook o Navigation Hook. No se amplía ni restringe esa fila. |
 | [4.º](architecture/presentation.md#articulo-4) y [11.º](architecture/roles.md#articulo-11) | El primero trata específicamente Components locales de Page y prohíbe conectar Hooks; el segundo permite Hooks al Component general. Se conservan ambos alcances sin extender el permiso general a los locales. Si se pretende permitir Hooks en estos últimos, requiere decisión humana. |
-| [31.º](architecture/presentation.md#articulo-31) y [33.º](architecture/presentation.md#articulo-33) | **Pendiente de precisar el alcance responsive.** El texto global de altura/overflow convive con el scroll natural móvil. El código de `AppLayout` cambia a altura automática y overflow visible bajo `$bp-mobile`, mientras `PageLayout` cambia bajo `$bp-tablet`; no se inventa un breakpoint común ni se modifica ninguna condición. |
-| [32.º](architecture/presentation.md#articulo-32) y [34.º](architecture/presentation.md#articulo-34) | **Pendiente de precisar la excepción.** La prohibición de fondos internos y de `background-color` convive con el fondo propio del footer compacto. No se redefine el elemento al que corresponde ese fondo. |
+| [31.º](architecture/presentation.md#articulo-31) y [33.º](architecture/presentation.md#articulo-33) | `PageLayout` limita el espacio disponible en desktop y libera el overflow en móvil; cada Page define su única región vertical principal y también la libera bajo el breakpoint responsive que le corresponde. |
+| [32.º](architecture/presentation.md#articulo-32) y [34.º](architecture/presentation.md#articulo-34) | `PageLayout` no define fondos ni regiones internas. El wrapper de la Page posee su fondo y la Page que compone una paginación posee su posicionamiento, reserva de espacio y apariencia. |
 | [Ubicación de layouts](architecture/implementation.md#ubicacion-de-layouts) | **Descripción actualizada.** `AuthGuard` está en `app/layouts/AuthGuard`. Coexisten dos `AuthLayout`: el global recuperado en `app/layouts/AuthLayout`, que contiene un `Outlet` y no está conectado al router actual, y el específico de auth en `features/auth/components/AuthLayout`, utilizado por login y registro con título, descripción, contenido y panel visual. Son implementaciones distintas; no se eliminan ni se intercambian para ajustar la documentación. |
 | [Colores literales](architecture/implementation.md#estilos-de-la-implementacion) | La referencia previa a una sección de inconsistencias de SPEC-005 tiene una deuda de trazabilidad ya registrada en [TD-018](../TECHNICAL_DEBT.md#td-018--colores-literales-en-los-módulos-de-estilo-de-componentes). Se conserva como antecedente, sin declararla resuelta. |

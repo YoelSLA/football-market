@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import type { PlayerRankingItem, RankingMode } from "@/features/players/types";
-import genericPlayerImage from "@/shared/assets/Player Generic-Icon.png";
+import {
+	NationalityFlag,
+	PlayerPortrait,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./RankingsTable.module.scss";
 import TableMedal from "./TableMedal";
 
@@ -89,15 +93,11 @@ export default function RankingsTable({ items, mode }: Props) {
 									className={styles.playerLink}
 									title={`Ver detalle de ${player.playerName}`}
 								>
-									<img
-										src={player.playerAvatar || genericPlayerImage}
+									<PlayerPortrait
+										src={player.playerAvatar}
+										name={player.playerName}
 										alt=""
 										className={styles.playerAvatar}
-										loading="lazy"
-										onError={(e) => {
-											(e.currentTarget as HTMLImageElement).src =
-												genericPlayerImage;
-										}}
 									/>
 									<span className={styles.playerName}>{player.playerName}</span>
 								</Link>
@@ -105,21 +105,12 @@ export default function RankingsTable({ items, mode }: Props) {
 
 							<td className={styles.td_team}>
 								<div className={styles.teamContainer}>
-									{player.teamBadge ? (
-										<img
-											src={player.teamBadge}
-											alt=""
-											className={styles.teamBadge}
-											loading="lazy"
-										/>
-									) : (
-										<span
-											className={styles.badgePlaceholder}
-											aria-hidden="true"
-										>
-											◇
-										</span>
-									)}
+									<TeamBadge
+										src={player.teamBadge}
+										teamName={player.teamName}
+										leagueName={player.leagueName}
+										className={styles.teamBadge}
+									/>
 									<span className={styles.teamName}>{player.teamName}</span>
 								</div>
 							</td>
@@ -127,11 +118,10 @@ export default function RankingsTable({ items, mode }: Props) {
 							<td className={styles.td_league}>
 								<div className={styles.leagueContainer}>
 									{player.leagueFlag && (
-										<img
+										<NationalityFlag
 											src={player.leagueFlag}
-											alt=""
+											nationality={player.leagueName}
 											className={styles.leagueFlag}
-											loading="lazy"
 										/>
 									)}
 									<span className={styles.leagueName}>{player.leagueName}</span>

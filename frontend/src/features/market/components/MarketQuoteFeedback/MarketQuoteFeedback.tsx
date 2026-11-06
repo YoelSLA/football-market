@@ -1,5 +1,6 @@
 import type { MarketQuoteStatus } from "@/features/market/types";
 import { getMarketQuoteMessage } from "@/features/market/utils";
+import { Button } from "@/shared/components";
 import styles from "./MarketQuoteFeedback.module.scss";
 
 interface Props {
@@ -20,9 +21,9 @@ export default function MarketQuoteFeedback({
 		<div className={styles.marketQuoteFeedback}>
 			<p role="status">{getMarketQuoteMessage(status, httpStatus)}</p>
 			{canRetry && (
-				<button type="button" onClick={onRetry}>
+				<Button unstyled type="button" onClick={onRetry}>
 					Reintentar cotización
-				</button>
+				</Button>
 			)}
 		</div>
 	);

@@ -1,0 +1,158 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioValueRow {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+
+	// 4. 📦 Box Model
+	padding: 8px 0;
+	&__label {
+		// 5. 🔤 Typography
+		font-size: 13px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-row-label-on-dark;
+	}
+
+	&__value {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 14px;
+		font-weight: 700;
+		text-align: right;
+
+		// 6. 🎨 Visual
+		color: ds.$text-value-on-dark;
+	}
+
+	&_positive &__value {
+		// 6. 🎨 Visual
+		color: ds.$accent-total;
+	}
+
+	&_negative &__value {
+		// 6. 🎨 Visual
+		color: ds.$state-loss;
+	}
+
+	&__icon {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 24px;
+		height: 24px;
+
+		// 6. 🎨 Visual
+		stroke-width: 2.25;
+		&_cyan {
+			// 6. 🎨 Visual
+			color: ds.$accent-highlight;
+		}
+
+		&_violet {
+			// 6. 🎨 Visual
+			color: ds.$accent-investment;
+		}
+
+		&_green {
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
+		}
+
+		&_gold {
+			// 6. 🎨 Visual
+			color: ds.$state-caution;
+		}
+	}
+
+	&__iconFrame {
+		// 3. 🧩 Layout
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 28px;
+		height: 28px;
+
+		// 6. 🎨 Visual
+		border-radius: 6px;
+		&_tinted {
+			&.portfolioValueRow__icon_cyan {
+				// 6. 🎨 Visual
+				background-color: ds.$surface-highlight-tint;
+			}
+
+			&.portfolioValueRow__icon_violet {
+				// 6. 🎨 Visual
+				background-color: ds.$surface-investment-tint;
+			}
+
+			&.portfolioValueRow__icon_green {
+				// 6. 🎨 Visual
+				background-color: ds.$surface-gain-tint;
+			}
+
+			&.portfolioValueRow__icon_gold {
+				// 6. 🎨 Visual
+				background-color: ds.$surface-caution-tint;
+			}
+		}
+	}
+
+	&_prominent {
+		// 3. 🧩 Layout
+		align-items: center;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		padding: 6px 0;
+		.portfolioValueRow__label {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: ds.$space-sm;
+
+			// 4. 📦 Box Model
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font-size: 16px;
+			line-height: 1.5;
+
+			// 6. 🎨 Visual
+			color: ds.$text-subtle-on-dark;
+		}
+
+		.portfolioValueRow__value {
+			// 4. 📦 Box Model
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font-size: 16px;
+			overflow-wrap: anywhere;
+		}
+	}
+
+	&_prominent.portfolioValueRow_emphasis:not(.portfolioValueRow_negative) &__value {
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
+	}
+
+	@include ds.down(ds.$bp-xs) {
+		&_prominent {
+			// 3. 🧩 Layout
+			flex-wrap: wrap;
+			.portfolioValueRow__value {
+				// 4. 📦 Box Model
+				margin-left: auto;
+			}
+		}
+	}
+}

@@ -1,32 +1,45 @@
 @use "@/styles/abstracts" as ds;
 
 .sessionChecking {
-	min-height: 100svh;
+	// 3. 🧩 Layout
 	display: grid;
 	place-items: center;
-	padding: 1.5rem;
-	background: ds.$surface-session-checking;
-	color: ds.$text-on-auth;
 
+	// 4. 📦 Box Model
+	min-height: 100svh;
+	padding: 1.5rem;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page-checking;
+	color: ds.$text-auth;
 	&__card {
-		width: min(100%, 32rem);
-		padding: clamp(1.5rem, 5vw, 3rem);
-		border-radius: 1.5rem;
-		background: ds.$surface-card;
-		box-shadow: 0 1rem 4rem #16224012;
+		// 3. 🧩 Layout
 		display: grid;
 		gap: 1.5rem;
+
+		// 4. 📦 Box Model
+		width: min(100%, 32rem);
+		padding: clamp(1.5rem, 5vw, 3rem);
+
+		// 6. 🎨 Visual
+		border-radius: 1.5rem;
+		background-color: ds.$surface-card;
+		box-shadow: 0 1rem 4rem ds.$shadow-card-subtle;
 	}
 
 	&__retry {
+		// 4. 📦 Box Model
+		padding: .9rem 1rem;
+
+		// 6. 🎨 Visual
 		border: 0;
 		border-radius: .6rem;
-		padding: .9rem 1rem;
-		background: ds.$action-primary;
+		background-color: ds.$action-primary;
 		color: ds.$text-inverse;
 	}
 
 	&__brand {
+		// 5. 🔤 Typography
 		font-size: .8rem;
 		font-weight: 800;
 		letter-spacing: .12em;

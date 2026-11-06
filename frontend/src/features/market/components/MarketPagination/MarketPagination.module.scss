@@ -1,48 +1,68 @@
 @use "@/styles/abstracts" as ds;
 
 .marketPagination {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: .8rem;
 	flex-wrap: wrap;
+
+	// 4. 📦 Box Model
 	min-width: 0;
-	color: ds.$text-portfolio-label;
+
+	// 5. 🔤 Typography
 	font-size: .8rem;
 
+	// 6. 🎨 Visual
+	color: ds.$text-label-on-dark;
 	&__pages {
-		--pagination-surface: transparent;
-		--pagination-border: #{ds.$border-finance};
-		--pagination-control-surface: #{ds.$surface-finance-panel-to};
-		--pagination-active: #{ds.$accent-finance-cyan};
+		// 1. 🏷️ Custom Properties
+		--pagination-surface: #{ds.$surface-transparent};
+		--pagination-border: #{ds.$border-panel};
+		--pagination-control-surface: #{ds.$surface-panel-to};
+		--pagination-active: #{ds.$accent-highlight};
+
+		// 3. 🧩 Layout
+		gap: .4rem;
+
+		// 4. 📦 Box Model
 		width: auto;
 		max-width: 100%;
 		padding: 0;
-		gap: .4rem;
 	}
 
 	&__size {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		gap: .65rem;
 		flex-wrap: wrap;
-
 		select {
-			color: ds.$text-portfolio-title;
-			background: ds.$surface-finance-base;
-			border: 1px solid ds.$border-finance;
-			border-radius: .35rem;
+			// 4. 📦 Box Model
 			padding: .3rem 1rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
+			background-color: ds.$surface-page;
+			border: 1px solid ds.$border-panel;
+			border-radius: .35rem;
+
+			// 7. ⚙️ Behavior
 			opacity: 1;
 		}
 
 		small {
+			// 5. 🔤 Typography
 			font-size: .65rem;
+
+			// 6. 🎨 Visual
 			color: ds.$state-caution;
 		}
 	}
 
 	@media (max-width: 850px) {
+		// 3. 🧩 Layout
 		justify-content: center;
 	}
 }

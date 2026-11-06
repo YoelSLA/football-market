@@ -1,5 +1,6 @@
 import type { PlayerRankingItem } from "@/features/players/types";
 import { getNationalityFlag } from "@/features/players/utils";
+import { NationalityFlag, TeamBadge } from "@/shared/components";
 import styles from "./RankingPlaceMeta.module.scss";
 
 interface Props {
@@ -32,20 +33,23 @@ export default function RankingPlaceMeta({ player }: Props) {
 	return (
 		<div className={styles.meta}>
 			<div className={styles.meta__clubRow}>
-				{player.teamBadge ? (
-					<img src={player.teamBadge} alt="" className={styles.meta__shield} />
-				) : (
-					<span className={styles.meta__shieldPlaceholder} aria-hidden="true">
-						◇
-					</span>
-				)}
-
+				<TeamBadge
+					src={player.teamBadge}
+					teamName={player.teamName}
+					leagueName={player.leagueName}
+					className={styles.meta__shield}
+				/>
 				<span className={styles.meta__teamName}>{player.teamName}</span>
 			</div>
 
 			<div className={styles.meta__leagueRow}>
-				{flag && <img src={flag} alt="" className={styles.meta__flag} />}
-
+				{flag && (
+					<NationalityFlag
+						src={flag}
+						nationality={player.leagueName}
+						className={styles.meta__flag}
+					/>
+				)}
 				<span className={styles.meta__leagueName}>{player.leagueName}</span>
 			</div>
 		</div>

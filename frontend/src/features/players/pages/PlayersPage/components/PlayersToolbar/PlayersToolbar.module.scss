@@ -1,0 +1,113 @@
+@use "@/styles/abstracts" as ds;
+
+.playersToolbar {
+	// 3. 🧩 Layout
+	display: grid;
+	gap: 10px;
+
+	// 4. 📦 Box Model
+	padding-bottom: 10px;
+	&__heading {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+		h1 {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 22px;
+		}
+
+		> span {
+			// 4. 📦 Box Model
+			padding: 4px 10px;
+
+			// 5. 🔤 Typography
+			font-size: 11px;
+
+			// 6. 🎨 Visual
+			border-radius: 16px;
+			background-color: ds.$surface-nav-active;
+		}
+	}
+
+	&__search {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-width: 200px;
+		width: 50%;
+		margin-left: auto;
+		padding: 6px 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 6px;
+		input {
+			// 3. 🧩 Layout
+			flex: 1;
+
+			// 4. 📦 Box Model
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font: inherit;
+			font-size: 12px;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-transparent;
+			border: 0;
+			outline: 0;
+			color: inherit;
+		}
+
+		&:focus-within {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+		}
+	}
+
+	&__optionsError {
+		button {
+			// 4. 📦 Box Model
+			padding: 7px 12px;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-nav-active;
+			color: ds.$accent-nav;
+			border: 1px solid ds.$accent-nav;
+			border-radius: 5px;
+
+			// 7. ⚙️ Behavior
+			cursor: pointer;
+			&:focus-visible {
+				// 6. 🎨 Visual
+				outline: 2px solid ds.$focus-ring-dark;
+				outline-offset: 3px;
+			}
+		}
+	}
+
+	@media (max-width: 1000px) {
+		&__search {
+			// 4. 📦 Box Model
+			width: 100%;
+			margin: 0;
+			min-width: 0;
+		}
+	}
+
+	@media (max-width: 480px) {
+		&__heading h1 {
+			// 5. 🔤 Typography
+			font-size: 24px;
+		}
+	}
+}
+

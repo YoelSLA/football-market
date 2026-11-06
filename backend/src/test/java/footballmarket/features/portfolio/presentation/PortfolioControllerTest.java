@@ -11,9 +11,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.portfolio.application.PortfolioService;
 import footballmarket.features.portfolio.domain.records.PortfolioView;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
@@ -50,13 +50,14 @@ class PortfolioControllerTest {
   @Autowired private SecretKey key;
 
   @MockitoBean private PortfolioService portfolioService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void arrange() {
+    when(identityValidator.exists("buyer@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

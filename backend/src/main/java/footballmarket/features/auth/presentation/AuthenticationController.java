@@ -35,12 +35,13 @@ public class AuthenticationController {
    * Consulta la identidad actual del usuario de la sesión JWT validada.
    *
    * @param jwt principal autenticado por Spring Security
-   * @return identificador, nombre de usuario, email y rol persistidos del usuario
+   * @return identificador, nombre de usuario, email, rol y créditos disponibles persistidos del
+   *     usuario
    */
   @Operation(
       summary = "Consultar usuario actual",
       description =
-          "Recupera el id, el nombre de usuario, el email y el rol actuales del usuario persistido"
+          "Recupera el id, el nombre de usuario, el email, el rol y los créditos disponibles actuales del usuario persistido"
               + " asociado a la sesión. El rol es informativo: el backend evalúa toda autorización a"
               + " partir del rol persistido.")
   @SecurityRequirement(name = "bearerAuth")

@@ -233,3 +233,124 @@ En `/market/buy`, únicamente el listado de jugadores tiene scroll vertical; nav
 El usuario autorizó **filtros plegables en móvil**, con métricas compactas, para no consumir todo el viewport. El desplegable nativo no implementa lógica de filtros; su panel se superpone al listado sin desplazar encabezado ni paginación. Se conservan tres columnas desktop y adaptación de columnas existente. Verificación requerida: 375/768/1440px, sin compras ni tests.
 
 > Revalidar plan, tareas y checklists contra esta aclaración arquitectónica y ejecutar `/speckit.analyze` antes de solicitar autorización para implementar.
+
+---
+
+## Ampliación normativa — compra de publicaciones entre usuarios (2026-11-04)
+
+Esta ampliación incorpora a SPEC-019 la segunda modalidad de compra disponible en el backend. Sustituye
+únicamente las declaraciones anteriores que excluían la compra mediante `listingId`, el placeholder de
+«Oferta de Usuarios» y cualquier limitación visual que impida implementar este flujo. La compra directa,
+sus requisitos, tareas y evidencias históricas se conservan. La estrategia aprobada es la **Alternativa A**:
+consumir el contrato vigente sin modificar el backend, agrupar y paginar localmente.
+
+### User Story 5 — Explorar jugadores con publicaciones comprables (Priority: P1)
+
+Un usuario autenticado selecciona «Ofertas de usuarios» en `/market/buy` y visualiza una sola ficha por
+jugador con publicaciones activas que puede comprar. Cada ficha informa cantidad de publicaciones, tokens
+totales ofrecidos y mejor precio unitario.
+
+**Independent Test**: entregar publicaciones de varios vendedores para dos jugadores, abrir la modalidad
+P2P y comprobar que cada jugador aparece una sola vez con agregados calculados exclusivamente desde esas
+publicaciones.
+
+**Acceptance Scenarios**:
+
+1. **Given** publicaciones comprables repetidas para un jugador, **When** carga el catálogo P2P, **Then**
+   aparece una sola ficha para ese `playerId`, con conteo, suma de cantidades y precio unitario mínimo.
+2. **Given** el mercado no contiene publicaciones comprables, **When** selecciona la modalidad P2P,
+   **Then** se muestra un estado vacío con acción para volver a Emisión oficial.
+3. **Given** búsqueda, liga o posición aplicadas, **When** cambia un filtro, **Then** se filtra el conjunto
+   agrupado completo antes de paginar y se vuelve a la primera página.
+4. **Given** un fallo al leer publicaciones o metadatos indispensables, **When** la pantalla no puede formar
+   un catálogo íntegro, **Then** no presenta resultados parciales como completos y ofrece reintentar.
+
+### User Story 6 — Elegir una publicación de un jugador (Priority: P1)
+
+Al seleccionar un jugador, el usuario visualiza **todas** sus publicaciones comprables recibidas por el
+frontend, ordenadas inicialmente por precio unitario ascendente, y elige un lote completo.
+
+**Independent Test**: abrir un jugador con cinco publicaciones y comprobar que las cinco aparecen con
+identificador, cantidad, precio unitario, total y vencimiento, sin permitir editar la cantidad.
+
+**Acceptance Scenarios**:
+
+1. **Given** un jugador del catálogo P2P, **When** pulsa «Ver ofertas», **Then** la URL conserva
+   `/market/buy`, identifica `mode=community` y `player=<id>`, y muestra todas sus publicaciones comprables.
+2. **Given** varias publicaciones, **When** abre el detalle, **Then** se ordenan por precio unitario
+   ascendente, con desempate por vencimiento y `listingId`.
+3. **Given** una publicación vencida localmente, **When** alcanza `expiresAt`, **Then** se deshabilita como
+   orientación visual y se refresca el mercado; el backend continúa siendo autoridad de disponibilidad.
+4. **Given** que todas las publicaciones desaparecieron entre catálogo y detalle, **When** se actualiza la
+   consulta, **Then** se muestra estado vacío y regreso al catálogo P2P.
+
+### User Story 7 — Confirmar la compra de un lote P2P (Priority: P1)
+
+El usuario abre la confirmación de una publicación, revisa cantidad fija, precio unitario, total,
+vencimiento y saldo, y compra el lote completo mediante `listingId`.
+
+**Independent Test**: seleccionar una publicación y verificar que el único payload enviado es
+`{ "listingId": <id> }`, que no existe campo de cantidad y que el resultado informa la transacción real.
+
+**Acceptance Scenarios**:
+
+1. **Given** publicación disponible y saldo suficiente, **When** confirma, **Then** se ejecuta una sola
+   mutación, se informa éxito y se invalidan publicaciones, usuario actual, resumen y tenencias.
+2. **Given** saldo insuficiente conocido por la UI, **When** abre la confirmación, **Then** se advierte y se
+   bloquea la acción; el backend revalida siempre el saldo.
+3. **Given** publicación vendida, vencida o cancelada concurrentemente, **When** confirma, **Then** se
+   informa que dejó de estar disponible y se refrescan catálogo y detalle sin afirmar una compra.
+4. **Given** una interrupción sin respuesta concluyente, **When** falla la solicitud, **Then** la UI no
+   afirma éxito ni fracaso transaccional y no reintenta automáticamente.
+
+### Requisitos funcionales P2P
+
+| ID | Requisito |
+|---|---|
+| FR-20 | `/market/buy` DEBE conservar las modalidades «Emisión oficial» y «Ofertas de usuarios» dentro de la misma Page y ruta protegida. La modalidad seleccionada DEBE reflejarse como `mode=official` o `mode=community` en la URL. |
+| FR-21 | La modalidad P2P DEBE consultar una vez `GET /api/listings`, sin parámetros inventados, y tratar `listings` como el conjunto completo de publicaciones comprables para esa sesión. |
+| FR-22 | El frontend DEBE validar y mapear cada publicación a un Model propio con `listingId`, `sellerId`, `playerId`, `quantity`, `unitPrice`, `totalAmount`, `status`, `createdAt` y `expiresAt`. Importes y precios permanecen en centésimas en Models y DTOs. |
+| FR-23 | El catálogo P2P DEBE agrupar por `playerId`, calcular conteo de publicaciones, suma segura de `quantity` y mínimo `unitPrice`, y presentar cada jugador una sola vez. No DEBE sumar ni mostrar una publicación inválida como válida. |
+| FR-24 | Los metadatos del jugador DEBEN resolverse mediante la API pública de `features/players` y su caché de TanStack Query. No se duplicarán DTOs, mappers ni requests HTTP de players dentro de market. Un jugador imposible de resolver no se mostrará como dato completo inventado. |
+| FR-25 | El catálogo agrupado DEBE permitir búsqueda normalizada por jugador o club, filtro por liga y posición, y orden por mejor precio, cantidad ofrecida o nombre. Filtrar y ordenar preceden a la paginación local de 12 jugadores. |
+| FR-26 | Seleccionar un jugador DEBE establecer `mode=community&player=<id>` sin abandonar `/market/buy`; cerrar o volver DEBE retirar `player` y conservar modalidad y filtros. Back/Forward y recarga DEBEN reconstruir la vista desde la URL y datos remotos. |
+| FR-27 | El detalle DEBE mostrar todas las publicaciones comprables del jugador presentes en la respuesta vigente de `/api/listings`, con cantidad fija, precio unitario, total y vencimiento. No DEBE ofrecer compra parcial ni campo de cantidad. |
+| FR-28 | El orden inicial del detalle DEBE ser `unitPrice` ascendente, luego `expiresAt` ascendente y finalmente `listingId` ascendente. La UI PUEDE ofrecer orden alternativo por total o vencimiento sin modificar el conjunto. |
+| FR-29 | La identidad del vendedor NO DEBE mostrarse. `sellerId` se conserva solo como dato contractual y no se resuelve mediante APIs adicionales ni se presenta como nombre público. |
+| FR-30 | La confirmación P2P DEBE reutilizar `shared/Modal` y `MarketPlayerSummary`, mostrar el lote completo y enviar exclusivamente `{ listingId }` a `POST /api/orders/buy`. El handler DEBE aplicar la misma guarda que el botón y prevenir doble envío. |
+| FR-31 | `LISTING_NOT_AVAILABLE` DEBE informar que la oferta dejó de estar disponible y refrescar publicaciones; `LISTING_NOT_FOUND` DEBE retirar el recurso no accesible; `CANNOT_BUY_OWN_LISTING` DEBE mostrar un rechazo defensivo; `INSUFFICIENT_CREDITS` DEBE informar saldo insuficiente. Ningún mensaje revelará datos del vendedor. |
+| FR-32 | Tras éxito P2P, el frontend DEBE invalidar la query de publicaciones, el usuario actual, el resumen de cartera y todas las tenencias, y mostrar `transactionId`, cantidad, precio unitario, total y `executedAt` reales. No habrá autocierre obligatorio del resultado P2P. |
+| FR-33 | La UI DEBE contemplar carga, error con reintento, mercado vacío, filtros sin resultados, jugador sin ofertas, expiración orientativa, saldo insuficiente, conflicto concurrente, éxito e incertidumbre de red. El backend sigue siendo autoridad para vigencia, saldo y liquidación. |
+| FR-34 | La primera implementación DEBE usar el contrato backend actual y paginación local. Paginación o agregación server-side, enriquecimiento del DTO y nombre público del vendedor quedan fuera de alcance. |
+
+FR-20–FR-34 sustituyen **FR-15**. Para la modalidad P2P también sustituyen las restricciones de
+FR-16–FR-19 que describían controles únicamente visuales; la modalidad oficial conserva su comportamiento
+vigente y sus controles pendientes salvo modificación explícita posterior.
+
+### Entidades adicionales
+
+- **TokenListingDTO**: representación HTTP de una publicación comprable; no se usa fuera de Service/Mapper.
+- **MarketListing**: publicación validada para UI, con importes en centésimas y vencimiento absoluto.
+- **CommunityMarketPlayer**: `MarketPlayer` más `listingCount`, `availableQuantity` y `minimumUnitPrice`.
+- **CommunityMarketFilters**: búsqueda, liga, posición, orden y página local.
+- **BuyListingRequest**: `{ listingId: number }`; no admite cantidad ni datos del jugador.
+
+### Criterios de éxito adicionales
+
+- **SC-07**: el 100 % de las publicaciones válidas recibidas para el jugador seleccionado aparece en su
+  detalle antes de aplicar exclusivamente un orden visual.
+- **SC-08**: ninguna compra P2P permite modificar la cantidad o envía campos distintos de `listingId`.
+- **SC-09**: una publicación retirada concurrentemente desaparece tras el refetch provocado por el error.
+- **SC-10**: catálogo, detalle y modal son operables por teclado y no producen scroll horizontal a
+  375, 768 y 1440 px; la validación visual sigue siendo humana.
+
+### Decisiones aprobadas y límites
+
+- Estrategia: Alternativa A, sin cambios backend.
+- Navegación: query parameters dentro de `/market/buy`.
+- Vendedor: no mostrar identidad.
+- Filtros iniciales: nombre/club, liga, posición y orden; página local de 12 jugadores.
+- «Todas las publicaciones» significa todas las activas y vigentes que `GET /api/listings` expone al
+  comprador; las propias quedan excluidas por contrato.
+- El saldo posterior se muestra solo si el contrato de usuario disponible conserva precisión suficiente;
+  de lo contrario se muestra saldo disponible y el backend decide la suficiencia.

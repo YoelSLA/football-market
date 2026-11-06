@@ -1,72 +1,99 @@
 @use "@/styles/abstracts" as ds;
 
 .navbarSections {
+	// 3. 🧩 Layout
 	grid-column: 2;
-	min-width: 0;
 	justify-self: center;
+
+	// 4. 📦 Box Model
+	min-width: 0;
 }
 
 .navbarSectionList {
+	// 3. 🧩 Layout
 	display: flex;
 	gap: ds.$space-xs;
+
+	// 4. 📦 Box Model
 	margin: 0;
 	padding: 0;
+
+	// 7. ⚙️ Behavior
 	list-style: none;
 }
 
 .navbarSectionItem {
+	// 3. 🧩 Layout
 	display: flex;
+
+	// 4. 📦 Box Model
 	min-width: 0;
 }
 
 .navbarSection {
+	// 3. 🧩 Layout
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: ds.$space-xs;
+
+	// 4. 📦 Box Model
 	min-height: 40px;
 	padding: ds.$space-3xs ds.$space-sm;
-	border: 1px solid ds.$border-finance;
-	border-radius: 10px;
-	background: linear-gradient(140deg, ds.$surface-finance-panel-to, ds.$surface-finance-base);
-	box-shadow: inset 0 0 0 1px rgba(ds.$accent-finance-cyan, 0.035);
+
+	// 5. 🔤 Typography
 	font-size: 15px;
-	color: ds.$text-portfolio-nav;
 	font-weight: 500;
 	white-space: nowrap;
 	text-decoration: none;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
+	background-color: ds.$surface-panel-to;
+	box-shadow: inset 0 0 0 1px ds.$surface-highlight-faint;
+	color: ds.$text-nav;
+
+	// 8. ✨ Animation
 	transition:
 		background-color 0.18s ease,
 		border-color 0.18s ease,
 		color 0.18s ease;
-
 	&:hover {
+		// 6. 🎨 Visual
 		background-color: ds.$surface-raised;
 		border-color: ds.$border-strong-hover;
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 		outline-offset: 2px;
 	}
 
 	&_active {
+		// 5. 🔤 Typography
+		font-weight: 700;
+
+		// 6. 🎨 Visual
 		background-color: ds.$surface-nav-active;
 		border-color: ds.$accent-nav;
 		color: ds.$accent-nav;
-		font-weight: 700;
-
 		&:hover {
+			// 6. 🎨 Visual
 			background-color: ds.$surface-nav-active;
 			border-color: ds.$accent-nav;
 		}
 	}
 
 	&_disabled {
-		color: ds.$text-on-dark-muted;
-		cursor: default;
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
 
+		// 7. ⚙️ Behavior
+		cursor: default;
 		&:hover {
+			// 6. 🎨 Visual
 			background-color: ds.$surface-dark;
 			border-color: ds.$border-strong;
 		}
@@ -75,24 +102,30 @@
 
 @include ds.down(ds.$bp-grid-sm) {
 	.navbarSectionList {
+		// 3. 🧩 Layout
 		flex-wrap: wrap;
 		justify-content: center;
 	}
 
 	.navbarSection {
+		// 4. 📦 Box Model
 		min-height: 44px;
 	}
 }
 
 @include ds.down(ds.$bp-grid-xl) {
 	.navbarSections {
+		// 3. 🧩 Layout
 		grid-column: 1 / -1;
 		order: 3;
+
+		// 4. 📦 Box Model
 		width: 100%;
 		padding-bottom: ds.$space-2xs;
 	}
 
 	.navbarSectionList {
+		// 3. 🧩 Layout
 		justify-content: center;
 	}
 }

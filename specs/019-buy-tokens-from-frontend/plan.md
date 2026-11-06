@@ -132,3 +132,82 @@ AppLayout aplica un modificador de contención exclusivamente cuando pathname co
 MarketBuyPage distribuye encabezado, contenido y footer mediante flex, sin usar PageLayout como scroller. Contenido grid con min-height:0, filtros estáticos y main de jugadores con overflow-y:auto; footer no encoge. En móvil, filtros nativos details/summary y métricas compactas; panel de filtros expandido superpuesto, sin consumir altura del listado. Cambios exclusivamente de presentación; queries, compra, formulario, paginación y HTTP no se modifican. No cambiar PageLayout compartido ni el scroll de rutas ajenas.
 
 Revalidar los criterios del revisor afectados por catálogo completo/filtros, ejecutar `/speckit.analyze` y solo después implementar el alcance autorizado si no quedan blockers. Sin compras reales, tests, commits, push ni merges.
+
+## Ampliación de diseño — mercado P2P (2026-11-04)
+
+### Decisión arquitectónica
+
+La modalidad P2P se incorpora a `MarketBuyPage` y a su Page Hook; no crea una segunda feature ni un
+adaptador en `app`. `features/market` consume exclusivamente APIs públicas de `features/players`, permitido
+por la matriz vigente, y conserva el flujo `Page → Hook → Service`. El backend y sus contratos permanecen
+sin cambios.
+
+```text
+MarketBuyPage
+  └─ useMarketBuyPage
+       ├─ compra oficial existente
+       └─ useCommunityMarketQuery
+            ├─ marketService.getListings() ── GET /listings
+            └─ queries públicas de players para playerId únicos
+                 ↓
+            agrupación + filtros + orden + página local
+
+CommunityPlayerCatalog ── seleccionar ── CommunityListingsPanel
+                                              └─ BuyListingModal
+                                                   └─ useBuyListingMutation
+                                                        └─ POST /orders/buy {listingId}
+```
+
+### Datos y caché
+
+- `marketQueryKeys.listings()` identifica la colección P2P y se invalida tras comprar.
+- Service recibe `unknown`, Mapper valida el sobre y cada DTO antes de producir Models.
+- La agrupación es una utilidad pura y usa aritmética segura; no muta la respuesta ni crea estado remoto
+  duplicado.
+- Los metadatos se obtienen con queries públicas de players y se cachean por id. No se accede a Service,
+  DTO o archivos privados de esa feature.
+- Mientras falten metadatos indispensables, se comunica carga íntegra; los fallos permiten reintentar.
+- La página local contiene 12 jugadores y se recalcula después de filtro/orden.
+
+### Estado y URL
+
+`mode` y `player` son estado navegable. Búsqueda, liga, posición, orden y página pueden permanecer como
+estado local de la modalidad durante esta primera implementación; volver del detalle los conserva. Un
+`player` inválido o que ya no tenga publicaciones conduce al estado vacío del detalle sin revelar recursos.
+
+### Componentes previstos
+
+| Componente | Responsabilidad |
+|---|---|
+| `CommunityMarketCatalog` | Estados de carga/error/vacío y grilla agrupada. |
+| `CommunityPlayerCard` | Resumen del jugador, ofertas, tokens y mejor precio; navegación al detalle. |
+| `CommunityListingsPanel` | Cabecera del jugador, orden y colección completa de publicaciones. |
+| `CommunityListingCard` | Lote fijo y acción; semántica adaptable de fila en desktop/card en móvil. |
+| `BuyListingModal` | Confirmación/resultados P2P sin formulario de cantidad ni Hook propio. |
+
+Se reutilizan `MarketSelector`, `MarketFilters`, `MarketPlayerSummary`, `MarketPagination`, `Button` y
+`Modal` cuando sus contratos encajan. No se fuerza reutilización de `BuyTokenModal`: su formulario de
+cantidad y cotización directa representan otra responsabilidad.
+
+### Errores e invalidaciones
+
+El Page Hook traduce códigos P2P y coordina refetch. Ante respuesta incierta no reintenta el POST. El éxito
+invalida `listings`, `authQueryKeys.all`, `portfolioQueryKeys.summary` y el prefijo de holdings. El detalle
+se deriva de la misma query y se actualiza atómicamente con el catálogo.
+
+### Secuencia frontend obligatoria
+
+1. **Fase 1 — lógica, estado y estructura:** DTO/Model/Mapper/Service, query/mutation, agrupación, URL,
+   JSX semántico y accesibilidad estructural. Sin maquetación fina.
+2. **Gate humano obligatorio:** detenerse después del build permitido y revisión estática/diff. No avanzar
+   por inferencia.
+3. **Fase 2 — estética:** únicamente SCSS y wrappers de layout permitidos, contrastados con los wireframes;
+   no cambiar contratos, datos, eventos ni ARIA validados.
+
+### Riesgos aceptados de la Alternativa A
+
+- `/listings` transfiere el mercado completo y la paginación local no reduce carga backend.
+- Resolver metadatos puede requerir múltiples lecturas, mitigadas por deduplicación y caché.
+- El contrato no fija orden; el frontend debe imponerlo.
+- Si el volumen deja de ser moderado, se evaluará otro alcance con agregación/paginación server-side; no
+  se anticipa en esta implementación.

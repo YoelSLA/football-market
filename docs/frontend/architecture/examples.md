@@ -8,24 +8,29 @@ Los anexos son ilustrativos y no normativos. Muestran aplicaciones genéricas de
 <a id="anexo-a"></a>
 ## ANEXO A — Ejemplos de organización de directorios
 
-Ilustra los Artículos [3.º](presentation.md#articulo-3) — Ubicación de Components de página, [8.º — APIs de carpetas modulares](../architecture.md#articulo-8) y [32.º — Fondos y responsabilidad visual](presentation.md#articulo-32). Su contenido es exclusivamente ilustrativo y no normativo.
+Ilustra los Artículos [3.º](presentation.md#articulo-3) — Ubicación de Components de página, [4.º](presentation.md#articulo-4) — Delegación visual y Components locales, [8.º — APIs de carpetas modulares](../architecture.md#articulo-8) y [32.º — Fondos y responsabilidad visual](presentation.md#articulo-32). Su contenido es exclusivamente ilustrativo y no normativo.
 
-Una Page con dos Components locales puede representarse así; el árbol no exige crear esos Components ni reproducir esta estructura sin una responsabilidad real:
+Una Page con Components locales organizados bajo su subcarpeta `components/` y un subcomponente colocalizado recursivamente puede representarse así; el árbol no exige crear esos Components ni reproducir esta estructura sin una responsabilidad real:
 
 ```text
 pages/
 └── ExamplePage/
     ├── ExamplePage.tsx
     ├── ExamplePage.module.scss
-    ├── ExampleHeader/
-    │   ├── ExampleHeader.tsx
-    │   ├── ExampleHeader.module.scss
-    │   └── index.ts
-    ├── ExampleContent/
-    │   ├── ExampleContent.tsx
-    │   ├── ExampleContent.module.scss
-    │   └── index.ts
-    └── index.ts
+    ├── index.ts
+    └── components/
+        ├── ExampleHeader/
+        │   ├── ExampleHeader.tsx
+        │   ├── ExampleHeader.module.scss
+        │   └── index.ts
+        └── ExampleSection/
+            ├── ExampleSection.tsx
+            ├── ExampleSection.module.scss
+            ├── index.ts
+            └── ExampleItem/
+                ├── ExampleItem.tsx
+                ├── ExampleItem.module.scss
+                └── index.ts
 ```
 
 Como ejemplos de nombres neutrales de wrappers de Page, `.exampleSummary`, `.exampleCollection` y `.examplePage` ilustran el lugar al que corresponde el fondo de Page según el [Artículo 32.º](presentation.md#articulo-32). Los nombres no establecen una convención adicional.

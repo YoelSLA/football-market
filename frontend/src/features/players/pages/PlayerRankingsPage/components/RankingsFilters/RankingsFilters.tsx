@@ -1,4 +1,5 @@
 import type { RankingFilterCriteria } from "@/features/players/types";
+import { Button } from "@/shared/components";
 import { X } from "@/shared/icons";
 import styles from "./RankingsFilters.module.scss";
 
@@ -79,7 +80,8 @@ export default function RankingsFilters({
 			</div>
 
 			<div className={styles.actionsContainer}>
-				<button
+				<Button
+					unstyled
 					type="button"
 					onClick={onClearFilters}
 					disabled={!hasActiveFilters}
@@ -90,7 +92,7 @@ export default function RankingsFilters({
 				>
 					<X size={14} aria-hidden="true" />
 					<span>Limpiar filtros</span>
-				</button>
+				</Button>
 			</div>
 		</search>
 	);

@@ -9,9 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.market.application.exceptions.MarketAlreadyInitializedException;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.market.domain.records.MarketInitializationResult;
@@ -25,6 +22,7 @@ import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategy
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
@@ -58,15 +56,13 @@ class QuoteControllerTest {
   @Autowired private SecretKey key;
   @MockitoBean private QuoteMarketInitializationService service;
   @MockitoBean private QuoteRecalculationService recalculationService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("quotes@example.com"))
-        .thenReturn(
-            new User(1L, "quotes.user", "quotes@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("quotes@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

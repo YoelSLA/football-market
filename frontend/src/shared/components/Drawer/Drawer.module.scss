@@ -1,0 +1,102 @@
+@use "@/styles/abstracts" as ds;
+
+.drawer {
+	&__accessibleTitle {
+		// 2. 📍 Positioning
+		position: absolute;
+
+		// 4. 📦 Box Model
+		width: 1px;
+		height: 1px;
+		padding: 0;
+
+		// 5. 🔤 Typography
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		clip-path: inset(50%);
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
+
+	&__overlay {
+		// 2. 📍 Positioning
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+
+		// 3. 🧩 Layout
+		display: flex;
+
+		// 6. 🎨 Visual
+		background-color: ds.$overlay-backdrop-dark;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
+
+	&__backdrop {
+		// 2. 📍 Positioning
+		position: absolute;
+		inset: 0;
+
+		// 4. 📦 Box Model
+		width: 100%;
+		height: 100%;
+		padding: 0;
+
+		// 6. 🎨 Visual
+		border: 0;
+		background-color: ds.$surface-transparent;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+	}
+
+	&__panel {
+		// 2. 📍 Positioning
+		position: fixed;
+		inset: 0 0 0 auto;
+		z-index: 1;
+
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
+		width: min(760px, 100vw);
+		max-width: 100vw;
+		height: 100dvh;
+		max-height: 100dvh;
+		margin: 0;
+		padding: 0;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-left: 1px solid ds.$border-panel;
+		background-color: ds.$surface-page;
+		color: ds.$text-strong-on-dark;
+		outline: none;
+		box-shadow: -8px 0 24px ds.$shadow-black-modal;
+
+		// 7. ⚙️ Behavior
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: -2px;
+		}
+
+		&_left {
+			// 2. 📍 Positioning
+			inset: 0 auto 0 0;
+
+			// 6. 🎨 Visual
+			border-left: 0;
+			border-right: 1px solid ds.$border-panel;
+			box-shadow: 8px 0 24px ds.$shadow-black-modal;
+		}
+	}
+}
