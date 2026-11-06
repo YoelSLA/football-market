@@ -22,6 +22,7 @@ import footballmarket.features.auth.application.exceptions.InvalidCredentialsExc
 import footballmarket.features.auth.application.exceptions.UsernameAlreadyRegisteredException;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.auth.domain.records.CurrentUserView;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
 import footballmarket.security.PersistedIdentityValidator;
@@ -156,7 +157,7 @@ class AuthenticationControllerTest {
               .compact();
       when(authenticationService.getCurrentUser("CURRENT@TEST.COM"))
           .thenReturn(
-              new User(42L, "current.user", "current@test.com", "password123", UserRole.USER));
+              new CurrentUserView(42L, "current.user", "current@test.com", UserRole.USER, 10000L));
 
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
@@ -164,7 +165,7 @@ class AuthenticationControllerTest {
           .andExpect(
               content()
                   .json(
-                      "{\"id\":42,\"username\":\"current.user\",\"email\":\"current@test.com\",\"role\":\"USER\"}",
+                      "{\"id\":42,\"username\":\"current.user\",\"email\":\"current@test.com\",\"role\":\"USER\",\"availableCredits\":100}",
                       JsonCompareMode.STRICT));
     }
 
@@ -179,7 +180,7 @@ class AuthenticationControllerTest {
               .compact();
       when(authenticationService.getCurrentUser("owner@test.com"))
           .thenReturn(
-              new User(7L, "market.owner", "owner@test.com", "password123", UserRole.SUPERUSER));
+              new CurrentUserView(7L, "market.owner", "owner@test.com", UserRole.SUPERUSER, 0L));
 
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
@@ -187,7 +188,7 @@ class AuthenticationControllerTest {
           .andExpect(
               content()
                   .json(
-                      "{\"id\":7,\"username\":\"market.owner\",\"email\":\"owner@test.com\",\"role\":\"SUPERUSER\"}",
+                      "{\"id\":7,\"username\":\"market.owner\",\"email\":\"owner@test.com\",\"role\":\"SUPERUSER\",\"availableCredits\":0}",
                       JsonCompareMode.STRICT));
     }
   }
