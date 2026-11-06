@@ -92,4 +92,10 @@ Como administrador, quiero conocer los fallos y conservar las operaciones manual
 ## Evidencia de CLARIFY
 
 - 2026-11-05: escaneo de alcance, comportamiento, datos, fallos, dependencias, seguridad y criterios de aceptación; no se identificaron ambigüedades críticas que requieran preguntas. Se conservan los contratos de SPEC-012 y SPEC-013, incluida la selección de la campaña confirmada por la evaluación y las fechas propias de cada operación.
-- El análisis no autoriza implementación. La finalización de CLARIFY queda pendiente de la publicación y del Pull Request requeridos por el workflow.
+- En el alcance revisado no se identificaron conflictos funcionales o normativos materiales; el escaneo no sustituye ANALYZE ni autoriza implementación.
+- La especificación fue publicada y el [PR #80](https://github.com/YoelSLA/football-market/pull/80) está abierto hacia `dev` y vinculado al [issue #41](https://github.com/YoelSLA/football-market/issues/41), según verificación en GitHub.
+
+## Evidencia de ANALYZE
+
+- 2026-11-05: `/speckit.analyze` contrastó la Constitución, la especificación, el diseño, las tareas y las listas de revisión. Resultado: sin hallazgos ni blockers identificados; 13 requisitos y criterios contabilizados con cobertura asociada a tareas y 12 tareas. FR-005 está retirado y no se contabiliza.
+- El análisis evaluó el alcance completo de SPEC-024 y no autoriza implementación. IMPLEMENT requiere autorización humana explícita, vigente y persistida para el alcance correspondiente.
