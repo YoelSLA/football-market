@@ -90,7 +90,7 @@ public class FootballDataIntegration {
   public CompetitionSnapshot fetchCompetition(String code) {
     try {
       Competition competition = this.read("/competitions/{code}", Competition.class, code);
-      Teams teams = this.read("/competitions/{code}/team", Teams.class, code);
+      Teams teams = this.read("/competitions/{code}/teams", Teams.class, code);
 
       if (competition.id() == null
           || competition.id() <= 0
@@ -112,7 +112,7 @@ public class FootballDataIntegration {
           throw new FootballDataUnavailableException();
         }
 
-        Team team = this.read("/team/{id}", Team.class, reference.id());
+        Team team = this.read("/teams/{id}", Team.class, reference.id());
 
         if (team.squad() == null) {
           throw new FootballDataUnavailableException();
