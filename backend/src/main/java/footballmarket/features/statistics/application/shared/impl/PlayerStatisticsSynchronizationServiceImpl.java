@@ -4,6 +4,8 @@ import footballmarket.features.statistics.application.JsonStatisticsUpdateServic
 import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
 import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
+import footballmarket.features.statistics.application.exceptions.ScheduledStatisticsSyncException;
+import footballmarket.features.statistics.application.exceptions.ScheduledStatisticsSyncException.Reason;
 import footballmarket.features.statistics.application.scraping.internal.ExtractionBatchExecutor;
 import footballmarket.features.statistics.application.shared.internal.ExtractionRunManager;
 import footballmarket.features.statistics.application.shared.internal.ExtractionWorkerPool;
@@ -89,6 +91,16 @@ public class PlayerStatisticsSynchronizationServiceImpl
 
   @Override
   public PlayerStatisticsSyncSummary synchronizeScraping(PlayerStatisticsSyncRequest request) {
+    return this.synchronizeScraping(request, false);
+  }
+
+  @Override
+  public boolean synchronizeScrapingScheduled(PlayerStatisticsSyncRequest request) {
+    return this.synchronizeScraping(request, true).status() == ExtractionRunStatus.PARTIAL;
+  }
+
+  private PlayerStatisticsSyncSummary synchronizeScraping(
+      PlayerStatisticsSyncRequest request, boolean scheduled) {
     if (request == null) {
       throw new PlayerStatisticsSynchronizationException();
     }
@@ -134,15 +146,28 @@ public class PlayerStatisticsSynchronizationServiceImpl
       PlayerStatisticsSyncSummary summary;
       try {
         summary =
-            this.runs.close(
+            this.closeRun(
                 runId,
                 failure != null || (outcome != null && outcome.interrupted())
                     ? ExtractionRunStatus.INTERRUPTED
                     : ExtractionRunStatus.COMPLETED,
                 code,
-                batch == null ? 0 : batch.providerCalls());
+                batch == null ? 0 : batch.providerCalls(),
+                scheduled && failure == null);
       } catch (RuntimeException auditFailure) {
         if (failure != null) {
+          if (scheduled) {
+            Reason reason =
+                failure instanceof HeadedBrowserUnavailableException
+                    ? Reason.HEADED_BROWSER_UNAVAILABLE
+                    : Thread.currentThread().isInterrupted()
+                        ? Reason.EXECUTION_INTERRUPTED
+                        : Reason.EXECUTION_FAILED;
+            ScheduledStatisticsSyncException signal = new ScheduledStatisticsSyncException(reason);
+            signal.initCause(failure);
+            signal.addSuppressed(auditFailure);
+            throw signal;
+          }
           failure.addSuppressed(auditFailure);
           throw failure;
         }
@@ -167,14 +192,48 @@ public class PlayerStatisticsSynchronizationServiceImpl
    */
   @Override
   public PlayerStatisticsSyncSummary synchronizeJson() {
+    return this.synchronizeJson(false);
+  }
+
+  @Override
+  public boolean synchronizeJsonScheduled() {
+    return this.synchronizeJson(true).status() == ExtractionRunStatus.PARTIAL;
+  }
+
+  private PlayerStatisticsSyncSummary synchronizeJson(boolean scheduled) {
     LocalDate extractionDate = LocalDate.now(this.clock.withZone(ZoneOffset.UTC));
     Long runId = this.runs.open(extractionDate, MetricSource.JSON, JSON_RUN_BUDGET_MS).getId();
-    List<Long> pending = this.selector.allPendingPlayerIds(extractionDate, MetricSource.JSON);
-    if (pending.isEmpty()) {
-      return this.runs.close(runId, ExtractionRunStatus.COMPLETED, null, 0);
-    }
     AtomicBoolean unavailable = new AtomicBoolean();
+    AtomicBoolean interrupted = new AtomicBoolean();
     AtomicLong providerCalls = new AtomicLong();
+    try {
+      List<Long> pending = this.selector.allPendingPlayerIds(extractionDate, MetricSource.JSON);
+      if (!pending.isEmpty()) {
+        this.updateJsonPlayers(runId, pending, scheduled, unavailable, interrupted, providerCalls);
+      }
+    } catch (RuntimeException failure) {
+      if (!scheduled) {
+        throw failure;
+      }
+      throw this.abortJsonRun(runId, failure, providerCalls.get());
+    }
+    return this.closeRun(
+        runId,
+        unavailable.get() ? ExtractionRunStatus.INTERRUPTED : ExtractionRunStatus.COMPLETED,
+        interrupted.get()
+            ? "EXECUTION_INTERRUPTED"
+            : unavailable.get() ? "PROVIDER_UNAVAILABLE" : null,
+        providerCalls.get(),
+        scheduled);
+  }
+
+  private void updateJsonPlayers(
+      Long runId,
+      List<Long> pending,
+      boolean scheduled,
+      AtomicBoolean unavailable,
+      AtomicBoolean interrupted,
+      AtomicLong providerCalls) {
     try (ExtractionWorkerPool pool = ExtractionWorkerPool.open(this.properties.jsonWorkers())) {
       java.util.concurrent.ConcurrentHashMap<Long, WhoScoredRequestPacer.StatisticsWorker> workers =
           new java.util.concurrent.ConcurrentHashMap<>();
@@ -191,17 +250,56 @@ public class PlayerStatisticsSynchronizationServiceImpl
             try {
               this.jsonUpdates.update(runId, playerId, worker);
             } catch (WhoScoredStatisticsException failure) {
+              if (scheduled && "EXTRACTION_INTERRUPTED".equals(failure.getCode())) {
+                interrupted.set(true);
+                unavailable.set(true);
+              }
               if (haltsCampaign(failure)) {
                 unavailable.set(true);
               }
             }
           });
     }
-    return this.runs.close(
-        runId,
-        unavailable.get() ? ExtractionRunStatus.INTERRUPTED : ExtractionRunStatus.COMPLETED,
-        unavailable.get() ? "PROVIDER_UNAVAILABLE" : null,
-        providerCalls.get());
+  }
+
+  /** El try-with-resources del recorrido ya terminó antes de intentar el cierre transaccional. */
+  private ScheduledStatisticsSyncException abortJsonRun(
+      Long runId, RuntimeException failure, long providerCalls) {
+    boolean interrupted = Thread.interrupted();
+    Reason reason = interrupted ? Reason.EXECUTION_INTERRUPTED : Reason.EXECUTION_FAILED;
+    ScheduledStatisticsSyncException signal = new ScheduledStatisticsSyncException(reason);
+    signal.initCause(failure);
+    try {
+      this.runs.abortScheduled(runId, reason.name(), providerCalls);
+    } catch (RuntimeException closeFailure) {
+      signal.addSuppressed(closeFailure);
+    } finally {
+      if (interrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    return signal;
+  }
+
+  private PlayerStatisticsSyncSummary closeRun(
+      Long runId,
+      ExtractionRunStatus requested,
+      String failureCode,
+      long providerCalls,
+      boolean scheduled) {
+    if (!scheduled) {
+      return this.runs.close(runId, requested, failureCode, providerCalls);
+    }
+    try {
+      return this.runs.closeScheduled(runId, requested, failureCode, providerCalls);
+    } catch (ScheduledStatisticsSyncException signal) {
+      throw signal;
+    } catch (RuntimeException closeFailure) {
+      ScheduledStatisticsSyncException signal =
+          new ScheduledStatisticsSyncException(Reason.CLOSE_FAILED);
+      signal.initCause(closeFailure);
+      throw signal;
+    }
   }
 
   /** Solo una indisponibilidad que afecta al proveedor entero abandona la campaña. */

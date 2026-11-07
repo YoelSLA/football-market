@@ -88,8 +88,32 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
 | [TD-035](#td-035--doble-división-potencial-de-estadísticas-json-y-auditoría-histórica-pendiente) | Doble división potencial de estadísticas JSON y auditoría histórica pendiente | Backend / Datos | Alta | Pendiente | 2026-10-29 12:59:24 |
 | [TD-036](#td-036--acoplamiento-de-paquete-entre-referencias-del-catálogo-e-identidad-whoscored) | Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored | Backend / Arquitectura | Media | Pendiente | 2026-10-28 16:08:35 |
+| [TD-037](#td-037--excepción-inesperada-json-deja-la-campaña-activa) | Excepción inesperada JSON deja la campaña activa | Backend / Disponibilidad | Alta | En curso | 2026-11-05 22:01:33 |
+| [TD-038](#td-038--fallo-de-cierre-scraping-oculto-en-el-log-automático) | Fallo de cierre scraping oculto en el log automático | Backend / Observabilidad | Media | En curso | 2026-11-06 13:22:21 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-038 — Fallo de cierre scraping oculto en el log automático
+
+- **Registro:** 2026-11-06 13:22:21 (`America/Argentina/Buenos_Aires`).
+- **Estado:** En curso. **Prioridad:** Media (hallazgo P2). **Área:** Backend / Observabilidad.
+- **Evidencia estática:** en `PlayerStatisticsSynchronizationServiceImpl.synchronizeScraping`, un error de ejecución y otro de cierre se propagaban como excepción original con cierre suprimido. El scheduler solo reconoce cierres fallidos en `ScheduledStatisticsSyncException`, por lo que registraba `closeFailed=false` para esa combinación.
+- **Impacto:** el registro ocultaba el fallo de cierre y no permitía identificar correctamente el estado operativo de la campaña. Relacionado con TD-037, sin modificar su alcance JSON.
+- **Corrección autorizada:** únicamente en la entrada automática, señalar el motivo seguro y conservar excepción original como causa y error de cierre como suprimido. La entrada manual mantiene la excepción y suprimidos originales. No se cambia el scheduler para considerar cualquier excepción suprimida como fallo de cierre.
+- **Verificación pendiente:** regresiones de fachada automática/manual y log scraping sin secretos/trazas ni evaluación posterior. Escritas, no ejecutadas ni compiladas por el agente.
+- **Criterio de cierre:** revisión humana de la corrección y ejecución satisfactoria de esas regresiones desde los tests de Service y scheduler de SPEC-024.
+- **Historial:** 2026-11-06 13:22:21 — hallazgo reportado por el usuario, comprobado por lectura y corrección expresamente autorizada. Implementación y tests escritos; no se declara resolución sin evidencia funcional humana.
+
+### TD-037 — Excepción inesperada JSON deja la campaña activa
+
+- **Registro:** 2026-11-05 22:01:33 (`America/Argentina/Buenos_Aires`).
+- **Estado:** En curso. **Prioridad:** Alta. **Área:** Backend / Disponibilidad.
+- **Evidencia estática:** `PlayerStatisticsSynchronizationServiceImpl.synchronizeJson` abre el run antes de seleccionar pendientes y recorrer workers. Una excepción inesperada del selector o propagada por `ExtractionWorkerPool.forEach` sale sin llegar a `closeRun`. Este recorrido ya existía antes de SPEC-024; no se ha ejecutado para demostrarlo.
+- **Impacto:** queda un run `RUNNING`; `ExtractionRunManager.open` rechaza una nueva entrada JSON hasta que resulte recuperable por su presupuesto de 24 horas. Puede afectar la disponibilidad manual tras un fallo automático (SPEC-024, FR-006).
+- **Propuesta:** acordar cierre seguro tras fallos e interrupción del coordinador, manteniendo el error original, transacciones y confirmaciones previas. No se corrige ni se amplía el contrato manual en esta entrega.
+- **Criterio de cierre:** regresión desde la fachada real que provoque un fallo inesperado o interrupción del coordinador y demuestre cierre y relanzamiento inmediato sin pérdida de datos, ejecutada y validada por el usuario.
+- **Historial:** 2026-11-05 22:01:33 — detectada al revisar T003 de SPEC-024; registrada sin afirmar resolución ni ampliar las tareas autorizadas.
+- **Actualización — 2026-11-05 22:43:13:** tras la corrección upstream autorizada y la reanudación solicitada por el usuario, se implementa el cierre del recorrido JSON automático después de limpiar workers, preservando error principal, interrupción y fallo de cierre. Se escriben regresiones de relanzamiento manual, confirmaciones conservadas y fallo de cierre con PostgreSQL real y una inyección técnica acotada a una sentencia en testing. Build sin tests satisfactorio; tests y validación humana pendientes. El comportamiento JSON manual preexistente se conserva, conforme al plan. No se declara resuelta la deuda ni se garantiza disponibilidad si la DB impide cerrar.
 
 ### TD-035 — Doble división potencial de estadísticas JSON y auditoría histórica pendiente
 

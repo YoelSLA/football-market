@@ -88,6 +88,31 @@ inerte. Otro proceso batch puede añadir su propio disparador en el módulo de s
 reutilizar esta infraestructura, sin duplicar la habilitación ni crear un registro central de jobs.
 SPEC-023 no implementa la sincronización automática de datos deportivos (#41).
 
+### 1.9. Punto de entrada batch deportivo (SPEC-024)
+
+`AutomaticSportsDataScheduler`, en `features/statistics/infraestructure/scheduling`, reutiliza
+el scheduler compartido y dispara los domingos a las 12:00 en
+`America/Argentina/Buenos_Aires`. Solo consume las interfaces
+`PlayerStatisticsSynchronizationService` y `ValuationEvaluationService`: espera JSON, luego
+scraping con fecha propia y finalmente evaluación sin argumentos. No inspecciona resúmenes de
+dominio ni depende de persistencia, integraciones, cotizaciones u operaciones financieras. No
+añade transacciones, infraestructura, reintentos ni configuración del horario.
+
+Las entradas automáticas de la fachada de estadísticas devuelven únicamente parcialidad y
+comunican fallos globales mediante `ScheduledStatisticsSyncException`, independientemente del
+estado del resumen manual. `ExtractionRunManager` confirma el cierre antes de emitir esa señal.
+Ante un fallo inesperado o interrupción del coordinador JSON automático, el recorrido termina
+workers y limpieza, intenta cerrar como interrumpido y conserva el error principal y cualquier
+fallo de cierre. Las confirmaciones previas no se revierten. Si la persistencia impide cerrar,
+no se garantiza relanzamiento manual inmediato. La entrada JSON manual conserva su recorrido
+anterior; la limitación preexistente y la verificación pendiente se registran en TD-037.
+
+El disparador corta ante fallo o interrupción, conserva el indicador del hilo y registra etapa,
+motivo seguro o identidad de excepción y fallo de cierre conocido, sin mensajes arbitrarios,
+trazas ni contadores. Un parcial sin fallo global permite continuar. El perfil `test` fija
+`whoscored.statistics.schedule.enabled=false` y mantiene inerte el disparador, sin cambiar el
+cron productivo ni deshabilitar las operaciones manuales.
+
 ## 2. Integraciones externas del backend
 
 Toda comunicación externa pasa por Integration, que encapsula configuración, comunicación, contratos externos, transformación y errores técnicos. Model no conoce proveedores, clientes, HTTP ni protocolos. Los contratos externos permanecen separados de los DTO HTTP propios y de los Model internos; estos tipos no se reutilizan como contratos externos aunque coincidan estructuralmente.
