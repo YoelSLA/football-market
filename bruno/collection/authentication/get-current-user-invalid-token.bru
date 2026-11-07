@@ -1,11 +1,12 @@
 meta {
   name: Obtener usuario con token inválido (401)
   type: http
-  seq: 1
+  seq: 6
 }
 
 get {
   url: {{baseUrl}}/api/auth/me
+  body: none
   auth: bearer
 }
 

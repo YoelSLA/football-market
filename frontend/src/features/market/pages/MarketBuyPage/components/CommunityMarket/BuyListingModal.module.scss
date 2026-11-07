@@ -1,0 +1,162 @@
+@use "@/styles/abstracts" as ds;
+
+.dialog {
+	// 4. 📦 Box Model
+	width: min(38rem, calc(100vw - 2rem));
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-panel-to;
+	color: ds.$text-title-on-dark;
+}
+
+.modal {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+
+	// 4. 📦 Box Model
+	padding: 1rem;
+	&__header {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+
+		// 4. 📦 Box Model
+		padding-bottom: 0.8rem;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-panel;
+		span {
+			// 5. 🔤 Typography
+			font-size: 0.7rem;
+			font-weight: 700;
+			text-transform: uppercase;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-highlight;
+		}
+
+		h3 {
+			// 4. 📦 Box Model
+			margin: 0.15rem 0 0;
+		}
+	}
+
+	&__player {
+		// 4. 📦 Box Model
+		padding: 0.65rem;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.55rem;
+	}
+
+	&__details {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.6rem;
+
+		// 4. 📦 Box Model
+		margin: 0;
+		div {
+			// 4. 📦 Box Model
+			padding: 0.65rem;
+
+			// 6. 🎨 Visual
+			border-radius: 0.45rem;
+			background-color: ds.$surface-card-subtle;
+		}
+
+		dt {
+			// 5. 🔤 Typography
+			font-size: 0.7rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0.18rem 0 0;
+
+			// 5. 🔤 Typography
+			font-weight: 700;
+		}
+	}
+
+	&__total {
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-gain;
+	}
+
+	&__notice {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 0.75rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+
+	&__error {
+		// 4. 📦 Box Model
+		padding: 0.65rem;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-loss-emphasis;
+		border-radius: 0.45rem;
+		color: ds.$state-error-on-dark;
+	}
+
+	&__actions {
+		// 3. 🧩 Layout
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.65rem;
+
+		// 4. 📦 Box Model
+		padding-top: 0.8rem;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__success {
+		// 4. 📦 Box Model
+		padding: 1rem;
+
+		// 5. 🔤 Typography
+		text-align: center;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-gain;
+		border-radius: 0.6rem;
+		background-color: ds.$surface-control-active;
+	}
+}
+
+@media (max-width: 500px) {
+	.dialog {
+		// 4. 📦 Box Model
+		width: calc(100vw - 1rem);
+	}
+
+	.modal {
+		// 4. 📦 Box Model
+		padding: 0.75rem;
+		&__details {
+			// 3. 🧩 Layout
+			grid-template-columns: 1fr;
+		}
+
+		&__actions {
+			// 3. 🧩 Layout
+			flex-direction: column-reverse;
+		}
+	}
+}

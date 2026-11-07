@@ -1,0 +1,91 @@
+@use "@/styles/abstracts" as ds;
+
+.playersCatalog {
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		align-content: start;
+		align-items: stretch;
+		gap: 10px;
+		grid-template-rows: auto;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		padding-bottom: 6px;
+	}
+
+	&__message {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+
+		// 4. 📦 Box Model
+		min-height: 80px;
+		padding: 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 8px;
+		button {
+			// 4. 📦 Box Model
+			padding: 7px 12px;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-nav-active;
+			color: ds.$accent-nav;
+			border: 1px solid ds.$accent-nav;
+			border-radius: 5px;
+
+			// 7. ⚙️ Behavior
+			cursor: pointer;
+			&:focus-visible {
+				// 6. 🎨 Visual
+				outline: 2px solid ds.$focus-ring-dark;
+				outline-offset: 3px;
+			}
+		}
+	}
+}
+
+@media (max-width: 1500px) {
+	.playersCatalog__grid {
+		// 3. 🧩 Layout
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 1000px) {
+	.playersCatalog__grid {
+		// 3. 🧩 Layout
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@include ds.down(ds.$bp-tablet) {
+	.playersCatalog__grid {
+		// 3. 🧩 Layout
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 480px) {
+	.playersCatalog__grid {
+		// 3. 🧩 Layout
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@include ds.compact() {
+	.playersCatalog__grid {
+		// 3. 🧩 Layout
+		flex: 1 1 auto;
+		grid-template-rows: repeat(2, minmax(0, 1fr));
+		align-content: stretch;
+
+		// 4. 📦 Box Model
+		min-height: 0;
+	}
+}

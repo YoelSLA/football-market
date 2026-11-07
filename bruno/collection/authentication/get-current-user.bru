@@ -1,11 +1,12 @@
 meta {
   name: Obtener usuario autenticado
   type: http
-  seq: 1
+  seq: 5
 }
 
 get {
   url: {{baseUrl}}/api/auth/me
+  body: none
   auth: bearer
 }
 

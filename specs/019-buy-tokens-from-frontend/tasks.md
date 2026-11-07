@@ -84,3 +84,55 @@ T-02 → T-17/T-18 (usuario), T-19 (agente: build permitido)
 ```
 
 La dependencia T-16 → T-11 → T-02 corresponde a la primera implementación. La propuesta posterior de filtros funcionales/catálogo completo fue sustituida por el rediseño visual: los controles nuevos permanecen deshabilitados y pendientes, sin lógica de filtro/stock. Los límites de players/portfolio/backend se mantienen. No crear tests frontend. Esta preparación documental no implementa nuevas capacidades, no renueva autorizaciones y no acredita CONVERGE ni cierre; primero deben resolverse las verificaciones e integración pendientes.
+
+## Ampliación P2P aprobada (2026-11-04)
+
+Estas tareas agregan la compra secundaria sin reabrir ni borrar las tareas históricas de compra oficial.
+La autorización de preparación documental no acredita implementación ni reemplaza el gate frontend.
+
+### Fase P1 — lógica, datos y estructura
+
+- [x] **P-01** Extender DTOs, Models y Mapper de market para `/listings` y `{listingId}`, con validación
+  estricta del sobre, enteros/fechas/estado y respuesta de compra; sin exponer DTO fuera de Service/Mapper.
+- [x] **P-02** Ampliar `market.service.ts` con lectura autenticada cancelable de publicaciones y compra por
+  listing; mantener compra directa compatible y sin endpoints duplicados.
+- [x] **P-03** Añadir query keys, `useCommunityMarketQuery` y `useBuyListingMutation`; sin retry automático
+  del POST y con invalidación de listings solo por coordinación del Page Hook.
+- [x] **P-04** Reutilizar desde la API pública de players `useAllPlayersQuery` y `Player`, ya expuestos, para
+  resolver detalles por ids únicos; no exportar Service ni DTO. Reutilizar caché existente.
+- [x] **P-05** Implementar utilidades puras de agrupación, filtros, orden y paginación local de 12, con
+  desempates deterministas y aritmética segura.
+- [x] **P-06** Ampliar `useMarketBuyPage` para `mode`/`player` en URL, estado P2P, selección, traducción de
+  errores, doble envío e invalidaciones de auth/portfolio/holdings/listings.
+- [x] **P-07** Crear estructura JSX accesible de catálogo agrupado, detalle completo, cards/filas de listing,
+  estados y `BuyListingModal`, reutilizando componentes existentes y sin CSS fino.
+- [x] **P-08** Revisar estáticamente consumidores, diff y contratos; ejecutar build y Biome acotado a los
+  archivos P2P permitidos por `frontend/AGENTS.md`, sin tests. Build y Biome satisfactorios el 2026-11-04;
+  Vite conserva la advertencia no bloqueante preexistente por chunk superior a 500 kB.
+
+### Gate obligatorio P2P
+
+- [x] **P-09 — USUARIO** Revisar Fase P1 y autorizar explícitamente la maquetación fina. Autorización recibida
+  el 2026-11-04: «Apruebo la Fase P1 de SPEC-019 P2P y autorizo P-10 y P-11.» El agente se detiene
+  aquí aunque el build sea satisfactorio. No se infiere aprobación de silencio, `ok` genérico ni tareas.
+
+### Fase P2 — maquetación fina
+
+- [x] **P-10** Implementar exclusivamente SCSS y wrappers de layout permitidos para catálogo, detalle y modal
+  conforme a wireframes, tokens y patrones visuales vigentes. Build y Biome acotado satisfactorios el
+  2026-11-04; sin cambios de contratos, datos, eventos ni ARIA.
+- [ ] **P-11** Auditar visualmente 375/768/1440 cuando el entorno lo permita, sin ejecutar compras ni tests;
+  registrar limitaciones y solicitar confirmación visual humana. Intento del 2026-11-04 bloqueado por
+  redirección legítima de `AuthGuard` a `/login`; no se inventaron credenciales ni evidencia autenticada.
+
+### Verificación humana
+
+- [ ] **P-12 — USUARIO** Validar catálogo agrupado, filtros/página, URL/Back/Forward, todas las publicaciones,
+  payload exclusivo `listingId`, errores concurrentes, resultado e interacción por teclado.
+
+```text
+P-01 → P-02 → P-03
+P-01 + P-04 → P-05
+P-03 + P-05 → P-06 → P-07 → P-08 → P-09
+P-09 → P-10 → P-11 → P-12
+```

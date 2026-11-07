@@ -1,0 +1,64 @@
+@use "@/styles/abstracts" as ds;
+
+.playerBreadcrumb {
+	// 5. 🔤 Typography
+	font-size: 0.9rem;
+
+	// 6. 🎨 Visual
+	color: ds.$text-breadcrumb;
+	ol {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+
+		// 4. 📦 Box Model
+		margin: 0;
+		padding: 0;
+
+		// 7. ⚙️ Behavior
+		list-style: none;
+	}
+
+	a {
+		// 5. 🔤 Typography
+		font-weight: 600;
+		text-decoration: underline;
+		text-underline-offset: 2px;
+
+		// 6. 🎨 Visual
+		color: ds.$link-light;
+		&:hover {
+			// 6. 🎨 Visual
+			color: ds.$link-light-hover;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			border-radius: 4px;
+			outline: 2px solid ds.$focus-ring-breadcrumb;
+			outline-offset: 3px;
+		}
+	}
+
+	li + li::before {
+		// 4. 📦 Box Model
+		margin-right: 0.4rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-separator;
+
+		// 7. ⚙️ Behavior
+		content: ">";
+		opacity: 0.75;
+	}
+
+	li[aria-current="page"] {
+		// 5. 🔤 Typography
+		font-weight: 700;
+		overflow-wrap: break-word;
+
+		// 6. 🎨 Visual
+		color: ds.$text-strong;
+	}
+}

@@ -1,0 +1,20 @@
+.nationalityFlag,
+.nationalityFlag_placeholder {
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+
+	// 4. 📦 Box Model
+	width: 2rem;
+	height: 1.25rem;
+	object-fit: contain;
+
+	// 5. 🔤 Typography
+	text-align: center;
+
+	// 7. ⚙️ Behavior
+	user-select: none;
+}
+

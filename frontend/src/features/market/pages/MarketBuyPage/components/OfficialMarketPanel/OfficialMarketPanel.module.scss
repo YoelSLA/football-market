@@ -1,0 +1,58 @@
+@use "@/styles/abstracts" as ds;
+.officialPanel {
+	&__content {
+		// 3. 🧩 Layout
+		display: grid;
+		flex: 1;
+		grid-template-columns: minmax(15rem, 0.86fr) minmax(0, 3.14fr);
+		grid-template-rows: minmax(0, 1fr);
+		align-items: stretch;
+		gap: 1rem;
+
+		// 4. 📦 Box Model
+		min-height: 0;
+		min-width: 0;
+	}
+
+	&__footer {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		padding-top: 1rem;
+	}
+}
+
+@media (max-width: 1099px) {
+	.officialPanel {
+		&__content {
+			// 3. 🧩 Layout
+			grid-template-columns: 13.5rem minmax(0, 1fr);
+		}
+	}
+}
+
+@media (max-width: 850px) {
+	.officialPanel {
+		&__content {
+			// 3. 🧩 Layout
+			grid-template-columns: 12rem minmax(0, 1fr);
+		}
+	}
+}
+
+@media (max-width: 639px) {
+	.officialPanel {
+		&__content {
+			// 3. 🧩 Layout
+			grid-template-columns: 1fr;
+			grid-template-rows: auto minmax(0, 1fr);
+			gap: 0.5rem;
+		}
+
+		&__footer {
+			// 4. 📦 Box Model
+			padding-top: 0.45rem;
+		}
+	}
+}

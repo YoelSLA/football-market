@@ -1,0 +1,428 @@
+@use "@/styles/abstracts" as ds;
+
+// BEM: el drawer posee su composición; cada panel posee sus filas.
+.portfolioDetail {
+	// 2. 📍 Positioning
+	position: fixed;
+	inset: 0 0 0 auto;
+
+	// 4. 📦 Box Model
+	width: min(760px, 100vw);
+	max-width: 100vw;
+	height: 100dvh;
+	max-height: 100dvh;
+	margin: 0;
+	padding: 0;
+
+	// 6. 🎨 Visual
+	border: 0;
+	border-left: 1px solid ds.$border-panel;
+	background-color: ds.$surface-page;
+	color: ds.$text-strong-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow: auto;
+	overscroll-behavior: contain;
+	&[open] {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+	}
+
+	&::backdrop {
+		// 6. 🎨 Visual
+		background-color: ds.$overlay-backdrop-dark;
+	}
+
+	&__header {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: ds.$space-sm;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		padding: ds.$space-xs ds.$space-md;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-panel;
+		background-color: ds.$surface-panel-from;
+		h2 {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 24px;
+			line-height: 1.3;
+		}
+
+		p {
+			// 4. 📦 Box Model
+			margin-top: ds.$space-3xs;
+
+			// 5. 🔤 Typography
+			font-size: 13px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-subtle-on-dark;
+		}
+
+		button,
+		&__closeButton {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+
+			// 4. 📦 Box Model
+			width: 44px;
+			height: 44px;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-panel;
+			border-radius: 10px;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-inverse;
+
+			// 7. ⚙️ Behavior
+			cursor: pointer;
+
+			// 8. ✨ Animation
+			transition: background-color 0.15s ease;
+			&:hover {
+				// 6. 🎨 Visual
+				background-color: ds.$surface-panel-from;
+			}
+		}
+	}
+
+	// El espacio sobrante amplía los paneles, no las separaciones.
+	// La base intrínseca sin contracción conserva el scroll cuando hace falta.
+	&__body {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-rows: auto auto minmax(max-content, 1fr) auto auto;
+		gap: ds.$space-xs;
+		flex: 1 0 auto;
+
+		// 4. 📦 Box Model
+		padding: ds.$space-sm ds.$space-md;
+		min-width: 0;
+	}
+
+	&__identity {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+		align-items: center;
+		gap: ds.$space-sm;
+
+		// 4. 📦 Box Model
+		padding: ds.$space-xs;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 12px;
+		background-color: ds.$surface-panel-to;
+	}
+
+	&__player {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: ds.$space-sm;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		h3 {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 18px;
+		}
+
+		p {
+			// 4. 📦 Box Model
+			margin-block: ds.$space-3xs;
+
+			// 5. 🔤 Typography
+			font-size: 14px;
+		}
+	}
+
+	&__portrait {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+		img {
+			// 4. 📦 Box Model
+			width: 94px;
+			height: 98px;
+			object-fit: cover;
+			padding: 0;
+		}
+	}
+
+	&__statusLine {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: ds.$space-xs;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+	}
+
+	&__badge {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+
+		// 4. 📦 Box Model
+		padding: 4px 10px;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-gain;
+		border-radius: 12px;
+		background-color: ds.$surface-control-active;
+		color: ds.$accent-gain;
+		&_closed {
+			// 6. 🎨 Visual
+			border-color: ds.$state-closed;
+			color: ds.$state-closed;
+			background-color: ds.$surface-status-closed;
+		}
+	}
+
+	&__identifiers {
+		// 4. 📦 Box Model
+		padding: ds.$space-2xs ds.$space-xs;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 10px;
+		background-color: ds.$surface-panel-from;
+		div {
+			// 3. 🧩 Layout
+			display: flex;
+			justify-content: space-between;
+			gap: ds.$space-2xs;
+
+			// 4. 📦 Box Model
+			padding-block: 4px;
+		}
+
+		dt {
+			// 6. 🎨 Visual
+			color: ds.$text-subtle-on-dark;
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			overflow-wrap: anywhere;
+			text-align: right;
+		}
+	}
+
+	&__metrics {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: ds.$space-2xs;
+	}
+
+	&__metric {
+		// 4. 📦 Box Model
+		padding: ds.$space-sm ds.$space-xs;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 12px;
+		background-color: ds.$surface-panel-from;
+		div {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: ds.$space-xs;
+		}
+
+		h3 {
+			// 5. 🔤 Typography
+			font-size: 12px;
+			font-weight: 400;
+
+			// 6. 🎨 Visual
+			color: ds.$text-subtle-on-dark;
+		}
+
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
+			width: 38px;
+			height: 38px;
+			padding: 8px;
+
+			// 6. 🎨 Visual
+			border-radius: 9px;
+			color: ds.$state-caution;
+			background-color: ds.$surface-caution-tint;
+		}
+
+		strong {
+			// 3. 🧩 Layout
+			display: block;
+
+			// 4. 📦 Box Model
+			margin-top: ds.$space-2xs;
+
+			// 5. 🔤 Typography
+			font-size: 22px;
+			line-height: 1.3;
+		}
+
+		&:nth-child(2) svg {
+			// 6. 🎨 Visual
+			color: ds.$accent-investment;
+			background-color: ds.$surface-investment-glow;
+		}
+
+		&:nth-child(3) svg {
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
+			background-color: ds.$surface-gain-tint;
+		}
+	}
+
+	&__positive {
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
+	}
+
+	&__negative {
+		// 6. 🎨 Visual
+		color: ds.$state-loss;
+	}
+
+	&__neutral {
+		// 6. 🎨 Visual
+		color: ds.$text-strong-on-dark;
+	}
+
+	// Las filas auto conservan sus mínimos independientes y reparten solo el
+	// espacio sobrante; dos filas 1fr igualaban también sus alturas intrínsecas.
+	&__sections {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-rows: auto auto;
+		gap: ds.$space-sm;
+		align-items: stretch;
+		align-content: stretch;
+	}
+
+	&__track {
+		// 3. 🧩 Layout
+		display: flex;
+
+		// 4. 📦 Box Model
+		height: 14px;
+		margin-top: ds.$space-xs;
+
+		// 6. 🎨 Visual
+		border-radius: 999px;
+		background-color: ds.$surface-card-subtle;
+		span:first-child {
+			// 6. 🎨 Visual
+			background-color: ds.$accent-gain;
+			border-radius: 999px 0 0 999px;
+		}
+
+		span:last-child {
+			// 6. 🎨 Visual
+			background-color: ds.$accent-investment;
+			border-radius: 0 999px 999px 0;
+		}
+	}
+
+	&__legend {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: ds.$space-2xs;
+
+		// 4. 📦 Box Model
+		margin-top: ds.$space-2xs;
+
+		// 5. 🔤 Typography
+		font-size: 10px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
+	}
+
+	&__note {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		line-height: 1.4;
+
+		// 6. 🎨 Visual
+		color: ds.$text-dimmed-on-dark;
+	}
+
+	:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+
+	@include ds.down(ds.$bp-sm) {
+		// 4. 📦 Box Model
+		width: 100vw;
+		&__header,
+		&__body {
+			// 4. 📦 Box Model
+			padding-inline: ds.$space-xs;
+		}
+
+		&__identity,
+		&__sections {
+			// 3. 🧩 Layout
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		&__sections {
+			// 3. 🧩 Layout
+			grid-template-rows: none;
+			grid-auto-rows: auto;
+		}
+
+		&__metrics {
+			// 3. 🧩 Layout
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		&__metric strong {
+			// 5. 🔤 Typography
+			font-size: 20px;
+		}
+	}
+}

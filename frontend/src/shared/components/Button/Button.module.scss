@@ -1,9 +1,12 @@
 @use "@/styles/abstracts" as ds;
 
 .button {
+	// 4. 📦 Box Model
+	padding: .85rem 1rem;
+
+	// 6. 🎨 Visual
 	border: 0;
 	border-radius: .6rem;
-	padding: .85rem 1rem;
-	background: ds.$action-primary;
+	background-color: ds.$action-primary;
 	color: ds.$text-inverse;
 }

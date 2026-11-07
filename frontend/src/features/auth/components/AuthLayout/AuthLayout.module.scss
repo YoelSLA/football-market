@@ -1,87 +1,125 @@
 @use "@/styles/abstracts" as ds;
 
 .authLayout {
-	min-height: 100svh;
+	// 3. 🧩 Layout
 	display: grid;
 	place-items: center;
-	background: radial-gradient(ellipse at 10% 0%, ds.$surface-auth-accent, transparent 55%), ds.$surface-auth;
-	color: ds.$text-on-auth;
 
+	// 4. 📦 Box Model
+	min-height: 100svh;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page-auth;
+	color: ds.$text-auth;
 	&__shell {
-		width: min(100%, 76rem);
-		min-width: 0;
+		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1rem;
+
+		// 4. 📦 Box Model
+		width: min(100%, 76rem);
+		min-width: 0;
 		padding: 1rem;
-		background: ds.$surface-card;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-card;
 		border-radius: 1.5rem;
-		box-shadow: 0 2rem 6rem #070c2940;
+		box-shadow: 0 2rem 6rem ds.$shadow-card-elevated;
 	}
 
 	&__content {
-		min-width: 0;
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 		padding: clamp(1rem, 3.7vw, 3.5rem);
 	}
 
 	&__footer {
+		// 4. 📦 Box Model
 		margin-top: 3rem;
+
+		// 5. 🔤 Typography
 		font-size: .75rem;
-		color: ds.$text-secondary;
+
+		// 6. 🎨 Visual
+		color: ds.$text-secondary-on-light;
 	}
 
 	&__brand {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		gap: .65rem;
+
+		// 5. 🔤 Typography
 		font-size: 1.05rem;
 		font-weight: 800;
 		letter-spacing: -.03em;
 	}
 
 	&__brandMark {
+		// 4. 📦 Box Model
 		padding: .3rem .45rem;
-		border-radius: .35rem;
-		background: ds.$brand-mark-surface;
-		color: ds.$text-inverse;
+
+		// 5. 🔤 Typography
 		font-size: .9rem;
 		font-style: italic;
+
+		// 6. 🎨 Visual
+		border-radius: .35rem;
+		background-color: ds.$brand-mark-surface;
+		color: ds.$text-inverse;
 	}
 
 	&__formArea {
+		// 4. 📦 Box Model
 		margin: auto 0;
 		padding-top: 3.5rem;
 	}
 
 	&__header {
+		// 4. 📦 Box Model
 		margin-bottom: 1.7rem;
 	}
 
 	&__title {
+		// 5. 🔤 Typography
 		font-size: clamp(1.7rem, 3vw, 2.1rem);
 		letter-spacing: -.05em;
 		line-height: 1.2;
 	}
 
 	&__description {
+		// 4. 📦 Box Model
 		margin-top: .7rem;
-		color: ds.$text-secondary;
+
+		// 5. 🔤 Typography
 		font-size: .9rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-secondary-on-light;
 	}
 
 	@media (max-width: 760px) {
 		&__shell {
+			// 3. 🧩 Layout
 			grid-template-columns: minmax(0, 1fr);
+
+			// 4. 📦 Box Model
 			max-width: 34rem;
 		}
 
 		&__content {
+			// 4. 📦 Box Model
 			padding: 1.25rem;
 		}
 
 		&__formArea {
+			// 4. 📦 Box Model
 			padding-top: 2rem;
 		}
 	}

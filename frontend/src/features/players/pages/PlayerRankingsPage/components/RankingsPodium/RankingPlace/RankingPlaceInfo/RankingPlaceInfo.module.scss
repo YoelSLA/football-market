@@ -1,15 +1,16 @@
 .info {
 	// Posicionamiento
+	// 2. 📍 Positioning
 	position: relative;
 	z-index: 1;
 
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	flex: 1;
 	flex-direction: column;
 	justify-content: space-between;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	min-width: 0;
 	height: 128px;
 }

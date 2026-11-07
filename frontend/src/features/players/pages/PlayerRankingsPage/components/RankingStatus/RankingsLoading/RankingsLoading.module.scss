@@ -1,42 +1,51 @@
 @use "@/styles/abstracts" as ds;
 
 .loadingState {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 16px;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	min-height: 280px;
-
 	// Espaciado
+	// 4. 📦 Box Model
 	padding: 32px;
-
 	// Apariencia
-	background: ds.$surface-finance-tile;
-	border: 1px solid ds.$border-finance;
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-subtle;
+	border: 1px solid ds.$border-panel;
 	border-radius: 12px;
-
 	&__text {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 14px;
-		color: ds.$text-on-dark-muted;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
 	}
 }
 
 .loadingSpinner {
+	// 6. 🎨 Visual
 	color: ds.$accent-nav;
+
+	// 8. ✨ Animation
 	animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
 	from {
+		// 8. ✨ Animation
 		transform: rotate(0deg);
 	}
 
 	to {
+		// 8. ✨ Animation
 		transform: rotate(360deg);
 	}
 }

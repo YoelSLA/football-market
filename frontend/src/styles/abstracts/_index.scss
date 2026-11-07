@@ -1,12 +1,12 @@
 /*
  * Punto de entrada de las capas abstractas de Football Market.
  *
- * Permite consumir tokens, tema y mixins con un unico namespace:
+ * Permite consumir tokens y mixins con un unico namespace:
  *
  *   @use ".../styles/abstracts" as ds;
  *
  *   ds.$space-sm
- *   color: ds.$text-on-dark;
+ *   color: ds.$text-body-on-dark;
  *   @include ds.down(ds.$bp-tablet) { ... }
  */
 
@@ -14,4 +14,3 @@
 @forward "tokens/spacing";
 @forward "tokens/colors";
 @forward "tokens/layout";
-@forward "themes/default";

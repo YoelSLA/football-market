@@ -1,0 +1,56 @@
+@use "@/styles/abstracts" as ds;
+
+.laurelRank {
+	// 3. 🧩 Layout
+	display: block;
+	&_rank1 {
+		// 6. 🎨 Visual
+		color: ds.$laurel-gold;
+		.laurelRank__star,
+		.laurelRank__leaves,
+		.laurelRank__bow,
+		.laurelRank__number {
+			// 6. 🎨 Visual
+			fill: ds.$laurel-gold;
+		}
+
+		.laurelRank__branch {
+			// 6. 🎨 Visual
+			stroke: ds.$laurel-gold;
+		}
+	}
+
+	&_rank2 {
+		// 6. 🎨 Visual
+		color: ds.$laurel-silver;
+		.laurelRank__star,
+		.laurelRank__leaves,
+		.laurelRank__bow,
+		.laurelRank__number {
+			// 6. 🎨 Visual
+			fill: ds.$laurel-silver;
+		}
+
+		.laurelRank__branch {
+			// 6. 🎨 Visual
+			stroke: ds.$laurel-silver;
+		}
+	}
+
+	&_rank3 {
+		// 6. 🎨 Visual
+		color: ds.$laurel-bronze;
+		.laurelRank__star,
+		.laurelRank__leaves,
+		.laurelRank__bow,
+		.laurelRank__number {
+			// 6. 🎨 Visual
+			fill: ds.$laurel-bronze;
+		}
+
+		.laurelRank__branch {
+			// 6. 🎨 Visual
+			stroke: ds.$laurel-bronze;
+		}
+	}
+}
