@@ -1409,6 +1409,7 @@ una base migrada con la versión previa.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 17:48:44 | Registro inicial en `docs/TECHNICAL_DEBT.md`, tras auditoría técnica de solo lectura del 2026-10-14. La reescritura se produjo en el commit `dd6fda3` al cerrar SPEC-007 y no fue registrada en su momento, por lo que la fecha registrada es la de su incorporación a este documento. |
+| 2026-11-07 | Se preparó una reconstrucción completa del historial con migraciones timestamp UTC, validación estática, control Git de inmutabilidad y pruebas de reconstrucción e incremento. La deuda permanece pendiente hasta que el nuevo historial se integre en `dev`, se recree y valide una base PostgreSQL vacía y exista evidencia de los tests; no se alteró ninguna base durante la preparación. |
 
 ### TD-005 — Perfil `dev` activo por defecto con credenciales de base de datos versionadas
 

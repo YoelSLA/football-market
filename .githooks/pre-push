@@ -3,6 +3,10 @@
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
 
+if git rev-parse --verify origin/dev >/dev/null 2>&1; then
+    bash "$root/.githooks/flyway-migrations.sh" origin/dev HEAD || exit 1
+fi
+
 bash "$root/.githooks/backend-changes.sh"
 classification_status=$?
 if [[ "$classification_status" == 1 ]]; then
