@@ -1,0 +1,80 @@
+@use "@/styles/abstracts" as ds;
+
+.selector {
+	// 3. 🧩 Layout
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	// 4. 📦 Box Model
+	width: 100%;
+	&__group {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		box-sizing: border-box;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		width: 100%;
+		max-width: 480px;
+		height: 44px;
+		padding: 4px;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-dark;
+		border: 1px solid ds.$border-subtle;
+		border-radius: 10px;
+	}
+
+	&__tab {
+		// 3. 🧩 Layout
+		flex: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		// 4. 📦 Box Model
+		height: 36px;
+		padding: 0 1rem;
+
+		// 5. 🔤 Typography
+		font-family: inherit;
+		font-size: 14px;
+		font-weight: 600;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-transparent;
+		border: none;
+		border-radius: 7px;
+		color: ds.$text-muted-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+		user-select: none;
+
+		// 8. ✨ Animation
+		transition: background-color 0.15s ease, color 0.15s ease;
+		&:hover:not(&_active) {
+			// 6. 🎨 Visual
+			color: ds.$text-pagination;
+			background-color: ds.$surface-glass-faint;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 2px;
+		}
+
+		&_active {
+			// 6. 🎨 Visual
+			background-color: ds.$action-selected;
+			color: ds.$text-inverse;
+
+			// 7. ⚙️ Behavior
+			cursor: default;
+		}
+	}
+}

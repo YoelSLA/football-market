@@ -1,88 +1,108 @@
+@use "@/styles/abstracts" as ds;
+
 .place {
 	// Posicionamiento
+	// 2. 📍 Positioning
 	position: relative;
 
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 16px;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	width: 100%;
 	height: 100%;
 	min-width: 0;
-
 	// Espaciado
+	// 4. 📦 Box Model
 	padding: 14px 18px;
-
 	// Apariencia
+	// 6. 🎨 Visual
 	border-radius: 12px;
-	overflow: hidden;
 
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 	// Comportamiento
+	// 8. ✨ Animation
 	transition:
 		transform 0.2s ease,
 		box-shadow 0.2s ease;
-
 	&:hover {
+		// 8. ✨ Animation
 		transform: translateY(-2px);
 	}
 
 	&__watermark {
+		// 2. 📍 Positioning
 		position: absolute;
 		top: 50%;
 		right: -15px;
 		z-index: 0;
 
+		// 4. 📦 Box Model
 		width: 175px;
 		height: 175px;
-
 		object-fit: contain;
-		opacity: 0.09;
-		filter: grayscale(100%);
-		transform: translateY(-50%);
 
+		// 6. 🎨 Visual
+		filter: grayscale(100%);
+
+		// 7. ⚙️ Behavior
+		opacity: 0.09;
 		pointer-events: none;
 		user-select: none;
+
+		// 8. ✨ Animation
+		transform: translateY(-50%);
 	}
 
 	&_rank1 {
-		background: linear-gradient(135deg, #0e243b 0%, #081726 100%);
-		border: 1.5px solid #eab308;
-		box-shadow: 0 0 18px rgba(234, 179, 8, 0.15);
-
+		// 6. 🎨 Visual
+		background-color: ds.$surface-podium-gold;
+		border: 1.5px solid ds.$badge-podium-gold-border;
+		box-shadow: 0 0 18px ds.$badge-podium-gold-glow;
 		&:hover {
-			box-shadow: 0 0 24px rgba(234, 179, 8, 0.25);
+			// 6. 🎨 Visual
+			box-shadow: 0 0 24px ds.$badge-podium-gold-glow-hover;
 		}
 
 		.place__watermark {
-			opacity: 0.11;
+			// 6. 🎨 Visual
 			filter: grayscale(70%) sepia(30%);
+
+			// 7. ⚙️ Behavior
+			opacity: 0.11;
 		}
 	}
 
 	&_rank2 {
-		background: linear-gradient(135deg, #0a1f33 0%, #061423 100%);
-		border: 1.5px solid rgba(148, 163, 184, 0.25);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-
+		// 6. 🎨 Visual
+		background-color: ds.$surface-podium-silver;
+		border: 1.5px solid ds.$badge-podium-silver-border;
+		box-shadow: 0 4px 16px ds.$shadow-black-medium;
 		&:hover {
-			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+			// 6. 🎨 Visual
+			box-shadow: 0 6px 20px ds.$shadow-black-heavy;
 		}
 	}
 
 	&_rank3 {
-		background: linear-gradient(135deg, #0a1f33 0%, #061423 100%);
-		border: 1.5px solid rgba(234, 88, 12, 0.35);
-		box-shadow: 0 0 16px rgba(234, 88, 12, 0.1);
-
+		// 6. 🎨 Visual
+		background-color: ds.$surface-podium-silver;
+		border: 1.5px solid ds.$badge-podium-bronze-border;
+		box-shadow: 0 0 16px ds.$badge-podium-bronze-glow;
 		&:hover {
-			box-shadow: 0 0 22px rgba(234, 88, 12, 0.18);
+			// 6. 🎨 Visual
+			box-shadow: 0 0 22px ds.$badge-podium-bronze-glow-hover;
 		}
 
 		.place__watermark {
-			opacity: 0.09;
+			// 6. 🎨 Visual
 			filter: grayscale(80%) sepia(40%);
+
+			// 7. ⚙️ Behavior
+			opacity: 0.09;
 		}
 	}
 }

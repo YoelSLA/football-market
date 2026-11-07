@@ -1,146 +1,171 @@
+@use "@/styles/abstracts" as ds;
+
 .authVisualPanel {
-  position: relative;
-  min-width: 0;
-  min-height: 42rem;
-  overflow: hidden;
+	// 2. 📍 Positioning
+	position: relative;
 
-  border-radius: 1rem;
-  background: #111c45;
-  color: white;
+	// 4. 📦 Box Model
+	min-width: 0;
+	min-height: 42rem;
 
-  &__backgrounds {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
+	// 6. 🎨 Visual
+	border-radius: 1rem;
+	background-color: ds.$surface-visual-panel;
+	color: ds.$text-primary-on-dark;
 
-    overflow: hidden;
-  }
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+	&__backgrounds {
+		// 2. 📍 Positioning
+		position: absolute;
+		inset: 0;
+		z-index: 0;
 
-  &__background {
-    position: absolute;
-    inset: 0;
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
 
-    width: 100%;
-    height: 100%;
+	&__background {
+		// 2. 📍 Positioning
+		position: absolute;
+		inset: 0;
 
-    object-fit: cover;
-    object-position: center;
+		// 4. 📦 Box Model
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
 
-    opacity: 0;
-    transition: opacity 1s ease-in-out;
+		// 7. ⚙️ Behavior
+		opacity: 0;
+		user-select: none;
+		pointer-events: none;
 
-    user-select: none;
-    pointer-events: none;
+		// 8. ✨ Animation
+		transition: opacity 1s ease-in-out;
+		&_active {
+			// 7. ⚙️ Behavior
+			opacity: 1;
+		}
+	}
 
-    &_active {
-      opacity: 1;
-    }
-  }
+	&__overlay {
+		// 2. 📍 Positioning
+		position: absolute;
+		inset: 0;
+		z-index: 1;
 
-  &__overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
+		// 6. 🎨 Visual
+		background-color: ds.$surface-transparent;
 
-    background:
-      linear-gradient(
-        180deg,
-        rgb(10 20 55 / 80%) 0%,
-        rgb(14 29 75 / 45%) 45%,
-        rgb(12 25 65 / 75%) 100%
-      ),
-      linear-gradient(
-        135deg,
-        rgb(20 40 100 / 55%),
-        rgb(48 80 190 / 20%)
-      );
+		// 7. ⚙️ Behavior
+		pointer-events: none;
+	}
 
-    pointer-events: none;
-  }
+	&__content {
+		// 2. 📍 Positioning
+		position: relative;
+		z-index: 2;
 
-  &__content {
-    position: relative;
-    z-index: 2;
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
 
-    min-height: 42rem;
-    height: 100%;
+		// 4. 📦 Box Model
+		min-height: 42rem;
+		height: 100%;
+		padding: clamp(1.5rem, 3vw, 3rem);
+	}
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+	&__eyebrow {
+		// 5. 🔤 Typography
+		font-size: .65rem;
+		font-weight: 700;
+		letter-spacing: .18em;
 
-    padding: clamp(1.5rem, 3vw, 3rem);
-  }
+		// 6. 🎨 Visual
+		color: ds.$text-visual-eyebrow;
+	}
 
-  &__eyebrow {
-    font-size: .65rem;
-    font-weight: 700;
-    letter-spacing: .18em;
-    color: #d5deff;
-  }
+	&__title {
+		// 4. 📦 Box Model
+		margin-top: 1.5rem;
 
-  &__title {
-    margin-top: 1.5rem;
+		// 5. 🔤 Typography
+		font-size: clamp(1.75rem, 3vw, 2.6rem);
+		line-height: 1.12;
+		letter-spacing: -.05em;
+		text-shadow: 0 2px 12px ds.$shadow-visual-title;
 
-    font-size: clamp(1.75rem, 3vw, 2.6rem);
-    line-height: 1.12;
-    letter-spacing: -.05em;
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+	}
 
-    color: #fff;
-    text-shadow: 0 2px 12px rgb(0 0 0 / 25%);
-  }
+	&__description {
+		// 4. 📦 Box Model
+		max-width: 22rem;
+		margin-top: 1rem;
 
-  &__description {
-    max-width: 22rem;
-    margin-top: 1rem;
+		// 5. 🔤 Typography
+		font-size: .9rem;
+		text-shadow: 0 1px 8px ds.$shadow-visual-desc;
 
-    font-size: .9rem;
-    color: #d5deff;
+		// 6. 🎨 Visual
+		color: ds.$text-visual-eyebrow;
+	}
 
-    text-shadow: 0 1px 8px rgb(0 0 0 / 35%);
-  }
+	&__caption {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: .6rem;
 
-  &__caption {
-    display: flex;
-    align-items: center;
-    gap: .6rem;
+		// 4. 📦 Box Model
+		margin-top: 2.5rem;
 
-    margin-top: 2.5rem;
+		// 5. 🔤 Typography
+		font-size: .6rem;
+		letter-spacing: .1em;
+		text-shadow: 0 1px 6px ds.$shadow-visual-caption;
 
-    font-size: .6rem;
-    letter-spacing: .1em;
-    color: #d5deff;
+		// 6. 🎨 Visual
+		color: ds.$text-visual-eyebrow;
+	}
 
-    text-shadow: 0 1px 6px rgb(0 0 0 / 40%);
-  }
+	&__captionDot {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
 
-  &__captionDot {
-    width: .4rem;
-    height: .4rem;
+		// 4. 📦 Box Model
+		width: .4rem;
+		height: .4rem;
 
-    flex-shrink: 0;
+		// 6. 🎨 Visual
+		border-radius: 50%;
+		background-color: ds.$dot-visual-active;
+		box-shadow: 0 0 .5rem ds.$shadow-visual-dot;
+	}
 
-    border-radius: 50%;
-    background: #b1f9c8;
-    box-shadow: 0 0 .5rem rgb(177 249 200 / 55%);
-  }
+	@media (max-width: 760px) {
+		// 4. 📦 Box Model
+		min-height: 28rem;
+		&__content {
+			// 4. 📦 Box Model
+			min-height: 28rem;
+			padding: 1.75rem;
+		}
 
-  @media (max-width: 760px) {
-    min-height: 28rem;
+		&__title {
+			// 5. 🔤 Typography
+			font-size: clamp(1.75rem, 8vw, 2.3rem);
+		}
+	}
 
-    &__content {
-      min-height: 28rem;
-      padding: 1.75rem;
-    }
-
-    &__title {
-      font-size: clamp(1.75rem, 8vw, 2.3rem);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    &__background {
-      transition: none;
-    }
-  }
+	@media (prefers-reduced-motion: reduce) {
+		&__background {
+			// 8. ✨ Animation
+			transition: none;
+		}
+	}
 }

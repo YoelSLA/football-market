@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.market.application.BuyOrderService;
@@ -26,6 +25,7 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import footballmarket.support.TestFixtures;
 import io.jsonwebtoken.Jwts;
@@ -298,12 +298,13 @@ class ListingControllerTest {
   @Autowired private SecretKey key;
   @MockitoBean private TokenListingService listingService;
   @MockitoBean private BuyOrderService buyService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void arrange() {
+    when(identityValidator.exists("seller@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

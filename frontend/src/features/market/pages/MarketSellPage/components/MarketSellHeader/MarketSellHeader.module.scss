@@ -1,0 +1,110 @@
+@use "@/styles/abstracts" as ds;
+
+.sellHeader {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1.25rem;
+
+	// 4. 📦 Box Model
+	padding-bottom: 1.2rem;
+	&__totals {
+		// 3. 🧩 Layout
+		display: grid;
+		flex: 1;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+
+		// 4. 📦 Box Model
+		max-width: 60rem;
+		min-width: 0;
+		p {
+			// 4. 📦 Box Model
+			min-width: 0;
+			margin: 0;
+			padding: .75rem 1rem;
+
+			// 5. 🔤 Typography
+			font-size: .78rem;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-panel;
+			border-radius: .6rem;
+			background-color: ds.$surface-panel-from;
+			color: ds.$text-label-on-dark;
+		}
+
+		p:nth-child(2) {
+			// 6. 🎨 Visual
+			border-color: ds.$border-gain-subtle;
+			color: ds.$accent-gain;
+		}
+
+		p:nth-child(3) {
+			// 6. 🎨 Visual
+			border-color: ds.$border-investment-subtle;
+			color: ds.$accent-investment;
+		}
+
+		strong {
+			// 3. 🧩 Layout
+			display: block;
+
+			// 4. 📦 Box Model
+			margin-top: .35rem;
+
+			// 5. 🔤 Typography
+			font-size: clamp(.95rem, 1.35vw, 1.35rem);
+			line-height: 1.2;
+
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
+		}
+
+		p:nth-child(3) strong {
+			// 6. 🎨 Visual
+			color: ds.$accent-investment;
+		}
+	}
+}
+
+@media (max-width: 850px) {
+	.sellHeader {
+		// 3. 🧩 Layout
+		align-items: stretch;
+		flex-direction: column;
+		&__totals {
+			// 4. 📦 Box Model
+			max-width: none;
+		}
+	}
+}
+
+@media (max-width: 639px) {
+	.sellHeader {
+		// 3. 🧩 Layout
+		gap: .5rem;
+
+		// 4. 📦 Box Model
+		padding-bottom: .5rem;
+		&__totals {
+			// 3. 🧩 Layout
+			gap: .35rem;
+			p {
+				// 4. 📦 Box Model
+				padding: .45rem;
+
+				// 5. 🔤 Typography
+				font-size: .65rem;
+			}
+
+			strong {
+				// 5. 🔤 Typography
+				font-size: .8rem;
+			}
+		}
+	}
+}
+

@@ -1,3 +1,5 @@
+@use "../abstracts" as ds;
+
 /*
  * Estilos base de Football Market.
  *
@@ -9,20 +11,24 @@
 *,
 *::before,
 *::after {
+	// 3. 🧩 Layout
 	box-sizing: border-box;
 }
 
 * {
+	// 4. 📦 Box Model
 	margin: 0;
 }
 
 html,
 body,
 #root {
+	// 4. 📦 Box Model
 	min-height: 100%;
 }
 
 html {
+	// 5. 🔤 Typography
 	font-family:
 		system-ui,
 		-apple-system,
@@ -38,6 +44,7 @@ html {
 }
 
 body {
+	// 4. 📦 Box Model
 	min-width: 0;
 	min-height: 100vh;
 }
@@ -46,6 +53,7 @@ button,
 input,
 textarea,
 select {
+	// 5. 🔤 Typography
 	font: inherit;
 }
 
@@ -54,7 +62,10 @@ picture,
 video,
 canvas,
 svg {
+	// 3. 🧩 Layout
 	display: block;
+
+	// 4. 📦 Box Model
 	max-width: 100%;
 }
 
@@ -65,19 +76,25 @@ h3,
 h4,
 h5,
 h6 {
+	// 5. 🔤 Typography
 	overflow-wrap: break-word;
 }
 
 a {
-	color: inherit;
+	// 5. 🔤 Typography
 	text-decoration: none;
+
+	// 6. 🎨 Visual
+	color: inherit;
 }
 
 button:not(:disabled) {
+	// 7. ⚙️ Behavior
 	cursor: pointer;
 }
 
 :focus-visible {
-	outline: 3px solid #6484ec;
+	// 6. 🎨 Visual
+	outline: 3px solid ds.$focus-ring-light;
 	outline-offset: 3px;
 }

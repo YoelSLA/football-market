@@ -7,13 +7,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
 import footballmarket.features.identity.application.exceptions.PlayerIdentitySynchronizationException;
 import footballmarket.features.identity.domain.enums.PlayerIdentityRunStatus;
 import footballmarket.features.identity.domain.records.PlayerIdentitySyncSummary;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -48,15 +46,13 @@ class PlayerIdentityControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private PlayerIdentitySynchronizationService service;
-  @MockitoBean private AuthenticationService authentication;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authentication.getCurrentUser("identity@test.com"))
-        .thenReturn(
-            new User(1L, "identity.user", "identity@test.com", "password123", UserRole.USER));
+    when(identityValidator.exists("identity@test.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

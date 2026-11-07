@@ -1,58 +1,78 @@
 @use "@/styles/abstracts" as ds;
 
 .tabLink {
+	// 3. 🧩 Layout
 	display: inline-flex;
 	align-items: center;
 	gap: ds.$space-xs;
+
+	// 4. 📦 Box Model
 	min-height: 44px;
 	padding: ds.$space-2xs ds.$space-md;
-	border-bottom: 2px solid transparent;
+
+	// 5. 🔤 Typography
 	font-size: 14px;
-	color: ds.$text-portfolio-nav;
 	text-decoration: none;
 	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	border-bottom: 2px solid ds.$border-transparent;
+	color: ds.$text-nav;
+
+	// 8. ✨ Animation
 	transition:
 		color 0.18s ease,
-		background 0.18s ease,
+		background-color 0.18s ease,
 		border-color 0.18s ease;
-
 	&:hover {
-		color: ds.$text-portfolio-strong;
+		// 6. 🎨 Visual
+		color: ds.$text-strong-on-dark;
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 		outline-offset: 2px;
 	}
 
 	&_active {
-		border-bottom-color: ds.$accent-finance-green;
-		background: linear-gradient(110deg, rgba(ds.$accent-finance-cyan, 0.06), rgba(ds.$accent-finance-cyan, 0.02));
-		color: ds.$accent-finance-green;
+		// 5. 🔤 Typography
 		font-weight: 700;
 
+		// 6. 🎨 Visual
+		border-bottom-color: ds.$accent-gain;
+		background-color: ds.$surface-nav-active;
+		color: ds.$accent-gain;
 		&:hover {
-			color: ds.$accent-finance-green;
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
 		}
 	}
 
 	&_disabled {
+		// 7. ⚙️ Behavior
 		cursor: default;
-
 		&:hover {
-			color: ds.$text-portfolio-nav;
+			// 6. 🎨 Visual
+			color: ds.$text-nav;
 		}
 	}
 
 	&__icon {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 4. 📦 Box Model
 		width: 22px;
 		height: 22px;
 	}
 
 	@include ds.down(ds.$bp-grid-sm) {
+		// 4. 📦 Box Model
 		min-height: 44px;
 		padding: ds.$space-2xs ds.$space-sm;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
 	}
 }

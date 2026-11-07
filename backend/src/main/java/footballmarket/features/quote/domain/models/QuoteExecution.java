@@ -1,5 +1,8 @@
 package footballmarket.features.quote.domain.models;
 
+import footballmarket.features.quote.domain.enums.QuoteExecutionFailureReason;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
+import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
 import footballmarket.features.quote.domain.exceptions.InvalidQuoteException;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import jakarta.persistence.Column;
@@ -37,6 +40,10 @@ public class QuoteExecution {
 
   @Column(name = "quote_date", nullable = false, updatable = false)
   private LocalDate quoteDate;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "origin", nullable = false, updatable = false, length = 16)
+  private QuoteExecutionOrigin origin;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "strategy_name", nullable = false, updatable = false)
@@ -81,6 +88,7 @@ public class QuoteExecution {
    * Crea el resumen persistido de una corrida de cotización.
    *
    * @param quoteDate fecha de cotización de la corrida
+   * @param origin origen manual o automático de la corrida
    * @param strategyName estrategia aplicada por la corrida
    * @param strategyVersion versión de la estrategia aplicada
    * @param adjustmentFactor factor de ajuste aplicado
@@ -97,6 +105,7 @@ public class QuoteExecution {
    */
   public QuoteExecution(
       LocalDate quoteDate,
+      QuoteExecutionOrigin origin,
       ValuationStrategy strategyName,
       String strategyVersion,
       BigDecimal adjustmentFactor,
@@ -110,6 +119,7 @@ public class QuoteExecution {
       Instant startedAt,
       Instant finishedAt) {
     if (quoteDate == null
+        || origin == null
         || strategyName == null
         || strategyVersion == null
         || adjustmentFactor == null
@@ -137,6 +147,7 @@ public class QuoteExecution {
       throw new InvalidQuoteException("Los contadores de la ejecución no pueden ser negativos");
     }
     this.quoteDate = quoteDate;
+    this.origin = origin;
     this.strategyName = strategyName;
     this.strategyVersion = strategyVersion;
     this.adjustmentFactor = adjustmentFactor;
@@ -149,6 +160,16 @@ public class QuoteExecution {
     this.failedPlayers = failedPlayers;
     this.startedAt = startedAt;
     this.finishedAt = finishedAt;
+  }
+
+  /** Deriva el resultado exclusivamente de los contadores persistidos. */
+  public QuoteExecutionResult result() {
+    return this.failedPlayers == 0 ? QuoteExecutionResult.SUCCESS : QuoteExecutionResult.FAILED;
+  }
+
+  /** Devuelve un motivo cerrado solo cuando hubo fallos individuales. */
+  public QuoteExecutionFailureReason failureReason() {
+    return this.failedPlayers == 0 ? null : QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES;
   }
 
   /** Completa los resultados de una corrida previamente reservada para su fecha. */

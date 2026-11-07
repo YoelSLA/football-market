@@ -6,13 +6,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.ranking.application.ScoreRankingQueryService;
 import footballmarket.features.ranking.domain.records.ScoreRanking;
 import footballmarket.features.ranking.domain.records.ScoreRankingEntry;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
@@ -46,15 +44,13 @@ class ScoreRankingControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private ScoreRankingQueryService queryService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("ranking@example.com"))
-        .thenReturn(
-            new User(1L, "ranking.user", "ranking@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("ranking@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

@@ -10,9 +10,12 @@ import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExis
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
+import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteExecution;
+import footballmarket.features.quote.infraestructure.config.QuoteProperties;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.support.IdentityCatalogueFixture;
@@ -29,6 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -46,7 +50,13 @@ import org.springframework.test.context.bean.override.convention.TestBean;
  * QuoteRecalculationService}. No accede a la persistencia: el estado durable se comprueba en {@code
  * QuoteExecutionPersistenceTest}.
  */
-@SpringBootTest
+@SpringBootTest(
+    properties = {
+      "market.quote.strategy=GENERAL_ATTRIBUTES",
+      "market.quote.adjustment-factor=0.25",
+      "market.quote.variation-cap=0.20",
+      "market.quote.min-price-floor=7"
+    })
 @ActiveProfiles("test")
 @Import({
   TestcontainersConfiguration.class,
@@ -75,6 +85,7 @@ class QuoteRecalculationServiceTest {
   @Autowired private QuotePlayerPublisher publisher;
   @Autowired private IdentityCatalogueFixture catalogue;
   @Autowired private ValuationTestData data;
+  @Autowired private QuoteProperties properties;
 
   /**
    * Reloj de las campañas de estadísticas, fijado a la fecha de la corrida.
@@ -211,6 +222,82 @@ class QuoteRecalculationServiceTest {
   class PopulationExecution {
 
     @Test
+    @DisplayName("La consulta relee origen y resultado derivados y devuelve vacío sin ejecución")
+    void queriesPersistedOutcomeByDate() {
+      // Arrange
+      prepareValuedMarket();
+      service.recalculateAutomatic();
+      // Act
+      List<QuoteExecution> saved = service.executions(QUOTE_DATE);
+      List<QuoteExecution> absent = service.executions(QUOTE_DATE.minusDays(1));
+      // Assert
+      assertThat(saved)
+          .singleElement()
+          .satisfies(
+              execution -> {
+                assertThat(execution.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
+                assertThat(execution.result()).isEqualTo(QuoteExecutionResult.SUCCESS);
+                assertThat(execution.failureReason()).isNull();
+              });
+      assertThat(absent).isEmpty();
+    }
+
+    @Test
+    @DisplayName("La entrada automática persiste su origen y aplica la configuración del mercado")
+    void automaticExecutionUsesMarketConfiguration() {
+      // Arrange
+      prepareValuedMarket();
+      // Act
+      QuoteExecution result = service.recalculateAutomatic();
+      // Assert
+      assertThat(result.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
+      assertThat(result.getStrategyName()).isEqualTo(ValuationStrategy.GENERAL_ATTRIBUTES);
+      assertThat(result.getAdjustmentFactor()).isEqualByComparingTo("0.25");
+      assertThat(result.getVariationCap()).isEqualByComparingTo("0.20");
+      assertThat(result.getMinPriceFloor()).isEqualTo(7L);
+      assertThat(result.getPricedPlayers()).isEqualTo(5);
+      assertThat(result.getRecomputedRows()).isEqualTo(5);
+      assertThat(result.getCarriedForwardRows()).isZero();
+      assertThat(result.getNotRepricedPlayers()).isZero();
+      assertThat(result.getFailedPlayers()).isZero();
+      // Verify
+      assertThat(service.executions(QUOTE_DATE))
+          .singleElement()
+          .satisfies(
+              saved -> {
+                assertThat(saved.getId()).isEqualTo(result.getId());
+                assertThat(saved.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
+                assertThat(saved.getStrategyName()).isEqualTo(result.getStrategyName());
+                assertThat(saved.getAdjustmentFactor())
+                    .isEqualByComparingTo(result.getAdjustmentFactor());
+                assertThat(saved.getVariationCap()).isEqualByComparingTo(result.getVariationCap());
+                assertThat(saved.getMinPriceFloor()).isEqualTo(result.getMinPriceFloor());
+              });
+    }
+
+    @Test
+    @DisplayName("La entrada manual con los parámetros configurados conserva los mismos contadores")
+    void manualExecutionUsesEquivalentInputs() {
+      // Arrange
+      prepareValuedMarket();
+      // Act
+      QuoteExecution result =
+          service.recalculate(
+              properties.strategy().name(),
+              properties.adjustmentFactor(),
+              properties.variationCap(),
+              properties.minPriceFloor());
+      // Assert
+      assertThat(result.getOrigin()).isEqualTo(QuoteExecutionOrigin.MANUAL);
+      assertThat(result.getStrategyName()).isEqualTo(ValuationStrategy.GENERAL_ATTRIBUTES);
+      assertThat(result.getPricedPlayers()).isEqualTo(5);
+      assertThat(result.getRecomputedRows()).isEqualTo(5);
+      assertThat(result.getCarriedForwardRows()).isZero();
+      assertThat(result.getNotRepricedPlayers()).isZero();
+      assertThat(result.getFailedPlayers()).isZero();
+    }
+
+    @Test
     @DisplayName("Persiste el resumen y rechaza una segunda corrida del día")
     void persistsSummaryAndRejectsSecondRun() {
       prepareValuedMarket();
@@ -258,22 +345,36 @@ class QuoteRecalculationServiceTest {
       try {
         List<Future<Class<?>>> results =
             List.of(
-                executor.submit(() -> executeAfter(start)),
-                executor.submit(() -> executeAfter(start)));
+                executor.submit(() -> executeAfter(start, false)),
+                executor.submit(() -> executeAfter(start, true)));
         start.countDown();
 
         assertThat(results)
-            .extracting(result -> result.get().getSimpleName())
+            .extracting(result -> result.get(30, TimeUnit.SECONDS).getSimpleName())
             .containsExactlyInAnyOrder("QuoteExecution", "ExecutionAlreadyExistsException");
+        assertThat(service.executions(QUOTE_DATE))
+            .singleElement()
+            .satisfies(
+                execution -> {
+                  assertThat(execution.getPricedPlayers()).isEqualTo(5);
+                  assertThat(execution.getRecomputedRows()).isEqualTo(5);
+                  assertThat(execution.getFailedPlayers()).isZero();
+                });
       } finally {
         executor.shutdownNow();
       }
     }
   }
 
-  private Class<?> executeAfter(CountDownLatch start) throws InterruptedException {
-    start.await();
+  private Class<?> executeAfter(CountDownLatch start, boolean automatic)
+      throws InterruptedException {
+    if (!start.await(10, TimeUnit.SECONDS)) {
+      throw new AssertionError("No se liberó el inicio concurrente");
+    }
     try {
+      if (automatic) {
+        return service.recalculateAutomatic().getClass();
+      }
       return service.recalculate("POSITIONAL_PERFORMANCE", null, null, null).getClass();
     } catch (ExecutionAlreadyExistsException exception) {
       return exception.getClass();

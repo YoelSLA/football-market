@@ -1,3 +1,8 @@
+market:
+  quote:
+    schedule:
+      enabled: false
+
 spring:
   datasource:
     hikari:
@@ -53,6 +58,8 @@ logging:
 # los IDs devueltos por el catálogo aislado antes de iniciar la sincronización.
 whoscored:
   statistics:
+    schedule:
+      enabled: false
     scraping-workers: 4
     json-workers: 3
     request-interval-ms: 1

@@ -53,3 +53,58 @@ El Page Hook `useMarketBuyPage` interpreta `getErrorCode` de `@/infrastructure/h
 ## Límite de integración
 
 `market` invalida únicamente su key de cotización vigente y comunica éxito mediante `onPurchaseSuccess(playerId)` a `app`. `app`, importando `portfolioQueryKeys` desde `features/portfolio/index.ts`, invalida `summary` y el prefijo de todas las `holdings(...)`; no copia los literales de key ni introduce imports entre features. La app obtiene los jugadores vía API raíz de `players`, y entrega a market su Model estructural propio. `infrastructure/http` solo agrega autenticación y transporta AxiosError sin entender negocios.
+
+## Modalidad secundaria: publicaciones de usuarios
+
+### Lectura del mercado
+
+`GET /api/listings`, autenticado, sin parámetros. El consumidor usa el contrato autoritativo de
+[SPEC-011](../../011-sell-player-tokens/contracts/listings.md).
+
+```ts
+interface TokenListingDTO {
+  listingId: number;
+  sellerId: number;
+  playerId: number;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  status: "ACTIVE";
+  createdAt: string;
+  expiresAt: string;
+}
+
+interface TokenListingsDTO { listings: TokenListingDTO[] }
+```
+
+El Mapper valida objeto, colección, enteros seguros positivos, `totalAmount === quantity * unitPrice`,
+estado `ACTIVE` y fechas ISO válidas. No convierte strings numéricos ni fabrica campos. La vigencia del
+backend es autoritativa; `expiresAt` solo permite feedback local y refetch. El `sellerId` no se presenta ni
+se resuelve como identidad pública.
+
+### Compra de una publicación
+
+`POST /api/orders/buy`, autenticado:
+
+```ts
+interface BuyListingRequestDTO { listingId: number }
+```
+
+Con `listingId` presente no se envían `playerId`, `quantity` ni precio. La respuesta reutiliza
+`OrderBuyResponseDTO` y exige que `listingId` coincida con el solicitado antes de presentar éxito.
+
+| Código | Comportamiento consumidor |
+|---|---|
+| `LISTING_NOT_AVAILABLE` | Informar que la oferta dejó de estar disponible e invalidar/refrescar listings. |
+| `LISTING_NOT_FOUND` | Informar indisponibilidad y retirar el recurso tras refetch. |
+| `CANNOT_BUY_OWN_LISTING` | Rechazo defensivo; refrescar porque el mercado público no debería entregarla. |
+| `INSUFFICIENT_CREDITS` | Informar saldo insuficiente; conservar modal para revisión/cierre. |
+| `INSUFFICIENT_STOCK` | Informar que el lote ya no puede liquidarse y refrescar listings. |
+| `SUPERUSER_CANNOT_BUY` | Informar que administradores no pueden comprar. |
+| `INVALID_REQUEST` | Informar solicitud inválida sin reintento automático. |
+| `INTERNAL_ERROR`, 500 | Error genérico; no afirmar resultado transaccional. |
+| Red/sin respuesta concluyente | Resultado incierto; no reintentar automáticamente ni afirmar fallo. |
+| 401 | Gestión global de sesión; no restaurar intención de compra. |
+
+Una compra exitosa invalida publicaciones, usuario actual, resumen y tenencias. La query de publicaciones
+es la única fuente remota para catálogo y detalle; estos no mantienen copias divergentes.

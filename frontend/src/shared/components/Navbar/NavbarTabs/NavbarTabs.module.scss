@@ -1,33 +1,45 @@
 @use "@/styles/abstracts" as ds;
 
 .navbarTabs {
+	// 3. 🧩 Layout
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
+
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 	min-height: ds.$navbar-tabs-height;
 	padding: 0 ds.$space-md;
-	background: ds.$surface-finance-panel-from;
-	border-bottom: ds.$navbar-border-width solid ds.$border-finance;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-panel-from;
+	border-bottom: ds.$navbar-border-width solid ds.$border-panel;
 }
 
 .navbarTabList {
+	// 3. 🧩 Layout
 	display: flex;
 	gap: 0;
+
+	// 4. 📦 Box Model
 	margin: 0;
 	padding: 0;
+
+	// 7. ⚙️ Behavior
 	overflow-x: auto;
 	list-style: none;
 }
 
 .navbarTabItem {
+	// 3. 🧩 Layout
 	display: flex;
 	flex-shrink: 0;
 }
 
 @include ds.down(ds.$bp-grid-sm) {
 	.navbarTabs {
+		// 4. 📦 Box Model
 		padding-inline: ds.$space-2xs;
 	}
 }

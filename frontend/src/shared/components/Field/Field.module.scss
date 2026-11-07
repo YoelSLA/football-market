@@ -1,38 +1,52 @@
 @use "@/styles/abstracts" as ds;
 
 .field {
+	// 3. 🧩 Layout
 	display: grid;
 	gap: .35rem;
-	min-width: 0;
 
+	// 4. 📦 Box Model
+	min-width: 0;
 	&__label {
+		// 5. 🔤 Typography
 		font-size: .8rem;
 		font-weight: 600;
 	}
 
 	&__input {
+		// 4. 📦 Box Model
 		width: 100%;
 		min-width: 0;
 		padding: .7rem .85rem;
-		border: 1px solid ds.$border-input;
-		border-radius: .5rem;
-		color: ds.$text-on-auth;
-		background: ds.$surface-card;
+
+		// 5. 🔤 Typography
 		font-size: .9rem;
 
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-input;
+		border-radius: .5rem;
+		color: ds.$text-auth;
+		background-color: ds.$surface-card;
 		&[aria-invalid="true"] {
+			// 6. 🎨 Visual
 			border-color: ds.$state-error-border;
 		}
 
 		&:disabled {
-			background: ds.$surface-disabled;
+			// 6. 🎨 Visual
+			background-color: ds.$surface-disabled;
 		}
 	}
 
 	&__error {
+		// 4. 📦 Box Model
 		min-height: 1.1rem;
-		color: ds.$state-error;
+
+		// 5. 🔤 Typography
 		font-size: .75rem;
 		overflow-wrap: anywhere;
+
+		// 6. 🎨 Visual
+		color: ds.$state-error;
 	}
 }

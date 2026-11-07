@@ -9,12 +9,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
-import footballmarket.features.auth.domain.User;
 import footballmarket.features.portfolio.application.OperationHistoryService;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -52,7 +50,7 @@ class OperationHistoryControllerTest {
   @Autowired private SecretKey key;
 
   @MockitoBean private OperationHistoryService historyService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mvc;
   private String authorization;
@@ -61,9 +59,7 @@ class OperationHistoryControllerTest {
   void arrange() {
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization = bearer(SUBJECT, Instant.now().plusSeconds(300));
-    when(authenticationService.getCurrentUser(anyString()))
-        .thenAnswer(
-            invocation -> new User("session-user", invocation.getArgument(0), "password123"));
+    when(identityValidator.exists(anyString())).thenReturn(true);
   }
 
   @Nested
@@ -153,8 +149,7 @@ class OperationHistoryControllerTest {
     @DisplayName("Rechaza una identidad autenticada que no corresponde a un usuario persistido")
     void rechazaSubjectSinUsuario() throws Exception {
       // Arrange
-      when(authenticationService.getCurrentUser("missing@example.com"))
-          .thenThrow(new CurrentUserNotFoundException());
+      when(identityValidator.exists("missing@example.com")).thenReturn(false);
       // Act / Assert
       mvc.perform(
               get("/api/users/me/transactions")

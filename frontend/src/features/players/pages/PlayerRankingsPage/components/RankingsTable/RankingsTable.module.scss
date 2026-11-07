@@ -1,89 +1,132 @@
 @use "@/styles/abstracts" as ds;
 
 .tableWrapper {
+	// 3. 🧩 Layout
 	flex: 0 0 413px;
+
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 	height: 413px;
-	overflow: hidden;
-	background: #071928;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-data-table;
 	border-radius: 8px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 4px 16px ds.$shadow-black-soft;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 	scrollbar-width: thin;
-	scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+	scrollbar-color: ds.$border-glass ds.$surface-transparent;
 }
 
 .table {
+	// 3. 🧩 Layout
 	display: block;
+	border-collapse: separate;
+	border-spacing: 0;
+
+	// 4. 📦 Box Model
 	width: 100%;
 	height: 100%;
 	min-width: 0;
-	border-collapse: separate;
-	border-spacing: 0;
+
+	// 5. 🔤 Typography
 	text-align: left;
 	font-size: 13px;
-	color: #ffffff;
 
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
 	thead {
+		// 3. 🧩 Layout
 		display: block;
+
+		// 4. 📦 Box Model
 		height: 32px;
 		margin-bottom: 4px;
-		background: #061320;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
+		// 6. 🎨 Visual
+		background-color: ds.$surface-data-header;
+		border-bottom: 1px solid ds.$border-glass-subtle;
 		tr {
+			// 4. 📦 Box Model
 			height: 32px;
 		}
 
 		th {
+			// 3. 🧩 Layout
 			display: flex;
 			align-items: center;
+
+			// 4. 📦 Box Model
 			min-width: 0;
 			padding: 0 8px;
+
+			// 5. 🔤 Typography
 			font-size: 11px;
 			font-weight: 600;
-			color: #7a91a6;
 			white-space: nowrap;
+
+			// 6. 🎨 Visual
+			color: ds.$text-header-table;
 		}
 	}
 
 	tbody {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+
+		// 4. 📦 Box Model
 		height: 377px;
 		padding: 4px 0;
+
+		// 7. ⚙️ Behavior
 		overflow: hidden;
-
 		tr {
-			height: 44px;
+			// 3. 🧩 Layout
 			flex: 0 0 44px;
-			border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-			transition: background-color 0.15s ease;
 
+			// 4. 📦 Box Model
+			height: 44px;
+
+			// 6. 🎨 Visual
+			border-bottom: 1px solid ds.$border-glass-faint;
+
+			// 8. ✨ Animation
+			transition: background-color 0.15s ease;
 			&:last-child {
+				// 6. 🎨 Visual
 				border-bottom: none;
 			}
 
 			&:hover {
-				background-color: rgba(255, 255, 255, 0.03);
+				// 6. 🎨 Visual
+				background-color: ds.$surface-glass-subtle;
 			}
 		}
 
 		td {
+			// 3. 🧩 Layout
 			display: flex;
 			align-items: center;
+			vertical-align: middle;
+
+			// 4. 📦 Box Model
 			min-width: 0;
 			padding: 0 8px;
-			vertical-align: middle;
 		}
 	}
 
 	thead tr,
 	tbody tr {
+		// 3. 🧩 Layout
 		display: grid;
 		align-items: center;
 		column-gap: 8px;
+
+		// 4. 📦 Box Model
 		width: 100%;
 		min-width: 0;
 	}
@@ -91,6 +134,7 @@
 	&_valuation {
 		thead tr,
 		tbody tr {
+			// 3. 🧩 Layout
 			grid-template-columns: 80px 364px 300px 300px 160px 180px 260px 204px;
 		}
 	}
@@ -98,6 +142,7 @@
 	&_performance {
 		thead tr,
 		tbody tr {
+			// 3. 🧩 Layout
 			grid-template-columns: 80px minmax(0, 1fr) 300px 300px 160px 180px 260px;
 		}
 	}
@@ -106,247 +151,350 @@
 // Columns width & alignment
 .th_pos,
 .td_pos {
-	width: auto;
-	text-align: center;
+	// 3. 🧩 Layout
 	justify-content: center;
+
+	// 4. 📦 Box Model
+	width: auto;
+
+	// 5. 🔤 Typography
+	text-align: center;
 }
 
 .th_player,
 .td_player {
+	// 4. 📦 Box Model
 	min-width: 0;
 }
 
 .th_team,
 .td_team {
+	// 4. 📦 Box Model
 	min-width: 0;
 }
 
 .th_league,
 .td_league {
+	// 4. 📦 Box Model
 	min-width: 0;
 }
 
 .th_role,
 .td_role {
-	width: auto;
-	text-align: center;
+	// 3. 🧩 Layout
 	justify-content: center;
+
+	// 4. 📦 Box Model
+	width: auto;
+
+	// 5. 🔤 Typography
+	text-align: center;
 }
 
 .th_value,
 .td_value {
+	// 4. 📦 Box Model
 	min-width: 0;
+
+	// 5. 🔤 Typography
 	text-align: left;
 }
 
 .th_date,
 .td_date {
+	// 4. 📦 Box Model
 	min-width: 0;
+
+	// 5. 🔤 Typography
 	text-align: left;
 }
 
 .th_origin,
 .td_origin {
-	width: auto;
-	text-align: center;
+	// 3. 🧩 Layout
 	justify-content: center;
+
+	// 4. 📦 Box Model
+	width: auto;
+
+	// 5. 🔤 Typography
+	text-align: center;
 }
 
 // Active sort header
 .th_activeSort {
-	color: #00c988 !important;
+	// 3. 🧩 Layout
 	align-items: center;
 	gap: 4px;
+
+	// 6. 🎨 Visual
+	color: ds.$action-selected-accent !important;
 }
 
 .sortArrow {
+	// 5. 🔤 Typography
 	font-size: 11px;
 }
 
 // Position medals and numbers
 .medalWrapper {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
 .posNumber {
+	// 5. 🔤 Typography
 	font-size: 13px;
 	font-weight: 700;
-	color: #ffffff;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
 }
 
 // Player cell
 .playerLink {
+	// 3. 🧩 Layout
 	display: inline-flex;
 	align-items: center;
 	gap: 10px;
-	color: #ffffff;
+
+	// 5. 🔤 Typography
 	text-decoration: none;
 	font-weight: 700;
 
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
 	&:hover {
-		color: #00c988;
-
+		// 6. 🎨 Visual
+		color: ds.$action-selected-accent;
 		.playerName {
+			// 5. 🔤 Typography
 			text-decoration: underline;
 		}
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 		outline-offset: 2px;
 		border-radius: 4px;
 	}
 }
 
 .playerAvatar {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
 	width: 28px;
 	height: 28px;
-	border-radius: 4px;
 	object-fit: cover;
-	background: #0a1a2b;
-	flex-shrink: 0;
-	border: 1px solid rgba(255, 255, 255, 0.08);
+
+	// 6. 🎨 Visual
+	border-radius: 4px;
+	background-color: ds.$surface-data-avatar;
+	border: 1px solid ds.$border-glass-subtle;
 }
 
 .playerName {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	// 4. 📦 Box Model
 	max-width: 180px;
+
+	// 5. 🔤 Typography
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	font-size: 13px;
 	font-weight: 700;
-	color: #ffffff;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 }
 
 // Team cell
 .teamContainer {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
 .teamBadge {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
 	width: 18px;
 	height: 18px;
 	object-fit: contain;
-	flex-shrink: 0;
 }
 
 .badgePlaceholder {
+	// 5. 🔤 Typography
 	font-size: 12px;
-	color: #7a91a6;
+
+	// 6. 🎨 Visual
+	color: ds.$text-header-table;
 }
 
 .teamName {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	// 4. 📦 Box Model
 	max-width: 140px;
-	color: #ffffff;
+
+	// 5. 🔤 Typography
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	font-size: 13px;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 }
 
 // League cell
 .leagueContainer {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
 
 .leagueFlag {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
 	width: 16px;
 	height: 16px;
 	object-fit: contain;
-	flex-shrink: 0;
+
+	// 6. 🎨 Visual
 	border-radius: 2px;
 }
 
 .leagueName {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	// 4. 📦 Box Model
 	max-width: 140px;
-	color: #cbd5e1;
+
+	// 5. 🔤 Typography
+	white-space: nowrap;
+	text-overflow: ellipsis;
 	font-size: 13px;
+
+	// 6. 🎨 Visual
+	color: ds.$text-pagination;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 }
 
 // Position solid badges
 .positionBadge {
+	// 3. 🧩 Layout
 	display: inline-block;
+
+	// 4. 📦 Box Model
 	padding: 2px 7px;
-	border-radius: 4px;
+
+	// 5. 🔤 Typography
 	font-size: 10px;
 	font-weight: 800;
 	letter-spacing: 0.04em;
 
+	// 6. 🎨 Visual
+	border-radius: 4px;
 	&_DEL {
-		background: #ef4444;
-		color: #ffffff;
+		// 6. 🎨 Visual
+		background-color: ds.$badge-pos-del-bg;
+		color: ds.$badge-pos-del-text;
 	}
 
 	&_MED {
-		background: #f59e0b;
-		color: #1e1b18;
+		// 6. 🎨 Visual
+		background-color: ds.$badge-pos-med-bg;
+		color: ds.$badge-pos-med-text;
 	}
 
 	&_DEF {
-		background: #3b82f6;
-		color: #ffffff;
+		// 6. 🎨 Visual
+		background-color: ds.$badge-pos-def-bg;
+		color: ds.$badge-pos-def-text;
 	}
 
 	&_POR {
-		background: #10b981;
-		color: #ffffff;
+		// 6. 🎨 Visual
+		background-color: ds.$badge-pos-por-bg;
+		color: ds.$badge-pos-por-text;
 	}
 }
 
 // Value strong
 .valueStrong {
+	// 5. 🔤 Typography
 	font-size: 13px;
 	font-weight: 700;
-	color: #ffffff;
 	font-variant-numeric: tabular-nums;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
 }
 
 // Date
 .dateText {
+	// 5. 🔤 Typography
 	font-size: 12px;
-	color: #8fa2b4;
 	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	color: ds.$text-auxiliary-on-dark;
 }
 
 // Origin chips
 .originChip {
+	// 3. 🧩 Layout
 	display: inline-block;
+
+	// 4. 📦 Box Model
 	padding: 2px 8px;
-	border-radius: 10px;
+
+	// 5. 🔤 Typography
 	font-size: 10px;
 	font-weight: 800;
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
 	white-space: nowrap;
 
+	// 6. 🎨 Visual
+	border-radius: 10px;
 	&_recomputed {
-		background: rgba(0, 201, 136, 0.12);
-		border: 1px solid rgba(0, 201, 136, 0.35);
-		color: #00c988;
+		// 6. 🎨 Visual
+		background-color: ds.$chip-recomputed-bg;
+		border: 1px solid ds.$chip-recomputed-border;
+		color: ds.$action-selected-accent;
 	}
 
 	&_carried {
-		background: rgba(59, 130, 246, 0.12);
-		border: 1px solid rgba(59, 130, 246, 0.35);
-		color: #60a5fa;
+		// 6. 🎨 Visual
+		background-color: ds.$chip-carried-bg;
+		border: 1px solid ds.$chip-carried-border;
+		color: ds.$chip-carried-text;
 	}
 }
 
 @media (max-width: 1200px) {
 	.tableWrapper {
+		// 7. ⚙️ Behavior
 		overflow-x: auto;
 	}
 
 	.table {
+		// 4. 📦 Box Model
 		min-width: 1200px;
 	}
 }

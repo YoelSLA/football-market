@@ -57,7 +57,7 @@ Consultar el [punto de entrada](../architecture.md), la [interpretación normati
 | Origen | Destinos permitidos |
 | --- | --- |
 | `app` | APIs públicas de features y `shared`, API pública de `infrastructure`. |
-| Feature | APIs públicas de `shared` compatibles con su rol y de `infrastructure` conforme a la matriz anterior. |
+| Feature | APIs públicas de otras features (sin ciclos ni invasión de responsabilidades), APIs públicas de `shared` compatibles con su rol y de `infrastructure` conforme a la matriz anterior. |
 | Service de feature | API pública de `infrastructure` según la regla anterior. |
 | `infrastructure/http` | API pública de `infrastructure/storage` cuando sea necesaria. |
 | `shared` | Ningún módulo específico de feature. |
@@ -78,7 +78,7 @@ d) **MUST NOT:** Model depende de React, Hook, Service, HTTP, DTO o infrastructu
 
 e) **MUST NOT:** Mapper depende de Service, Hook, HTTP o React. El mapper de sesión utiliza la utilidad de expiración de `infrastructure/storage`.
 
-f) **MUST NOT:** Una feature depende de otra feature.
+f) **MUST NOT:** Una feature accede a archivos internos o carpetas privadas de otra feature (debe importar únicamente de su API pública en el `index.ts` raíz), genera dependencias circulares directas o indirectas entre features, o invade responsabilidades de la feature consumida.
 
 g) **MUST NOT:** `shared` e `infrastructure` dependen de features.
 

@@ -27,6 +27,26 @@ export interface OrderBuyResponseDTO {
 	listingId?: number;
 }
 
+export interface BuyListingRequestDTO {
+	listingId: number;
+}
+
+export interface TokenListingDTO {
+	listingId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: "ACTIVE";
+	createdAt: string;
+	expiresAt: string;
+}
+
+export interface TokenListingsDTO {
+	listings: TokenListingDTO[];
+}
+
 export interface OrderSellRequestDTO {
 	playerId: number;
 	quantity: number;
