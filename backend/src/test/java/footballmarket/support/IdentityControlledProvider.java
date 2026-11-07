@@ -28,11 +28,11 @@ public final class IdentityControlledProvider implements AutoCloseable {
             String code = path.split("/")[2];
             int index = CODES.indexOf(code) + 1;
             response =
-                path.endsWith("/team")
+                path.endsWith("/teams")
                     ? Map.of("count", 1, "teams", List.of(Map.of("id", 200 + index)))
                     : Map.of("id", 100 + index, "name", "League " + index);
-          } else if (path.startsWith("/team/")) {
-            int index = Integer.parseInt(path.substring("/team/".length())) - 200;
+          } else if (path.startsWith("/teams/")) {
+            int index = Integer.parseInt(path.substring("/teams/".length())) - 200;
             response =
                 Map.of(
                     "name",
