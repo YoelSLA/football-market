@@ -1,38 +1,38 @@
 # Specification Quality Checklist: Detalle individual del jugador
 
-## Evaluación vigente del rediseño — 2026-10-25
+## Evaluación vigente del rediseño visual — 2026-11-09
 
 **Feature**: [spec.md](../spec.md), secciones vigentes anteriores al antecedente histórico.
 **Purpose**: Evaluación documental de Specify, no aceptación humana ni validación del producto.
 
 ### Content Quality
 
-- [x] Sin decisiones de stack, rutas nuevas, almacenamiento ni diseño técnico.
+- [x] Sin decisiones de stack, rutas nuevas, almacenamiento ni diseño técnico; la jerarquía visual aprobada expresa comportamiento observable.
 - [x] Centrada en valor del usuario y necesidades de negocio.
 - [x] Redactada para stakeholders con escenarios observables.
 - [x] Secciones obligatorias completas.
 
 ### Requirement Completeness
 
-- [x] Sin aclaraciones pendientes: FR-041 (snapshot y canales); prioridad futura de tres claves hoy ausentes pendiente si se incorporan valores.
-- [x] Todos los requisitos inequívocos: selección de registros pendiente de Clarify; no se exige definir cálculos excluidos.
-- [x] Criterios de éxito medibles: SC-012–018.
+- [x] Sin marcadores `[NEEDS CLARIFICATION]`; CLARIFY sigue siendo una fase obligatoria y puede concluir con cero preguntas.
+- [x] Todos los requisitos del rediseño son verificables: composición, ausencia de duplicados, categorías, relevancia y orden responsive.
+- [x] Criterios de éxito medibles: SC-012–028, con SC-025–028 para el layout aprobado.
 - [x] Criterios agnósticos tecnológicamente.
 - [x] Escenarios de aceptación definidos para US1, US2, US4 y US5; US3 retirada con trazabilidad.
 - [x] Casos límite identificados, incluidos cero, ausencias, errores parciales y posición desconocida.
-- [x] Alcance delimitado: dos pestañas, 60 claves, sin finanzas ni mocks.
+- [x] Alcance delimitado: reorganización frontend de dos pestañas y 60 claves, sin reconstrucción funcional ni cambio backend presumido.
 - [x] Dependencias y supuestos identificados.
 
 ### Feature Readiness
 
-- [x] Cobertura de aceptación completamente determinada: selección de registros pendiente de Clarify.
+- [x] Cobertura de aceptación determinada para la revisión visual; selección y composición de datos conservan FR-041.
 - [x] Historias cubren consulta, navegación, resumen y catálogo completo.
 - [x] Resultados esperados definidos y medibles; no se afirma su cumplimiento real.
 - [x] No se prescriben detalles técnicos de implementación.
 
 ### Notes
 
-Evaluación del agente actualizada: 13/16 criterios conformes documentalmente, 3 pendientes. FR-032 resuelto por exclusión de radar, percentiles y cálculos no definidos. Cuatro tarjetas por posición, gráficos, adicionales y matriz completa de categorías/prioridades incorporados; SC-019/020 agregan aceptación verificable. FR-041 sigue pendiente. Las tres claves actualmente ausentes conservan esa disponibilidad y no reciben prioridad deportiva inventada. No se ejecutaron tests ni build. La aprobación histórica que sigue no se extiende al nuevo alcance. `requirements-quality.md` conserva su evidencia anterior y debe reevaluarse en la fase correspondiente, sin modificar aprobaciones históricas en esta operación.
+Evaluación del agente: 16/16 criterios conformes para SPECIFY. El wireframe aprobado se tradujo a FR-049–052 y SC-025–028; FR-030/035 quedaron alineados con la composición sin duplicados y el catálogo sin panel lateral. La revisión no acredita CLARIFY, PLAN, implementación, revisión visual ni tests. La evidencia histórica posterior se conserva sin extender sus aprobaciones al alcance nuevo; `requirements-quality.md` deberá reevaluarse en CHECKLIST.
 
 ## Antecedente histórico — evaluación anterior
 
