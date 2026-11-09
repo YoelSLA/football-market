@@ -28,8 +28,8 @@ Adaptar la presentación existente del detalle sin reconstruir su funcionalidad 
 
 **Propósito**: Adaptar utilidades de cálculo de presentación y estado local de la página, retirando el filtro de unidad y preparando la agrupación y deduplicación pura.
 
-- [ ] T086 Actualizar utilidades de presentación en `frontend/src/features/players/utils/playerStatisticsView.ts` para retirar el filtro de unidad, añadir mapeo de etiquetas de relevancia (Principal, Secundaria, Poco relevante), derivar grupos por categoría y función pura de deduplicación de métricas adicionales para el Resumen (excluyendo tarjetas y paneles)
-- [ ] T087 Simplificar el estado local en `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts` retirando `unit` y sus callbacks, conservando `playerId`, `activeTab` (`summary`/`catalog`), `search`, `category` y la acción `clearFilters` con reset por jugador
+- [x] T086 Actualizar utilidades de presentación en `frontend/src/features/players/utils/playerStatisticsView.ts` para retirar el filtro de unidad, añadir mapeo de etiquetas de relevancia (Principal, Secundaria, Poco relevante), derivar grupos por categoría y función pura de deduplicación de métricas adicionales para el Resumen (excluyendo tarjetas y paneles)
+- [x] T087 Simplificar el estado local en `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts` retirando `unit` y sus callbacks, conservando `playerId`, `activeTab` (`summary`/`catalog`), `search`, `category` y la acción `clearFilters` con reset por jugador
 
 ---
 

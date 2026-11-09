@@ -2,7 +2,7 @@
 
 **Feature Branch vigente**: `feat/009-player-statistics-layout`
 **Created**: 2026-10-12 · **Revisión**: 2026-11-09
-**Status vigente**: TASKS completado; gate ANALYZE pendiente. No autoriza implementación.
+**Status vigente**: IMPLEMENT en progreso (Etapa 1: T086–T087 completada). En revisión humana de etapa. No autoriza cierre.
 **Input vigente**: Rediseñar la presentación existente de SPEC-009 según el wireframe aprobado el 2026-11-09, conservando exactamente dos pestañas y las 60 métricas reales, sin reconstruir capacidades ya implementadas ni ampliar innecesariamente el backend.
 
 ## Trazabilidad del rediseño
@@ -54,7 +54,7 @@ Como usuario, quiero interpretar cuatro tarjetas, estadísticas destacadas y gr�
 **Acceptance Scenarios**:
 
 1. **Given** estadísticas reales disponibles, **When** abro Resumen, **Then** veo identidad, exactamente las cuatro tarjetas de mi perfil y los gráficos y estadísticas adicionales definidos abajo, con temporada, unidades y procedencia identificables, sin radar ni percentiles.
-2. **Given** un cero real y una métrica ausente, **When** se presentan, **Then** el primero conserva su cero y la segunda indica «No disponible», sin sustituirla por cero.
+2. **Given** un cero real y una métrica ausente, **When** se presentan, **Then** el primero conserva su cero y la segunda indica «Sin datos», sin sustituirla por cero.
 3. **Given** estadísticas presentes pero ninguna valoración ni cotización calculada, **When** consulto el resumen, **Then** funciona sin solicitar recálculos ni mostrar datos financieros.
 4. **Given** información insuficiente para un gráfico, **When** se presenta el resumen, **Then** informa la limitación y mantiene visibles los valores disponibles, sin dibujar rendimiento ficticio ni sustituir silenciosamente las métricas de las tarjetas.
 
@@ -105,7 +105,7 @@ Como usuario, quiero encontrar cualquiera de las 60 métricas por categoría y n
 - **FR-030**: Mostrar en Resumen identidad, exactamente cuatro tarjetas por posición, exactamente dos paneles específicos y un único bloque de estadísticas destacadas según los perfiles siguientes, siempre sujetos a disponibilidad. Una tarjeta sin valor conserva su etiqueta y muestra «Sin datos». Los paneles específicos pueden desarrollar métricas ya introducidas en las tarjetas cuando el perfil y el wireframe así lo establecen; el bloque de destacadas no repite claves presentes en tarjetas o paneles (US2).
 - **FR-031**: Las visualizaciones conservan unidades, etiquetas y valores textuales. No mezclar magnitudes de distinta unidad en un mismo eje; no convertir tasas en acumulados ni representar categorías como partes de un total sin una regla definida (US2, US4).
 - **FR-032**: No incluir radar, percentiles, promedios poblacionales, normalizaciones ni indicadores derivados nuevos. Sustituir la zona del radar del mockup por estadísticas destacadas en unidades originales. No reutilizar scores ni atributos de SPEC-013 como sustitutos de estadísticas. Las tasas ya canónicas y persistidas no son indicadores nuevos (US2).
-- **FR-033**: Exponer exactamente las 60 claves canónicas de SPEC-012, con nombre comprensible en español, categoría, unidad original y valor real o «No disponible». No añadir xG, xA ni otras métricas del mockup ajenas al catálogo (US5).
+- **FR-033**: Exponer exactamente las 60 claves canónicas de SPEC-012, con nombre comprensible en español, categoría, unidad original y valor real o «Sin datos». No añadir xG, xA ni otras métricas del mockup ajenas al catálogo (US5).
 - **FR-034**: Agrupar en General, Ataque, Pases, Regates, Duelos, Defensa, Portería y Disciplina. Cada clave pertenece a una sola categoría; General incluye minutos, apariciones, titularidades y rating; los demás grupos siguen la naturaleza deportiva del catálogo, no el canal de extracción (US5).
 - **FR-035**: Buscar por nombre visible o clave canónica sin distinguir mayúsculas ni acentos, aplicar coincidencia parcial y combinar con una categoría seleccionable desde controles visibles en el encabezado del catálogo. Mostrar cantidad de resultados y permitir limpiar filtros; todas las métricas siguen accesibles aunque la presentación se divida en páginas. No exigir un panel lateral ni un filtro de unidad para acceder al catálogo (US5).
 - **FR-036**: No inventar acumulados, mapas de eventos, coordenadas ni series temporales desde agregados de temporada. Los gráficos representan exclusivamente desgloses realmente disponibles (US2).

@@ -96,12 +96,55 @@ export function getMetricPriority(key: string, position: string): number {
 			: 1;
 }
 
+export type MetricPriorityLevel = 0 | 1 | 2;
+export type MetricPriorityLabel = "Principal" | "Secundaria" | "Poco relevante";
+
+export const METRIC_PRIORITY_LABELS: Record<
+	MetricPriorityLevel,
+	MetricPriorityLabel
+> = {
+	0: "Principal",
+	1: "Secundaria",
+	2: "Poco relevante",
+};
+
+export function getMetricPriorityLabel(
+	key: string,
+	position: string,
+): MetricPriorityLabel {
+	const priority = getMetricPriority(key, position) as MetricPriorityLevel;
+	return METRIC_PRIORITY_LABELS[priority] ?? "Secundaria";
+}
+
+export const STATISTIC_CATEGORIES = [
+	"General",
+	"Ataque",
+	"Pases",
+	"Regates",
+	"Duelos",
+	"Defensa",
+	"Portería",
+	"Disciplina",
+] as const;
+
+export type StatisticCategory = (typeof STATISTIC_CATEGORIES)[number];
+
+export function getCategoryCounts(): Record<string, number> {
+	const counts: Record<string, number> = {
+		all: METRIC_DEFINITIONS.length,
+	};
+	for (const def of METRIC_DEFINITIONS) {
+		counts[def.category] = (counts[def.category] ?? 0) + 1;
+	}
+	return counts;
+}
+
 export function getPlayerStatisticsCatalog(
 	metrics: PlayerMetric[],
 	position: string,
 	search: string,
 	category: string,
-	unit: string,
+	_unit?: string,
 ) {
 	const normalize = (text: string) =>
 		text
@@ -112,6 +155,7 @@ export function getPlayerStatisticsCatalog(
 	const query = normalize(search);
 	return METRIC_DEFINITIONS.map((definition, order) => {
 		const metric = metrics.find((item) => item.key === definition.key);
+		const priority = getMetricPriority(definition.key, position);
 		return {
 			...definition,
 			unit: getMetricUnit(definition.key),
@@ -126,13 +170,13 @@ export function getPlayerStatisticsCatalog(
 							: "AVERAGE_RATING"),
 			value: metric?.value ?? null,
 			order,
-			priority: getMetricPriority(definition.key, position),
+			priority,
+			priorityLabel: getMetricPriorityLabel(definition.key, position),
 		};
 	})
 		.filter(
 			(item) =>
 				(category === "all" || category === item.category) &&
-				(unit === "all" || unit === item.technicalUnit) &&
 				(!query || normalize(`${item.key} ${item.label}`).includes(query)),
 		)
 		.sort((a, b) => {
@@ -153,6 +197,71 @@ export function getPlayerStatisticsCatalog(
 				a.order - b.order
 			);
 		});
+}
+
+export interface CatalogCategoryGroup {
+	category: string;
+	totalCount: number;
+	metrics: ReturnType<typeof getPlayerStatisticsCatalog>;
+}
+
+export function getPlayerStatisticsCatalogGroups(
+	metrics: ReturnType<typeof getPlayerStatisticsCatalog>,
+): CatalogCategoryGroup[] {
+	const categoryOrder = [
+		"General",
+		"Ataque",
+		"Pases",
+		"Regates",
+		"Duelos",
+		"Defensa",
+		"Portería",
+		"Disciplina",
+	];
+
+	return categoryOrder
+		.map((category) => {
+			const categoryMetrics = metrics.filter((m) => m.category === category);
+			return {
+				category,
+				totalCount: categoryMetrics.length,
+				metrics: categoryMetrics,
+			};
+		})
+		.filter((group) => group.metrics.length > 0);
+}
+
+/**
+ * Obtiene las claves para el bloque único de estadísticas destacadas en Resumen.
+ * Deduplica estrictamente contra las tarjetas del perfil y contra los dos paneles específicos.
+ * Calificación se incluye en destacadas únicamente cuando no es una tarjeta principal (Defensor y Mediocampista).
+ */
+export function getHighlightedStatisticsKeys(position: string): string[] {
+	const profile = getStatisticsProfile(position);
+	if (!profile) {
+		return [
+			"minutes_played_total",
+			"appearances_total",
+			"whoscored_rating_average",
+		];
+	}
+
+	const cardKeys = new Set(profile.cards);
+	const panelKeys = new Set(
+		getStatisticsPanels(position).flatMap((panel) => panel.keys),
+	);
+
+	return profile.additional.filter(
+		(key) => !cardKeys.has(key) && !panelKeys.has(key),
+	);
+}
+
+export function getHighlightedStatistics(
+	statistics: PlayerStatistics,
+	position: string,
+) {
+	const keys = getHighlightedStatisticsKeys(position);
+	return keys.map((key) => getStatisticsMetric(statistics, key));
 }
 
 export function getStatisticsPanels(position: string) {

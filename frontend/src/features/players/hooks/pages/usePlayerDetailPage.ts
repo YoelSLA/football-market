@@ -31,7 +31,6 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 		tab: "summary" as StatisticsTab,
 		search: "",
 		category: "all",
-		unit: "all",
 	};
 	const [controls, setControls] = useState(initial);
 	const currentControls = controls.id === playerId ? controls : initial;
@@ -41,13 +40,11 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 		setControls({ ...currentControls, search });
 	const setCategory = (category: string) =>
 		setControls({ ...currentControls, category });
-	const setUnit = (unit: string) => setControls({ ...currentControls, unit });
 	const clearFilters = () =>
 		setControls({
 			...currentControls,
 			search: "",
 			category: "all",
-			unit: "all",
 		});
 
 	const detail = usePlayerDetailQuery(playerId ?? 0, playerId !== null);
@@ -109,8 +106,10 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 		setSearch,
 		category: currentControls.category,
 		setCategory,
-		unit: currentControls.unit,
-		setUnit,
 		clearFilters,
+		/** @deprecated Se retira en el rediseño según T087; conservado temporalmente hasta T094/T095 */
+		unit: "all",
+		/** @deprecated Se retira en el rediseño según T087; conservado temporalmente hasta T094/T095 */
+		setUnit: () => {},
 	};
 }
