@@ -1,5 +1,22 @@
 # Research: Detalle individual del jugador
 
+## Investigación vigente — rediseño visual 2026-11-09
+
+Este bloque desarrolla únicamente el delta del [wireframe canónico](../../docs/wireframes/player-detail.md). Las decisiones de 2026-10-25 siguen vigentes para consulta, snapshot, contratos y arquitectura ya implementados.
+
+| Decisión | Razón y evidencia | Alternativas descartadas |
+| --- | --- | --- |
+| Reutilizar la Page y sus cinco Components estadísticos locales | Las responsabilidades ya coinciden con cabecera, coordinación de estados, tabs, resumen y catálogo. El cambio es de composición, no una funcionalidad nueva | Duplicar la Page; crear una feature de estadísticas frontend; mover Components a `shared` |
+| Mantener el Page Hook y retirar solo el filtro de unidad | Pestaña, búsqueda y categoría son estado local por jugador. El wireframe no incluye unidad y cada fila ya muestra su unidad | Conservar un control no aprobado; mover controles a store; filtrar dentro del Component sin contrato explícito |
+| Derivar relevancia y grupos desde utilidades puras existentes | `getMetricPriority` y el catálogo ya preservan P/S/B, orden, cero y null. Exponer etiqueta/grupo evita duplicar reglas en JSX | Reescribir la matriz; usar colores sin texto; ordenar manualmente en cada grupo |
+| Deduplicar el Resumen por clave | Tarjetas, paneles y adicionales comparten métricas. Excluir claves ya presentadas cumple FR-030 sin modificar perfiles canónicos | Cambiar perfiles; repetir calificación/pases; sustituir métricas ausentes automáticamente |
+| Lista agrupada en lugar de tabla con `aside` | El wireframe exige controles superiores, categorías visibles y filas adaptables. Una lista semántica facilita dos líneas en móvil sin scroll horizontal | Mantener tabla cromática; paginar 60 claves; ocultar columnas o métricas en móvil |
+| Conservar PageLayout y la autoridad de scroll | La Page ya cumple la cadena de altura y la arquitectura prohíbe resolver una composición específica modificando layouts globales | Cambiar AppLayout/PageLayout; agregar scroll vertical anidado; usar alturas fijas |
+
+No hay NEEDS CLARIFICATION. No se agregan paquetes, endpoints, modelos remotos, cálculos deportivos ni recursos gráficos.
+
+---
+
 ## Investigación vigente — rediseño 2026-10-25
 
 Estas decisiones desarrollan exclusivamente el alcance vigente de `spec.md`. Las secciones R-01 y siguientes se conservan como investigación histórica; las decisiones sobre mocks, finanzas o herramientas retiradas no se aplican al rediseño.

@@ -1,5 +1,30 @@
 # Modelo de datos: Detalle individual del jugador
 
+## Modelo de presentación vigente — rediseño visual 2026-11-09
+
+No cambia el modelo persistido, el snapshot backend, el DTO ni el Model remoto frontend. El rediseño reutiliza `PlayerDetail`, `PlayerStatistics` y sus 60 `PlayerMetric` con las mismas reglas de contexto, fuente, cero y ausencia.
+
+### Estado local de la Page
+
+| Campo | Valores | Regla |
+| --- | --- | --- |
+| `playerId` | entero positivo o null | Del parámetro de ruta; identifica el conjunto de controles vigente |
+| `activeTab` | `summary` / `catalog` | `summary` inicial; cambiar no consulta otro snapshot |
+| `search` | texto | Búsqueda local normalizada por nombre o clave |
+| `category` | `all` o una de ocho categorías | Filtro único, combinable con búsqueda |
+
+El filtro `unit` de la implementación anterior se retira del estado visible y del contrato del Page Hook. Limpiar restablece `search=""` y `category="all"`. Cambiar jugador restablece ambos filtros y la pestaña sin conservar controles del ID anterior.
+
+### Modelos de presentación derivados
+
+- **Métrica de catálogo**: definición canónica + unidad visible + valor/source existente + `priority` 0/1/2 + etiqueta de relevancia. No persiste ni modifica el Model remoto.
+- **Grupo de catálogo**: categoría canónica + conteo total + métricas filtradas en orden disponible P→S→B y ausente al final.
+- **Resumen posicional**: cuatro claves de tarjetas, dos paneles existentes y adicionales deduplicados por clave. La deduplicación no altera `POSITION_PROFILES`.
+
+Estados remotos (`loading`, `error`, `AVAILABLE`, `PARTIAL`, `NO_DATA`) y conservación de respuesta compatible permanecen según el modelo funcional de 2026-10-25.
+
+---
+
 ## Modelo vigente — rediseño 2026-10-25
 
 Este bloque gobierna el rediseño; lo posterior a «Antecedente histórico» conserva evidencia anterior. No introduce tablas ni modifica entidades de extracción. Identidad mantiene el contrato existente, separado de estadísticas.

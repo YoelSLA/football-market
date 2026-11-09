@@ -1,6 +1,104 @@
 # Implementation Plan: Detalle individual del jugador
 
-**Plan vigente del rediseño** — revisión pendiente para el alcance visual del 2026-11-09 · Rama real `feat/009-player-statistics-layout` · [Spec](spec.md) · [Wireframe canónico](../../docs/wireframes/player-detail.md).
+## Plan vigente — rediseño visual 2026-11-09
+
+**Rama**: `feat/009-player-statistics-layout` · **Spec**: [spec.md](spec.md) · **Referencia visual canónica**: [docs/wireframes/player-detail.md](../../docs/wireframes/player-detail.md).
+
+### Summary
+
+Adaptar la presentación existente del detalle sin reconstruir su funcionalidad. Se conservan identidad, consulta real, DTO/Model, mapper, Query Hook, estados, pestañas, perfiles posicionales y catálogo de 60 métricas. El cambio recompone los Components locales y sus SCSS para obtener una cabecera compacta, cuatro indicadores, exactamente dos paneles específicos, un único bloque de destacadas y un catálogo agrupado con controles en su encabezado. No modifica backend, rutas, contratos HTTP, persistencia, dependencias, navegación global ni otras Pages.
+
+### Technical Context
+
+- **Stack efectivo**: React 19.3.0, TypeScript 7.0.2, Sass Modules, TanStack Query y Lucide mediante `shared/icons`; sin dependencias nuevas.
+- **Área afectada**: exclusivamente `frontend/src/features/players/pages/PlayerDetailPage/`, el Page Hook de controles locales y utilidades/constantes de presentación solo cuando el nuevo árbol lo requiera.
+- **Datos**: se reutiliza `PlayerStatistics` con 60 `PlayerMetric`; cero, null, fuente y contexto no cambian. No hay migraciones ni contratos backend nuevos.
+- **Estado**: TanStack Query continúa como autoridad remota. Pestaña, búsqueda y categoría siguen siendo estado local por jugador; el filtro de unidad deja de formar parte de la interacción del rediseño.
+- **Responsive**: 360, 768 y 1280 px, alturas de 640 y 800 px; una región principal de scroll en desktop y scroll documental natural en móvil conforme a arquitectura.
+- **Testing y validación**: frontend sin tests. Build permitido tras implementación futura; revisión visual humana contra el wireframe. PLAN no ejecuta build ni tests.
+- **Unknowns**: ninguno. El wireframe, perfiles, prioridades, estados y límites están cerrados por CLARIFY.
+
+### Constitution Check
+
+| Garantía | Antes del diseño | Después del diseño |
+| --- | --- | --- |
+| Simplicidad y proporcionalidad | Reutilizar la implementación existente | Conforme: no se crean capas, contratos, dependencias ni abstracciones preventivas |
+| Coherencia contractual | Mantener 60 métricas, contexto y estados | Conforme: no cambia HTTP, DTO, Model remoto ni selección del snapshot |
+| Arquitectura frontend | Page compone; Components locales presentan; Hook coordina | Conforme: no hay HTTP en Components, estado remoto duplicado ni cambios globales |
+| Sistema de diseño | Reutilizar tokens, breakpoints, Button e iconos existentes | Conforme: SCSS Modules colocalizados y `@use "@/styles/abstracts" as ds` |
+| Accesibilidad | Tabs, estados y valores ya tienen semántica | Conforme: se conservan y se agregan nombres de relevancia/categoría no dependientes del color |
+| Verificación | No ejecutar tests del frontend | Conforme: PLAN documental; build y revisión visual quedan para implementación autorizada |
+
+No hay excepciones constitucionales. La implementación actual presenta divergencias respecto del wireframe, no respecto de contratos funcionales: cinco paneles en Resumen, tabla con filtros laterales y filtro de unidad. El diseño corrige solo esas divergencias.
+
+### Phase 0 — Research
+
+Decisiones consolidadas en [research.md](research.md), sección «Investigación vigente — rediseño visual 2026-11-09»:
+
+1. Reutilizar `PlayerOverview`, `PlayerStatisticsSection`, `PlayerStatisticsSummary`, `PlayerStatisticsCatalog` y `PlayerStatisticsTabs`; no crear una nueva Page ni una feature paralela.
+2. Mantener el Page Hook como propietario de pestaña, búsqueda y categoría; retirar `unit` y sus callbacks solo después de revisar consumidores.
+3. Mantener metadatos y prioridades puros en `playerStatisticsView.ts`; exponer la relevancia nominal para UI y derivar grupos por categoría sin cambiar valores.
+4. Representar el Resumen con los dos paneles de `getStatisticsPanels(position)` y una única colección adicional filtrada para no repetir tarjetas o paneles.
+5. Reemplazar la tabla y el `aside` por secciones/listas semánticas agrupadas; no paginar ni ocultar claves.
+
+### Phase 1 — Diseño
+
+#### Composición y componentes
+
+- `PlayerDetailPage.tsx` conserva `PageLayout`, breadcrumb, identidad y `PlayerStatisticsSection`. No incorpora lógica visual específica ni cambia consultas.
+- `PlayerOverview` conserva su responsabilidad y datos. Solo se compactan wrappers/clases para separar identidad a la izquierda y contexto a la derecha; temporada, competición y extracción mantienen sus fallbacks contractuales.
+- `PlayerStatisticsSection` conserva tabs, tabpanels, carga, error, reintento y respuesta anterior. Su contrato elimina `unit`, `onUnitChange` y el paso correspondiente al catálogo. Los mensajes se alinean con los estados del wireframe sin cambiar su derivación.
+- `PlayerStatisticsSummary` conserva cuatro tarjetas fijas por perfil. Renderiza únicamente los dos paneles devueltos por `getStatisticsPanels`; elimina los paneles genéricos de calificación, posición y participación/distribución. El bloque de destacadas usa las métricas `additional`, excluye cualquier clave ya mostrada en tarjetas o paneles y presenta la calificación allí solo cuando no es tarjeta.
+- `PlayerStatisticsCatalog` integra título, resultados, búsqueda, limpiar, categorías y leyenda de relevancia en el encabezado. Agrupa los resultados por las ocho categorías, manteniendo P→S→B disponibles y ausentes al final. Cada fila muestra nombre, relevancia, unidad y valor; no alterna fondos para simular agrupación.
+- `PlayerStatisticsTabs` conserva comportamiento y semántica existentes; únicamente ajusta distribución visual al ancho disponible.
+
+No se crea un Component por tarjeta o fila salvo que durante implementación exista una responsabilidad visual independiente real. Los Components exclusivos permanecen bajo `pages/PlayerDetailPage/components/` con TSX, SCSS Module y barrel existentes.
+
+#### Modelos de presentación y estado local
+
+- `getMetricPriority` continúa siendo la fuente de P/S/B y se complementa con una etiqueta presentacional (`Principal`, `Secundaria`, `Poco relevante`) sin puntuaciones nuevas.
+- `getPlayerStatisticsCatalog` deja de filtrar por unidad. Conserva búsqueda, categoría, orden, cero/null y unidad técnica; su resultado puede agruparse en el Component o mediante una utilidad pura si evita duplicar el orden canónico.
+- `usePlayerDetailPage` conserva reset por `playerId`, pestaña, búsqueda, categoría y limpiar. Elimina `unit` del estado inicial, setters y retorno público. No se agrega store ni estado global.
+- Los perfiles de `playerStatisticsProfiles.ts` no cambian. La deduplicación es una regla de presentación del Resumen, no una modificación de las listas canónicas.
+
+#### Layout y responsive
+
+- `PlayerDetailPage.module.scss` conserva la única región vertical principal y la cadena de altura existente.
+- `PlayerOverview.module.scss`: escritorio en dos zonas compactas; tablet apila contexto bajo identidad; móvil conserva retrato/nombre primero y detalles/contexto después.
+- `PlayerStatisticsSummary.module.scss`: cuatro columnas en escritorio, dos en tablet y una en móvil; dos paneles específicos en escritorio y una columna en anchos menores; destacadas ocupa todo el ancho disponible.
+- `PlayerStatisticsCatalog.module.scss`: una sola columna; controles envuelven en desktop/tablet y categorías pueden envolver o desplazarse dentro de su fila en móvil sin ensanchar el documento. Filas cambian a dos líneas en móvil manteniendo nombre/relevancia y unidad/valor.
+- No modificar `PageLayout`, `AppLayout`, navbar, tokens ni breakpoints globales.
+
+#### Accesibilidad y estados
+
+- Conservar tablist/tabpanel, navegación por teclado, `aria-selected`, `aria-controls`, foco visible y `aria-busy`.
+- Mantener carga como estado propio, error con `role="alert"`, reintento accesible, NO_DATA con 60 ausencias y PARTIAL sin transformar null en cero.
+- Comunicar relevancia con texto o símbolo acompañado por texto; categoría activa usa `aria-pressed` y no depende del color.
+- Las barras conservan valor textual. Ausencia no dibuja barra; todo cero muestra cero sin división por cero.
+
+#### Contratos y archivos
+
+- **Sin cambios**: backend completo, `players.service.ts`, DTO/Models remotos, mapper, Query Hook, router, navegación, assets y dependencias.
+- **Modificar durante implementación futura**: `usePlayerDetailPage.ts`; Components y SCSS Modules de `PlayerOverview`, `PlayerStatisticsSection`, `PlayerStatisticsSummary`, `PlayerStatisticsCatalog` y `PlayerStatisticsTabs`; `playerStatisticsView.ts` solo para retirar filtro de unidad, exponer relevancia y/o agrupación pura.
+- **Documentación**: mantener spec, wireframe, plan, tareas y quickstart trazados. El contrato HTTP no cambia; [contracts/player-statistics.md](contracts/player-statistics.md) solo documenta la presentación.
+
+### Riesgos y verificación futura
+
+- Retirar `unit` exige revisar todos sus consumidores y barrels para no dejar props o estado muerto.
+- Deduplicar adicionales debe usar claves, no etiquetas, y no alterar los perfiles canónicos.
+- Agrupar después de filtrar debe conservar las ocho categorías cuando corresponda y exactamente 60 métricas al limpiar.
+- Los cambios SCSS no pueden introducir un segundo scroll vertical principal ni overflow horizontal.
+- La revisión visual humana debe cubrir las cuatro posiciones, ambas pestañas, carga, error, NO_DATA, PARTIAL y 360/768/1280 × 640/800.
+
+### Evidencia de PLAN
+
+`setup-plan.sh --json` conservó el plan existente y resolvió SPEC-009. Se revisaron Constitución, arquitectura común, arquitectura/convenciones/tecnologías frontend, contratos de presentación/composición y la implementación actual. No existe `.specify/extensions.yml`: sin hooks de PLAN. No se modificó código, no se ejecutaron tests ni build y no se autoriza implementación. Constitution Check antes y después: conforme, sin excepciones. Siguiente etapa: CHECKLIST; no TASKS automáticamente.
+
+---
+
+## Antecedente de planificación — dashboard real 2026-10-25
+
+**Plan anterior** — rama `feat/009-player-detail-whoscored-stats-dashboard`. Se conserva como evidencia del diseño funcional ya implementado. El plan visual vigente anterior gobierna cualquier contradicción de composición.
 
 Las secciones vigentes terminan antes de «Antecedente histórico». Se preservan los planes y decisiones anteriores como evidencia, no como requisitos del nuevo dashboard. `tasks.md` no se modifica ni se considera vigente para este alcance por existir.
 

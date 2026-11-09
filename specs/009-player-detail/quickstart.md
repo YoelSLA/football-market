@@ -1,5 +1,26 @@
 # Guía de validación: Detalle individual del jugador
 
+## Validación vigente — rediseño visual 2026-11-09
+
+Después de una implementación autorizada, contrastar la Page con el [wireframe canónico](../../docs/wireframes/player-detail.md) usando un jugador real de cada posición. La validación visual comprueba el delta; los escenarios funcionales posteriores continúan verificando consulta, snapshot y estados ya existentes.
+
+| Área | Resultado esperado |
+| --- | --- |
+| Cabecera | Identidad a la izquierda y contexto a la derecha en escritorio; orden semántico conservado al apilar |
+| Resumen | Cuatro tarjetas, exactamente dos paneles específicos y un bloque de destacadas sin claves repetidas |
+| Arquero | Atajadas por zona y distribución |
+| Defensor | Acciones defensivas y duelos aéreos |
+| Mediocampista | Distribución y creación |
+| Delantero | Tiros por zona y asistencias por tipo |
+| Catálogo | Búsqueda, limpiar, categorías, leyenda y grupos; 60 métricas al limpiar; sin filtro de unidad ni panel lateral |
+| Estados | Carga, error, respuesta anterior, NO_DATA y PARTIAL coinciden con el wireframe sin inventar valores |
+| Responsive | 360/768/1280 × 640/800; sin overflow horizontal y con una única autoridad principal de scroll |
+| Accesibilidad | Tabs por teclado, foco visible, categorías/relevancia no dependientes del color y valores textuales en barras |
+
+No ejecutar sincronización ni modificar datos para fabricar escenarios. No corresponde build ni test durante PLAN.
+
+---
+
 ## Guía vigente del rediseño — 2026-10-25
 
 Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md); referencia visual: [wireframe canónico](../../docs/wireframes/player-detail.md).

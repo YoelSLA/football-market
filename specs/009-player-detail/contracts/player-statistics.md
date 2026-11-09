@@ -1,5 +1,11 @@
 # Contrato propuesto: consulta individual de estadísticas
 
+> **PLAN visual 2026-11-09:** el contrato HTTP y la selección de snapshot no cambian. La
+> implementación reutiliza esta respuesta y aplica únicamente el contrato de presentación del
+> [wireframe canónico](../../../docs/wireframes/player-detail.md): cuatro tarjetas, dos paneles,
+> destacadas sin duplicados y catálogo agrupado por categoría. No se agregan parámetros de unidad,
+> endpoints ni campos de respuesta.
+
 Diseño de PLAN de SPEC-009, 2026-10-25. No acredita endpoint implementado. Complementa la identidad existente sin modificar su respuesta ni el catálogo. Fuente funcional: `spec.md` FR-025–048 y Clarify; FR-045 define competición legible/fallback, FR-046 distingue IDs/no encontrado/ausencia, FR-047 conserva respuesta compatible ante error y FR-048 referencia el glosario.
 
 ## Solicitud
