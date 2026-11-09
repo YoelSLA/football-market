@@ -2,7 +2,7 @@
 
 **Feature Branch vigente**: `feat/009-player-statistics-layout`
 **Created**: 2026-10-12 · **Revisión**: 2026-11-09
-**Status vigente**: Draft — SPECIFY del rediseño visual completado localmente; CLARIFY, publicación, PLAN, CHECKLIST, TASKS y ANALYZE pendientes. No autoriza implementación.
+**Status vigente**: Ready for planning — CLARIFY del rediseño visual completado localmente sin ambigüedades críticas; publicación y Pull Request obligatorios pendientes por falta de autorización de push. No autoriza PLAN ni implementación.
 **Input vigente**: Rediseñar la presentación existente de SPEC-009 según el wireframe aprobado el 2026-11-09, conservando exactamente dos pestañas y las 60 métricas reales, sin reconstruir capacidades ya implementadas ni ampliar innecesariamente el backend.
 
 ## Trazabilidad del rediseño
@@ -110,7 +110,7 @@ Como usuario, quiero encontrar cualquiera de las 60 métricas por categoría y n
 - **FR-035**: Buscar por nombre visible o clave canónica sin distinguir mayúsculas ni acentos, aplicar coincidencia parcial y combinar con una categoría seleccionable desde controles visibles en el encabezado del catálogo. Mostrar cantidad de resultados y permitir limpiar filtros; todas las métricas siguen accesibles aunque la presentación se divida en páginas. No exigir un panel lateral ni un filtro de unidad para acceder al catálogo (US5).
 - **FR-036**: No inventar acumulados, mapas de eventos, coordenadas ni series temporales desde agregados de temporada. Los gráficos representan exclusivamente desgloses realmente disponibles (US2).
 - **FR-037**: Preservar navbar, sesión, retorno al catálogo, identidad e imágenes existentes; no rediseñar otras páginas ni cambiar las rutas de entrada. La compatibilidad con catálogo no implica perpetuar sus mocks ni presentarlos como estadísticas reales del detalle (US1, US4).
-- **FR-038**: Mantener colores, tipografía y jerarquía actuales del sitio, tomando el mockup como referencia visual. Adaptar ancho y altura disponibles, con desplazamiento vertical natural y sin desbordamiento horizontal de la página en los viewports de US4 (US4).
+- **FR-038**: Mantener colores, tipografía y jerarquía actuales del sitio, tomando el [wireframe canónico](../../docs/wireframes/player-detail.md) como referencia visual. Adaptar ancho y altura disponibles, con desplazamiento vertical natural y sin desbordamiento horizontal de la página en los viewports de US4 (US4).
 - **FR-039**: Mantener teclado, foco visible, etiquetas, selección de pestaña perceptible y alternativa textual a toda visualización; no depender solo del color (US4).
 - **FR-040**: No mostrar cotización ni historial financiero en estas dos pestañas. Su retirada de esta vista no autoriza eliminar capacidades, componentes compartidos ni contratos consumidos fuera de ella (US2).
 - **FR-041**: Consultar la última extracción confirmada disponible del jugador para la temporada seleccionada y mostrar su fecha real. No aplicar la selección poblacional de SPEC-013 ni exigir que otros jugadores tengan datos. Ordenar fechas de extracción de más reciente a más antigua; dentro de un mismo canal y contexto, desempatar por instante de observación más reciente y, si persiste el empate, por identificador de registro mayor. En la fecha y contexto seleccionados, JSON tiene prioridad: scraping solo completa valores JSON nulos, incluidas sus tres claves exclusivas (`starts_total`, `shots_on_target_total`, `second_yellow_total`), cuando coinciden jugador, temporada, fecha de extracción y contexto de competición. Un cero JSON es válido y nunca activa respaldo. No buscar valores en fechas o contextos diferentes. Si únicamente existe scraping confirmado en la fecha seleccionada, usar sus valores disponibles sin exigir JSON. La respuesta distingue ausencia de valor de fallo de consulta y conserva la procedencia efectiva por métrica, sin prescribir rutas nuevas ni almacenamiento.
@@ -273,7 +273,7 @@ Disponibilidad observada en la consulta PostgreSQL del análisis previo: 950 reg
 ## Assumptions
 
 - La sesión, navegación e identidad existentes se conservan; no se añaden roles ni gestión de sesión.
-- El mockup no autoriza selector de temporadas, percentiles en cada fila ni métricas nuevas. Se presenta el contexto seleccionado; el selector queda fuera de este rediseño salvo decisión posterior.
+- El wireframe no autoriza selector de temporadas, percentiles en cada fila ni métricas nuevas. Se presenta el contexto seleccionado; el selector queda fuera de este rediseño salvo decisión posterior.
 - No se exige que todos los jugadores tengan las 60 métricas; el catálogo completo es distinto de la cobertura real.
 - Los controles de calidad de producto descritos son criterios futuros, no comprobaciones ejecutadas por el agente.
 
@@ -290,7 +290,7 @@ Disponibilidad observada en la consulta PostgreSQL del análisis previo: 950 reg
 - Implementación durante Specify; PLAN, TASKS y autorizaciones de implementación.
 - Sincronización, scraping, cálculo de valoraciones o cotizaciones y cambios en esas features.
 - Compra/venta, historial financiero, ranking, favoritos y nuevas pestañas.
-- Mapas de eventos, series por partido y métricas ajenas a las 60 canónicas; cifras del mockup como datos reales.
+- Mapas de eventos, series por partido y métricas ajenas a las 60 canónicas; cifras ilustrativas del wireframe o de las capturas anteriores como datos reales.
 - xG, xA, percentiles, radares, promedios comparativos e indicadores derivados con cálculos no definidos.
 - Eliminación automática de contratos o componentes históricos y rediseño del catálogo.
 
@@ -305,6 +305,8 @@ Actualización de Specify tras el análisis completo: FR-032 resuelto por exclus
 Evidencia de CLARIFY — 2026-10-25: tres preguntas formuladas y tres respuestas explícitas incorporadas en la sesión vigente. Resueltos FR-041 y prioridad futura de las tres claves; FR-044 y SC-021/022 verifican el comportamiento. «Confirmada» conserva el significado de SPEC-012: fila publicada atómicamente con item de jugador `COMPLETED`, no mera existencia de una fila ni cobertura poblacional. La temporada seleccionada es el contexto de la consulta; no añade selector de temporadas a la interfaz. El contexto es el de la competición de la liga local resuelto por SPEC-012; no se seleccionan competiciones adicionales. La unicidad por jugador/fecha/canal de SPEC-012 limita empates; observación e ID fijan orden estable sin fusionar registros incompatibles.
 
 Escaneo de alcance, dominio/datos, interacción, calidad no funcional aplicable, integración, excepciones, restricciones, terminología, señales de aceptación y placeholders: claro tras estas respuestas. Rendimiento cuantitativo e instrumentación no se agregan como requisitos; diseño de consulta y contratos concretos corresponde a PLAN. No quedan marcadores abiertos en el alcance vigente. Checklist documental vigente 13/16 → 16/16; no implica aceptación del producto ni extiende aprobaciones históricas. Sin hooks: `.specify/extensions.yml` ausente. No se ejecutaron tests, PLAN, TASKS, implementación, commits, push ni cambios del seguimiento. Siguiente paso permitido bajo un nuevo encargo: `/speckit.plan`.
+
+Evidencia de CLARIFY — rediseño visual 2026-11-09: se ejecutó el escaneo completo de alcance y comportamiento, dominio y datos, interacción, estados, accesibilidad, integración, límites, terminología y señales de aceptación contra el [wireframe canónico](../../docs/wireframes/player-detail.md). No se formularon preguntas nuevas: las cuatro decisiones ya registradas en la sesión del 2026-11-09 resuelven la reorganización de la implementación existente, la referencia visual, la ausencia de duplicados y la exploración de las 60 métricas. Rendimiento operativo, observabilidad e infraestructura no cambian y no justifican requisitos nuevos para un rediseño presentacional. El checklist vigente permanece 16/16 sin cambios de marcadores. No existe `.specify/extensions.yml`, por lo que no hay hooks de CLARIFY. La fase está completa documentalmente y el estado funcional es Ready for planning, pero su cierre operativo, PLAN y cualquier implementación permanecen bloqueados hasta publicar este estado y crear el Pull Request obligatorio hacia `dev`; no se inventa esa evidencia mientras el push siga sin autorización.
 
 ---
 

@@ -32,7 +32,7 @@
 
 ### Notes
 
-Evaluación del agente: 16/16 criterios conformes para SPECIFY. El wireframe aprobado se tradujo a FR-049–052 y SC-025–028; FR-030/035 quedaron alineados con la composición sin duplicados y el catálogo sin panel lateral. La revisión no acredita CLARIFY, PLAN, implementación, revisión visual ni tests. La evidencia histórica posterior se conserva sin extender sus aprobaciones al alcance nuevo; `requirements-quality.md` deberá reevaluarse en CHECKLIST.
+Evaluación del agente: 16/16 criterios conformes para SPECIFY y sin regresiones tras el escaneo CLARIFY del 2026-11-09. El wireframe aprobado se tradujo a FR-049–052 y SC-025–028; FR-030/035/038 quedaron alineados con la composición sin duplicados, el catálogo sin panel lateral y la referencia visual canónica. Los marcadores permanecen 16/16 porque no cambió su resultado. La revisión no acredita publicación, PLAN, implementación, revisión visual ni tests. La evidencia histórica posterior se conserva sin extender sus aprobaciones al alcance nuevo; `requirements-quality.md` deberá reevaluarse en CHECKLIST.
 
 ## Antecedente histórico — evaluación anterior
 
