@@ -1,6 +1,11 @@
 import { getLeagueClassification } from "@/features/players/constants";
-import type { PlayerDetail } from "@/features/players/types";
-import { getStatisticsPositionLabel } from "@/features/players/utils";
+import type { PlayerDetail, PlayerStatistics } from "@/features/players/types";
+import {
+	formatStatisticsValue,
+	getStatisticsMetric,
+	getStatisticsPosition,
+	getStatisticsPositionLabel,
+} from "@/features/players/utils";
 import {
 	NationalityFlag,
 	PlayerPortrait,
@@ -13,9 +18,19 @@ interface Props {
 	player: PlayerDetail;
 	seasonLabel: string | null;
 	extractionDate: string | null;
-	competitionName: string | null;
-	sourcesLabel?: string | null;
+	statistics: PlayerStatistics | undefined;
 }
+
+const HEADLINE_METRIC_KEYS = [
+	[
+		"saves_per_match",
+		"pass_completion_percentage",
+		"successful_long_balls_per_match",
+	],
+	["tackles_per_match", "interceptions_per_match", "clearances_per_match"],
+	["passes_per_match", "pass_completion_percentage", "key_passes_per_match"],
+	["goals_total", "shots_per_match", "assists_total"],
+] as const;
 
 function formatDate(dateStr: string | null): string {
 	if (!dateStr) return "No disponible";
@@ -31,24 +46,22 @@ export default function PlayerOverview({
 	player,
 	seasonLabel,
 	extractionDate,
-	competitionName,
-	sourcesLabel,
+	statistics,
 }: Props) {
 	const league = getLeagueClassification(player.leagueName);
 	const positionLabel = getStatisticsPositionLabel(player.position);
+	const positionIndex = getStatisticsPosition(player.position);
+	const headlineKeys = HEADLINE_METRIC_KEYS[positionIndex] ?? [];
 	const resolvedSeason = seasonLabel
 		? `Temporada ${seasonLabel}`
 		: "Temporada no disponible";
-	const resolvedCompetition = competitionName ?? "Competición no disponible";
 	const resolvedExtraction = formatDate(extractionDate);
 	const resolvedBirth = formatDate(player.dateOfBirth);
-	const resolvedSources =
-		sourcesLabel ?? (extractionDate ? "JSON + Scraping" : "No disponible");
 
 	return (
 		<section
 			className={styles.playerOverview}
-			aria-label="Identidad y contexto del jugador"
+			aria-label="Identidad y estadísticas principales del jugador"
 		>
 			<div className={styles.playerOverview__identityBlock}>
 				<PlayerPortrait
@@ -109,31 +122,65 @@ export default function PlayerOverview({
 				</div>
 			</div>
 
-			<div className={styles.playerOverview__contextBlock}>
+			<section
+				className={styles.playerOverview__headlineMetrics}
+				aria-label={`Estadísticas principales de ${positionLabel.toLowerCase()}`}
+			>
+				{headlineKeys.map((key) => {
+					const metric = statistics
+						? getStatisticsMetric(statistics, key)
+						: { key, label: key, unit: "", value: null };
+					const isPercentage = metric.unit === "%";
+
+					return (
+						<div className={styles.playerOverview__metricCard} key={metric.key}>
+							<span className={styles.playerOverview__metricLabel}>
+								{statistics ? metric.label : getStatisticsMetricLabel(key)}
+							</span>
+							<strong className={styles.playerOverview__metricValue}>
+								{formatStatisticsValue(metric.value)}
+								{isPercentage && metric.value !== null ? " %" : ""}
+							</strong>
+							<small className={styles.playerOverview__metricUnit}>
+								{getHeadlineUnit(key)}
+							</small>
+						</div>
+					);
+				})}
+			</section>
+
+			<div className={styles.playerOverview__temporalContext}>
 				<div className={styles.playerOverview__seasonBadge}>
 					{resolvedSeason}
 				</div>
-
-				<div className={styles.playerOverview__statsContext}>
-					<h2 className={styles.playerOverview__contextHeading}>
-						Contexto estadístico
-					</h2>
-					<dl className={styles.playerOverview__contextGrid}>
-						<div className={styles.playerOverview__contextRow}>
-							<dt>Competición:</dt>
-							<dd>{resolvedCompetition}</dd>
-						</div>
-						<div className={styles.playerOverview__contextRow}>
-							<dt>Actualizado:</dt>
-							<dd>{resolvedExtraction}</dd>
-						</div>
-						<div className={styles.playerOverview__contextRow}>
-							<dt>Fuentes:</dt>
-							<dd>{resolvedSources}</dd>
-						</div>
-					</dl>
-				</div>
+				<p className={styles.playerOverview__updatedAt}>
+					<span>Actualizado:</span>
+					<strong>{resolvedExtraction}</strong>
+				</p>
 			</div>
 		</section>
 	);
+}
+
+function getStatisticsMetricLabel(key: string): string {
+	const labels: Record<string, string> = {
+		saves_per_match: "Atajadas",
+		pass_completion_percentage: "Precisión de pases",
+		successful_long_balls_per_match: "Pases largos acertados",
+		tackles_per_match: "Entradas",
+		interceptions_per_match: "Intercepciones",
+		clearances_per_match: "Despejes",
+		passes_per_match: "Pases por partido",
+		key_passes_per_match: "Pases clave",
+		goals_total: "Goles",
+		shots_per_match: "Tiros por partido",
+		assists_total: "Asistencias",
+	};
+	return labels[key] ?? key;
+}
+
+function getHeadlineUnit(key: string): string {
+	if (key === "pass_completion_percentage") return "% acierto";
+	if (key.endsWith("_total")) return "total temporada";
+	return "por partido";
 }

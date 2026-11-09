@@ -2,27 +2,29 @@
 
 .playerOverview {
 	// 3. 🧩 Layout
-	display: flex;
-	justify-content: space-between;
-	align-items: stretch;
-	gap: 24px;
+	display: grid;
+	grid-template-columns: minmax(360px, 1.2fr) minmax(390px, 1fr) minmax(170px, 0.45fr);
+	align-items: center;
+	gap: 20px;
 
 	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	height: 125px;
 	min-width: 0;
-	padding: 16px 20px;
+	padding: 12px 20px;
 
 	// 6. 🎨 Visual
+	color: ds.$text-body-on-dark;
+	background-color: ds.$surface-panel-from;
 	border: 1px solid ds.$border-subtle;
 	border-radius: 10px;
-	background-color: ds.$surface-panel-from;
-	color: ds.$text-body-on-dark;
 
 	&__identityBlock {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
-		gap: 20px;
-		flex: 1 1 auto;
+		gap: 14px;
 
 		// 4. 📦 Box Model
 		min-width: 0;
@@ -30,23 +32,23 @@
 
 	&__portrait {
 		// 3. 🧩 Layout
-		flex-shrink: 0;
+		flex: 0 0 auto;
 
 		// 4. 📦 Box Model
-		width: 130px;
-		height: 130px;
+		width: 90px;
+		height: 90px;
 
 		// 6. 🎨 Visual
-		border-radius: 8px;
-		background-color: ds.$surface-nav-active;
 		object-fit: contain;
+		background-color: ds.$surface-nav-active;
+		border-radius: 8px;
 	}
 
 	&__info {
 		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 6px;
 
 		// 4. 📦 Box Model
 		min-width: 0;
@@ -57,38 +59,90 @@
 		margin: 0;
 
 		// 5. 🔤 Typography
-		font-size: clamp(20px, 1.8vw, 28px);
+		font-size: clamp(19px, 1.45vw, 25px);
 		font-weight: 700;
-		line-height: 1.2;
-		color: ds.$text-body-on-dark;
-		overflow-wrap: anywhere;
+		line-height: 1.1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
-	&__teamLine {
+	&__teamLine,
+	&__metaLine {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
-		flex-wrap: wrap;
-		gap: 8px;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 
 		// 5. 🔤 Typography
-		font-size: 14px;
-		color: ds.$text-body-on-dark;
+		font-size: 12px;
+		line-height: 1.25;
+	}
 
-		img {
-			// 4. 📦 Box Model
-			width: 22px;
-			height: 22px;
-			object-fit: contain;
-		}
+	&__teamLine {
+		// 6. 🎨 Visual
+		color: ds.$text-body-on-dark;
+	}
+
+	&__metaLine {
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__team,
+	&__league,
+	&__metaItem {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 	}
 
 	&__team,
 	&__league {
-		// 3. 🧩 Layout
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
+		// 4. 📦 Box Model
+		overflow: hidden;
+
+		// 5. 🔤 Typography
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		img {
+			// 3. 🧩 Layout
+			flex: 0 0 auto;
+
+			// 4. 📦 Box Model
+			width: 18px;
+			height: 18px;
+
+			// 6. 🎨 Visual
+			object-fit: contain;
+		}
+	}
+
+	&__metaItem {
+		// 5. 🔤 Typography
+		white-space: nowrap;
+
+		svg {
+			// 6. 🎨 Visual
+			color: ds.$accent-nav;
+		}
+
+		img {
+			// 4. 📦 Box Model
+			width: 17px;
+			max-height: 13px;
+
+			// 6. 🎨 Visual
+			object-fit: contain;
+		}
 	}
 
 	&__separator {
@@ -99,235 +153,273 @@
 		color: ds.$text-muted-on-dark;
 	}
 
-	&__metaLine {
+	&__headlineMetrics {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		align-items: stretch;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		height: 70px;
+	}
+
+	&__metricCard {
 		// 3. 🧩 Layout
 		display: flex;
+		flex-direction: column;
 		align-items: center;
-		flex-wrap: wrap;
-		gap: 8px;
+		justify-content: center;
+		gap: 2px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		min-width: 0;
+		padding: 7px 6px;
 
 		// 5. 🔤 Typography
-		font-size: 13px;
+		text-align: center;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-nav-active;
+		border: 1px solid ds.$border-subtle;
+
+		&:first-child {
+			border-radius: 7px 0 0 7px;
+		}
+
+		&:not(:first-child) {
+			border-left: 0;
+		}
+
+		&:last-child {
+			border-radius: 0 7px 7px 0;
+		}
+	}
+
+	&__metricLabel {
+		// 4. 📦 Box Model
+		width: 100%;
+		overflow: hidden;
+
+		// 5. 🔤 Typography
+		font-size: 9px;
+		font-weight: 700;
+		line-height: 1.1;
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
 		color: ds.$text-muted-on-dark;
 	}
 
-	&__metaItem {
-		// 3. 🧩 Layout
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-
-		svg {
-			// 3. 🧩 Layout
-			flex-shrink: 0;
-
-			// 6. 🎨 Visual
-			color: ds.$accent-nav;
-		}
-
-		img {
-			// 4. 📦 Box Model
-			width: 20px;
-			max-height: 15px;
-			object-fit: contain;
-		}
+	&__metricValue {
+		// 5. 🔤 Typography
+		font-size: 18px;
+		line-height: 1.1;
 	}
 
-	&__contextBlock {
+	&__metricUnit {
+		// 5. 🔤 Typography
+		font-size: 9px;
+		line-height: 1.1;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__temporalContext {
 		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
-		justify-content: space-between;
 		align-items: flex-end;
-		flex-shrink: 0;
+		justify-content: center;
+		gap: 10px;
 
 		// 4. 📦 Box Model
-		min-width: 260px;
+		min-width: 0;
 	}
 
 	&__seasonBadge {
 		// 4. 📦 Box Model
-		padding: 6px 14px;
+		box-sizing: border-box;
+		max-width: 100%;
+		height: 24px;
+		padding: 4px 10px;
+		overflow: hidden;
 
 		// 5. 🔤 Typography
-		font-size: 12px;
+		font-size: 11px;
 		font-weight: 600;
-		color: ds.$text-body-on-dark;
+		line-height: 14px;
+		text-overflow: ellipsis;
 		white-space: nowrap;
 
 		// 6. 🎨 Visual
-		border: 1px solid ds.$border-subtle;
-		border-radius: 6px;
 		background-color: ds.$surface-nav-active;
+		border: 1px solid ds.$border-subtle;
+		border-radius: 999px;
 	}
 
-	&__statsContext {
+	&__updatedAt {
 		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 6px;
+		gap: 2px;
 
-		// 4. 📦 Box Model
-		width: 100%;
-	}
-
-	&__contextHeading {
 		// 4. 📦 Box Model
 		margin: 0;
 
 		// 5. 🔤 Typography
 		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.5px;
+		line-height: 1.2;
 
-		// 6. 🎨 Visual
-		color: ds.$text-muted-on-dark;
-	}
-
-	&__contextGrid {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-
-		// 4. 📦 Box Model
-		width: 100%;
-		padding: 10px 14px;
-		margin: 0;
-
-		// 5. 🔤 Typography
-		font-size: 12px;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-subtle;
-		border-radius: 6px;
-		background-color: rgba(0, 0, 0, 0.15);
-	}
-
-	&__contextRow {
-		// 3. 🧩 Layout
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 12px;
-
-		dt {
-			// 6. 🎨 Visual
+		span {
 			color: ds.$text-muted-on-dark;
-		}
-
-		dd {
-			// 4. 📦 Box Model
-			margin: 0;
-
-			// 5. 🔤 Typography
-			font-weight: 500;
-			text-align: right;
-			color: ds.$text-body-on-dark;
-			overflow-wrap: anywhere;
 		}
 	}
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1279px) {
 	.playerOverview {
 		// 3. 🧩 Layout
-		flex-direction: column;
-		gap: 18px;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 8px 16px;
 
-		&__contextBlock {
+		// 4. 📦 Box Model
+		height: auto;
+		min-height: 169px;
+		padding: 10px 14px;
+
+		&__portrait {
+			// 4. 📦 Box Model
+			width: 75px;
+			height: 75px;
+		}
+
+		&__headlineMetrics {
 			// 3. 🧩 Layout
-			flex-direction: row;
-			justify-content: space-between;
-			align-items: center;
-			flex-wrap: wrap;
-			gap: 14px;
+			grid-column: 1 / -1;
+			grid-row: 2;
 
 			// 4. 📦 Box Model
 			width: 100%;
-			min-width: 0;
 		}
 
-		&__seasonBadge {
+		&__temporalContext {
 			// 3. 🧩 Layout
-			order: 1;
-		}
-
-		&__statsContext {
-			// 3. 🧩 Layout
-			order: 2;
-			align-items: flex-start;
-			flex: 1 1 300px;
+			grid-column: 2;
+			grid-row: 1;
 		}
 	}
 }
 
 @media (max-width: 600px) {
 	.playerOverview {
+		// 3. 🧩 Layout
+		grid-template-columns: minmax(0, 1fr);
+		gap: 7px;
+
 		// 4. 📦 Box Model
-		padding: 12px;
-		gap: 14px;
+		min-height: 195px;
+		padding: 9px 6px;
 
 		&__identityBlock {
 			// 3. 🧩 Layout
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 12px;
+			gap: 9px;
 		}
 
 		&__portrait {
 			// 4. 📦 Box Model
-			width: 90px;
-			height: 90px;
+			width: 64px;
+			height: 64px;
 			border-radius: 6px;
 		}
 
-		&__name {
-			// 5. 🔤 Typography
-			font-size: 20px;
+		&__info {
+			gap: 4px;
 		}
 
-		&__teamLine {
-			// 5. 🔤 Typography
-			font-size: 12px;
-			gap: 6px;
+		&__name {
+			font-size: 18px;
+		}
+
+		&__teamLine,
+		&__metaLine {
+			gap: 4px;
+			font-size: 10px;
+		}
+
+		&__team img,
+		&__league img {
+			width: 15px;
+			height: 15px;
+		}
+
+		&__metaItem {
+			gap: 3px;
+
+			svg {
+				display: none;
+			}
 
 			img {
-				// 4. 📦 Box Model
-				width: 18px;
-				height: 18px;
+				width: 14px;
 			}
 		}
 
-		&__metaLine {
-			// 5. 🔤 Typography
-			font-size: 11px;
-			gap: 6px;
-		}
-
-		&__contextBlock {
+		&__temporalContext {
 			// 3. 🧩 Layout
-			flex-direction: column;
-			align-items: stretch;
-			gap: 10px;
+			grid-column: 1;
+			grid-row: 2;
+			flex-direction: row;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+
+			// 4. 📦 Box Model
+			min-width: 0;
 		}
 
 		&__seasonBadge {
-			// 3. 🧩 Layout
-			width: 100%;
-			text-align: center;
+			height: auto;
+			padding: 0;
+			font-size: 10px;
+			line-height: 1.2;
+			background: none;
+			border: 0;
+			border-radius: 0;
 		}
 
-		&__contextGrid {
-			// 4. 📦 Box Model
-			padding: 8px 10px;
+		&__updatedAt {
+			flex-direction: row;
+			gap: 3px;
+			font-size: 10px;
+		}
 
-			// 5. 🔤 Typography
-			font-size: 11px;
+		&__headlineMetrics {
+			// 3. 🧩 Layout
+			grid-column: 1;
+			grid-row: 3;
+
+			// 4. 📦 Box Model
+			height: 64px;
+		}
+
+		&__metricCard {
+			padding: 5px 3px;
+		}
+
+		&__metricLabel,
+		&__metricUnit {
+			font-size: 8px;
+		}
+
+		&__metricValue {
+			font-size: 16px;
 		}
 	}
 }

@@ -33,7 +33,7 @@ export default function PlayerDetailPage() {
 									null
 								}
 								extractionDate={detail.statistics?.extractionDate ?? null}
-								competitionName={detail.statistics?.competitionName ?? null}
+								statistics={detail.statistics}
 							/>
 
 							<PlayerStatisticsSection
