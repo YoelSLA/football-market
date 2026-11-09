@@ -39,8 +39,15 @@ Adaptar la presentación existente del detalle sin reconstruir su funcionalidad 
 
 **Independent Test**: Abrir un jugador con datos reales y otro con datos parciales o ausencias. Verificar la disposición horizontal compacta de identidad (retrato, nombre, equipo, liga, posición, nacimiento, nacionalidad) y contexto estadístico (temporada, competición o «Competición no disponible», fecha de extracción y procedencia), y verificar apilado responsive en tablet y móvil sin ocultar identidad ni retorno al catálogo (SC-012, SC-023, SC-026).
 
-- [ ] T088 [P] [US1] Rediseñar la estructura compacta en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.tsx` en tres zonas (identidad a la izquierda con foto de 90px, tres micro-tarjetas titulares en el centro según posición y temporada + fecha a la derecha, omitiendo contexto general, fuentes y competición) con sus fallbacks contractuales de «Sin datos» / «No disponible» según `docs/wireframes/player-detail.md`
-- [ ] T089 [US1] Ajustar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.module.scss` para composición de tres zonas con altura neta de 125 px en escritorio (≥1280px, `box-sizing: border-box`), apilado de dos filas en tablet (768px) y fila simétrica de tres micro-tarjetas compactas de 108 px en móvil (360px)
+- [x] T088 [P] [US1] Rediseñar la estructura compacta en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.tsx` en tres zonas (identidad a la izquierda con foto de 90px, tres micro-tarjetas titulares en el centro según posición y temporada + fecha a la derecha, omitiendo contexto general, fuentes y competición) con sus fallbacks contractuales de «Sin datos» / «No disponible» según `docs/wireframes/player-detail.md`
+- [x] T089 [US1] Ajustar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.module.scss` para composición de tres zonas con altura neta de 125 px en escritorio (≥1280px, `box-sizing: border-box`), apilado de dos filas en tablet (768px) y fila simétrica de tres micro-tarjetas compactas de 108 px en móvil (360px)
+
+**Evidencia T088–T089 — 2026-11-09**: implementación registrada en el commit local `7de5c33`.
+`npm run biome:fix` y `npm run build` finalizaron sin errores; el hook de commit confirmó
+`spotlessCheck` y `npm run biome:check` sin infracciones. No se ejecutaron tests. La inspección en
+el navegador local alcanzó la pantalla de autenticación, por lo que la comprobación visual con
+sesión autenticada a 1920×913, 768 y 360 px permanece pendiente del usuario y no acredita aceptación
+visual ni avance a la Fase 3.
 
 ---
 
