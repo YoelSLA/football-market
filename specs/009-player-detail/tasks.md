@@ -3,16 +3,146 @@
 description: "Task list template for feature implementation"
 ---
 
-# Tasks: Detalle individual del jugador
+# Tasks: Detalle individual del jugador — Rediseño visual
 
-> **Rediseño visual 2026-11-09:** la referencia vigente es el
-> [wireframe canónico](../../docs/wireframes/player-detail.md). Las tareas y evidencias de
-> 2026-10-25 describen la implementación anterior —incluidos filtros laterales y paneles que el
-> wireframe sustituye— y se conservan como antecedente. La actualización de tareas para el nuevo
-> alcance se realizará en la fase TASKS correspondiente; este aviso no marca trabajo nuevo como
-> completo ni invalida evidencia funcional no afectada.
+**Feature Branch vigente**: `feat/009-player-statistics-layout`
+**Created**: 2026-10-12 · **Revisión vigente**: 2026-11-09
+**Status vigente**: TASKS completado; gate ANALYZE pendiente de ejecución. No autoriza IMPLEMENT.
+**Referencia visual canónica**: [wireframe canónico](../../docs/wireframes/player-detail.md), aprobado el 2026-11-09.
 
-## Tareas vigentes del rediseño — 2026-10-25
+## Tareas vigentes del rediseño visual — 2026-11-09
+
+### Resumen del alcance y estrategia
+Adaptar la presentación existente del detalle sin reconstruir su funcionalidad ni ampliar el backend. Se conservan identidad, consulta real (`GET /api/players/{id}/statistics`), DTO/Model, mapper, Query Hook, estados, dos pestañas, perfiles posicionales y catálogo de 60 métricas. El cambio recompone los componentes locales y módulos SCSS de `frontend/src/features/players/pages/PlayerDetailPage/` para obtener una cabecera compacta, cuatro indicadores, exactamente dos paneles específicos por posición, un único bloque de destacadas deduplicado y un catálogo agrupado por 8 categorías con controles en su encabezado (sin panel lateral ni filtro de unidad).
+
+**Preservación y numeración**:
+- T001–T047 se conservan íntegras como antecedente histórico del dashboard inicial con demostraciones (2026-10-12).
+- T048–T085 se conservan íntegras como antecedente histórico de la implementación funcional con estadísticas reales (2026-10-25).
+- Las tareas vigentes del rediseño visual inician en **T086** hasta **T102** (17 tareas en total).
+- Las tareas inician en estado pendiente `[ ]`; esta generación no autoriza implementación ni marca tareas como completadas.
+- Frontend exento de tests automáticos según Constitución y `AGENTS.md`. No se agregan ni modifican endpoints o contratos backend.
+
+---
+
+### Fase 1 — Fundamentos de presentación del rediseño
+
+**Propósito**: Adaptar utilidades de cálculo de presentación y estado local de la página, retirando el filtro de unidad y preparando la agrupación y deduplicación pura.
+
+- [ ] T086 Actualizar utilidades de presentación en `frontend/src/features/players/utils/playerStatisticsView.ts` para retirar el filtro de unidad, añadir mapeo de etiquetas de relevancia (Principal, Secundaria, Poco relevante), derivar grupos por categoría y función pura de deduplicación de métricas adicionales para el Resumen (excluyendo tarjetas y paneles)
+- [ ] T087 Simplificar el estado local en `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts` retirando `unit` y sus callbacks, conservando `playerId`, `activeTab` (`summary`/`catalog`), `search`, `category` y la acción `clearFilters` con reset por jugador
+
+---
+
+### Fase 2 — User Story 1 (P1): Cabecera compacta e identidad
+
+**Goal**: Componer la cabecera compacta con identidad a la izquierda y contexto a la derecha según el wireframe canónico, sin sustituir ausencias por la temporada o liga actual.
+
+**Independent Test**: Abrir un jugador con datos reales y otro con datos parciales o ausencias. Verificar la disposición horizontal compacta de identidad (retrato, nombre, equipo, liga, posición, nacimiento, nacionalidad) y contexto estadístico (temporada, competición o «Competición no disponible», fecha de extracción y procedencia), y verificar apilado responsive en tablet y móvil sin ocultar identidad ni retorno al catálogo (SC-012, SC-023, SC-026).
+
+- [ ] T088 [P] [US1] Rediseñar la estructura compacta en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.tsx` separando identidad a la izquierda y contexto a la derecha con sus fallbacks contractuales según `docs/wireframes/player-detail.md`
+- [ ] T089 [US1] Ajustar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.module.scss` para composición compacta en escritorio (≥1280px), apilado de contexto bajo identidad en tablet (768px) y prioridad de retrato/nombre en móvil (360px)
+
+---
+
+### Fase 3 — User Story 2 (P1): Resumen posicional rediseñado
+
+**Goal**: Presentar exactamente 4 tarjetas fijas por perfil, exactamente 2 paneles posicionales de barras y un único bloque de estadísticas destacadas deduplicado para cada una de las 4 posiciones.
+
+**Independent Test**: Inspeccionar un arquero, defensor, mediocampista y delantero con estadísticas reales. Verificar que cada perfil presenta sus 4 tarjetas exactas y sus 2 paneles aprobados; que las destacadas no repiten ninguna clave de tarjetas o paneles; que la calificación se muestra en tarjeta para arquero/delantero y en destacadas para defensor/mediocampista; y que no se renderizan paneles genéricos repetidos de posición o distribución (SC-014, SC-015, SC-019, SC-025, SC-028).
+
+- [ ] T090 [US2] Recomponer `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsSummary/PlayerStatisticsSummary.tsx` para presentar cuatro tarjetas por perfil, exactamente los dos paneles devueltos por `getStatisticsPanels`, bloque único de destacadas deduplicado y tratamiento posicional de calificación según `docs/wireframes/player-detail.md`, eliminando paneles genéricos repetidos
+- [ ] T091 [US2] Actualizar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsSummary/PlayerStatisticsSummary.module.scss` para grilla de 4 columnas en desktop, 2 en tablet y 1 en móvil, dos paneles específicos en escritorio y destacadas a todo el ancho disponible
+- [ ] T092 [US2] Ajustar el componente de barras en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsBars/PlayerStatisticsBars.tsx` para representar valores originales, barras proporcionales sin división por cero cuando todos los valores son cero, y aviso de datos insuficientes sin barras simuladas
+
+---
+
+### Fase 4 — User Story 4 (P2): Pestañas, navegación accesible y adaptación responsive
+
+**Goal**: Pestañas accesibles a todo el ancho, estados visuales coherentes (carga, sin datos, datos parciales, error, refetch compatible) y comportamiento responsive sin desbordamiento horizontal.
+
+**Independent Test**: Navegar con teclado (flechas, Tab, Home, End), alternar pestañas en escritorio, tablet y móvil (360, 768 y 1280 px a alturas de 640 y 800 px); verificar foco visible, selección perceptible, alternativa textual para gráficos, anuncios de estado accesibles y desplazamiento vertical natural sin scroll horizontal en ningún ancho (SC-016, SC-017, SC-024, SC-026).
+
+- [ ] T093 [P] [US4] Actualizar `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsTabs/PlayerStatisticsTabs.tsx` y su `PlayerStatisticsTabs.module.scss` para diseño de pestañas a todo el ancho inmediatamente tras la cabecera, conservando accesibilidad (tablist, tab, aria-selected, roving tabindex)
+- [ ] T094 [US4] Alinear estados de carga, sin estadísticas confirmadas, datos parciales (57/60), error sin respuesta compatible y error con respuesta anterior compatible en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsSection/PlayerStatisticsSection.tsx` y su `PlayerStatisticsSection.module.scss` según `docs/wireframes/player-detail.md` §Estados
+- [ ] T095 [US4] Ajustar composición y responsive global en `frontend/src/features/players/pages/PlayerDetailPage/PlayerDetailPage.tsx` y `PlayerDetailPage.module.scss` garantizando región de scroll vertical único en desktop, scroll documental natural en móvil y ausencia de overflow horizontal en 360, 768 y 1280 px
+
+---
+
+### Fase 5 — User Story 5 (P2): Catálogo agrupado con exploración superior
+
+**Goal**: Exponer las 60 métricas canónicas mediante controles de exploración en el encabezado (búsqueda, limpiar, 8 categorías con conteo) y secciones semánticas agrupadas por categoría a todo el ancho, sin panel lateral ni filtro de unidad.
+
+**Independent Test**: Abrir Todas las estadísticas sin filtros y contar exactamente 60 métricas; probar búsqueda insensible a mayúsculas/acentos y combinación con categorías; verificar conteos en botones (`[Todas 60] [General 5]...`); comprobar leyenda accesible de relevancia (`● Principal ○ Secundaria · Poco relevante`); verificar orden P→S→B con ausencias al final mostrando «Sin datos»; provocar búsqueda vacía y verificar mensaje explícito y botón Limpiar (SC-013, SC-020, SC-021, SC-027).
+
+- [ ] T096 [US5] Reestructurar `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsCatalog/PlayerStatisticsCatalog.tsx` para sustituir el panel lateral y tabla anterior por controles superiores (búsqueda, limpiar, 8 botones de categoría con conteo y `aria-pressed`, leyenda de relevancia accesible) y lista agrupada por categorías
+- [ ] T097 [US5] Implementar presentación de filas de métricas en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsCatalog/PlayerStatisticsCatalog.tsx` asegurando que cada fila comunica nombre, relevancia textual/símbolo, unidad visible y valor (o «Sin datos»), en orden P→S→B y ausencias al final
+- [ ] T098 [US5] Ajustar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerStatisticsCatalog/PlayerStatisticsCatalog.module.scss` para controles superiores envolventes, desplazamiento horizontal interno de categorías en móvil, y adaptación de filas a dos líneas en 360 px sin scroll horizontal de documento
+
+---
+
+### Fase 6 — Pulido, integración transversal y validación
+
+**Propósito**: Retirar código muerto, sincronizar escenarios de prueba en quickstart y validar calidad estática y build.
+
+- [ ] T099 Revisar y retirar código muerto o tipos no utilizados relacionados con el antiguo filtro de unidad y paneles eliminados en `frontend/src/features/players/pages/PlayerDetailPage/` y barrels colocalizados
+- [ ] T100 Actualizar escenarios de verificación manual y visual en `specs/009-player-detail/quickstart.md` contra `docs/wireframes/player-detail.md` para los 3 viewports y 4 perfiles posicionales
+- [ ] T101 Ejecutar controles estáticos y formateo permitidos (`npm run biome:check` en frontend y `./gradlew spotlessCheck` en backend) garantizando cero infracciones
+- [ ] T102 Ejecutar build de frontend (`npm run build`) y verificar ausencia de errores de compilación y tipado TypeScript
+
+---
+
+### Dependencias y oportunidades de paralelismo
+
+```mermaid
+flowchart TD
+    T086["T086: Utilidades playerStatisticsView"] --> T087["T087: Estado usePlayerDetailPage"]
+    T086 --> T090["T090: PlayerStatisticsSummary TSX"]
+    T086 --> T096["T096: PlayerStatisticsCatalog TSX"]
+    T087 --> T088["T088 [P]: PlayerOverview TSX"]
+    T087 --> T093["T093 [P]: PlayerStatisticsTabs TSX"]
+    T088 --> T089["T089: PlayerOverview SCSS"]
+    T090 --> T091["T091: PlayerStatisticsSummary SCSS"]
+    T090 --> T092["T092: PlayerStatisticsBars"]
+    T093 --> T094["T094: PlayerStatisticsSection"]
+    T089 & T091 & T092 & T094 --> T095["T095: PlayerDetailPage Composición & SCSS"]
+    T096 --> T097["T097: Catálogo Filas & Relevancia"]
+    T097 --> T098["T098: PlayerStatisticsCatalog SCSS"]
+    T095 & T098 --> T099["T099: Limpieza de código muerto"]
+    T099 --> T100["T100: Quickstart escenarios visuales"]
+    T100 --> T101["T101: Biome & Spotless checks"]
+    T101 --> T102["T102: Frontend Build"]
+```
+
+**Paralelismo identificado**:
+- Tras T086 y T087, `T088` (PlayerOverview) y `T093` (PlayerStatisticsTabs) pueden desarrollarse en paralelo al operar sobre componentes desacoplados.
+- `T090` (Summary) y `T096` (Catalog) trabajan sobre carpetas de componentes aisladas dentro de `components/`.
+- Las tareas de estilos SCSS (`T089`, `T091`, `T098`) siguen naturalmente a sus respectivos TSX sin colisión entre archivos.
+
+---
+
+### Matriz de trazabilidad
+
+| Requisito / Criterio | Tarea(s) asignada(s) | Sección Wireframe Canónico | Criterio de Aceptación |
+| --- | --- | --- | --- |
+| FR-025, FR-037, FR-046, FR-049 | T088, T089 | §Cabecera, §Adaptación responsive | SC-012, SC-023, SC-026 |
+| FR-030, FR-031, FR-032, FR-036, FR-050 | T090, T091, T092 | §Resumen (Defensor, Arquero, Medio, Delantero) | SC-014, SC-015, SC-019, SC-025, SC-028 |
+| FR-026, FR-029, FR-038, FR-039, FR-047, FR-050 | T093, T094, T095 | §Estados, §Adaptación responsive | SC-016, SC-017, SC-024, SC-026 |
+| FR-033, FR-034, FR-035, FR-042, FR-043, FR-044, FR-048, FR-051, FR-052 | T086, T096, T097, T098 | §Todas las estadísticas | SC-013, SC-020, SC-021, SC-027 |
+| FR-037, FR-040 (higiene, trazabilidad y build) | T087, T099, T100, T101, T102 | §Límites | SC-017, SC-018, SC-026 |
+
+---
+
+### Estrategia de entrega incremental
+
+1. **Incremento 1 (Fundamentos y Cabecera Compacta - US1)**: T086–T089. Entrega la limpieza de utilidades, el estado desacoplado y la cabecera compacta con separación clara de identidad y contexto.
+2. **Incremento 2 (Resumen Posicional - US2)**: T090–T092. Entrega las 4 tarjetas, los 2 paneles posicionales de barras y las destacadas deduplicadas, eliminando paneles obsoletos.
+3. **Incremento 3 (Pestañas y Responsive - US4)**: T093–T095. Entrega pestañas a todo el ancho, integración de estados visuales del wireframe y ajuste de viewports en 360, 768 y 1280 px.
+4. **Incremento 4 (Catálogo Agrupado - US5)**: T096–T098. Entrega la cabecera de exploración superior y las 60 métricas agrupadas por categoría con orden P→S→B y ausencias al final.
+5. **Incremento 5 (Higiene y Verificación)**: T099–T102. Limpieza de código muerto, escenarios en quickstart y validación mediante `biome:check`, `spotlessCheck` y `npm run build`.
+
+---
+
+## Antecedente histórico — Implementación funcional con estadísticas reales (2026-10-25)
 
 ### Continuación visual autorizada — referencias por posición
 
