@@ -11,41 +11,113 @@
 
 	// 6. 🎨 Visual
 	color: ds.$text-body-on-dark;
+
+	&__header {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__title {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 14px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+
+		// 6. 🎨 Visual
+		color: ds.$text-body-on-dark;
+	}
+
+	&__subtitle {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__fallback {
+		// 4. 📦 Box Model
+		margin: 0;
+		padding: 10px 14px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 6px;
+		background-color: ds.$surface-dark;
+		color: ds.$text-muted-on-dark;
+	}
+
 	&__cards {
 		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 16px;
+		gap: 12px;
 	}
 
 	&__card {
 		// 3. 🧩 Layout
 		display: flex;
-		gap: 18px;
+		gap: 14px;
 		align-items: center;
 
 		// 4. 📦 Box Model
-		padding: 16px;
+		padding: 12px 14px;
 		min-width: 0;
 
 		// 6. 🎨 Visual
 		border: 1px solid ds.$border-subtle;
-		border-radius: 9px;
+		border-radius: 8px;
 		background-color: ds.$surface-panel-from;
-		h2 {
+	}
+
+	&__cardContent {
+		// 3. 🧩 Layout
+		flex: 1;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		h3 {
 			// 4. 📦 Box Model
-			margin: 0 0 6px;
+			margin: 0 0 3px;
 
 			// 5. 🔤 Typography
-			font-size: 14px;
+			font-size: 12px;
 			font-weight: 500;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
 		}
 
 		strong {
+			// 3. 🧩 Layout
+			display: block;
+
 			// 5. 🔤 Typography
-			font-size: 29px;
+			font-size: 22px;
+			font-weight: 700;
 			line-height: 1.15;
 			font-variant-numeric: tabular-nums;
+
+			// 6. 🎨 Visual
+			color: ds.$text-body-on-dark;
 		}
 
 		small {
@@ -53,10 +125,13 @@
 			display: block;
 
 			// 4. 📦 Box Model
-			margin-top: 3px;
+			margin-top: 2px;
 
 			// 5. 🔤 Typography
 			font-size: 10px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
 
 			// 6. 🎨 Visual
 			color: ds.$text-muted-on-dark;
@@ -70,8 +145,8 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		width: 62px;
-		height: 62px;
+		width: 44px;
+		height: 44px;
 
 		// 6. 🎨 Visual
 		border-radius: 8px;
@@ -80,34 +155,62 @@
 		border: 1px solid ds.$border-subtle;
 	}
 
-	&__grid {
+	&__panels {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 14px;
 		align-items: stretch;
 	}
 
 	&__panel {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+
 		// 4. 📦 Box Model
 		min-width: 0;
 		padding: 14px;
 
 		// 6. 🎨 Visual
 		border: 1px solid ds.$border-subtle;
-		border-radius: 9px;
+		border-radius: 8px;
 		background-color: ds.$surface-panel-from;
+	}
+
+	&__panelHeader {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		margin-bottom: 2px;
+		padding-bottom: 8px;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-subtle;
+
 		h3 {
 			// 3. 🧩 Layout
 			display: flex;
 			align-items: center;
-			gap: 10px;
+			gap: 8px;
 
 			// 4. 📦 Box Model
-			margin: 0 0 14px;
+			margin: 0;
 
 			// 5. 🔤 Typography
-			font-size: 14px;
+			font-size: 13px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+
+			// 6. 🎨 Visual
+			color: ds.$text-body-on-dark;
+
 			svg {
 				// 3. 🧩 Layout
 				flex-shrink: 0;
@@ -115,196 +218,12 @@
 				// 6. 🎨 Visual
 				color: ds.$accent-nav;
 			}
-
-			small {
-				// 4. 📦 Box Model
-				margin-left: auto;
-
-				// 5. 🔤 Typography
-				font-size: 10px;
-				font-weight: 400;
-
-				// 6. 🎨 Visual
-				color: ds.$text-muted-on-dark;
-			}
-		}
-	}
-
-	&__rows {
-		// 4. 📦 Box Model
-		margin: 0;
-		div {
-			// 3. 🧩 Layout
-			display: flex;
-			gap: 12px;
-			align-items: center;
-
-			// 4. 📦 Box Model
-			min-height: 29px;
-			padding: 4px 0;
-
-			// 6. 🎨 Visual
-			border-bottom: 1px solid ds.$border-subtle;
-			&:last-child {
-				// 6. 🎨 Visual
-				border: 0;
-			}
-		}
-
-		dt {
-			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			gap: 9px;
-			flex: 1;
-
-			// 4. 📦 Box Model
-			min-width: 0;
-
-			// 5. 🔤 Typography
-			font-size: 12px;
-			svg {
-				// 3. 🧩 Layout
-				flex-shrink: 0;
-
-				// 6. 🎨 Visual
-				color: ds.$accent-highlight;
-			}
-		}
-
-		dd {
-			// 4. 📦 Box Model
-			margin: 0;
-
-			// 5. 🔤 Typography
-			text-align: right;
-			font-size: 12px;
-			font-weight: 600;
-			font-variant-numeric: tabular-nums;
-		}
-	}
-
-	&__track {
-		// 4. 📦 Box Model
-		width: 26%;
-		height: 8px;
-
-		// 6. 🎨 Visual
-		border-radius: 9px;
-		background-color: ds.$surface-dark;
-
-		// 7. ⚙️ Behavior
-		overflow: hidden;
-		span {
-			// 3. 🧩 Layout
-			display: block;
-
-			// 4. 📦 Box Model
-			height: 100%;
-
-			// 6. 🎨 Visual
-			border-radius: inherit;
-			background-color: ds.$accent-nav;
-		}
-	}
-
-	&__pitch {
-		// 2. 📍 Positioning
-		position: relative;
-
-		// 4. 📦 Box Model
-		min-height: 150px;
-		margin: 8px 12px 0;
-		padding: 18px 8px 8px;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$accent-nav;
-		border-radius: 4px;
-		background-color: ds.$surface-nav-active;
-	}
-
-	&__goal {
-		// 2. 📍 Positioning
-		position: absolute;
-		inset: 0 0 auto;
-
-		// 4. 📦 Box Model
-		height: 16px;
-
-		// 6. 🎨 Visual
-		border: 3px solid ds.$text-muted-on-dark;
-		background-color: ds.$surface-transparent;
-	}
-
-	&__zones {
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-
-		// 4. 📦 Box Model
-		min-height: 125px;
-		div {
-			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-			gap: 8px;
-
-			// 5. 🔤 Typography
-			text-align: center;
-
-			// 6. 🎨 Visual
-			border-right: 1px solid ds.$border-subtle;
-			&:last-child {
-				// 6. 🎨 Visual
-				border: 0;
-			}
-		}
-
-		strong {
-			// 5. 🔤 Typography
-			font-size: 22px;
-		}
-
-		span {
-			// 5. 🔤 Typography
-			font-size: 12px;
 		}
 
 		small {
 			// 5. 🔤 Typography
 			font-size: 10px;
-
-			// 6. 🎨 Visual
-			color: ds.$text-muted-on-dark;
-		}
-	}
-
-	&__rating {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
-
-		// 4. 📦 Box Model
-		min-height: 130px;
-
-		// 6. 🎨 Visual
-		color: ds.$accent-nav;
-		strong {
-			// 5. 🔤 Typography
-			font-size: 38px;
-
-			// 6. 🎨 Visual
-			color: ds.$text-body-on-dark;
-		}
-
-		span {
-			// 5. 🔤 Typography
-			font-size: 12px;
+			font-weight: 400;
 
 			// 6. 🎨 Visual
 			color: ds.$text-muted-on-dark;
@@ -313,13 +232,120 @@
 
 	&__note {
 		// 4. 📦 Box Model
-		margin: 8px 0;
+		margin: 6px 0 0;
 
 		// 5. 🔤 Typography
 		font-size: 11px;
+		font-style: italic;
 
 		// 6. 🎨 Visual
 		color: ds.$text-muted-on-dark;
+	}
+
+	&__highlighted {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		padding: 14px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 8px;
+		background-color: ds.$surface-panel-from;
+	}
+
+	&__highlightedGrid {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 6px 20px;
+
+		// 4. 📦 Box Model
+		margin: 0;
+	}
+
+	&__highlightItem {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+
+		// 4. 📦 Box Model
+		min-height: 26px;
+		padding: 4px 0;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-subtle;
+
+		dt {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 8px;
+
+			// 4. 📦 Box Model
+			margin: 0;
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font-size: 12px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-body-on-dark;
+
+			svg {
+				// 3. 🧩 Layout
+				flex-shrink: 0;
+
+				// 6. 🎨 Visual
+				color: ds.$accent-highlight;
+			}
+
+			span {
+				// 5. 🔤 Typography
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+
+		dd {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			text-align: right;
+			font-size: 12px;
+			white-space: nowrap;
+
+			strong {
+				// 5. 🔤 Typography
+				font-weight: 600;
+				font-variant-numeric: tabular-nums;
+
+				// 6. 🎨 Visual
+				color: ds.$text-body-on-dark;
+			}
+
+			span {
+				// 4. 📦 Box Model
+				margin-left: 3px;
+
+				// 5. 🔤 Typography
+				font-size: 11px;
+
+				// 6. 🎨 Visual
+				color: ds.$text-muted-on-dark;
+			}
+		}
 	}
 }
 
@@ -330,18 +356,64 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 
-		&__grid {
+		&__panels {
+			// 3. 🧩 Layout
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		&__highlightedGrid {
 			// 3. 🧩 Layout
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 }
 
-@media (max-width: 480px) {
+@include ds.down(ds.$bp-2xs) {
 	.playerStatisticsSummary {
 		&__cards {
 			// 3. 🧩 Layout
 			grid-template-columns: minmax(0, 1fr);
+		}
+
+		&__card {
+			// 3. 🧩 Layout
+			gap: 12px;
+
+			// 4. 📦 Box Model
+			padding: 10px 12px;
+
+			strong {
+				// 5. 🔤 Typography
+				font-size: 20px;
+			}
+		}
+
+		&__icon {
+			// 4. 📦 Box Model
+			width: 38px;
+			height: 38px;
+		}
+
+		&__panel {
+			// 4. 📦 Box Model
+			padding: 12px;
+		}
+
+		&__highlighted {
+			// 4. 📦 Box Model
+			padding: 12px;
+		}
+
+		&__highlightItem {
+			dt {
+				// 5. 🔤 Typography
+				font-size: 11px;
+			}
+
+			dd {
+				// 5. 🔤 Typography
+				font-size: 11px;
+			}
 		}
 	}
 }

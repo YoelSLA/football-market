@@ -231,10 +231,27 @@ export function getPlayerStatisticsCatalogGroups(
 		.filter((group) => group.metrics.length > 0);
 }
 
+export const HEADLINE_STATISTICS_KEYS = [
+	[
+		"saves_per_match",
+		"pass_completion_percentage",
+		"successful_long_balls_per_match",
+	],
+	["tackles_per_match", "interceptions_per_match", "clearances_per_match"],
+	["passes_per_match", "pass_completion_percentage", "key_passes_per_match"],
+	["goals_total", "shots_per_match", "assists_total"],
+] as const;
+
+export function getHeaderStatisticsKeys(position: string): string[] {
+	const index = getStatisticsPosition(position);
+	return index >= 0 && index < HEADLINE_STATISTICS_KEYS.length
+		? [...HEADLINE_STATISTICS_KEYS[index]]
+		: [];
+}
+
 /**
  * Obtiene las claves para el bloque único de estadísticas destacadas en Resumen.
- * Deduplica estrictamente contra las tarjetas del perfil y contra los dos paneles específicos.
- * Calificación se incluye en destacadas únicamente cuando no es una tarjeta principal (Defensor y Mediocampista).
+ * Deduplica estrictamente contra la cabecera, las tarjetas del perfil y los dos paneles específicos.
  */
 export function getHighlightedStatisticsKeys(position: string): string[] {
 	const profile = getStatisticsProfile(position);
@@ -246,13 +263,14 @@ export function getHighlightedStatisticsKeys(position: string): string[] {
 		];
 	}
 
+	const headerKeys = new Set(getHeaderStatisticsKeys(position));
 	const cardKeys = new Set(profile.cards);
 	const panelKeys = new Set(
 		getStatisticsPanels(position).flatMap((panel) => panel.keys),
 	);
 
 	return profile.additional.filter(
-		(key) => !cardKeys.has(key) && !panelKeys.has(key),
+		(key) => !headerKeys.has(key) && !cardKeys.has(key) && !panelKeys.has(key),
 	);
 }
 
@@ -264,9 +282,16 @@ export function getHighlightedStatistics(
 	return keys.map((key) => getStatisticsMetric(statistics, key));
 }
 
-export function getStatisticsPanels(position: string) {
+export interface StatisticsPanelDefinition {
+	title: string;
+	keys: string[];
+}
+
+export function getStatisticsPanels(
+	position: string,
+): StatisticsPanelDefinition[] {
 	const index = getStatisticsPosition(position);
-	const groups = [
+	const groups: StatisticsPanelDefinition[][] = [
 		[
 			{
 				title: "Atajadas por zona",
@@ -275,7 +300,6 @@ export function getStatisticsPanels(position: string) {
 					"penalty_area_saves_per_match",
 					"outside_box_saves_per_match",
 				],
-				zones: true,
 			},
 			{
 				title: "Distribución de pases",
@@ -327,7 +351,6 @@ export function getStatisticsPanels(position: string) {
 					"penalty_area_shots_per_match",
 					"outside_box_shots_per_match",
 				],
-				zones: true,
 			},
 			{
 				title: "Asistencias por tipo",

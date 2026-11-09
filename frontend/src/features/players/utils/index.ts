@@ -5,10 +5,12 @@ export type {
 	MetricPriorityLabel,
 	MetricPriorityLevel,
 	StatisticCategory,
+	StatisticsPanelDefinition,
 } from "./playerStatisticsView";
 export {
 	formatStatisticsValue,
 	getCategoryCounts,
+	getHeaderStatisticsKeys,
 	getHighlightedStatistics,
 	getHighlightedStatisticsKeys,
 	getMetricPriority,
@@ -21,6 +23,7 @@ export {
 	getStatisticsPosition,
 	getStatisticsPositionLabel,
 	getStatisticsProfile,
+	HEADLINE_STATISTICS_KEYS,
 	METRIC_PRIORITY_LABELS,
 	STATISTIC_CATEGORIES,
 } from "./playerStatisticsView";

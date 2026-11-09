@@ -1,68 +1,70 @@
+import { formatStatisticsValue } from "@/features/players/utils";
 import styles from "./PlayerStatisticsBars.module.scss";
 
-interface BarProps {
+export interface BarItem {
+	key: string;
 	label: string;
 	value: number | null;
-	unit: string;
-	percentage: number;
-	source: "JSON" | "SCRAPING" | null;
-}
-
-function Bar({ label, value, unit, percentage, source }: BarProps) {
-	const displayValue = value === null ? "No disponible" : `${value} ${unit}`;
-	const sourceLabel = source ? ` (${source})` : "";
-
-	return (
-		<div className={styles.barContainer}>
-			<div className={styles.barHeader}>
-				<span className={styles.barLabel}>{label}</span>
-				<span className={styles.barValue}>
-					{displayValue}
-					{sourceLabel}
-				</span>
-			</div>
-			<div
-				className={styles.barTrack}
-				role="img"
-				aria-label={`${label}: ${displayValue}${sourceLabel}`}
-			>
-				<div
-					className={styles.barFill}
-					style={{ width: `${Math.min(percentage, 100)}%` }}
-				/>
-			</div>
-		</div>
-	);
+	unit?: string;
 }
 
 interface Props {
-	bars: Array<{
-		key: string;
-		label: string;
-		value: number | null;
-		unit: string;
-		source: "JSON" | "SCRAPING" | null;
-	}>;
-	maxValue: number;
+	bars: BarItem[];
+	maxValue?: number;
+	ariaLabel?: string;
 }
 
-export default function PlayerStatisticsBars({ bars, maxValue }: Props) {
+export default function PlayerStatisticsBars({
+	bars,
+	maxValue: propMaxValue,
+	ariaLabel = "Gráficos de barras estadísticas",
+}: Props) {
+	const computedMax = Math.max(
+		0,
+		...bars.filter((b) => b.value !== null).map((b) => b.value as number),
+	);
+	const maxValue = propMaxValue ?? computedMax;
+
 	return (
-		<section className={styles.bars} aria-label="Gráficos de barras">
-			{bars.map((bar) => (
-				<Bar
-					key={bar.key}
-					label={bar.label}
-					value={bar.value}
-					unit={bar.unit}
-					percentage={
-						maxValue > 0 && bar.value !== null
-							? (bar.value / maxValue) * 100
-							: 0
-					}
-					source={bar.source}
-				/>
-			))}
+		<section className={styles.bars} aria-label={ariaLabel}>
+			{bars.map((bar) => {
+				const isNull = bar.value === null;
+				const displayValue = formatStatisticsValue(bar.value);
+				const percentage =
+					!isNull && maxValue > 0
+						? Math.min(
+								100,
+								Math.max(0, ((bar.value as number) / maxValue) * 100),
+							)
+						: 0;
+
+				return (
+					<div className={styles.barRow} key={bar.key}>
+						<span className={styles.barLabel} title={bar.label}>
+							{bar.label}
+						</span>
+						<div
+							className={styles.barTrack}
+							role="progressbar"
+							aria-valuenow={isNull ? undefined : (bar.value ?? 0)}
+							aria-valuemin={0}
+							aria-valuemax={maxValue > 0 ? maxValue : 100}
+							aria-label={`${bar.label}: ${displayValue}`}
+						>
+							<div
+								className={styles.barFill}
+								style={{ width: `${percentage}%` }}
+							/>
+						</div>
+						<span
+							className={`${styles.barValue} ${isNull ? styles.barValueEmpty : ""}`}
+						>
+							{displayValue}
+							{bar.unit === "%" && !isNull ? " %" : ""}
+						</span>
+					</div>
+				);
+			})}
 		</section>
 	);
 }
