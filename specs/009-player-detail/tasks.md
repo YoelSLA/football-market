@@ -5,6 +5,13 @@ description: "Task list template for feature implementation"
 
 # Tasks: Detalle individual del jugador
 
+> **Rediseño visual 2026-11-09:** la referencia vigente es el
+> [wireframe canónico](../../docs/wireframes/player-detail.md). Las tareas y evidencias de
+> 2026-10-25 describen la implementación anterior —incluidos filtros laterales y paneles que el
+> wireframe sustituye— y se conservan como antecedente. La actualización de tareas para el nuevo
+> alcance se realizará en la fase TASKS correspondiente; este aviso no marca trabajo nuevo como
+> completo ni invalida evidencia funcional no afectada.
+
 ## Tareas vigentes del rediseño — 2026-10-25
 
 ### Continuación visual autorizada — referencias por posición

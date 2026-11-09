@@ -1,6 +1,6 @@
 # Implementation Plan: Detalle individual del jugador
 
-**Plan vigente del rediseño** — 2026-10-25 · Rama real `feat/009-player-detail-whoscored-stats-dashboard` · [Spec y Clarify](spec.md).
+**Plan vigente del rediseño** — revisión pendiente para el alcance visual del 2026-11-09 · Rama real `feat/009-player-statistics-layout` · [Spec](spec.md) · [Wireframe canónico](../../docs/wireframes/player-detail.md).
 
 Las secciones vigentes terminan antes de «Antecedente histórico». Se preservan los planes y decisiones anteriores como evidencia, no como requisitos del nuevo dashboard. `tasks.md` no se modifica ni se considera vigente para este alcance por existir.
 
@@ -55,7 +55,7 @@ Decisiones y alternativas en [research.md](research.md), sección vigente. Inves
 - `constants/playerStatisticsCatalog.ts`: nombres españoles, unidades visibles y categorías exactas de [contracts/metric-glossary.md](contracts/metric-glossary.md), orden y prioridades de la matriz; `playerStatisticsProfiles.ts`: tarjetas, series y adicionales por posición. Tipos en `types/models.ts`, DTO en `types/dtos.ts`; transformaciones en mapper, agrupación/filtrado/orden puro sobre Model en `utils/`. Barrels exponen solo lo necesario.
 - Catálogo: ocho categorías; buscar sin mayúsculas/acentos por clave o nombre, intersección con categoría. Disponibles P→S→B; ausentes al final, orden estable de spec. Sin paginación inicial necesaria para 60 filas: lista agrupada accesible con scroll de PageLayout; no agregar páginas, selector o totales derivados del mockup como requisito.
 - Resumen: exactamente cuatro tarjetas de cada perfil y gráficos/adicionales definidos en spec. Barras en unidades originales con valores textuales; falta un valor → aviso y sin barra; cero → 0 visible; si todos son cero no se divide por cero. No generar proporciones de zonas, medias ni totales desde tasas.
-- Responsive: conservar tokens y flex/min-width:0/min-height:0, sin alturas fijas. PageLayout posee scroll desktop; móvil conserva scroll natural vigente. Columnas se apilan; filas largas se adaptan sin overflow de documento. No tocar layouts compartidos para corregir esta Page.
+- Responsive: implementar el orden y composición del [wireframe canónico](../../docs/wireframes/player-detail.md), conservar tokens y flex/min-width:0/min-height:0, sin alturas fijas. PageLayout posee scroll desktop; móvil conserva scroll natural vigente. Columnas se apilan; filas largas se adaptan sin overflow de documento. No tocar layouts compartidos para corregir esta Page.
 - Accesibilidad: tablist/tabpanel, aria-selected/controls, roving tabindex y flechas/Home/End; buscador etiquetado, categorías con selección perceptible, feedback role=status y errores role=alert, foco y reintento. Tabla/listado mantiene nombre/unidad/valor en móvil, gráfico con alternativa textual; no depender del color.
 
 ### Archivos afectados durante implementación futura

@@ -2,7 +2,7 @@
 
 ## Guía vigente del rediseño — 2026-10-25
 
-Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md).
+Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md); referencia visual: [wireframe canónico](../../docs/wireframes/player-detail.md).
 
 ### Prerrequisitos y arranque futuro
 
@@ -38,13 +38,13 @@ Consultar el endpoint con la sesión existente desde la aplicación o cliente HT
 | Fila huérfana, item no COMPLETED o contexto no resuelto | No seleccionarla como confirmada; no sustituir error técnico por ausencia |
 | Sin datos de jugador visible | Mantener identidad/tabs; 60 claves con ausencia explícita, sin mocks |
 | Fallo estadístico, carga y reintento | Estados distintos; identidad y retorno permanecen, sin datos de otro jugador |
-| Cuatro posiciones | Cuatro tarjetas exactas, series y adicionales de spec; sin cálculos nuevos ni finanzas |
-| Todas las estadísticas | 60 claves únicas; categorías 5/19/10/5/3/10/4/4; búsqueda nombre/clave sin acentos/mayúsculas intersecta categoría; limpiar restaura todo |
+| Cuatro posiciones | Cuatro tarjetas, dos paneles específicos y un bloque de destacadas según el wireframe; sin duplicados, cálculos nuevos ni finanzas |
+| Todas las estadísticas | 60 claves únicas en grupos; categorías 5/19/10/5/3/10/4/4; búsqueda nombre/clave sin acentos/mayúsculas intersecta categoría; relevancia y unidad visibles; limpiar restaura todo |
 | Orden y aparición de tres claves | P→S→B disponibles, luego ausentes; cero disponible; nuevos valores reordenan catálogo sin cambiar Resumen |
 | Privacidad | Visitante/sesión vencida no accede; inexistente e inactivo mismo no encontrado; ID inválido 400 |
 | Navegación rápida A→B | Respuesta tardía no altera B ni mezcla identidad/contexto/valores |
 | Teclado | Tabs flechas/Home/End, foco y selección; buscador, categorías y reintento accesibles; gráficos comprensibles por texto |
-| Viewports 360/768/1280 × 640/800 | Sin recortes ni overflow horizontal del documento; scroll en PageLayout desktop, natural móvil; controles siempre alcanzables |
+| Viewports 360/768/1280 × 640/800 | Orden del wireframe conservado; sin recortes ni overflow horizontal del documento; scroll en PageLayout desktop, natural móvil; controles siempre alcanzables |
 | Catálogo y otras rutas | Navegación, retrato fallback y sesión sin regresiones; no borrar consumidores compartidos de demos |
 | Nombre histórico de competición | Nombre solo con correspondencia fiable; sin ella «Competición no disponible», nunca liga actual como sustituto |
 | ID inválido frente a ausencia | Ambas lecturas 400 para formato/rango inválido/cero/negativo; válido inexistente/no visible 404; estadísticas ausentes de visible 200 NO_DATA |

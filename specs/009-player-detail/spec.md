@@ -13,7 +13,7 @@ Las secciones anteriores a «Antecedente histórico» son la especificación vig
 
 La sustitución de mocks y la retirada de los bloques financieros del detalle afectan el alcance evaluado anteriormente. La propuesta inicial de radar queda sustituida por métricas en unidades originales por decisión del usuario. Las aprobaciones históricas no autorizan implementar este rediseño. Plan, contratos, tareas y checklists previos se conservan, pero requieren revisión posterior por impacto; no se presentan como coherentes ni aprobados para este alcance.
 
-La referencia funcional y visual vigente es el wireframe ASCII aprobado el 2026-11-09 y documentado en «Estructura visual aprobada». El [mockup anterior de estadísticas](../../referencias-imagenes/spec-009-player-detail-statistics-mockup.png) queda como antecedente de estilo, no como fuente de estructura cuando difiere del wireframe. No gobiernan sus cifras, equipo de ejemplo, xG, xA, percentiles, totales derivados ni controles sin datos confirmados. El catálogo canónico es el de [SPEC-012, §Catálogo de métricas](../012-player-statistics-scraping/spec.md#catálogo-de-métricas): 60 claves; 57 cubiertas por JSON, no 60 valores garantizados por jugador.
+La referencia funcional y visual vigente es el [wireframe ASCII del detalle del jugador](../../docs/wireframes/player-detail.md), aprobado el 2026-11-09 y resumido en «Estructura visual aprobada». Las [capturas anteriores por posición](../../referencias-imagenes/arquero-stats.png) quedan como antecedente de estilo, no como fuente de estructura cuando difieren del wireframe. No gobiernan sus cifras, equipo de ejemplo, xG, xA, percentiles, totales derivados ni controles sin datos confirmados. El catálogo canónico es el de [SPEC-012, §Catálogo de métricas](../012-player-statistics-scraping/spec.md#catálogo-de-métricas): 60 claves; 57 cubiertas por JSON, no 60 valores garantizados por jugador.
 
 ## Clarifications
 
@@ -128,7 +128,7 @@ Como usuario, quiero encontrar cualquiera de las 60 métricas por categoría y n
 
 ### Estructura visual aprobada
 
-La estructura es normativa respecto de jerarquía y composición; las dimensiones exactas pertenecen a PLAN y al sistema de diseño existente.
+La estructura completa se conserva en el [wireframe canónico](../../docs/wireframes/player-detail.md). El resumen siguiente es normativo respecto de jerarquía y composición; las dimensiones exactas pertenecen a PLAN y al sistema de diseño existente.
 
 ```text
 Cabecera compacta
