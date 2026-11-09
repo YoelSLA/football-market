@@ -7,9 +7,10 @@
 	flex-direction: column;
 
 	// 4. 📦 Box Model
+	box-sizing: border-box;
 	min-width: 0;
 	min-height: 0;
-	padding: 12px 24px 20px;
+	padding: 0 24px;
 
 	// 6. 🎨 Visual
 	color: ds.$text-body-on-dark;
@@ -17,37 +18,59 @@
 
 	// 7. ⚙️ Behavior
 	overflow: hidden;
-	&__scrollRegion {
+
+	&__container {
 		// 3. 🧩 Layout
+		display: flex;
 		flex: 1;
+		flex-direction: column;
 
 		// 4. 📦 Box Model
 		min-width: 0;
 		min-height: 0;
+		width: 100%;
 
 		// 7. ⚙️ Behavior
-		overflow-y: auto;
-		overflow-x: hidden;
-		scrollbar-width: thin;
+		overflow: hidden;
 	}
 
-	&__content {
+	&__status {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		align-items: center;
+		justify-content: center;
+
 		// 4. 📦 Box Model
 		min-width: 0;
-		width: 100%;
+		min-height: 0;
+		padding: 24px;
 	}
 }
 
 @include ds.down(ds.$bp-tablet) {
 	.playerDetail {
+		// 3. 🧩 Layout
+		flex: none;
+
 		// 4. 📦 Box Model
+		height: auto;
+		min-height: 0;
 		padding: 10px;
 
 		// 7. ⚙️ Behavior
 		overflow: visible;
-		&__scrollRegion {
-			// 7. ⚙️ Behavior
+
+		&__container {
+			flex: none;
+			height: auto;
 			overflow: visible;
+		}
+
+		&__status {
+			flex: none;
+			height: auto;
+			padding: 12px;
 		}
 	}
 }

@@ -1,8 +1,19 @@
 @use "@/styles/abstracts" as ds;
 
 .playerBreadcrumb {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	height: 32px;
+	padding: 6px 0;
+
 	// 5. 🔤 Typography
-	font-size: 0.9rem;
+	font-size: 14px;
+	line-height: 20px;
 
 	// 6. 🎨 Visual
 	color: ds.$text-breadcrumb;
@@ -60,5 +71,13 @@
 
 		// 6. 🎨 Visual
 		color: ds.$text-strong;
+	}
+}
+
+@include ds.down(ds.$bp-tablet) {
+	.playerBreadcrumb {
+		height: auto;
+		min-height: 28px;
+		padding: 4px 0;
 	}
 }

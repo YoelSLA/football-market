@@ -13,6 +13,7 @@
 	height: 125px;
 	min-width: 0;
 	padding: 12px 20px;
+	flex-shrink: 0;
 
 	// 6. 🎨 Visual
 	color: ds.$text-body-on-dark;

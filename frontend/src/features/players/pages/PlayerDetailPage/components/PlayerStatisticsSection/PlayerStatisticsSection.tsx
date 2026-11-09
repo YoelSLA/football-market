@@ -22,6 +22,16 @@ interface Props {
 	onClearFilters: () => void;
 }
 
+function formatDate(dateStr: string | null): string {
+	if (!dateStr) return "";
+	const parts = dateStr.split("-");
+	if (parts.length === 3) {
+		const [year, month, day] = parts;
+		return `${day}/${month}/${year}`;
+	}
+	return dateStr;
+}
+
 export default function PlayerStatisticsSection({
 	player,
 	statistics,
@@ -38,18 +48,31 @@ export default function PlayerStatisticsSection({
 	onUnitChange,
 	onClearFilters,
 }: Props) {
+	const availableMetricsCount =
+		statistics?.metrics.filter((m) => m.value !== null).length ?? 0;
+
 	return (
 		<div className={styles.statisticsSection}>
 			<PlayerStatisticsTabs activeTab={activeTab} onChange={onTabChange} />
 
 			{statisticsState === "error" && (
-				<section role="alert" className={styles.statisticsSection__message}>
-					<p>{statisticsErrorMessage}</p>
-					{statistics && (
+				<section role="alert" className={styles.statisticsSection__bannerError}>
+					<div className={styles.statisticsSection__bannerText}>
+						<strong>
+							{statistics
+								? "No se pudo actualizar."
+								: "No se pudieron consultar las estadísticas."}
+						</strong>
 						<p>
-							Mostrando la última consulta disponible; no se pudo actualizar
+							{statistics
+								? `Mostrando la última consulta disponible${
+										statistics.extractionDate
+											? ` del ${formatDate(statistics.extractionDate)}`
+											: ""
+									}.`
+								: "La identidad y la navegación permanecen disponibles."}
 						</p>
-					)}
+					</div>
 					<Button type="button" onClick={onRetryStatistics}>
 						Reintentar
 					</Button>
@@ -62,24 +85,61 @@ export default function PlayerStatisticsSection({
 				aria-labelledby="tab-summary"
 				hidden={activeTab !== "summary"}
 				aria-busy={statisticsState === "loading"}
+				className={styles.statisticsSection__tabpanel}
 			>
 				{statistics ? (
 					<>
-						<p className={styles.statisticsSection__context}>
-							{statistics.status === "NO_DATA"
-								? "No hay estadísticas disponibles para este jugador y temporada."
-								: statistics.status === "PARTIAL"
-									? "Algunas estadísticas no están disponibles para esta temporada."
-									: "Estadísticas de la temporada"}
-						</p>
+						{statistics.status === "NO_DATA" && (
+							<div
+								className={styles.statisticsSection__bannerNotice}
+								role="status"
+							>
+								<strong>
+									No hay estadísticas confirmadas para esta temporada.
+								</strong>
+								<p>
+									Las 60 métricas siguen disponibles en el catálogo y muestran
+									«Sin datos».
+								</p>
+							</div>
+						)}
+
+						{statistics.status === "PARTIAL" && (
+							<div
+								className={styles.statisticsSection__bannerNotice}
+								role="status"
+							>
+								<strong>
+									Datos parciales: {availableMetricsCount} de 60 métricas
+									disponibles.
+								</strong>
+								<p>Los valores ausentes no se consideran cero.</p>
+							</div>
+						)}
+
 						<PlayerStatisticsSummary
 							statistics={statistics}
 							position={player.position}
 						/>
 					</>
+				) : statisticsState === "loading" ? (
+					<div
+						className={styles.statisticsSection__bannerLoading}
+						role="status"
+					>
+						<p>Consultando estadísticas del jugador…</p>
+					</div>
 				) : (
-					statisticsState === "loading" && (
-						<p role="status">Cargando estadísticas…</p>
+					statisticsState === "error" && (
+						<div
+							className={styles.statisticsSection__bannerErrorPlaceholder}
+							role="alert"
+						>
+							<p>
+								{statisticsErrorMessage ||
+									"No se pudieron cargar las estadísticas del jugador."}
+							</p>
+						</div>
 					)
 				)}
 			</div>
@@ -90,24 +150,58 @@ export default function PlayerStatisticsSection({
 				aria-labelledby="tab-catalog"
 				hidden={activeTab !== "catalog"}
 				aria-busy={statisticsState === "loading"}
+				className={styles.statisticsSection__tabpanel}
 			>
 				{statistics ? (
-					<PlayerStatisticsCatalog
-						metrics={statistics.metrics}
-						position={player.position}
-						search={search}
-						category={category}
-						unit={unit}
-						onSearchChange={onSearchChange}
-						onCategoryChange={onCategoryChange}
-						onUnitChange={onUnitChange}
-						onClear={onClearFilters}
-					/>
-				) : (
-					statisticsState === "loading" && (
-						<p role="status">Cargando estadísticas…</p>
-					)
-				)}
+					<>
+						{statistics.status === "NO_DATA" && (
+							<div
+								className={styles.statisticsSection__bannerNotice}
+								role="status"
+							>
+								<strong>
+									No hay estadísticas confirmadas para esta temporada.
+								</strong>
+								<p>
+									Las 60 métricas siguen disponibles en el catálogo y muestran
+									«Sin datos».
+								</p>
+							</div>
+						)}
+
+						{statistics.status === "PARTIAL" && (
+							<div
+								className={styles.statisticsSection__bannerNotice}
+								role="status"
+							>
+								<strong>
+									Datos parciales: {availableMetricsCount} de 60 métricas
+									disponibles.
+								</strong>
+								<p>Los valores ausentes no se consideran cero.</p>
+							</div>
+						)}
+
+						<PlayerStatisticsCatalog
+							metrics={statistics.metrics}
+							position={player.position}
+							search={search}
+							category={category}
+							unit={unit}
+							onSearchChange={onSearchChange}
+							onCategoryChange={onCategoryChange}
+							onUnitChange={onUnitChange}
+							onClear={onClearFilters}
+						/>
+					</>
+				) : statisticsState === "loading" ? (
+					<div
+						className={styles.statisticsSection__bannerLoading}
+						role="status"
+					>
+						<p>Consultando estadísticas del jugador…</p>
+					</div>
+				) : null}
 			</div>
 		</div>
 	);

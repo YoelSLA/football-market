@@ -16,45 +16,45 @@ export default function PlayerDetailPage() {
 			<div className={styles.playerDetail}>
 				<PlayerBreadcrumb playerName={detail.player?.name} />
 
-				<div className={styles.playerDetail__scrollRegion}>
-					{!detail.player ? (
+				{!detail.player ? (
+					<div className={styles.playerDetail__status}>
 						<PlayerDetailStatus
 							state={detail.detailState}
 							errorMessage={detail.errorMessage}
 							onRetry={detail.retry}
 						/>
-					) : (
-						<div className={styles.playerDetail__content}>
-							<PlayerOverview
-								player={detail.player}
-								seasonLabel={
-									detail.statistics?.seasonLabel ??
-									detail.statistics?.seasonKey ??
-									null
-								}
-								extractionDate={detail.statistics?.extractionDate ?? null}
-								statistics={detail.statistics}
-							/>
+					</div>
+				) : (
+					<div className={styles.playerDetail__container}>
+						<PlayerOverview
+							player={detail.player}
+							seasonLabel={
+								detail.statistics?.seasonLabel ??
+								detail.statistics?.seasonKey ??
+								null
+							}
+							extractionDate={detail.statistics?.extractionDate ?? null}
+							statistics={detail.statistics}
+						/>
 
-							<PlayerStatisticsSection
-								player={detail.player}
-								statistics={detail.statistics}
-								statisticsState={detail.statisticsState}
-								statisticsErrorMessage={detail.statisticsErrorMessage}
-								activeTab={detail.activeTab}
-								onTabChange={detail.setActiveTab}
-								onRetryStatistics={detail.retryStatistics}
-								search={detail.search}
-								category={detail.category}
-								unit={detail.unit}
-								onSearchChange={detail.setSearch}
-								onCategoryChange={detail.setCategory}
-								onUnitChange={detail.setUnit}
-								onClearFilters={detail.clearFilters}
-							/>
-						</div>
-					)}
-				</div>
+						<PlayerStatisticsSection
+							player={detail.player}
+							statistics={detail.statistics}
+							statisticsState={detail.statisticsState}
+							statisticsErrorMessage={detail.statisticsErrorMessage}
+							activeTab={detail.activeTab}
+							onTabChange={detail.setActiveTab}
+							onRetryStatistics={detail.retryStatistics}
+							search={detail.search}
+							category={detail.category}
+							unit={detail.unit}
+							onSearchChange={detail.setSearch}
+							onCategoryChange={detail.setCategory}
+							onUnitChange={detail.setUnit}
+							onClearFilters={detail.clearFilters}
+						/>
+					</div>
+				)}
 			</div>
 		</PageLayout>
 	);
