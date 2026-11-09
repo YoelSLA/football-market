@@ -39,8 +39,8 @@ Adaptar la presentación existente del detalle sin reconstruir su funcionalidad 
 
 **Independent Test**: Abrir un jugador con datos reales y otro con datos parciales o ausencias. Verificar la disposición horizontal compacta de identidad (retrato, nombre, equipo, liga, posición, nacimiento, nacionalidad) y contexto estadístico (temporada, competición o «Competición no disponible», fecha de extracción y procedencia), y verificar apilado responsive en tablet y móvil sin ocultar identidad ni retorno al catálogo (SC-012, SC-023, SC-026).
 
-- [ ] T088 [P] [US1] Rediseñar la estructura compacta en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.tsx` separando identidad a la izquierda y contexto a la derecha con sus fallbacks contractuales según `docs/wireframes/player-detail.md`
-- [ ] T089 [US1] Ajustar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.module.scss` para composición compacta en escritorio (≥1280px), apilado de contexto bajo identidad en tablet (768px) y prioridad de retrato/nombre en móvil (360px)
+- [x] T088 [P] [US1] Rediseñar la estructura compacta en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.tsx` separando identidad a la izquierda y contexto a la derecha con sus fallbacks contractuales según `docs/wireframes/player-detail.md`
+- [x] T089 [US1] Ajustar estilos en `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerOverview/PlayerOverview.module.scss` para composición compacta en escritorio (≥1280px), apilado de contexto bajo identidad en tablet (768px) y prioridad de retrato/nombre en móvil (360px)
 
 ---
 

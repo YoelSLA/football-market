@@ -2,7 +2,7 @@
 
 **Feature Branch vigente**: `feat/009-player-statistics-layout`
 **Created**: 2026-10-12 · **Revisión**: 2026-11-09
-**Status vigente**: IMPLEMENT en progreso (Etapa 1: T086–T087 completada). En revisión humana de etapa. No autoriza cierre.
+**Status vigente**: IMPLEMENT en progreso (Etapa 2: T088–T089 completada). En revisión humana de etapa. No autoriza cierre.
 **Input vigente**: Rediseñar la presentación existente de SPEC-009 según el wireframe aprobado el 2026-11-09, conservando exactamente dos pestañas y las 60 métricas reales, sin reconstruir capacidades ya implementadas ni ampliar innecesariamente el backend.
 
 ## Trazabilidad del rediseño

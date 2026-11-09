@@ -2,113 +2,220 @@
 
 .playerOverview {
 	// 3. 🧩 Layout
-	display: grid;
-	grid-template-columns: 180px minmax(0, 1fr) minmax(310px, 0.85fr);
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
 	gap: 24px;
-	align-items: center;
 
 	// 4. 📦 Box Model
 	min-width: 0;
-	padding: 10px;
+	padding: 16px 20px;
 
 	// 6. 🎨 Visual
 	border: 1px solid ds.$border-subtle;
 	border-radius: 10px;
 	background-color: ds.$surface-panel-from;
 	color: ds.$text-body-on-dark;
-	&__portrait {
-		// 4. 📦 Box Model
-		width: 180px;
-		height: 180px;
-		object-fit: contain;
 
-		// 6. 🎨 Visual
-		border-radius: 7px;
-		background-color: ds.$surface-nav-active;
-	}
+	&__identityBlock {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 20px;
+		flex: 1 1 auto;
 
-	&__identity {
 		// 4. 📦 Box Model
 		min-width: 0;
-		h1 {
-			// 4. 📦 Box Model
-			margin: 0 0 14px;
-
-			// 5. 🔤 Typography
-			font-size: clamp(24px, 1.8vw, 34px);
-			line-height: 1.15;
-			overflow-wrap: anywhere;
-		}
 	}
 
-	&__team {
+	&__portrait {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 130px;
+		height: 130px;
+
+		// 6. 🎨 Visual
+		border-radius: 8px;
+		background-color: ds.$surface-nav-active;
+		object-fit: contain;
+	}
+
+	&__info {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__name {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: clamp(20px, 1.8vw, 28px);
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-body-on-dark;
+		overflow-wrap: anywhere;
+	}
+
+	&__teamLine {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 18px;
-
-		// 4. 📦 Box Model
-		margin-bottom: 14px;
+		gap: 8px;
 
 		// 5. 🔤 Typography
 		font-size: 14px;
-		span {
-			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
+		color: ds.$text-body-on-dark;
 
 		img {
 			// 4. 📦 Box Model
-			width: 33px;
-			height: 36px;
+			width: 22px;
+			height: 22px;
 			object-fit: contain;
 		}
 	}
 
-	&__details {
+	&__team,
+	&__league {
 		// 3. 🧩 Layout
-		display: flex;
-		flex-wrap: wrap;
-		gap: 18px;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
 
-		// 4. 📦 Box Model
-		padding-top: 14px;
-		margin: 0;
+	&__separator {
+		// 5. 🔤 Typography
+		user-select: none;
 
 		// 6. 🎨 Visual
-		border-top: 1px solid ds.$border-subtle;
-		> div {
-			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			svg {
-				// 3. 🧩 Layout
-				flex-shrink: 0;
+		color: ds.$text-muted-on-dark;
+	}
 
-				// 6. 🎨 Visual
-				color: ds.$accent-nav;
-			}
+	&__metaLine {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__metaItem {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-nav;
 		}
 
 		img {
 			// 4. 📦 Box Model
-			width: 28px;
-			max-height: 22px;
+			width: 20px;
+			max-height: 15px;
 			object-fit: contain;
 		}
+	}
+
+	&__contextBlock {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: flex-end;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		min-width: 260px;
+	}
+
+	&__seasonBadge {
+		// 4. 📦 Box Model
+		padding: 6px 14px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 600;
+		color: ds.$text-body-on-dark;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 6px;
+		background-color: ds.$surface-nav-active;
+	}
+
+	&__statsContext {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		width: 100%;
+	}
+
+	&__contextHeading {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__contextGrid {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		width: 100%;
+		padding: 10px 14px;
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 6px;
+		background-color: rgba(0, 0, 0, 0.15);
+	}
+
+	&__contextRow {
+		// 3. 🧩 Layout
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 12px;
 
 		dt {
-			// 4. 📦 Box Model
-			margin-top: 5px;
-
-			// 5. 🔤 Typography
-			font-size: 9px;
-			text-transform: uppercase;
-
 			// 6. 🎨 Visual
 			color: ds.$text-muted-on-dark;
 		}
@@ -118,151 +225,109 @@
 			margin: 0;
 
 			// 5. 🔤 Typography
-			font-size: 13px;
+			font-weight: 500;
+			text-align: right;
+			color: ds.$text-body-on-dark;
+			overflow-wrap: anywhere;
 		}
 	}
+}
 
-	&__context {
+@media (max-width: 1024px) {
+	.playerOverview {
 		// 3. 🧩 Layout
-		align-self: stretch;
-		display: flex;
 		flex-direction: column;
-		align-items: end;
+		gap: 18px;
 
-		// 4. 📦 Box Model
-		padding: 0 4px;
-		min-width: 0;
-		dl {
+		&__contextBlock {
 			// 3. 🧩 Layout
-			display: grid;
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+			gap: 14px;
 
 			// 4. 📦 Box Model
 			width: 100%;
-			padding: 12px;
-			margin: 12px 0 0;
-
-			// 6. 🎨 Visual
-			border: 1px solid ds.$border-subtle;
-			border-radius: 7px;
-			> div {
-				// 4. 📦 Box Model
-				padding: 0 10px;
-
-				// 5. 🔤 Typography
-				text-align: center;
-				&:first-child {
-					// 6. 🎨 Visual
-					border-right: 1px solid ds.$border-subtle;
-				}
-			}
-
-			svg {
-				// 6. 🎨 Visual
-				color: ds.$accent-highlight;
-			}
-
-			dt {
-				// 4. 📦 Box Model
-				margin: 7px 0;
-
-				// 5. 🔤 Typography
-				font-size: 10px;
-
-				// 6. 🎨 Visual
-				color: ds.$text-muted-on-dark;
-			}
-
-			dd {
-				// 4. 📦 Box Model
-				margin: 0;
-
-				// 5. 🔤 Typography
-				font-size: 12px;
-				overflow-wrap: anywhere;
-			}
+			min-width: 0;
 		}
 
-		p {
-			// 4. 📦 Box Model
-			margin: 8px 0 0;
+		&__seasonBadge {
+			// 3. 🧩 Layout
+			order: 1;
+		}
 
-			// 5. 🔤 Typography
-			font-size: 10px;
-
-			// 6. 🎨 Visual
-			color: ds.$text-muted-on-dark;
+		&__statsContext {
+			// 3. 🧩 Layout
+			order: 2;
+			align-items: flex-start;
+			flex: 1 1 300px;
 		}
 	}
+}
 
-	&__season {
+@media (max-width: 600px) {
+	.playerOverview {
 		// 4. 📦 Box Model
-		padding: 8px 12px;
+		padding: 12px;
+		gap: 14px;
 
-		// 5. 🔤 Typography
-		font-size: 11px;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-subtle;
-		border-radius: 5px;
-	}
-}
-
-@media (max-width: 1100px) {
-	.playerOverview {
-		// 3. 🧩 Layout
-		grid-template-columns: 130px minmax(0, 1fr);
-		gap: 16px;
-		&__portrait {
-			// 4. 📦 Box Model
-			width: 130px;
-			height: 150px;
-		}
-
-		&__context {
+		&__identityBlock {
 			// 3. 🧩 Layout
-			grid-column: 1 / -1;
-			align-items: start;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 12px;
 		}
-	}
-}
 
-@media (max-width: 500px) {
-	.playerOverview {
-		// 3. 🧩 Layout
-		grid-template-columns: 80px minmax(0, 1fr);
-		gap: 12px;
 		&__portrait {
 			// 4. 📦 Box Model
-			width: 80px;
-			height: 110px;
+			width: 90px;
+			height: 90px;
+			border-radius: 6px;
 		}
 
-		&__identity h1 {
+		&__name {
 			// 5. 🔤 Typography
-			font-size: 22px;
+			font-size: 20px;
 		}
 
-		&__team {
+		&__teamLine {
+			// 5. 🔤 Typography
+			font-size: 12px;
+			gap: 6px;
+
+			img {
+				// 4. 📦 Box Model
+				width: 18px;
+				height: 18px;
+			}
+		}
+
+		&__metaLine {
+			// 5. 🔤 Typography
+			font-size: 11px;
+			gap: 6px;
+		}
+
+		&__contextBlock {
 			// 3. 🧩 Layout
-			gap: 8px;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 10px;
+		}
+
+		&__seasonBadge {
+			// 3. 🧩 Layout
+			width: 100%;
+			text-align: center;
+		}
+
+		&__contextGrid {
+			// 4. 📦 Box Model
+			padding: 8px 10px;
 
 			// 5. 🔤 Typography
 			font-size: 11px;
-			img {
-				// 4. 📦 Box Model
-				width: 22px;
-				height: 26px;
-			}
-		}
-
-		&__details {
-			// 3. 🧩 Layout
-			gap: 10px;
-			dd {
-				// 5. 🔤 Typography
-				font-size: 11px;
-			}
 		}
 	}
 }
