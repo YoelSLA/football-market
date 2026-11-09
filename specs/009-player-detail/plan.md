@@ -45,10 +45,10 @@ Decisiones consolidadas en [research.md](research.md), sección «Investigación
 
 #### Composición y componentes
 
-- `PlayerDetailPage.tsx` conserva `PageLayout`, breadcrumb, identidad y `PlayerStatisticsSection`. No incorpora lógica visual específica ni cambia consultas.
-- `PlayerOverview` conserva su responsabilidad y datos. Solo se compactan wrappers/clases para separar identidad a la izquierda y contexto a la derecha; temporada, competición y extracción mantienen sus fallbacks contractuales.
+- `PlayerDetailPage.tsx` conserva `PageLayout`, breadcrumb, identidad y `PlayerStatisticsSection`. En desktop fija la zona superior (209 px: breadcrumb 32px + cabecera 125px + separación 12px + pestañas 40px) y asigna el scroll vertical exclusivamente a la región de contenido activa (`flex: 1; min-height: 0; overflow-y: auto`), con 596 px de presupuesto de referencia a 1920×913 px.
+- `PlayerOverview` recompone la cabecera en tres zonas (identidad a la izquierda con retrato de 90px, tres micro-tarjetas titulares en el centro y bloque de temporada + fecha de corte a la derecha, omitiendo competición, procedencia y contexto estadístico general para fijar la altura en 125 px con `box-sizing: border-box`).
 - `PlayerStatisticsSection` conserva tabs, tabpanels, carga, error, reintento y respuesta anterior. Su contrato elimina `unit`, `onUnitChange` y el paso correspondiente al catálogo. Los mensajes se alinean con los estados del wireframe sin cambiar su derivación.
-- `PlayerStatisticsSummary` conserva cuatro tarjetas fijas por perfil. Renderiza únicamente los dos paneles devueltos por `getStatisticsPanels`; elimina los paneles genéricos de calificación, posición y participación/distribución. El bloque de destacadas usa las métricas `additional`, excluye cualquier clave ya mostrada en tarjetas o paneles y presenta la calificación allí solo cuando no es tarjeta.
+- `PlayerStatisticsSummary` presenta cuatro tarjetas complementarias desduplicadas por posición (sin repetir las tres métricas de cabecera) y exactamente los dos paneles devueltos por `getStatisticsPanels`. El bloque de destacadas usa las métricas `additional`, excluyendo cualquier clave presente en cabecera, tarjetas o paneles.
 - `PlayerStatisticsCatalog` integra título, resultados, búsqueda, limpiar, categorías y leyenda de relevancia en el encabezado. Agrupa los resultados por las ocho categorías, manteniendo P→S→B disponibles y ausentes al final. Cada fila muestra nombre, relevancia, unidad y valor; no alterna fondos para simular agrupación.
 - `PlayerStatisticsTabs` conserva comportamiento y semántica existentes; únicamente ajusta distribución visual al ancho disponible.
 
@@ -63,8 +63,8 @@ No se crea un Component por tarjeta o fila salvo que durante implementación exi
 
 #### Layout y responsive
 
-- `PlayerDetailPage.module.scss` conserva la única región vertical principal y la cadena de altura existente.
-- `PlayerOverview.module.scss`: escritorio en dos zonas compactas; tablet apila contexto bajo identidad; móvil conserva retrato/nombre primero y detalles/contexto después.
+- `PlayerDetailPage.module.scss` fija en escritorio la zona superior (209 px) y confina el desplazamiento vertical exclusivamente a la región de contenido activa (`flex: 1; min-height: 0; overflow-y: auto`), manteniendo scroll documental natural en tablet y móvil.
+- `PlayerOverview.module.scss`: escritorio en tres zonas horizontales compactas (altura neta 125 px con `box-sizing: border-box`); tablet en dos filas (~165–175 px); móvil con fila simétrica de tres micro-tarjetas (~108 px cada una) a 360 px sin desbordamiento horizontal.
 - `PlayerStatisticsSummary.module.scss`: cuatro columnas en escritorio, dos en tablet y una en móvil; dos paneles específicos en escritorio y una columna en anchos menores; destacadas ocupa todo el ancho disponible.
 - `PlayerStatisticsCatalog.module.scss`: una sola columna; controles envuelven en desktop/tablet y categorías pueden envolver o desplazarse dentro de su fila en móvil sin ensanchar el documento. Filas cambian a dos líneas en móvil manteniendo nombre/relevancia y unidad/valor.
 - No modificar `PageLayout`, `AppLayout`, navbar, tokens ni breakpoints globales.
