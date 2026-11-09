@@ -19,7 +19,7 @@ El filtro `unit` de la implementación anterior se retira del estado visible y d
 
 - **Métrica de catálogo**: definición canónica + unidad visible + valor/source existente + `priority` 0/1/2 + etiqueta de relevancia. No persiste ni modifica el Model remoto.
 - **Grupo de catálogo**: categoría canónica + conteo total + métricas filtradas en orden disponible P→S→B y ausente al final.
-- **Resumen posicional**: cuatro claves de tarjetas, dos paneles existentes y adicionales deduplicados por clave. La deduplicación no altera `POSITION_PROFILES`.
+- **Resumen posicional**: cuatro claves de tarjetas, dos paneles existentes y adicionales deduplicados contra tarjetas y paneles. Un panel puede desarrollar una métrica introducida en una tarjeta cuando lo exige el wireframe. La deduplicación no altera `POSITION_PROFILES`.
 
 Estados remotos (`loading`, `error`, `AVAILABLE`, `PARTIAL`, `NO_DATA`) y conservación de respuesta compatible permanecen según el modelo funcional de 2026-10-25.
 
