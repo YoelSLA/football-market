@@ -109,7 +109,7 @@ class OperationHistoryControllerTest {
 
     @Test
     @DisplayName("Cada sesión consulta únicamente el historial de su propio subject")
-    void aíslaLaIdentidadDeSesion() throws Exception {
+    void aislaLaIdentidadDeSesion() throws Exception {
       // Arrange
       String otherSubject = "other@example.com";
       when(historyService.history(SUBJECT)).thenReturn(List.of());
