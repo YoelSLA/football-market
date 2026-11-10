@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -12,11 +13,31 @@ import org.junit.jupiter.api.io.TempDir;
 
 @Tag("unit")
 class FlywayMigrationPolicyTest {
+  private static final Set<String> GIT_LOCAL_ENVIRONMENT_VARIABLES =
+      Set.of(
+          "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+          "GIT_COMMON_DIR",
+          "GIT_CONFIG",
+          "GIT_CONFIG_COUNT",
+          "GIT_CONFIG_PARAMETERS",
+          "GIT_DIR",
+          "GIT_GRAFT_FILE",
+          "GIT_IMPLICIT_WORK_TREE",
+          "GIT_INDEX_FILE",
+          "GIT_NO_REPLACE_OBJECTS",
+          "GIT_OBJECT_DIRECTORY",
+          "GIT_PREFIX",
+          "GIT_REPLACE_REF_BASE",
+          "GIT_SHALLOW_FILE",
+          "GIT_WORK_TREE");
+
   @TempDir Path temporaryDirectory;
 
   private ProcessResult run(Path directory, String... command) throws Exception {
-    Process process =
-        new ProcessBuilder(command).directory(directory.toFile()).redirectErrorStream(true).start();
+    ProcessBuilder processBuilder =
+        new ProcessBuilder(command).directory(directory.toFile()).redirectErrorStream(true);
+    GIT_LOCAL_ENVIRONMENT_VARIABLES.forEach(processBuilder.environment()::remove);
+    Process process = processBuilder.start();
     String output = new String(process.getInputStream().readAllBytes());
     return new ProcessResult(process.waitFor(), output);
   }
