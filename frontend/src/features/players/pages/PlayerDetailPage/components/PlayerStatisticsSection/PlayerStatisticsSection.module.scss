@@ -15,6 +15,9 @@
 	overflow: hidden;
 
 	&__tabpanel {
+		// 2. 📍 Positioning
+		position: relative;
+
 		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
