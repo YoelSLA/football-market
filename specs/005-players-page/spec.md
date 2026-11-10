@@ -1,5 +1,25 @@
 # Feature Specification: Página de catálogo de jugadores
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Solo preparación documental; IMPLEMENT AUTHORIZATION: NONE. Reutiliza SPEC-005 y conserva cierres y decisiones históricas no afectadas.
+
+- **FR-023 / FR-025 / FR-028**: Consumir el universo con métricas definido en SPEC-002 para listado, conteos, filtros globales y acceso al detalle. No mostrar jugadores sin métricas ni opciones aportadas únicamente por ellos. La ausencia de una de las tres estadísticas de tarjeta sigue mostrando «Sin datos»: no se exige que todas estén informadas ni que exista score.
+- **US1 / US2 / US4 — aceptación**: un jugador sin métricas queda fuera del listado y no altera totales ni opciones globales; un jugador elegible fuera de la página inicial puede encontrarse mediante filtros backend. Los filtros no se calculan desde la página. Un acceso directo al detalle no elude la misma elegibilidad backend.
+- Se conserva el rediseño, búsqueda, filtros, orden y paginación ya especificados; no se agregan filtros numéricos por valores deportivos. «Filtrar por métricas» delimita la población por existencia de métricas, no introduce rangos estadísticos.
+
+Este bloque sustituye las frases anteriores que exigían mantener visible al jugador sin estadísticas y que excluían cualquier impacto sobre el detalle, únicamente respecto de elegibilidad. No se modifica SPEC-009 ni se amplía su diseño. La respuesta exacta para detalle no elegible se resuelve en CLARIFY junto con SPEC-002.
+
+**Impacto SDD**: plan, research, modelo, contratos, quickstart, tasks y checklists afectados pendientes de revisión; no hay ANALYZE vigente para el delta. CODE REVIEW, TESTING y cierre del nuevo alcance pendientes, sin gates retroactivos sobre el cierre histórico. CLARIFY pendiente.
+
+**Validación de SPECIFY**: aceptación y distinción entre elegibilidad y disponibilidad de cada cifra definidas. CLARIFY debe validar interpretación de métricas y respuesta de detalle junto con SPEC-002; no se marcan checklists del revisor. Issue #58 CLOSED observada; sin item de esa issue entre los 29 recuperados del proyecto. Seguimiento del delta PENDING, sin escritura remota.
+
+**Evidencia**: script real `--reuse`, `FEATURE_NUM=005`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; trabajo previo preservado y sin nueva spec.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 ## Revisión vigente — catálogo real con filtros globales
 
 **Fecha**: 2026-10-25. **Identidad**: `005-players-page`, reutilizada, sin nueva SPEC.

@@ -1,5 +1,28 @@
 # Feature Specification: Visualizar ranking de jugadores (REQ-S2-13)
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Solo preparación documental; IMPLEMENT AUTHORIZATION: NONE. Identidad SPEC-022 preservada.
+
+- **FR-002 / FR-011**: Consumir `GET /api/rankings/score` y `GET /api/rankings/quote` para rendimiento y cotización, respectivamente. No cambiar la ruta de navegación web `/players/ranking`.
+- **FR-005 / FR-007**: Búsqueda por nombre, liga, posición y paginación se solicitan al backend para ambos modos. No descargar el ranking completo para filtrar o paginar en cliente. Un cambio de filtro, tamaño o modo reinicia a página cero; navegar conserva los criterios efectivos y descarta respuestas tardías de una selección anterior.
+- **FR-012**: Conservar el Top 3 global del modo activo sin filtros, independiente de la tabla y su página. Con menos de tres elegibles se muestran solo los existentes; no se rellena el podio ni se lo deriva de la página filtrada.
+- La tabla respeta las posiciones oficiales globales recibidas sin renumerarlas. El total de tabla corresponde al conjunto filtrado; no se confunde con el total global de clasificados.
+
+**Aceptación US1–US3**: un jugador de una página posterior se encuentra con filtros enviados al backend; filtros y paginación no cambian líderes del podio; cambiar de modo actualiza endpoint, metadatos, podio y tabla; carga, vacío y error siguen distinguiéndose y se preservan navegación al detalle, accesibilidad y JWT. Sin ordenamiento cliente que altere posiciones.
+
+Este bloque sustituye el filtrado cliente de las aclaraciones y FR anteriores. No autoriza nuevas métricas ni filtros estadísticos. SPEC-018 y SPEC-016 son responsables de los contratos backend; CLARIFY/PLAN deberán resolver cómo consumir página, Top 3 y datos identificatorios sin depender de descargar todo el catálogo.
+
+**Impacto SDD**: revisar plan, research, modelo, contrato de consumo, quickstart, tasks y checklists afectados. No hay ANALYZE vigente para el delta; no se transfieren autorizaciones históricas. CODE REVIEW, TESTING y cierre pendientes para el nuevo alcance, conservando la exención de tests frontend y sin aprobar N/A en nombre del usuario.
+
+**Validación de SPECIFY**: consumo backend, invariancia del podio y aceptación definidos; contrato de página/Top 3/enriquecimiento pendiente de CLARIFY/PLAN. No se marcan checklists del revisor. Issue #25 CLOSED e item Done observados para el alcance histórico, no para este delta. Seguimiento del cambio PENDING, sin escritura remota.
+
+**Evidencia**: script real `--reuse`, `FEATURE_NUM=022`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; sin rama ni spec nueva. CLARIFY pendiente; preparación global incompleta.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 <!-- MUST seguir Constitution y docs/development/sdd-workflow.md.
 Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
 manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,

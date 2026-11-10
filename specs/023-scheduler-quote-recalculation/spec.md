@@ -1,5 +1,26 @@
 # Feature Specification: Programar recálculo automático de cotizaciones
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Solo preparación documental; IMPLEMENT AUTHORIZATION: NONE. Este bloque sustituye las reglas anteriores incompatibles y conserva el resto como antecedente.
+
+- **FR-001 / SC-001**: Programación diaria en UTC, configurable, en lugar de semanal. Se conserva como supuesto la hora 00:00 UTC; CLARIFY debe confirmar que no se requiere cambiarla.
+- **FR-002 / FR-003**: Reutilizar el núcleo de SPEC-016 actualizado: aplicar diariamente el último score disponible aunque no sea nuevo; mantener el precio si no existe score para la estrategia. El scheduler no calcula scores ni duplica reglas financieras.
+- **FR-006**: Admitir varias ejecuciones por fecha, manuales o automáticas, sin omitir el disparo únicamente porque exista una ejecución previa. La unicidad es de cotización por jugador y día UTC, garantizada por SPEC-016, no de ejecución por fecha. No se incorpora exclusión global adicional.
+- **FR-004 / FR-005**: Cada corrida conserva identidad, origen, fecha y resultado diferenciables; consultar por fecha permite distinguir las múltiples ejecuciones. Los errores siguen registrándose sin compensación a cargo del scheduler.
+
+**Aceptación US1–US3**: dos días consecutivos con el mismo score producen el ajuste diario; sin score se conserva el precio; una ejecución manual posterior a la automática el mismo día es admitida pero no recotiza jugadores ya procesados; los pendientes pueden completarse sin duplicados. Se conservan mercado inicializado, seguridad, trazabilidad y responsabilidades de recuperación existentes.
+
+**Impacto SDD**: sustituidas las aclaraciones, escenarios, supuestos y criterios que exigen frecuencia semanal, unicidad de ejecución diaria o rechazo de reintento con resumen previo. Plan, configuración contractual, modelo, research, quickstart, tasks y checklists afectados pendientes de revisión; ANALYZE previo no vigente para el delta. Autorizaciones históricas no cubren el cambio; CODE REVIEW, TESTING y cierre pendientes para este alcance, sin borrar su evidencia.
+
+**Validación de SPECIFY**: alcance, escenarios y límites definidos; hora diaria pendiente de confirmar en CLARIFY. Los checklists históricos del revisor no se marcan para el delta. Issue #40 CLOSED e item Done observados para el alcance anterior; seguimiento del cambio PENDING, sin escritura remota.
+
+**Evidencia**: script real con `--reuse`, `FEATURE_NUM=023`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; no cambio de rama ni descarte de trabajo. CLARIFY pendiente; no se acredita preparación completa.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 **Feature Branch**: `feat/023-scheduler-quote-recalculation`
 
 **Created**: 2026-11-03

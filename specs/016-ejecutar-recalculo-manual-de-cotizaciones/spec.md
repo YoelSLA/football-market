@@ -1,5 +1,43 @@
 # Feature Specification: Cotización de tokens de jugadores con historial trazable
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Preparación documental autorizada por el usuario; IMPLEMENT AUTHORIZATION: NONE. Este bloque sustituye por impacto las decisiones anteriores incompatibles, que se conservan como antecedente, no como requisitos ejecutables del cambio.
+
+### Decisiones y requisitos vigentes
+
+- **FR-005 / FR-027**: Recotizar diariamente desde el último precio vigente usando el último score persistido disponible de la estrategia elegida, aunque no haya score ni métricas nuevos. La antigüedad de la valuación no impide el ajuste diario. Se conserva la fórmula compuesta, topes, piso y redondeo existentes; no se recalculan scores ni se consultan proveedores al cotizar.
+- **FR-008**: Si no existe score para la estrategia elegida, mantener el precio mediante `CARRIED_FORWARD`, sin score y con multiplicador 1. Un score neutro existente sigue siendo `RECOMPUTED`.
+- **FR-024 / FR-026**: La fecha de vigencia de la nueva cotización es el día UTC de ejecución, no la fecha del score. La fecha de valuación se conserva separada como auditoría. Como máximo una cotización por jugador y día, independientemente de origen o estrategia; no coexisten una fila arrastrada y una recalculada para ese jugador y día. La inicialización también cuenta para ese límite.
+- **FR-060**: Permitir múltiples ejecuciones manuales o automáticas por fecha UTC. Tener una ejecución registrada ese día no causa `EXECUTION_ALREADY_EXISTS`. Cada ejecución respeta la unicidad por jugador y día, incluso concurrentemente: un jugador ya cotizado ese día no vuelve a ajustarse ni se sobrescribe. Los jugadores pendientes pueden procesarse en otra ejecución del día.
+- **FR-024 / FR-060 — cambio de día**: La fecha de cotización se fija con la fecha UTC de inicio y se conserva para toda la ejecución, aunque termine al día siguiente. Todas sus nuevas filas usan esa fecha de vigencia y ese mismo día para aplicar la unicidad por jugador; no se interrumpe la corrida por el cambio de día.
+- **FR-061**: Conservar resúmenes diferenciables de cada ejecución y sus contadores. La consulta por fecha UTC devuelve una lista sin paginación de todos los resúmenes del día, del más reciente al más antiguo; cada resumen incluye un identificador único de ejecución y su instante de ejecución. No devuelve únicamente el último resultado. Los omitidos por cotización diaria existente se distinguen de fallos; no se clasifican por ausencia de score nuevo.
+- **FR-039**: El ranking por cotización se expone como `GET /api/rankings/quote`, paginado y filtrado en backend, conservando orden por precio descendente y una entrada por jugador. Los empates de precio se resuelven por ID de jugador ascendente y las posiciones globales son consecutivas y únicas (1, 2, 3), sin posiciones compartidas. Los filtros y la paginación conservan esas posiciones globales, sin renumerarlas. La UI de SPEC-022 conserva el Top 3 global sin filtros, determinado por ese mismo orden; no se obtiene filtrando o paginando en el navegador un ranking completo.
+
+Sustituciones: quedan superadas las aclaraciones y escenarios que congelan el precio por falta de valuación nueva, exigen una ejecución por fecha, permiten dos orígenes el mismo día o identifican la vigencia con la fecha de valuación. US2 y US4 conservan identidad; US1, US3 y US5 se revisan solo por impacto en unicidad, vigencia y contratos.
+
+- **FR-039 — filtros**: La tabla admite filtros por nombre, liga y posición, aplicados en backend sobre todo el ranking elegible antes de contar y paginar. Se deben cumplir todos los filtros seleccionados; el nombre se compara por coincidencia parcial sin distinguir mayúsculas y minúsculas. Los filtros omitidos no restringen resultados. No afectan al Top 3 global ni reasignan posiciones.
+
+### Aceptación del cambio (US2 y US4)
+
+1. Con el mismo score disponible en dos días UTC sucesivos, cada día aplica una vez el ajuste sobre el precio vigente del día anterior y conserva la fecha original del score.
+2. Sin score de la estrategia, el precio se mantiene y la fila diaria es arrastrada.
+3. Dos ejecuciones del mismo día, incluso concurrentes o con estrategias distintas, no producen dos cotizaciones ni dos ajustes por jugador; una ejecución posterior puede procesar jugadores aún pendientes.
+4. Una valuación llegada después de la cotización diaria no sobrescribe esa fila; puede usarse al día siguiente.
+5. El ranking por cotización permite recorrer páginas y aplicar filtros globales desde backend, sin modificar precios; el podio global permanece independiente de esos filtros.
+
+### Validación de SPECIFY
+
+Alcance, dependencias y cinco escenarios observables definidos; sin requisitos de rendimiento nuevos. Pendiente CLARIFY: forma de consulta de múltiples ejecuciones, contrato paginado/filtros y obtención de Top 3 coordinados con SPEC-018/022. No se marcan checklists históricos del revisor ni se considera completa la preparación. GitHub: issue #39 CLOSED y item Done observados; reflejan el alcance anterior, no aceptación de este delta. Seguimiento del cambio: PENDING, sin escrituras remotas.
+
+### Impacto SDD y autorizaciones
+
+Reutilización real: `SPEC_ACTION=reused`, `FEATURE_NUM=016`, `BRANCH_STATUS=skipped-dirty-tree`; rama actual `dev`, cambios previos preservados. No se creó spec ni rama. Plan, research, modelo, contratos, quickstart, tasks y checklists afectados requieren revisión; ANALYZE anterior no acredita este alcance. Las autorizaciones históricas no se extienden al cambio: CODE REVIEW, TESTING y FEATURE COMPLETION pendientes para el delta. No se borran cierres ni evidencias anteriores. CLARIFY pendiente; no se declara preparación global completa.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 **Feature Branch**: `feat/016-ejecutar-recalculo-manual-de-cotizaciones` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `016-ejecutar-recalculo-manual-de-cotizaciones`, sin el prefijo de tipo.
 
 **Created**: 2026-10-20
@@ -13,6 +51,17 @@
 **Trazabilidad**: cubre `REQ-S2-11-A` (ejecución del recálculo de cotizaciones, de forma parcial: la ejecución y su persistencia, no la agenda), `REQ-S2-03` (consultar la cotización actual), `REQ-S2-04` (consultar la cotización a una fecha dada), `REQ-S2-05` (consultar el historial de cotizaciones) y `REQ-S2-08` (ranking de jugadores, de forma parcial: por precio vigente) de `tp/entregas.md`. Resuelve `tp/enunciado.md` §3.2, §3.3, §4 y §9.
 
 ## Clarifications
+
+### Session 2026-11-10
+
+- Q: ¿Cómo debe devolver la consulta por fecha las múltiples ejecuciones de cotización de ese día? → A: Lista sin paginación de todos los resúmenes del día UTC, con identificador único e instante de ejecución, del más reciente al más antiguo.
+- Q: ¿Qué debe ocurrir cuando varios jugadores tienen el mismo precio en el ranking por cotización? → A: Desempatar por ID de jugador ascendente y asignar posiciones globales consecutivas y únicas, conservadas al filtrar y paginar; el Top 3 global usa el mismo orden.
+- Q: ¿Cómo deben combinarse los filtros de nombre, liga y posición en el ranking por cotización? → A: Cumplir todos los filtros seleccionados; buscar el nombre por coincidencia parcial sin distinguir mayúsculas y minúsculas.
+- Q: ¿Qué fecha debe usar una ejecución de cotización que comienza antes de medianoche UTC y termina al día siguiente? → A: Fijar la fecha UTC al comenzar y conservarla para toda la ejecución, aunque termine al día siguiente.
+
+**Resultado del escaneo CLARIFY**: cuatro preguntas respondidas e integradas en los requisitos vigentes. Resueltos consulta de múltiples ejecuciones, desempate y posiciones del ranking, combinación de filtros y fecha de una corrida que cruza medianoche. Alcance, seguridad, dependencias, terminología y criterios de aceptación conservan las obligaciones vigentes. Se difieren a PLAN la forma del objeto paginado, parámetros y límites reutilizables, la obtención del Top 3 independiente y el enriquecimiento identificatorio, coordinados con SPEC-018/022; son decisiones de diseño sin cambio del comportamiento aprobado. No se modifican los antecedentes históricos sustituidos ni sus aprobaciones.
+
+**Cierre operativo de CLARIFY pendiente**: rama Git real `dev`, con cambios previos ajenos que no se incorporan. No se realiza commit, push ni creación de PR en esta ejecución: abrir un PR hacia `dev` dispara `.github/workflows/ci.yml`, que ejecuta `./gradlew build` con tests; el workflow §8 prohíbe al agente dispararlos y reserva esa operación al usuario. Se requiere publicar el alcance revisado en una rama de feature y crear o verificar el PR vinculado a #39. No se acredita fase completa ni sincronización remota. Checklist de requisitos revisado sin alterar marcadores históricos del revisor, conforme al workflow §6; su aceptación vigente del delta queda pendiente. No se ejecutan fases posteriores.
 
 ### Session 2026-10-20
 
