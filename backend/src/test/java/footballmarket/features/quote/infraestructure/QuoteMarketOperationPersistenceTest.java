@@ -6,10 +6,14 @@ import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.BuyOrderService;
+import footballmarket.features.market.application.TokenListingService;
 import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.market.infraestructure.MarketTransactionRepository;
 import footballmarket.features.market.infraestructure.PlayerTokenRepository;
+import footballmarket.features.market.infraestructure.TokenListingRepository;
 import footballmarket.features.market.infraestructure.UserCreditRepository;
 import footballmarket.features.quote.application.QuoteMarketInitializationService;
 import footballmarket.features.quote.application.QuoteRecalculationService;
@@ -20,6 +24,7 @@ import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.QuoteTestData;
+import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import footballmarket.support.ValuationTestData;
 import java.time.LocalDate;
@@ -30,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestExecutionListeners;
 
 /**
  * Categoría Repository de la operación del mercado sobre la cotización persistida.
@@ -47,6 +53,9 @@ import org.springframework.test.context.ActiveProfiles;
   ValuationTestData.class
 })
 @ActiveProfiles("test")
+@TestExecutionListeners(
+    listeners = ResetPlayerCatalogListener.class,
+    mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 @org.junit.jupiter.api.Tag("integration")
 class QuoteMarketOperationPersistenceTest {
 
@@ -65,6 +74,8 @@ class QuoteMarketOperationPersistenceTest {
   @Autowired private PlayerTokenRepository holdings;
   @Autowired private MarketTransactionRepository transactions;
   @Autowired private PlayerQuoteRepository quotes;
+  @Autowired private TokenListingService listingService;
+  @Autowired private TokenListingRepository listings;
 
   @Nested
   @DisplayName("Compra sobre la cotización persistida")
@@ -104,6 +115,8 @@ class QuoteMarketOperationPersistenceTest {
       User superuser = market.registerSuperuser();
       market.emitInitialTokens(player, superuser);
       buyOrderService.buy(buyer.getEmail(), new BuyOrderRequest(player.getId(), 10));
+      TokenListing listing =
+          listingService.publish(buyer.getEmail(), new SellOrderRequest(player.getId(), 2));
       long creditsBefore = credits.findById(buyer.getId()).orElseThrow().getAvailableCredits();
       int tokensBefore =
           holdings
@@ -127,8 +140,14 @@ class QuoteMarketOperationPersistenceTest {
                   .getQuantity())
           .isEqualTo(tokensBefore);
       assertThat(transactions.count()).isEqualTo(transactionsBefore);
+      TokenListing unchanged = listings.findById(listing.getId()).orElseThrow();
+      assertThat(unchanged.getUnitPrice()).isEqualTo(listing.getUnitPrice());
+      assertThat(unchanged.getQuoteCalculatedAt()).isEqualTo(listing.getQuoteCalculatedAt());
+      assertThat(unchanged.getTotalAmount()).isEqualTo(listing.getTotalAmount());
       assertThat(quotes.findLatestByPlayerId(player.getId()).getFirst().getOrigin())
           .isEqualTo(QuoteOrigin.RECOMPUTED);
+      assertThat(quotes.findLatestByPlayerId(player.getId()).getFirst().getExecution().getId())
+          .isEqualTo(execution.getId());
     }
   }
 

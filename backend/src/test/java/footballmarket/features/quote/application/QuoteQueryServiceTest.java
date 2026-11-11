@@ -6,11 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.quote.application.exceptions.QuoteNotFoundException;
-import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteAdjustment;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
+import footballmarket.features.quote.domain.records.QuoteRankingPage;
+import footballmarket.features.quote.domain.records.QuoteRankingQuery;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.support.IdentityCatalogueFixture;
@@ -22,8 +23,16 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -60,7 +69,6 @@ class QuoteQueryServiceTest {
   @Autowired private QuoteRecalculationService recalculation;
   @Autowired private ValuationEvaluationService valuation;
   @Autowired private PlayerCatalogService playerCatalogue;
-  @Autowired private QuotePlayerPublisher publisher;
   @Autowired private IdentityCatalogueFixture catalogue;
   @Autowired private ValuationTestData data;
   @Autowired private QuoteTestData quoteData;
@@ -89,12 +97,94 @@ class QuoteQueryServiceTest {
   }
 
   static Clock quoteClock() {
-    return Clock.fixed(Instant.parse("2026-10-18T09:00:00Z"), ZoneOffset.UTC);
+    return new QueryClock();
+  }
+
+  @BeforeEach
+  void resetMarketClock() {
+    QueryClock clock = (QueryClock) marketClock;
+    clock.time.set(Instant.parse("2026-10-18T09:00:00Z"));
+    clock.pauseThread = null;
+    clock.captured = new CountDownLatch(1);
+    clock.resume = new CountDownLatch(1);
   }
 
   @Nested
   @DisplayName("Historial de cotizaciones")
   class History {
+
+    @Test
+    @DisplayName("El score antiguo se aplica por día y conserva su fecha de origen en el historial")
+    void oldScoreHasSeparateDailyValidity() {
+      // Arrange
+      Player player = prepareRecalculatedMarket();
+      ((QueryClock) marketClock).time.set(Instant.parse("2026-10-19T09:00:00Z"));
+      recalculation.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Act
+      List<PlayerQuote> history = queryService.findHistory(player.getId());
+      // Assert
+      assertThat(history).hasSize(3);
+      PlayerQuote today = history.get(0);
+      PlayerQuote yesterday = history.get(1);
+      assertThat(today.getEffectiveDate()).isEqualTo(LocalDate.of(2026, 10, 19));
+      assertThat(today.getSourceValuationDate()).isEqualTo(yesterday.getSourceValuationDate());
+      assertThat(today.getScore()).isEqualByComparingTo(yesterday.getScore());
+      assertThat(today.getPreviousPrice()).isEqualTo(yesterday.getPrice());
+      QuoteAdjustment expected =
+          QuoteAdjustment.calculate(
+              yesterday.getPrice(),
+              today.getScore(),
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L);
+      assertThat(today.getPrice()).isEqualTo(expected.price());
+      assertThat(queryService.findOnDate(player.getId(), LocalDate.of(2026, 10, 18)).getId())
+          .isEqualTo(yesterday.getId());
+    }
+
+    @Test
+    @DisplayName("Una corrida atrasada no inserta historia ni cambia el precio ya publicado en D+1")
+    void delayedRunCannotRewriteFutureQuote() throws Exception {
+      // Arrange
+      catalogue.prepare();
+      data.prepareConfirmedJsonCampaign(LocalDate.of(2026, 10, 17));
+      valuation.evaluate();
+      initialization.initialize(LocalDate.of(2026, 10, 16));
+      Player player = firstPlayer();
+      QueryClock clock = (QueryClock) marketClock;
+      clock.pauseThread = "delayed-quote";
+      ExecutorService executor =
+          Executors.newSingleThreadExecutor(task -> new Thread(task, "delayed-quote"));
+      try {
+        Future<footballmarket.features.quote.domain.models.QuoteExecution> delayed =
+            executor.submit(
+                () -> recalculation.recalculate("POSITIONAL_PERFORMANCE", null, null, null));
+        if (!clock.captured.await(10, TimeUnit.SECONDS)) {
+          throw new AssertionError("La corrida atrasada no capturó su fecha");
+        }
+        clock.time.set(Instant.parse("2026-10-19T09:00:00Z"));
+        recalculation.recalculateAutomatic();
+        clock.resume.countDown();
+        delayed.get(30, TimeUnit.SECONDS);
+        // Act
+        List<PlayerQuote> history = queryService.findHistory(player.getId());
+        PlayerQuote current = queryService.findCurrent(player.getId());
+        // Assert
+        assertThat(history).hasSize(2);
+        assertThat(history)
+            .extracting(PlayerQuote::getEffectiveDate)
+            .containsExactly(LocalDate.of(2026, 10, 19), LocalDate.of(2026, 10, 16));
+        assertThat(current.getId()).isEqualTo(history.getFirst().getId());
+        assertThat(current.getPreviousPrice()).isEqualTo(100L);
+        QuoteAdjustment expected =
+            QuoteAdjustment.calculate(
+                100L, current.getScore(), new BigDecimal("0.10"), new BigDecimal("0.10"), 1L);
+        assertThat(current.getPrice()).isEqualTo(expected.price());
+      } finally {
+        clock.resume.countDown();
+        executor.shutdownNow();
+      }
+    }
 
     @Test
     @DisplayName("Devuelve las filas del jugador de la más reciente a la más antigua")
@@ -210,11 +300,11 @@ class QuoteQueryServiceTest {
   }
 
   @Nested
-  @DisplayName("Prevalencia a igualdad de fecha de vigencia")
+  @DisplayName("Vigencia diaria sin coexistencia de orígenes")
   class Precedence {
 
     @Test
-    @DisplayName("La fila recalculada prevalece sobre la arrastrada de la misma fecha")
+    @DisplayName("Una cotización del día siguiente es vigente sin sustituir la arrastrada anterior")
     void recomputedPrecedesCarriedForward() {
       Player player = prepareMarketWithBothOrigins();
       List<PlayerQuote> history = queryService.findHistory(player.getId());
@@ -230,6 +320,39 @@ class QuoteQueryServiceTest {
   @Nested
   @DisplayName("Ranking por precio vigente")
   class Ranking {
+
+    @Test
+    @DisplayName("La página filtrada conserva la posición global y los totales fuera de rango")
+    void filteredPagePreservesGlobalPosition() {
+      // Arrange
+      catalogue.prepare();
+      List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
+      Player first = players.get(0);
+      Player second = players.get(1);
+      LocalDate day = LocalDate.of(2026, 10, 20);
+      quoteData.prepareMetrics(first, day);
+      quoteData.prepareMetrics(second, day);
+      quoteData.persistInitial(first, day, Instant.parse("2026-10-20T09:00:00Z"));
+      quoteData.persistInitial(second, day, Instant.parse("2026-10-20T09:00:00Z"));
+      QuoteRankingQuery query = new QuoteRankingQuery(0, 1, second.getName(), null, null);
+      QuoteRankingQuery outside = new QuoteRankingQuery(10, 1, second.getName(), null, null);
+      // Act
+      QuoteRankingPage page = queryService.findRanking(query);
+      QuoteRankingPage empty = queryService.findRanking(outside);
+      // Assert
+      assertThat(page.content())
+          .singleElement()
+          .satisfies(
+              entry -> {
+                assertThat(entry.playerId()).isEqualTo(second.getId());
+                assertThat(entry.position()).isEqualTo(first.getId() < second.getId() ? 2 : 1);
+              });
+      assertThat(page.totalElements()).isEqualTo(1);
+      assertThat(page.totalPages()).isEqualTo(1);
+      assertThat(empty.content()).isEmpty();
+      assertThat(empty.totalElements()).isEqualTo(1);
+      assertThat(empty.leagues()).isEqualTo(page.leagues());
+    }
 
     @Test
     @DisplayName(
@@ -311,18 +434,13 @@ class QuoteQueryServiceTest {
   }
 
   @Nested
-  @DisplayName("Desempate ante empate de fecha de vigencia e instante de cálculo")
+  @DisplayName("Selección de la cotización diaria vigente")
   class TieBreak {
 
-    /**
-     * El desempate entre dos filas del mismo jugador que coinciden en fecha de vigencia e instante
-     * de cálculo queda cerrado por el identificador de la fila, de modo que el jugador aparece una
-     * sola vez en el ranking y su cotización vigente es siempre la misma fila.
-     */
+    /** El jugador aparece una sola vez, con su última fila diaria, sin prioridad entre orígenes. */
     @Test
-    @DisplayName(
-        "Muestra una sola entrada por jugador cuando dos filas coinciden en fecha e instante")
-    void showsSingleEntryWhenRowsTie() {
+    @DisplayName("Muestra una sola entrada por jugador con su cotización del día más reciente")
+    void showsLatestDailyEntry() {
       // Arrange
       catalogue.prepare();
       Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
@@ -330,7 +448,8 @@ class QuoteQueryServiceTest {
       Instant calculatedAt = Instant.parse("2026-10-17T09:00:00Z");
       quoteData.prepareMetrics(player, marketDate);
       quoteData.persistInitial(player, marketDate, calculatedAt);
-      quoteData.persistCarriedForward(player, marketDate, 100L, calculatedAt);
+      quoteData.persistCarriedForward(
+          player, marketDate.plusDays(1), 100L, calculatedAt.plusSeconds(86400));
 
       // Act
       List<PlayerRankingEntry> ranking = queryService.findRanking();
@@ -381,28 +500,50 @@ class QuoteQueryServiceTest {
     data.prepareConfirmedJsonCampaign(LocalDate.of(2026, 10, 18));
     initialization.initialize(LocalDate.of(2026, 10, 17));
     Player player = firstPlayer();
-    LocalDate quoteDate = LocalDate.of(2026, 10, 18);
-    publisher.publish(
-        player,
-        quoteDate,
-        ValuationStrategy.POSITIONAL_PERFORMANCE,
-        new BigDecimal("0.10"),
-        new BigDecimal("0.10"),
-        1L,
-        Instant.parse("2026-10-18T09:00:00Z"));
-    valuation.evaluate();
-    publisher.publish(
-        player,
-        quoteDate,
-        ValuationStrategy.POSITIONAL_PERFORMANCE,
-        new BigDecimal("0.10"),
-        new BigDecimal("0.10"),
-        1L,
-        Instant.parse("2026-10-18T10:00:00Z"));
+    quoteData.persistCarriedForward(
+        player, LocalDate.of(2026, 10, 18), 100L, Instant.parse("2026-10-18T09:00:00Z"));
+    quoteData.persistRecomputed(
+        player, LocalDate.of(2026, 10, 19), 105L, Instant.parse("2026-10-19T09:00:00Z"));
     return player;
   }
 
   private Player firstPlayer() {
     return playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+  }
+
+  static class QueryClock extends Clock {
+    final AtomicReference<Instant> time =
+        new AtomicReference<>(Instant.parse("2026-10-18T09:00:00Z"));
+    volatile String pauseThread;
+    CountDownLatch captured = new CountDownLatch(1);
+    CountDownLatch resume = new CountDownLatch(1);
+
+    @Override
+    public ZoneId getZone() {
+      return ZoneOffset.UTC;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return Clock.fixed(time.get(), zone);
+    }
+
+    @Override
+    public Instant instant() {
+      Instant instant = time.get();
+      if (Thread.currentThread().getName().equals(pauseThread)) {
+        pauseThread = null;
+        captured.countDown();
+        try {
+          if (!resume.await(10, TimeUnit.SECONDS)) {
+            throw new AssertionError("No se liberó la corrida atrasada");
+          }
+        } catch (InterruptedException exception) {
+          Thread.currentThread().interrupt();
+          throw new AssertionError("Se interrumpió la barrera", exception);
+        }
+      }
+      return instant;
+    }
   }
 }

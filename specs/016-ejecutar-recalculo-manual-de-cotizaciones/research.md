@@ -1,5 +1,47 @@
 # Research: Cotización de tokens de jugadores con historial trazable
 
+## Investigación vigente — 2026-11-10
+
+Esta revisión sustituye las decisiones incompatibles del antecedente: una ejecución por fecha, vigencia de valuación, exclusión de score antiguo, coexistencia de orígenes diarios y ranking completo.
+
+### R1. Publicación diaria y concurrencia
+
+**Decision**: mantener la fórmula y `REQUIRES_NEW` por jugador; bloquear la fila `Player` antes de leer precio vigente y comprobar cotización del día, tanto en recálculo como inicialización. Constraint `(player_id,effective_date)` para todos los orígenes. La ausencia de score no impide escribir una fila diaria arrastrada. No comparar fecha de score con una referencia para decidir recotizar. Fijar día con un único instante inicial UTC.
+
+**Rationale**: `QuotePlayerPublisher` actualmente excluye scores antiguos y `QuoteRecalculationServiceImpl` reserva fecha única; ambas condiciones contradicen FR-005/027/060 vigentes. La serialización por jugador evita calcular dos veces sobre el mismo precio y conserva atomicidad individual sin lock global. Omisión diaria y fallo técnico son resultados distintos.
+
+**Alternatives considered**: solo comprobación previa sin constraint (carrera); solo capturar cualquier error de integridad (oculta fallos ajenos); lock global por día (innecesario y contradice múltiples corridas). No se introduce recuperación automática ni compensación; TD-024 conserva su alcance conocido.
+
+**Ajuste mínimo autorizado tras ANALYZE I1**: bajo el mismo lock, omitir si la fecha efectiva vigente es igual o posterior al día inicial de la corrida (`effectiveDate >= quoteDate`). Contabilizar en `notRepricedPlayers`, sin escritura ni ajuste. La comparación sustituye comprobar solo existencia del mismo día; no usa fecha del score. Si D+1 publicó primero, D no reconstruye ese día ni altera el precio. Se rechazan como innecesarias la reconstrucción retrospectiva y la serialización global de corridas.
+
+### R2. Identidad, contadores y auditoría
+
+**Decision**: conservar PK de ejecución, eliminar unicidad de fecha y exponer `executionId`; ordenar consulta diaria por inicio e ID descendentes. Reutilizar `notRepricedPlayers` con significado explícito de omisión por fila diaria existente. Añadir referencia `execution_id` nullable desde cotización: nula solo en iniciales. Persistir contexto de ejecución antes de publicaciones individuales mediante componente interno de la misma fachada y transacción independiente; finalizar su resumen aparte. No hacer que una transacción de jugador espere una FK a una ejecución aún no confirmada.
+
+**Rationale**: varias corridas pueden compartir fecha e instante; el instante solo ya no identifica parámetros de forma inequívoca. La referencia permite auditar qué corrida produjo la fila. Persistir el contexto antes evita pérdida de la identidad al fallar el cierre; un cierre interrumpido puede conservar contadores incompletos y sigue siendo TD-024, no éxito demostrado. La lectura pública de resúmenes finalizados no presenta un contexto en curso como resultado completo.
+
+**Alternatives considered**: unir por instante (ambiguo); duplicar parámetros en cada fila (duplica fuente de verdad); eliminar atomicidad individual (revierte éxitos por fallo de otro jugador). La finalización incompleta no se compensa desde el scheduler.
+
+### R3. Ranking y reutilización
+
+**Decision**: `page=0,size=20`, máximo 100; `name,leagueId,position` según catálogo. SQL con última fila elegible por jugador, `row_number()` global, filtro posterior y página final. Top 3 con la misma lectura sin filtros y tamaño 3. Entradas incluyen identificación y opciones globales de liga/posición, sin descargar el catálogo entero. Precio e ID determinan orden, nunca fecha ni orden cliente.
+
+**Rationale**: `QuoteMapper` asigna actualmente posición por índice y `findRanking` desempata además por fecha; ambos deben cambiar. El catálogo ya define límites y formato de metadatos. Un agente de investigación read-only contrastó ranking score, catálogo y consumidor SPEC-022; no ejecutó controles.
+
+**Alternatives considered**: filtrar/paginar una lista completa en Java o navegador (incumple alcance); endpoint nuevo de podio (no necesario); renumerar página filtrada (pierde posición oficial).
+
+### R4. Compatibilidad y límites
+
+**Decision**: ruta/shape incompatibles se adoptan con consumidores, OpenAPI y tests en el mismo cambio de implementación, bajo preparación y autorización de las specs responsables. No introducir dependencia Service → Service entre quote, catálogo y ranking: consultas/proyecciones en Repository y modelos de resultado. Agenda diaria no se cambia aquí.
+
+**Rationale**: la matriz arquitectónica prohíbe esa dependencia general y la Constitución exige coherencia observable. La selección determinista de ejecución del ranking score es una dependencia explícita de SPEC-018, no una fase ejecutada desde PLAN de SPEC-016.
+
+**Alternatives considered**: conservar ruta vieja sin consumidores conocidos (compatibilidad innecesaria de desarrollo); ampliar unilateralmente las otras features (fuera del encargo).
+
+---
+
+## Antecedente — decisiones sustituidas solo por impacto
+
 **Feature**: `016-ejecutar-recalculo-manual-de-cotizaciones`
 **Spec**: [`spec.md`](spec.md)
 **Plan**: [`plan.md`](plan.md)

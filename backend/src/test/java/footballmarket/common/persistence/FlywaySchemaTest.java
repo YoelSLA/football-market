@@ -9,6 +9,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.flywaydb.core.api.output.MigrateResult;
+import org.flywaydb.core.api.output.ValidateResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -20,7 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers
 @Tag("integration")
 class FlywaySchemaTest {
-  private static final String LAST_VERSION = "20261107030028";
+  private static final String LAST_VERSION = "20261110235437";
 
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 
@@ -29,7 +32,7 @@ class FlywaySchemaTest {
   }
 
   private Flyway flyway(String url, String target) {
-    var configuration =
+    FluentConfiguration configuration =
         Flyway.configure()
             .dataSource(url, DATABASE.getUsername(), DATABASE.getPassword())
             .validateOnMigrate(true)
@@ -44,15 +47,18 @@ class FlywaySchemaTest {
   @DisplayName("Reconstrucción completa")
   class CompleteReconstruction {
     @Test
-    @DisplayName("Migra PostgreSQL vacío y valida las veintiocho versiones")
+    @DisplayName("Migra PostgreSQL vacío y valida las veintinueve versiones")
     void migratesEmptyPostgres() throws Exception {
+      // Arrange
       String url = createDatabase("flyway_full_reconstruction");
       Flyway flyway = flyway(url, null);
 
-      var result = flyway.migrate();
-      var validation = flyway.validateWithResult();
+      // Act
+      MigrateResult result = flyway.migrate();
+      ValidateResult validation = flyway.validateWithResult();
 
-      assertThat(result.migrationsExecuted).isEqualTo(28);
+      // Assert
+      assertThat(result.migrationsExecuted).isEqualTo(29);
       assertThat(result.targetSchemaVersion).hasToString(LAST_VERSION);
       assertThat(validation.validationSuccessful).isTrue();
       try (Connection connection =
@@ -62,7 +68,7 @@ class FlywaySchemaTest {
               statement.executeQuery(
                   "SELECT count(*) FROM flyway_schema_history WHERE success AND type = 'SQL'")) {
         rows.next();
-        assertThat(rows.getInt(1)).isEqualTo(28);
+        assertThat(rows.getInt(1)).isEqualTo(29);
       }
     }
   }

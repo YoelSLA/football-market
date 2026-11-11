@@ -2,7 +2,6 @@ package footballmarket.features.quote.presentation;
 
 import footballmarket.common.presentation.ErrorResponses;
 import footballmarket.common.presentation.dtos.ErrorResponseDTO;
-import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.InvalidMinPriceFloorException;
 import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
@@ -91,20 +90,6 @@ public class QuoteExceptionHandler {
       QuoteNotFoundException exception, HttpServletRequest request) {
     return ErrorResponses.build(
         exception.getMessage(), "QUOTE_NOT_FOUND", HttpStatus.NOT_FOUND, request);
-  }
-
-  /**
-   * Traduce ejecuciones de cotización duplicadas en la misma fecha.
-   *
-   * @param exception error de ejecución existente
-   * @param request petición HTTP en curso
-   * @return respuesta HTTP formateada
-   */
-  @ExceptionHandler(ExecutionAlreadyExistsException.class)
-  public ResponseEntity<ErrorResponseDTO> handleExecutionAlreadyExists(
-      ExecutionAlreadyExistsException exception, HttpServletRequest request) {
-    return ErrorResponses.build(
-        exception.getMessage(), "EXECUTION_ALREADY_EXISTS", HttpStatus.CONFLICT, request);
   }
 
   /**

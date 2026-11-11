@@ -1,5 +1,18 @@
 # Contrato del puerto de lectura de cotización: fuente real
 
+## Vigencia del delta — 2026-11-10
+
+El delta no cambia firmas ni comportamiento de mercado: preservar `QuoteSource.currentQuote` y `currentQuotes` (lectura por lote existente para posiciones financieras), sus ausencias y errores. Ubicación real: interfaz en `features/quote/application`, adaptador `RepositoryQuoteSource` en `features/quote/infraestructure`; el paquete plano del antecedente es histórico. Consumidores existentes incluyen compra, publicación y posiciones financieras; no eliminar capacidades de lote al adaptar las consultas.
+
+La vigente se selecciona por máxima fecha efectiva diaria, sin depender de fecha de valuación ni de existencia de score nuevo. Unicidad jugador/día elimina cualquier coexistencia de orígenes diarios. Mantener precio en centésimas e instante de cálculo original; cotizaciones arrastradas son precios vigentes válidos. Las filas iniciales carecen de estrategia. El contrato HTTP de ranking cambia según [quotes-http.md](quotes-http.md), no a través de este puerto.
+
+No se reimplementa la sustitución del simulador ya realizada ni se amplía el mercado. Los apartados siguientes se conservan como antecedente de esa sustitución.
+
+**IMPLEMENT local:** se conservaron las firmas individual y por lote. Sus selectores
+comparten ahora el orden diario sin prioridad entre orígenes; el adaptador no aplica
+fórmulas ni sustituye el instante persistido. Regresiones escritas para lote/individual,
+arrastre, FK de ejecución y recursos/publicaciones de mercado; ejecución humana pendiente.
+
 **Feature**: `016-ejecutar-recalculo-manual-de-cotizaciones`
 **Spec**: [`spec.md`](../spec.md) · **Research**: [`../research.md`](../research.md)
 

@@ -12,7 +12,6 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.quote.application.QuoteRecalculationService;
-import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.infraestructure.config.QuoteProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -111,20 +110,15 @@ class AutomaticQuoteRecalculationSchedulerTest {
     }
 
     @Test
-    @DisplayName("Omite la fecha ya registrada sin propagar el rechazo")
-    void skipsExistingDate() {
+    @DisplayName("Cada disparo del mismo día vuelve a delegar sin exclusión por fecha")
+    void delegatesRepeatedTriggers() {
       // Arrange
-      when(service.recalculateAutomatic()).thenThrow(new ExecutionAlreadyExistsException());
       AutomaticQuoteRecalculationScheduler scheduler = scheduler(true);
       // Act / Assert
       assertThatCode(scheduler::recalculate).doesNotThrowAnyException();
+      assertThatCode(scheduler::recalculate).doesNotThrowAnyException();
       // Verify
-      assertThat(events.list)
-          .extracting(ILoggingEvent::getFormattedMessage)
-          .anyMatch(
-              message ->
-                  message.startsWith("quote_automatic_recalculation_skipped ")
-                      && message.endsWith("reason=EXECUTION_ALREADY_EXISTS"));
+      verify(service, org.mockito.Mockito.times(2)).recalculateAutomatic();
     }
   }
 

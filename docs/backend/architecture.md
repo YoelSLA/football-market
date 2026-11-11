@@ -78,8 +78,12 @@ inspecciona ni transforma el resultado de dominio.
 El disparador invoca `recalculateAutomatic()` y traduce los rechazos o errores recibidos a eventos
 operativos, sin propagarlos ni impedir disparos futuros. No contiene lógica de negocio, fórmulas,
 validaciones del mercado ni gestión de transacciones, persistencia, compensación, recuperación o
-reintentos. Esas responsabilidades permanecen en el recálculo existente; la unicidad por fecha UTC
-se conserva sin añadir un lock global y TD-024 permanece pendiente.
+reintentos. Esas responsabilidades permanecen en el recálculo existente; la unicidad por jugador
+y día UTC se conserva bajo bloqueo de la fila de catálogo compartido con inicialización, sin
+lock global. Varias corridas diarias tienen identidad propia y omiten jugadores con cotización
+vigente del mismo día o posterior. El contexto se confirma antes de publicar y el resumen se
+cierra aparte mediante `QuoteExecutionRecorder`, componente interno de la fachada, no un Service
+reutilizable. TD-024 permanece pendiente: un cierre interrumpido puede dejar contexto sin resumen final.
 
 La programación se habilita una sola vez con `@EnableScheduling` en `FootballMarketApplication` y
 utiliza el `TaskScheduler` autoconfigurado por Spring Boot, con un hilo y prefijo `market-batch-`.

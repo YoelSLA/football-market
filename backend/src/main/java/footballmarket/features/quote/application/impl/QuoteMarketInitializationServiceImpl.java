@@ -1,6 +1,7 @@
 package footballmarket.features.quote.application.impl;
 
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.market.application.exceptions.MarketAlreadyInitializedException;
 import footballmarket.features.market.domain.records.MarketInitializationResult;
 import footballmarket.features.quote.application.QuoteMarketInitializationService;
@@ -31,16 +32,19 @@ public class QuoteMarketInitializationServiceImpl implements QuoteMarketInitiali
   private final QuotePopulationSelector population;
   private final QuoteProperties properties;
   private final Clock marketClock;
+  private final PlayerRepository players;
 
   public QuoteMarketInitializationServiceImpl(
       PlayerQuoteRepository quotes,
       QuotePopulationSelector population,
       QuoteProperties properties,
-      Clock marketClock) {
+      Clock marketClock,
+      PlayerRepository players) {
     this.quotes = quotes;
     this.population = population;
     this.properties = properties;
     this.marketClock = marketClock;
+    this.players = players;
   }
 
   @Override
@@ -58,7 +62,16 @@ public class QuoteMarketInitializationServiceImpl implements QuoteMarketInitiali
     Instant calculatedAt = Instant.now(this.marketClock);
     long anchor = this.properties.initialAnchor();
     List<Player> players = this.population.pricablePlayers();
+    int inserted = 0;
     for (Player player : players) {
+      this.players.lockIdentityById(player.getId()).orElseThrow();
+      List<LocalDate> confirmedDates = this.quotes.findMarketDates();
+      if (!confirmedDates.isEmpty() && !confirmedDates.getFirst().equals(requested)) {
+        throw new MarketAlreadyInitializedException();
+      }
+      if (this.quotes.existsByPlayerIdAndEffectiveDate(player.getId(), requested)) {
+        continue;
+      }
       this.quotes.save(
           new PlayerQuote(
               player,
@@ -72,7 +85,11 @@ public class QuoteMarketInitializationServiceImpl implements QuoteMarketInitiali
               null,
               QuoteOrigin.INITIAL,
               calculatedAt));
+      inserted++;
     }
-    return new MarketInitializationResult(requested, players.size(), false);
+    return new MarketInitializationResult(
+        requested,
+        Math.toIntExact(this.quotes.countByOrigin(QuoteOrigin.INITIAL)),
+        inserted == 0 && !players.isEmpty());
   }
 }

@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
-import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.domain.enums.QuoteExecutionFailureReason;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
@@ -76,22 +75,23 @@ class QuoteAutomaticRecalculationFailureTest {
   @DisplayName("Errores automáticos y reintento según el registro existente")
   class AutomaticFailures {
     @Test
-    @DisplayName("Un fallo completo sin resumen permite reintento manual el mismo día")
-    void retriesManuallyWhenAutomaticAttemptLeavesNoExecution() {
+    @DisplayName("Un fallo de cierre no expone el contexto como resumen y permite otra corrida")
+    void retriesManuallyWithoutFinishedSummary() {
       // Arrange: falla el reloj al cerrar el resumen, después de la reserva y del recorrido real.
       catalogue.prepare();
       data.prepareConfirmedJsonCampaign(MARKET_DATE);
       initialization.initialize(MARKET_DATE);
-      ((FailureClock) clock).readsUntilFailure.set(3);
+      ((FailureClock) clock).readsUntilFailure.set(2);
       // Act / Assert
       assertThatThrownBy(service::recalculateAutomatic).isInstanceOf(DateTimeException.class);
       assertThat(service.executions(QUOTE_DATE)).isEmpty();
-      // Verify: se acepta y registra el reintento; TD-024 puede causar fallos individuales
-      // por las cotizaciones ya confirmadas. No se exige que el reintento sea exitoso.
+      // Verify: el contexto sin cierre sigue fuera de la consulta; no se recupera ni compensa.
       QuoteExecution retry = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       assertThat(retry.getQuoteDate()).isEqualTo(QUOTE_DATE);
       assertThat(retry.getOrigin()).isEqualTo(QuoteExecutionOrigin.MANUAL);
       assertThat(retry.getPricedPlayers()).isEqualTo(5);
+      assertThat(retry.getNotRepricedPlayers()).isEqualTo(5);
+      assertThat(retry.getFailedPlayers()).isZero();
       assertThat(service.executions(QUOTE_DATE))
           .extracting(QuoteExecution::getId)
           .containsExactly(retry.getId());
@@ -116,9 +116,8 @@ class QuoteAutomaticRecalculationFailureTest {
     }
 
     @Test
-    @DisplayName(
-        "Una ejecución registrada con fallos individuales consume la fecha y rechaza el reintento")
-    void recordedIndividualFailuresRejectManualRetry() {
+    @DisplayName("Un reintento completa al jugador pendiente sin sobrescribir éxitos anteriores")
+    void retryCompletesPendingPlayer() {
       // Arrange: cinco jugadores cotizables, pero solo cuatro tienen cotización inicial.
       catalogue.prepare();
       data.prepareConfirmedJsonCampaign(MARKET_DATE);
@@ -137,9 +136,13 @@ class QuoteAutomaticRecalculationFailureTest {
       assertThat(execution.failureReason())
           .isEqualTo(QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES);
       // Verify
-      assertThatThrownBy(() -> service.recalculate("POSITIONAL_PERFORMANCE", null, null, null))
-          .isInstanceOf(ExecutionAlreadyExistsException.class);
+      quoteData.persistInitial(population.get(4), MARKET_DATE, NOW.minusSeconds(86400));
+      QuoteExecution retry = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      assertThat(retry.getCarriedForwardRows()).isEqualTo(1);
+      assertThat(retry.getNotRepricedPlayers()).isEqualTo(4);
+      assertThat(retry.getFailedPlayers()).isZero();
       assertThat(service.executions(QUOTE_DATE))
+          .filteredOn(saved -> saved.getId().equals(execution.getId()))
           .singleElement()
           .satisfies(
               saved -> {

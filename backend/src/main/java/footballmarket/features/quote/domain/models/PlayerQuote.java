@@ -25,8 +25,7 @@ import lombok.Getter;
  * Fila del historial de cotizaciones de un jugador.
  *
  * <p>La tabla es el historial completo: la cotización vigente del jugador es su fila de fecha de
- * vigencia máxima y, a igualdad de fecha, la fila {@code RECOMPUTED}, escrita después que la
- * arrastrada. Cada fila conserva la trazabilidad de lo que produjo su precio: estrategia y versión,
+ * vigencia máxima, con una única fila por jugador y día. Cada fila conserva estrategia y versión,
  * score, precio anterior, multiplicador, fecha de la valuación de origen e instante de cálculo.
  */
 @Entity
@@ -77,10 +76,14 @@ public class PlayerQuote {
   @Column(name = "calculated_at", nullable = false, updatable = false)
   private Instant calculatedAt;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "execution_id", updatable = false)
+  private QuoteExecution execution;
+
   protected PlayerQuote() {}
 
   /**
-   * Crea una fila del historial con los invariantes de su origen.
+   * Crea exclusivamente una fila INITIAL; los otros orígenes requieren ejecución auditada.
    *
    * @param player jugador cotizable de la fila
    * @param effectiveDate fecha de vigencia de la fila
@@ -107,6 +110,35 @@ public class PlayerQuote {
       LocalDate sourceValuationDate,
       QuoteOrigin origin,
       Instant calculatedAt) {
+    this(
+        player,
+        effectiveDate,
+        price,
+        previousPrice,
+        multiplier,
+        score,
+        strategyName,
+        strategyVersion,
+        sourceValuationDate,
+        origin,
+        calculatedAt,
+        null);
+  }
+
+  /** Crea una fila auditada; solo INITIAL carece de referencia a una corrida. */
+  public PlayerQuote(
+      Player player,
+      LocalDate effectiveDate,
+      long price,
+      Long previousPrice,
+      BigDecimal multiplier,
+      BigDecimal score,
+      ValuationStrategy strategyName,
+      String strategyVersion,
+      LocalDate sourceValuationDate,
+      QuoteOrigin origin,
+      Instant calculatedAt,
+      QuoteExecution execution) {
     if (player == null
         || effectiveDate == null
         || multiplier == null
@@ -116,6 +148,9 @@ public class PlayerQuote {
     }
     if (price <= 0) {
       throw new InvalidQuoteException("El precio de la cotización debe ser mayor que cero");
+    }
+    if ((origin == QuoteOrigin.INITIAL) != (execution == null)) {
+      throw new InvalidQuoteException("Solo la cotización inicial carece de ejecución de origen");
     }
     this.assertOriginInvariants(
         origin,
@@ -136,6 +171,7 @@ public class PlayerQuote {
     this.sourceValuationDate = sourceValuationDate;
     this.origin = origin;
     this.calculatedAt = calculatedAt;
+    this.execution = execution;
   }
 
   private void assertOriginInvariants(

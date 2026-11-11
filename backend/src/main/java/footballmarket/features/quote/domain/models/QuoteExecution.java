@@ -22,9 +22,8 @@ import lombok.Getter;
 /**
  * Corrida persistida del recálculo de cotizaciones.
  *
- * <p>Es un registro append-only: cada fecha de cotización admite como máximo una ejecución, de modo
- * que el resumen de una fecha es único e inequívoco y los parámetros aplicados quedan en un único
- * lugar, sin duplicarse en cada fila del historial.
+ * <p>Cada corrida tiene identidad propia y admite un único cierre explícito. Sus parámetros
+ * permanecen inmutables; un contexto sin cierre no constituye un resultado finalizado.
  */
 @Entity
 @Table(name = "quote_executions")
@@ -79,13 +78,13 @@ public class QuoteExecution {
   @Column(name = "started_at", nullable = false, updatable = false)
   private Instant startedAt;
 
-  @Column(name = "finished_at", nullable = false)
+  @Column(name = "finished_at")
   private Instant finishedAt;
 
   protected QuoteExecution() {}
 
   /**
-   * Crea el resumen persistido de una corrida de cotización.
+   * Crea un contexto abierto con contadores en cero o un resumen ya finalizado y consistente.
    *
    * @param quoteDate fecha de cotización de la corrida
    * @param origin origen manual o automático de la corrida
@@ -97,10 +96,10 @@ public class QuoteExecution {
    * @param pricedPlayers población cotizable evaluada
    * @param recomputedRows filas recalculadas escritas
    * @param carriedForwardRows filas arrastradas escritas
-   * @param notRepricedPlayers jugadores no repreciados
+   * @param notRepricedPlayers omitidos por cotización vigente del mismo día o posterior
    * @param failedPlayers jugadores con fallo individual
    * @param startedAt inicio de la corrida
-   * @param finishedAt fin de la corrida
+   * @param finishedAt fin de la corrida, nulo mientras el contexto está abierto
    * @throws InvalidQuoteException si algún valor persistido es inválido
    */
   public QuoteExecution(
@@ -124,8 +123,7 @@ public class QuoteExecution {
         || strategyVersion == null
         || adjustmentFactor == null
         || variationCap == null
-        || startedAt == null
-        || finishedAt == null) {
+        || startedAt == null) {
       throw new InvalidQuoteException("La ejecución de cotización requiere contexto completo");
     }
     if (adjustmentFactor.compareTo(new BigDecimal("0.10")) < 0
@@ -146,6 +144,22 @@ public class QuoteExecution {
         || failedPlayers < 0) {
       throw new InvalidQuoteException("Los contadores de la ejecución no pueden ser negativos");
     }
+    if ((finishedAt != null
+            && (finishedAt.isBefore(startedAt)
+                || pricedPlayers
+                    != (long) recomputedRows
+                        + carriedForwardRows
+                        + notRepricedPlayers
+                        + failedPlayers))
+        || (finishedAt == null
+            && (pricedPlayers != 0
+                || recomputedRows != 0
+                || carriedForwardRows != 0
+                || notRepricedPlayers != 0
+                || failedPlayers != 0))) {
+      throw new InvalidQuoteException(
+          "Los contadores y el cierre de la ejecución son inconsistentes");
+    }
     this.quoteDate = quoteDate;
     this.origin = origin;
     this.strategyName = strategyName;
@@ -164,15 +178,17 @@ public class QuoteExecution {
 
   /** Deriva el resultado exclusivamente de los contadores persistidos. */
   public QuoteExecutionResult result() {
+    this.requireFinished();
     return this.failedPlayers == 0 ? QuoteExecutionResult.SUCCESS : QuoteExecutionResult.FAILED;
   }
 
   /** Devuelve un motivo cerrado solo cuando hubo fallos individuales. */
   public QuoteExecutionFailureReason failureReason() {
+    this.requireFinished();
     return this.failedPlayers == 0 ? null : QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES;
   }
 
-  /** Completa los resultados de una corrida previamente reservada para su fecha. */
+  /** Completa una sola vez los resultados disjuntos de una corrida en curso. */
   public void complete(
       int pricedPlayers,
       int recomputedRows,
@@ -180,7 +196,10 @@ public class QuoteExecution {
       int notRepricedPlayers,
       int failedPlayers,
       Instant finishedAt) {
-    if (pricedPlayers < 0
+    if (this.finishedAt != null
+        || pricedPlayers
+            != (long) recomputedRows + carriedForwardRows + notRepricedPlayers + failedPlayers
+        || pricedPlayers < 0
         || recomputedRows < 0
         || carriedForwardRows < 0
         || notRepricedPlayers < 0
@@ -195,5 +214,11 @@ public class QuoteExecution {
     this.notRepricedPlayers = notRepricedPlayers;
     this.failedPlayers = failedPlayers;
     this.finishedAt = finishedAt;
+  }
+
+  private void requireFinished() {
+    if (this.finishedAt == null) {
+      throw new InvalidQuoteException("La ejecución todavía no tiene un resumen finalizado");
+    }
   }
 }

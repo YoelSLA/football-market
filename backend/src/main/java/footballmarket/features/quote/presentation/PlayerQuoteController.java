@@ -2,8 +2,10 @@ package footballmarket.features.quote.presentation;
 
 import footballmarket.common.presentation.dtos.ErrorResponseDTO;
 import footballmarket.features.quote.application.QuoteQueryService;
+import footballmarket.features.quote.presentation.dtos.request.QuoteRankingQueryRequestDTO;
 import footballmarket.features.quote.presentation.dtos.response.PlayerRankingResponseDTO;
 import footballmarket.features.quote.presentation.dtos.response.QuoteHistoryResponseDTO;
+import footballmarket.features.quote.presentation.dtos.response.QuoteRankingPageResponseDTO;
 import footballmarket.features.quote.presentation.dtos.response.QuoteResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,9 +14,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * recalcular precios.
  */
 @RestController
-@RequestMapping("/api/players")
+@RequestMapping("/api")
 @Tag(
     name = "Cotizaciones de jugadores",
     description = "Historial, cotización vigente y ranking por precio de los jugadores")
@@ -41,14 +46,13 @@ public class PlayerQuoteController {
     this.queryService = queryService;
   }
 
-  @GetMapping(value = "/{id}/quotes", params = "!date")
+  @GetMapping(value = "/players/{id}/quotes", params = "!date")
   @Operation(
       summary = "Consultar el historial de cotizaciones de un jugador",
       description =
           "Devuelve todas las filas persistidas del jugador, de la más reciente a la más antigua. "
-              + "Un jugador sin cotizaciones devuelve una lista vacía, no un error. A igualdad de "
-              + "fecha de vigencia, la fila recalculada se devuelve antes que la arrastrada y es la "
-              + "cotización vigente del jugador.")
+              + "Un jugador sin cotizaciones devuelve una lista vacía, no un error. Existe una sola "
+              + "fila por jugador y día; la fecha de vigencia diaria no es la fecha del score auditado.")
   @ApiResponse(
       responseCode = "200",
       description = "Historial de cotizaciones del jugador",
@@ -64,7 +68,7 @@ public class PlayerQuoteController {
     return ResponseEntity.ok(QuoteMapper.toHistoryResponse(id, this.queryService.findHistory(id)));
   }
 
-  @GetMapping(value = "/{id}/quotes", params = "date")
+  @GetMapping(value = "/players/{id}/quotes", params = "date")
   @Operation(
       summary = "Consultar la cotización de un jugador a una fecha dada",
       description =
@@ -93,7 +97,7 @@ public class PlayerQuoteController {
     return ResponseEntity.ok(QuoteMapper.toQuoteResponse(this.queryService.findOnDate(id, date)));
   }
 
-  @GetMapping("/{id}/quotes/current")
+  @GetMapping("/players/{id}/quotes/current")
   @Operation(
       summary = "Consultar la cotización vigente de un jugador",
       description =
@@ -119,7 +123,7 @@ public class PlayerQuoteController {
     return ResponseEntity.ok(QuoteMapper.toQuoteResponse(this.queryService.findCurrent(id)));
   }
 
-  @GetMapping("/ranking")
+  @GetMapping("/players/ranking")
   @Operation(
       summary = "Consultar el ranking de jugadores por cotización vigente",
       description =
@@ -134,5 +138,33 @@ public class PlayerQuoteController {
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   public ResponseEntity<PlayerRankingResponseDTO> ranking() {
     return ResponseEntity.ok(QuoteMapper.toRankingResponse(this.queryService.findRanking()));
+  }
+
+  @GetMapping("/rankings/quote")
+  @Operation(
+      summary = "Consultar el ranking paginado por cotización",
+      description =
+          "Orden fijo por precio descendente e ID ascendente. Las posiciones globales se "
+              + "calculan antes de filtrar por nombre, liga y posición. El total corresponde al filtro; "
+              + "las opciones son globales. page=0, size=20, máximo 100. Para el podio usar page=0&size=3 "
+              + "sin filtros. No se promete un snapshot entre solicitudes independientes.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Página, incluidos vacío y página fuera de rango",
+      content = @Content(schema = @Schema(implementation = QuoteRankingPageResponseDTO.class)))
+  @ApiResponse(
+      responseCode = "400",
+      description = "INVALID_REQUEST: parámetros inválidos",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+  @ApiResponse(
+      responseCode = "500",
+      description = "INTERNAL_ERROR sin detalles internos",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  public ResponseEntity<QuoteRankingPageResponseDTO> rankingPage(
+      @Valid @ModelAttribute @ParameterObject QuoteRankingQueryRequestDTO request) {
+    return ResponseEntity.ok(
+        QuoteMapper.toRankingPageResponse(
+            this.queryService.findRanking(QuoteMapper.toRankingQuery(request))));
   }
 }

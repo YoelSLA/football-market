@@ -1,5 +1,34 @@
 # Data Model: Cotización de tokens de jugadores con historial trazable
 
+## Modelo vigente del delta — 2026-11-10
+
+Este bloque sustituye las reglas históricas incompatibles siguientes; los demás campos, tipos, rangos de factor/tope/piso e invariantes de origen se conservan.
+
+| Entidad/campo | Diseño vigente |
+| --- | --- |
+| `player_quotes.effective_date` | Día UTC fijado al inicio de la ejecución; inicialización conserva su fecha de mercado |
+| `player_quotes.source_valuation_date` | Fecha original del último score disponible; puede ser anterior a vigencia; nula en INITIAL/CARRIED_FORWARD |
+| `player_quotes.execution_id` | BIGINT FK a `quote_executions.id`; nula en INITIAL, obligatoria en RECOMPUTED/CARRIED_FORWARD |
+| `uq_player_quote` | UNIQUE `(player_id,effective_date)`, sin origen: inicialización también consume el día |
+| `quote_executions.id` | PK existente; identidad pública `executionId` |
+| `quote_executions.quote_date` | Día UTC de `started_at`, inmutable; no es único |
+| `quote_executions.finished_at` | Nullable mientras el contexto está en curso; se fija al finalizar; nunca anterior al inicio |
+| `quote_executions.not_repriced_players` | Omitidos por cotización vigente de fecha igual o posterior al día inicial de la corrida, no por falta de score nuevo |
+
+Conservar `origin` MANUAL/AUTOMATIC y resultado/motivo derivados existentes. El contexto se persiste antes del recorrido, se completa mediante operación de dominio y luego no se sobrescribe por otras corridas. Solo resúmenes con fin informado son resultados finalizados; contexto sin fin no equivale a éxito. Para corrida finalizada: `priced_players = recomputed_rows + carried_forward_rows + not_repriced_players + failed_players`, todos no negativos. Un fallo individual no deja fila y permite que otra corrida del día lo procese. Un jugador ya cotizado se omite, sin ajuste ni sobrescritura.
+
+Índices: mantener lectura `(player_id,effective_date DESC,calculated_at DESC)` y añadir lectura de ejecuciones `(quote_date DESC,started_at DESC,id DESC)`; FK indexada para auditoría. Una fila por día elimina la prevalencia entre orígenes del mismo día. Vigente: máxima fecha de vigencia; fecha e ID cierran el orden de lectura, sin usar fecha de score. Precio anterior es el vigente leído bajo lock de jugador. No hay estado de precio duplicado ni tabla de ranking.
+
+**Invariante de publicación (I1)**: bajo el lock del jugador, publicar solo si la fecha efectiva vigente es estrictamente anterior a `quoteDate`. Una fecha igual o posterior produce omisión sin insertar ni ajustar; no reconstruir días atrasados. Así el precio anterior de una nueva fila no procede de una cotización futura respecto de esa fila.
+
+La consulta ranking produce Model/proyección con posición global y datos de jugador; selecciona fila vigente del universo con métricas, numera por precio DESC/ID ASC, aplica filtros y cuenta/pagina. Lectura consistente por solicitud, no snapshot durable entre páginas; aceptación de recorrido sin duplicados requiere datos estables. No se promete consistencia entre dos peticiones independientes de tabla y podio ante cambios simultáneos.
+
+**Esquema y despliegue**: migraciones fuente observadas `V20261107030027__create_player_quotes.sql` y `V20261107030028__create_quote_executions.sql`, ambas presentes en la referencia local `origin/dev` según `git ls-tree`. No editarlas: planificar nueva migración de constraints/FK/nulabilidad. Los datos son descartables: no se diseña backfill ni transformación preservadora; si los datos existentes impiden aplicar constraints/FK, toda limpieza/recreación requiere encargo explícito y no se ejecuta en PLAN. Hibernate debe validar el esquema resultante durante la verificación humana.
+
+---
+
+## Antecedente — no aplicar restricciones sustituidas
+
 **Feature**: `016-ejecutar-recalculo-manual-de-cotizaciones`
 **Spec**: [`spec.md`](spec.md) · **Research**: [`research.md`](research.md)
 
