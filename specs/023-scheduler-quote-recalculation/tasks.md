@@ -5,6 +5,31 @@ description: "Task list for feature implementation"
 
 # Tasks: Recálculo automático programado de cotizaciones
 
+## Integración vigente con SPEC-016 — 2026-11-11
+
+Fuentes: decisiones de ambas specs y [`integration-baseline.md`](integration-baseline.md).
+Esta alineación documental no implementa tareas ni acredita ANALYZE. Se conservan T001–T042 y
+su avance histórico; T034–T042 describen la entrega publicada `7fe1d4b`, no el resultado del merge.
+Las omisiones por score antiguo, ausencia de ID público y transacción externa única quedan
+sustituidas por los encabezados de integración de diseño y contratos.
+
+- [ ] T043 Reconciliar `backend/src/main/java/footballmarket/features/quote/application/internal/QuoteExecutionRecorder.java`, `application/impl/QuoteRecalculationServiceImpl.java`, `application/exceptions/ExecutionAlreadyExistsException.java` e `infraestructure/scheduling/AutomaticQuoteRecalculationScheduler.java`: reservar contexto automático confirmado bajo índice parcial por fecha, permitir manuales ilimitadas y traducir solo SQLSTATE/constraint automático correspondiente a omisión `EXECUTION_ALREADY_EXISTS`. No eliminar esa clase; contexto automático sin fin consume cuota diaria sin impedir manuales. Mantener habilitación, cron diario 12:00 UTC, zona fija, logs seguros y responsabilidades delgadas del scheduler. Escribir antes la regresión específica en `backend/src/test/java/footballmarket/features/quote/infraestructure/scheduling/AutomaticQuoteRecalculationSchedulerTest.java`; no ejecutar pruebas. Depende del esquema compartido T084 de SPEC-016, no crea otro recorder ni otro DDL.
+- [ ] T044 Adaptar cobertura cruzada en `backend/src/test/java/footballmarket/features/quote/application/QuoteRecalculationServiceTest.java`, `QuoteAutomaticRecalculationFailureTest.java` y `backend/src/test/java/footballmarket/features/quote/presentation/QuoteControllerTest.java`: manual antes/después de una automática; otra automática omitida, incluso contexto previo sin cierre; IDs públicos diferenciables y solo finalizadas en GET; una fila diaria actualizada con referencia de última corrida. Reutilizar T081/T083/T085 de SPEC-016 sin duplicar casos; esta tarea agrega solo aserciones del límite automático/scheduler. No ejecutar pruebas (depende de T043 y núcleo T082/T085 de SPEC-016).
+- [ ] T045 Revisar y adaptar `backend/src/test/java/footballmarket/common/persistence/FlywaySchemaTest.java` para la secuencia real reconciliada por T084 de SPEC-016, incluidas expectativa de versión y esquema nuevo; inspeccionar salida del fallo humano antes de atribuirle causa. Mantener pruebas PostgreSQL/Flyway reales y evitar duplicar los escenarios de constraints ya asignados a T084. No ejecutar tests ni modificar migraciones integradas. La causa de fallo desconocida se conserva pendiente hasta obtener evidencia.
+- [ ] T046 Tras T043–T045 y T081–T085 de SPEC-016 implementadas/verificadas conforme al encargo, alinear `docs/backend/architecture.md` §1.8 y actualizar informes/evidencias de ambas specs, conservando TD-024 y autorizaciones históricas no afectadas. Usar la misma verificación de build permitida de T086 de SPEC-016, sin duplicarla; revisar diff y estado. Tests, revisión y cierre humanos pendientes; no hacer commit, completar merge ni push sin encargo vigente. No ejecutar esta tarea desde la alineación documental.
+
+**Coordinación**: núcleo/esquema compartidos viven en T081–T086 de SPEC-016; cuota y disparador
+en T043–T044, regresión Flyway en T045 y arquitectura/evidencia conjunta en T046. El grafo completo
+está en `tasks.md` de SPEC-016 y la cobertura en la base común §3. No consumir tareas históricas
+como si acreditaran integración. El pendiente T077 de SPEC-016 con SPEC-022 se conserva.
+
+**Checklists**: marcadores preservados; corrección C1 y contraste documental de integración
+registrados el 2026-11-11 en `checklists/quality.md`, `checklists/concurrency-integrity.md` y
+`checklists/data.md` de SPEC-016. No constituyen aprobación humana de gates. Repetir ANALYZE de
+ambas specs sobre esta misma base sin ediciones intermedias; no ejecutado en la corrección.
+
+## Desglose de origen — antecedente con IDs y avance preservados
+
 **Input**: Design documents from `/specs/023-scheduler-quote-recalculation/`
 
 **Prerequisites**: `plan.md` (required), `spec.md` (required for user stories), `research.md`, `data-model.md`, `contracts/quote-executions-http.md`, `contracts/scheduling-configuration.md`, `quickstart.md`

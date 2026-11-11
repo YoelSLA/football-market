@@ -183,6 +183,7 @@ class QuoteControllerTest {
                   .contentType("application/json")
                   .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executionId").value(1))
           .andExpect(jsonPath("$.quoteDate").value("2026-10-21"))
           .andExpect(jsonPath("$.origin").value("MANUAL"))
           .andExpect(jsonPath("$.result").value("SUCCESS"))
@@ -193,7 +194,7 @@ class QuoteControllerTest {
           .andExpect(jsonPath("$.variationCap").value(0.10))
           .andExpect(jsonPath("$.minPriceFloor").value(1))
           .andExpect(jsonPath("$.pricedPlayers").value(5))
-          .andExpect(jsonPath("$.recomputedRows").value(3))
+          .andExpect(jsonPath("$.recomputedRows").value(2))
           .andExpect(jsonPath("$.carriedForwardRows").value(2))
           .andExpect(jsonPath("$.notRepricedPlayers").value(1))
           .andExpect(jsonPath("$.failedPlayers").value(0))
@@ -219,7 +220,7 @@ class QuoteControllerTest {
           .andExpect(jsonPath("$.executions[0].variationCap").value(0.10))
           .andExpect(jsonPath("$.executions[0].minPriceFloor").value(1))
           .andExpect(jsonPath("$.executions[0].pricedPlayers").value(5))
-          .andExpect(jsonPath("$.executions[0].recomputedRows").value(3))
+          .andExpect(jsonPath("$.executions[0].recomputedRows").value(2))
           .andExpect(jsonPath("$.executions[0].carriedForwardRows").value(2))
           .andExpect(jsonPath("$.executions[0].notRepricedPlayers").value(1))
           .andExpect(jsonPath("$.executions[0].failedPlayers").value(0))
@@ -233,11 +234,49 @@ class QuoteControllerTest {
     }
 
     @Test
+    @DisplayName("POST repetidos del mismo día devuelven las identidades de ambas corridas")
+    void acceptsRepeatedHttpRuns() throws Exception {
+      // Arrange
+      QuoteExecution first = execution();
+      QuoteExecution second = execution();
+      org.springframework.test.util.ReflectionTestUtils.setField(second, "id", 2L);
+      when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(first, second);
+      // Act / Assert
+      for (int id = 1; id <= 2; id++) {
+        mvc.perform(
+                post("/api/quotes/recalculate")
+                    .header("Authorization", authorization)
+                    .contentType("application/json")
+                    .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.executionId").value(id))
+            .andExpect(jsonPath("$.quoteDate").value("2026-10-21"))
+            .andExpect(jsonPath("$.notRepricedPlayers").value(1))
+            .andExpect(jsonPath("$.failedPlayers").value(0));
+      }
+    }
+
+    @Test
     @DisplayName("Expone un motivo cerrado para fallos individuales sin detalles internos")
     void returnsFailedExecutionWithoutInternalDetails() throws Exception {
       // Arrange
-      QuoteExecution failed = execution();
-      failed.complete(5, 2, 2, 0, 1, Instant.parse("2026-10-21T10:00:05Z"));
+      QuoteExecution failed =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.MANUAL,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              0,
+              1,
+              Instant.parse("2026-10-21T10:00:00Z"),
+              Instant.parse("2026-10-21T10:00:05Z"));
+      org.springframework.test.util.ReflectionTestUtils.setField(failed, "id", 3L);
       when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(failed);
       // Act / Assert
       mvc.perform(
@@ -246,6 +285,7 @@ class QuoteControllerTest {
                   .contentType("application/json")
                   .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executionId").value(3))
           .andExpect(jsonPath("$.origin").value("MANUAL"))
           .andExpect(jsonPath("$.result").value("FAILED"))
           .andExpect(jsonPath("$.failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
@@ -276,8 +316,10 @@ class QuoteControllerTest {
               1,
               Instant.parse("2026-10-21T10:00:00Z"),
               Instant.parse("2026-10-21T10:00:05Z"));
+      org.springframework.test.util.ReflectionTestUtils.setField(automatic, "id", 2L);
+      QuoteExecution manual = execution();
       when(recalculationService.executions(LocalDate.of(2026, 10, 21)))
-          .thenReturn(List.of(automatic));
+          .thenReturn(List.of(automatic, manual));
       when(recalculationService.executions(LocalDate.of(2026, 10, 22))).thenReturn(List.of());
       // Act / Assert
       mvc.perform(
@@ -285,7 +327,9 @@ class QuoteControllerTest {
                   .header("Authorization", authorization)
                   .queryParam("date", "2026-10-21"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.executions.length()").value(1))
+          .andExpect(jsonPath("$.executions.length()").value(2))
+          .andExpect(jsonPath("$.executions[0].executionId").value(2))
+          .andExpect(jsonPath("$.executions[1].executionId").value(1))
           .andExpect(jsonPath("$.executions[0].origin").value("AUTOMATIC"))
           .andExpect(jsonPath("$.executions[0].result").value("FAILED"))
           .andExpect(jsonPath("$.executions[0].failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
@@ -350,21 +394,24 @@ class QuoteControllerTest {
     }
 
     private QuoteExecution execution() {
-      return new QuoteExecution(
-          LocalDate.of(2026, 10, 21),
-          QuoteExecutionOrigin.MANUAL,
-          ValuationStrategy.POSITIONAL_PERFORMANCE,
-          "v1",
-          new BigDecimal("0.10"),
-          new BigDecimal("0.10"),
-          1L,
-          5,
-          3,
-          2,
-          1,
-          0,
-          Instant.parse("2026-10-21T10:00:00Z"),
-          Instant.parse("2026-10-21T10:00:05Z"));
+      QuoteExecution execution =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.MANUAL,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              1,
+              0,
+              Instant.parse("2026-10-21T10:00:00Z"),
+              Instant.parse("2026-10-21T10:00:05Z"));
+      org.springframework.test.util.ReflectionTestUtils.setField(execution, "id", 1L);
+      return execution;
     }
   }
 }

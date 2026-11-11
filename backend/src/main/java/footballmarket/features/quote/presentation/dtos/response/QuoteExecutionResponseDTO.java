@@ -12,7 +12,8 @@ import java.time.LocalDate;
 /**
  * Resumen trazable de una corrida de cotizaciones.
  *
- * @param quoteDate fecha de cotización de la corrida: la fecha UTC del día de la ejecución
+ * @param executionId identidad única de la corrida
+ * @param quoteDate día UTC fijado al iniciar la corrida
  * @param origin origen manual o automático de la corrida
  * @param result resultado derivado de los fallos individuales
  * @param failureReason motivo cerrado de fallo individual, nulo si hubo éxito
@@ -24,7 +25,7 @@ import java.time.LocalDate;
  * @param pricedPlayers jugadores cotizados en la corrida, incluidos los que no se repreciaron
  * @param recomputedRows filas {@code RECOMPUTED} escritas
  * @param carriedForwardRows filas {@code CARRIED_FORWARD} escritas
- * @param notRepricedPlayers jugadores sin valuación posterior a su fecha de vigencia de referencia
+ * @param notRepricedPlayers jugadores omitidos por cotización vigente del mismo día o posterior
  * @param failedPlayers jugadores con fallo individual; el detalle interno no se expone
  * @param startedAt instante de inicio de la corrida
  * @param finishedAt instante de finalización de la corrida
@@ -33,6 +34,7 @@ import java.time.LocalDate;
     name = "QuoteExecutionResponse",
     description = "Resumen persistido de una corrida de cotizaciones")
 public record QuoteExecutionResponseDTO(
+    @Schema(description = "Identificador único de la corrida", example = "1") Long executionId,
     @Schema(description = "Fecha de cotización de la corrida", example = "2026-10-20")
         LocalDate quoteDate,
     @Schema(
@@ -65,8 +67,7 @@ public record QuoteExecutionResponseDTO(
     @Schema(description = "Filas CARRIED_FORWARD escritas", example = "12") int carriedForwardRows,
     @Schema(
             description =
-                "Jugadores sin valuación posterior a su fecha de vigencia de referencia, que no "
-                    + "se repreciaron",
+                "Jugadores omitidos por cotización vigente de fecha igual o posterior al día de la corrida",
             example = "3")
         int notRepricedPlayers,
     @Schema(description = "Jugadores con fallo individual", example = "0") int failedPlayers,

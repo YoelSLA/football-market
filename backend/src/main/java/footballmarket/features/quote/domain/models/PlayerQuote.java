@@ -77,10 +77,14 @@ public class PlayerQuote {
   @Column(name = "calculated_at", nullable = false)
   private Instant calculatedAt;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "execution_id")
+  private QuoteExecution execution;
+
   protected PlayerQuote() {}
 
   /**
-   * Crea una fila del historial con los invariantes de su origen.
+   * Crea exclusivamente una fila INITIAL; los otros orígenes requieren ejecución auditada.
    *
    * @param player jugador cotizable de la fila
    * @param effectiveDate fecha de vigencia de la fila
@@ -107,6 +111,35 @@ public class PlayerQuote {
       LocalDate sourceValuationDate,
       QuoteOrigin origin,
       Instant calculatedAt) {
+    this(
+        player,
+        effectiveDate,
+        price,
+        previousPrice,
+        multiplier,
+        score,
+        strategyName,
+        strategyVersion,
+        sourceValuationDate,
+        origin,
+        calculatedAt,
+        null);
+  }
+
+  /** Crea una fila auditada; solo INITIAL carece de referencia a una corrida. */
+  public PlayerQuote(
+      Player player,
+      LocalDate effectiveDate,
+      long price,
+      Long previousPrice,
+      BigDecimal multiplier,
+      BigDecimal score,
+      ValuationStrategy strategyName,
+      String strategyVersion,
+      LocalDate sourceValuationDate,
+      QuoteOrigin origin,
+      Instant calculatedAt,
+      QuoteExecution execution) {
     if (player == null
         || effectiveDate == null
         || multiplier == null
@@ -116,6 +149,9 @@ public class PlayerQuote {
     }
     if (price <= 0) {
       throw new InvalidQuoteException("El precio de la cotización debe ser mayor que cero");
+    }
+    if ((origin == QuoteOrigin.INITIAL) != (execution == null)) {
+      throw new InvalidQuoteException("Solo la cotización inicial carece de ejecución de origen");
     }
     this.assertOriginInvariants(
         origin,
@@ -136,6 +172,7 @@ public class PlayerQuote {
     this.sourceValuationDate = sourceValuationDate;
     this.origin = origin;
     this.calculatedAt = calculatedAt;
+    this.execution = execution;
   }
 
   /** Sustituye el cálculo diario completo sin cambiar la identidad, el jugador ni la fecha. */
@@ -154,6 +191,7 @@ public class PlayerQuote {
     this.sourceValuationDate = calculation.getSourceValuationDate();
     this.origin = calculation.getOrigin();
     this.calculatedAt = calculation.getCalculatedAt();
+    this.execution = calculation.getExecution();
   }
 
   private void assertOriginInvariants(

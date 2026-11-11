@@ -12,9 +12,5 @@ BEGIN
 END;
 $$;
 
-ALTER TABLE quote_executions DROP CONSTRAINT uq_quote_executions_date;
 CREATE UNIQUE INDEX uq_quote_executions_automatic_date
     ON quote_executions (quote_date) WHERE origin = 'AUTOMATIC';
-
-ALTER TABLE player_quotes DROP CONSTRAINT uq_player_quote;
-ALTER TABLE player_quotes ADD CONSTRAINT uq_player_quote UNIQUE (player_id, effective_date);

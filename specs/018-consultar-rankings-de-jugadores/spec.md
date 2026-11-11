@@ -1,5 +1,29 @@
 # Feature Specification: Consultar ranking de jugadores por score
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Preparación documental; IMPLEMENT AUTHORIZATION: NONE. Se reutiliza SPEC-018 y se preservan las evidencias históricas.
+
+- **FR-001**: Renombrar la consulta por score a `GET /api/rankings/score`. Ambos rankings —este y `GET /api/rankings/quote` de SPEC-016— se paginan en backend y reciben los filtros de tabla aprobados en SPEC-022: nombre, liga y posición. La aplicación de filtros, conteos, orden y selección de página se hace en backend, no sobre una descarga completa en frontend.
+- **FR-002**: La última ejecución persistida determina la estrategia del ranking por score, pero ya puede haber varias ejecuciones por día. CLARIFY debe fijar el desempate temporal determinista entre esas ejecuciones; la fecha sola deja de identificar la última.
+- **FR-003 / FR-006 / FR-007**: Preservar elegibilidad, score final persistido, orden descendente y desempate por ID. Los filtros no reasignan las posiciones oficiales globales; las posiciones de una página filtrada pueden tener saltos.
+- Ambos modos deben permitir obtener sus tres líderes globales sin filtros independientemente de la página filtrada. No se cambia la población del ranking por filtros del podio ni se recalculan scores o precios al leer.
+- Preservar JWT y errores seguros. El renombre es un cambio observable de contrato: PLAN debe actualizar consumidores, documentación OpenAPI y tests backend en conjunto; no se afirma que las rutas nuevas ya existan.
+
+**Aceptación US1–US3**: recorrer páginas sin duplicados bajo datos estables; encontrar por filtro un jugador fuera de la primera página; totales correspondientes al conjunto filtrado; conservar posiciones globales y Top 3 del modo sin filtrar. Sin datos, devolver una página vacía sin inventar posiciones; sin JWT, conservar rechazo. CLARIFY debe precisar parámetros/límites y forma paginada, además de la selección de última ejecución.
+
+Sustituye las prohibiciones anteriores de paginación/filtros y la garantía de una ejecución por fecha. La propiedad del ranking por cotización sigue en SPEC-016; SPEC-018 define score y coordina coherencia del contrato compartido con SPEC-022.
+
+**Impacto SDD**: plan, research, modelo, contrato, quickstart, tasks y checklists pendientes de revisión por impacto; ANALYZE anterior no acredita el delta. Autorizaciones históricas no habilitan este cambio; CODE REVIEW, TESTING y cierre pendientes para el alcance nuevo.
+
+**Validación de SPECIFY**: endpoints, alcance y aceptación definidos; paginación, filtros y última ejecución requieren CLARIFY. No se marcan checklists del revisor ni se acredita ANALYZE. Issue #19 CLOSED e item Done observados, correspondientes al alcance histórico. Seguimiento del delta PENDING, sin escritura remota.
+
+**Evidencia**: script real `--reuse`, `FEATURE_NUM=018`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`. CLARIFY pendiente; no se declara preparación completa ni implementación.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 <!-- MUST seguir Constitution y docs/development/sdd-workflow.md.
 Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
 manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,

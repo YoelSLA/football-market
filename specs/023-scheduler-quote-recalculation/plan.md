@@ -1,5 +1,34 @@
 # Implementation Plan: Recálculo automático programado de cotizaciones
 
+## Plan vigente de integración — 2026-11-11
+
+Fuente funcional: decisión de integración de `spec.md` y de SPEC-016. Diseño implementable común:
+[`integration-baseline.md`](integration-baseline.md), especialmente §1–3. Este encabezado y esa
+base sustituyen por impacto los supuestos incompatibles del plan de origen conservado abajo.
+
+- Cron diario `0 0 12 * * *`, UTC, configurable; sin nuevas dependencias ni infraestructura.
+- Reutilizar núcleo diario de SPEC-016 con score disponible antiguo o reciente; fecha efectiva de
+  corrida UTC, no de score. Sin score arrastrar. Publicar puede actualizar la fila del mismo día.
+- Una fila jugador-fecha, identidad preservada; reemplazo atómico del cálculo y de `execution_id`.
+  Conservar bloqueo por jugador de SPEC-016 y protección solo contra fechas posteriores; sin lock
+  global nuevo. Mantener inicialización aun si cambia el origen de INITIAL.
+- Manuales ilimitadas; reservar contexto automático confirmado bajo índice parcial único por fecha.
+  Contexto abierto automático consume cuota; el scheduler traduce únicamente ese conflicto a omisión.
+- `QuoteExecutionRecorder` conserva contextos y cierres independientes; solo finalizadas en la
+  consulta. `executionId` público contractual; DTO y Mapper deben reflejarlo sin detalles técnicos.
+- Reconciliar ambas migraciones según base común: no repetir retirada de las mismas restricciones,
+  conservar FK/contadores/índices de SPEC-016 y añadir unicidad automática. No editar historial
+  inmutable ni eliminar datos automáticamente; fallo Flyway humano sigue sin salida diagnóstica.
+- Las remediaciones específicas están en T043–T046; núcleo/esquema compartidos en T081–T086 de
+  SPEC-016. No implementar dos soluciones distintas para el mismo archivo.
+
+**Constitution Check documental**: solución con stack existente, responsabilidades separadas,
+cardinalidad y trazabilidad explícitas, sin versiones intradiarias ni recuperación adicional.
+Preservar migraciones integradas y trabajo del merge. No se acredita implementación combinada,
+ANALYZE ni gates humanos; no se ejecutan tests ni build en esta alineación documental.
+
+## Plan de origen de SPEC-023 — antecedente, no aplicar reglas sustituidas
+
 **Branch**: `feat/023-daily-quote-scheduling` | **Date**: 2026-11-11 | **Spec**: [`spec.md`](spec.md)
 
 <!-- MUST usar rama real según Constitution §7 y seguir docs/development/sdd-workflow.md.

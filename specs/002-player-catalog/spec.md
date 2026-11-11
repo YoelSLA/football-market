@@ -1,5 +1,28 @@
 # Feature Specification: Catálogo de jugadores
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Preparación documental autorizada; IMPLEMENT AUTHORIZATION: NONE. Se reutiliza SPEC-002, sin nueva identidad. Los cierres históricos se conservan; esta reapertura material aplica el workflow vigente solo al delta.
+
+### Alcance y aceptación (US1)
+
+- El listado, sus conteos y las opciones de filtros globales incluyen únicamente jugadores con métricas persistidas: al menos una métrica informada en su último registro, conforme a SPEC-016 FR-003. Cero es un valor informado; una fila vacía no hace elegible al jugador. No se exige score ni cotización para aparecer en catálogo.
+- Aplicar elegibilidad en backend antes de búsqueda, filtros, orden y paginación; las opciones globales provienen de todo el universo elegible, no de la página actual. Se preservan los demás criterios de visibilidad y seguridad.
+- La consulta de detalle utiliza la misma elegibilidad: un ID sin métricas no permite eludir la exclusión navegando directamente. No se elimina el jugador ni se alteran sincronización, identidad o métricas.
+- **Aceptación**: un jugador con métricas aparece en listado y puede consultarse por ID; uno sin métricas no aparece, no aporta opciones exclusivas de filtros y no es accesible por detalle. Totales y páginas se calculan después de excluirlo. Jugador con métricas y sin score sigue siendo visible.
+
+Este bloque sustituye las exclusiones previas de detalle solo en cuanto a elegibilidad y amplía el contrato de lectura documentado en `contracts/catalog-query.md`; no autoriza rediseñar SPEC-009 ni modificarla. La decisión sobre la respuesta exacta para detalle no elegible se resuelve en CLARIFY reutilizando el contrato existente.
+
+**Impacto SDD**: revisar contratos, plan, modelo, research, quickstart, tasks y checklists afectados antes de ANALYZE. No se acreditan implementación ni aprobaciones del delta. CODE REVIEW, TESTING y cierre pendientes para el cambio; evidencia histórica intacta.
+
+**Validación de SPECIFY**: población, límites y aceptación definidos; respuesta de detalle no elegible pendiente de CLARIFY. Sin modificar marcadores históricos del revisor. Issue #55 CLOSED observada; no se encontró item de esa issue en los 29 items recuperados del proyecto. Seguimiento del delta PENDING; no se afirma sincronización ni se reabre remotamente.
+
+**Evidencia**: mecanismo real `--reuse`, `FEATURE_NUM=002`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; rama actual preservada. CLARIFY pendiente, preparación global incompleta.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 ## Nota de evolución contractual — preparación de SPEC-005
 
 El usuario autorizó el 2026-10-25 preparar en SPEC-005 búsqueda/filtros globales por nombre/liga/equipo/posición/nacionalidad, orden explícito por nombre y datos deportivos reales por lote. Contrato propuesto en [contracts/catalog-query.md](contracts/catalog-query.md). No cambia identidad interna, visibilidad, sincronización, permisos ni el orden ID predeterminado de clientes API antiguos. El enriquecimiento deportivo es opcional y el orden nombre ascendente lo solicita explícitamente la nueva UI. Las obligaciones/US/tareas del rediseño viven en SPEC-005, no se duplican aquí. No acredita implementación ni reapertura de aprobaciones históricas ajenas al cambio.

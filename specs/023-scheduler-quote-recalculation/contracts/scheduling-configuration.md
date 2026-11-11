@@ -1,5 +1,24 @@
 # Contrato: programación y configuración del recálculo automático
 
+## Contrato vigente de integración — 2026-11-11
+
+Base funcional y técnica: [integración](../integration-baseline.md). Conservar configuración
+`market.quote.strategy` y `market.quote.schedule.{cron,enabled}`; cron por defecto diario
+`0 0 12 * * *`, UTC fija, configurable. El disparador mantiene dependencia de interfaz y
+properties, salida silenciosa deshabilitado, y eventos triggered/skipped/rejected/failed.
+
+El núcleo común de SPEC-016 confirma contextos antes de publicar, permite actualización diaria con
+score antiguo y guarda la FK de la última ejecución productora. La cuota automática se impone en
+base al reservar contexto confirmado, incluso si no termina; las manuales no consumen esa cuota.
+`ExecutionAlreadyExistsException` se conserva solo para ese conflicto. Un fallo completo puede
+dejar contexto sin fin y cotizaciones confirmadas: el scheduler no elimina ni compensa y la
+consulta no presenta ese contexto como resultado exitoso. No añadir recuperación ni lock global.
+
+Estos puntos sustituyen las menciones incompatibles del contrato de origen siguiente; la
+configuración, dependencias y catálogo de eventos compatibles se conservan.
+
+## Contrato de origen — antecedente, no aplicar reglas sustituidas
+
 **Feature**: `023-scheduler-quote-recalculation`
 **Spec**: [`spec.md`](../spec.md) · **Data model**: [`../data-model.md`](../data-model.md)
 

@@ -1,5 +1,85 @@
 # Quickstart: validación de la cotización de tokens
 
+## Guía vigente — integración 2026-11-11
+
+Base común: [integración](../023-scheduler-quote-recalculation/integration-baseline.md).
+Las evidencias locales históricas de abajo no acreditan esta combinación; no ejecutar mientras el
+merge siga en conflicto. Tests y aplicación de migraciones son responsabilidad del usuario.
+
+Estos escenarios sustituyen los incompatibles de la guía histórica siguiente. **Ejecución exclusivamente humana tras IMPLEMENT autorizado**; PLAN no ejecuta aplicación, SQL, builds ni tests. Contrato objetivo en [contracts/quotes-http.md](contracts/quotes-http.md); modelo en [data-model.md](data-model.md).
+
+### Preparación y comandos para el usuario
+
+JDK 21 y dependencias configuradas; Docker disponible para pruebas PostgreSQL/Testcontainers. No usar datos ni secretos productivos. Desde `backend/`, los comandos de pruebas previstos son:
+
+```bash
+./gradlew test --tests 'footballmarket.features.quote.*'
+```
+
+Para validación manual sobre entorno de desarrollo descartable, preparar DB/JWT por los mecanismos existentes y arrancar con `./gradlew bootRun` desde `backend/`. `$TOKEN` representa JWT local y `$API` la URL base (por ejemplo `http://localhost:8080/api`); usar un playerId real elegible. No compartir el token ni registrarlo. Inicializar con fecha anterior al día controlado de prueba para poder recotizar; inicialización del mismo día se comprueba en escenario separado.
+
+```bash
+curl -s -X POST "$API/quotes/recalculate" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"strategy":"POSITIONAL_PERFORMANCE"}'
+curl -s -H "Authorization: Bearer $TOKEN" "$API/quotes/executions?date=2026-11-10"
+curl -s -H "Authorization: Bearer $TOKEN" "$API/rankings/quote?page=0&size=8&name=jugador"
+curl -s -H "Authorization: Bearer $TOKEN" "$API/rankings/quote?page=0&size=3"
+```
+
+Sustituir fecha/nombre por los datos preparados. La consulta devuelve resúmenes finalizados con IDs distintos y orden inicio/ID descendente. Un POST manual repetido devuelve 200 y puede reemplazar cotizaciones del día; no se omite por fecha igual ni devuelve `EXECUTION_ALREADY_EXISTS` por repetición manual.
+
+### Escenarios verificables
+
+| Requisito | Preparación/acción | Resultado esperado |
+| --- | --- | --- |
+| FR-005/027 | Mismo score en días UTC D y D+1, usando Clock controlado en tests | Un ajuste cada día sobre el precio anterior; fecha de score preservada |
+| FR-008 | Jugador con métricas sin score de estrategia | Fila diaria CARRIED_FORWARD, multiplicador 1, precio repetido |
+| FR-024/060 | Dos manuales del mismo día con estrategias/parámetros distintos | IDs distintos; una fila por jugador-día con identidad preservada, último precio válido, ejecución referenciada y último instante; no hay límite de un ajuste |
+| FR-026 | Inicialización en D, recálculo en D y repetir inicialización | Una fila diaria actualizada, mercado sigue inicializado, initialize no sobrescribe el cálculo ni inserta otro INITIAL |
+| FR-060/062 | Fallo individual al reemplazar y reintento manual | El fallo conserva íntegro el cálculo previo; reintento válido puede sustituirlo sin duplicar |
+| CLARIFY medianoche | Clock cruza UTC durante el recorrido | Todas las nuevas filas conservan el día fijado al iniciar |
+| Corrección I1 / aceptación 6 | Con Clock y barreras controlados, D+1 publica a un jugador antes de que lo procese la corrida atrasada de D | D lo omite en notRepricedPlayers; ninguna fila atrasada, ningún ajuste adicional y cotización de D+1 intacta |
+| Aceptación 4 | Score nuevo tras primera cotización de D y otra manual de D | Actualiza la misma fila, precio y trazabilidad del último cálculo; también actualiza su FK de ejecución |
+| Cuota automática | Manual antes y después de automática; segundo disparo automático en D | Manuales aceptadas; solo una automática registrada y disparo adicional omitido |
+| Migraciones integradas | Aplicar en PostgreSQL aislado la secuencia de ambas migraciones con datos compatibles y comprobar colisiones en otro escenario | Sin DROP duplicados; unicidad diaria/FK e índice automático correctos; ante colisiones detener sin limpieza |
+| FR-039 | Precios iguales, ID distintos, suficientes datos para varias páginas | Orden precio DESC/ID ASC; posiciones únicas y globales |
+| FR-039 filtros | Buscar jugador de página posterior y combinar nombre/liga/posición | Búsqueda backend en universo completo; totales filtrados; posiciones no renumeradas |
+| Podio | Cambiar filtros de tabla | Consulta independiente sin filtros mantiene Top 3 global bajo datos estables |
+| HTTP | Página negativa, tamaño 0/101, liga no positiva, JWT ausente | 400 por parámetros inválidos; 401 por autenticación; errores seguros |
+| Vacíos | Sin clasificados, sin coincidencias y página fuera de rango | Página vacía con totales definidos por contrato, sin filas inventadas |
+| Mercado | Consultar vigente e historial tras recálculo | Mismo precio vigente consumido por QuoteSource; sin cambios en saldos/tenencias ni publicaciones congeladas |
+
+Verificar auditoría por FK a ejecución en pruebas Repository, no SQL desde tests Service. Model: invariantes y fórmula; Service: retorno/estado por API pública, fixtures solo Arrange; Controller: status y shape exactos/OpenAPI; Repository: unicidad real, SQL de posiciones y filtros. No repetir exhaustivamente escenarios en E2E. No se planifican tests frontend.
+
+TD-024 sigue pendiente: un contexto sin cierre no acredita un resumen final correcto ni una recuperación satisfactoria. La aceptación de reintentos no se usa como prueba de solución de esa deuda. El scheduler diario y consumo UI requieren sus propias specs preparadas.
+
+### Evidencia de IMPLEMENT parcial
+
+**Estado vigente tras reanudación:** backend diario y ranking paginado implementados.
+Último `./gradlew.bat build -x test` observado: BUILD SUCCESSFUL en 4 s, 12 tareas
+accionables (4 ejecutadas, 8 actualizadas), 29 migraciones con layout válido y 144
+clases de test clasificadas estáticamente. No se ejecutaron ni compilaron pruebas;
+el build no inicia la aplicación ni aplica Flyway a datos existentes. Los fallos de
+formato de intentos intermedios fueron corregidos antes de este resultado.
+T077 conserva únicamente el retiro de ruta histórica coordinado con SPEC-022;
+el selector de SPEC-018 se mantiene pendiente de su bloque (TD-039), sin bloquear
+el trabajo independiente. Informe y comandos humanos en
+[daily-implementation-review.md](daily-implementation-review.md).
+
+**Primer intento — evidencia histórica superada por la reanudación:**
+
+Se generó y escribió `V20261110235437__daily_quote_recalculation.sql` (T055), sin
+aplicarla a una base. Tras inspeccionar sus dependencias, se ejecutó desde `backend/`
+`./gradlew.bat build -x test`: BUILD SUCCESSFUL; layout de 29 migraciones válido,
+sin ejecución de tests. Este build no demuestra aplicación del esquema ni aceptación
+funcional. T056–T080 siguen pendientes; no desplegar este cambio parcial como delta
+terminado. Autorización y decisión pendiente del selector de SPEC-018 documentadas
+en [implementation-progress.md](implementation-progress.md). No se ejecutaron
+las pruebas ni los escenarios humanos de esta guía.
+
+---
+
+## Guía histórica — no ejecutar expectativas sustituidas
+
 **Feature**: `016-ejecutar-recalculo-manual-de-cotizaciones`
 **Spec**: [`spec.md`](spec.md) · **Contrato**: [`contracts/quotes-http.md`](contracts/quotes-http.md)
 

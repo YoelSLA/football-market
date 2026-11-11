@@ -2,9 +2,78 @@
 
 **Feature Branch**: `feat/023-daily-quote-scheduling`
 
+## Decisión vigente de integración con SPEC-016 — 2026-11-11
+
+**Autor**: usuario de la sesión activa, tras comparar ambas implementaciones: «vayamos con la regla de la spec023» y «a mi solo me importa conservar un precio por fecha», autorizando combinar ambas especificaciones.
+
+Esta decisión sustituye las reglas incompatibles de los bloques anteriores y de la revisión de
+SPEC-016 del 2026-11-10, sin eliminar su evidencia histórica:
+
+- **FR-001 / SC-001**: programación diaria configurable a las **12:00 UTC** por defecto.
+- **FR-006 / FR-015**: corridas manuales ilimitadas y como máximo una automática registrada por
+  fecha UTC. Una manual no consume la cuota automática. Otro disparo automático de esa fecha se
+  omite con registro operativo; se conserva `EXECUTION_ALREADY_EXISTS` para ese conflicto automático.
+- **FR-002 / FR-003**: ambas entradas reutilizan las reglas financieras diarias de SPEC-016:
+  último score persistido disponible de la estrategia, aunque no sea nuevo; sin score se arrastra
+  el precio. No se recalculan scores ni se duplican fórmulas en el scheduler.
+- **FR-014 / SC-009**: una sola fila por jugador y fecha UTC de cotización, sin distinguir origen
+  ni estrategia. Si una ejecución posterior vuelve a calcular ese jugador y fecha, actualiza la
+  fila existente con el último cálculo válido, preservando identidad, jugador y fecha. La mera
+  existencia de la fila diaria no causa omisión. No se conserva cada precio intermedio intradiario.
+- La fecha de vigencia es la fecha UTC fijada al iniciar la corrida; la fecha del score se conserva
+  aparte como auditoría. Una corrida de una fecha anterior a la cotización vigente no sobrescribe
+  una fecha posterior; la igualdad de fecha sí permite actualización.
+- La fila diaria referencia la ejecución que produjo su último cálculo. Al actualizar precio,
+  estrategia, origen e instante, se actualiza también esa referencia. Cada corrida conserva su
+  propio resumen y parámetros; esto no exige almacenar versiones de cada precio intradiario.
+- SPEC-016 conserva el cálculo, persistencia, consultas y ranking paginado; SPEC-023 conserva la
+  programación y el límite automático. No se crea otra spec ni se fusionan sus identidades.
+- El scheduler sigue sin compensar cotizaciones ni recuperar transacciones; no se declara resuelta
+  TD-024 ni se añade exclusión global de corridas como requisito.
+
+**Aceptación integrada**: dos manuales de la misma fecha tienen resúmenes independientes y una sola
+cotización diaria del jugador con el último cálculo válido y su ejecución de origen; manuales antes
+y después de una automática siguen permitidas; una segunda automática se omite sin cotizar. Las
+consultas diaria y vigente no deben elegir entre filas duplicadas. Se conserva el ajuste diario con
+score antiguo y el ranking de SPEC-016.
+
+**Impacto SDD**: deben reconciliarse planes, modelos, contratos, research, quickstarts, tareas y
+cobertura de ambas specs con esta decisión, y repetirse ANALYZE sobre la base combinada antes de
+resolver funcionalmente el código del merge. Los análisis y resultados de tests anteriores no
+acreditan la integración; no se aprueban CODE REVIEW, TESTING ni cierre. El usuario informa tests
+satisfactorios salvo Flyway, cuyo diagnóstico sigue pendiente de salida. La autorización de combinar
+no se interpreta como aceptación funcional ni como autorización de cierre.
+
+Base conjunta de diseño y cobertura para ambos ANALYZE: [`integration-baseline.md`](integration-baseline.md).
+Los apartados funcionales siguientes reflejan esta integración; la revisión del 2026-11-10 se
+conserva expresamente como antecedente, no como requisito activo.
+
+## Revisión de la rama SPEC-016 — 2026-11-10 (antecedente superado por la decisión de integración)
+
+**Status vigente del cambio**: Draft. Solo preparación documental; IMPLEMENT AUTHORIZATION: NONE. Este bloque sustituye las reglas anteriores incompatibles y conserva el resto como antecedente.
+
+- **FR-001 / SC-001**: Programación diaria en UTC, configurable, en lugar de semanal. Se conserva como supuesto la hora 00:00 UTC; CLARIFY debe confirmar que no se requiere cambiarla.
+- **FR-002 / FR-003**: Reutilizar el núcleo de SPEC-016 actualizado: aplicar diariamente el último score disponible aunque no sea nuevo; mantener el precio si no existe score para la estrategia. El scheduler no calcula scores ni duplica reglas financieras.
+- **FR-006**: Admitir varias ejecuciones por fecha, manuales o automáticas, sin omitir el disparo únicamente porque exista una ejecución previa. La unicidad es de cotización por jugador y día UTC, garantizada por SPEC-016, no de ejecución por fecha. No se incorpora exclusión global adicional.
+- **FR-004 / FR-005**: Cada corrida conserva identidad, origen, fecha y resultado diferenciables; consultar por fecha permite distinguir las múltiples ejecuciones. Los errores siguen registrándose sin compensación a cargo del scheduler.
+
+**Aceptación US1–US3**: dos días consecutivos con el mismo score producen el ajuste diario; sin score se conserva el precio; una ejecución manual posterior a la automática el mismo día es admitida pero no recotiza jugadores ya procesados; los pendientes pueden completarse sin duplicados. Se conservan mercado inicializado, seguridad, trazabilidad y responsabilidades de recuperación existentes.
+
+**Impacto SDD**: sustituidas las aclaraciones, escenarios, supuestos y criterios que exigen frecuencia semanal, unicidad de ejecución diaria o rechazo de reintento con resumen previo. Plan, configuración contractual, modelo, research, quickstart, tasks y checklists afectados pendientes de revisión; ANALYZE previo no vigente para el delta. Autorizaciones históricas no cubren el cambio; CODE REVIEW, TESTING y cierre pendientes para este alcance, sin borrar su evidencia.
+
+**Validación de SPECIFY**: alcance, escenarios y límites definidos; hora diaria pendiente de confirmar en CLARIFY. Los checklists históricos del revisor no se marcan para el delta. Issue #40 CLOSED e item Done observados para el alcance anterior; seguimiento del cambio PENDING, sin escritura remota.
+
+**Evidencia**: script real con `--reuse`, `FEATURE_NUM=023`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; no cambio de rama ni descarte de trabajo. CLARIFY pendiente; no se acredita preparación completa.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
+**Feature Branch histórica**: `feat/023-scheduler-quote-recalculation`
+
 **Created**: 2026-11-03
 
-**Status**: Ready for implementation
+**Status**: Draft
 
 **Input**: Programar recálculo automático de cotizaciones (issue #40, requisito REQ-S2-11-B). El sistema ya calcula y persiste cotizaciones con historial trazable mediante ejecución manual (SPEC-016) sobre valuaciones estadísticas (SPEC-013). Esta feature añade la ejecución periódica y desatendida del recálculo, sin modificar la lógica financiera existente.
 
@@ -89,7 +158,7 @@ Como responsable del mercado, quiero conocer los errores o rechazos del recálcu
 - El mercado no está inicializado al momento del disparo: el intento queda en el registro operativo y la fecha sigue disponible para reintento manual.
 - Una ejecución falla: el scheduler registra el error y no altera los efectos ni la recuperación del recálculo existente.
 - La programación se evalúa en UTC fija, por lo que no hay cambio de horario estacional que desplace el disparo.
-- No hay valuaciones disponibles o actualizadas al momento del disparo: se conserva el comportamiento existente de SPEC-016 (arrastrar el precio cuando no hay valuación y no repreciar cuando no hay valuación posterior a la referencia). Este caso no añade un requisito nuevo a SPEC-023.
+- No hay score para la estrategia: arrastrar el precio. Si existe un score antiguo, aplicar el cálculo diario de SPEC-016; su antigüedad no impide publicar ni actualizar la fila del día. El scheduler no añade reglas financieras.
 
 ## Requirements *(mandatory)*
 
@@ -101,14 +170,14 @@ Los identificadores FR-007 y FR-008 se retiraron durante la revisión; no se reu
 - **FR-002**: El sistema MUST aplicar a la ejecución automática las mismas reglas de valuación, estrategia y parámetros que la ejecución manual. La estrategia MUST leerse de una variable de configuración del mercado; mientras el administrador no la modifique, MUST usarse la estrategia allí definida. Los parámetros de ajuste MUST provenir de la misma configuración del mercado.
 - **FR-003**: El sistema MUST NOT definir, duplicar ni modificar fórmulas de valuación; la lógica financiera existente es la única fuente de verdad.
 - **FR-004**: El sistema MUST registrar cada ejecución automática completada en el registro persistido de ejecuciones existente, con, al menos, identificador único, fecha y hora en UTC, origen automático o manual, resultado (éxito o fallo), alcance procesado y motivo de fallo cuando corresponda. Un fallo completo se registra operativamente conforme a FR-013. El resultado y el motivo de fallo MUST poder derivarse de forma determinista de los datos persistidos de la ejecución, sin depender de columnas duplicadas.
-- **FR-005**: El sistema MUST permitir identificar y consultar el registro de cada ejecución por fecha mediante el mecanismo de consulta de ejecuciones ya existente, sin introducir una consulta histórica nueva. La retención de esos registros MUST ser indefinida, junto con el historial de cotizaciones.
+- **FR-005**: El sistema MUST permitir identificar y consultar por fecha todos los resúmenes finalizados con `executionId`, por inicio e ID descendentes, mediante la consulta existente y sin ruta histórica nueva. Un contexto sin cierre no se presenta como éxito ni como resumen finalizado. La retención de registros MUST ser indefinida junto con las cotizaciones diarias.
 - **FR-006**: El sistema MUST permitir cualquier cantidad de ejecuciones manuales en una fecha UTC, registrando cada una independientemente. El scheduler MUST ejecutar como máximo una corrida automática por fecha UTC y MUST omitir y registrar operativamente cualquier disparo automático adicional de esa fecha, incluso si también hubo ejecuciones manuales.
 - **FR-009**: La ejecución automática MUST completarse sin requerir ninguna acción de un operador.
-- **FR-010**: El resultado expuesto de una ejecución MUST NOT incluir trazas, mensajes técnicos ni identificadores internos.
+- **FR-010**: El resultado MUST NOT incluir trazas, mensajes técnicos ni identificadores internos ajenos al contrato. `executionId` es la identidad pública contractual de la corrida, compartida con SPEC-016, no un detalle interno accidental.
 - **FR-011**: La infraestructura de programación MUST quedar planteada para reutilizarse en otros procesos batch, en particular #41, sin implementar #41 en esta feature.
 - **FR-012**: Cuando el mercado no esté inicializado, el sistema MUST rechazar la ejecución de forma controlada, MUST NOT alterar cotizaciones existentes ni persistir una ejecución para ese intento, y MUST registrar el intento en el registro operativo con su motivo. Las ejecuciones manuales posteriores MUST seguir permitidas tras la inicialización.
 - **FR-013**: Si la invocación automática del recálculo falla, el scheduler MUST registrar el error en el registro operativo. La persistencia, integridad, compensación, recuperación y disponibilidad de reintentos corresponden al caso de uso existente de SPEC-016 y no son responsabilidad adicional del scheduler; TD-024 permanece pendiente.
-- **FR-014**: Cuando otra ejecución recalcule la cotización de un jugador que ya tiene una cotización para la misma fecha UTC, el sistema MUST actualizar la fila existente con el último cálculo y MUST NOT crear una fila duplicada para ese jugador y día.
+- **FR-014**: Otra ejecución del mismo jugador y fecha UTC MUST actualizar la única fila con el último cálculo válido y su referencia de ejecución, precio anterior, multiplicador, score, estrategia/versión, fecha fuente, origen e instante; MUST preservar ID, jugador y fecha y MUST NOT crear duplicados ni versiones intradiarias. La fecha de vigencia es el día UTC fijado al iniciar corrida, no la fecha del score. Sin score se arrastra; score antiguo no impide calcular. Si la fecha vigente es posterior a la de la corrida, omitir sin alterar ese historial; igualdad permite reemplazar.
 - **FR-015**: El registro de ejecuciones MUST admitir múltiples registros para una misma fecha UTC e identificar cada corrida de forma independiente, sin limitar las ejecuciones manuales por fecha.
 
 ### Key Entities *(include if feature involves data)*
@@ -131,7 +200,7 @@ Los criterios se verifican por resultado observable (cumple o no cumple) en los 
 - **SC-003**: Si el caso de uso falla durante una invocación automática, el scheduler registra el error sin compensar ni modificar por su cuenta las cotizaciones.
 - **SC-004**: El administrador puede solicitar y registrar cualquier cantidad de ejecuciones manuales en la misma fecha UTC, aunque ya existan ejecuciones automáticas o manuales.
 - **SC-005**: La ejecución programada se completa de principio a fin sin intervención de un operador.
-- **SC-006**: Los resultados expuestos no contienen trazas, mensajes técnicos ni identificadores internos.
+- **SC-006**: Los resultados no contienen trazas, mensajes técnicos ni IDs internos no contractuales; cada resumen finalizado expone su `executionId` contractual.
 - **SC-007**: Un disparo automático adicional omitido porque ya hubo una ejecución automática en esa fecha deja constancia operativa.
 - **SC-008**: Ante un fallo del caso de uso, la ejecución automática deja constancia operativa del error; la persistencia y los reintentos conservan el comportamiento existente del recálculo.
 - **SC-009**: Tras dos o más ejecuciones en una fecha UTC, cada jugador recalculado tiene como máximo una fila de cotización para ese día, cuyo valor corresponde al último cálculo realizado.
@@ -140,7 +209,7 @@ Los criterios se verifican por resultado observable (cumple o no cumple) en los 
 ## Assumptions
 
 - SPEC-013 (#38) y SPEC-016 (#39) están cerradas y su comportamiento está disponible, según confirmación del equipo del 2026-11-04; la actualización de su campo `Status` para reflejar ese cierre queda pendiente en los artefactos correspondientes.
-- La ejecución manual de recálculo (SPEC-016) funciona correctamente y se asume operativa; esta especificación no la modifica ni la verifica.
+- La integración usa el núcleo diario de SPEC-016 y debe verificar su compatibilidad con la entrada automática; no se presume correcta una combinación de ramas sin revisar ni probar. Fórmulas y ranking permanecen bajo responsabilidad de SPEC-016.
 - Se permiten ejecuciones manuales ilimitadas en una fecha UTC. El scheduler automático realiza como máximo una ejecución por fecha UTC; disparos automáticos adicionales se omiten y registran operativamente.
 - La cadencia es diaria a las 12:00 UTC y es ajustable por configuración; al evaluarse en UTC no hay horario estacional que desplazar.
 - La estrategia y los parámetros de la ejecución automática se definen por configuración y el administrador puede cambiarlos sin modificar la lógica de negocio ni las fórmulas de valuación.

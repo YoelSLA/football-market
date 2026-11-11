@@ -237,3 +237,43 @@ límite no clasificado (C2).
 - **Informe**: `daily-implementation-report.md` contiene el Code Review Report completo, inventario de cambios incluidos tests, decisiones, riesgos, orden de revisión, checklist humano, cobertura y comandos exactos de pruebas pendientes para el usuario. El informe histórico se conserva.
 - **Hooks y límites**: `.specify/extensions.yml` sigue ausente, sin hooks pre/post a ejecutar. No se ejecutaron fases posteriores, handoffs, commits, push ni cambios de seguimiento remoto.
 - **Estado**: IMPLEMENT entregada; `spec.md` conserva `Ready for implementation`. CODE REVIEW, TESTING y cierre pendientes. Seguimiento remoto no verificado; sincronización PENDING, sin afirmar `In Review`, `Approved` ni `Done`.
+
+## Decisión humana para integrar SPEC-016 y SPEC-023 — 2026-11-11
+
+- **Autor y evidencia**: usuario de la sesión activa: «vayamos con la regla de la spec023», «a mi solo me importa conservar un precio por fecha» y «combina ambas spec. Para luego hacer el merge».
+- **Regla elegida**: última cotización válida por jugador-fecha mediante actualización de la fila y de su referencia de ejecución; conservar el cálculo diario y ranking de SPEC-016 y el cron 12:00 UTC y cuota automática de SPEC-023. No conservar precios intermedios intradiarios.
+- **Persistencia**: decisión incorporada en `spec.md` de ambas funcionalidades, conservando requisitos anteriores como antecedentes y declarando explícitamente las sustituciones.
+- **Impacto**: el ANALYZE anterior de cada rama no acredita la combinación. Revisión de artefactos derivados y nuevo ANALYZE pendientes antes de resolver funcionalmente el código en conflicto. No se ejecutó otra fase ni se aprobó revisión, testing o cierre.
+- **Git**: cambios previos de SPEC-023 conservados en `7fe1d4b`, publicado en `origin/feat/023-daily-quote-scheduling`. Merge de `docs/016-daily-quote-recalculation-spec` iniciado y pendiente; no se completa ni publica la integración en esta operación documental.
+- **Pruebas humanas**: el usuario informa que pasaron los tests salvo Flyway; salida y causa de ese fallo no aportadas. Esa evidencia no se extiende al código integrado; TESTING permanece pendiente.
+
+## Alineación documental conjunta autorizada — 2026-11-11
+
+- **Autor y alcance**: usuario de la sesión activa: «alinees ambas spec para luego procegir al analyze, tenes mi autorizacion para modificar la spec016». Se alinean ambas carpetas para preparar un nuevo ANALYZE, no se ejecuta esa fase ni IMPLEMENT en esta operación.
+- **Base persistida**: `integration-baseline.md` contiene decisiones, reparto de responsabilidades, diseño integrado, secuencia DDL, criterios y mapa de cobertura para que los dos análisis lean la misma base sin cambios intermedios. No es una tercera spec ni un informe de análisis.
+- **Artefactos**: ambas specs, planes, research, modelos, contratos, quickstarts y tareas alineados. T081–T086 de SPEC-016 y T043–T046 de SPEC-023 pendientes; tareas anteriores conservan sus IDs y avance como evidencia de origen, no de integración. T077 con SPEC-022 sigue pendiente.
+- **Reglas sustituidas**: primera cotización inmutable, omisión por igualdad de fecha/score antiguo, automática ilimitada, eliminación total de `ExecutionAlreadyExistsException` y ocultación de `executionId` contractual. Se conservan parámetros financieros, ranking y límites de transacciones/recuperación.
+- **Límites**: sin código, SQL, tests ni marcadores de checklist modificados; sin tests/build, commits, push, fases posteriores ni cierre del merge. No se atribuye nueva aprobación al revisor. El fallo humano de Flyway sigue pendiente de salida, sin causa ni solución supuestas.
+- **Estado siguiente**: ejecutar por encargo ANALYZE para SPEC-016 y SPEC-023 con contexto conjunto y sin corregir entre ambos. Los resultados previos no acreditan esta integración; CODE REVIEW, TESTING y cierre permanecen pendientes; seguimiento remoto PENDING, no modificado.
+
+## Corrección documental C1/L1 autorizada — 2026-11-11
+
+- **Autor y evidencia**: usuario de la sesión activa, tras recibir el ANALYZE conjunto: «Mas que reevaluacion, quiero que lo corrigas. Por L1 tambien podes corregirlo».
+- **C1**: corregidos criterios y justificaciones incompatibles en `checklists/data.md` de SPEC-016 y `checklists/quality.md`/`concurrency-integrity.md` de SPEC-023: último cálculo válido, score antiguo utilizable, actualización atómica, ID contractual, cuota solo automática y contexto confirmado con cierre independiente. Contraste documental actual y justificaciones históricas conservados en esos archivos; marcadores e IDs intactos y ninguna aprobación humana nueva atribuida.
+- **L1**: corregidas las 18 referencias `contracts/...` relativas a los checklists de SPEC-023, usando `../contracts/`; las referencias actualizadas también apuntan a los encabezados de integración donde procede.
+- **Coherencia**: ambos `tasks.md` y `integration-baseline.md` referencian la corrección, sin afirmar que un nuevo ANALYZE haya pasado. No se modifica alcance funcional, código, tests, SQL ni otros conflictos del merge.
+- **Límites**: corrección separada y posterior a ANALYZE, no corrección dentro del comando ni loop autónomo. Sin tests/build, commits, push, merge finalizado ni escrituras remotas. CODE REVIEW, TESTING y cierre pendientes. Siguiente operación: repetir ambos ANALYZE por encargo sobre la base corregida.
+
+## Resultado ANALYZE y autorización de integración — 2026-11-11
+
+- **Evidencia de ANALYZE**: ambas specs se analizaron en la misma sesión y sobre la misma base documental, sin cambios entre ejecuciones; resultado comunicado al usuario: 0 hallazgos nuevos, 0 blockers, C1/L1 corregidos, 8/8 grupos de integración con cobertura y 10 tareas pendientes. Prerrequisitos mediante modo oficial `--paths-only` y lectura de artefactos, sin persistir selección de feature. Sin hooks de extensiones, tests ni escrituras dentro del análisis.
+- **Registro**: esta evidencia se persiste ahora fuera del comando ANALYZE, por solicitud del usuario; los informes y estados anteriores se conservan como históricos. No se atribuyen tests, revisión ni cierre aprobados.
+- **IMPLEMENT AUTHORIZATION**: usuario de la sesión activa: «Ya podes hacer el merge correspondiente para arreglar los conflictos». Alcance contextual presentado: T081–T086 de SPEC-016 y T043–T046 de SPEC-023, resolución de conflictos del merge de `ce794c2` hacia la rama actual, regla del último cálculo diario y referencia de ejecución, migraciones compatibles y build sin tests. Autoriza completar el merge; no aprobar gates ni ampliar a UI/otras specs.
+- **Inicio**: integración autorizada en curso; código, tests y documentación se reconciliarán contra `integration-baseline.md`. No ejecutar tests ni modificar datos; estado remoto de seguimiento no alterado. Push del resultado no se presume ejecutado.
+
+## Resolución del merge — 2026-11-11
+
+Conflictos reconciliados contra la base compartida. Build backend sin tests satisfactorio;
+evidencia y límites en [merge-integration-report.md](merge-integration-report.md), aplicable también
+a SPEC-016. Los tests integrados y la salida del fallo anterior de Flyway siguen pendientes del
+usuario. No se atribuye CODE REVIEW, TESTING ni cierre; no se altera seguimiento remoto.

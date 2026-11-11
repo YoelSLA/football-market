@@ -1,5 +1,30 @@
 # Contrato HTTP: ejecuciones de recálculo con origen y resultado
 
+## Contrato vigente de integración — 2026-11-11
+
+Referencia normativa compartida:
+[contrato HTTP de SPEC-016](../../016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md)
+y [base común](../integration-baseline.md). Este encabezado sustituye ejemplos/afirmaciones
+incompatibles del antecedente siguiente.
+
+- POST manual conserva request/defaults y devuelve 200 con `executionId` público, incluso repetido
+  en la misma fecha. Puede reemplazar la cotización diaria; no devuelve conflicto por fecha manual.
+- GET por fecha conserva `{ "executions": [...] }`, sin paginación, con todas las finalizadas y
+  orden `startedAt DESC, executionId DESC`; vacía sin resultados. Cada elemento incluye ID público,
+  origen, resultado/motivo derivados, parámetros, contadores y tiempos. No exponer contexto abierto
+  como éxito ni exigir ocultar `executionId` como si fuera un detalle interno accidental.
+- `notRepricedPlayers` cuenta solo fecha vigente posterior a la corrida. Reemplazo del mismo día
+  cuenta como recalculado/arrastrado, no omitido. Se conserva partición de contadores al cerrar.
+- AUTOMATIC tiene cuota de una corrida registrada por día; manuales ilimitadas. El conflicto
+  automático conserva `EXECUTION_ALREADY_EXISTS` como evento `skipped`, no una ruta automática HTTP.
+- Conservar JWT y errores estructurales existentes. No exponer trazas, mensajes técnicos ni IDs
+  ajenos al contrato. No se agregan rutas de scheduler ni filtros de origen.
+
+El ranking paginado de SPEC-016 y su adopción por SPEC-022 son ajenos a la programación; mantener
+su contrato y pendientes existentes. No acreditar que la integración ya esté implementada.
+
+## Contrato de origen — antecedente, no aplicar reglas sustituidas
+
 **Feature**: `023-scheduler-quote-recalculation`
 **Spec**: [`spec.md`](../spec.md) · **Data model**: [`../data-model.md`](../data-model.md)
 

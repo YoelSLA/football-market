@@ -81,14 +81,17 @@ validaciones del mercado ni gestión de transacciones, persistencia, compensaci�
 reintentos. Esas responsabilidades permanecen en el recálculo existente: una fecha UTC admite
 cualquier cantidad de corridas manuales y como máximo una automática, impuesta mediante el índice
 único parcial `uq_quote_executions_automatic_date`. Las manuales no consumen la cuota automática.
-No se añade un lock global; el uso operativo evita recálculos simultáneos. TD-024 permanece pendiente.
+No se añade un lock global; se conserva el bloqueo por jugador compartido con inicialización.
 
 La cotización tiene unicidad por `(player_id, effective_date)`, sin distinguir origen.
 `QuotePlayerPublisher` actualiza el cálculo de la fila diaria existente mediante
 `PlayerQuote.replaceCalculation`, preservando identidad, jugador y fecha; precio, trazabilidad,
-origen e instante reflejan el último cálculo aplicable. Las reglas existentes que omiten el reprecio
-sin una valuación posterior se conservan. La migración detiene su aplicación ante colisiones
+origen, instante y referencia de ejecución reflejan el último cálculo aplicable, incluso con el
+mismo score antiguo. Solo se omiten fechas vigentes posteriores. La migración se detiene ante colisiones
 previas de jugador-fecha y exige resolución humana; no borra ni selecciona filas automáticamente.
+El contexto se confirma antes de publicar y el resumen se
+cierra aparte mediante `QuoteExecutionRecorder`, componente interno de la fachada, no un Service
+reutilizable. TD-024 permanece pendiente: un cierre interrumpido puede dejar contexto sin resumen final.
 
 La programación se habilita una sola vez con `@EnableScheduling` en `FootballMarketApplication` y
 utiliza el `TaskScheduler` autoconfigurado por Spring Boot, con un hilo y prefijo `market-batch-`.

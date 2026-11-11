@@ -90,8 +90,28 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-036](#td-036--acoplamiento-de-paquete-entre-referencias-del-catálogo-e-identidad-whoscored) | Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored | Backend / Arquitectura | Media | Pendiente | 2026-10-28 16:08:35 |
 | [TD-037](#td-037--excepción-inesperada-json-deja-la-campaña-activa) | Excepción inesperada JSON deja la campaña activa | Backend / Disponibilidad | Alta | En curso | 2026-11-05 22:01:33 |
 | [TD-038](#td-038--fallo-de-cierre-scraping-oculto-en-el-log-automático) | Fallo de cierre scraping oculto en el log automático | Backend / Observabilidad | Media | En curso | 2026-11-06 13:22:21 |
+| [TD-039](#td-039--selector-de-estrategia-del-ranking-pendiente-de-adopción-multicorrida) | Selector de estrategia del ranking pendiente de adopción multicorrida | Backend / Datos | Media | Pendiente | 2026-11-10 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-039 — Selector de estrategia del ranking pendiente de adopción multicorrida
+
+- **Área / prioridad / estado:** Backend / Datos; Media; Pendiente.
+- **Origen:** revisión de consumidores durante IMPLEMENT de SPEC-016, T057/T078.
+- **Evidencia:** `ScoreRankingQueryServiceImpl.findScoreRanking` consume
+  `QuoteExecutionRepository.findTopByOrderByQuoteDateDesc`. Con varias corridas diarias,
+  la fecha sola no establece un orden total y el selector no excluye contextos sin cierre.
+- **Impacto:** la estrategia y el encabezado del ranking por score pueden proceder de
+  cualquiera de las corridas de una fecha, incluso de una todavía no finalizada.
+- **Decisión humana:** el usuario indicó durante esta ejecución «ese problema es para
+  otro bloque el cual nos vamos a preocupar». Se conserva el selector sin imponer
+  semántica nueva a SPEC-018; la dependencia no frena el trabajo independiente de SPEC-016.
+- **Pendiente:** consolidar la selección temporal en SPEC-018 y adaptar allí consumidor,
+  consulta y regresiones. La propuesta de SPEC-016 es usar finalizadas con orden
+  `quoteDate DESC, startedAt DESC, id DESC`; no se presenta como decisión aprobada de SPEC-018.
+- **Cierre:** requiere implementación, evidencia verificable y los gates humanos aplicables.
+  No se declara resuelta por el build de SPEC-016. El retiro de la ruta histórica de
+  cotización permanece además coordinado con SPEC-022 en T077, sin ampliación a UI.
 
 ### TD-038 — Fallo de cierre scraping oculto en el log automático
 
@@ -479,6 +499,24 @@ productivo; TD-024 permanece pendiente.
 por jugador-fecha en vez de intentar duplicarla, también en un reintento. Esto elimina esa causa
 concreta de conflicto de unicidad, pero no cambia `REQUIRES_NEW` ni compensa filas confirmadas si
 falla el resumen. TD-024 permanece pendiente; no hay evidencia de tests ejecutados por el agente.
+**Diseño del delta SPEC-016 (2026-11-10, PLAN).** Se planifica identidad de corrida y referencia
+`execution_id` desde la cotización, con contexto confirmado antes de publicar jugadores y resumen
+finalizado aparte. Evita depender del instante para identificar parámetros, pero no acredita
+recuperación de una corrida cuyo cierre falla ni exactitud de contadores incompletos. La deuda sigue
+`Pendiente`, sin implementación ni pruebas ejecutadas. Fuente: revisión vigente de
+`specs/016-ejecutar-recalculo-manual-de-cotizaciones/research.md`, R2. No se añade compensación al
+scheduler ni se declara resuelta por permitir múltiples ejecuciones diarias.
+
+**IMPLEMENT del delta SPEC-016 (sesión de 2026-11-10).** Se implementó contexto
+confirmado antes de publicaciones y cierre independiente, con FK desde filas no
+iniciales. La consulta pública solo devuelve finalizadas. El test de fallo de cierre
+se adaptó para distinguir contexto persistido de resumen final y nuevas corridas de
+recuperación del contexto anterior. Las pruebas no se ejecutaron y los contadores de
+un contexto interrumpido no se reconstruyen: TD-024 sigue `Pendiente`.
+
+**Integración SPEC-016/023 (2026-11-11).** El reemplazo diario actualiza también la FK de ejecución.
+Un contexto automático sin cierre consume la cuota diaria; una manual posterior puede publicar
+nuevos cálculos, pero no repara el contexto anterior. TD-024 continúa pendiente.
 
 **Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
 consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.

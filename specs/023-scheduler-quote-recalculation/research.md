@@ -1,5 +1,27 @@
 # Research: Recálculo automático programado de cotizaciones (SPEC-023)
 
+## Investigación vigente de integración — 2026-11-11
+
+Diseño común: [`integration-baseline.md`](integration-baseline.md). Adoptar último cálculo válido
+en una sola fila diaria, no «primera fila inmutable» ni omisión por antigüedad del score.
+La fecha efectiva procede de la corrida UTC; fecha del score queda como auditoría. El precio
+anterior es el vigente antes de cada cálculo y pueden existir varios ajustes intradiarios, no sus
+versiones persistidas. Reemplazar en la misma transacción precio, trazabilidad y referencia de
+ejecución, conservando identidad de fila. Mantener bloqueo por jugador ya diseñado en SPEC-016.
+
+Conservar contexto previo confirmado y cierre independiente de SPEC-016 para que `execution_id`
+referencie una fila confirmada. Solo se devuelven resúmenes finalizados. Un contexto automático
+abierto consume cuota; las manuales no tienen unicidad de fecha. Conservar clase y traducción de
+`ExecutionAlreadyExistsException` solo para el índice automático parcial. Se descartan eliminar
+esa excepción globalmente, congelar el primer precio y aplicar dos veces el mismo DROP de DDL.
+No se añaden tablas, dependencias, recuperación ni compensación. TD-024 no se declara resuelta.
+
+El detalle de alternativas, concurrencia, inicialización y secuencia de migraciones está en la
+base común §2. Este diseño sustituye por impacto el antecedente siguiente, incluidas las menciones
+a transacción externa única, no modificación de SPEC-016 y ausencia de ejecución pública con ID.
+
+## Investigación de origen — antecedente, no aplicar reglas sustituidas
+
 **Feature**: `023-scheduler-quote-recalculation`
 **Spec**: [`spec.md`](spec.md)
 

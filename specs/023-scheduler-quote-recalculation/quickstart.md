@@ -1,5 +1,35 @@
 # Quickstart: validación del recálculo automático programado
 
+## Validación vigente de integración — 2026-11-11
+
+Base: [integración](integration-baseline.md) y
+[guía de SPEC-016](../016-ejecutar-recalculo-manual-de-cotizaciones/quickstart.md).
+Ejecuta exclusivamente el usuario tras reconciliar código/SQL y completar preparación vigente.
+Mientras el merge tenga conflictos, no iniciar aplicación ni ejecutar estos escenarios.
+
+1. Con datos locales compatibles y migraciones de ambas specs reconciliadas, configurar cadencia
+   de prueba; conservar default diario 12:00 UTC y UTC fija. Scheduler deshabilitado no invoca nada.
+2. Ejecutar manual, disparo automático y otra manual del mismo día: tres resúmenes finalizados
+   con `executionId` distintos; como máximo una automática. Repetir disparo automático deja evento
+   skipped y ninguna nueva publicación; contexto automático abierto también consume su cuota.
+3. Las manuales pueden usar nuevo score/estrategia/parámetros: releer una sola fila jugador-fecha,
+   mismo ID y datos del último cálculo válido, incluida FK de ejecución e instante de cálculo.
+   Historial no contiene versiones intradiarias. Score antiguo se aplica; sin score se arrastra.
+4. Recalcular INITIAL del día y repetir initialize: sin duplicar, mercado sigue inicializado y la
+   repetición de initialize no sobrescribe la cotización. Corrida atrasada no altera fecha posterior.
+5. GET por fecha devuelve todas las finalizadas con ID público; contexto sin cierre no se presenta
+   como éxito. JWT y errores seguros conservados. Sin datos: lista vacía.
+6. Verificar secuencia de migraciones real en PostgreSQL aislado sin DROP duplicado y con índice
+   automático/FK/cardinalidad; escenario incompatible debe abortar sin elegir ni borrar filas.
+   El fallo Flyway informado requiere salida diagnóstica y no se declara solucionado por el diseño.
+
+Casos específicos, pruebas y comandos humanos en la guía de SPEC-016. No se ejecutaron pruebas ni
+build en esta alineación. Los apartados siguientes son antecedentes y solo se reutilizan en lo
+compatible: no omitir score antiguo, no ocultar ID contractual ni esperar siempre ausencia de
+contexto persistido ante fallo completo. #41 ya existe en otra spec y no se modifica aquí.
+
+## Guía de origen — antecedente, no aplicar reglas sustituidas
+
 **Feature**: `023-scheduler-quote-recalculation`
 **Spec**: [`spec.md`](spec.md) · **Contratos**:
 [`contracts/quote-executions-http.md`](contracts/quote-executions-http.md) y

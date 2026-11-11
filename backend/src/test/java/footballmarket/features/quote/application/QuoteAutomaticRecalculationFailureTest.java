@@ -76,22 +76,26 @@ class QuoteAutomaticRecalculationFailureTest {
   @DisplayName("Errores automáticos y reintento según el registro existente")
   class AutomaticFailures {
     @Test
-    @DisplayName("Un fallo completo sin resumen permite reintento manual el mismo día")
-    void retriesManuallyWhenAutomaticAttemptLeavesNoExecution() {
+    @DisplayName("Un fallo de cierre no expone el contexto como resumen y permite otra corrida")
+    void retriesManuallyWithoutFinishedSummary() {
       // Arrange: falla el reloj al cerrar el resumen, después de la reserva y del recorrido real.
       catalogue.prepare();
       data.prepareConfirmedJsonCampaign(MARKET_DATE);
       initialization.initialize(MARKET_DATE);
-      ((FailureClock) clock).readsUntilFailure.set(3);
+      ((FailureClock) clock).readsUntilFailure.set(2);
       // Act / Assert
       assertThatThrownBy(service::recalculateAutomatic).isInstanceOf(DateTimeException.class);
       assertThat(service.executions(QUOTE_DATE)).isEmpty();
-      // Verify: se acepta y registra el reintento; TD-024 puede causar fallos individuales
-      // por las cotizaciones ya confirmadas. No se exige que el reintento sea exitoso.
+      // Verify: el contexto sin cierre sigue fuera de la consulta; no se recupera ni compensa.
+      assertThatThrownBy(service::recalculateAutomatic)
+          .isInstanceOf(ExecutionAlreadyExistsException.class);
       QuoteExecution retry = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       assertThat(retry.getQuoteDate()).isEqualTo(QUOTE_DATE);
       assertThat(retry.getOrigin()).isEqualTo(QuoteExecutionOrigin.MANUAL);
       assertThat(retry.getPricedPlayers()).isEqualTo(5);
+      assertThat(retry.getNotRepricedPlayers()).isZero();
+      assertThat(retry.getCarriedForwardRows()).isEqualTo(5);
+      assertThat(retry.getFailedPlayers()).isZero();
       assertThat(service.executions(QUOTE_DATE))
           .extracting(QuoteExecution::getId)
           .containsExactly(retry.getId());
@@ -138,12 +142,27 @@ class QuoteAutomaticRecalculationFailureTest {
       // Verify
       assertThatThrownBy(service::recalculateAutomatic)
           .isInstanceOf(ExecutionAlreadyExistsException.class);
+      quoteData.persistInitial(population.get(4), MARKET_DATE, NOW.minusSeconds(86400));
       QuoteExecution retry = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       assertThat(retry.getOrigin()).isEqualTo(QuoteExecutionOrigin.MANUAL);
       assertThat(retry.getId()).isNotEqualTo(execution.getId());
       assertThat(service.executions(QUOTE_DATE))
           .extracting(QuoteExecution::getId)
           .containsExactlyInAnyOrder(execution.getId(), retry.getId());
+      assertThat(retry.getCarriedForwardRows()).isEqualTo(5);
+      assertThat(retry.getNotRepricedPlayers()).isZero();
+      assertThat(retry.getFailedPlayers()).isZero();
+      assertThat(service.executions(QUOTE_DATE))
+          .filteredOn(saved -> saved.getId().equals(execution.getId()))
+          .singleElement()
+          .satisfies(
+              saved -> {
+                assertThat(saved.getId()).isEqualTo(execution.getId());
+                assertThat(saved.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
+                assertThat(saved.result()).isEqualTo(QuoteExecutionResult.FAILED);
+                assertThat(saved.failureReason())
+                    .isEqualTo(QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES);
+              });
     }
   }
 

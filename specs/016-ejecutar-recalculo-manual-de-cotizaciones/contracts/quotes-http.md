@@ -1,5 +1,73 @@
 # Contrato HTTP: Cotización de tokens de jugadores
 
+## Contrato vigente — integración 2026-11-11
+
+Base común: [`integration-baseline.md`](../../023-scheduler-quote-recalculation/integration-baseline.md).
+No se acredita que el código en conflicto implemente ya esta versión.
+
+Esta revisión prevalece sobre las reglas incompatibles del antecedente: ruta de ranking, respuesta completa, error por segunda ejecución, vigencia de valuación y ausencia de reprecio por score antiguo. Es un contrato objetivo de PLAN, no comportamiento implementado. Todas las rutas conservan JWT y errores seguros `ErrorResponseDTO`.
+
+### Ejecución y consultas de cotización
+
+`POST /api/quotes/recalculate` conserva request y defaults. La respuesta 200 agrega `executionId` positivo único; `quoteDate` es el día UTC de `startedAt`, fijado una vez. Manuales repetidas son válidas y actualizan la única cotización del día con el último cálculo confirmado. `notRepricedPlayers` cuenta solo omisiones por fecha vigente posterior a `quoteDate`; una fecha igual no impide actualizar. No hay `409 EXECUTION_ALREADY_EXISTS` por repetición manual; ese motivo se conserva para conflictos automáticos y se registra como omisión por el scheduler, sin respuesta HTTP automática. Errores restantes y precedencia estrategia → mercado → factor → tope/piso permanecen; no traducir fallos SQL ajenos como duplicados.
+
+Conservar `origin`, `result`, `failureReason`, estrategia/versión, parámetros, contadores y tiempos. Cada jugador pertenece a un contador: recalculado, arrastrado, omitido por fecha posterior o fallido; reemplazos se cuentan en recalculados/arrastrados. Sin score se publica CARRIED_FORWARD; un score antiguo se aplica igual que uno reciente, sobre el precio vigente antes del cálculo. INITIAL respeta la misma unicidad, pero no impide actualización posterior. No alterar una cotización de fecha posterior ni reconstruir días atrasados.
+
+`GET /api/quotes/executions?date=YYYY-MM-DD`: 200 `{ "executions": [...] }`, todos los resúmenes finalizados del día solicitado, sin paginación, orden `startedAt DESC,executionId DESC`. Cada objeto tiene los campos del POST incluido `executionId`. Fecha sin resultados: lista vacía. Fecha ausente/malformada: 400 INVALID_REQUEST; JWT inválido/ausente: 401. Un contexto interrumpido sin resumen final no se presenta como ejecución exitosa: limitación operativa TD-024, sin recuperación añadida.
+
+Las consultas de historial, vigente y por fecha conservan rutas y shape. `effectiveDate` es la fecha UTC de corrida y `sourceValuationDate` la fecha auditada del score. Una sola fila diaria refleja el último cálculo confirmado, incluido `calculatedAt`, nunca el instante de lectura. Internamente su FK apunta a la ejecución de ese cálculo, sin agregar versiones intradiarias. No hay coexistencia ni prioridad entre orígenes del mismo día. Sin cotizaciones: historial vacío; vigente/por fecha 404 QUOTE_NOT_FOUND.
+
+### `GET /api/rankings/quote`
+
+Reemplaza `/api/players/ranking` en adopción coordinada con SPEC-022. No se deja un endpoint para descargar el ranking completo. Ruta web `/players/ranking` no cambia.
+
+| Parámetro | Contrato |
+| --- | --- |
+| `page` | Entero >= 0, default 0 |
+| `size` | Entero 1..100, default 20 |
+| `name` | Texto opcional máximo 255; trim, vacío equivale a omisión; coincidencia parcial sin distinguir mayúsculas; `%` y `_` literales escapados |
+| `leagueId` | Entero positivo opcional; igualdad por ID de liga; desconocido válido da página vacía |
+| `position` | Texto opcional máximo 255; trim, vacío equivale a omisión; igualdad con posición persistida del catálogo, sin distinguir mayúsculas |
+
+Todos los filtros seleccionados se cumplen conjuntamente. No hay parámetro de orden: precio DESC, playerId ASC. La posición global se calcula antes del filtro y puede tener saltos en la página. El total es el del conjunto filtrado. El universo conserva métricas y cotización vigente; no depende de que el score sea nuevo.
+
+Respuesta 200:
+
+```json
+{
+  "content": [{
+    "position": 7, "playerId": 7821, "price": 105,
+    "effectiveDate": "2026-11-10", "origin": "RECOMPUTED",
+    "calculatedAt": "2026-11-10T00:00:00Z",
+    "player": {"name": "Jugador", "position": "Offence", "imageUrl": null,
+      "team": {"id": 10, "name": "Equipo", "crestUrl": null},
+      "league": {"id": 20, "name": "Liga"}}
+  }],
+  "page": 0, "size": 20, "totalElements": 1, "totalPages": 1,
+  "filterOptions": {"leagues": [{"id": 20, "name": "Liga"}], "positions": ["Offence"]}
+}
+```
+
+`player` y `name` son obligatorios; posición, imagen, team y league pueden ser nulos cuando falten datos persistidos; objetos team/league presentes requieren ID y nombre, crestUrl nullable. No inventar datos de identificación. `filterOptions` representa todo el ranking elegible sin filtros, no la página; ligas únicas por ID y posiciones únicas, ordenadas por nombre/valor y ID para desempate. No incluye opciones sin jugadores elegibles. Origen admite INITIAL, RECOMPUTED y CARRIED_FORWARD.
+
+Vacío/sin coincidencias: `content:[]`, `totalElements:0`, `totalPages:0`, opciones globales conservadas. Página fuera de rango: contenido vacío con totales reales; no es error. Parámetros inválidos: 400 INVALID_REQUEST, sin llamar al caso de uso ante error estructural. JWT inválido/ausente: 401. Fallo técnico: 500 INTERNAL_ERROR sin detalle interno.
+
+**Podio**: misma ruta con `page=0&size=3` y sin filtros. UI puede usar `size=8` para conservar tamaño visual actual y traduce página base uno a base cero. No derivar podio de tabla filtrada. Las dos solicitudes no prometen snapshot compartido; bajo datos estables coinciden con posiciones globales. Respuestas tardías y cambios de modo/filtro pertenecen a SPEC-022.
+
+**Compatibilidad**: SPEC-018 debe acordar su propio contrato `/api/rankings/score` antes de adaptar ambos modos. La lista de ejecuciones conserva envolvente pero cambia cardinalidad y significado de `notRepricedPlayers`; actualizar consumidores, DTO, anotaciones OpenAPI y tests backend conjuntamente. No afirmar que estas rutas/shape ya existen.
+
+**Estado de IMPLEMENT local:** núcleo diario, lista de finalizadas y ruta paginada
+`/api/rankings/quote` implementados en el diff local, todavía sin validación humana
+de pruebas ni publicación. La retirada de `/api/players/ranking` permanece pendiente
+en T077 hasta la adopción conjunta de SPEC-022; se conserva su contrato existente,
+sin crear un alias nuevo de descarga completa. La selección temporal del ranking
+por score no se modifica desde esta spec (dependencia registrada como TD-039).
+Esta evidencia no cambia el contrato objetivo de retirada ni acredita cierre.
+
+---
+
+## Antecedente contractual — no aplicar reglas sustituidas
+
 **Feature**: `016-ejecutar-recalculo-manual-de-cotizaciones`
 **Spec**: [`spec.md`](../spec.md) · **Data model**: [`../data-model.md`](../data-model.md)
 

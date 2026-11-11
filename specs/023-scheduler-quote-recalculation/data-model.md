@@ -1,5 +1,29 @@
 # Data Model: Recálculo automático programado de cotizaciones
 
+## Modelo vigente de integración — 2026-11-11
+
+Modelo compartido: [SPEC-016](../016-ejecutar-recalculo-manual-de-cotizaciones/data-model.md) y
+[base común §2](integration-baseline.md). No hay nuevas tablas ni versiones intradiarias.
+
+| Elemento | Invariante integrada |
+| --- | --- |
+| `quote_executions.quote_date` | Fecha UTC de inicio; múltiples manuales y una automática como máximo |
+| `uq_quote_executions_automatic_date` | Índice parcial por fecha `WHERE origin='AUTOMATIC'`; incluye contexto aún sin cierre |
+| `quote_executions.finished_at` | Nulo en contexto abierto, informado al cerrar; solo finalizadas en GET |
+| Contadores | Partición disjunta al cerrar; reemplazos cuentan en recalculados/arrastrados, omisión solo por fecha posterior |
+| `player_quotes` | UNIQUE jugador/fecha efectiva; fecha = día UTC fijado al iniciar corrida |
+| Reemplazo | Conservar ID/jugador/fecha; reemplazar cálculo completo y `execution_id` atómicamente |
+| `execution_id` | FK nula en INITIAL, obligatoria en otros orígenes; referencia la última corrida productora |
+| Score fuente | `source_valuation_date` separado de fecha efectiva; score antiguo sigue utilizable |
+| Inicialización | Sigue vigente tras cambiar origen de la fila; no reinicializar ni sobrescribir al repetir initialize |
+| Lectura HTTP | `executionId` contractual; orden de finalizadas por inicio/ID descendente |
+
+No repetir DDL incompatible entre las dos migraciones de las ramas ni cambiar checksums de
+migraciones inmutables; guardar colisiones para decisión humana sin eliminación automática. El
+antecedente siguiente se conserva, pero sus reglas incompatibles no son diseño vigente.
+
+## Modelo de origen — antecedente, no aplicar reglas sustituidas
+
 **Feature**: `023-scheduler-quote-recalculation`
 **Spec**: [`spec.md`](spec.md) · **Research**: [`research.md`](research.md)
 
