@@ -39,3 +39,32 @@ no validan esta base integrada.
 
 IMPLEMENT autorizado; CODE REVIEW, TESTING y cierre pendientes. Sin nueva fase ANALYZE/CONVERGE,
 sin cambios de seguimiento remoto ni push del resultado. La finalización Git se verifica aparte.
+
+## Comprobación de tareas posterior al merge — 2026-11-11
+
+Por solicitud del usuario se contrastaron las tareas con el commit de merge `23e175c` y se
+marcaron únicamente alcances técnicos comprobables, sin atribuir ejecución ni aceptación humana:
+
+| Tarea | Evidencia inspeccionada |
+| --- | --- |
+| SPEC-016 T082 | `PlayerQuote.replaceCalculation`, publicación con bloqueo y `REQUIRES_NEW`, búsqueda diaria, omisión solo de fecha posterior; inicialización y guard de mercado independientes de INITIAL. |
+| SPEC-016 T084 | DDL consecutivo sin DROP repetido; constraints/FK, pruebas de unicidad automática/manual, contextos sin cierre y consulta ordenada; prueba de actualización de FK en `QuoteMarketOperationPersistenceTest`. La aplicación real sigue sin ejecutar. |
+| SPEC-016 T085 | Fachada/recorder, modelo y mapper de ejecución; `QuoteControllerTest.acceptsRepeatedHttpRuns`, IDs en GET y ausencia de detalles internos. |
+| SPEC-023 T043 | Reserva independiente, traducción específica del índice automático, scheduler y `skipsAlreadyRegisteredAutomaticExecution`. El orden histórico de escritura prueba/código no se presenta como satisfecho: la regresión del scheduler se añadió después de la resolución productiva. |
+| SPEC-023 T044 | `acceptsRepeatedRun`, rechazo automático tras cierre fallido y reintento manual; IDs HTTP y comprobación persistida de última FK. |
+
+Pendientes conservados, sin duplicar su estado fuera de los respectivos `tasks.md`:
+
+- T081: falta completar la comprobación/cobertura explícita de fallo sin reemplazo parcial y de
+  cambio de score/estrategia en la misma fecha; los escenarios existentes no bastan para declarar
+  todo ese alcance cumplido.
+- T083: falta cerrar el contraste de lecturas vigente/historial/fecha y fuente por lote después
+  del reemplazo del mismo día. La prueba persistida añadida no demuestra por sí sola esas APIs.
+- T045: versión/conteo actualizados; falta salida del fallo anterior de Flyway para diagnosticarlo.
+- T086/T046: entrega parcial documentada y build observado, pero sus prerrequisitos amplios siguen
+  abiertos. T077 conserva su coordinación pendiente con SPEC-022.
+
+Se pueden ejecutar ahora los tests existentes con Docker disponible desde `backend/`:
+`./gradlew.bat test`. Se solicita salida de los fallos, especialmente Flyway. Un resultado verde
+no sustituye los escenarios pendientes de cobertura ni autoriza cierre. Esta operación solo
+actualiza documentación: no nuevo build, tests, commit, push ni cambio de seguimiento remoto.
