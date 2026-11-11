@@ -14,6 +14,7 @@ import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
+import footballmarket.features.quote.domain.models.QuoteAdjustment;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.config.QuoteProperties;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
@@ -28,11 +29,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -190,16 +186,17 @@ class QuoteRecalculationServiceTest {
 
     @Test
     @DisplayName("Una fila arrastrada no impide publicar la recalculada de la misma fecha")
-    void recomputedQuoteCoexistsWithCarriedForward() {
+    void recomputedQuoteUpdatesCarriedForward() {
       Player player = prepareMarketWithoutValuations();
-      publisher.publish(
-          player,
-          QUOTE_DATE,
-          ValuationStrategy.POSITIONAL_PERFORMANCE,
-          new BigDecimal("0.10"),
-          new BigDecimal("0.10"),
-          1L,
-          Instant.parse("2026-10-19T09:00:00Z"));
+      QuotePlayerPublisher.PublicationResult carried =
+          publisher.publish(
+              player,
+              QUOTE_DATE,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              Instant.parse("2026-10-19T09:00:00Z"));
       valuation.evaluate();
 
       QuotePlayerPublisher.PublicationResult result =
@@ -214,6 +211,20 @@ class QuoteRecalculationServiceTest {
 
       assertThat(result.publication()).isEqualTo(QuotePlayerPublisher.Publication.RECOMPUTED);
       assertThat(result.quote().orElseThrow().getEffectiveDate()).isEqualTo(QUOTE_DATE);
+      assertThat(result.quote().orElseThrow().getId())
+          .isEqualTo(carried.quote().orElseThrow().getId());
+      assertThat(result.quote().orElseThrow().getCalculatedAt())
+          .isEqualTo(Instant.parse("2026-10-19T10:00:00Z"));
+      assertThat(result.quote().orElseThrow().getStrategyName())
+          .isEqualTo(ValuationStrategy.POSITIONAL_PERFORMANCE);
+      assertThat(result.quote().orElseThrow().getScore()).isNotNull();
+      PlayerQuote updated = result.quote().orElseThrow();
+      QuoteAdjustment expected =
+          QuoteAdjustment.calculate(
+              100L, updated.getScore(), new BigDecimal("0.10"), new BigDecimal("0.10"), 1L);
+      assertThat(updated.getPrice()).isEqualTo(expected.price());
+      assertThat(updated.getPreviousPrice()).isEqualTo(100L);
+      assertThat(updated.getMultiplier()).isEqualByComparingTo(expected.multiplier());
     }
   }
 
@@ -298,8 +309,8 @@ class QuoteRecalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Persiste el resumen y rechaza una segunda corrida del día")
-    void persistsSummaryAndRejectsSecondRun() {
+    @DisplayName("Persiste independientemente varias corridas manuales del mismo día")
+    void persistsRepeatedManualRuns() {
       prepareValuedMarket();
 
       QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
@@ -311,8 +322,13 @@ class QuoteRecalculationServiceTest {
       assertThat(service.executions(result.getQuoteDate()))
           .extracting(QuoteExecution::getId)
           .containsExactly(result.getId());
-      assertThatThrownBy(() -> service.recalculate("POSITIONAL_PERFORMANCE", null, null, null))
-          .isInstanceOf(ExecutionAlreadyExistsException.class);
+      QuoteExecution repeated = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      assertThat(repeated.getId()).isNotEqualTo(result.getId());
+      assertThat(repeated.getOrigin()).isEqualTo(QuoteExecutionOrigin.MANUAL);
+      assertThat(repeated.getFailedPlayers()).isZero();
+      assertThat(service.executions(QUOTE_DATE))
+          .extracting(QuoteExecution::getId)
+          .containsExactlyInAnyOrder(result.getId(), repeated.getId());
     }
 
     @Test
@@ -337,47 +353,26 @@ class QuoteRecalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Dos corridas concurrentes resuelven una sola ejecución")
-    void resolvesConcurrentExecutions() throws Exception {
+    @DisplayName("Las manuales coexisten con una automática y otra automática se rechaza")
+    void limitsOnlyAutomaticExecution() {
+      // Arrange
       prepareValuedMarket();
-      CountDownLatch start = new CountDownLatch(1);
-      ExecutorService executor = Executors.newFixedThreadPool(2);
-      try {
-        List<Future<Class<?>>> results =
-            List.of(
-                executor.submit(() -> executeAfter(start, false)),
-                executor.submit(() -> executeAfter(start, true)));
-        start.countDown();
-
-        assertThat(results)
-            .extracting(result -> result.get(30, TimeUnit.SECONDS).getSimpleName())
-            .containsExactlyInAnyOrder("QuoteExecution", "ExecutionAlreadyExistsException");
-        assertThat(service.executions(QUOTE_DATE))
-            .singleElement()
-            .satisfies(
-                execution -> {
-                  assertThat(execution.getPricedPlayers()).isEqualTo(5);
-                  assertThat(execution.getRecomputedRows()).isEqualTo(5);
-                  assertThat(execution.getFailedPlayers()).isZero();
-                });
-      } finally {
-        executor.shutdownNow();
-      }
-    }
-  }
-
-  private Class<?> executeAfter(CountDownLatch start, boolean automatic)
-      throws InterruptedException {
-    if (!start.await(10, TimeUnit.SECONDS)) {
-      throw new AssertionError("No se liberó el inicio concurrente");
-    }
-    try {
-      if (automatic) {
-        return service.recalculateAutomatic().getClass();
-      }
-      return service.recalculate("POSITIONAL_PERFORMANCE", null, null, null).getClass();
-    } catch (ExecutionAlreadyExistsException exception) {
-      return exception.getClass();
+      // Act
+      QuoteExecution before = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      QuoteExecution automatic = service.recalculateAutomatic();
+      QuoteExecution after = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      assertThatThrownBy(service::recalculateAutomatic)
+          .isInstanceOf(ExecutionAlreadyExistsException.class);
+      assertThat(service.executions(QUOTE_DATE))
+          .extracting(QuoteExecution::getId)
+          .containsExactlyInAnyOrder(before.getId(), automatic.getId(), after.getId());
+      assertThat(service.executions(QUOTE_DATE))
+          .extracting(QuoteExecution::getOrigin)
+          .containsExactlyInAnyOrder(
+              QuoteExecutionOrigin.MANUAL,
+              QuoteExecutionOrigin.AUTOMATIC,
+              QuoteExecutionOrigin.MANUAL);
     }
   }
 

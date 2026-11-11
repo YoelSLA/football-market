@@ -214,14 +214,15 @@ class QuoteQueryServiceTest {
   class Precedence {
 
     @Test
-    @DisplayName("La fila recalculada prevalece sobre la arrastrada de la misma fecha")
+    @DisplayName("La fila recalculada sustituye la arrastrada de la misma fecha")
     void recomputedPrecedesCarriedForward() {
       Player player = prepareMarketWithBothOrigins();
       List<PlayerQuote> history = queryService.findHistory(player.getId());
 
-      assertThat(history).hasSize(3);
+      assertThat(history).hasSize(2);
       assertThat(history.get(0).getOrigin()).isEqualTo(QuoteOrigin.RECOMPUTED);
-      assertThat(history.get(1).getOrigin()).isEqualTo(QuoteOrigin.CARRIED_FORWARD);
+      assertThat(history.get(1).getOrigin()).isEqualTo(QuoteOrigin.INITIAL);
+      assertThat(history.get(0).getCalculatedAt()).isEqualTo(Instant.parse("2026-10-18T10:00:00Z"));
       assertThat(queryService.findCurrent(player.getId()).getOrigin())
           .isEqualTo(QuoteOrigin.RECOMPUTED);
     }
@@ -315,13 +316,12 @@ class QuoteQueryServiceTest {
   class TieBreak {
 
     /**
-     * El desempate entre dos filas del mismo jugador que coinciden en fecha de vigencia e instante
-     * de cálculo queda cerrado por el identificador de la fila, de modo que el jugador aparece una
-     * sola vez en el ranking y su cotización vigente es siempre la misma fila.
+     * El ranking conserva una sola entrada por jugador aunque varias fechas compartan instante de
+     * cálculo: la fecha de vigencia más reciente determina la fila vigente.
      */
     @Test
     @DisplayName(
-        "Muestra una sola entrada por jugador cuando dos filas coinciden en fecha e instante")
+        "Muestra una sola entrada por jugador cuando dos fechas comparten instante de cálculo")
     void showsSingleEntryWhenRowsTie() {
       // Arrange
       catalogue.prepare();
@@ -330,7 +330,7 @@ class QuoteQueryServiceTest {
       Instant calculatedAt = Instant.parse("2026-10-17T09:00:00Z");
       quoteData.prepareMetrics(player, marketDate);
       quoteData.persistInitial(player, marketDate, calculatedAt);
-      quoteData.persistCarriedForward(player, marketDate, 100L, calculatedAt);
+      quoteData.persistCarriedForward(player, marketDate.plusDays(1), 100L, calculatedAt);
 
       // Act
       List<PlayerRankingEntry> ranking = queryService.findRanking();

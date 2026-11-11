@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Publica atómicamente la cotización de un jugador dentro de una corrida manual. */
+/** Publica atómicamente la cotización diaria de un jugador en una corrida manual o automática. */
 @Component
 public class QuotePlayerPublisher {
   private static final Logger LOGGER = LoggerFactory.getLogger(QuotePlayerPublisher.class);
@@ -64,6 +64,12 @@ public class QuotePlayerPublisher {
                           minPriceFloor,
                           calculatedAt))
               .orElseGet(() -> this.carriedForward(player, current, quoteDate, calculatedAt));
+      Optional<PlayerQuote> existing =
+          this.quotes.findByPlayerIdAndEffectiveDate(player.getId(), next.getEffectiveDate());
+      if (existing.isPresent()) {
+        existing.get().replaceCalculation(next);
+        next = existing.get();
+      }
       this.quotes.saveAndFlush(next);
       Publication publication =
           next.getOrigin() == QuoteOrigin.RECOMPUTED

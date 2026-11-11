@@ -28,7 +28,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Recálculo compartido por las entradas manual y automática, con reserva única por fecha UTC. */
+/** Recálculo compartido con corridas manuales múltiples y una reserva automática por fecha UTC. */
 @Service
 @Transactional
 public class QuoteRecalculationServiceImpl implements QuoteRecalculationService {

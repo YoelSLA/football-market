@@ -24,7 +24,7 @@ class QuotePropertiesTest {
   @DisplayName("Configuración del recálculo automático")
   class AutomaticConfiguration {
     @Test
-    @DisplayName("Usa estrategia y cadencia semanal por defecto sin propiedades explícitas")
+    @DisplayName("Usa estrategia y cadencia diaria a las 12 UTC por defecto")
     void bindsDefaults() {
       // Act / Assert
       runner.run(
@@ -32,7 +32,7 @@ class QuotePropertiesTest {
             assertThat(context).hasNotFailed();
             QuoteProperties properties = context.getBean(QuoteProperties.class);
             assertThat(properties.strategy()).isEqualTo(ValuationStrategy.POSITIONAL_PERFORMANCE);
-            assertThat(properties.schedule().cron()).isEqualTo("0 0 0 * * MON");
+            assertThat(properties.schedule().cron()).isEqualTo("0 0 12 * * *");
             assertThat(properties.schedule().enabled()).isTrue();
             assertThat(properties.adjustmentFactor()).isEqualByComparingTo("0.10");
             assertThat(properties.variationCap()).isEqualByComparingTo("0.10");

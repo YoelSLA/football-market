@@ -81,9 +81,9 @@ Ejecuta el recálculo manual de cotizaciones (US2, FR-059, FR-060, FR-061).
 | `minPriceFloor` | `integer` | no | Piso mínimo de precio en centésimas, siempre > 0; por defecto 1 (FR-013, FR-015) |
 
 El campo `quoteDate` **no** existe: la fecha de cotización es siempre la fecha del día en que corre
-la ejecución (FR-060). Cada fecha de cotización admite como máximo una ejecución: una segunda
-ejecución en la misma fecha se rechaza con `409 EXECUTION_ALREADY_EXISTS`, no escribe filas de
-cotización y no altera el resumen ya registrado (FR-060).
+la ejecución (FR-060). El delta diario de SPEC-023 reemplaza la limitación original: cada fecha UTC
+admite cualquier cantidad de corridas manuales y como máximo una automática. Cada corrida manual
+queda registrada independientemente, aunque existan corridas previas ese día.
 
 **Response 200**:
 
@@ -129,14 +129,14 @@ cotización y no altera el resumen ya registrado (FR-060).
 | `INVALID_MIN_PRICE_FLOOR` | 400 | `minPriceFloor` no positivo (FR-013) |
 | `UNKNOWN_QUOTE_STRATEGY` | 400 | Estrategia fuera del catálogo (FR-018) |
 | `MARKET_NOT_INITIALIZED` | 409 | El mercado no está inicializado; no se escribe ninguna fila (FR-063) |
-| `EXECUTION_ALREADY_EXISTS` | 409 | Ya existe una ejecución de cotización para la fecha de cotización del día, incluida la concurrencia entre dos ejecuciones (FR-060) |
 | `401` | — | JWT ausente o inválido |
 | `INTERNAL_ERROR` | 500 | Fallo general de la ejecución |
 
 **Orden de precedencia**: cuando una solicitud reúne más de una causa de rechazo, se devuelve
 siempre el código de mayor precedencia (FR-066): `UNKNOWN_QUOTE_STRATEGY` → `MARKET_NOT_INITIALIZED`
-→ `INVALID_ADJUSTMENT_FACTOR` → `INVALID_VARIATION_CAP` / `INVALID_MIN_PRICE_FLOOR` →
-`EXECUTION_ALREADY_EXISTS`. Ningún rechazo escribe filas de cotización ni registra resumen de
+→ `INVALID_ADJUSTMENT_FACTOR` → `INVALID_VARIATION_CAP` / `INVALID_MIN_PRICE_FLOOR`.
+`EXECUTION_ALREADY_EXISTS` se conserva exclusivamente para el conflicto automático por fecha y no
+limita este POST manual. Ningún rechazo escribe filas de cotización ni registra resumen de
 ejecución.
 
 ---
@@ -153,14 +153,13 @@ Consulta el resumen de las ejecuciones de cotización por fecha de cotización (
 { "executions": [ { "quoteDate": "2026-10-20", "origin": "AUTOMATIC", "result": "SUCCESS", "failureReason": null, "strategy": "POSITIONAL_PERFORMANCE", "strategyVersion": "v1", "adjustmentFactor": 0.10, "variationCap": 0.10, "minPriceFloor": 1, "pricedPlayers": 42, "recomputedRows": 30, "carriedForwardRows": 12, "notRepricedPlayers": 3, "failedPlayers": 0, "startedAt": "2026-10-20T18:00:00Z", "finishedAt": "2026-10-20T18:00:12Z" } ] }
 ```
 
-Como máximo hay una ejecución por fecha de cotización (FR-060), de modo que la lista contiene un
-único elemento cuando la fecha tiene ejecución. Una fecha sin ejecuciones devuelve una lista vacía,
-no un error.
+La lista contiene todas las corridas de la fecha UTC por inicio descendente: múltiples `MANUAL` y
+como máximo una `AUTOMATIC` (SPEC-023). Una fecha sin ejecuciones devuelve una lista vacía, no un error.
 
 Los objetos incluyen los mismos campos `origin`, `result` y `failureReason` descritos para el POST.
 Los campos son aditivos (SPEC-023) y no cambian rutas, request ni códigos de error. Una ejecución
-completada con fallos individuales queda registrada y consume la fecha; un intento que no dejó
-registro permite reintentar según el comportamiento existente. El scheduler solo registra los
+completada con fallos individuales queda registrada; solo una automática consume la cuota automática
+de la fecha. Las manuales siguen permitidas. El scheduler solo registra los
 errores recibidos: no compensa cotizaciones ya confirmadas (TD-024).
 
 **Errores**: `400 INVALID_REQUEST` (fecha ausente o malformada), `401`.
@@ -195,10 +194,9 @@ Historial de cotizaciones de un jugador, de la más reciente a la más antigua (
 
 Un jugador sin cotizaciones devuelve `quotes: []`.
 
-Cuando un jugador tiene dos filas con la misma fecha de vigencia —una `CARRIED_FORWARD` y una
-`RECOMPUTED`—, el historial las devuelve con la `RECOMPUTED` antes que la arrastrada, y la
-`RECOMPUTED` es su cotización vigente (FR-026, FR-037). La fila arrastrada documenta el precio
-anterior al reprecio y la repreciada, el precio vigente.
+Existe como máximo una cotización por jugador y fecha de vigencia, independientemente del origen
+(SPEC-023). Un cálculo posterior actualiza la fila diaria existente y conserva su identidad, con el
+último precio, estrategia, origen y `calculatedAt`; no devuelve una segunda fila diaria arrastrada.
 
 Cuando la valuación disponible del jugador no es posterior a su fecha de vigencia de referencia —porque
 sus métricas no cambiaron o porque la campaña que las provee no aportó datos nuevos—, la ejecución no
@@ -297,7 +295,7 @@ Todos los endpoints de consulta exponen los mismos campos de auditoría (FR-041)
 | `INVALID_VARIATION_CAP` | 400 | Tope de variación inválido |
 | `INVALID_MIN_PRICE_FLOOR` | 400 | Piso mínimo no positivo |
 | `UNKNOWN_QUOTE_STRATEGY` | 400 | Estrategia fuera del catálogo vigente |
-| `EXECUTION_ALREADY_EXISTS` | 409 | Ya existe una ejecución de cotización para la fecha de cotización (FR-060) |
+| `EXECUTION_ALREADY_EXISTS` | 409 | Conflicto de corrida automática por fecha UTC (SPEC-023); no limita corridas manuales ni se devuelve por repetición de este POST |
 | `QUOTE_NOT_FOUND` | 404 | El jugador no tiene cotización disponible |
 | `QUOTE_UNAVAILABLE` | 409 | Error vigente del mercado: el jugador no tiene cotización vigente. Se conserva sin cambios (FR-045) |
 

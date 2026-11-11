@@ -12,14 +12,14 @@
 ## Unicidad por fecha
 
 - [x] CHK001 ¿Se define con precisión qué fecha UTC identifica la unicidad y cómo se obtiene respecto de la fecha de cotización? [Clarity, Spec §FR-006] — [data-model §1](../data-model.md) y [research §9](../research.md) fijan `quote_date` como la fecha UTC del día en que corre.
-- [x] CHK002 ¿Se especifica que la garantía de una ejecución por fecha cubre por igual las vías manual y automática? [Completeness, Spec §FR-006] — FR-006 declara la restricción aplicable también a la vía automática y el [contrato §3](contracts/scheduling-configuration.md) comparte el recorrido.
+- [x] CHK002 ¿Se diferencia el límite de ejecuciones automáticas de la admisión de ejecuciones manuales múltiples en una misma fecha? [Completeness, Spec §FR-006, §FR-015] — FR-006 y FR-015 permiten múltiples ejecuciones manuales y limitan a una las automáticas por fecha UTC.
 - [x] CHK003 ¿Se define el resultado observable de un disparo duplicado: ausencia de escrituras, ausencia de segunda ejecución y constancia operativa del intento? [Completeness, Spec §FR-006, §SC-007] — FR-006 y SC-007 lo fijan; el [contrato §4](contracts/scheduling-configuration.md), caso 3, lo detalla.
 - [x] CHK004 ¿Se declara el alcance real de la garantía entre instancias o procesos concurrentes, o se supone explícitamente una instancia única? [Assumption, Gap, Spec §FR-006] — [research §3](../research.md) registra el supuesto de instancia única y el alcance real de cada capa.
 
 ## Exclusión de solapamientos
 
 - [x] CHK005 ¿Se define el rechazo por fecha ya registrada? [Clarity, Spec §FR-006] — El catálogo operativo registra `EXECUTION_ALREADY_EXISTS`; no se añade un motivo de lock global.
-- [x] CHK006 ¿Se define el alcance de la unicidad? [Coverage, Spec §FR-006] — [research §3](../research.md) conserva la unicidad por fecha para las vías manual y automática; no se añade exclusión global.
+- [x] CHK006 ¿Se define el alcance de la unicidad? [Coverage, Spec §FR-006, §FR-015] — La unicidad por fecha aplica solo a corridas AUTOMATIC; no se limita la cantidad de corridas MANUAL ni se añade exclusión mutua global.
 - [x] CHK007 ¿Se define el alcance frente a una corrida bloqueada? [Recovery, Gap, Spec §FR-006] — La recuperación y el bloqueo global no forman parte de esta feature.
 
 ## Atomicidad e integridad de datos
@@ -39,6 +39,7 @@
 ## Notes
 
 - Decisiones del revisor (2026-11-03): recuperación ante corrida bloqueada fuera de alcance; FR-007 eliminada y atomicidad por jugador conservada por SPEC-016.
+- La expectativa operativa es que no se inicien dos recálculos simultáneamente ni se dispare el scheduler mientras otro recálculo está en curso. No se exige una garantía técnica de exclusión mutua en esta feature; T026 conserva una prueba histórica, no un requisito vigente.
 - Marcar `[x]` solo tras revisar y confirmar que el criterio de calidad de requisitos se cumple.
 - Los elementos se dejan sin marcar mientras requieran aclaración, corrección o evaluación del revisor.
 - `/speckit.implement` lee el estado de los checkboxes como puerta y no debe modificar los marcadores.

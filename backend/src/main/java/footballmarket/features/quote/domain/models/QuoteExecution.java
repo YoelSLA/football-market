@@ -22,9 +22,8 @@ import lombok.Getter;
 /**
  * Corrida persistida del recálculo de cotizaciones.
  *
- * <p>Es un registro append-only: cada fecha de cotización admite como máximo una ejecución, de modo
- * que el resumen de una fecha es único e inequívoco y los parámetros aplicados quedan en un único
- * lugar, sin duplicarse en cada fila del historial.
+ * <p>Cada corrida conserva su propio resumen y parámetros. Una fecha UTC admite corridas manuales
+ * ilimitadas y como máximo una automática, sin duplicar parámetros en cada cotización.
  */
 @Entity
 @Table(name = "quote_executions")

@@ -8,19 +8,20 @@ IMPLEMENT: las fases siguientes son Checklists, Tasks y Analyze.
 
 ---
 
-## 0. Estado verificado del código (2026-11-03)
+## 0. Estado verificado del código (2026-11-11)
 
 Leído antes de decidir; estas son las capacidades existentes que la feature reutiliza.
 
 | Elemento | Estado observado |
 | --- | --- |
-| `QuoteRecalculationServiceImpl.recalculate(...)` | Valida estrategia, rechaza mercado no inicializado, aplica los valores por defecto de `QuoteProperties`, reserva la ejecución con `saveAndFlush` (la unicidad por fecha se impone en base), recorre la población con atomicidad por jugador y completa el resumen |
-| `quote_executions` | Una fila por `quote_date` (`uq_quote_executions_date`); guarda estrategia, versión, parámetros, contadores e instantes. No distingue origen |
+| `QuoteRecalculationServiceImpl.recalculate(...)` | Valida estrategia, rechaza mercado no inicializado, aplica valores por defecto, reserva ejecución y publica jugadores con atomicidad por jugador |
+| `quote_executions` | `uq_quote_executions_date` limita actualmente a una fila por `quote_date`; debe reemplazarse por unicidad parcial `(quote_date)` para `origin='AUTOMATIC'`, preservando manuales múltiples |
 | `QuoteProperties` | `market.quote.{adjustment-factor, variation-cap, min-price-floor, initial-anchor}`, con valores por defecto y validación Jakarta |
 | `Clock` | Bean `marketClock` = `Clock.systemUTC()`; la fecha de cotización es `LocalDate.now(marketClock)` |
 | Consulta de ejecuciones | `GET /api/quotes/executions?date=`, servida por el mismo `QuoteRecalculationService` y su repositorio |
 | Programación | No existe ningún `@Scheduled`, `@EnableScheduling`, `TaskScheduler` ni configuración `spring.task.*` |
-| Exclusión de solapamiento | **No existe ningún lock ni control de concurrencia propio del recálculo.** La única garantía es la restricción `uq_quote_executions_date`, que rechaza la segunda inserción de la misma fecha |
+| Exclusión de solapamiento | No existe lock global. La restricción única por fecha actual impide indebidamente repetir corridas manuales y no distingue el límite automático requerido |
+| `player_quotes` | `uq_player_quote (player_id, effective_date, origin)` permite filas del mismo jugador/fecha con distinto origen; debe cambiarse para la cotización recalculada única por jugador-fecha, actualizando la fila existente con el último resultado |
 | Atomicidad de la publicación por jugador | `QuotePlayerPublisher.publish(...)` es `@Transactional(propagation = REQUIRES_NEW)`: cada jugador confirma o revierte por separado, y el bucle captura y cuenta los fallos individuales |
 | Registro operativo | Logs estructurados SLF4J ya usados por la ejecución (`quote_execution_started`, `quote_execution_completed`, `quote_player_recalculation_failed`) |
 | Dependencias | Spring Boot 4.1.1 administra `spring-context` y `spring-boot-autoconfigure`, que incluyen el soporte de scheduling. No hace falta una dependencia nueva |
@@ -30,7 +31,7 @@ Leído antes de decidir; estas son las capacidades existentes que la feature reu
 ## 1. Mecanismo de programación (FR-001, FR-011)
 
 **Decisión**: usar el soporte de scheduling de Spring (`@EnableScheduling` + `@Scheduled` con
-expresión cron resuelta por propiedad y `zone = "UTC"`).
+expresión cron resuelta por propiedad, valor por defecto diario `0 0 12 * * *`, y `zone = "UTC"`).
 
 **Rationale**:
 - Ya está en el classpath por Spring Boot; no incorpora tecnología ni dependencia.
@@ -68,13 +69,49 @@ un hilo serializa los procesos batch y refuerza la no superposición.
 
 ---
 
-## 3. Unicidad y no superposición (FR-006)
+## 3. Unicidad por fecha y corridas múltiples (FR-006, FR-015)
 
-**Decisión**: conservar `uq_quote_executions_date` y el rechazo existente de SPEC-016 para una
-segunda ejecución de la misma fecha. Por decisión humana se retiró la exigencia adicional de
-exclusión global: no se añade un lock de instancia ni se garantiza exclusión entre fechas distintas.
-El scheduler usa el hilo de programación configurado; eso no implica una garantía global para la vía
-manual. Un fallo sin ejecución registrada deja disponible el reintento conforme al servicio existente.
+**Decisión**: reemplazar `uq_quote_executions_date` por una restricción única parcial para
+`(quote_date) WHERE origin = 'AUTOMATIC'`. Las corridas manuales no tienen unicidad por fecha y cada
+una obtiene su propio ID y fila de ejecución. La inserción de la corrida automática debe ser
+idempotente en la base: si ya existe una automática para la fecha, se omite y se registra
+`EXECUTION_ALREADY_EXISTS`. No se agrega lock global para corridas manuales ni para fechas distintas.
+
+**Supuesto operativo de concurrencia**: no se inicia una segunda ejecución manual mientras una
+primera sigue en curso, ni se programa el disparo automático para coincidir con un recálculo en curso.
+La feature no implementa ni exige una exclusión mutua global; la unicidad automática por fecha evita
+registrar una segunda corrida automática de esa fecha, pero no es una garantía general contra toda
+concurrencia entre vías.
+
+La reserva automática debe basarse en el origen y fecha de la corrida, no en la mera existencia de
+cualquier ejecución ese día. Los conflictos concurrentes de dos disparos automáticos se resuelven en
+la restricción parcial; el caso de uso traduce ese conflicto a omisión operativa. Manuales pueden
+ejecutarse antes o después de la automática sin consumir su cuota diaria.
+
+**Alternativas consideradas**: unicidad total por fecha contradice las manuales ilimitadas; control
+solo en memoria no protege frente a reinicios o varias instancias; contar corridas antes de insertar
+es susceptible a carreras.
+
+## 17. Cotización única por jugador y fecha (FR-014)
+
+**Decisión**: `player_quotes` debe tener como máximo una fila por `(player_id, effective_date)`,
+independientemente del origen. Si la fila del día ya existe (incluyendo `INITIAL` o
+`CARRIED_FORWARD`), la ejecución posterior actualiza esa fila con el último precio, estrategia,
+origen del cálculo y `calculated_at`, dentro de la misma atomicidad por jugador. No insertar una
+segunda fila diaria con otro origen.
+
+La migración nueva sustituye `uq_player_quote (player_id, effective_date, origin)` por unicidad
+`(player_id, effective_date)`. Debe verificarse que los datos existentes no contienen colisiones
+antes de aplicar la restricción y definir una resolución compatible si las hubiera; no editar
+migraciones aplicadas. Las consultas de vigente, ranking e historial siguen deterministas.
+
+**Rationale**: una clave por origen permite varias cotizaciones del jugador en la fecha y contradice
+FR-014. Actualizar cualquier fila existente de esa fecha mantiene la cardinalidad diaria sin cambiar
+la fórmula.
+
+**Alternativas consideradas**: borrar e insertar pierde identidad y puede romper referencias; permitir
+duplicados y elegir el más reciente viola la cardinalidad explícita; unicidad por origen no asegura
+unicidad jugador-día.
 
 ---
 
@@ -83,7 +120,7 @@ manual. Un fallo sin ejecución registrada deja disponible el reintento conforme
 **Decisión**: extender `QuoteProperties` (prefijo `market.quote`) con:
 - `strategy`: estrategia de valuación aplicada por la ejecución automática, por defecto
   `POSITIONAL_PERFORMANCE`.
-- `schedule.cron`: expresión cron por defecto `0 0 0 * * MON`.
+- `schedule.cron`: expresión cron por defecto `0 0 12 * * *` (diaria a las 12:00 UTC).
 - `schedule.enabled`: habilitación del disparador, por defecto `true`.
 
 La ejecución automática toma estrategia, factor de ajuste, tope y piso de esa misma configuración.
@@ -235,9 +272,9 @@ Los campos nuevos son aditivos y no rompen consumidores. OpenAPI se actualiza en
 
 ## 11. Migración de base de datos
 
-**Decisión**: una única migración Flyway nueva
-(`V<timestamp>__add_quote_execution_origin.sql`) que agrega `origin` con relleno `MANUAL`, retira el
-valor por defecto y agrega el `CHECK` del catálogo. No se toca ninguna migración previa.
+**Decisión**: nuevas migraciones Flyway agregan `origin` con relleno `MANUAL`, retiran el valor por
+defecto, agregan el `CHECK` del catálogo y reemplazan las restricciones incompatibles de ejecuciones
+y cotizaciones diarias. No se toca ninguna migración previa.
 
 **Rationale**: el proyecto está en desarrollo y los datos son descartables, pero la migración debe
 poder aplicarse sobre una base existente sin reescribir historial. No se implementan mecanismos de
@@ -252,8 +289,8 @@ compatibilidad retroactiva ni columnas preservadoras.
 ## 12. Retención y consulta (FR-005)
 
 **Decisión**: no se agrega purga ni retención configurable; los registros de ejecución se conservan
-indefinidamente junto con el historial de cotizaciones. La consulta sigue siendo la existente por
-fecha, con una fila como máximo.
+indefinidamente junto con el historial de cotizaciones. La consulta existente por fecha retorna todas
+las corridas identificadas de esa fecha.
 
 **Rationale**: es lo que fija la clarificación y no requiere trabajo adicional. Introducir una purga
 sería alcance no solicitado.

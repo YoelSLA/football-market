@@ -4,6 +4,7 @@ import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,9 @@ import org.springframework.data.repository.query.Param;
  * lectura sea total y una fila nunca dependa del orden arbitrario de PostgreSQL.
  */
 public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> {
+
+  /** Busca la única cotización del jugador para la fecha, sin distinguir el origen. */
+  Optional<PlayerQuote> findByPlayerIdAndEffectiveDate(Long playerId, LocalDate effectiveDate);
 
   /**
    * Última fila persistida del jugador: su cotización vigente.

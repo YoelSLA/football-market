@@ -91,7 +91,7 @@ class QuoteExecutionPersistenceTest {
     }
 
     @Test
-    @DisplayName("Rechaza una segunda ejecución para la misma fecha")
+    @DisplayName("Rechaza una segunda ejecución automática para la misma fecha")
     void rejectsDuplicateDate() throws Exception {
       try (Connection connection = ValuationDatabaseSupport.migrated(DATABASE, "execution_unique");
           Statement statement = connection.createStatement()) {
@@ -100,6 +100,25 @@ class QuoteExecutionPersistenceTest {
         assertThatThrownBy(() -> insertExecution(statement, "2026-10-21", "0.10"))
             .isInstanceOf(SQLException.class);
         assertThat(countExecutions(statement)).isEqualTo(1L);
+      }
+    }
+
+    @Test
+    @DisplayName("Admite varias manuales antes y después de una automática del mismo día")
+    void allowsRepeatedManualExecutions() throws Exception {
+      // Arrange
+      try (Connection connection = ValuationDatabaseSupport.migrated(DATABASE, "manual_repeated");
+          Statement statement = connection.createStatement()) {
+        // Act
+        insertExecution(statement, "2026-10-21", "0.10", "MANUAL");
+        insertExecution(statement, "2026-10-21", "0.10", "MANUAL");
+        insertExecution(statement, "2026-10-21", "0.10");
+        insertExecution(statement, "2026-10-21", "0.10", "MANUAL");
+        // Assert
+        assertThat(countExecutions(statement)).isEqualTo(4L);
+        assertThatThrownBy(() -> insertExecution(statement, "2026-10-21", "0.10"))
+            .isInstanceOf(SQLException.class);
+        assertThat(countExecutions(statement)).isEqualTo(4L);
       }
     }
 
@@ -116,7 +135,7 @@ class QuoteExecutionPersistenceTest {
     }
 
     @Test
-    @DisplayName("Dos inserciones concurrentes dejan una sola ejecución")
+    @DisplayName("Dos inserciones automáticas concurrentes dejan una sola ejecución")
     void concurrentExecutionsLeaveOneRow() throws Exception {
       String schema = "execution_concurrent";
       try (Connection ignored = ValuationDatabaseSupport.migrated(DATABASE, schema)) {
@@ -160,6 +179,11 @@ class QuoteExecutionPersistenceTest {
 
   private static void insertExecution(Statement statement, String date, String factor)
       throws SQLException {
+    insertExecution(statement, date, factor, "AUTOMATIC");
+  }
+
+  private static void insertExecution(
+      Statement statement, String date, String factor, String origin) throws SQLException {
     statement.execute(
         "INSERT INTO quote_executions (quote_date, strategy_name, strategy_version,"
             + " adjustment_factor, variation_cap, min_price_floor, priced_players,"
@@ -168,7 +192,9 @@ class QuoteExecutionPersistenceTest {
             + date
             + "', 'POSITIONAL_PERFORMANCE', 'v1', "
             + factor
-            + ", 0.10, 1, 0, 0, 0, 0, 0, 'MANUAL', now(), now())");
+            + ", 0.10, 1, 0, 0, 0, 0, 0, '"
+            + origin
+            + "', now(), now())");
   }
 
   private static long countExecutions(Statement statement) throws SQLException {

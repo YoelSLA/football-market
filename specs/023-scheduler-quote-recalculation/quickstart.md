@@ -29,8 +29,8 @@ detalles de datos están en [`data-model.md`](data-model.md) y las decisiones de
 
 ## 2. Levantar la aplicación con una cadencia de prueba
 
-La cadencia se ajusta por configuración. Para observar el disparo sin esperar al lunes, usar una
-expresión de cada minuto y evaluar en UTC:
+La cadencia se ajusta por configuración. Para observar el disparo sin esperar a las 12:00 UTC, usar
+una expresión de cada minuto y evaluar en UTC:
 
 ```powershell
 $env:MARKET_QUOTE_SCHEDULE_CRON = "0 */1 * * * *"
@@ -88,20 +88,20 @@ curl -s -X POST http://localhost:8080/api/quotes/initialize \
 
 ---
 
-## 4. Escenario B — disparo duplicado el mismo día (US1, US3)
+## 4. Escenario B — corridas múltiples y cotización única diaria (US1, US3)
 
-Con la aplicación corriendo y una ejecución ya registrada para la fecha UTC (resultado del escenario A):
+Con la aplicación corriendo y una ejecución automática ya registrada para la fecha UTC (resultado del escenario A):
 
 1. Esperar al siguiente disparo.
 
 **Esperado**:
 
 - `quote_automatic_recalculation_skipped reason=EXECUTION_ALREADY_EXISTS`.
-- No se crea una segunda fila y no se escriben cotizaciones: el historial de un jugador no gana filas
-  nuevas con la fecha de esa corrida.
+- No se crea una segunda ejecución automática ni se escriben cotizaciones en ese disparo omitido.
 
 ```sql
-SELECT count(*) FROM quote_executions WHERE quote_date = CURRENT_DATE;  -- 1
+SELECT count(*) FROM quote_executions
+WHERE quote_date = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date AND origin = 'AUTOMATIC'; -- 1
 ```
 
 2. Intentar el mismo día una ejecución manual desde HTTP:
@@ -112,7 +112,22 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST http://localhost:8080/api/quote
   -d '{"strategy":"POSITIONAL_PERFORMANCE"}'
 ```
 
-**Esperado**: `409`, coherente con la unicidad por fecha ya vigente.
+**Esperado**: `200`; se registra una ejecución `MANUAL` adicional para la misma fecha UTC.
+
+Ejecutar el POST manual una segunda vez y verificar que ambas ejecuciones manuales quedan registradas,
+pero el recuento de filas recalculadas por jugador-fecha permanece en uno y su valor corresponde al
+cálculo más reciente:
+
+```sql
+SELECT count(*) FROM quote_executions
+WHERE quote_date = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date AND origin = 'MANUAL'; -- >= 2
+
+SELECT player_id, effective_date, count(*)
+FROM player_quotes
+WHERE effective_date = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC')::date
+GROUP BY player_id, effective_date
+HAVING count(*) > 1; -- sin filas
+```
 
 > La unicidad por fecha se verifica también con el test de integración del caso de uso. No se añade
 > una garantía de exclusión global entre recálculos de fechas distintas.
@@ -126,7 +141,7 @@ curl -s -H "Authorization: Bearer $TOKEN" \
   "http://localhost:8080/api/quotes/executions?date=$(date -u +%Y-%m-%d)"
 ```
 
-**Esperado**: un único elemento con `origin`, `result`, `failureReason`, `pricedPlayers`,
+**Esperado**: todas las corridas de la fecha UTC, cada una con ID, `origin`, `result`, `failureReason`, `pricedPlayers`,
 `recomputedRows`, `carriedForwardRows`, `failedPlayers`, `startedAt` y `finishedAt`.
 
 Comprobaciones:
@@ -208,13 +223,14 @@ existir en este cambio.
 
 | Criterio | Cómo se comprueba |
 | --- | --- |
-| SC-001 | El disparo ocurre con la cadencia configurada; por defecto, lunes 00:00 UTC (escenario A) |
+| SC-001 | El disparo ocurre con la cadencia configurada; por defecto, diario 12:00 UTC (escenario A) |
 | SC-002 | `GET /api/quotes/executions?date=` devuelve `origin`, `result` y el alcance de la corrida (escenario C) |
 | SC-003 | Ante un fallo del caso de uso, el scheduler registra el error sin compensar cotizaciones |
-| SC-004 | Tras un intento sin ejecución registrada, reintento manual conforme a SPEC-016 |
+| SC-004, SC-010 | Se permiten varias corridas manuales por fecha y como máximo una automática (escenario B) |
 | SC-005 | La corrida se completa sin ninguna acción de un operador (escenario A) |
 | SC-006 | La respuesta no contiene trazas, mensajes técnicos ni identificadores internos (escenario C) |
-| SC-007 | El disparo duplicado no crea fila ni escribe cotizaciones y deja el evento `skipped` (escenario B) |
+| SC-007 | Disparos automáticos adicionales se omiten y dejan evento `skipped` (escenario B) |
+| SC-009 | Cotización única por jugador-fecha; corrida posterior actualiza la fila existente (escenario B) |
 | SC-008 | El scheduler registra el error; persistencia y reintentos siguen el comportamiento existente (escenario E) |
 
 ---

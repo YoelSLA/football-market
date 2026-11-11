@@ -24,18 +24,17 @@ class PlayerQuoteMigrationTest {
   class Migration {
 
     @Test
-    @DisplayName("Admite una fila por jugador, fecha de vigencia y origen")
-    void allowsOneRowPerPlayerDateAndOrigin() throws Exception {
+    @DisplayName("Admite una sola fila por jugador y fecha independientemente del origen")
+    void allowsOneRowPerPlayerDate() throws Exception {
       try (Connection connection = ValuationDatabaseSupport.migrated(DATABASE, "quote_migration");
           Statement statement = connection.createStatement()) {
-        assertThatCode(
-                () -> {
-                  insertInitial(statement, "2026-10-20");
-                  insertCarriedForward(statement, "2026-10-20");
-                })
-            .doesNotThrowAnyException();
+        assertThatCode(() -> insertInitial(statement, "2026-10-20")).doesNotThrowAnyException();
+        assertThatThrownBy(() -> insertCarriedForward(statement, "2026-10-20"))
+            .isInstanceOf(SQLException.class);
         assertThatThrownBy(() -> insertInitial(statement, "2026-10-20"))
             .isInstanceOf(SQLException.class);
+        assertThatCode(() -> insertCarriedForward(statement, "2026-10-21"))
+            .doesNotThrowAnyException();
       }
     }
 

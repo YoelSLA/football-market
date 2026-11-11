@@ -12,8 +12,8 @@ operativo es evidencia en logs, no una tabla.
 
 ## 1. `quote_executions` — Ejecución de cotización (ampliada)
 
-Registro append-only con como máximo una fila por fecha de cotización UTC. La columna `origin` es la
-única incorporación.
+Registro append-only: admite cualquier cantidad de filas `MANUAL` por fecha UTC y como máximo una
+fila `AUTOMATIC` por fecha. La columna `origin` es la única incorporación de esta feature al modelo.
 
 | Columna | Tipo | Nulable | Semántica |
 | --- | --- | --- | --- |
@@ -37,7 +37,7 @@ Registro append-only con como máximo una fila por fecha de cotización UTC. La 
 
 | Nombre | Definición | Origen |
 | --- | --- | --- |
-| `uq_quote_executions_date` | `UNIQUE (quote_date)` | FR-006: como máximo una ejecución por fecha UTC; segunda inserción → `ExecutionAlreadyExistsException` |
+| `uq_quote_executions_automatic_date` | `UNIQUE (quote_date) WHERE origin = 'AUTOMATIC'` (índice único parcial) | FR-006: como máximo una corrida automática por fecha UTC; corridas manuales ilimitadas |
 | `ck_quote_execution_origin` | `CHECK (origin IN ('MANUAL', 'AUTOMATIC'))` | **Nueva.** Catálogo cerrado del origen (FR-004) |
 | `ck_quote_execution_factor`, `ck_quote_execution_cap`, `ck_quote_execution_floor`, `ck_quote_execution_counters` | Sin cambios | SPEC-016 |
 
@@ -60,7 +60,24 @@ no forma parte de esta tabla: vive únicamente en el registro operativo (FR-013)
 
 | Nombre | Definición | Uso |
 | --- | --- | --- |
-| `ix_quote_executions_date` | `(quote_date DESC, started_at DESC)` | Consulta existente por fecha (FR-005). Sin cambios: el origen no se usa como filtro |
+| `ix_quote_executions_date` | `(quote_date DESC, started_at DESC)` | Consulta existente por fecha retorna todas las corridas (FR-005) |
+
+## 1.1. `player_quotes` — Cotización diaria de jugador
+
+La tabla existente no agrega entidad ni columnas. Su restricción actual `uq_player_quote
+(player_id, effective_date, origin)` debe cambiarse por unicidad `(player_id, effective_date)`, sin
+distinción de origen. Una ejecución posterior actualiza cualquier fila diaria existente con el último
+cálculo, incluyendo precio, estrategia, origen y hora de cálculo.
+
+| Invariante | Regla |
+| --- | --- |
+| Cotización diaria única | A lo sumo una fila por `(player_id, effective_date)`, cualquiera sea `origin` |
+| Actualización repetida | Recalcular mismo jugador y fecha actualiza precio, estrategia, `origin` y `calculated_at` en la fila existente |
+| Historial | Se conserva la fila y su identidad; no se borra ni inserta una segunda fila diaria |
+
+La migración nueva sustituye la unicidad anterior sin modificar migraciones ya aplicadas. Debe
+comprobar colisiones existentes de jugador-fecha antes de imponer la nueva restricción y documentar
+su tratamiento para el entorno de desarrollo.
 
 ---
 
@@ -97,9 +114,10 @@ Cambios sobre el Model existente:
 | Completada con fallos individuales | Fin del recorrido con `failed_players > 0` | Fila con contadores definitivos; `result = FAILED`, motivo `INDIVIDUAL_PLAYER_FAILURES` |
 | Descartada | Excepción no controlada que revierte la transacción externa existente | Ninguna fila de ejecución para la fecha; el intento queda en el registro operativo (FR-013). Las cotizaciones ya confirmadas pueden permanecer; compensarlas está fuera del alcance del scheduler (TD-024) |
 
-El comportamiento existente no persiste un estado terminal para el fallo completo; si no queda
-ejecución registrada, la fecha queda disponible para reintento manual. Un resultado `FAILED` por
-fallos individuales sí corresponde a una ejecución completada y registrada, y consume la fecha.
+El comportamiento existente no persiste un estado terminal para el fallo completo. Un resultado
+`FAILED` por fallos individuales corresponde a una ejecución completada y registrada. Solo una corrida
+`AUTOMATIC` registrada consume la cuota automática de esa fecha; las corridas manuales no consumen
+esa cuota.
 
 ---
 
@@ -108,7 +126,7 @@ fallos individuales sí corresponde a una ejecución completada y registrada, y 
 | Propiedad | Tipo | Obligatoria | Valor por defecto | Regla |
 | --- | --- | --- | --- | --- |
 | `market.quote.strategy` | enum `ValuationStrategy` | no | `POSITIONAL_PERFORMANCE` | Estrategia aplicada por la ejecución automática (FR-002) |
-| `market.quote.schedule.cron` | `String` | no | `0 0 0 * * MON` | Expresión cron de 6 campos de Spring, evaluada en UTC (FR-001) |
+| `market.quote.schedule.cron` | `String` | no | `0 0 12 * * *` | Expresión cron de 6 campos de Spring, diaria a las 12:00 UTC por defecto (FR-001) |
 | `market.quote.schedule.enabled` | `boolean` | no | `true` | Habilita el disparador; no es un requisito funcional (ver [`research.md`](research.md) §4) |
 
 `market.quote.{adjustment-factor, variation-cap, min-price-floor, initial-anchor}` conservan su
@@ -126,7 +144,7 @@ sustituye ni duplica `quote_executions`:
 
 | Situación | Evento | Datos mínimos |
 | --- | --- | --- |
-| Disparo omitido por fecha ya registrada | `quote_automatic_recalculation_skipped` | fecha UTC, motivo `EXECUTION_ALREADY_EXISTS` |
+| Disparo automático adicional en fecha con corrida automática | `quote_automatic_recalculation_skipped` | fecha UTC, motivo `EXECUTION_ALREADY_EXISTS` |
 | Rechazo por mercado no inicializado | `quote_automatic_recalculation_rejected` | fecha UTC, motivo `MARKET_NOT_INITIALIZED` |
 | Fallo completo de la corrida | `quote_automatic_recalculation_failed` | fecha UTC, clase de la causa |
 | Disparo aceptado | `quote_automatic_recalculation_triggered` | fecha UTC |
@@ -157,7 +175,8 @@ Las transiciones y resultados de persistencia describen el recálculo existente,
 
 | Invariante | Requisito | Verificación observable |
 | --- | --- | --- |
-| Como máximo una ejecución por fecha UTC | FR-006 | `uq_quote_executions_date`; segunda corrida de la fecha rechazada sin escribir cotizaciones |
+| Manuales ilimitadas por fecha y como máximo una automática | FR-006, FR-015 | Índice único parcial sobre fecha para `AUTOMATIC`; inserciones manuales distintas admitidas |
+| Una cotización por jugador-fecha | FR-014 | Restricción única por jugador/fecha sin distinción de origen; corrida posterior actualiza la fila |
 | Toda ejecución persistida tiene origen | FR-004 | `origin NOT NULL` + `CK` del catálogo cerrado |
 | El resultado es coherente con los contadores | FR-004 | Derivación en el Model; no existe columna alternativa que pueda divergir |
 | Error de invocación registrado | FR-013, SC-008 | El scheduler registra el error; el rollback y la disponibilidad de reintento dependen del recálculo existente. Las cotizaciones ya confirmadas no se compensan (TD-024) |

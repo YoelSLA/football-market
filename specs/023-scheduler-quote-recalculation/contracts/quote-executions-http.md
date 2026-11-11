@@ -17,7 +17,7 @@ automático ni consulta histórica nueva (FR-005).
 | Método y ruta | Cambio en esta feature |
 | --- | --- |
 | `POST /api/quotes/recalculate` | Sin cambios en el request. El response gana tres campos aditivos. `origin` siempre `MANUAL` |
-| `GET /api/quotes/executions?date=` | Sin cambios en la query. Cada elemento gana los mismos tres campos aditivos |
+| `GET /api/quotes/executions?date=` | Sin cambios en la query. Retorna todas las corridas de la fecha; cada elemento gana los mismos tres campos aditivos |
 | `POST /api/quotes/initialize` | Sin cambios |
 | `GET /api/players/{id}/quotes`, `.../quotes/current`, `/api/players/ranking` | Sin cambios |
 
@@ -42,6 +42,7 @@ contrato.
 {
   "executions": [
     {
+      "id": 912,
       "quoteDate": "2026-11-02",
       "origin": "AUTOMATIC",
       "result": "SUCCESS",
@@ -57,7 +58,26 @@ contrato.
       "notRepricedPlayers": 3,
       "failedPlayers": 0,
       "startedAt": "2026-11-02T00:00:00Z",
-      "finishedAt": "2026-11-02T00:00:12Z"
+      "finishedAt": "2026-11-02T12:00:12Z"
+    },
+    {
+      "id": 913,
+      "quoteDate": "2026-11-02",
+      "origin": "MANUAL",
+      "result": "SUCCESS",
+      "failureReason": null,
+      "strategy": "POSITIONAL_PERFORMANCE",
+      "strategyVersion": "v1",
+      "adjustmentFactor": 0.10,
+      "variationCap": 0.10,
+      "minPriceFloor": 1,
+      "pricedPlayers": 42,
+      "recomputedRows": 30,
+      "carriedForwardRows": 12,
+      "notRepricedPlayers": 3,
+      "failedPlayers": 0,
+      "startedAt": "2026-11-02T13:00:00Z",
+      "finishedAt": "2026-11-02T13:00:12Z"
     }
   ]
 }
@@ -94,9 +114,9 @@ Response `200`:
 
 ## 3. Comportamiento en la consulta por fecha
 
-- Como máximo hay una ejecución por fecha UTC, de modo que la lista contiene cero o un elemento.
+- La lista incluye todas las corridas de la fecha, ordenadas por inicio descendente. Puede incluir muchas `MANUAL` y como máximo una `AUTOMATIC`.
 - Una fecha sin ejecución devuelve `{"executions": []}`. Si el disparo se omite porque ya existe
-  una ejecución para esa fecha, se devuelve la ejecución existente. El motivo del rechazo o fallo
+  una ejecución automática para esa fecha, se devuelve la corrida automática existente junto con cualquier manual. El motivo del rechazo o fallo
   no aparece en la respuesta: está en el registro operativo; la persistencia depende del caso de uso existente.
 - El origen no es un filtro: no se añade query parameter ni se cambia el índice.
 
@@ -110,7 +130,7 @@ Sin códigos nuevos ni cambios de código HTTP. Se mantienen los de SPEC-016:
 | `UNKNOWN_QUOTE_STRATEGY` | 400 | Estrategia fuera del catálogo |
 | `INVALID_ADJUSTMENT_FACTOR`, `INVALID_VARIATION_CAP`, `INVALID_MIN_PRICE_FLOOR` | 400 | Parámetros fuera de rango |
 | `MARKET_NOT_INITIALIZED` | 409 | Mercado no inicializado |
-| `EXECUTION_ALREADY_EXISTS` | 409 | Ya existe una ejecución para la fecha o hay una corrida en curso |
+| `EXECUTION_ALREADY_EXISTS` | 409 | Conflicto idempotente de corrida automática para la fecha; no limita corridas manuales |
 | `401` | — | JWT ausente o inválido |
 | `INTERNAL_ERROR` | 500 | Fallo general |
 

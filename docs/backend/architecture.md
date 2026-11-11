@@ -78,12 +78,22 @@ inspecciona ni transforma el resultado de dominio.
 El disparador invoca `recalculateAutomatic()` y traduce los rechazos o errores recibidos a eventos
 operativos, sin propagarlos ni impedir disparos futuros. No contiene lógica de negocio, fórmulas,
 validaciones del mercado ni gestión de transacciones, persistencia, compensación, recuperación o
-reintentos. Esas responsabilidades permanecen en el recálculo existente; la unicidad por fecha UTC
-se conserva sin añadir un lock global y TD-024 permanece pendiente.
+reintentos. Esas responsabilidades permanecen en el recálculo existente: una fecha UTC admite
+cualquier cantidad de corridas manuales y como máximo una automática, impuesta mediante el índice
+único parcial `uq_quote_executions_automatic_date`. Las manuales no consumen la cuota automática.
+No se añade un lock global; el uso operativo evita recálculos simultáneos. TD-024 permanece pendiente.
+
+La cotización tiene unicidad por `(player_id, effective_date)`, sin distinguir origen.
+`QuotePlayerPublisher` actualiza el cálculo de la fila diaria existente mediante
+`PlayerQuote.replaceCalculation`, preservando identidad, jugador y fecha; precio, trazabilidad,
+origen e instante reflejan el último cálculo aplicable. Las reglas existentes que omiten el reprecio
+sin una valuación posterior se conservan. La migración detiene su aplicación ante colisiones
+previas de jugador-fecha y exige resolución humana; no borra ni selecciona filas automáticamente.
 
 La programación se habilita una sola vez con `@EnableScheduling` en `FootballMarketApplication` y
 utiliza el `TaskScheduler` autoconfigurado por Spring Boot, con un hilo y prefijo `market-batch-`.
-El método `@Scheduled` usa cron configurable y zona fija UTC; el perfil `test` deja el disparador
+El método `@Scheduled` usa cron configurable (por defecto diario a las 12:00) y zona fija UTC;
+el perfil `test` deja el disparador
 inerte. Otro proceso batch puede añadir su propio disparador en el módulo de su funcionalidad y
 reutilizar esta infraestructura, sin duplicar la habilitación ni crear un registro central de jobs.
 SPEC-023 no implementa la sincronización automática de datos deportivos (#41).

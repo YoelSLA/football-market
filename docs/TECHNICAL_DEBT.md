@@ -475,6 +475,11 @@ que no evita esos intentos repetidos. Poder reintentar no implica recuperar exit
 Se corrigió la expectativa adicional de cero fallos del test de SPEC-023, no el comportamiento
 productivo; TD-024 permanece pendiente.
 
+**Delta diario de SPEC-023 (2026-11-11).** La publicación ahora actualiza una cotización existente
+por jugador-fecha en vez de intentar duplicarla, también en un reintento. Esto elimina esa causa
+concreta de conflicto de unicidad, pero no cambia `REQUIRES_NEW` ni compensa filas confirmadas si
+falla el resumen. TD-024 permanece pendiente; no hay evidencia de tests ejecutados por el agente.
+
 **Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
 consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.
 

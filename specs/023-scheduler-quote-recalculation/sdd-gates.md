@@ -3,6 +3,31 @@
 Registro persistente de las fases y gates de esta funcionalidad. Conserva la evidencia histórica y no
 se reescribe para reflejar estados posteriores.
 
+## Referencia de continuación — bloque 2
+
+- **Solicitud del usuario**: continuar el bloque 2 sobre la funcionalidad ya identificada como SPEC-023 (`023-scheduler-quote-recalculation`); no crear otra spec.
+- **Alcance a especificar mediante Spec Kit**: cambiar la programación a diaria, permitir varias ejecuciones en una misma fecha y evitar cotizaciones duplicadas para un mismo jugador y día.
+- **Estado**: intención registrada; los requisitos y artefactos de SPEC-023 aún no se actualizaron. Esta referencia no ejecuta fases Spec Kit, no concede autorización IMPLEMENT ni declara preparación vigente para el alcance nuevo.
+- **Próxima acción**: el usuario ejecutará los comandos Spec Kit y actualizará los artefactos de SPEC-023; después se reevaluarán las fases, el análisis y las autorizaciones afectadas.
+
+## Resultado CLARIFY — 2026-11-11
+
+- **Base**: `specs/023-scheduler-quote-recalculation/spec.md`; rama local `feat/023-daily-quote-scheduling`.
+- **Decisiones integradas**: programación diaria a las 12:00 UTC; ejecuciones manuales ilimitadas por fecha UTC; como máximo una ejecución automática por fecha; al recalcular un jugador ya cotizado ese día, actualizar su fila con el último cálculo.
+- **Estado de spec**: `Ready for planning`; el plan y el ANALYZE anteriores requieren revisión por impacto de los requisitos modificados.
+- **Checklist de calidad**: 16/16 ítems siguen satisfechos; no cambiaron marcadores.
+- **Publicación pendiente**: el hook pre-push ejecuta `fastTest`, prohibido para el agente. No se ejecutaron hooks, tests, commit ni push; tampoco se creó PR. `gh pr list --head feat/023-daily-quote-scheduling` no devolvió PR existente.
+- **Siguiente acción**: el usuario debe realizar o autorizar un procedimiento de publicación que no ejecute tests por parte del agente; luego continúa PLAN. Este registro no habilita fases posteriores ni IMPLEMENT.
+
+## Resultado PLAN — 2026-11-11
+
+- **Rama**: `feat/023-daily-quote-scheduling` (rama local verificada).
+- **Artefactos actualizados**: `plan.md`, `research.md`, `data-model.md`, `contracts/quote-executions-http.md`, `contracts/scheduling-configuration.md` y `quickstart.md`.
+- **Diseño**: cron diario a las 12:00 UTC; ejecuciones manuales ilimitadas; unicidad de ejecución automática por fecha; consulta por fecha con múltiples ejecuciones; unicidad de cotización `RECOMPUTED` por jugador-fecha y actualización de la fila existente.
+- **Gate de Constitución**: PASS documental bajo el diseño propuesto. La unicidad automática deberá implementarse como restricción de persistencia; el quickstart define escenarios manuales observables.
+- **Seguimiento preservado**: `tasks.md` no modificado. No se ejecutaron tests, builds, fases posteriores, handoffs, hooks, commit ni push.
+- **Pendiente**: PLAN identifica la migración de restricciones e idempotencia como requisitos de implementación; la revisión posterior de checklist/tasks/analyze debe confirmar el DDL y su convivencia con el historial. La publicación de CLARIFY sigue bloqueada por el hook pre-push que ejecuta `fastTest`.
+
 ## Gate ANALYZE
 
 **Estado**: superado sin blockers. Preparación global completa. **No autoriza IMPLEMENT.**
@@ -177,3 +202,38 @@ límite no clasificado (C2).
 - El usuario confirma que otros dos tests de la clase se corrigieron y aporta la ejecución restante: el reintento manual se acepta, completa y cuenta cinco fallos por filas arrastradas confirmadas antes del rollback del resumen (`uq_player_quote`). Es evidencia parcial humana, no aprobación del gate TESTING.
 - Se retira la garantía extra de `failedPlayers = 0`: la spec solo exige disponibilidad del reintento sin registro previo. Se comprueba población procesada y se mantienen fecha, origen MANUAL y persistencia del único resumen de reintento. No se compensa, limpia ni altera producción para hacer pasar la prueba.
 - Evidencia añadida a TD-024 e informe de revisión actualizado. Deuda y gates humanos siguen pendientes; reejecución del escenario corregido a cargo del usuario.
+
+## ANALYZE de clarificaciones diarias — 2026-11-11
+
+- **Base evaluada**: rama `feat/023-daily-quote-scheduling`, con los artefactos locales de SPEC-023 tras integrar las clarificaciones diarias y las correcciones documentales de I1–I5. Prerrequisitos `spec.md`, `plan.md` y `tasks.md` presentes.
+- **Artefactos contrastados**: `spec.md`, `plan.md`, `tasks.md`, `research.md`, `data-model.md`, ambos contratos, `quickstart.md` y los checklists aplicables; además de la Constitución y el workflow SDD.
+- **Hooks**: `.specify/extensions.yml` no existe; no había hooks `before_analyze` ni `after_analyze` que ejecutar.
+- **Resultado**: sin hallazgos ni issues; 0 CRITICAL, 0 HIGH y 0 MEDIUM. Los requisitos funcionales y criterios de éxito tienen cobertura asociada en tareas/historias. La preparación queda completa y `spec.md` se actualizó a `Ready for implementation`.
+- **Límites**: ANALYZE fue de solo lectura. No se ejecutaron tests, builds ni hooks; no se modificó código ni seguimiento remoto. Este resultado no concede IMPLEMENT AUTHORIZATION, CODE REVIEW, TESTING ni autorización de cierre.
+- **Siguiente acción permitida**: solicitar IMPLEMENT AUTHORIZATION humana explícita para el alcance que se desea implementar; la implementación no comienza sin esa autorización vigente.
+
+## IMPLEMENT AUTHORIZATION — T035–T042 — 2026-11-11
+
+- **Autor**: usuario de la sesión activa de OpenCode.
+- **Evidencia**: solicitud explícita del usuario: «autorizo a implementar T035, T036, T037, T038, T039, T040, T041 y T042 como ultima tarea», reiterada en la sesión al solicitar que se registre para avanzar.
+- **Alcance**: únicamente T035–T042 de `tasks.md` en SPEC-023, incluyendo el cambio del cron diario, cobertura backend, unicidad de ejecuciones/cotizaciones, migración Flyway, contrato HTTP de SPEC-016 y actualización de arquitectura. Se respetan las dependencias y límites descritos en las tareas; no se autoriza alcance adicional.
+- **Base**: artefactos locales actuales de SPEC-023; `spec.md` indica `Ready for implementation`; el ANALYZE de clarificaciones diarias del 2026-11-11 registra 0 hallazgos y 0 issues. Los checklists de calidad visibles están completos.
+- **Límites**: no ejecutar tests, fases posteriores, handoffs, commits, push ni modificar el seguimiento remoto. CODE REVIEW, TESTING y cierre requieren autorizaciones separadas.
+- **Estado**: autorización persistida; no implica que IMPLEMENT haya comenzado.
+
+## Ampliación autorizada e inicio de IMPLEMENT — 2026-11-11
+
+- **Autor**: usuario de la sesión activa. Ante la consulta sobre T034, indica: «T035 se implementa lo que pide, ya que sera diario. Y actualizar para que el test teste de manera diaria como estara en la implementacion».
+- **Alcance**: T034 como prerrequisito de T035, más T035–T042 ya autorizadas; T042 se realiza como última tarea. Base: artefactos diarios y ANALYZE del 2026-11-11 antes referenciados.
+- **Inicio**: comienza IMPLEMENT del delta diario. Prerrequisitos resueltos mediante `bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks`; los cinco checklists tienen 0 ítems pendientes (64/64). `.specify/extensions.yml` ausente.
+- **Límites**: sin tests ejecutados, fases posteriores, handoffs ni operaciones Git de publicación. Seguimiento remoto no modificado ni declarado sincronizado.
+
+## Resultado IMPLEMENT del delta diario — 2026-11-11
+
+- **Alcance**: T034–T042 implementadas y marcadas en `tasks.md`; T034 incluida por confirmación humana del test diario y T042 realizada como última tarea del alcance. Se preservan artefactos y modificaciones locales anteriores.
+- **Resultado**: cron diario a las 12:00 UTC configurable; corridas manuales múltiples y cuota automática diaria mediante índice parcial; actualización de cotización por jugador-fecha conservando identidad y trazabilidad; contrato/OpenAPI y arquitectura alineados. Las omisiones de reprecio sin valuación posterior y `REQUIRES_NEW` por jugador se conservan; TD-024 sigue pendiente.
+- **Migración**: generada mediante `gradlew.bat createMigration -PmigrationDescription=allow_daily_quote_recalculation`: `V20261111163841__allow_daily_quote_recalculation.sql`. Detecta colisiones heredadas y aborta sin borrar ni elegir filas. No se aplicó a ninguna base desde el agente.
+- **Verificación**: último `gradlew.bat build -x test`, `BUILD SUCCESSFUL` en 5 s, 29 migraciones válidas y clasificación estática de 143 clases. Los fallos intermedios de formato del cambio quedaron corregidos. No se ejecutaron ni compilaron tests.
+- **Informe**: `daily-implementation-report.md` contiene el Code Review Report completo, inventario de cambios incluidos tests, decisiones, riesgos, orden de revisión, checklist humano, cobertura y comandos exactos de pruebas pendientes para el usuario. El informe histórico se conserva.
+- **Hooks y límites**: `.specify/extensions.yml` sigue ausente, sin hooks pre/post a ejecutar. No se ejecutaron fases posteriores, handoffs, commits, push ni cambios de seguimiento remoto.
+- **Estado**: IMPLEMENT entregada; `spec.md` conserva `Ready for implementation`. CODE REVIEW, TESTING y cierre pendientes. Seguimiento remoto no verificado; sincronización PENDING, sin afirmar `In Review`, `Approved` ni `Done`.

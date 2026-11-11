@@ -25,8 +25,8 @@ import lombok.Getter;
  * Fila del historial de cotizaciones de un jugador.
  *
  * <p>La tabla es el historial completo: la cotización vigente del jugador es su fila de fecha de
- * vigencia máxima y, a igualdad de fecha, la fila {@code RECOMPUTED}, escrita después que la
- * arrastrada. Cada fila conserva la trazabilidad de lo que produjo su precio: estrategia y versión,
+ * vigencia máxima. Hay una única fila por jugador y fecha, actualizada por un cálculo posterior.
+ * Cada fila conserva la trazabilidad de lo que produjo su último precio: estrategia y versión,
  * score, precio anterior, multiplicador, fecha de la valuación de origen e instante de cálculo.
  */
 @Entity
@@ -48,33 +48,33 @@ public class PlayerQuote {
   @Column(name = "effective_date", nullable = false, updatable = false)
   private LocalDate effectiveDate;
 
-  @Column(name = "price", nullable = false, updatable = false)
+  @Column(name = "price", nullable = false)
   private long price;
 
-  @Column(name = "previous_price", updatable = false)
+  @Column(name = "previous_price")
   private Long previousPrice;
 
-  @Column(name = "multiplier", nullable = false, updatable = false)
+  @Column(name = "multiplier", nullable = false)
   private BigDecimal multiplier;
 
-  @Column(name = "score", updatable = false)
+  @Column(name = "score")
   private BigDecimal score;
 
-  @Column(name = "strategy_name", updatable = false)
+  @Column(name = "strategy_name")
   @Enumerated(EnumType.STRING)
   private ValuationStrategy strategyName;
 
-  @Column(name = "strategy_version", updatable = false)
+  @Column(name = "strategy_version")
   private String strategyVersion;
 
-  @Column(name = "source_valuation_date", updatable = false)
+  @Column(name = "source_valuation_date")
   private LocalDate sourceValuationDate;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "origin", nullable = false, updatable = false)
+  @Column(name = "origin", nullable = false)
   private QuoteOrigin origin;
 
-  @Column(name = "calculated_at", nullable = false, updatable = false)
+  @Column(name = "calculated_at", nullable = false)
   private Instant calculatedAt;
 
   protected PlayerQuote() {}
@@ -136,6 +136,24 @@ public class PlayerQuote {
     this.sourceValuationDate = sourceValuationDate;
     this.origin = origin;
     this.calculatedAt = calculatedAt;
+  }
+
+  /** Sustituye el cálculo diario completo sin cambiar la identidad, el jugador ni la fecha. */
+  public void replaceCalculation(PlayerQuote calculation) {
+    if (calculation == null
+        || !this.player.getId().equals(calculation.getPlayer().getId())
+        || !this.effectiveDate.equals(calculation.getEffectiveDate())) {
+      throw new InvalidQuoteException("El cálculo debe corresponder al mismo jugador y fecha");
+    }
+    this.price = calculation.getPrice();
+    this.previousPrice = calculation.getPreviousPrice();
+    this.multiplier = calculation.getMultiplier();
+    this.score = calculation.getScore();
+    this.strategyName = calculation.getStrategyName();
+    this.strategyVersion = calculation.getStrategyVersion();
+    this.sourceValuationDate = calculation.getSourceValuationDate();
+    this.origin = calculation.getOrigin();
+    this.calculatedAt = calculation.getCalculatedAt();
   }
 
   private void assertOriginInvariants(

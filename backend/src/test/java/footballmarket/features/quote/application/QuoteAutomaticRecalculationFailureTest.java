@@ -116,9 +116,8 @@ class QuoteAutomaticRecalculationFailureTest {
     }
 
     @Test
-    @DisplayName(
-        "Una ejecución registrada con fallos individuales consume la fecha y rechaza el reintento")
-    void recordedIndividualFailuresRejectManualRetry() {
+    @DisplayName("Una automática con fallos impide otra automática pero admite reintento manual")
+    void recordedIndividualFailuresAllowManualRetry() {
       // Arrange: cinco jugadores cotizables, pero solo cuatro tienen cotización inicial.
       catalogue.prepare();
       data.prepareConfirmedJsonCampaign(MARKET_DATE);
@@ -137,18 +136,14 @@ class QuoteAutomaticRecalculationFailureTest {
       assertThat(execution.failureReason())
           .isEqualTo(QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES);
       // Verify
-      assertThatThrownBy(() -> service.recalculate("POSITIONAL_PERFORMANCE", null, null, null))
+      assertThatThrownBy(service::recalculateAutomatic)
           .isInstanceOf(ExecutionAlreadyExistsException.class);
+      QuoteExecution retry = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      assertThat(retry.getOrigin()).isEqualTo(QuoteExecutionOrigin.MANUAL);
+      assertThat(retry.getId()).isNotEqualTo(execution.getId());
       assertThat(service.executions(QUOTE_DATE))
-          .singleElement()
-          .satisfies(
-              saved -> {
-                assertThat(saved.getId()).isEqualTo(execution.getId());
-                assertThat(saved.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
-                assertThat(saved.result()).isEqualTo(QuoteExecutionResult.FAILED);
-                assertThat(saved.failureReason())
-                    .isEqualTo(QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES);
-              });
+          .extracting(QuoteExecution::getId)
+          .containsExactlyInAnyOrder(execution.getId(), retry.getId());
     }
   }
 
