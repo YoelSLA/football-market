@@ -1,6 +1,11 @@
 # Research: Cotización de tokens de jugadores con historial trazable
 
-## Investigación vigente — 2026-11-10
+## Investigación vigente — integración 2026-11-11
+
+Decisión humana y diseño compartido:
+[`integration-baseline.md`](../023-scheduler-quote-recalculation/integration-baseline.md).
+Se conserva la fórmula compuesta sobre el precio vigente antes de cada cálculo; unicidad de fila
+no equivale a un límite de un ajuste diario. La decisión reemplaza la omisión por igualdad de fecha.
 
 Esta revisión sustituye las decisiones incompatibles del antecedente: una ejecución por fecha, vigencia de valuación, exclusión de score antiguo, coexistencia de orígenes diarios y ranking completo.
 
@@ -8,15 +13,15 @@ Esta revisión sustituye las decisiones incompatibles del antecedente: una ejecu
 
 **Decision**: mantener la fórmula y `REQUIRES_NEW` por jugador; bloquear la fila `Player` antes de leer precio vigente y comprobar cotización del día, tanto en recálculo como inicialización. Constraint `(player_id,effective_date)` para todos los orígenes. La ausencia de score no impide escribir una fila diaria arrastrada. No comparar fecha de score con una referencia para decidir recotizar. Fijar día con un único instante inicial UTC.
 
-**Rationale**: `QuotePlayerPublisher` actualmente excluye scores antiguos y `QuoteRecalculationServiceImpl` reserva fecha única; ambas condiciones contradicen FR-005/027/060 vigentes. La serialización por jugador evita calcular dos veces sobre el mismo precio y conserva atomicidad individual sin lock global. Omisión diaria y fallo técnico son resultados distintos.
+**Rationale**: la antigüedad de score no impide cotizar. La serialización por jugador conserva lectura/cálculo/reemplazo atómicos y hace que cada cálculo confirmado use el precio entonces vigente, sin lock global. Un nuevo cálculo del mismo día actualiza la fila y su referencia de ejecución; no se conserva cada precio intermedio.
 
 **Alternatives considered**: solo comprobación previa sin constraint (carrera); solo capturar cualquier error de integridad (oculta fallos ajenos); lock global por día (innecesario y contradice múltiples corridas). No se introduce recuperación automática ni compensación; TD-024 conserva su alcance conocido.
 
-**Ajuste mínimo autorizado tras ANALYZE I1**: bajo el mismo lock, omitir si la fecha efectiva vigente es igual o posterior al día inicial de la corrida (`effectiveDate >= quoteDate`). Contabilizar en `notRepricedPlayers`, sin escritura ni ajuste. La comparación sustituye comprobar solo existencia del mismo día; no usa fecha del score. Si D+1 publicó primero, D no reconstruye ese día ni altera el precio. Se rechazan como innecesarias la reconstrucción retrospectiva y la serialización global de corridas.
+**Integración de la protección I1**: bajo el mismo lock, omitir solo si `effectiveDate > quoteDate`, contabilizando en `notRepricedPlayers`. La igualdad permite actualizar la fila del día; una fecha posterior sigue protegiendo contra corridas atrasadas. No se compara fecha del score ni se reconstruyen días anteriores. Inicialización no pierde su estado porque una fila cambie de INITIAL a otro origen; existencia y fecha de mercado se obtienen del historial conservado.
 
 ### R2. Identidad, contadores y auditoría
 
-**Decision**: conservar PK de ejecución, eliminar unicidad de fecha y exponer `executionId`; ordenar consulta diaria por inicio e ID descendentes. Reutilizar `notRepricedPlayers` con significado explícito de omisión por fila diaria existente. Añadir referencia `execution_id` nullable desde cotización: nula solo en iniciales. Persistir contexto de ejecución antes de publicaciones individuales mediante componente interno de la misma fachada y transacción independiente; finalizar su resumen aparte. No hacer que una transacción de jugador espere una FK a una ejecución aún no confirmada.
+**Decision**: conservar PK y exponer `executionId`; eliminar unicidad global de fecha, manteniendo índice parcial solo para AUTOMATIC. Consulta diaria por inicio e ID descendentes; `notRepricedPlayers` significa fecha vigente posterior. Referencia `execution_id` nula solo en INITIAL y actualizada en cada reemplazo diario junto con el cálculo. Persistir contexto antes de publicaciones mediante componente interno y transacción independiente; cerrar aparte. Conflicto automático se traduce por SQLSTATE/constraint, nunca por texto ni para una manual. Contexto automático registrado consume la cuota diaria aunque quede sin fin; no añadir recuperación.
 
 **Rationale**: varias corridas pueden compartir fecha e instante; el instante solo ya no identifica parámetros de forma inequívoca. La referencia permite auditar qué corrida produjo la fila. Persistir el contexto antes evita pérdida de la identidad al fallar el cierre; un cierre interrumpido puede conservar contadores incompletos y sigue siendo TD-024, no éxito demostrado. La lectura pública de resúmenes finalizados no presenta un contexto en curso como resultado completo.
 

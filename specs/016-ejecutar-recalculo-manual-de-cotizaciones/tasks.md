@@ -5,6 +5,52 @@ description: "Task list template for feature implementation"
 
 # Tasks: Cotización de tokens de jugadores con historial trazable
 
+## Integración vigente con SPEC-023 — 2026-11-11
+
+**Fuentes**: decisiones de integración de ambas `spec.md`, diseño compartido en
+[`integration-baseline.md`](../023-scheduler-quote-recalculation/integration-baseline.md),
+encabezados vigentes de plan/research/modelo/contratos/quickstart de ambas specs.
+**Rama destino**: `feat/023-daily-quote-scheduling`. **Estado**: corrección documental autorizada,
+ANALYZE conjunto pendiente; no se implementan estas tareas en esta operación.
+
+Se conservan T001–T080 y sus marcadores como evidencia del trabajo de origen. Los IDs no se
+renumeran ni se regeneran; sus marcas no acreditan la combinación ni habilitan consumir todo el
+backlog. Las reglas de primera cotización inmutable, omisión por igualdad de fecha, eliminación
+total de `ExecutionAlreadyExistsException` y automática ilimitada están sustituidas por las specs
+vigentes. El pendiente T077 con SPEC-022 permanece separado, no se declara resuelto.
+
+### Tareas acotadas de integración (pendientes)
+
+**Evidencia posterior (2026-11-11)**: resolución de merge implementada y build sin tests
+satisfactorio; [informe compartido](../023-scheduler-quote-recalculation/merge-integration-report.md).
+Las marcas amplias conservan pendientes de comprobación y no acreditan testing humano.
+
+**Comprobación posterior al merge `23e175c`**: T082/T084/T085 marcadas por implementación
+inspeccionada; T081/T083 conservan faltantes de cobertura explícitos y T086 depende del alcance
+restante. Evidencias y limitaciones en el informe compartido, sección «Comprobación de tareas
+posterior al merge». Las marcas no acreditan tests ni cierre de la Feature.
+
+- [ ] T081 Escribir/adaptar regresiones backend en `backend/src/test/java/footballmarket/features/quote/application/QuoteRecalculationServiceTest.java`, `QuoteMarketInitializationServiceTest.java`, `QuoteAutomaticRecalculationFailureTest.java` y `backend/src/test/java/footballmarket/features/quote/domain/models/PlayerQuoteTest.java` (crear solo si no existe cobertura suficiente): dos manuales del día con una fila y último cálculo válido, misma identidad y última referencia de ejecución; score antiguo diario, cambio de estrategia/score, actualización de INITIAL y repetición idempotente de initialize, fallo sin reemplazo parcial y omisión solo ante fecha posterior. Relojes controlados y bloqueo de jugador; respetar fronteras de tests, fixtures solo Arrange y APIs públicas para Assert. No ejecutar pruebas.
+- [X] T082 Reconciliar `backend/src/main/java/footballmarket/features/quote/domain/models/PlayerQuote.java`, `application/internal/QuotePlayerPublisher.java`, `infraestructure/PlayerQuoteRepository.java` y `application/impl/QuoteMarketInitializationServiceImpl.java`: último cálculo sobre precio vigente, actualizar fila igual al día de corrida y todos sus datos incluido `execution_id`, conservando identidad/fecha; insertar si falta, omitir solo fecha vigente posterior. Mantener bloqueo por jugador compartido, `REQUIRES_NEW`, fecha UTC inicial y score disponible aunque antiguo. Conservar mercado inicializado tras reemplazar INITIAL, sin reinicializar ni borrar; revisar consumidores del estado/fecha de mercado antes de cambiar su consulta (depende de T081 y esquema compatible T084).
+- [ ] T083 Adaptar en `backend/src/test/java/footballmarket/features/quote/application/QuoteQueryServiceTest.java`, `infraestructure/PlayerQuoteMigrationTest.java`, `infraestructure/QuoteMarketOperationPersistenceTest.java` e `infraestructure/RepositoryQuoteSourceTest.java` la verificación persistida de último cálculo diario, FK actualizada y una fila por fecha, consulta vigente/historial/fecha y mercado/lectura por lote preservados. Añadir assertions de identidad y datos persistidos por la frontera de cada categoría, no solo retorno en memoria. No cambiar firmas de QuoteSource ni precios congelados de operaciones; no ejecutar pruebas (depende de T081–T082).
+- [X] T084 Reconciliar el esquema de ambas ramas y pruebas en `backend/src/test/java/footballmarket/features/quote/infraestructure/QuoteExecutionPersistenceTest.java` y `PlayerQuoteMigrationTest.java`: secuencia compatible de `backend/src/main/resources/db/migration/V20261110235437__daily_quote_recalculation.sql` y `V20261111163841__allow_daily_quote_recalculation.sql`, sin retirar dos veces constraints. Verificar primero si son editables según integración/aplicación; si no, preservar checksums y generar nueva migración con tarea oficial. Conservar unicidad jugador-fecha, FK de ejecución, fin nullable, contadores y orden de finalizadas; añadir unicidad parcial AUTOMATIC de SPEC-023. Prevalidar colisiones/datos incompatibles, detener sin limpieza/backfill automático. Escribir pruebas de secuencia y rechazo de segunda automática, admisión manual y FK del cálculo reemplazado; no ejecutar migraciones ni tests. Esta tarea es la única propietaria de la reconciliación DDL compartida.
+- [X] T085 Reconciliar `backend/src/main/java/footballmarket/features/quote/domain/models/QuoteExecution.java`, `application/impl/QuoteRecalculationServiceImpl.java`, `presentation/QuoteController.java`, `QuoteExecutionMapper.java` y `presentation/dtos/response/QuoteExecutionResponseDTO.java` con `contracts/quotes-http.md`: `executionId` contractual y finalizadas por inicio/ID, contadores disjuntos (reemplazo no es omisión), omisión solo fecha posterior, manuales sin rechazo de fecha y sin exposición de detalles técnicos. Adaptar `backend/src/test/java/footballmarket/features/quote/presentation/QuoteControllerTest.java` a la respuesta integrada y conservar ranking/consumidores. Coordinar con T043 de SPEC-023 sobre reserva de contextos automáticos y excepción; no eliminar esa excepción ni duplicar el recorder. No ejecutar pruebas (depende de T081–T084 y T043 de SPEC-023).
+- [ ] T086 Tras la implementación de integración autorizada y T043–T045 de SPEC-023, actualizar informe integral y evidencias de ambas specs sin reescribir históricos. Si cambió código backend, ejecutar solo `gradlew.bat build -x test` desde `backend/`, con dependencias inspeccionadas; revisión final de diff/`git diff --check`/estado. Mantener Flyway pendiente hasta salida humana, tests exclusivamente del usuario, TD-024 pendiente y gates separados. No ejecutar build durante esta alineación documental ni afirmar publicación del merge sin observarla.
+
+**Orden conjunto**: pruebas antes del comportamiento → T084 (esquema compartido) → T082
+(publicación/estado) y T043 de SPEC-023 (reserva/disparador, en secuencia si comparten archivo) →
+T083/T085 y T044–T045 → T086/T046. T081 no depende del DDL para escribirse; la ejecución humana sí
+requiere esquema reconciliado. No paralelizar ediciones del mismo archivo ni crear tareas duplicadas
+en ambas specs. T077 no es dependencia para corregir la actualización diaria; su condición de entrega
+coordinada con SPEC-022 permanece vigente para el ranking completo.
+
+**Checklists**: marcadores del revisor preservados. Corrección C1 y contraste documental de los
+criterios afectados registrados el 2026-11-11 en `checklists/data.md` y en los checklists de
+SPEC-023, con fuentes de la base común. No se atribuye aprobación humana nueva ni se reutiliza
+la primera cotización inmutable como requisito. Nuevo ANALYZE pendiente para verificar la corrección.
+
+## Desglose de origen — antecedente con IDs y avance preservados
+
 ## Delta vigente — cotización diaria y ranking paginado (2026-11-10)
 
 **Fuentes**: revisión vigente de [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md), [data-model.md](data-model.md), [contrato HTTP](contracts/quotes-http.md), [puerto de cotización](contracts/quote-source.md) y [quickstart.md](quickstart.md).

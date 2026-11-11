@@ -1,12 +1,20 @@
 # Implementation Plan: Cotización de tokens de jugadores con historial trazable
 
-## Plan vigente del delta — 2026-11-10
+## Plan vigente de integración — 2026-11-11
+
+Base compartida de diseño, esquema, verificación y reparto de tareas:
+[`integration-baseline.md`](../023-scheduler-quote-recalculation/integration-baseline.md).
+La rama destino es `feat/023-daily-quote-scheduling`; las referencias siguientes a la rama y PR
+de SPEC-016 describen su origen, no una publicación del merge. El análisis anterior no evalúa
+esta integración. No se modifica código en esta alineación.
+
+## Plan del delta de origen — 2026-11-10, actualizado por impacto
 
 **Rama real**: `docs/016-daily-quote-recalculation-spec`. **PR**: [#86](https://github.com/YoelSLA/football-market/pull/86), base `dev`, relacionado con #39 (verificado por lectura). El scope inglés de la rama difiere del directorio histórico; no se renombra la spec. Esta revisión sustituye por impacto el diseño histórico de abajo, no acredita implementación ni autorizaciones.
 
 ### Resumen y contexto técnico
 
-Recotizar una vez por jugador/día UTC aplicando el último score persistido aunque sea antiguo; permitir varias corridas manuales o automáticas del día. Separar fecha de vigencia diaria y fecha de valuación auditada. Ranking por precio en `/api/rankings/quote`, con posiciones globales, filtros backend y página acotada. Agenda diaria corresponde a SPEC-023; ranking por score a SPEC-018 y UI a SPEC-022. No se planifica aquí su implementación completa.
+Conservar una fila por jugador/día UTC, actualizada por el último cálculo válido aplicando el último score persistido aunque sea antiguo. Admitir manuales ilimitadas y una automática diaria según SPEC-023. Separar fecha de vigencia diaria y fecha de valuación auditada. Ranking por precio en `/api/rankings/quote`, con posiciones globales, filtros backend y página acotada. Agenda diaria corresponde a SPEC-023; ranking por score a SPEC-018 y UI a SPEC-022. No se planifica aquí su implementación completa.
 
 Reutilizar Java 21, Spring Boot 4.1.1, Spring Data JPA, PostgreSQL, JWT, Flyway y Springdoc existentes; sin dependencias nuevas. Las versiones efectivas siguen en Gradle. No se crean tablas de precio actual, capas de caché ni SLAs nuevos. El código real está en `backend/src/main/java/footballmarket/features/quote/{application,domain,infraestructure,presentation}`, no en los paquetes planos del antecedente. Tests en el árbol equivalente de `backend/src/test/java/footballmarket/features/quote/`.
 
@@ -23,9 +31,9 @@ Reutilizar Java 21, Spring Boot 4.1.1, Spring Data JPA, PostgreSQL, JWT, Flyway 
 
 ### Diseño y componentes afectados
 
-1. `QuoteRecalculationServiceImpl`: capturar un solo `Instant startedAt`; derivar `quoteDate` con UTC de ese instante. Eliminar reserva/rechazo por fecha y traducción indiscriminada de errores SQL a `EXECUTION_ALREADY_EXISTS`. Cada corrida conserva su propio ID y resumen.
-2. `QuotePlayerPublisher`: conservar `REQUIRES_NEW`; serializar lectura/cálculo/publicación del mismo jugador con bloqueo de su fila de catálogo, compartido con inicialización. Leer bajo ese lock la cotización vigente y omitir si `effectiveDate >= quoteDate`, sin ajuste ni escritura; no es fallo. Solo con fecha vigente anterior se aplica score sobre precio vigente o se arrastra sin score. Esto evita insertar una cotización atrasada si otra corrida ya avanzó al día siguiente, sin reconstrucciones ni bloqueo global. Constraint único `(player_id,effective_date)` como defensa final; cualquier conflicto se clasifica fuera de la transacción revertida, por constraint/SQLSTATE, nunca por texto ni como duplicado de ejecución. No recalcular scores.
-3. `QuoteExecution` y DTO: ID expuesto; `notRepricedPlayers` pasa a significar omitidos por cotización vigente del mismo día o posterior al de la corrida; contadores disjuntos. Mantener `origin`, `result`, `failureReason`, `startedAt`, `finishedAt` y parámetros existentes. Lista diaria ordenada por `startedAt DESC,id DESC`.
+1. `QuoteRecalculationServiceImpl`: capturar un solo `Instant startedAt`; derivar `quoteDate` en UTC. Cada corrida conserva ID y resumen independientes; las manuales no se rechazan por fecha. Conservar reserva confirmada automática e identificar únicamente el conflicto del índice parcial `uq_quote_executions_automatic_date` para `ExecutionAlreadyExistsException`; no traducir otros errores SQL a ese motivo.
+2. `QuotePlayerPublisher`: conservar `REQUIRES_NEW` y bloqueo de jugador compartido con inicialización. Omitir solo si `effectiveDate > quoteDate`. Con fecha igual, recalcular sobre precio vigente y actualizar la fila existente, incluidos datos de trazabilidad y `execution_id`, sin cambiar ID/jugador/fecha. Con fecha anterior insertar la nueva fila diaria. Mantener constraint único `(player_id,effective_date)` y no recalcular scores. El bloqueo por jugador no es exclusión global de corridas. Inicialización y verificación de mercado deben seguir funcionando aunque una fila INITIAL haya cambiado de origen: derivar existencia/primera fecha del historial, no solo del origen INITIAL.
+3. `QuoteExecution` y DTO: `executionId` contractual; `notRepricedPlayers` cuenta omisiones por fecha vigente posterior. Reemplazos cuentan como recalculados o arrastrados, no omitidos; contadores disjuntos. Mantener `origin`, `result`, `failureReason`, tiempos y parámetros; contexto previo confirmado y cierre independiente. Lista finalizada ordenada por `startedAt DESC,id DESC`.
 4. `PlayerQuoteRepository` y `QuoteQueryService`: consulta SQL de última fila por jugador elegible, posición con `row_number()` por `price DESC,player_id ASC`, filtros después de numerar y antes de contar/paginar. No materializar el ranking completo en Java para paginarlo. Leer contenido, total y opciones con snapshot `REPEATABLE_READ`. Mapper solo transforma Model a DTO, sin asignar posiciones.
 5. Frontera de ranking bajo `/api/rankings/quote`: Request DTO record, Mapper estático y Service con interfaz. Reutilizar defaults y límites del catálogo. Entregar identificación por joins/proyecciones de conjunto, sin N+1 ni descargar todo el catálogo. Top 3 mediante el mismo endpoint sin filtros con `page=0&size=3`, sin ruta adicional.
 6. Esquema: ambas migraciones de creación ya están presentes en la referencia local `origin/dev` (verificado con `git ls-tree`); planificar nueva migración de cambio de constraints/FK/nulabilidad, sin editar las integradas. No preservar datos descartables ni ejecutar reinicializaciones por iniciativa del agente. Ver detalle en `data-model.md`.

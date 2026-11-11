@@ -1,6 +1,9 @@
 # Data Model: Cotización de tokens de jugadores con historial trazable
 
-## Modelo vigente del delta — 2026-11-10
+## Modelo vigente — integración 2026-11-11
+
+Diseño común y secuencia de migraciones:
+[`integration-baseline.md`](../023-scheduler-quote-recalculation/integration-baseline.md).
 
 Este bloque sustituye las reglas históricas incompatibles siguientes; los demás campos, tipos, rangos de factor/tope/piso e invariantes de origen se conservan.
 
@@ -9,17 +12,18 @@ Este bloque sustituye las reglas históricas incompatibles siguientes; los demá
 | `player_quotes.effective_date` | Día UTC fijado al inicio de la ejecución; inicialización conserva su fecha de mercado |
 | `player_quotes.source_valuation_date` | Fecha original del último score disponible; puede ser anterior a vigencia; nula en INITIAL/CARRIED_FORWARD |
 | `player_quotes.execution_id` | BIGINT FK a `quote_executions.id`; nula en INITIAL, obligatoria en RECOMPUTED/CARRIED_FORWARD |
-| `uq_player_quote` | UNIQUE `(player_id,effective_date)`, sin origen: inicialización también consume el día |
+| `uq_player_quote` | UNIQUE `(player_id,effective_date)`, sin origen; fila INITIAL puede actualizarse sin duplicar ni perder el estado de inicialización |
 | `quote_executions.id` | PK existente; identidad pública `executionId` |
 | `quote_executions.quote_date` | Día UTC de `started_at`, inmutable; no es único |
 | `quote_executions.finished_at` | Nullable mientras el contexto está en curso; se fija al finalizar; nunca anterior al inicio |
-| `quote_executions.not_repriced_players` | Omitidos por cotización vigente de fecha igual o posterior al día inicial de la corrida, no por falta de score nuevo |
+| `quote_executions.not_repriced_players` | Omitidos solo por fecha vigente posterior al día inicial de corrida; igualdad permite reemplazo, score antiguo no impide cotizar |
+| `uq_quote_executions_automatic_date` | Índice único parcial por `quote_date WHERE origin='AUTOMATIC'`; manuales ilimitadas |
 
-Conservar `origin` MANUAL/AUTOMATIC y resultado/motivo derivados existentes. El contexto se persiste antes del recorrido, se completa mediante operación de dominio y luego no se sobrescribe por otras corridas. Solo resúmenes con fin informado son resultados finalizados; contexto sin fin no equivale a éxito. Para corrida finalizada: `priced_players = recomputed_rows + carried_forward_rows + not_repriced_players + failed_players`, todos no negativos. Un fallo individual no deja fila y permite que otra corrida del día lo procese. Un jugador ya cotizado se omite, sin ajuste ni sobrescritura.
+Conservar `origin` y resultado/motivo derivados. Confirmar contexto antes del recorrido y cerrar aparte; otras corridas no sobrescriben ese resumen. Solo resultados con fin informado son finalizados. Para corrida finalizada, `priced_players = recomputed_rows + carried_forward_rows + not_repriced_players + failed_players`. Reemplazos cuentan en recalculados/arrastrados. Un fallo individual no inserta ni sustituye parcialmente; conserva el último cálculo confirmado. Una corrida automática registrada consume la cuota de su día aunque no cierre; manuales siguen disponibles.
 
 Índices: mantener lectura `(player_id,effective_date DESC,calculated_at DESC)` y añadir lectura de ejecuciones `(quote_date DESC,started_at DESC,id DESC)`; FK indexada para auditoría. Una fila por día elimina la prevalencia entre orígenes del mismo día. Vigente: máxima fecha de vigencia; fecha e ID cierran el orden de lectura, sin usar fecha de score. Precio anterior es el vigente leído bajo lock de jugador. No hay estado de precio duplicado ni tabla de ranking.
 
-**Invariante de publicación (I1)**: bajo el lock del jugador, publicar solo si la fecha efectiva vigente es estrictamente anterior a `quoteDate`. Una fecha igual o posterior produce omisión sin insertar ni ajustar; no reconstruir días atrasados. Así el precio anterior de una nueva fila no procede de una cotización futura respecto de esa fila.
+**Invariante de publicación (I1 integrada)**: omitir bajo lock solo si la fecha vigente es posterior a `quoteDate`. Para igualdad, actualizar ID de ejecución y todos los datos del cálculo preservando ID de cotización/jugador/fecha. Para fecha anterior, insertar. El precio anterior es el vigente leído antes de cada cálculo, nunca el de una fecha futura. No hay tabla de versiones intradiarias. La primera fecha efectiva del historial se conserva incluso si cambia el origen de su fila y permite mantener la fecha de mercado.
 
 La consulta ranking produce Model/proyección con posición global y datos de jugador; selecciona fila vigente del universo con métricas, numera por precio DESC/ID ASC, aplica filtros y cuenta/pagina. Lectura consistente por solicitud, no snapshot durable entre páginas; aceptación de recorrido sin duplicados requiere datos estables. No se promete consistencia entre dos peticiones independientes de tabla y podio ante cambios simultáneos.
 

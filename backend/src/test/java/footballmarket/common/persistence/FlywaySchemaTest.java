@@ -23,7 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers
 @Tag("integration")
 class FlywaySchemaTest {
-  private static final String LAST_VERSION = "20261110235437";
+  private static final String LAST_VERSION = "20261111163841";
 
   @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
 
@@ -47,7 +47,7 @@ class FlywaySchemaTest {
   @DisplayName("Reconstrucción completa")
   class CompleteReconstruction {
     @Test
-    @DisplayName("Migra PostgreSQL vacío y valida las veintinueve versiones")
+    @DisplayName("Migra PostgreSQL vacío y valida las treinta versiones")
     void migratesEmptyPostgres() throws Exception {
       // Arrange
       String url = createDatabase("flyway_full_reconstruction");
@@ -58,7 +58,7 @@ class FlywaySchemaTest {
       ValidateResult validation = flyway.validateWithResult();
 
       // Assert
-      assertThat(result.migrationsExecuted).isEqualTo(29);
+      assertThat(result.migrationsExecuted).isEqualTo(30);
       assertThat(result.targetSchemaVersion).hasToString(LAST_VERSION);
       assertThat(validation.validationSuccessful).isTrue();
       try (Connection connection =
@@ -68,7 +68,7 @@ class FlywaySchemaTest {
               statement.executeQuery(
                   "SELECT count(*) FROM flyway_schema_history WHERE success AND type = 'SQL'")) {
         rows.next();
-        assertThat(rows.getInt(1)).isEqualTo(29);
+        assertThat(rows.getInt(1)).isEqualTo(30);
       }
     }
   }

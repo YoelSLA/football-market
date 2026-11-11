@@ -21,8 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Inicialización del mercado.
  *
- * <p>La fecha de mercado se deriva de las propias filas {@code INITIAL}: no existe estado paralelo
- * del mercado. Repetir la inicialización en la misma fecha es idempotente y cualquier otra fecha se
+ * <p>La fecha de mercado se deriva de la primera fecha del historial: no existe estado paralelo del
+ * mercado. Repetir la inicialización en la misma fecha es idempotente y cualquier otra fecha se
  * rechaza, porque escribir una segunda fila inicial por jugador violaría la unicidad del ancla.
  */
 @Service
@@ -57,7 +57,9 @@ public class QuoteMarketInitializationServiceImpl implements QuoteMarketInitiali
         throw new MarketAlreadyInitializedException();
       }
       return new MarketInitializationResult(
-          currentMarketDate, Math.toIntExact(this.quotes.countByOrigin(QuoteOrigin.INITIAL)), true);
+          currentMarketDate,
+          Math.toIntExact(this.quotes.countByEffectiveDate(currentMarketDate)),
+          true);
     }
     Instant calculatedAt = Instant.now(this.marketClock);
     long anchor = this.properties.initialAnchor();
@@ -89,7 +91,7 @@ public class QuoteMarketInitializationServiceImpl implements QuoteMarketInitiali
     }
     return new MarketInitializationResult(
         requested,
-        Math.toIntExact(this.quotes.countByOrigin(QuoteOrigin.INITIAL)),
+        Math.toIntExact(this.quotes.countByEffectiveDate(requested)),
         inserted == 0 && !players.isEmpty());
   }
 }

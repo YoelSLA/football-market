@@ -2,6 +2,7 @@ package footballmarket.features.quote.infraestructure.scheduling;
 
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.quote.application.QuoteRecalculationService;
+import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.infraestructure.config.QuoteProperties;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -34,6 +35,10 @@ public class AutomaticQuoteRecalculationScheduler {
     LOG.info("quote_automatic_recalculation_triggered quoteDate={}", quoteDate);
     try {
       this.service.recalculateAutomatic();
+    } catch (ExecutionAlreadyExistsException exception) {
+      LOG.warn(
+          "quote_automatic_recalculation_skipped quoteDate={} reason=EXECUTION_ALREADY_EXISTS",
+          quoteDate);
     } catch (MarketNotInitializedException exception) {
       LOG.warn(
           "quote_automatic_recalculation_rejected quoteDate={} reason=MARKET_NOT_INITIALIZED",

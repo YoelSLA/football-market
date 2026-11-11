@@ -108,3 +108,12 @@ base ni verifica la compatibilidad funcional del delta parcial. No se ejecutaron
 tests, commit, push ni fases posteriores. TD-024 continúa pendiente.
 Seguimiento remoto PENDING: no se consultó ni modificó su estado y no se afirma
 sincronización ni transición remota.
+# Alineación documental para integración con SPEC-023 — 2026-11-11
+
+- **Autorización**: usuario de la sesión activa: «alinees ambas spec para luego procegir al analyze, tenes mi autorizacion para modificar la spec016». No se interpreta como autorización de ejecutar ANALYZE en esta misma operación ni de completar/publicar el merge.
+- **Decisión aplicada**: último cálculo válido en una fila jugador-fecha y referencia de ejecución actualizada; núcleo diario/ranking de SPEC-016 más cron 12:00 UTC y cuota automática de SPEC-023. Fórmula sobre precio vigente de cada cálculo; no guardar precios intermedios ni limitar a un ajuste diario.
+- **Artefactos alineados**: spec, plan, research, data-model, contratos, quickstart y tareas de ambas specs. Diseño y cobertura compartidos en `../023-scheduler-quote-recalculation/integration-baseline.md`. T081–T086 y T043–T046 son remediaciones pendientes; IDs y avance anteriores preservados.
+- **Estado**: preparación documental para nuevo ANALYZE de ambas specs sobre una sola base, sin cambios entre ejecuciones. Los análisis anteriores siguen como historia, no acreditan la integración. No se aprueban checklists ni gates humanos.
+- **Límites observados**: no se modificaron código, tests, SQL ni marcadores de checklist; sin tests/build, commits, push ni conclusión del merge. Conflictos productivos y de pruebas permanecen; Flyway humano sigue pendiente de diagnóstico.
+
+---

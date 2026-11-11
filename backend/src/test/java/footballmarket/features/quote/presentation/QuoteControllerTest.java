@@ -127,6 +127,52 @@ class QuoteControllerTest {
   class RecalculationContract {
 
     @Test
+    @DisplayName("Consulta todas las corridas manuales y automática de una misma fecha")
+    void returnsMultipleDailyExecutions() throws Exception {
+      // Arrange
+      QuoteExecution firstManual = execution();
+      QuoteExecution secondManual = execution();
+      QuoteExecution automatic =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.AUTOMATIC,
+              ValuationStrategy.GENERAL_ATTRIBUTES,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              0,
+              1,
+              Instant.parse("2026-10-21T12:00:00Z"),
+              Instant.parse("2026-10-21T12:00:05Z"));
+      when(recalculationService.executions(LocalDate.of(2026, 10, 21)))
+          .thenReturn(List.of(automatic, secondManual, firstManual));
+      // Act / Assert
+      mvc.perform(
+              get("/api/quotes/executions")
+                  .header("Authorization", authorization)
+                  .queryParam("date", "2026-10-21"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executions.length()").value(3))
+          .andExpect(jsonPath("$.executions[0].origin").value("AUTOMATIC"))
+          .andExpect(jsonPath("$.executions[0].result").value("FAILED"))
+          .andExpect(jsonPath("$.executions[0].failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
+          .andExpect(jsonPath("$.executions[0].startedAt").value("2026-10-21T12:00:00Z"))
+          .andExpect(jsonPath("$.executions[1].origin").value("MANUAL"))
+          .andExpect(jsonPath("$.executions[1].result").value("SUCCESS"))
+          .andExpect(jsonPath("$.executions[2].origin").value("MANUAL"))
+          .andExpect(jsonPath("$.executions[2].result").value("SUCCESS"))
+          .andExpect(
+              jsonPath(
+                  "$.executions[*].quoteDate",
+                  org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("2026-10-21"))))
+          .andExpect(jsonPath("$.executions[*].id").isEmpty());
+    }
+
+    @Test
     @DisplayName("Devuelve el resumen completo de la ejecución")
     void returnsExecutionSummary() throws Exception {
       when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(execution());

@@ -1,6 +1,48 @@
 # Feature Specification: Cotización de tokens de jugadores con historial trazable
 
-## Revisión vigente — 2026-11-10 (SPECIFY)
+## Decisión vigente de integración con SPEC-023 — 2026-11-11
+
+**Autor**: usuario de la sesión activa: «vayamos con la regla de la spec023» y «a mi solo me importa
+conservar un precio por fecha», autorizando combinar ambas especificaciones. La regla completa y
+la división de responsabilidades se registran también en
+[`SPEC-023`](../023-scheduler-quote-recalculation/spec.md#decisión-vigente-de-integración-con-spec-016--2026-11-11).
+
+- Se conserva el cálculo diario de SPEC-016 con el último score persistido disponible, aun antiguo,
+  la fecha UTC fijada al inicio como fecha de vigencia, el arrastre sin score y el ranking paginado
+  y filtrado. No se modifican las fórmulas financieras.
+- **FR-026 / FR-060**: una sola fila por jugador y día UTC, independientemente del origen o estrategia.
+  Una nueva corrida del mismo día **actualiza la fila existente con el último cálculo válido**,
+  preservando su identidad, jugador y fecha. Se retira la regla «conservar siempre el primer cálculo».
+  No se conserva un historial de precios intermedios intradiarios.
+- **FR-027 / FR-060**: una cotización vigente de fecha **posterior** a la corrida sigue impidiendo
+  publicar una cotización atrasada; una fecha **igual** no impide actualizar el cálculo diario.
+- **FR-060**: se admiten manuales ilimitadas y como máximo una automática registrada por fecha UTC,
+  conforme a SPEC-023. Manuales existentes no consumen la cuota automática. Solo el conflicto
+  automático conserva `EXECUTION_ALREADY_EXISTS`, traducido a omisión operativa por el scheduler.
+- **FR-029 / FR-061**: la cotización apunta a la ejecución que produjo el último cálculo guardado;
+  la actualización diaria sustituye también `execution_id`, precio, trazabilidad y `calculatedAt`.
+  Se conservan los resúmenes y parámetros de cada ejecución, aunque su precio intermedio haya sido
+  reemplazado. No se requiere reconstruir precios intradiarios ya sustituidos.
+- La inicialización también respeta la cardinalidad jugador-día; no se inserta una segunda fila
+  por cambiar de origen. Las responsabilidades de inicialización se conservan en SPEC-016.
+
+**Aceptación que reemplaza los escenarios 3 y 4 del delta anterior**: dos manuales en la misma fecha
+conservan resúmenes distintos y una única cotización por jugador con el último cálculo válido y su
+referencia de ejecución actualizada. Una valuación que llega después de la primera corrida puede
+usarse en otra corrida manual del mismo día; no se difiere obligatoriamente al día siguiente.
+Una automática puede coexistir con las manuales, pero otra automática de esa fecha se omite.
+Se conservan los demás escenarios compatibles de cálculo diario, arrastre, ranking y fechas atrasadas.
+
+**Impacto SDD**: el ANALYZE del 2026-11-10 no evalúa esta combinación. Reconciliar diseño, contratos,
+tareas y cobertura afectados y repetir ANALYZE antes de resolver el código del merge. Los registros
+históricos de autorización, implementación y pruebas se conservan; no acreditan revisión ni testing
+del resultado integrado. No se declara ninguna deuda resuelta ni se aprueba cierre.
+
+Base conjunta de diseño y cobertura para los dos ANALYZE:
+[`integration-baseline.md`](../023-scheduler-quote-recalculation/integration-baseline.md).
+No se ejecutó ANALYZE en esta alineación; el cambio combinado permanece Draft.
+
+## Revisión del 2026-11-10 (actualizada por impacto de la integración)
 
 **Status vigente del cambio**: Draft. Preparación documental autorizada por el usuario; IMPLEMENT AUTHORIZATION: NONE. Este bloque sustituye por impacto las decisiones anteriores incompatibles, que se conservan como antecedente, no como requisitos ejecutables del cambio.
 
@@ -13,10 +55,10 @@
 - **FR-005 / FR-027**: Recotizar diariamente desde el último precio vigente usando el último score persistido disponible de la estrategia elegida, aunque no haya score ni métricas nuevos. La antigüedad de la valuación no impide el ajuste diario. Se conserva la fórmula compuesta, topes, piso y redondeo existentes; no se recalculan scores ni se consultan proveedores al cotizar.
 - **FR-008**: Si no existe score para la estrategia elegida, mantener el precio mediante `CARRIED_FORWARD`, sin score y con multiplicador 1. Un score neutro existente sigue siendo `RECOMPUTED`.
 - **FR-024 / FR-026**: La fecha de vigencia de la nueva cotización es el día UTC de ejecución, no la fecha del score. La fecha de valuación se conserva separada como auditoría. Como máximo una cotización por jugador y día, independientemente de origen o estrategia; no coexisten una fila arrastrada y una recalculada para ese jugador y día. La inicialización también cuenta para ese límite.
-- **FR-060**: Permitir múltiples ejecuciones manuales o automáticas por fecha UTC. Tener una ejecución registrada ese día no causa `EXECUTION_ALREADY_EXISTS`. Cada ejecución respeta la unicidad por jugador y día, incluso concurrentemente: un jugador ya cotizado ese día no vuelve a ajustarse ni se sobrescribe. Los jugadores pendientes pueden procesarse en otra ejecución del día.
+- **FR-060**: Permitir manuales ilimitadas y como máximo una automática registrada por fecha UTC. Una manual no genera `EXECUTION_ALREADY_EXISTS` por fecha; otra automática sí se omite operativamente según SPEC-023. Cada corrida conserva identidad propia; una cotización del mismo jugador-día se actualiza con el último cálculo válido sin duplicar fila ni conservar precios intermedios. Se conserva la fórmula sobre el precio vigente antes de cada cálculo, no un límite de un ajuste diario.
 - **FR-024 / FR-060 — cambio de día**: La fecha de cotización se fija con la fecha UTC de inicio y se conserva para toda la ejecución, aunque termine al día siguiente. Todas sus nuevas filas usan esa fecha de vigencia y ese mismo día para aplicar la unicidad por jugador; no se interrumpe la corrida por el cambio de día.
-- **FR-027 / FR-060 — corrida atrasada (decisión humana posterior a ANALYZE I1)**: Si la cotización vigente del jugador tiene fecha de vigencia igual o posterior al día fijado de la corrida, se omite al jugador sin ajustar precios, insertar filas ni sobrescribir historial. La omisión se incluye en `notRepricedPlayers`, no en fallos. Solo se publica cuando la fecha vigente es estrictamente anterior al día de la corrida; se compara la fecha de cotización, nunca la del score. No se reconstruyen días anteriores ni se añaden bloqueos globales, esperas de ordenamiento o recuperación automática.
-- **FR-061**: Conservar resúmenes diferenciables de cada ejecución y sus contadores. La consulta por fecha UTC devuelve una lista sin paginación de todos los resúmenes del día, del más reciente al más antiguo; cada resumen incluye un identificador único de ejecución y su instante de ejecución. No devuelve únicamente el último resultado. Los omitidos por cotización diaria existente se distinguen de fallos; no se clasifican por ausencia de score nuevo.
+- **FR-027 / FR-060 — corrida atrasada (I1 alineada)**: Si la fecha vigente del jugador es posterior al día de la corrida, se omite en `notRepricedPlayers` sin alterar historial. Igualdad permite sustituir el cálculo diario. No comparar fecha del score ni reconstruir días anteriores ni añadir exclusión global o recuperación automática.
+- **FR-061**: Conservar resúmenes diferenciables de cada ejecución y sus contadores. La consulta por fecha UTC devuelve todos los resúmenes finalizados, sin paginación, por inicio e ID descendentes; cada resumen incluye `executionId` e instante. No devuelve solo el último ni presenta contexto abierto como éxito. Reemplazos diarios cuentan como recalculados/arrastrados; omisiones solo por fecha vigente posterior, no por igualdad ni falta de score nuevo; fallos son categoría separada.
 - **FR-039**: El ranking por cotización se expone como `GET /api/rankings/quote`, paginado y filtrado en backend, conservando orden por precio descendente y una entrada por jugador. Los empates de precio se resuelven por ID de jugador ascendente y las posiciones globales son consecutivas y únicas (1, 2, 3), sin posiciones compartidas. Los filtros y la paginación conservan esas posiciones globales, sin renumerarlas. La UI de SPEC-022 conserva el Top 3 global sin filtros, determinado por ese mismo orden; no se obtiene filtrando o paginando en el navegador un ranking completo.
 
 Sustituciones: quedan superadas las aclaraciones y escenarios que congelan el precio por falta de valuación nueva, exigen una ejecución por fecha, permiten dos orígenes el mismo día o identifican la vigencia con la fecha de valuación. US2 y US4 conservan identidad; US1, US3 y US5 se revisan solo por impacto en unicidad, vigencia y contratos.
@@ -25,10 +67,10 @@ Sustituciones: quedan superadas las aclaraciones y escenarios que congelan el pr
 
 ### Aceptación del cambio (US2 y US4)
 
-1. Con el mismo score disponible en dos días UTC sucesivos, cada día aplica una vez el ajuste sobre el precio vigente del día anterior y conserva la fecha original del score.
+1. Con una corrida en cada uno de dos días UTC sucesivos y el mismo score disponible, ambas aplican el ajuste sobre el precio vigente y conservan la fecha original del score. Este escenario no limita las corridas adicionales del mismo día.
 2. Sin score de la estrategia, el precio se mantiene y la fila diaria es arrastrada.
-3. Dos ejecuciones del mismo día, incluso concurrentes o con estrategias distintas, no producen dos cotizaciones ni dos ajustes por jugador; una ejecución posterior puede procesar jugadores aún pendientes.
-4. Una valuación llegada después de la cotización diaria no sobrescribe esa fila; puede usarse al día siguiente.
+3. Dos manuales del mismo día tienen IDs de ejecución distintos y una sola fila por jugador-fecha; la última publicación válida sustituye precio y trazabilidad incluida su referencia de ejecución, preservando identidad. No hay límite de un ajuste diario; serializar por jugador mantiene cada publicación íntegra.
+4. Una valuación llegada después de la cotización diaria puede usarse en otra manual del mismo día y actualizar la fila. El historial devuelve un precio por fecha, no cada versión intradiaria.
 5. El ranking por cotización permite recorrer páginas y aplicar filtros globales desde backend, sin modificar precios; el podio global permanece independiente de esos filtros.
 6. Si una corrida de D procesa un jugador después de que otra ya publicó su cotización de D+1, la de D lo omite sin alterar esa cotización ni insertar una fila atrasada; el recorrido normal de días sucesivos conserva el ajuste diario del escenario 1.
 

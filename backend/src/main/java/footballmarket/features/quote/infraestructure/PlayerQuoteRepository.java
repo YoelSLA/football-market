@@ -6,6 +6,7 @@ import footballmarket.features.quote.domain.records.QuoteRankingPage.LeagueOptio
 import footballmarket.features.quote.domain.records.QuoteRankingRow;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,9 @@ import org.springframework.data.repository.query.Param;
  * effective_date DESC, calculated_at DESC, id DESC}.
  */
 public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> {
+
+  /** Busca la única cotización del jugador para la fecha, sin distinguir el origen. */
+  Optional<PlayerQuote> findByPlayerIdAndEffectiveDate(Long playerId, LocalDate effectiveDate);
 
   String RANKED_QUOTES =
       """
@@ -138,15 +142,16 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
   List<PlayerQuote> findRanking(@Param("playerIds") List<Long> playerIds);
 
   /**
-   * Fechas de mercado de las filas iniciales existentes, de la más reciente a la más antigua.
+   * Fechas persistidas, de menor a mayor; la primera conserva la fecha de mercado aunque cambie su
+   * origen.
    *
    * @return fechas de mercado vigentes
    */
-  @Query(
-      "select distinct q.effectiveDate from PlayerQuote q"
-          + " where q.origin = footballmarket.features.quote.domain.enums.QuoteOrigin.INITIAL"
-          + " order by q.effectiveDate desc")
+  @Query("select distinct q.effectiveDate from PlayerQuote q order by q.effectiveDate asc")
   List<LocalDate> findMarketDates();
+
+  /** Cuenta jugadores de una fecha sin depender del origen mutable de su cotización. */
+  long countByEffectiveDate(LocalDate effectiveDate);
 
   /**
    * Indica si existe alguna fila del origen indicado.

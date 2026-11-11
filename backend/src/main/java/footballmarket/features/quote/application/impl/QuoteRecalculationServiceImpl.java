@@ -3,6 +3,7 @@ package footballmarket.features.quote.application.impl;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.quote.application.QuoteRecalculationService;
+import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.InvalidMinPriceFloorException;
 import footballmarket.features.quote.application.exceptions.InvalidVariationCapException;
@@ -11,7 +12,6 @@ import footballmarket.features.quote.application.internal.QuoteExecutionRecorder
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.application.internal.QuotePopulationSelector;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
-import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Recálculo diario por jugador, compartido por las entradas manual y automática. */
+/** Recálculo compartido con corridas manuales múltiples y una reserva automática por fecha UTC. */
 @Service
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 public class QuoteRecalculationServiceImpl implements QuoteRecalculationService {
@@ -93,7 +93,7 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       Long requestedFloor,
       QuoteExecutionOrigin origin) {
     ValuationStrategy strategy = this.parseStrategy(requestedStrategy);
-    if (!this.quotes.existsByOrigin(QuoteOrigin.INITIAL)) {
+    if (this.quotes.count() == 0) {
       throw new MarketNotInitializedException();
     }
     BigDecimal factor =
@@ -124,7 +124,14 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
     QuoteExecution execution =
         new QuoteExecution(
             quoteDate, origin, strategy, "v1", factor, cap, floor, 0, 0, 0, 0, 0, startedAt, null);
-    execution = this.recorder.start(execution);
+    try {
+      execution = this.recorder.start(execution);
+    } catch (DataIntegrityViolationException exception) {
+      if (origin == QuoteExecutionOrigin.AUTOMATIC && this.isAutomaticConflict(exception)) {
+        throw new ExecutionAlreadyExistsException();
+      }
+      throw exception;
+    }
 
     List<Player> players = this.population.pricablePlayers();
     int recomputed = 0;
@@ -142,10 +149,6 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
           case NOT_REPRICED -> notRepriced++;
         }
       } catch (RuntimeException exception) {
-        if (this.isDailyConflict(exception)) {
-          notRepriced++;
-          continue;
-        }
         failed++;
         LOG.error(
             "quote_player_recalculation_failed playerId={} stage=recalculate cause={}",
@@ -182,7 +185,7 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
     return this.executions.findAllByQuoteDateAndFinishedAtIsNotNullOrderByStartedAtDescIdDesc(date);
   }
 
-  private boolean isDailyConflict(RuntimeException exception) {
+  private boolean isAutomaticConflict(RuntimeException exception) {
     if (!(exception instanceof DataIntegrityViolationException)) {
       return false;
     }
@@ -190,8 +193,9 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       if (cause instanceof PSQLException sql
           && "23505".equals(sql.getSQLState())
           && sql.getServerErrorMessage() != null
-          && "player_quotes".equals(sql.getServerErrorMessage().getTable())
-          && "uq_player_quote".equals(sql.getServerErrorMessage().getConstraint())) {
+          && "quote_executions".equals(sql.getServerErrorMessage().getTable())
+          && "uq_quote_executions_automatic_date"
+              .equals(sql.getServerErrorMessage().getConstraint())) {
         return true;
       }
     }

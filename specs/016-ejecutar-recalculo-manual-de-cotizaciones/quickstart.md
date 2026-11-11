@@ -1,6 +1,10 @@
 # Quickstart: validación de la cotización de tokens
 
-## Guía vigente del delta — 2026-11-10
+## Guía vigente — integración 2026-11-11
+
+Base común: [integración](../023-scheduler-quote-recalculation/integration-baseline.md).
+Las evidencias locales históricas de abajo no acreditan esta combinación; no ejecutar mientras el
+merge siga en conflicto. Tests y aplicación de migraciones son responsabilidad del usuario.
 
 Estos escenarios sustituyen los incompatibles de la guía histórica siguiente. **Ejecución exclusivamente humana tras IMPLEMENT autorizado**; PLAN no ejecuta aplicación, SQL, builds ni tests. Contrato objetivo en [contracts/quotes-http.md](contracts/quotes-http.md); modelo en [data-model.md](data-model.md).
 
@@ -21,7 +25,7 @@ curl -s -H "Authorization: Bearer $TOKEN" "$API/rankings/quote?page=0&size=8&nam
 curl -s -H "Authorization: Bearer $TOKEN" "$API/rankings/quote?page=0&size=3"
 ```
 
-Sustituir fecha/nombre por los datos preparados. La consulta de ejecuciones debe devolver todos los resúmenes finalizados del día con IDs distintos y orden de inicio/ID descendente. El POST repetido devuelve 200 y omisiones, no `EXECUTION_ALREADY_EXISTS`.
+Sustituir fecha/nombre por los datos preparados. La consulta devuelve resúmenes finalizados con IDs distintos y orden inicio/ID descendente. Un POST manual repetido devuelve 200 y puede reemplazar cotizaciones del día; no se omite por fecha igual ni devuelve `EXECUTION_ALREADY_EXISTS` por repetición manual.
 
 ### Escenarios verificables
 
@@ -29,12 +33,14 @@ Sustituir fecha/nombre por los datos preparados. La consulta de ejecuciones debe
 | --- | --- | --- |
 | FR-005/027 | Mismo score en días UTC D y D+1, usando Clock controlado en tests | Un ajuste cada día sobre el precio anterior; fecha de score preservada |
 | FR-008 | Jugador con métricas sin score de estrategia | Fila diaria CARRIED_FORWARD, multiplicador 1, precio repetido |
-| FR-024/060 | Dos corridas del mismo día, también concurrentes y con estrategias distintas | IDs de corrida distintos, una fila y un ajuste como máximo por jugador/día; omitidos no son fallos |
-| FR-026 | Inicialización en D y recálculo en D | INITIAL consume el día, sin segunda fila |
-| FR-060/062 | Un jugador falla antes de publicar; otra corrida del día lo procesa | Puede completar al pendiente sin sobrescribir éxitos previos |
+| FR-024/060 | Dos manuales del mismo día con estrategias/parámetros distintos | IDs distintos; una fila por jugador-día con identidad preservada, último precio válido, ejecución referenciada y último instante; no hay límite de un ajuste |
+| FR-026 | Inicialización en D, recálculo en D y repetir inicialización | Una fila diaria actualizada, mercado sigue inicializado, initialize no sobrescribe el cálculo ni inserta otro INITIAL |
+| FR-060/062 | Fallo individual al reemplazar y reintento manual | El fallo conserva íntegro el cálculo previo; reintento válido puede sustituirlo sin duplicar |
 | CLARIFY medianoche | Clock cruza UTC durante el recorrido | Todas las nuevas filas conservan el día fijado al iniciar |
 | Corrección I1 / aceptación 6 | Con Clock y barreras controlados, D+1 publica a un jugador antes de que lo procese la corrida atrasada de D | D lo omite en notRepricedPlayers; ninguna fila atrasada, ningún ajuste adicional y cotización de D+1 intacta |
-| Aceptación 4 | Score nuevo tras cotización de D | No reescribe D; puede utilizarse en D+1 |
+| Aceptación 4 | Score nuevo tras primera cotización de D y otra manual de D | Actualiza la misma fila, precio y trazabilidad del último cálculo; también actualiza su FK de ejecución |
+| Cuota automática | Manual antes y después de automática; segundo disparo automático en D | Manuales aceptadas; solo una automática registrada y disparo adicional omitido |
+| Migraciones integradas | Aplicar en PostgreSQL aislado la secuencia de ambas migraciones con datos compatibles y comprobar colisiones en otro escenario | Sin DROP duplicados; unicidad diaria/FK e índice automático correctos; ante colisiones detener sin limpieza |
 | FR-039 | Precios iguales, ID distintos, suficientes datos para varias páginas | Orden precio DESC/ID ASC; posiciones únicas y globales |
 | FR-039 filtros | Buscar jugador de página posterior y combinar nombre/liga/posición | Búsqueda backend en universo completo; totales filtrados; posiciones no renumeradas |
 | Podio | Cambiar filtros de tabla | Consulta independiente sin filtros mantiene Top 3 global bajo datos estables |

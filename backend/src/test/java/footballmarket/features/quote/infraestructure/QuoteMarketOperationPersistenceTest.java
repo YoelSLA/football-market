@@ -19,6 +19,7 @@ import footballmarket.features.quote.application.QuoteMarketInitializationServic
 import footballmarket.features.quote.application.QuoteRecalculationService;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
+import footballmarket.features.quote.domain.models.QuoteAdjustment;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.support.IdentityCatalogueFixture;
@@ -27,7 +28,11 @@ import footballmarket.support.QuoteTestData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import footballmarket.support.ValuationTestData;
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -36,6 +41,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.bean.override.convention.TestBean;
 
 /**
  * Categoría Repository de la operación del mercado sobre la cotización persistida.
@@ -77,6 +83,13 @@ class QuoteMarketOperationPersistenceTest {
   @Autowired private TokenListingService listingService;
   @Autowired private TokenListingRepository listings;
 
+  @TestBean(name = "marketClock", methodName = "quoteClock")
+  private Clock marketClock;
+
+  static Clock quoteClock() {
+    return Clock.fixed(Instant.parse("2026-10-19T09:00:00Z"), ZoneOffset.UTC);
+  }
+
   @Nested
   @DisplayName("Compra sobre la cotización persistida")
   class PurchaseOverPersistedQuote {
@@ -105,6 +118,47 @@ class QuoteMarketOperationPersistenceTest {
   @Nested
   @DisplayName("Aislamiento del recálculo respecto del mercado")
   class RecalculationIsolation {
+
+    @Test
+    @DisplayName("Reemplaza INITIAL y el cálculo diario conservando identidad e inicialización")
+    void replacesDailyCalculationAndAuditReference() {
+      // Arrange
+      catalogue.prepare();
+      data.prepareConfirmedJsonCampaign(CAMPAIGN_DATE);
+      valuation.evaluate();
+      LocalDate day = LocalDate.of(2026, 10, 19);
+      initialization.initialize(day);
+      Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+      Long initialId =
+          quotes.findByPlayerIdAndEffectiveDate(player.getId(), day).orElseThrow().getId();
+      QuoteExecution first = recalculation.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      PlayerQuote before = quotes.findByPlayerIdAndEffectiveDate(player.getId(), day).orElseThrow();
+      long previousPrice = before.getPrice();
+      BigDecimal score = before.getScore();
+      // Act
+      QuoteExecution last = recalculation.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      PlayerQuote persisted =
+          quotes.findByPlayerIdAndEffectiveDate(player.getId(), day).orElseThrow();
+      assertThat(last.getId()).isNotEqualTo(first.getId());
+      assertThat(persisted.getId()).isEqualTo(initialId);
+      assertThat(persisted.getPreviousPrice()).isEqualTo(previousPrice);
+      assertThat(persisted.getPrice())
+          .isEqualTo(
+              QuoteAdjustment.calculate(
+                      previousPrice,
+                      score,
+                      last.getAdjustmentFactor(),
+                      last.getVariationCap(),
+                      last.getMinPriceFloor())
+                  .price());
+      assertThat(persisted.getExecution().getId()).isEqualTo(last.getId());
+      assertThat(quotes.countByEffectiveDate(day)).isEqualTo(5);
+      assertThat(initialization.initialize(day).alreadyInitialized()).isTrue();
+      assertThat(
+              quotes.findByPlayerIdAndEffectiveDate(player.getId(), day).orElseThrow().getPrice())
+          .isEqualTo(persisted.getPrice());
+    }
 
     @Test
     @DisplayName("El recálculo no altera saldos, tenencias ni transacciones")

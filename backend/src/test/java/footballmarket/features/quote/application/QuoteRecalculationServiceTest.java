@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
+import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
@@ -92,7 +93,7 @@ class QuoteRecalculationServiceTest {
   @DisplayName("Recálculo diario por jugador")
   class DailyRecalculation {
     @Test
-    @DisplayName("Un score neutro existente se cuenta como recalculado, no como arrastrado")
+    @DisplayName("Un score neutro existente es recalculado, no arrastrado")
     void neutralScoreIsRecomputed() {
       // Arrange
       prepareMarket(false);
@@ -107,24 +108,25 @@ class QuoteRecalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Permite otra corrida y omite sin fallar los jugadores ya cotizados")
+    @DisplayName("Registra manuales antes y después de una automática y rechaza otra automática")
     void acceptsRepeatedRun() {
       // Arrange
       prepareMarket(true);
-      QuoteExecution first = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       // Act
-      QuoteExecution second = service.recalculateAutomatic();
+      QuoteExecution first = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      QuoteExecution automatic = service.recalculateAutomatic();
+      QuoteExecution last = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       // Assert
       assertThat(first.getRecomputedRows()).isEqualTo(5);
-      assertThat(second.getId()).isNotEqualTo(first.getId());
-      assertThat(second.getNotRepricedPlayers()).isEqualTo(5);
-      assertThat(second.getRecomputedRows()).isZero();
-      assertThat(second.getFailedPlayers()).isZero();
-      assertThat(second.result()).isEqualTo(QuoteExecutionResult.SUCCESS);
-      // Verify
+      assertThat(automatic.getRecomputedRows()).isEqualTo(5);
+      assertThat(last.getRecomputedRows()).isEqualTo(5);
+      assertThat(last.getNotRepricedPlayers()).isZero();
+      assertThat(last.result()).isEqualTo(QuoteExecutionResult.SUCCESS);
+      assertThatThrownBy(service::recalculateAutomatic)
+          .isInstanceOf(ExecutionAlreadyExistsException.class);
       assertThat(service.executions(QUOTE_DATE))
           .extracting(QuoteExecution::getId)
-          .containsExactly(second.getId(), first.getId());
+          .containsExactly(last.getId(), automatic.getId(), first.getId());
     }
 
     @Test
@@ -144,7 +146,7 @@ class QuoteRecalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Sin score arrastra diariamente y la configuración automática queda auditada")
+    @DisplayName("Sin score arrastra diariamente y audita la configuración automática")
     void carriesWithoutScore() {
       // Arrange
       prepareMarket(false);
@@ -152,33 +154,33 @@ class QuoteRecalculationServiceTest {
       QuoteExecution result = service.recalculateAutomatic();
       // Assert
       assertThat(result.getCarriedForwardRows()).isEqualTo(5);
-      assertThat(result.getRecomputedRows()).isZero();
-      assertThat(result.getFailedPlayers()).isZero();
       assertThat(result.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
       assertThat(result.getAdjustmentFactor()).isEqualByComparingTo("0.25");
       assertThat(result.getVariationCap()).isEqualByComparingTo("0.20");
       assertThat(result.getMinPriceFloor()).isEqualTo(7);
+      assertThat(result.getFailedPlayers()).isZero();
     }
 
     @Test
-    @DisplayName("INITIAL consume el día incluso si ya hay valuaciones disponibles")
-    void initialConsumesDay() {
+    @DisplayName("Recalcular INITIAL no duplica ni desinicializa el mercado")
+    void updatesInitialDay() {
       // Arrange
       catalogue.prepare();
       data.prepareConfirmedJsonCampaign(QUOTE_DATE.minusDays(1));
       valuation.evaluate();
       initialization.initialize(QUOTE_DATE);
       // Act
-      QuoteExecution result = service.recalculateAutomatic();
+      QuoteExecution first = service.recalculateAutomatic();
+      QuoteExecution next = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       // Assert
-      assertThat(result.getNotRepricedPlayers()).isEqualTo(5);
-      assertThat(result.getRecomputedRows()).isZero();
-      assertThat(result.getFailedPlayers()).isZero();
+      assertThat(first.getRecomputedRows()).isEqualTo(5);
+      assertThat(next.getRecomputedRows()).isEqualTo(5);
+      assertThat(next.getFailedPlayers()).isZero();
     }
 
     @Test
-    @DisplayName("Una valuación llegada después no reemplaza la fila diaria arrastrada")
-    void lateScoreWaitsUntilNextDay() {
+    @DisplayName("Una valuación llegada después reemplaza la cotización arrastrada del día")
+    void lateScoreReplacesDailyQuote() {
       // Arrange
       prepareMarket(false);
       service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
@@ -186,13 +188,15 @@ class QuoteRecalculationServiceTest {
       // Act
       QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
       // Assert
-      assertThat(result.getNotRepricedPlayers()).isEqualTo(5);
-      assertThat(result.getRecomputedRows()).isZero();
+      assertThat(result.getRecomputedRows()).isEqualTo(5);
+      assertThat(result.getNotRepricedPlayers()).isZero();
+      assertThat(result.getFailedPlayers()).isZero();
     }
 
     @Test
-    @DisplayName("Dos corridas concurrentes con estrategias distintas cotizan una vez por jugador")
-    void concurrentRunsPartitionPublications() throws Exception {
+    @DisplayName(
+        "Dos corridas concurrentes publican cálculos completos sin duplicar la fila diaria")
+    void concurrentRunsPublishBothCalculations() throws Exception {
       // Arrange
       prepareMarket(true);
       CountDownLatch start = new CountDownLatch(1);
@@ -206,8 +210,8 @@ class QuoteRecalculationServiceTest {
         QuoteExecution second = automatic.get(30, TimeUnit.SECONDS);
         // Assert
         assertThat(first.getId()).isNotEqualTo(second.getId());
-        assertThat(first.getRecomputedRows() + second.getRecomputedRows()).isEqualTo(5);
-        assertThat(first.getNotRepricedPlayers() + second.getNotRepricedPlayers()).isEqualTo(5);
+        assertThat(first.getRecomputedRows() + second.getRecomputedRows()).isEqualTo(10);
+        assertThat(first.getNotRepricedPlayers() + second.getNotRepricedPlayers()).isZero();
         assertThat(first.getFailedPlayers() + second.getFailedPlayers()).isZero();
         assertThat(service.executions(QUOTE_DATE)).hasSize(2);
       } finally {
@@ -216,7 +220,7 @@ class QuoteRecalculationServiceTest {
     }
 
     @Test
-    @DisplayName("Fija el día UTC con el único instante inicial aunque el cierre cruce medianoche")
+    @DisplayName("Fija el día UTC inicial aunque el cierre cruce medianoche")
     void fixesUtcDayAtStart() {
       // Arrange
       prepareMarket(false);

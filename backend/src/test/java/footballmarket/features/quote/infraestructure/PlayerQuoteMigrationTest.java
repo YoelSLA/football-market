@@ -73,7 +73,7 @@ class PlayerQuoteMigrationTest {
     }
 
     @Test
-    @DisplayName("La inicialización también consume la única cotización diaria")
+    @DisplayName("La unicidad diaria impide insertar otra fila, incluso con diferente origen")
     void allowsOneRowPerPlayerDateAndOrigin() throws Exception {
       try (Connection connection = ValuationDatabaseSupport.migrated(DATABASE, "quote_migration");
           Statement statement = connection.createStatement()) {

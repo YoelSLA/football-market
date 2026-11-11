@@ -22,8 +22,9 @@ import lombok.Getter;
 /**
  * Corrida persistida del recálculo de cotizaciones.
  *
- * <p>Cada corrida tiene identidad propia y admite un único cierre explícito. Sus parámetros
- * permanecen inmutables; un contexto sin cierre no constituye un resultado finalizado.
+ * <p>Cada corrida conserva su propio resumen y parámetros. Una fecha UTC admite corridas manuales
+ * ilimitadas y como máximo una automática, sin duplicar parámetros en cada cotización. Un contexto
+ * sin cierre no constituye un resultado finalizado.
  */
 @Entity
 @Table(name = "quote_executions")
@@ -96,7 +97,7 @@ public class QuoteExecution {
    * @param pricedPlayers población cotizable evaluada
    * @param recomputedRows filas recalculadas escritas
    * @param carriedForwardRows filas arrastradas escritas
-   * @param notRepricedPlayers omitidos por cotización vigente del mismo día o posterior
+   * @param notRepricedPlayers omitidos por cotización vigente de fecha posterior
    * @param failedPlayers jugadores con fallo individual
    * @param startedAt inicio de la corrida
    * @param finishedAt fin de la corrida, nulo mientras el contexto está abierto

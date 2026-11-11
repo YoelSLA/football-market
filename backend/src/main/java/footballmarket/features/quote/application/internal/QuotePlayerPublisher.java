@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Publica atómicamente la cotización de un jugador dentro de una corrida manual. */
+/** Publica atómicamente la cotización diaria de un jugador en una corrida manual o automática. */
 @Component
 public class QuotePlayerPublisher {
   private static final Logger LOGGER = LoggerFactory.getLogger(QuotePlayerPublisher.class);
@@ -33,7 +33,7 @@ public class QuotePlayerPublisher {
     this.players = players;
   }
 
-  /** Publica como máximo una fila diaria bajo el bloqueo compartido con inicialización. */
+  /** Inserta o actualiza la única fila diaria bajo el bloqueo compartido con inicialización. */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public PublicationResult publish(
       Player player,
@@ -47,7 +47,7 @@ public class QuotePlayerPublisher {
     try {
       this.players.lockIdentityById(player.getId()).orElseThrow();
       PlayerQuote current = this.quotes.findLatestByPlayerId(player.getId()).getFirst();
-      if (!current.getEffectiveDate().isBefore(quoteDate)) {
+      if (current.getEffectiveDate().isAfter(quoteDate)) {
         return new PublicationResult(Publication.NOT_REPRICED, Optional.empty());
       }
       Optional<QuoteScoreResolver.ResolvedScore> resolved =
@@ -68,6 +68,12 @@ public class QuotePlayerPublisher {
                           execution))
               .orElseGet(
                   () -> this.carriedForward(player, current, quoteDate, calculatedAt, execution));
+      Optional<PlayerQuote> existing =
+          this.quotes.findByPlayerIdAndEffectiveDate(player.getId(), quoteDate);
+      if (existing.isPresent()) {
+        existing.get().replaceCalculation(next);
+        next = existing.get();
+      }
       this.quotes.saveAndFlush(next);
       Publication publication =
           next.getOrigin() == QuoteOrigin.RECOMPUTED

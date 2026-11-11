@@ -54,7 +54,7 @@ public record QuoteProperties(
   /** Cadencia UTC y habilitación del disparador; Spring valida la sintaxis del cron al arrancar. */
   public record Schedule(@NotBlank String cron, @NotNull Boolean enabled) {
     public Schedule {
-      cron = cron == null ? "0 0 0 * * MON" : cron;
+      cron = cron == null ? "0 0 12 * * *" : cron;
       enabled = enabled == null ? true : enabled;
     }
   }

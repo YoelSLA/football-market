@@ -495,6 +495,10 @@ que no evita esos intentos repetidos. Poder reintentar no implica recuperar exit
 Se corrigió la expectativa adicional de cero fallos del test de SPEC-023, no el comportamiento
 productivo; TD-024 permanece pendiente.
 
+**Delta diario de SPEC-023 (2026-11-11).** La publicación ahora actualiza una cotización existente
+por jugador-fecha en vez de intentar duplicarla, también en un reintento. Esto elimina esa causa
+concreta de conflicto de unicidad, pero no cambia `REQUIRES_NEW` ni compensa filas confirmadas si
+falla el resumen. TD-024 permanece pendiente; no hay evidencia de tests ejecutados por el agente.
 **Diseño del delta SPEC-016 (2026-11-10, PLAN).** Se planifica identidad de corrida y referencia
 `execution_id` desde la cotización, con contexto confirmado antes de publicar jugadores y resumen
 finalizado aparte. Evita depender del instante para identificar parámetros, pero no acredita
@@ -509,6 +513,10 @@ iniciales. La consulta pública solo devuelve finalizadas. El test de fallo de c
 se adaptó para distinguir contexto persistido de resumen final y nuevas corridas de
 recuperación del contexto anterior. Las pruebas no se ejecutaron y los contadores de
 un contexto interrumpido no se reconstruyen: TD-024 sigue `Pendiente`.
+
+**Integración SPEC-016/023 (2026-11-11).** El reemplazo diario actualiza también la FK de ejecución.
+Un contexto automático sin cierre consume la cuota diaria; una manual posterior puede publicar
+nuevos cálculos, pero no repara el contexto anterior. TD-024 continúa pendiente.
 
 **Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
 consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.

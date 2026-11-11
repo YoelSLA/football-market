@@ -312,6 +312,8 @@ class QuoteQueryServiceTest {
       assertThat(history).hasSize(3);
       assertThat(history.get(0).getOrigin()).isEqualTo(QuoteOrigin.RECOMPUTED);
       assertThat(history.get(1).getOrigin()).isEqualTo(QuoteOrigin.CARRIED_FORWARD);
+      assertThat(history.get(2).getOrigin()).isEqualTo(QuoteOrigin.INITIAL);
+      assertThat(history.get(0).getCalculatedAt()).isEqualTo(Instant.parse("2026-10-19T09:00:00Z"));
       assertThat(queryService.findCurrent(player.getId()).getOrigin())
           .isEqualTo(QuoteOrigin.RECOMPUTED);
     }
@@ -437,10 +439,14 @@ class QuoteQueryServiceTest {
   @DisplayName("Selección de la cotización diaria vigente")
   class TieBreak {
 
-    /** El jugador aparece una sola vez, con su última fila diaria, sin prioridad entre orígenes. */
+    /**
+     * El ranking conserva una sola entrada por jugador aunque varias fechas compartan instante de
+     * cálculo: la fecha de vigencia más reciente determina la fila vigente.
+     */
     @Test
-    @DisplayName("Muestra una sola entrada por jugador con su cotización del día más reciente")
-    void showsLatestDailyEntry() {
+    @DisplayName(
+        "Muestra una sola entrada por jugador cuando dos fechas comparten instante de cálculo")
+    void showsSingleEntryWhenRowsTie() {
       // Arrange
       catalogue.prepare();
       Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
@@ -448,8 +454,7 @@ class QuoteQueryServiceTest {
       Instant calculatedAt = Instant.parse("2026-10-17T09:00:00Z");
       quoteData.prepareMetrics(player, marketDate);
       quoteData.persistInitial(player, marketDate, calculatedAt);
-      quoteData.persistCarriedForward(
-          player, marketDate.plusDays(1), 100L, calculatedAt.plusSeconds(86400));
+      quoteData.persistCarriedForward(player, marketDate.plusDays(1), 100L, calculatedAt);
 
       // Act
       List<PlayerRankingEntry> ranking = queryService.findRanking();
