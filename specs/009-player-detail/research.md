@@ -1,17 +1,19 @@
 # Research: Detalle individual del jugador
 
-## Investigación vigente — rediseño visual 2026-11-09
+## Investigación vigente — rediseño visual 2026-11-12
 
-Este bloque desarrolla únicamente el delta del [wireframe canónico](../../docs/wireframes/player-detail.md). Las decisiones de 2026-10-25 siguen vigentes para consulta, snapshot, contratos y arquitectura ya implementados.
+Este bloque consolida el delta de presentación del [wireframe canónico](../../docs/wireframes/player-detail.md) y las decisiones acordadas durante el rediseño visual definitivo. Las decisiones de 2026-10-25 siguen vigentes para consulta, snapshot, contratos y arquitectura ya implementados.
 
 | Decisión | Razón y evidencia | Alternativas descartadas |
 | --- | --- | --- |
-| Reutilizar la Page y sus cinco Components estadísticos locales | Las responsabilidades ya coinciden con cabecera, coordinación de estados, tabs, resumen y catálogo. El cambio es de composición, no una funcionalidad nueva | Duplicar la Page; crear una feature de estadísticas frontend; mover Components a `shared` |
-| Mantener el Page Hook y retirar solo el filtro de unidad | Pestaña, búsqueda y categoría son estado local por jugador. El wireframe no incluye unidad y cada fila ya muestra su unidad | Conservar un control no aprobado; mover controles a store; filtrar dentro del Component sin contrato explícito |
-| Derivar relevancia y grupos desde utilidades puras existentes | `getMetricPriority` y el catálogo ya preservan P/S/B, orden, cero y null. Exponer etiqueta/grupo evita duplicar reglas en JSX | Reescribir la matriz; usar colores sin texto; ordenar manualmente en cada grupo |
-| Deduplicar las destacadas por clave | Tarjetas, paneles y adicionales comparten métricas. Excluir de destacadas las claves ya presentadas cumple FR-030 sin modificar perfiles canónicos ni impedir que un panel desarrolle un indicador de tarjeta previsto por el wireframe | Cambiar perfiles; repetir claves en destacadas; sustituir métricas ausentes automáticamente |
-| Lista agrupada en lugar de tabla con `aside` | El wireframe exige controles superiores, categorías visibles y filas adaptables. Una lista semántica facilita dos líneas en móvil sin scroll horizontal | Mantener tabla cromática; paginar 60 claves; ocultar columnas o métricas en móvil |
-| Conservar PageLayout y la autoridad de scroll | La Page ya cumple la cadena de altura y la arquitectura prohíbe resolver una composición específica modificando layouts globales | Cambiar AppLayout/PageLayout; agregar scroll vertical anidado; usar alturas fijas |
+| 4 KPI principales + 2 paneles temáticos | Las barras de progreso carecían de escala comparativa válida y el bloque de destacadas duplicaba información. 4 KPI superiores y 2 paneles temáticos específicos por posición organizan la información de forma clara y sin redundancias | Mantener barras relativas arbitrarias; mantener bloque de destacadas duplicado; radar chart |
+| Filas de paneles acotadas (`min-height: 44px; max-height: 58px;`) con `justify-content: space-evenly` | Evita que las filas se estiren indefinidamente en pantallas altas y garantiza que los paneles encajen de forma natural en resoluciones con altura menor (768px, 800px) | `flex: 1` sin límite en filas; alturas fijas en píxeles que provocan desbordamiento |
+| Eliminación de unidades redundantes en KPI cards | La unidad redundante repite innecesariamente el concepto ya expresado en el título/subtítulo (ej. `0,4` y debajo `regates/partido`). Solo `%` se mantiene al lado del valor | Mostrar `0,4 regates regates/partido`; abreviaciones crípticas |
+| Iconos de 24px en KPI y valores de 28px bold | Mejora sustancial de jerarquía visual y legibilidad en escritorio | Iconos diminutos de 18px; tipografía secundaria comprimida |
+| Eliminación de `text-overflow: ellipsis` en subtítulos de KPI | El ellipsis forzado con altura fija recortaba trazos descendentes (`g`, `p`, `y`). Ajustar `line-height: 1.35` y padding interno resuelve el clipping | Cortar texto; ocultar información esencial |
+| Paleta semántica con colores estrictamente sólidos | Garantiza máxima legibilidad, contraste adecuado y diseño profesional alineado con Football Market sin distracciones | Gradientes, sombras decorativas, efectos de brillo |
+| Cabecera compacta de 3 zonas con cotización oficial de 94 px | Integra precio en créditos, badges semánticos (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`) y diferencia absoluta en créditos sin inventar datos | Ocultar cotización; inventar variaciones cuando no existe precio previo |
+| Cero scroll vertical y horizontal en escritorio | Verificación automatizada con Playwright en 1920×1080, 1920×913, 1366×768 y 1280×800 (`hasVerticalScroll: false`, `hasHorizontalScroll: false`) | Permitir scroll anidado en el resumen; recortar contenidos esenciales |
 
 No hay NEEDS CLARIFICATION. No se agregan paquetes, endpoints, modelos remotos, cálculos deportivos ni recursos gráficos.
 

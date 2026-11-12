@@ -6,9 +6,9 @@ description: "Task list template for feature implementation"
 # Tasks: Detalle individual del jugador — Rediseño visual
 
 **Feature Branch vigente**: `feat/009-player-statistics-layout`
-**Created**: 2026-10-12 · **Revisión vigente**: 2026-11-09
-**Status vigente**: TASKS completado; gate ANALYZE pendiente de ejecución. No autoriza IMPLEMENT.
-**Referencia visual canónica**: [wireframe canónico](../../docs/wireframes/player-detail.md), aprobado el 2026-11-09.
+**Created**: 2026-10-12 · **Revisión vigente**: 2026-11-12
+**Status vigente**: IMPLEMENT completado y verificado (Cabecera de 3 zonas con cotización oficial y badges de variación, Resumen deportivo con 4 KPI y 2 paneles temáticos de altura acotada sin barras ni destacadas, paleta semántica de tokens sólidos y cero scroll en desktop).
+**Referencia visual canónica**: [wireframe canónico](../../docs/wireframes/player-detail.md), aprobado el 2026-11-12.
 
 ## Tareas vigentes del rediseño visual — 2026-11-09
 
@@ -91,10 +91,39 @@ visual ni avance a la Fase 3.
 
 **Propósito**: Retirar código muerto, sincronizar escenarios de prueba en quickstart y validar calidad estática y build.
 
-- [ ] T099 Revisar y retirar código muerto o tipos no utilizados relacionados con el antiguo filtro de unidad y paneles eliminados en `frontend/src/features/players/pages/PlayerDetailPage/` y barrels colocalizados
-- [ ] T100 Actualizar escenarios de verificación manual y visual en `specs/009-player-detail/quickstart.md` contra `docs/wireframes/player-detail.md` para los 3 viewports y 4 perfiles posicionales
-- [ ] T101 Ejecutar controles estáticos y formateo permitidos (`npm run biome:check` en frontend y `./gradlew spotlessCheck` en backend) garantizando cero infracciones
-- [ ] T102 Ejecutar build de frontend (`npm run build`) y verificar ausencia de errores de compilación y tipado TypeScript
+- [x] T099 Revisar y retirar código muerto o tipos no utilizados relacionados con el antiguo filtro de unidad y paneles eliminados en `frontend/src/features/players/pages/PlayerDetailPage/` y barrels colocalizados
+- [x] T100 Actualizar escenarios de verificación manual y visual en `specs/009-player-detail/quickstart.md` contra `docs/wireframes/player-detail.md` para los 3 viewports y 4 perfiles posicionales
+- [x] T101 Ejecutar controles estáticos y formateo permitidos (`npm run biome:check` en frontend y `./gradlew spotlessCheck` en backend) garantizando cero infracciones
+- [x] T102 Ejecutar build de frontend (`npm run build`) y verificar ausencia de errores de compilación y tipado TypeScript
+
+**Evidencia T099–T102 — 2026-11-12**:
+- Barrels revisados y sincronizados, sin componentes ni imports muertos.
+- `npm run biome:check` ejecutado en frontend con 0 errores y 0 advertencias.
+- `npm run scss:check-imports` ejecutado con éxito.
+- `npm run build` ejecutado exitosamente sin errores de compilación TypeScript.
+
+---
+
+### Fase 7 — Rediseño visual definitivo, paleta de tokens, cotización enriquecida y ausencia de scroll (2026-11-12)
+
+**Propósito**: Recomponer el Resumen deportivo en 4 tarjetas KPI y 2 paneles temáticos específicos con filas acotadas (eliminando barras de progreso y bloque de destacadas), adoptar la paleta semántica sólida de design tokens, rediseñar la cotización oficial en cabecera con badges de variación y cambio absoluto en créditos, y asegurar cero scroll en escritorio en todos los viewports normativos.
+
+- [x] T103 [US2] Recomponer `PlayerStatisticsSummary` y `SummaryPanel` para eliminar definitivamente barras (`PlayerStatisticsBars`) y bloque de destacadas (`PlayerSportsSummary`), consolidando el Resumen en 4 tarjetas KPI (`SummaryKpiCard`) y 2 paneles temáticos específicos por posición con filas de altura acotada (`min-height: 44px; max-height: 58px;`) y espaciado armónico (`justify-content: space-evenly`)
+- [x] T104 [US4] Incorporar y armonizar la paleta semántica sólida de design tokens en `PlayerDetailPage` y subcomponentes (`$surface-page-deep`, `$surface-card-dark`, `$surface-panel-to`, `$surface-panel-from`, `$surface-accent-deep`, `$surface-accent-dark`, `$accent-sports-green`, `$border-panel`) asegurando el uso exclusivo de `background-color` sin gradientes ni sombras decorativas
+- [x] T105 [US3] Rediseñar la caja de cotización en cabecera (`PlayerOverviewQuote`) en contenedor de 94 px con precio en créditos, badges semánticos (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y cálculo de variación absoluta en créditos (`formatQuoteAbsoluteChange`)
+- [x] T106 [US2] Ampliar iconografía y tipografía en KPI cards (iconos 24px en caja 48×48, valores 28px) y paneles temáticos, eliminar unidades redundantes y corregir recortes de texto y trazos descendentes (`line-height: 1.35`, sin ellipsis artificial)
+- [x] T107 [US4] Ejecutar verificaciones estáticas de formato y calidad de código: `npm run biome:check` (0 errores, 0 warnings), `npm run scss:check-imports` (OK) y compilación `npm run build` sin errores
+- [x] T108 [US4] Verificar ausencia de scroll en desktop mediante Playwright en Chrome DevTools en 1920×1080, 1920×913, 1366×768 y 1280×800 (`hasVerticalScroll: false`, `hasHorizontalScroll: false`), y scroll natural de documento en móvil
+
+**Evidencia T103–T108 — 2026-11-12**:
+- Layout flexible de `PlayerStatisticsSummary` verificado sin barras ni bloque de destacadas.
+- Filas de `SummaryPanel` acotadas a `min-height: 44px; max-height: 58px;` con `justify-content: space-evenly`.
+- Cabecera en 3 zonas con cotización oficial en caja de 94 px, precio en créditos destacado, badges de variación y diferencia absoluta.
+- Paleta semántica sólida aplicada en SCSS modules de `PlayerDetailPage`, `PlayerOverview`, `PlayerStatisticsSummary`, `PlayerStatisticsTabs` y `PlayerStatisticsCatalog`.
+- Cero scroll en escritorio comprobado vía Playwright en Chrome DevTools en 1920×1080, 1920×913, 1366×768 y 1280×800 (`hasVerticalScroll: false`, `hasHorizontalScroll: false`).
+- `npm run biome:check`: 0 errores, 0 advertencias.
+- `npm run scss:check-imports`: OK.
+- `npm run build`: compilación completada con éxito en 4.66s.
 
 ---
 
@@ -118,12 +147,13 @@ flowchart TD
     T099 --> T100["T100: Quickstart escenarios visuales"]
     T100 --> T101["T101: Biome & Spotless checks"]
     T101 --> T102["T102: Frontend Build"]
+    T102 --> T103["T103: Resumen 4 KPI + 2 Paneles (sin barras/destacadas)"]
+    T103 --> T104["T104: Tokens semánticos de colores sólidos"]
+    T104 --> T105["T105: Caja cotización 94px con badges"]
+    T105 --> T106["T106: Iconografía, tipografía y corrección descenders"]
+    T106 --> T107["T107: Verificaciones estáticas y build final"]
+    T107 --> T108["T108: Validación Playwright de cero scroll en desktop"]
 ```
-
-**Paralelismo identificado**:
-- Tras T086 y T087, `T088` (PlayerOverview) y `T093` (PlayerStatisticsTabs) pueden desarrollarse en paralelo al operar sobre componentes desacoplados.
-- `T090` (Summary) y `T096` (Catalog) trabajan sobre carpetas de componentes aisladas dentro de `components/`.
-- Las tareas de estilos SCSS (`T089`, `T091`, `T098`) siguen naturalmente a sus respectivos TSX sin colisión entre archivos.
 
 ---
 
@@ -131,11 +161,12 @@ flowchart TD
 
 | Requisito / Criterio | Tarea(s) asignada(s) | Sección Wireframe Canónico | Criterio de Aceptación |
 | --- | --- | --- | --- |
-| FR-025, FR-037, FR-046, FR-049 | T088, T089 | §Cabecera, §Adaptación responsive | SC-012, SC-023, SC-026 |
-| FR-030, FR-031, FR-032, FR-036, FR-050 | T090, T091, T092 | §Resumen (Defensor, Arquero, Medio, Delantero) | SC-014, SC-015, SC-019, SC-025, SC-028 |
-| FR-026, FR-029, FR-038, FR-039, FR-047, FR-050 | T093, T094, T095 | §Estados, §Adaptación responsive | SC-016, SC-017, SC-024, SC-026 |
+| FR-025, FR-037, FR-046, FR-049 | T088, T089, T105 | §Cabecera, §Adaptación responsive | SC-012, SC-023, SC-026 |
+| FR-030, FR-031, FR-032, FR-036, FR-050 | T090, T091, T092, T103, T106 | §Resumen deportivo (Defensor, Arquero, Medio, Delantero) | SC-014, SC-015, SC-019, SC-025, SC-028 |
+| FR-026, FR-029, FR-038, FR-039, FR-047, FR-050 | T093, T094, T095, T104, T108 | §Estados, §Adaptación responsive | SC-016, SC-017, SC-024, SC-026 |
 | FR-033, FR-034, FR-035, FR-042, FR-043, FR-044, FR-048, FR-051, FR-052 | T086, T096, T097, T098 | §Todas las estadísticas | SC-013, SC-020, SC-021, SC-027 |
-| FR-037, FR-040 (higiene, trazabilidad y build) | T087, T099, T100, T101, T102 | §Límites | SC-017, SC-018, SC-026 |
+| FR-037, FR-040, FR-049 (cotizaciones oficiales) | T105 | §Cabecera, §Cotizaciones | SC-012, SC-022, SC-026 |
+| Higiene, trazabilidad, build y validación | T087, T099, T100, T101, T102, T107, T108 | §Límites | SC-017, SC-018, SC-026 |
 
 ---
 
@@ -143,6 +174,10 @@ flowchart TD
 
 1. **Incremento 1 (Fundamentos y Cabecera Compacta - US1)**: T086–T089. Entrega la limpieza de utilidades, el estado desacoplado y la cabecera compacta con separación clara de identidad y contexto.
 2. **Incremento 2 (Resumen Posicional - US2)**: T090–T092. Entrega las 4 tarjetas, los 2 paneles posicionales de barras y las destacadas deduplicadas, eliminando paneles obsoletos.
+3. **Incremento 3 (Pestañas, navegación accesible y responsive - US4)**: T093–T095. Entrega pestañas a todo el ancho, estados visuales y adaptación responsive sin desbordamiento.
+4. **Incremento 4 (Catálogo agrupado - US5)**: T096–T098. Entrega controles de exploración superiores y secciones semánticas agrupadas por categoría.
+5. **Incremento 5 (Validación transversal e higiene)**: T099–T102. Limpieza de código muerto, quickstart sincronizado y verificación de compilación y linter.
+6. **Incremento 6 (Rediseño visual definitivo, cotización enriquecida y ausencia de scroll - US2, US3, US4)**: T103–T108. Consolidación de 4 KPI cards + 2 paneles temáticos sin barras ni destacadas, paleta semántica de colores sólidos, caja de cotización oficial de 94 px con badges y variación absoluta, iconografía y tipografía ampliada sin recortes de descenders, y verificación de scroll cero en escritorio en 1920×1080, 1920×913, 1366×768 y 1280×800.
 3. **Incremento 3 (Pestañas y Responsive - US4)**: T093–T095. Entrega pestañas a todo el ancho, integración de estados visuales del wireframe y ajuste de viewports en 360, 768 y 1280 px.
 4. **Incremento 4 (Catálogo Agrupado - US5)**: T096–T098. Entrega la cabecera de exploración superior y las 60 métricas agrupadas por categoría con orden P→S→B y ausencias al final.
 5. **Incremento 5 (Higiene y Verificación)**: T099–T102. Limpieza de código muerto, escenarios en quickstart y validación mediante `biome:check`, `spotlessCheck` y `npm run build`.

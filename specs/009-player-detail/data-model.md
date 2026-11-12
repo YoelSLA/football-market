@@ -1,17 +1,17 @@
 # Modelo de datos: Detalle individual del jugador
 
-## Modelo de presentación vigente — rediseño visual 2026-11-09
+## Modelo de presentación vigente — rediseño visual 2026-11-12
 
-No cambia el modelo persistido, el snapshot backend, el DTO ni el Model remoto frontend. El rediseño reutiliza `PlayerDetail`, `PlayerStatistics` y sus 60 `PlayerMetric` con las mismas reglas de contexto, fuente, cero y ausencia.
+No cambia el modelo persistido, el snapshot backend, el DTO ni el Model remoto frontend. El rediseño reutiliza `PlayerDetail`, `PlayerStatistics` y sus 60 `PlayerMetric` con las mismas reglas de contexto, fuente, cero y ausencia, e integra la cotización oficial proveniente de `PlayerQuotes`.
 
 ### Estado local de la Page
 
 | Campo | Valores | Regla |
 | --- | --- | --- |
 | `playerId` | entero positivo o null | Del parámetro de ruta; identifica el conjunto de controles vigente |
-| `activeTab` | `summary` / `catalog` | `summary` inicial; cambiar no consulta otro snapshot |
-| `search` | texto | Búsqueda local normalizada por nombre o clave |
-| `category` | `all` o una de ocho categorías | Filtro único, combinable con búsqueda |
+| `activeTab` | `'quotes'` / `'summary'` / `'catalog'` | `'quotes'` inicial por defecto; cambiar de pestaña no consulta otro snapshot |
+| `search` | texto | Búsqueda local normalizada por nombre o clave en catálogo |
+| `category` | `'all'` o una de ocho categorías | Filtro único, combinable con búsqueda en catálogo |
 
 El filtro `unit` de la implementación anterior se retira del estado visible y del contrato del Page Hook. Limpiar restablece `search=""` y `category="all"`. Cambiar jugador restablece ambos filtros y la pestaña sin conservar controles del ID anterior.
 
@@ -19,7 +19,8 @@ El filtro `unit` de la implementación anterior se retira del estado visible y d
 
 - **Métrica de catálogo**: definición canónica + unidad visible + valor/source existente + `priority` 0/1/2 + etiqueta de relevancia. No persiste ni modifica el Model remoto.
 - **Grupo de catálogo**: categoría canónica + conteo total + métricas filtradas en orden disponible P→S→B y ausente al final.
-- **Resumen posicional**: cuatro claves de tarjetas, dos paneles existentes y adicionales deduplicados contra tarjetas y paneles. Un panel puede desarrollar una métrica introducida en una tarjeta cuando lo exige el wireframe. La deduplicación no altera `POSITION_PROFILES`.
+- **Resumen posicional**: cuatro tarjetas KPI principales (`SummaryKpiCard`) con prioridades y fallbacks deportivos para asegurar relevancia sin repetir métricas de cabecera ni duplicar entre paneles, y exactamente dos paneles temáticos específicos por posición (`SummaryPanel`) con filas de altura acotada (`min-height: 44px; max-height: 58px;`). Se eliminan definitivamente las barras de progreso sin escala (`PlayerStatisticsBars`) y el bloque de estadísticas destacadas (`PlayerSportsSummary`).
+- **Cotización oficial**: precio en créditos, badges de variación semántica (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y cálculo de cambio absoluto en créditos (`formatQuoteAbsoluteChange`).
 
 Estados remotos (`loading`, `error`, `AVAILABLE`, `PARTIAL`, `NO_DATA`) y conservación de respuesta compatible permanecen según el modelo funcional de 2026-10-25.
 

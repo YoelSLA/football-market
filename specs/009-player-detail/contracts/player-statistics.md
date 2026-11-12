@@ -1,11 +1,11 @@
 # Contrato propuesto: consulta individual de estadísticas
 
-> **PLAN visual 2026-11-09:** el contrato HTTP y la selección de snapshot no cambian. La
-> implementación reutiliza esta respuesta y aplica únicamente el contrato de presentación del
-> [wireframe canónico](../../../docs/wireframes/player-detail.md): cuatro tarjetas, dos paneles,
-> destacadas sin claves ya presentes en tarjetas o paneles y catálogo agrupado por categoría. No se
-> agregan parámetros de unidad,
-> endpoints ni campos de respuesta.
+> **PLAN visual 2026-11-12:** el contrato HTTP y la selección de snapshot no cambian. La
+> implementación reutiliza esta respuesta y aplica el contrato de presentación del
+> [wireframe canónico](../../../docs/wireframes/player-detail.md): cabecera de 3 zonas con cotización oficial
+> y badges de variación, cuatro tarjetas KPI principales, dos paneles temáticos específicos (sin barras
+> de progreso ni bloque de destacadas) y catálogo agrupado por 8 categorías. No se agregan parámetros
+> de unidad, endpoints ni campos de respuesta.
 
 Diseño de PLAN de SPEC-009, 2026-10-25. No acredita endpoint implementado. Complementa la identidad existente sin modificar su respuesta ni el catálogo. Fuente funcional: `spec.md` FR-025–048 y Clarify; FR-045 define competición legible/fallback, FR-046 distingue IDs/no encontrado/ausencia, FR-047 conserva respuesta compatible ante error y FR-048 referencia el glosario.
 
@@ -56,6 +56,6 @@ No requiere roles operativos de sincronización ni amplía permisos existentes. 
 
 ## Contrato de presentación
 
-Usar los perfiles, matriz y gráficos exactos de `../spec.md` dentro de la jerarquía del [wireframe canónico](../../../docs/wireframes/player-detail.md). Etiquetas/categorías/prioridades son metadatos de presentación de la feature, no valores del proveedor. Fuente nullable por métrica mantiene trazabilidad; número cero siempre disponible. La aparición futura de las tres claves no cambia Resumen. Dos tabs accesibles, buscador/categorías locales; sin radar, xG/xA, percentiles, tasas nuevas o finanzas.
+Usar los perfiles, matriz y componentes aprobados de `../spec.md` dentro de la jerarquía del [wireframe canónico](../../../docs/wireframes/player-detail.md). Etiquetas, categorías y prioridades son metadatos de presentación de la feature, no valores del proveedor. Fuente nullable por métrica mantiene trazabilidad; número cero siempre disponible. Tres pestañas ordenadas (`Cotizaciones` por defecto, `Resumen deportivo` con 4 KPI y 2 paneles temáticos específicos, y `Todas las estadísticas` con 60 métricas), buscador y categorías locales en encabezado; sin radar, xG/xA, percentiles ni barras sin escala de referencia.
 
 Error de actualización: conservar solo la última respuesta exitosa del mismo playerId/seasonKey resuelto, mostrando su fecha original, el error, reintento y «Mostrando la última consulta disponible; no se pudo actualizar». No hacer pasar esa respuesta por una actualización exitosa ni convertirla a NO_DATA. No mezclarla con una selección explícita distinta; sin respuesta compatible presentar error sin valores. Para consulta sin seasonKey, una actualización fallida puede conservar el último contexto resuelto del mismo jugador identificado como anterior; no afirmar conocer la temporada de una respuesta que falló. Una respuesta nueva exitosa sustituye la anterior incluso si es NO_DATA.
