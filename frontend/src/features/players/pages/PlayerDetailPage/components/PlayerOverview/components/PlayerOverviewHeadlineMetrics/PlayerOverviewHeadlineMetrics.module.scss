@@ -1,0 +1,106 @@
+@use "@/styles/abstracts" as ds;
+
+.headlineMetrics {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: stretch;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	min-width: 0;
+	height: 94px;
+	padding: 6px 0;
+	border-radius: 12px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-accent-deep;
+	border: 1px solid ds.$border-panel;
+
+	&__card {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		min-width: 0;
+		padding: 2px 6px;
+
+		// 5. 🔤 Typography
+		text-align: center;
+
+		// 6. 🎨 Visual
+		border-right: 1px solid ds.$border-panel;
+
+		&:last-child {
+			border-right: none;
+		}
+	}
+
+	&__icon {
+		flex-shrink: 0;
+		color: ds.$accent-sports-green;
+		margin-bottom: 2px;
+	}
+
+	&__label {
+		// 4. 📦 Box Model
+		width: 100%;
+		overflow: hidden;
+
+		// 5. 🔤 Typography
+		font-size: 10.5px;
+		font-weight: 700;
+		line-height: 1.2;
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__value {
+		// 5. 🔤 Typography
+		font-size: 22px;
+		font-weight: 800;
+		line-height: 1.15;
+		color: ds.$text-primary-on-dark;
+		margin: 2px 0;
+	}
+
+	&__unit {
+		// 5. 🔤 Typography
+		font-size: 11px;
+		line-height: 1.2;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+}
+
+@media (max-width: 600px) {
+	.headlineMetrics {
+		height: 68px;
+
+		&__icon {
+			width: 13px;
+			height: 13px;
+		}
+
+		&__label,
+		&__unit {
+			font-size: 8px;
+		}
+
+		&__value {
+			font-size: 16px;
+		}
+	}
+}

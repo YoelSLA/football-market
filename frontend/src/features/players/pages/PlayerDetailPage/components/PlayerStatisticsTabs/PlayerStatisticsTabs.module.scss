@@ -13,7 +13,7 @@
 	padding: 0;
 
 	// 6. 🎨 Visual
-	border-bottom: 1px solid ds.$border-subtle;
+	border-bottom: 1px solid ds.$border-panel;
 
 	button {
 		// 3. 🧩 Layout
@@ -37,9 +37,9 @@
 		letter-spacing: 0.04em;
 
 		// 6. 🎨 Visual
-		background-color: ds.$surface-transparent;
+		background-color: ds.$surface-panel-from;
 		color: ds.$text-muted-on-dark;
-		border: 1px solid ds.$border-subtle;
+		border: 1px solid ds.$border-panel;
 		border-bottom: none;
 		border-radius: 6px 6px 0 0;
 
@@ -48,8 +48,8 @@
 		transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 
 		&:hover {
-			color: ds.$text-body-on-dark;
-			background-color: ds.$surface-dark;
+			color: ds.$text-primary-on-dark;
+			background-color: ds.$surface-card-dark;
 		}
 
 		&[aria-selected="true"] {
@@ -57,9 +57,13 @@
 			font-weight: 700;
 
 			// 6. 🎨 Visual
-			color: ds.$accent-nav;
-			background-color: ds.$surface-nav-active;
-			border-color: ds.$accent-nav;
+			color: ds.$text-primary-on-dark;
+			background-color: ds.$surface-control-active;
+			border-color: ds.$accent-sports-green;
+
+			svg {
+				color: ds.$accent-sports-green;
+			}
 		}
 
 		&:focus-visible {
@@ -74,13 +78,21 @@
 	.playerStatisticsTabs {
 		height: 40px;
 		margin-top: 10px;
+		overflow-x: auto;
+		scrollbar-width: none;
+		-webkit-overflow-scrolling: touch;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
 
 		button {
-			flex: 1;
-			min-width: 0;
-			padding: 0 12px;
+			flex: 1 0 auto;
+			min-width: 140px;
+			padding: 0 14px;
 			font-size: 12px;
 			gap: 6px;
+			white-space: nowrap;
 		}
 	}
 }
@@ -88,7 +100,8 @@
 @include ds.down(ds.$bp-2xs) {
 	.playerStatisticsTabs {
 		button {
-			padding: 0 8px;
+			min-width: 120px;
+			padding: 0 10px;
 			font-size: 11px;
 		}
 	}

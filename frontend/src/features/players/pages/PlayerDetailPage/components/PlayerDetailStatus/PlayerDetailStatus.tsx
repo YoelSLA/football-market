@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import type { PlayerDetailState } from "@/features/players/hooks";
+import type { PlayerDetailState } from "@/features/players/types";
 import { Button } from "@/shared/components";
 import styles from "./PlayerDetailStatus.module.scss";
 

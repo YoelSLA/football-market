@@ -1,0 +1,341 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsCatalogCard {
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: 16px;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 128px;
+	padding: 16px 20px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+
+	// 6. 🎨 Visual
+	background: linear-gradient(
+		135deg,
+		ds.$surface-panel-from,
+		ds.$surface-panel-to
+	);
+	color: ds.$text-body-on-dark;
+
+	// 7. ⚙️ Behavior
+	transition:
+		background-color 160ms ease,
+		border-color 160ms ease,
+		transform 160ms ease;
+
+	&:hover {
+		border-color: ds.$accent-nav;
+		transform: translateY(-2px);
+
+		.playerStatisticsCatalogCard__iconContainer {
+			border-color: ds.$accent-highlight;
+		}
+	}
+
+	&_absent {
+		.playerStatisticsCatalogCard__value {
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	// ========================================
+	// PRIORITY INDICATOR
+	// ========================================
+
+	&__priority {
+		// 2. 📍 Positioning
+		position: absolute;
+		top: 12px;
+		left: 12px;
+
+		// 4. 📦 Box Model
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+
+		// 6. 🎨 Visual
+		background-color: ds.$text-muted-on-dark;
+
+		&_principal {
+			background-color: ds.$accent-highlight;
+		}
+
+		&_secondary {
+			background-color: ds.$accent-nav;
+		}
+
+		&_low {
+			background-color: ds.$text-muted-on-dark;
+		}
+	}
+
+	// ========================================
+	// ICON
+	// ========================================
+
+	&__iconContainer {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		width: 56px;
+		height: 56px;
+		border: 1px solid transparent;
+		border-radius: 12px;
+
+		// 6. 🎨 Visual
+		background: linear-gradient(
+			135deg,
+			ds.$surface-dark,
+			ds.$surface-panel-to
+		);
+
+		box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.12);
+
+		// 7. ⚙️ Behavior
+		transition: border-color 160ms ease;
+	}
+
+	&__icon {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 28px;
+		height: 28px;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-sports-green;
+	}
+
+	// ========================================
+	// CONTENT
+	// ========================================
+
+	&__content {
+		// 3. 🧩 Layout
+		display: grid;
+		flex: 1;
+		grid-template-rows: minmax(36px, auto) minmax(34px, auto) auto;
+		align-content: center;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__title {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		font-weight: 600;
+		line-height: 1.35;
+		text-transform: uppercase;
+		overflow-wrap: anywhere;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__value {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+
+		// 5. 🔤 Typography
+		font-size: 28px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		line-height: 1.2;
+		overflow-wrap: anywhere;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+
+		&_absent {
+			// 5. 🔤 Typography
+			font-size: 18px;
+			font-weight: 400;
+			font-style: italic;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__unit {
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		font-weight: 400;
+		line-height: 1.35;
+		white-space: normal;
+		overflow-wrap: anywhere;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+}
+
+// ========================================
+// ACCESSIBILITY
+// ========================================
+
+.srOnly {
+	// 2. 📍 Positioning
+	position: absolute;
+
+	// 4. 📦 Box Model
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	border: 0;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+}
+
+// ========================================
+// RESPONSIVE - TABLET
+// ========================================
+
+@include ds.down(ds.$bp-tablet) {
+	.playerStatisticsCatalogCard {
+		// 3. 🧩 Layout
+		gap: 14px;
+
+		// 4. 📦 Box Model
+		min-height: 116px;
+		padding: 16px;
+
+		&__iconContainer {
+			width: 52px;
+			height: 52px;
+			border-radius: 12px;
+		}
+
+		&__icon {
+			width: 24px;
+			height: 24px;
+		}
+
+		&__content {
+			grid-template-rows: minmax(32px, auto) minmax(30px, auto) auto;
+			gap: 4px;
+		}
+
+		&__title {
+			font-size: 12px;
+		}
+
+		&__value {
+			font-size: 24px;
+
+			&_absent {
+				font-size: 16px;
+			}
+		}
+
+		&__unit {
+			font-size: 12px;
+		}
+	}
+}
+
+// ========================================
+// RESPONSIVE - SMALL SCREENS
+// ========================================
+
+@include ds.down(ds.$bp-2xs) {
+	.playerStatisticsCatalogCard {
+		// 3. 🧩 Layout
+		gap: 10px;
+
+		// 4. 📦 Box Model
+		min-height: 104px;
+		padding: 12px;
+
+		&__priority {
+			top: 8px;
+			left: 8px;
+			width: 8px;
+			height: 8px;
+		}
+
+		&__iconContainer {
+			width: 44px;
+			height: 44px;
+			border-radius: 10px;
+		}
+
+		&__icon {
+			width: 22px;
+			height: 22px;
+		}
+
+		&__content {
+			grid-template-rows: minmax(30px, auto) minmax(26px, auto) auto;
+			gap: 3px;
+		}
+
+		&__title {
+			font-size: 11px;
+		}
+
+		&__value {
+			font-size: 21px;
+
+			&_absent {
+				font-size: 14px;
+			}
+		}
+
+		&__unit {
+			font-size: 11px;
+		}
+	}
+}
+
+// ========================================
+// REDUCED MOTION
+// ========================================
+
+@media (prefers-reduced-motion: reduce) {
+	.playerStatisticsCatalogCard {
+		transition: none;
+
+		&:hover {
+			transform: none;
+		}
+
+		&__iconContainer {
+			transition: none;
+		}
+	}
+}

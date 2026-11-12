@@ -1,0 +1,44 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsCatalogControls {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	min-height: 68px;
+	padding: 12px 16px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-panel-to;
+}
+
+// ========================================
+// RESPONSIVE - TABLET
+// ========================================
+
+@include ds.down(ds.$bp-tablet) {
+	.playerStatisticsCatalogControls {
+		gap: 12px;
+		padding: 10px 12px;
+	}
+}
+
+// ========================================
+// RESPONSIVE - SMALL SCREENS
+// ========================================
+
+@include ds.down(ds.$bp-2xs) {
+	.playerStatisticsCatalogControls {
+		gap: 8px;
+		padding: 8px;
+	}
+}

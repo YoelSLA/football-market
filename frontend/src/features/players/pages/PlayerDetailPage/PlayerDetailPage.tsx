@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { PageLayout } from "@/app/layouts";
 import { usePlayerDetailPage } from "@/features/players/hooks";
-import PlayerBreadcrumb from "./components/PlayerBreadcrumb";
+import PlayerDetailNav from "./components/PlayerDetailNav";
 import PlayerDetailStatus from "./components/PlayerDetailStatus";
 import PlayerOverview from "./components/PlayerOverview";
 import PlayerStatisticsSection from "./components/PlayerStatisticsSection";
@@ -14,7 +14,7 @@ export default function PlayerDetailPage() {
 	return (
 		<PageLayout>
 			<div className={styles.playerDetail}>
-				<PlayerBreadcrumb playerName={detail.player?.name} />
+				<PlayerDetailNav />
 
 				{!detail.player ? (
 					<div className={styles.playerDetail__status}>
@@ -28,13 +28,8 @@ export default function PlayerDetailPage() {
 					<div className={styles.playerDetail__container}>
 						<PlayerOverview
 							player={detail.player}
-							seasonLabel={
-								detail.statistics?.seasonLabel ??
-								detail.statistics?.seasonKey ??
-								null
-							}
-							extractionDate={detail.statistics?.extractionDate ?? null}
 							statistics={detail.statistics}
+							quote={detail.currentQuote}
 						/>
 
 						<PlayerStatisticsSection
@@ -42,15 +37,17 @@ export default function PlayerDetailPage() {
 							statistics={detail.statistics}
 							statisticsState={detail.statisticsState}
 							statisticsErrorMessage={detail.statisticsErrorMessage}
+							quotes={detail.quotes}
+							quotesState={detail.quotesState}
+							quotesErrorMessage={detail.quotesErrorMessage}
+							onRetryQuotes={detail.retryQuotes}
 							activeTab={detail.activeTab}
 							onTabChange={detail.setActiveTab}
 							onRetryStatistics={detail.retryStatistics}
 							search={detail.search}
 							category={detail.category}
-							unit={detail.unit}
 							onSearchChange={detail.setSearch}
 							onCategoryChange={detail.setCategory}
-							onUnitChange={detail.setUnit}
 							onClearFilters={detail.clearFilters}
 						/>
 					</div>

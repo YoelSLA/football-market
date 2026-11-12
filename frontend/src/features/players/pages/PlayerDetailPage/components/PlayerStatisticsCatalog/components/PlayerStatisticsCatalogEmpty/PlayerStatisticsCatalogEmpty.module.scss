@@ -1,0 +1,29 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsCatalogEmpty {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+
+	// 4. 📦 Box Model
+	padding: 36px 16px;
+
+	// 5. 🔤 Typography
+	font-size: 13px;
+	text-align: center;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-subtle;
+	border-radius: 8px;
+	background-color: ds.$surface-panel-from;
+	color: ds.$text-muted-on-dark;
+
+	p {
+		// 4. 📦 Box Model
+		margin: 0;
+	}
+}
+

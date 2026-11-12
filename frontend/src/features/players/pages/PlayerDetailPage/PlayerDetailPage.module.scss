@@ -5,16 +5,17 @@
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	gap: 8px;
 
 	// 4. 📦 Box Model
 	box-sizing: border-box;
 	min-width: 0;
 	min-height: 0;
-	padding: 0 24px;
+	padding: 8px;
 
 	// 6. 🎨 Visual
 	color: ds.$text-body-on-dark;
-	background-color: ds.$surface-panel-to;
+	background-color: ds.$surface-data-header;
 
 	// 7. ⚙️ Behavior
 	overflow: hidden;

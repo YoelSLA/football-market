@@ -1,35 +1,35 @@
-import type { PlayerDetail, PlayerStatistics } from "@/features/players/types";
+import type {
+	PlayerDetail,
+	PlayerQuoteHistory,
+	PlayerStatistics,
+	QueryState,
+	StatisticsTab,
+} from "@/features/players/types";
+import { formatDate } from "@/features/players/utils";
 import { Button } from "@/shared/components";
-import PlayerStatisticsCatalog from "../PlayerStatisticsCatalog";
-import PlayerStatisticsSummary from "../PlayerStatisticsSummary";
 import PlayerStatisticsTabs from "../PlayerStatisticsTabs";
+import PlayerCatalogTab from "./components/PlayerCatalogTab";
+import PlayerQuotesTab from "./components/PlayerQuotesTab";
+import PlayerSummaryTab from "./components/PlayerSummaryTab";
 import styles from "./PlayerStatisticsSection.module.scss";
 
 interface Props {
 	player: PlayerDetail;
 	statistics: PlayerStatistics | undefined;
-	statisticsState: string;
+	statisticsState: QueryState;
 	statisticsErrorMessage?: string | null;
-	activeTab: "summary" | "catalog";
-	onTabChange: (tab: "summary" | "catalog") => void;
+	quotes?: PlayerQuoteHistory;
+	quotesState?: QueryState;
+	quotesErrorMessage?: string | null;
+	onRetryQuotes?: () => void;
+	activeTab: StatisticsTab;
+	onTabChange: (tab: StatisticsTab) => void;
 	onRetryStatistics: () => void;
 	search: string;
 	category: string;
-	unit: string;
 	onSearchChange: (value: string) => void;
 	onCategoryChange: (value: string) => void;
-	onUnitChange: (value: string) => void;
 	onClearFilters: () => void;
-}
-
-function formatDate(dateStr: string | null): string {
-	if (!dateStr) return "";
-	const parts = dateStr.split("-");
-	if (parts.length === 3) {
-		const [year, month, day] = parts;
-		return `${day}/${month}/${year}`;
-	}
-	return dateStr;
 }
 
 export default function PlayerStatisticsSection({
@@ -37,23 +37,29 @@ export default function PlayerStatisticsSection({
 	statistics,
 	statisticsState,
 	statisticsErrorMessage,
+	quotes: _quotes,
+	quotesState = "ready",
+	quotesErrorMessage,
+	onRetryQuotes,
 	activeTab,
 	onTabChange,
 	onRetryStatistics,
 	search,
 	category,
-	unit,
 	onSearchChange,
 	onCategoryChange,
-	onUnitChange,
 	onClearFilters,
 }: Props) {
-	const availableMetricsCount =
-		statistics?.metrics.filter((m) => m.value !== null).length ?? 0;
-
 	return (
 		<div className={styles.statisticsSection}>
 			<PlayerStatisticsTabs activeTab={activeTab} onChange={onTabChange} />
+
+			<PlayerQuotesTab
+				activeTab={activeTab}
+				quotesState={quotesState}
+				quotesErrorMessage={quotesErrorMessage}
+				onRetryQuotes={onRetryQuotes}
+			/>
 
 			{statisticsState === "error" && (
 				<section role="alert" className={styles.statisticsSection__bannerError}>
@@ -67,7 +73,7 @@ export default function PlayerStatisticsSection({
 							{statistics
 								? `Mostrando la última consulta disponible${
 										statistics.extractionDate
-											? ` del ${formatDate(statistics.extractionDate)}`
+											? ` del ${formatDate(statistics.extractionDate, "")}`
 											: ""
 									}.`
 								: "La identidad y la navegación permanecen disponibles."}
@@ -79,130 +85,25 @@ export default function PlayerStatisticsSection({
 				</section>
 			)}
 
-			<div
-				id="panel-summary"
-				role="tabpanel"
-				aria-labelledby="tab-summary"
-				hidden={activeTab !== "summary"}
-				aria-busy={statisticsState === "loading"}
-				className={styles.statisticsSection__tabpanel}
-			>
-				{statistics ? (
-					<>
-						{statistics.status === "NO_DATA" && (
-							<div
-								className={styles.statisticsSection__bannerNotice}
-								role="status"
-							>
-								<strong>
-									No hay estadísticas confirmadas para esta temporada.
-								</strong>
-								<p>
-									Las 60 métricas siguen disponibles en el catálogo y muestran
-									«Sin datos».
-								</p>
-							</div>
-						)}
+			<PlayerSummaryTab
+				activeTab={activeTab}
+				statistics={statistics}
+				position={player.position}
+				statisticsState={statisticsState}
+				statisticsErrorMessage={statisticsErrorMessage}
+			/>
 
-						{statistics.status === "PARTIAL" && (
-							<div
-								className={styles.statisticsSection__bannerNotice}
-								role="status"
-							>
-								<strong>
-									Datos parciales: {availableMetricsCount} de 60 métricas
-									disponibles.
-								</strong>
-								<p>Los valores ausentes no se consideran cero.</p>
-							</div>
-						)}
-
-						<PlayerStatisticsSummary
-							statistics={statistics}
-							position={player.position}
-						/>
-					</>
-				) : statisticsState === "loading" ? (
-					<div
-						className={styles.statisticsSection__bannerLoading}
-						role="status"
-					>
-						<p>Consultando estadísticas del jugador…</p>
-					</div>
-				) : (
-					statisticsState === "error" && (
-						<div
-							className={styles.statisticsSection__bannerErrorPlaceholder}
-							role="alert"
-						>
-							<p>
-								{statisticsErrorMessage ||
-									"No se pudieron cargar las estadísticas del jugador."}
-							</p>
-						</div>
-					)
-				)}
-			</div>
-
-			<div
-				id="panel-catalog"
-				role="tabpanel"
-				aria-labelledby="tab-catalog"
-				hidden={activeTab !== "catalog"}
-				aria-busy={statisticsState === "loading"}
-				className={styles.statisticsSection__tabpanel}
-			>
-				{statistics ? (
-					<>
-						{statistics.status === "NO_DATA" && (
-							<div
-								className={styles.statisticsSection__bannerNotice}
-								role="status"
-							>
-								<strong>
-									No hay estadísticas confirmadas para esta temporada.
-								</strong>
-								<p>
-									Las 60 métricas siguen disponibles en el catálogo y muestran
-									«Sin datos».
-								</p>
-							</div>
-						)}
-
-						{statistics.status === "PARTIAL" && (
-							<div
-								className={styles.statisticsSection__bannerNotice}
-								role="status"
-							>
-								<strong>
-									Datos parciales: {availableMetricsCount} de 60 métricas
-									disponibles.
-								</strong>
-								<p>Los valores ausentes no se consideran cero.</p>
-							</div>
-						)}
-
-						<PlayerStatisticsCatalog
-							metrics={statistics.metrics}
-							position={player.position}
-							search={search}
-							category={category}
-							unit={unit}
-							onSearchChange={onSearchChange}
-							onCategoryChange={onCategoryChange}
-							onUnitChange={onUnitChange}
-							onClear={onClearFilters}
-						/>
-					</>
-				) : statisticsState === "loading" ? (
-					<div
-						className={styles.statisticsSection__bannerLoading}
-						role="status"
-					>
-						<p>Consultando estadísticas del jugador…</p>
-					</div>
-				) : null}
-			</div>
+			<PlayerCatalogTab
+				activeTab={activeTab}
+				statistics={statistics}
+				position={player.position}
+				statisticsState={statisticsState}
+				search={search}
+				category={category}
+				onSearchChange={onSearchChange}
+				onCategoryChange={onCategoryChange}
+				onClearFilters={onClearFilters}
+			/>
 		</div>
 	);
 }

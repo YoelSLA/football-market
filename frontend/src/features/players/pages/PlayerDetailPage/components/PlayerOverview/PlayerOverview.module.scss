@@ -1,11 +1,14 @@
 @use "@/styles/abstracts" as ds;
 
 .playerOverview {
+	// 2. 📍 Positioning
+	position: relative;
+
 	// 3. 🧩 Layout
 	display: grid;
-	grid-template-columns: minmax(360px, 1.2fr) minmax(390px, 1fr) minmax(170px, 0.45fr);
+	grid-template-columns: minmax(350px, 1.2fr) minmax(370px, 1.05fr) minmax(230px, 0.75fr);
 	align-items: center;
-	gap: 20px;
+	gap: 16px;
 
 	// 4. 📦 Box Model
 	box-sizing: border-box;
@@ -17,271 +20,12 @@
 
 	// 6. 🎨 Visual
 	color: ds.$text-body-on-dark;
-	background-color: ds.$surface-panel-from;
-	border: 1px solid ds.$border-subtle;
-	border-radius: 10px;
+	background-color: ds.$surface-page-deep;
+	border: 1px solid ds.$border-panel;
+	border-radius: 16px;
 
-	&__identityBlock {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: 14px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
-
-	&__portrait {
-		// 3. 🧩 Layout
-		flex: 0 0 auto;
-
-		// 4. 📦 Box Model
-		width: 90px;
-		height: 90px;
-
-		// 6. 🎨 Visual
-		object-fit: contain;
-		background-color: ds.$surface-nav-active;
-		border-radius: 8px;
-	}
-
-	&__info {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
-
-	&__name {
-		// 4. 📦 Box Model
-		margin: 0;
-
-		// 5. 🔤 Typography
-		font-size: clamp(19px, 1.45vw, 25px);
-		font-weight: 700;
-		line-height: 1.1;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	&__teamLine,
-	&__metaLine {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: 6px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-
-		// 5. 🔤 Typography
-		font-size: 12px;
-		line-height: 1.25;
-	}
-
-	&__teamLine {
-		// 6. 🎨 Visual
-		color: ds.$text-body-on-dark;
-	}
-
-	&__metaLine {
-		// 6. 🎨 Visual
-		color: ds.$text-muted-on-dark;
-	}
-
-	&__team,
-	&__league,
-	&__metaItem {
-		// 3. 🧩 Layout
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
-
-	&__team,
-	&__league {
-		// 4. 📦 Box Model
-		overflow: hidden;
-
-		// 5. 🔤 Typography
-		text-overflow: ellipsis;
-		white-space: nowrap;
-
-		img {
-			// 3. 🧩 Layout
-			flex: 0 0 auto;
-
-			// 4. 📦 Box Model
-			width: 18px;
-			height: 18px;
-
-			// 6. 🎨 Visual
-			object-fit: contain;
-		}
-	}
-
-	&__metaItem {
-		// 5. 🔤 Typography
-		white-space: nowrap;
-
-		svg {
-			// 6. 🎨 Visual
-			color: ds.$accent-nav;
-		}
-
-		img {
-			// 4. 📦 Box Model
-			width: 17px;
-			max-height: 13px;
-
-			// 6. 🎨 Visual
-			object-fit: contain;
-		}
-	}
-
-	&__separator {
-		// 5. 🔤 Typography
-		user-select: none;
-
-		// 6. 🎨 Visual
-		color: ds.$text-muted-on-dark;
-	}
-
-	&__headlineMetrics {
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		align-items: stretch;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-		height: 70px;
-	}
-
-	&__metricCard {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 2px;
-
-		// 4. 📦 Box Model
-		box-sizing: border-box;
-		min-width: 0;
-		padding: 7px 6px;
-
-		// 5. 🔤 Typography
-		text-align: center;
-
-		// 6. 🎨 Visual
-		background-color: ds.$surface-nav-active;
-		border: 1px solid ds.$border-subtle;
-
-		&:first-child {
-			border-radius: 7px 0 0 7px;
-		}
-
-		&:not(:first-child) {
-			border-left: 0;
-		}
-
-		&:last-child {
-			border-radius: 0 7px 7px 0;
-		}
-	}
-
-	&__metricLabel {
-		// 4. 📦 Box Model
-		width: 100%;
-		overflow: hidden;
-
-		// 5. 🔤 Typography
-		font-size: 9px;
-		font-weight: 700;
-		line-height: 1.1;
-		text-overflow: ellipsis;
-		text-transform: uppercase;
-		white-space: nowrap;
-
-		// 6. 🎨 Visual
-		color: ds.$text-muted-on-dark;
-	}
-
-	&__metricValue {
-		// 5. 🔤 Typography
-		font-size: 18px;
-		line-height: 1.1;
-	}
-
-	&__metricUnit {
-		// 5. 🔤 Typography
-		font-size: 9px;
-		line-height: 1.1;
-		white-space: nowrap;
-
-		// 6. 🎨 Visual
-		color: ds.$text-muted-on-dark;
-	}
-
-	&__temporalContext {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		justify-content: center;
-		gap: 10px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
-
-	&__seasonBadge {
-		// 4. 📦 Box Model
-		box-sizing: border-box;
-		max-width: 100%;
-		height: 24px;
-		padding: 4px 10px;
-		overflow: hidden;
-
-		// 5. 🔤 Typography
-		font-size: 11px;
-		font-weight: 600;
-		line-height: 14px;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-
-		// 6. 🎨 Visual
-		background-color: ds.$surface-nav-active;
-		border: 1px solid ds.$border-subtle;
-		border-radius: 999px;
-	}
-
-	&__updatedAt {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 2px;
-
-		// 4. 📦 Box Model
-		margin: 0;
-
-		// 5. 🔤 Typography
-		font-size: 11px;
-		line-height: 1.2;
-
-		span {
-			color: ds.$text-muted-on-dark;
-		}
-	}
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 }
 
 @media (max-width: 1279px) {
@@ -295,12 +39,6 @@
 		min-height: 169px;
 		padding: 10px 14px;
 
-		&__portrait {
-			// 4. 📦 Box Model
-			width: 75px;
-			height: 75px;
-		}
-
 		&__headlineMetrics {
 			// 3. 🧩 Layout
 			grid-column: 1 / -1;
@@ -310,7 +48,7 @@
 			width: 100%;
 		}
 
-		&__temporalContext {
+		&__quoteContext {
 			// 3. 🧩 Layout
 			grid-column: 2;
 			grid-row: 1;
@@ -326,101 +64,18 @@
 
 		// 4. 📦 Box Model
 		min-height: 195px;
-		padding: 9px 6px;
+		padding: 9px 8px;
 
-		&__identityBlock {
-			// 3. 🧩 Layout
-			gap: 9px;
-		}
-
-		&__portrait {
-			// 4. 📦 Box Model
-			width: 64px;
-			height: 64px;
-			border-radius: 6px;
-		}
-
-		&__info {
-			gap: 4px;
-		}
-
-		&__name {
-			font-size: 18px;
-		}
-
-		&__teamLine,
-		&__metaLine {
-			gap: 4px;
-			font-size: 10px;
-		}
-
-		&__team img,
-		&__league img {
-			width: 15px;
-			height: 15px;
-		}
-
-		&__metaItem {
-			gap: 3px;
-
-			svg {
-				display: none;
-			}
-
-			img {
-				width: 14px;
-			}
-		}
-
-		&__temporalContext {
+		&__quoteContext {
 			// 3. 🧩 Layout
 			grid-column: 1;
 			grid-row: 2;
-			flex-direction: row;
-			align-items: center;
-			justify-content: center;
-			gap: 8px;
-
-			// 4. 📦 Box Model
-			min-width: 0;
-		}
-
-		&__seasonBadge {
-			height: auto;
-			padding: 0;
-			font-size: 10px;
-			line-height: 1.2;
-			background: none;
-			border: 0;
-			border-radius: 0;
-		}
-
-		&__updatedAt {
-			flex-direction: row;
-			gap: 3px;
-			font-size: 10px;
 		}
 
 		&__headlineMetrics {
 			// 3. 🧩 Layout
 			grid-column: 1;
 			grid-row: 3;
-
-			// 4. 📦 Box Model
-			height: 64px;
-		}
-
-		&__metricCard {
-			padding: 5px 3px;
-		}
-
-		&__metricLabel,
-		&__metricUnit {
-			font-size: 8px;
-		}
-
-		&__metricValue {
-			font-size: 16px;
 		}
 	}
 }
