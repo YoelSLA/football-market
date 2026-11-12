@@ -280,3 +280,5 @@ export function toQuoteRankingMetadata(
 		quoteOriginSummary: "Mercado",
 	};
 }
+
+export { toPlayerQuote, toPlayerQuoteHistory } from "./utils/playerQuotes";
