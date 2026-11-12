@@ -1,148 +1,72 @@
-# Implementation Plan: Visualizar historial personal de transacciones
+# Implementation Plan: Historial personal de transacciones (SPEC-025)
 
-**Branch**: `feat/025-view-transaction-history` | **Date**: 2026-11-10 | **Spec**: [spec.md](spec.md)
+**Feature Branch**: `feat/025-view-transaction-history`
+**Estado**: Plan de implementación vigente.
+**Referencias normativas**: [spec.md](spec.md), [contracts/transaction-history.md](contracts/transaction-history.md) y [data-model.md](data-model.md).
 
-**Input**: Feature specification from `/specs/025-view-transaction-history/spec.md`
+---
 
-## Summary
+## 1. Resumen de arquitectura
 
-Incorporar en la feature frontend `portfolio` una pantalla protegida en
-`/portfolio/transactions` que consuma el contrato existente
-`GET /api/users/me/transactions`, transforme sus DTO a modelos propios y represente compras y
-ventas confirmadas mediante tabla en escritorio, cuatro grupos en tablet y tarjetas en móvil.
-La solución extiende las fronteras existentes de Service, Mapper, TanStack Query, router y
-navegación; reutiliza layouts, `PageHeading`, `Button`, iconos, formatters y tokens actuales, sin
-cambios backend, nuevas dependencias ni ampliaciones funcionales.
+La funcionalidad integra el backend paginado de `GET /api/users/me/transactions` con la vista desktop `/portfolio/transactions` en la sección de Cartera. La solución ofrece:
+- Controles de filtrado y orden sincronizados bidireccionalmente con los parámetros de la URL.
+- Consulta mediante TanStack Query con clave compuesta de criterios.
+- Componentes modulares reutilizables con tokens SCSS y retícula de 8 px.
+- Región vertical flexible con estados de contenido compacto centrado, filas naturales y paginación inferior.
 
-## Technical Context
+---
 
-**Language/Version**: TypeScript 7.0.2, React 19.3.0, SCSS Modules
-**Primary Dependencies**: React Router DOM 7.18.4, TanStack Query 5.103.1, Axios 1.20.0,
-Lucide React 1.59.0 mediante `shared/icons`
-**Storage**: N/A; el historial es estado remoto en Query Cache y no se persiste en cliente
-**Testing**: Frontend temporalmente exento de tests; el usuario ejecutará `npm run build` y
-`npm run biome:fix` en los gates de implementación definidos por `frontend/AGENTS.md`
-**Target Platform**: Navegadores web soportados por Vite; viewport mínimo aprobado de 360 px
-**Project Type**: Aplicación web con frontend React y backend Spring Boot existente
-**Performance Goals**: Mostrar la colección completa recibida sin recalcular, enriquecer ni
-solicitar datos por operación; scroll limitado a la región de filas en escritorio
-**Constraints**: Solo frontend; ruta autenticada; sin scroll global a 1920 × 913 px; espacios
-locales de hasta 8 px; sin scroll horizontal; sin filtros, ordenamiento, paginación ni navegación
-desde el jugador
-**Scale/Scope**: Una Page nueva, una lectura HTTP existente y sus fronteras DTO/Model/Mapper,
-query, componentes locales, estilos, ruta y navegación
+## 2. Contexto técnico
 
-## Constitution Check
+- **Backend**: Java 21, Spring Boot 4.1.1, Spring Data JPA, Spring Security JWT, PostgreSQL.
+- **Frontend**: TypeScript 7.0.2, React 19.3.0, TanStack Query, React Router, SCSS Modules.
+- **Persistencia**: Reutilización de `market_transactions`, `users`, `players`, `teams` y `leagues` sin migraciones nuevas.
+- **Verificación**: Controles ejecutables de agente (`./gradlew build -x test`, `npm run biome:check`, `npm run build`); ejecución de pruebas automatizadas y validación visual reservadas al usuario.
 
-*GATE inicial y posterior al diseño: PASS.*
+---
 
-- **Simplicidad y mínimo alcance**: se amplía `portfolio`, propietaria del concepto; no se crea
-  feature, store, tabla genérica, dependencia ni capa nueva.
-- **Proporcionalidad**: el plan cubre únicamente consulta, estados, navegación y responsive
-  aprobados; excluye toda capacidad enumerada fuera de alcance.
-- **Seguridad e integridad**: el Service usa `authenticated: true`; la identidad continúa
-  derivándose exclusivamente del JWT y no existe entrada de usuario para sustituirla.
-- **Coherencia de contratos**: DTO, Model y Mapper reflejan el endpoint existente sin modificarlo;
-  `playerId` se conserva en la frontera de datos, pero no habilita navegación ni enriquecimiento.
-- **Trazabilidad**: SPEC-025, issue #27, rama, wireframe, contrato y artefactos de diseño quedan
-  enlazados.
-- **Arquitectura frontend**: se conserva el flujo
-  `Page/Component → Query Hook → Service → Mapper → Model`; router y navegación permanecen en
-  `app`, y la presentación específica en `features/portfolio`.
-- **Verificación**: PLAN es documental. No se ejecutan tests, builds ni hooks; los controles de
-  implementación quedan reservados al usuario y a los gates del área.
-- **Desacople UI**: la futura implementación deberá detenerse tras la fase de lógica, estado y
-  estructura antes de iniciar la maquetación fina, conforme a `frontend/AGENTS.md`.
-
-## Project Structure
-
-### Documentation (this feature)
+## 3. Arquitectura backend
 
 ```text
-specs/025-view-transaction-history/
-├── plan.md
-├── research.md
-├── data-model.md
-├── quickstart.md
-├── contracts/
-│   └── transaction-history.md
-├── checklists/
-│   └── requirements.md
-└── tasks.md                       # futuro: /speckit.tasks, no creado por PLAN
+OperationHistoryController
+  → OperationHistoryService(criteria)
+      → MarketTransactionRepository
+          ├── Page<MarketTransaction> (filtrada, ordenada, con fetch joins to-one)
+          ├── Conteo de totalElements (sin fetch joins)
+          └── OperationHistoryAggregate (métricas sumadas y contadas en base de datos)
+  → OperationHistoryMapper
+  → OperationHistoryResponseDTO (summary, transactions, pagination)
 ```
 
-### Source Code (repository root)
+- La consulta de contenido precarga `buyer`, `seller`, `player`, `player.team` y `player.team.league` en una única consulta para eliminar el problema de N+1.
+- Conteo y agregados aplican exactamente los mismos predicados que la consulta de contenido.
+- Los cuatro órdenes (`NEWEST`, `OLDEST`, `AMOUNT_DESC`, `AMOUNT_ASC`) incorporan desempates deterministas por fecha de ejecución e ID de transacción.
+
+---
+
+## 4. Arquitectura frontend
 
 ```text
-frontend/src/
-├── app/
-│   ├── navigation/
-│   │   └── sections.ts            # habilitar Cartera y retirar placeholder de Mercado
-│   └── router/AppRouter/
-│       └── AppRouter.tsx           # asociar la ruta protegida
-└── features/portfolio/
-    ├── constants/
-    │   └── portfolioQueryKeys.ts   # key estable del historial
-    ├── hooks/queries/
-    │   └── useTransactionHistoryQuery.ts
-    ├── pages/TransactionHistoryPage/
-    │   ├── TransactionHistoryPage.tsx
-    │   ├── TransactionHistoryPage.module.scss
-    │   ├── components/             # cabecera, contenido/estados y operación
-    │   └── index.ts
-    ├── types/
-    │   ├── dtos.ts
-    │   └── models.ts
-    ├── portfolio.mapper.ts
-    └── portfolio.service.ts
+TransactionHistoryPage
+  ├── useTransactionHistoryPage (sincronización con URL y coordinación de estado)
+  │     └── useTransactionHistoryQuery (TanStack Query con query key parametrizada)
+  ├── TransactionHistoryHeader (título y navegación de contexto)
+  ├── TransactionHistoryMetrics (4 tarjetas resumen de compras, ventas y volúmenes)
+  ├── TransactionHistoryFilters (búsqueda, tipo, fechas, orden y botón limpiar)
+  ├── TransactionHistoryContent
+  │     └── TransactionHistoryEntry (PlayerPortrait, datos de jugador, tipo y finanzas)
+  ├── Pagination (componente compartido con navegación de páginas)
+  └── TransactionHistoryState / TransactionHistoryEmptyState (contenido compacto centrado)
 ```
 
-**Structure Decision**: La pantalla pertenece a `portfolio` porque muestra actividad financiera
-personal y comparte sus fronteras, formatters y navegación. Los componentes de tabla/tarjeta son
-locales a `TransactionHistoryPage`; no se promueven a `shared` ni se fuerza la reutilización de
-componentes de tenencias con semántica distinta.
+- `portfolio.service.ts`: cliente HTTP tipado que invoca `GET /api/users/me/transactions`.
+- `portfolio.mapper.ts`: traduce `OperationHistoryResponseDTO` a `TransactionHistory`.
+- La URL es la única fuente de verdad: cambiar filtros u orden reinicia la página a cero; paginar conserva los demás criterios.
 
-## Design Decisions
+---
 
-### Flujo de datos
+## 5. Diseño de verificación
 
-1. `useTransactionHistoryQuery` usa `portfolioQueryKeys.transactions` y entrega la señal de
-   cancelación al Service.
-2. `portfolioService.getTransactionHistory(signal)` realiza la lectura autenticada del endpoint
-   existente y transforma el array mediante el mapper.
-3. La Page consume directamente el Query Hook: no se crea Page Hook porque no existe coordinación
-   suficiente más allá de carga, error, reintento y navegación declarativa.
-4. Durante `isPending` o `isFetching` no se expone la colección como vigente. Ante error no se
-   muestran filas anteriores; el reintento usa `refetch`.
-5. El orden recibido y `transactionId` como key se conservan sin ordenar, deduplicar ni recalcular.
-
-### Presentación y navegación
-
-- `AppRouter` agrega `/portfolio/transactions` dentro de `AuthGuard` y `AppLayout`.
-- `NAV_SECTIONS` asigna esa ruta a `Cartera > Historial de transacciones` y elimina el placeholder
-  duplicado `Mercado > Historial de operaciones`.
-- `PageLayout`, `PageHeading`, `Button`, `History`/`FileText`, `formatCredits` y
-  `formatDateTime` se reutilizan cuando su contrato satisface la pantalla.
-- Una única colección semántica cambia su composición visual por breakpoint: seis columnas en
-  escritorio, cuatro zonas en tablet y tarjetas en móvil; no se duplican árboles simultáneos
-  ocultos por CSS.
-- `Ir al mercado` navega a `/market/buy`; el nombre del jugador siempre es texto.
-
-### Estados y accesibilidad
-
-- Carga: contenedor con `aria-busy="true"` y mensaje con `role="status"`.
-- Error: bloque con `role="alert"`, mensaje estable y `Button` para reintentar.
-- Vacío: bloque con `role="status"` y `Button`/navegación a mercado.
-- Datos: encabezados visibles en escritorio, etiquetas explícitas en tarjetas y foco visible
-  heredado de los controles compartidos.
-
-## Post-Design Constitution Check
-
-*PASS.* El diseño no introduce violaciones, incógnitas ni excepciones. La interfaz HTTP es de solo
-lectura y ya existe; el contrato frontend documentado no altera backend. La solución respeta las
-dependencias permitidas y el gate humano entre estructura y maquetación. No corresponde completar
-Complexity Tracking.
-
-## Complexity Tracking
-
-No aplica: no existen violaciones constitucionales que justificar.
+- **Backend**: Cobertura integral en Repository (consultas y desempates), Service (validaciones y agregados) y Controller (contrato JSON, códigos 200, 400, 401 y 500).
+- **Frontend**: Cumplimiento de Biome, compilación de SCSS Modules y build de producción sin errores.
+- **Validación visual**: Inspección en resolución desktop de referencia (1920×913 px) sin desbordamiento horizontal.

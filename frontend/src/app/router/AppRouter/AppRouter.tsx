@@ -10,6 +10,7 @@ import {
 import {
 	PortfolioHoldingsPage,
 	PortfolioSummaryPage,
+	TransactionHistoryPage,
 } from "@/features/portfolio";
 
 export default function AppRouter() {
@@ -32,6 +33,10 @@ export default function AppRouter() {
 					<Route
 						path="/portfolio/holdings"
 						element={<PortfolioHoldingsPage />}
+					/>
+					<Route
+						path="/portfolio/transactions"
+						element={<TransactionHistoryPage />}
 					/>
 					<Route path="/players" element={<PlayersPage />} />
 					<Route path="/players/ranking" element={<PlayerRankingsPage />} />

@@ -1,266 +1,145 @@
-# Feature Specification: Visualizar historial personal de transacciones
+# Feature Specification: Historial personal de transacciones
 
 **Feature Branch**: `feat/025-view-transaction-history`
-
-**Created**: 2026-11-10
-
-**Status**: Ready for planning
-
-**Input**: User description: "Como usuario autenticado de Football Market, quiero visualizar mi
-historial de transacciones desde la interfaz web para consultar las compras y ventas que realicé y
-comprender mi actividad dentro del mercado."
-
-**Trazabilidad**: SPEC-025 materializa `REQ-S2-16` del issue
-[#27](https://github.com/YoelSLA/football-market/issues/27), conforme a la asignación explícita
-registrada en [`specs/assignments.md`](../assignments.md). Consume el historial personal provisto
-por SPEC-020 y adopta el
-[wireframe aprobado](../../docs/wireframes/transaction-history.md) como referencia visual.
-
-## User Scenarios & Testing *(mandatory)*
-
-### User Story 1 - Consultar compras y ventas personales (Priority: P1)
-
-Como usuario autenticado, quiero acceder desde mi cartera a un historial cronológico de mis
-compras y ventas confirmadas para comprender qué operaciones realicé y con qué valores.
-
-**Why this priority**: Es el valor central del requerimiento y permite consultar la actividad
-financiera propia sin generar ni modificar operaciones.
-
-**Independent Test**: Puede verificarse con un usuario que tenga compras y ventas confirmadas: al
-abrir el historial desde Cartera, visualiza cada operación propia una sola vez, desde la más
-reciente, con tipo, jugador, cantidad, precio, importe, fecha e identidad de transacción.
-
-**Acceptance Scenarios**:
-
-1. **Given** un usuario autenticado con compras confirmadas, **When** accede a `Cartera > Historial
-   de transacciones`, **Then** cada compra aparece identificada como `COMPRA` con su jugador,
-   cantidad, precio unitario histórico, importe total histórico, fecha y hora e identificador de
-   transacción.
-2. **Given** un usuario autenticado con ventas confirmadas, **When** consulta el historial,
-   **Then** cada venta aparece identificada como `VENTA` con los mismos datos financieros
-   disponibles.
-3. **Given** un usuario con varias operaciones, **When** se muestra el historial, **Then** las
-   operaciones conservan el orden de la más reciente a la más antigua y cada transacción aparece
-   exactamente una vez.
-4. **Given** dos usuarios con historiales distintos, **When** cada uno consulta la pantalla desde
-   su sesión, **Then** cada usuario visualiza exclusivamente sus propias operaciones y no dispone
-   de un control para seleccionar otra identidad.
-5. **Given** una operación mostrada, **When** el usuario observa el nombre del jugador, **Then** el
-   nombre se presenta como texto informativo y no actúa como enlace, botón o redirección.
+**Estado**: Especificación viva del sistema.
+**Referencias normativas**: [`docs/wireframes/transaction-history.md`](../../docs/wireframes/transaction-history.md), [contracts/transaction-history.md](contracts/transaction-history.md), [data-model.md](data-model.md) y [SPEC-020](../../specs/020-view-operation-history/spec.md).
 
 ---
 
-### User Story 2 - Comprender el estado de la consulta (Priority: P1)
+## User Scenarios & Testing
 
-Como usuario autenticado, quiero recibir indicaciones claras mientras se consulta el historial y
-cuando no puede recuperarse, para distinguir una espera, un error y una ausencia real de
-operaciones.
+### User Story 1 - Explorar el historial personal (Priority: P1)
 
-**Why this priority**: Sin estados inequívocos, el usuario podría interpretar una demora o un
-fallo como si nunca hubiera operado, lo que afecta la confianza en información financiera.
+Como usuario autenticado, quiero consultar una página de mis compras y ventas confirmadas con el perfil actual del jugador para revisar mis operaciones en el mercado sin abandonar mi cartera.
 
-**Independent Test**: Puede verificarse provocando sucesivamente una consulta pendiente y un
-error: la pantalla comunica el estado activo, ofrece reintentar tras el error y nunca presenta
-datos parciales como si fueran el historial vigente.
+**Independent Test**: Con compras y ventas confirmadas, la pantalla presenta únicamente operaciones propias, una vez cada una, con perfil actual del jugador, tipo, cantidad, valores financieros históricos, fecha e identificador.
 
 **Acceptance Scenarios**:
-
-1. **Given** una consulta en curso, **When** la pantalla espera el resultado, **Then** comunica que
-   está cargando el historial y no informa cero operaciones.
-2. **Given** una consulta que falla, **When** se presenta el error, **Then** se comunica que el
-   historial no pudo cargarse, se aclara que las operaciones no fueron modificadas y se ofrece una
-   acción para reintentar.
-3. **Given** un error visible, **When** el usuario elige reintentar y la nueva consulta resulta
-   exitosa, **Then** el error se reemplaza por el historial o por el estado vacío correspondiente.
-4. **Given** una sesión ausente o inválida, **When** se intenta acceder al historial, **Then** se
-   aplica la protección de acceso vigente sin exponer operaciones privadas.
+1. Una compra se presenta como `COMPRA` y una venta como `VENTA` desde la perspectiva de la sesión.
+2. Cada fila agrupa imagen, nombre, equipo y liga actuales del jugador, además del número de transacción, sin convertir el jugador en enlace interactivo.
+3. Cantidad, precio unitario, importe total y ejecución reproducen el registro confirmado y no se recalculan con cotizaciones vigentes.
+4. El endpoint obtiene la identidad exclusivamente del JWT y nunca acepta un usuario seleccionable.
 
 ---
 
-### User Story 3 - Orientarse cuando todavía no hay operaciones (Priority: P2)
+### User Story 2 - Buscar, filtrar y ordenar (Priority: P1)
 
-Como usuario autenticado sin transacciones confirmadas, quiero ver un estado vacío comprensible y
-poder ir al mercado para saber que la consulta funcionó y cuál es la próxima acción disponible.
+Como usuario con muchas operaciones, quiero buscar por jugador y filtrar por tipo y fecha para encontrar movimientos concretos, conservando los criterios en la URL.
 
-**Why this priority**: Completa la experiencia de usuarios nuevos o inactivos sin confundir un
-resultado exitoso vacío con un fallo.
-
-**Independent Test**: Puede verificarse con un usuario sin operaciones: la pantalla informa que
-todavía no existen transacciones y la acción `Ir al mercado` conduce al flujo de compra existente.
+**Independent Test**: Aplicando cada criterio por separado y en combinación, el backend devuelve solo coincidencias, indicadores del conjunto filtrado y una página estable; recargar la URL conserva los controles.
 
 **Acceptance Scenarios**:
-
-1. **Given** un usuario autenticado sin operaciones confirmadas, **When** consulta su historial,
-   **Then** ve un estado vacío que indica que sus compras y ventas futuras aparecerán allí.
-2. **Given** el estado vacío, **When** el usuario elige `Ir al mercado`, **Then** accede a la
-   pantalla existente para comprar tokens.
+1. La búsqueda compara el texto con el nombre actual normalizado del jugador.
+2. `BUY` y `SELL` limitan las operaciones según el rol de la sesión.
+3. El rango temporal usa inicio inclusivo (`executedFrom`) y final exclusivo (`executedBefore`) expresados como instantes con offset.
+4. El orden admite únicamente `NEWEST`, `OLDEST`, `AMOUNT_DESC` y `AMOUNT_ASC`, con desempate determinista por ejecución e identificador.
+5. Una combinación sin coincidencias muestra `Sin resultados`, distinto del historial inicialmente vacío.
 
 ---
 
-### User Story 4 - Consultar el historial en distintos tamaños de pantalla (Priority: P2)
+### User Story 3 - Comprender actividad y paginación (Priority: P1)
 
-Como usuario autenticado, quiero leer toda la información de mis transacciones tanto en escritorio
-como en tablet y móvil, sin desplazamiento horizontal ni pérdida de datos.
+Como usuario, quiero ver indicadores agregados y recorrer páginas para dimensionar la actividad coincidente sin descargar el historial completo.
 
-**Why this priority**: La adaptabilidad es un criterio de aceptación explícito del issue y debe
-preservar la interpretación de importes y fechas en cualquier tamaño soportado.
-
-**Independent Test**: Puede verificarse con el mismo historial en los tres rangos del wireframe:
-tabla en escritorio, cuatro grupos en tablet y tarjetas en móvil, conservando los mismos datos y su
-orden.
+**Independent Test**: Con más de 20 operaciones, la respuesta informa totales del conjunto filtrado, entrega solo la página solicitada y permite recorrer todas las páginas sin duplicados ni omisiones.
 
 **Acceptance Scenarios**:
+1. Los cuatro indicadores informan compras y tokens comprados, ventas y tokens vendidos, volumen comprado y volumen vendido sobre todo el conjunto filtrado.
+2. Ningún volumen se rotula como ganancia, pérdida o rentabilidad.
+3. La paginación usa base cero en HTTP, tamaño default 20 y máximo 100.
+4. Cambiar búsqueda, filtro u orden restablece la página a cero.
 
-1. **Given** un viewport de referencia de `1920 × 913 px`, **When** el historial contiene más
-   operaciones que las visibles, **Then** la navegación y la cabecera permanecen visibles, las
-   filas se desplazan dentro de su región y la ventana no presenta scroll global.
-2. **Given** un ancho de tablet, **When** se muestra el historial, **Then** cada operación conserva
-   todos sus datos agrupados en cuatro zonas legibles y no genera desplazamiento horizontal.
-3. **Given** un ancho móvil desde 360 px, **When** se muestra el historial, **Then** cada operación
-   se presenta como tarjeta en una sola columna y la página usa desplazamiento vertical natural.
+---
+
+### User Story 4 - Resolver estados de consulta (Priority: P2)
+
+Como usuario, quiero distinguir carga, error, historial vacío y filtros sin resultados para saber si debo esperar, reintentar, ir al mercado o limpiar criterios.
+
+**Independent Test**: Simular carga, error de red, usuario nuevo sin operaciones y filtros sin coincidencia; comprobar mensajes, botones de acción y centrado dentro de la región vertical disponible.
+
+**Acceptance Scenarios**:
+1. Carga y error son anunciables mediante atributos de accesibilidad; el error permite reintentar.
+2. Un historial sin operaciones ofrece `Ir al mercado` hacia `/market/buy`.
+3. Un conjunto filtrado vacío ofrece `Limpiar filtros`.
+4. La región del historial ocupa el espacio vertical disponible; el contenido de los estados conserva composición compacta y se centra sin expandir filas.
+
+---
 
 ### Edge Cases
 
-- Un usuario sin operaciones recibe un resultado exitoso vacío; la pantalla no lo presenta como
-  error.
-- Dos operaciones con la misma fecha y hora conservan el orden recibido, cuyo desempate por
-  identificador descendente corresponde al historial provisto.
-- Los valores cero no se sustituyen por ausencia ni se ocultan; la pantalla conserva los valores
-  recibidos y aplica el formato monetario acordado.
-- Un nombre de jugador largo puede ocupar hasta dos líneas sin truncar importes, fechas ni provocar
-  desplazamiento horizontal.
-- Una colección extensa se consulta completa y se desplaza dentro de la región prevista en
-  escritorio; no se introduce paginación ni carga incremental.
-- La pantalla no muestra datos parciales cuando la consulta falla y no revela información de otra
-  persona ante una sesión inválida.
+- **Desempates estables**: Dos operaciones con igual valor de orden conservan un desempate determinista por ejecución e ID.
+- **Página fuera de rango**: Una página fuera de rango devuelve `transactions: []` y metadatos de paginación válidos.
+- **Imágenes ausentes**: Se representan como `null` y el frontend aplica el icono o retrato genérico compartido.
+- **Integridad referencial**: Jugador, equipo y liga son relaciones obligatorias; una inconsistencia no se disfraza como perfil parcial.
+- **Actualizaciones de catálogo**: Si cambian nombre, equipo, liga o imagen en el catálogo, el historial refleja el perfil actual en la siguiente consulta; no son snapshots históricos.
+- **Rango temporal invertido**: Un `executedFrom` igual o posterior a `executedBefore` se rechaza con HTTP 400 `INVALID_DATE_RANGE`.
 
-## Requirements *(mandatory)*
+---
+
+## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: El sistema MUST permitir que un usuario autenticado acceda a su historial personal
-  desde la pestaña `Historial de transacciones` de la sección `Cartera`.
-- **FR-002**: La pantalla MUST usar la ruta acordada `/portfolio/transactions` y MUST permanecer
-  protegida por las mismas reglas de sesión que las demás vistas privadas.
-- **FR-003**: El historial MUST incluir exclusivamente las compras y ventas confirmadas que el
-  servicio personal vigente entregue para la identidad de la sesión.
-- **FR-004**: Cada operación MUST mostrar tipo, identificador de transacción, nombre del jugador,
-  cantidad de tokens, precio unitario histórico, importe total histórico y fecha y hora de
-  ejecución.
-- **FR-005**: El tipo `BUY` MUST presentarse como `COMPRA` y el tipo `SELL` MUST presentarse como
-  `VENTA`, sin inferir que una venta representa ganancia o pérdida.
-- **FR-006**: El nombre del jugador MUST presentarse como texto sin enlace, botón, redirección ni
-  consulta adicional de datos del jugador.
-- **FR-007**: Los precios e importes MUST reflejar los valores históricos recibidos, expresarse en
-  créditos con dos decimales y MUST NOT recalcularse con una cotización vigente.
-- **FR-008**: La pantalla MUST conservar el orden recibido y MUST mostrar cada transacción una
-  sola vez.
-- **FR-009**: La cabecera MUST informar la cantidad de operaciones usando el tamaño de la
-  colección obtenida y MUST aplicar correctamente singular y plural.
-- **FR-010**: Mientras la consulta esté pendiente, la pantalla MUST comunicar el estado de carga y
-  MUST NOT presentar la ausencia de datos como historial vacío.
-- **FR-011**: Si la consulta falla, la pantalla MUST mostrar un error comprensible, indicar que las
-  operaciones no fueron modificadas y ofrecer una acción para reintentar.
-- **FR-012**: Si el historial está vacío, la pantalla MUST comunicar que todavía no existen
-  transacciones y MUST ofrecer `Ir al mercado`, que conduce al flujo de compra existente.
-- **FR-013**: En escritorio, el historial MUST usar una presentación tabular con seis columnas; en
-  tablet MUST reagrupar los mismos datos en cuatro zonas; en móvil MUST presentar una tarjeta por
-  operación en una sola columna.
-- **FR-014**: La pantalla MUST preservar todos los datos de cada operación sin desplazamiento
-  horizontal en los rangos definidos por el wireframe aprobado.
-- **FR-015**: En el viewport de referencia `1920 × 913 px`, la página MUST evitar el scroll global
-  y MUST confinar el desplazamiento de una colección extensa a la región de filas.
-- **FR-016**: El contenido propio de la página MUST usar una retícula compacta donde el padding
-  exterior, la separación, los márgenes y los espacios locales sean de 8 px y ninguno supere ese
-  valor, sin alterar el contrato del navbar compartido.
-- **FR-017**: La aplicación MUST mantener una sola entrada de navegación para este historial en
-  `Cartera` y MUST retirar el placeholder duplicado `Historial de operaciones` de `Mercado`.
-- **FR-018**: Los estados de carga y vacío MUST ser anunciables como estado, los errores MUST ser
-  anunciables como alerta y las acciones MUST conservar foco visible y nombre accesible.
-- **FR-019**: La funcionalidad MUST reutilizar las capacidades visuales y de navegación vigentes
-  cuando satisfagan el wireframe, sin duplicar el shell, la navegación ni los patrones compartidos.
-- **FR-020**: La pantalla MUST NOT incorporar filtros, búsqueda, ordenamiento controlado por el
-  usuario, paginación, exportación, agregaciones, contraparte, saldo, tenencias, rentabilidad,
-  cotización vigente, imágenes ni información deportiva no provista por el historial personal.
+- **FR-001**: La ruta protegida MUST ser `/portfolio/transactions` bajo `Cartera` y MUST ser la única entrada de navegación al historial.
+- **FR-002**: `GET /api/users/me/transactions` MUST identificar al usuario exclusivamente por el JWT y MUST NOT aceptar selección de identidad.
+- **FR-003**: El endpoint MUST responder un objeto con `summary`, `transactions` y `pagination`.
+- **FR-004**: Cada operación MUST incluir `transactionId`, `type`, `player`, `quantity`, `unitPrice`, `totalAmount` y `executedAt`.
+- **FR-005**: `player` MUST incluir ID, nombre e imágenes actuales, equipo actual con ID/nombre y liga actual con ID/nombre, obtenidos mediante relaciones existentes y sin llamadas frontend adicionales.
+- **FR-006**: La documentación y la UI MUST identificar el perfil del jugador como actual; MUST NOT presentarlo como snapshot ni dato histórico de la operación.
+- **FR-007**: Cantidad, precio, importe, tipo e instante MUST conservar los valores confirmados y MUST NOT modificarse ni recalcularse.
+- **FR-008**: `imageUrl` y `fallbackImageUrl` MAY ser `null`; jugador, equipo y liga MUST estar completos en una respuesta exitosa.
+- **FR-009**: El backend MUST admitir búsqueda opcional por nombre normalizado, tipo opcional `BUY|SELL`, `executedFrom` inclusivo y `executedBefore` exclusivo.
+- **FR-010**: El backend MUST admitir únicamente los órdenes `NEWEST`, `OLDEST`, `AMOUNT_DESC` y `AMOUNT_ASC`.
+- **FR-011**: Todo orden MUST incluir desempates estables para evitar duplicados o saltos entre páginas.
+- **FR-012**: La paginación MUST usar `page >= 0`, `1 <= size <= 100`, defaults `0` y `20`, y MUST informar página, tamaño, elementos y páginas totales.
+- **FR-013**: `summary` MUST calcularse sobre todo el conjunto filtrado y MUST informar conteos de operaciones, tokens y volúmenes separados para compras y ventas.
+- **FR-014**: Los volúmenes MUST sumar `totalAmount` histórico y MUST NOT interpretarse como resultado financiero o rentabilidad.
+- **FR-015**: Contenido, conteo y agregados MUST aplicar exactamente los mismos predicados de filtrado.
+- **FR-016**: La lectura MUST evitar N+1 y MUST paginar en base de datos; no puede consultar un jugador por fila ni paginar en memoria.
+- **FR-017**: Parámetros inválidos MUST producir HTTP 400 (`INVALID_PARAMETER_TYPE` o `INVALID_DATE_RANGE`); sesión inválida MUST producir HTTP 401 y fallos internos HTTP 500 sin datos parciales.
+- **FR-018**: Los criterios de UI MUST usar URL search params como única fuente de verdad y la query key de TanStack Query MUST incluirlos.
+- **FR-019**: El nombre y retrato del jugador MUST ser puramente informativos y MUST NOT navegar a su ficha de detalle.
+- **FR-020**: La interfaz MUST reutilizar `PlayerPortrait`, `Pagination`, `Button`, iconos, formatters y tokens de diseño existentes.
+- **FR-021**: El alcance visual MUST ser exclusivamente desktop y MUST seguir el wireframe aprobado sin agregar adaptaciones específicas para tablet o móvil.
+- **FR-022**: La pantalla MUST presentar encabezado compacto, cuatro indicadores, filtros, tabla y paginación, con espacios locales de hasta 8 px.
+- **FR-023**: La región del historial MUST ocupar el espacio vertical disponible en desktop. Carga, error, vacío y sin resultados MUST conservar contenido compacto, accesible y centrado dentro de esa región; las filas MUST mantener su altura natural y la paginación MUST permanecer alineada al borde inferior cuando exista.
+- **FR-024**: El estado vacío MUST navegar a `/market/buy`; `Sin resultados` MUST limpiar los criterios sin abandonar la pantalla.
+- **FR-025**: La implementación MUST NOT modificar migraciones, datos persistidos, reglas contables ni flujos de compra y venta.
 
-### Key Entities
+---
 
-- **Operación del historial**: Representación de una transacción confirmada desde la perspectiva
-  del usuario autenticado. Incluye identidad, tipo, jugador, cantidad, valores históricos y momento
-  de ejecución.
-- **Usuario autenticado**: Persona identificada por la sesión vigente, cuya identidad delimita el
-  historial privado visible y no puede sustituirse desde la pantalla.
-- **Jugador**: Activo negociado identificado visualmente solo por su nombre en esta funcionalidad.
-- **Historial personal**: Colección completa y ordenada de operaciones propias que puede estar
-  cargando, disponible, vacía o fallida.
+## Key Entities
 
-## Success Criteria *(mandatory)*
+- **TransactionHistory**: Modelo frontend que agrupa el resumen filtrado, página de operaciones y metadatos de paginación.
+- **TransactionHistoryEntry**: Representación de una transacción desde la perspectiva de la sesión (`BUY` o `SELL`).
+- **TransactionPlayer**: Perfil actual del jugador y sus relaciones de equipo y liga.
+- **TransactionHistoryQueryParams**: Criterios de consulta sincronizados con la URL (`page`, `size`, `search`, `type`, `executedFrom`, `executedBefore`, `sort`).
 
-### Measurable Outcomes
+---
 
-- **SC-001**: En el 100% de los escenarios con datos, cada operación propia aparece una sola vez y
-  presenta los siete datos visibles obligatorios: tipo, identificador, jugador, cantidad, precio
-  unitario, importe total y fecha y hora.
-- **SC-002**: En el 100% de las verificaciones con sesiones de usuarios distintos, ninguna pantalla
-  presenta operaciones ajenas ni ofrece un mecanismo para seleccionar otra identidad.
-- **SC-003**: En el 100% de las consultas vacías, la pantalla diferencia la ausencia de operaciones
-  de un error y permite acceder al mercado mediante una sola acción.
-- **SC-004**: En los rangos de escritorio, tablet y móvil definidos, el 100% de los datos de cada
-  operación permanece legible sin desplazamiento horizontal.
-- **SC-005**: En un viewport de `1920 × 913 px`, una colección que excede el espacio visible puede
-  recorrerse completamente mediante scroll interno sin producir scroll global en la ventana.
-- **SC-006**: Los estados de carga, error y vacío se distinguen correctamente en el 100% de sus
-  escenarios y el reintento permite iniciar una nueva consulta sin recargar toda la aplicación.
-- **SC-007**: Una persona sin conocimiento previo del historial puede identificar correctamente el
-  jugador, el tipo y el importe total de una transacción indicada en no más de 10 segundos, medidos
-  desde que recibe la consigna hasta que responde, sobre una pantalla ya cargada con un dataset
-  representativo de 20 operaciones ficticias.
+## Success Criteria
 
-### Protocolo de evaluación de SC-007
+- **SC-001**: El 100% de las filas muestra identidad actual del jugador y los cinco datos financieros/temporales obligatorios sin consultas frontend adicionales.
+- **SC-002**: El 100% de las combinaciones válidas aplica criterios idénticos a filas, total e indicadores agregados.
+- **SC-003**: Un conjunto de más de 20 operaciones puede recorrerse por páginas sin duplicados ni omisiones bajo un estado estable de base de datos.
+- **SC-004**: En resolución de referencia desktop (`1920 × 913 px`), la vista mantiene legibles indicadores, filtros, tabla y paginación sin scroll horizontal.
+- **SC-005**: Carga, error, vacío y sin resultados se distinguen inequívocamente y quedan centrados dentro de una región de historial de altura consistente con la tabla, sin expandir artificialmente su contenido.
+- **SC-006**: Una persona sin conocimiento previo identifica jugador, tipo e importe de una transacción indicada en ≤ 10 segundos sobre una pantalla cargada con 20 operaciones.
 
-- **Participante**: persona sin conocimiento previo del historial presentado.
-- **Estado inicial**: pantalla del historial completamente cargada, sin estado de carga ni error.
-- **Dataset**: 20 operaciones ficticias representativas, con compras y ventas y todos los campos
-  visibles definidos por FR-004.
-- **Consigna**: identificar el jugador, el tipo (`COMPRA` o `VENTA`) y el importe total de una
-  transacción indicada por su identificador.
-- **Cronometraje**: comienza al comunicar la consigna y finaliza cuando la persona responde los
-  tres datos solicitados.
-- **Éxito**: respuesta completa y correcta en un tiempo menor o igual a 10 segundos.
-- **Momento de ejecución**: validación posterior a la implementación; este protocolo define el
-  criterio y no acredita su cumplimiento anticipado.
+---
 
-## Assumptions
+## Assumptions & Dependencies
 
-- SPEC-020 continúa siendo la fuente disponible del historial personal y entrega exclusivamente
-  operaciones confirmadas, completas y ordenadas.
-- La autenticación vigente identifica al usuario y protege las rutas privadas; SPEC-025 no redefine
-  inicio de sesión, expiración ni autorización backend.
-- Los importes enteros recibidos representan centésimas de crédito y pueden presentarse con el
-  formato monetario ya usado por Cartera.
-- La colección completa sin paginación es suficiente para el volumen esperado en esta entrega.
-- El wireframe aprobado en `docs/wireframes/transaction-history.md` gobierna composición, Box
-  Model, presupuesto vertical, scroll y responsive de esta pantalla.
-- La navegación existente al flujo de compra es el destino de `Ir al mercado`.
+- Las relaciones `MarketTransaction.player`, `Player.team` y `Team.league` son íntegras y obligatorias.
+- Los datos descriptivos del catálogo pueden actualizarse sin alterar el registro financiero histórico.
+- Reutiliza `AppLayout`, sesión JWT, cliente `http`, TanStack Query y componentes compartidos del proyecto.
 
-## Dependencies
-
-- **SPEC-020 — Consultar historial de operaciones**: provee las compras y ventas personales que
-  consume esta interfaz. La dependencia está cerrada y disponible.
-- **Sistema de sesión vigente**: identifica a la persona autenticada y protege el acceso privado.
-- **Navegación y patrones de Cartera vigentes**: proporcionan el contexto visual y de acceso donde
-  se incorpora la pantalla.
+---
 
 ## Out of Scope
 
-- Crear, modificar, cancelar o eliminar transacciones.
-- Implementar o modificar el servicio backend del historial.
-- Mostrar contraparte, saldo posterior, tenencia resultante, comisiones, rentabilidad o
-  cotizaciones vigentes.
-- Mostrar fotos, equipo, liga, posición, nacionalidad u otros datos del jugador.
-- Navegar desde el nombre del jugador a su detalle.
-- Incorporar filtros, búsqueda, ordenamiento configurable, paginación, exportaciones, estadísticas
-  o informes.
-- Calcular saldos, posiciones, costo promedio o resultados financieros.
-- Rediseñar el navbar, las pantallas de mercado o las demás vistas de Cartera fuera del cambio
-  mínimo para incorporar esta navegación.
+- Snapshots históricos de datos de jugador, equipo, liga o imágenes.
+- Migraciones de esquema, backfills o tablas adicionales en la base de datos.
+- Contrapartes, saldos remanentes, comisiones, rentabilidad calculada o exportaciones a archivos externos.
+- Navegación hacia la ficha del jugador desde la tabla de historial.
+- Diseños o adaptaciones específicas para viewports de tablet o móvil.

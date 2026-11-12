@@ -1,75 +1,48 @@
 # Data Model: Historial personal de transacciones
 
-## Contrato de transporte
+## Transporte y Model frontend
 
-### `OperationHistoryResponseDTO`
+`OperationHistoryResponseDTO` y `TransactionHistory` contienen:
 
-Representa un elemento de la respuesta HTTP existente.
+- `summary`: conteos, tokens y volúmenes de compras/ventas del conjunto filtrado.
+- `transactions`: página de `TransactionHistoryEntry`.
+- `pagination`: `page`, `size`, `totalElements`, `totalPages`.
 
-| Campo | Tipo | Obligatorio | Semántica |
-| --- | --- | --- | --- |
-| `transactionId` | `number` | Sí | Identificador persistido y key estable de UI. |
-| `type` | `"BUY" \| "SELL"` | Sí | Rol del usuario autenticado en la operación. |
-| `playerId` | `number` | Sí | Identidad interna; no habilita navegación ni consulta adicional. |
-| `playerName` | `string` | Sí | Nombre persistido del jugador mostrado como texto. |
-| `quantity` | `number` | Sí | Tokens confirmados transferidos. |
-| `unitPrice` | `number` | Sí | Precio histórico unitario en centésimas de crédito. |
-| `totalAmount` | `number` | Sí | Importe histórico total en centésimas de crédito. |
-| `executedAt` | `string` | Sí | Instante ISO-8601 con offset. |
+Cada entrada contiene `transactionId`, `TransactionType`, `player`, `quantity`, `unitPrice`,
+`totalAmount` y `executedAt`. `TransactionType` es enum de dominio frontend; el DTO conserva los
+literales JSON `BUY|SELL`.
 
-La respuesta completa es `OperationHistoryResponseDTO[]`. No contiene wrapper, paginación,
-totales agregados ni metadatos.
+`player` contiene `id`, `name`, `imageUrl`, `fallbackImageUrl`, `team` y `league`. Sus datos son el
+perfil actual. Las imágenes admiten `null`; las identidades y nombres relacionados son obligatorios.
 
-## Modelo frontend
+## Criterios
 
-### `TransactionHistoryEntry`
+`TransactionHistoryQueryParams`:
 
-Modelo inmutable de lectura que consume la UI después del mapper.
+- `page: number`
+- `size: number`
+- `search?: string`
+- `type?: TransactionType`
+- `executedFrom?: string`
+- `executedBefore?: string`
+- `sort: TransactionHistorySort`
 
-| Campo | Tipo | Regla de presentación |
-| --- | --- | --- |
-| `transactionId` | `number` | Mostrar como `Transacción #N`; usar como key React. |
-| `type` | `"BUY" \| "SELL"` | Mapear a `COMPRA` o `VENTA`; no inferir resultado financiero. |
-| `playerId` | `number` | Conservar como dato del modelo; no mostrar ni navegar. |
-| `playerName` | `string` | Texto plano, hasta dos líneas según espacio disponible. |
-| `quantity` | `number` | Mostrar singular/plural de token sin alterar el valor. |
-| `unitPrice` | `number` | Formatear en créditos con dos decimales. |
-| `totalAmount` | `number` | Formatear en créditos con dos decimales y mayor jerarquía visual. |
-| `executedAt` | `string` | Formatear fecha y hora con el formatter vigente de Cartera. |
+`TransactionHistorySort` admite `NEWEST`, `OLDEST`, `AMOUNT_DESC`, `AMOUNT_ASC`.
 
-DTO y Model mantienen tipos separados aunque la transformación sea 1:1.
+La URL es la fuente de verdad. Valores ausentes usan defaults; valores no reconocidos se
+normalizan a defaults antes de llamar al backend. Cambiar criterios distintos de página restablece
+`page=0`.
 
-## Colección y estados
+## Semántica histórica
 
-### `TransactionHistory`
+Son históricos: identidad de transacción, rol del usuario, cantidad, precio, importe e instante.
+Son actuales: nombre e imágenes del jugador y equipo/liga relacionados. No se agregan snapshots ni
+campos persistidos.
 
-`TransactionHistoryEntry[]` recibida completa y ordenada. Reglas:
+## Estados UI
 
-- conservar el orden del backend (`executedAt DESC, transactionId DESC`);
-- no ordenar, deduplicar, paginar ni filtrar en cliente;
-- derivar el contador exclusivamente de `entries.length`;
-- `[]` representa éxito vacío, no error;
-- no recalcular `totalAmount` desde cantidad y precio.
-
-### Estados de consulta
-
-```text
-pending/fetching ──success──> data(entries.length > 0)
-       │               └────> empty(entries.length = 0)
-       └──error─────────────> error ──retry──> pending/fetching
-```
-
-- **loading**: no hay contador cero ni filas visibles.
-- **data**: colección completa vigente.
-- **empty**: resultado exitoso `[]`, con navegación a `/market/buy`.
-- **error**: no se muestran datos parciales u obsoletos; se ofrece reintento.
-- **unauthorized**: lo resuelve el ciclo global de sesión, no un estado de dominio nuevo.
-
-## Validaciones y garantías
-
-- El frontend confía en el contrato tipado; no agrega schemas runtime ad hoc.
-- Los valores cero son válidos y se muestran.
-- `playerId` no se usa para navegación.
-- No existen transiciones ni mutaciones de una operación: todas las entradas son confirmadas y de
-  solo lectura.
-- No se agregan campos derivados persistentes ni estado cliente duplicado.
+- `loading`: primera página pendiente, sin contador cero.
+- `error`: error anunciable y reintento.
+- `empty`: `totalElements=0` sin criterios activos; ofrece ir al mercado.
+- `no-results`: `totalElements=0` con criterios activos; ofrece limpiar.
+- `data`: indicadores, tabla y paginación.

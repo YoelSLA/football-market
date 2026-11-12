@@ -2,7 +2,6 @@ import type { NavSection } from "@/shared/components";
 import {
 	BarChart3,
 	FileText,
-	History,
 	LayoutDashboard,
 	Package,
 	Puzzle,
@@ -81,12 +80,6 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: Puzzle,
 				path: null,
 			},
-			{
-				key: "market-history",
-				label: "Historial de operaciones",
-				icon: History,
-				path: null,
-			},
 		],
 	},
 	{
@@ -112,14 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: FileText,
 				badgeTone: "gold",
 				label: "Historial de transacciones",
-				path: null,
-			},
-			{
-				key: "portfolio-stats",
-				label: "Estadísticas/gráficos",
-				path: null,
-				icon: BarChart3,
-				badgeTone: "violet",
+				path: "/portfolio/transactions",
 			},
 		],
 	},

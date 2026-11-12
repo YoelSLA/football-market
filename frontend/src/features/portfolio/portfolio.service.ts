@@ -1,9 +1,12 @@
 import { http } from "@/infrastructure/http";
-import { toPortfolio } from "./portfolio.mapper";
+import { toPortfolio, toTransactionHistory } from "./portfolio.mapper";
 import type {
+	OperationHistoryResponseDTO,
 	Portfolio,
 	PortfolioQueryParams,
 	PortfolioResponseDTO,
+	TransactionHistory,
+	TransactionHistoryQueryParams,
 } from "./types";
 
 async function getPortfolio(
@@ -18,4 +21,19 @@ async function getPortfolio(
 	return toPortfolio(data);
 }
 
-export const portfolioService = { getPortfolio };
+async function getTransactionHistory(
+	params: TransactionHistoryQueryParams,
+	signal: AbortSignal,
+): Promise<TransactionHistory> {
+	const { data } = await http.get<OperationHistoryResponseDTO>(
+		"/users/me/transactions",
+		{
+			authenticated: true,
+			params,
+			signal,
+		},
+	);
+	return toTransactionHistory(data);
+}
+
+export const portfolioService = { getPortfolio, getTransactionHistory };

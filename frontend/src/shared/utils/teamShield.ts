@@ -1,9 +1,9 @@
 /**
  * Resuelve escudos de equipos desde `src/shared/assets/team-shields/{liga}/{equipo}.png`.
  *
- * La asociación se realiza por liga + nombre normalizado del equipo, nunca por
- * posición en un listado ni por identificadores de base de datos. Las diferencias
- * de nombre, abreviaturas y caracteres especiales se cubren con alias explícitos.
+ * Los IDs identifican establemente la relación cuando están disponibles; liga y
+ * nombre actuales resuelven el asset local. Las diferencias de nombre,
+ * abreviaturas y caracteres especiales se cubren con alias explícitos.
  */
 import { getLeagueSlug } from "./leagueShield";
 
@@ -22,6 +22,8 @@ for (const [path, module] of Object.entries(modules)) {
 	if (!shields.has(leagueSlug)) shields.set(leagueSlug, new Map());
 	shields.get(leagueSlug)?.set(teamSlug, module.default);
 }
+
+const shieldByIdentity = new Map<string, string | null>();
 
 /** Normaliza un nombre a la forma de slug usada por los archivos. */
 export function normalizeTeamSlug(name: string): string {
@@ -46,12 +48,29 @@ const teamAliases: Record<string, Record<string, string>> = {
 export function getTeamShield(
 	leagueName: string,
 	teamName: string,
+	teamId?: number,
+	leagueId?: number,
 ): string | null {
+	const identity =
+		teamId === undefined
+			? null
+			: `${leagueId ?? "unknown"}:${teamId}:${leagueName}:${teamName}`;
+	if (identity && shieldByIdentity.has(identity)) {
+		return shieldByIdentity.get(identity) ?? null;
+	}
 	const leagueSlug = getLeagueSlug(leagueName);
-	if (!leagueSlug) return null;
+	if (!leagueSlug) {
+		if (identity) shieldByIdentity.set(identity, null);
+		return null;
+	}
 	const leagueShields = shields.get(leagueSlug);
-	if (!leagueShields) return null;
+	if (!leagueShields) {
+		if (identity) shieldByIdentity.set(identity, null);
+		return null;
+	}
 	const slug = normalizeTeamSlug(teamName);
 	const canonical = teamAliases[leagueSlug]?.[slug] ?? slug;
-	return leagueShields.get(canonical) ?? null;
+	const shield = leagueShields.get(canonical) ?? null;
+	if (identity) shieldByIdentity.set(identity, shield);
+	return shield;
 }
