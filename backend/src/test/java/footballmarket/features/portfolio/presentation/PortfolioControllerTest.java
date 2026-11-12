@@ -73,6 +73,22 @@ class PortfolioControllerTest {
   class Consulta {
 
     @Test
+    @DisplayName("Entrega una posición histórica sin depender del detalle público del jugador")
+    void entregaPosicionHistorica() throws Exception {
+      // Arrange: el Controller transporta la posición del Service sin consultar el catálogo.
+      when(portfolioService.portfolio(anyString(), anyInt(), anyInt(), isNull()))
+          .thenReturn(view());
+
+      // Act / Assert
+      mvc.perform(get("/api/portfolio/me").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.positions[0].playerId").value(41))
+          .andExpect(jsonPath("$.positions[0].quantity").value(10))
+          .andExpect(jsonPath("$.positions[0].acquisitionCost").value(1000));
+      org.mockito.Mockito.verify(portfolioService).portfolio("buyer@example.com", 0, 20, null);
+    }
+
+    @Test
     @DisplayName("Devuelve resumen, posiciones y paginación con los valores del portfolio")
     void devuelveElPortfolio() throws Exception {
       // Arrange

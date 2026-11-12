@@ -8,8 +8,6 @@ import static org.mockito.Mockito.when;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
 import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
-import footballmarket.features.catalog.presentation.dtos.response.PlayerResponseDTO;
-import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
 import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
 import footballmarket.features.statistics.presentation.dtos.request.PlayerStatisticsSyncRequestDTO;
 import footballmarket.features.statistics.presentation.dtos.response.PlayerStatisticsSyncResponseDTO;
@@ -19,6 +17,7 @@ import footballmarket.integrations.whoscored.records.WhoScoredScrapedContextRow;
 import footballmarket.integrations.whoscored.records.WhoScoredScrapedMetricCell;
 import footballmarket.integrations.whoscored.records.WhoScoredScrapedPlayer;
 import footballmarket.integrations.whoscored.records.WhoScoredStructuredDataBlock;
+import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.IdentityControlledProvider;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
@@ -31,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
@@ -45,7 +45,7 @@ import org.springframework.web.client.RestClient;
 /** Journey HTTP completo de un lote de scraping y su consulta de cobertura. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
@@ -53,6 +53,7 @@ import org.springframework.web.client.RestClient;
 class PlayerStatisticsSyncJourneyE2ETest {
   private static final IdentityControlledProvider PROVIDER = startProvider();
   @LocalServerPort private int port;
+  @Autowired private IdentityCatalogueFixture catalogueFixture;
   @MockitoSpyBean private WhoScoredProperties properties;
 
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
@@ -106,23 +107,12 @@ class PlayerStatisticsSyncJourneyE2ETest {
         .headers(headers -> headers.setBearerAuth(token))
         .retrieve()
         .toBodilessEntity();
-    PlayersPageResponseDTO catalogue =
-        api.get()
-            .uri("/api/players?size=100")
-            .headers(headers -> headers.setBearerAuth(token))
-            .retrieve()
-            .body(PlayersPageResponseDTO.class);
     List<Integer> tournaments = List.of(2, 3, 4, 5, 22);
     List<WhoScoredProperties.Competition> bindings = new ArrayList<>();
     for (int index = 1; index <= 5; index++) {
-      String leagueName = "League " + index;
-      PlayerResponseDTO local =
-          catalogue.content().stream()
-              .filter(player -> leagueName.equals(player.leagueName()))
-              .findFirst()
-              .orElseThrow();
-      bindings.add(
-          new WhoScoredProperties.Competition(local.leagueId(), tournaments.get(index - 1)));
+      // La liga recién sincronizada aún no es elegible: sus jugadores no tienen métricas.
+      Long leagueId = catalogueFixture.leagueId("League " + index);
+      bindings.add(new WhoScoredProperties.Competition(leagueId, tournaments.get(index - 1)));
     }
     org.mockito.Mockito.doReturn(bindings).when(properties).competitions();
     PlayerIdentitySyncRunResponseDTO identities =

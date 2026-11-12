@@ -84,7 +84,7 @@ export default function PlayerCard({ player }: Props) {
 						<dd>
 							{item.value !== null && item.value !== undefined
 								? number.format(item.value)
-								: "—"}
+								: "Sin datos"}
 						</dd>
 					</div>
 				))}

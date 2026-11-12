@@ -6,19 +6,21 @@ import static org.mockito.Mockito.doReturn;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
 import footballmarket.features.auth.presentation.dtos.response.LoginResponseDTO;
-import footballmarket.features.catalog.presentation.dtos.response.PlayerResponseDTO;
+import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.presentation.dtos.response.PlayerSyncResponseDTO;
-import footballmarket.features.catalog.presentation.dtos.response.PlayersPageResponseDTO;
 import footballmarket.features.identity.presentation.dtos.response.PlayerIdentitySyncRunResponseDTO;
 import footballmarket.integrations.whoscored.config.WhoScoredProperties;
+import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.IdentityControlledProvider;
 import footballmarket.support.TestcontainersConfiguration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
@@ -29,7 +31,7 @@ import org.springframework.web.client.RestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
 @org.springframework.test.context.TestExecutionListeners(
     listeners = footballmarket.support.ResetPlayerCatalogListener.class,
     mergeMode =
@@ -38,6 +40,7 @@ import org.springframework.web.client.RestClient;
 class PlayerIdentityE2ETest {
   private static final IdentityControlledProvider PROVIDER = startProvider();
   @LocalServerPort private int port;
+  @Autowired private IdentityCatalogueFixture catalogueFixture;
   @MockitoSpyBean private WhoScoredProperties properties;
 
   @TestBean(name = "whoScoredRestClient", methodName = "providerClient")
@@ -66,6 +69,41 @@ class PlayerIdentityE2ETest {
     PROVIDER.close();
   }
 
+  /** Atributos observables del catálogo persistido, independientes de la elegibilidad actual. */
+  private record CatalogIdentity(
+      Long id,
+      String name,
+      Long teamId,
+      String teamName,
+      Long leagueId,
+      String leagueName,
+      String position,
+      LocalDate dateOfBirth,
+      String nationality,
+      String imageUrl,
+      String fallbackImageUrl) {}
+
+  private List<CatalogIdentity> catalogIdentities() {
+    return catalogueFixture.identitySnapshot().stream()
+        .map(PlayerIdentityE2ETest::catalogIdentity)
+        .toList();
+  }
+
+  private static CatalogIdentity catalogIdentity(Player player) {
+    return new CatalogIdentity(
+        player.getId(),
+        player.getName(),
+        player.getTeam().getId(),
+        player.getTeam().getName(),
+        player.getLeague().getId(),
+        player.getLeague().getName(),
+        player.getPosition(),
+        player.getDateOfBirth(),
+        player.getNationality(),
+        player.getImageUrl(),
+        player.getFallbackImageUrl());
+  }
+
   @Nested
   @DisplayName("Journey de sincronización completa y repetición")
   class HistoricalJourney {
@@ -90,23 +128,14 @@ class PlayerIdentityE2ETest {
             .headers(headers -> headers.setBearerAuth(token))
             .retrieve()
             .body(PlayerSyncResponseDTO.class);
-        PlayersPageResponseDTO original =
-            api.get()
-                .uri("/api/players?size=100")
-                .headers(headers -> headers.setBearerAuth(token))
-                .retrieve()
-                .body(PlayersPageResponseDTO.class);
+        List<CatalogIdentity> original = catalogIdentities();
         List<Integer> tournaments = List.of(2, 3, 4, 5, 22);
         List<WhoScoredProperties.Competition> bindings = new ArrayList<>();
         for (int index = 1; index <= 5; index++) {
-          String leagueName = "League " + index;
-          PlayerResponseDTO local =
-              original.content().stream()
-                  .filter(player -> leagueName.equals(player.leagueName()))
-                  .findFirst()
-                  .orElseThrow();
+          // La liga recién sincronizada aún no es elegible: sus jugadores no tienen métricas.
+          Long leagueId = catalogueFixture.leagueId("League " + index);
           bindings.add(
-              new WhoScoredProperties.Competition(local.leagueId(), tournaments.get(index - 1)));
+              new WhoScoredProperties.Competition(leagueId, tournaments.get(index - 1)));
         }
         doReturn(bindings).when(properties).competitions();
         // Act
@@ -134,13 +163,7 @@ class PlayerIdentityE2ETest {
         // Verify
         assertThat(requests).isEqualTo(5);
         assertThat(PROVIDER.historicalRequests()).isEqualTo(requests);
-        PlayersPageResponseDTO after =
-            api.get()
-                .uri("/api/players?size=100")
-                .headers(headers -> headers.setBearerAuth(token))
-                .retrieve()
-                .body(PlayersPageResponseDTO.class);
-        assertThat(after.content()).containsExactlyElementsOf(original.content());
+        assertThat(catalogIdentities()).containsExactlyElementsOf(original);
       } finally {
         PROVIDER.historicalScenario(false);
       }
@@ -168,23 +191,13 @@ class PlayerIdentityE2ETest {
           .headers(headers -> headers.setBearerAuth(token))
           .retrieve()
           .body(PlayerSyncResponseDTO.class);
-      PlayersPageResponseDTO original =
-          api.get()
-              .uri("/api/players?size=100")
-              .headers(headers -> headers.setBearerAuth(token))
-              .retrieve()
-              .body(PlayersPageResponseDTO.class);
+      List<CatalogIdentity> original = catalogIdentities();
       List<Integer> tournaments = List.of(2, 3, 4, 5, 22);
       List<WhoScoredProperties.Competition> bindings = new ArrayList<>();
       for (int index = 1; index <= 5; index++) {
-        String leagueName = "League " + index;
-        PlayerResponseDTO local =
-            original.content().stream()
-                .filter(player -> leagueName.equals(player.leagueName()))
-                .findFirst()
-                .orElseThrow();
-        bindings.add(
-            new WhoScoredProperties.Competition(local.leagueId(), tournaments.get(index - 1)));
+        // La liga recién sincronizada aún no es elegible: sus jugadores no tienen métricas.
+        Long leagueId = catalogueFixture.leagueId("League " + index);
+        bindings.add(new WhoScoredProperties.Competition(leagueId, tournaments.get(index - 1)));
       }
       doReturn(bindings).when(properties).competitions();
       // Act
@@ -208,13 +221,7 @@ class PlayerIdentityE2ETest {
       assertThat(first.unresolvedPlayers()).isZero();
       assertThat(repeated).isEqualTo(first);
       // Verify
-      PlayersPageResponseDTO after =
-          api.get()
-              .uri("/api/players?size=100")
-              .headers(headers -> headers.setBearerAuth(token))
-              .retrieve()
-              .body(PlayersPageResponseDTO.class);
-      assertThat(after.content()).containsExactlyElementsOf(original.content());
+      assertThat(catalogIdentities()).containsExactlyElementsOf(original);
     }
   }
 }

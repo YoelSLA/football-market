@@ -9,10 +9,16 @@ import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.OperationHistoryTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.TestcontainersConfiguration;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,10 +39,53 @@ class OperationHistoryServiceTest {
 
   @Autowired private OperationHistoryService historyService;
   @Autowired private OperationHistoryTestData data;
+  @Autowired private PlayerStatisticsQueryData statistics;
 
   @Nested
   @DisplayName("Interpretación del historial")
   class Interpretacion {
+
+    @Test
+    @DisplayName("Conserva las operaciones propias cuando el jugador deja de tener métricas")
+    void conservaOperacionesSinMetricasRecientes() {
+      // Arrange
+      User owner = data.registerUser();
+      User superuser = data.registerSuperuser();
+      User other = data.registerUser();
+      Player player = data.createPlayer();
+      LocalDate date = LocalDate.of(2026, 10, 20);
+      statistics.row(
+          player.getId(),
+          date,
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ONE));
+      MarketTransaction own = data.record(owner, superuser, player, 4, 125L, BUY_TIME);
+      data.record(other, superuser, player, 1, 100L, BUY_TIME);
+      statistics.row(
+          player.getId(),
+          date.plusDays(1),
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of());
+
+      // Act / Assert
+      assertThat(historyService.history(owner.getEmail()))
+          .containsExactly(
+              new OperationHistoryEntry(
+                  own.getId(),
+                  OperationType.BUY,
+                  player.getId(),
+                  player.getName(),
+                  4,
+                  125L,
+                  500L,
+                  BUY_TIME));
+    }
 
     @Test
     @DisplayName("Interpreta compra y venta y conserva todos los valores históricos")

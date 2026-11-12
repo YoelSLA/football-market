@@ -5,11 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.application.exceptions.PlayerSynchronizationPersistenceException;
+import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.records.LeagueCandidate;
 import footballmarket.features.catalog.domain.records.PlayerCandidate;
 import footballmarket.features.catalog.domain.records.PlayerSnapshot;
 import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import footballmarket.features.catalog.domain.records.TeamCandidate;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
@@ -44,6 +46,7 @@ import org.springframework.test.context.TestExecutionListeners;
 class PlayerSnapshotConsistencyPersistenceTest {
   @Autowired private PlayerCatalogService catalog;
   @Autowired private JdbcTemplate jdbc;
+  @Autowired private PlayerRepository players;
 
   private Long playerId;
 
@@ -51,10 +54,22 @@ class PlayerSnapshotConsistencyPersistenceTest {
   void prepareMultipleReferences() {
     PlayerCandidate original = candidate("7001", "Original", "101");
     catalog.applySynchronization(snapshot(original));
-    playerId = catalog.getActivePlayers(0, 20).getContent().getFirst().getId();
+    playerId =
+        jdbc.queryForObject(
+            "SELECT player_id FROM player_external_references WHERE provider='FOOTBALL_DATA' AND external_id='7001'",
+            Long.class);
     jdbc.update(
         "INSERT INTO player_external_references(player_id,provider,external_id) VALUES (?, 'FOOTBALL_DATA', '7002')",
         playerId);
+  }
+
+  /** Visibilidad histórica para verificar sincronización sin exigir estadísticas. */
+  private List<Player> synchronizedVisiblePlayers() {
+    List<Long> ids = jdbc.queryForList("SELECT id FROM players ORDER BY id", Long.class);
+    if (ids.isEmpty()) return List.of();
+    return players.findHistoricalIdentitySnapshot(ids).stream()
+        .filter(player -> player.isActive() && player.getTeam().isCurrent())
+        .toList();
   }
 
   private PlayerCandidate candidate(String externalId, String name, String teamId) {
@@ -143,7 +158,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
               jdbc.queryForMap(
                   "SELECT id,case_key,first_detected_at,evidence::text FROM pending_review_cases"))
           .isEqualTo(review);
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .extracting(player -> player.getName())
           .containsExactly("Original", "Other player");
     }
@@ -285,7 +300,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
 
       // Verify
       assertThat(persistedPlayer()).isEqualTo(before);
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .extracting(player -> player.getName())
           .containsExactly("Original", "Other player");
       assertThat(jdbc.queryForObject("SELECT count(*) FROM players", Integer.class)).isEqualTo(2);
@@ -313,7 +328,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       // Verify
       assertThat(persistedPlayer()).isEqualTo(before);
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -391,7 +406,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
       assertThat(jdbc.queryForObject("SELECT count(*) FROM pending_review_cases", Integer.class))
           .isZero();
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -421,7 +436,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       assertThat(result.discardedInvalid()).isZero();
 
       // Verify
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -459,7 +474,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
 
       // Verify
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -490,7 +505,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       catalog.applySynchronization(snapshot(conflictingDate, conflictingNationality));
 
       // Assert / Verify
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -505,7 +520,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
               optionalCandidate("7002", java.time.LocalDate.of(1998, 4, 10), "Argentina")));
 
       // Verify
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -537,7 +552,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       // Verify
       assertThat(persistedPlayer()).containsEntry("active", false);
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
-      assertThat(catalog.getActivePlayers(0, 20)).isEmpty();
+      assertThat(synchronizedVisiblePlayers()).isEmpty();
       assertThat(
               jdbc.queryForMap(
                   "SELECT id,last_detected_at,evidence::text FROM pending_review_cases"))
@@ -564,7 +579,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
 
       // Verify
       assertThat(persistedReferences()).isEqualTo(referencesBefore);
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {
@@ -602,7 +617,7 @@ class PlayerSnapshotConsistencyPersistenceTest {
       assertThat(result.markedInactive()).isZero();
 
       // Verify
-      assertThat(catalog.getActivePlayers(0, 20).getContent())
+      assertThat(synchronizedVisiblePlayers())
           .singleElement()
           .satisfies(
               player -> {

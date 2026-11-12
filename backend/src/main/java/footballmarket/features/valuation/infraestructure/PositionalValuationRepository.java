@@ -32,6 +32,9 @@ public interface PositionalValuationRepository extends JpaRepository<PositionalV
           + "select q.id from PlayerQuote q where q.player.id = v.player.id) and not exists ("
           + "select newer.id from PositionalValuation newer where newer.player.id = v.player.id"
           + " and newer.valuationDate > v.valuationDate)"
+          + " and exists (select s.id from PlayerStatistics s where s.player.id = v.player.id"
+          + " and s.presentMetrics > 0 and s.extractionDate ="
+          + " (select max(latest.extractionDate) from PlayerStatistics latest where latest.player.id = v.player.id))"
           + " order by v.finalScore desc, v.player.id asc")
   List<PositionalValuation> findScoreRanking();
 }

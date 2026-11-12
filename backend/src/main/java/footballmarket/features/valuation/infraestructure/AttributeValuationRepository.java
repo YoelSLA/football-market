@@ -32,6 +32,9 @@ public interface AttributeValuationRepository extends JpaRepository<AttributeVal
           + "select q.id from PlayerQuote q where q.player.id = v.player.id) and not exists ("
           + "select newer.id from AttributeValuation newer where newer.player.id = v.player.id"
           + " and newer.valuationDate > v.valuationDate)"
+          + " and exists (select s.id from PlayerStatistics s where s.player.id = v.player.id"
+          + " and s.presentMetrics > 0 and s.extractionDate ="
+          + " (select max(latest.extractionDate) from PlayerStatistics latest where latest.player.id = v.player.id))"
           + " order by v.finalGrl desc, v.player.id asc")
   List<AttributeValuation> findScoreRanking();
 }

@@ -4,19 +4,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.features.valuation.domain.models.AttributeValuation;
 import footballmarket.features.valuation.domain.models.PositionalValuation;
 import footballmarket.features.valuation.infraestructure.AttributeValuationRepository;
 import footballmarket.features.valuation.infraestructure.PositionalValuationRepository;
 import footballmarket.support.IdentityCatalogueFixture;
+import footballmarket.support.PlayerCatalogQueryData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.ScoreRankingTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,7 +37,9 @@ import org.springframework.test.context.TestExecutionListeners;
 @Import({
   TestcontainersConfiguration.class,
   IdentityCatalogueFixture.class,
-  ScoreRankingTestData.class
+  ScoreRankingTestData.class,
+  PlayerCatalogQueryData.class,
+  PlayerStatisticsQueryData.class
 })
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
@@ -44,15 +52,81 @@ class ScoreRankingQueryTest {
   @Autowired private PlayerCatalogService playerCatalogue;
   @Autowired private IdentityCatalogueFixture catalogue;
   @Autowired private ScoreRankingTestData data;
+  @Autowired private PlayerCatalogQueryData catalogData;
+  @Autowired private PlayerStatisticsQueryData statistics;
+  @Autowired private PlayerRepository players;
+
+  private void prepareEligibleCatalogue() {
+    catalogue.prepare();
+    for (Player player : players.findAll()) {
+      statistics.row(
+          player.getId(),
+          LocalDate.of(2026, 9, 1),
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ZERO));
+    }
+  }
 
   @Nested
   @DisplayName("Consultas persistentes del ranking por score")
   class Queries {
     @Test
+    @DisplayName(
+        "Ambas estrategias excluyen valoraciones históricas de jugadores sin métricas recientes")
+    void excludesValuationsWithEmptyLatestMetrics() {
+      // Arrange
+      var excluded = catalogData.player("Excluido", "Forward", "France", null);
+      var included = catalogData.player("Incluido", "Forward", "Spain", null);
+      LocalDate old = LocalDate.of(2026, 10, 20);
+      LocalDate latest = old.plusDays(1);
+      statistics.row(
+          excluded.playerId(),
+          old,
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ONE));
+      statistics.row(
+          excluded.playerId(),
+          latest,
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of());
+      statistics.row(
+          included.playerId(),
+          latest,
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ZERO));
+      Player excludedPlayer = players.findById(excluded.playerId()).orElseThrow();
+      Player includedPlayer = players.findById(included.playerId()).orElseThrow();
+      data.preparePlayer(excludedPlayer, old, old, new BigDecimal("0.900000"));
+      data.preparePlayer(includedPlayer, old, old, new BigDecimal("0.700000"));
+      data.prepareAttributeValuation(excludedPlayer, old, new BigDecimal("0.900000"));
+      data.prepareAttributeValuation(includedPlayer, old, new BigDecimal("0.700000"));
+
+      // Act / Assert
+      assertThat(valuations.findScoreRanking())
+          .extracting(row -> row.getPlayer().getId())
+          .containsExactly(included.playerId());
+      assertThat(attributeValuations.findScoreRanking())
+          .extracting(row -> row.getPlayer().getId())
+          .containsExactly(included.playerId());
+    }
+
+    @Test
     @DisplayName("Selecciona la valuación de mayor fecha y ordena los empates por jugador")
     void selectsLatestValuationAndOrdersTies() {
       // Arrange
-      catalogue.prepare();
+      prepareEligibleCatalogue();
       List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
       Player first =
           players.stream().min(java.util.Comparator.comparing(Player::getId)).orElseThrow();
@@ -80,7 +154,7 @@ class ScoreRankingQueryTest {
     @DisplayName("Ordena el resultado final de atributos y excluye jugadores sin cotización")
     void ordersAttributeScoresAndExcludesPlayersWithoutQuotes() {
       // Arrange
-      catalogue.prepare();
+      prepareEligibleCatalogue();
       List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
       Player quoted = players.get(0);
       Player withoutQuote = players.get(1);
@@ -103,7 +177,7 @@ class ScoreRankingQueryTest {
     @DisplayName("Mantiene el orden total posicional ante múltiples grupos de empate")
     void maintainsPositionalOrderAcrossMultipleTieGroups() {
       // Arrange
-      catalogue.prepare();
+      prepareEligibleCatalogue();
       List<Player> players =
           playerCatalogue.getActivePlayers(0, 10).getContent().stream()
               .sorted(java.util.Comparator.comparing(Player::getId))
@@ -132,7 +206,7 @@ class ScoreRankingQueryTest {
     @DisplayName("Mantiene el orden total por atributos ante múltiples grupos de empate")
     void maintainsAttributeOrderAcrossMultipleTieGroups() {
       // Arrange
-      catalogue.prepare();
+      prepareEligibleCatalogue();
       List<Player> players =
           playerCatalogue.getActivePlayers(0, 10).getContent().stream()
               .sorted(java.util.Comparator.comparing(Player::getId))

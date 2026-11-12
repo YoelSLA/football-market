@@ -13,6 +13,7 @@ import footballmarket.features.catalog.domain.records.TeamCandidate;
 import footballmarket.integrations.thesportsdb.TheSportsDbIntegration;
 import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbResponseException;
 import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbUnavailableException;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class TeamEnrichmentServiceTest {
   @Autowired private TeamEnrichmentService enrichment;
   @Autowired private PlayerCatalogService catalog;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @MockitoBean private TheSportsDbIntegration integration;
 
   private PlayerSnapshot snapshot(String teamName) {
@@ -58,6 +60,7 @@ class TeamEnrichmentServiceTest {
     void consumeValidEvaluation(boolean complete) {
       // Arrange
       catalog.applySynchronization(snapshot("Team"));
+      statistics.makeSynchronizedPlayerEligible("1");
       TheSportsDbIntegration.TeamData candidate =
           new TheSportsDbIntegration.TeamData("sports-team", "Team", "Soccer");
       TheSportsDbIntegration.TeamSearch response =
@@ -82,6 +85,7 @@ class TeamEnrichmentServiceTest {
     void retryAfterTechnicalFailure() {
       // Arrange
       catalog.applySynchronization(snapshot("Team"));
+      statistics.makeSynchronizedPlayerEligible("1");
       TheSportsDbIntegration.TeamSearch empty =
           new TheSportsDbIntegration.TeamSearch(List.of(), true);
       when(integration.searchTeams("Team"))
@@ -106,6 +110,7 @@ class TeamEnrichmentServiceTest {
     void evaluateOnlySemanticRename() {
       // Arrange
       catalog.applySynchronization(snapshot("Team"));
+      statistics.makeSynchronizedPlayerEligible("1");
       TheSportsDbIntegration.TeamSearch empty =
           new TheSportsDbIntegration.TeamSearch(List.of(), true);
       when(integration.searchTeams("Team")).thenReturn(empty);
@@ -145,6 +150,8 @@ class TeamEnrichmentServiceTest {
               List.of(initial.teams().getFirst(), secondTeam),
               List.of());
       catalog.applySynchronization(photo);
+      statistics.makeSynchronizedPlayerEligible("1");
+      statistics.makeSynchronizedPlayerEligible("2");
       TheSportsDbIntegration.TeamSearch empty =
           new TheSportsDbIntegration.TeamSearch(List.of(), false);
       when(integration.searchTeams("Team")).thenThrow(new InvalidTheSportsDbResponseException());
