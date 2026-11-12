@@ -21,12 +21,17 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.MarketTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -65,6 +70,7 @@ class BuyOrderServiceTest {
   @Autowired private BuyOrderService buyOrderService;
   @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @Autowired private QuoteRecalculationService recalculation;
   @MockitoBean private QuoteSource quotes;
 
@@ -75,6 +81,24 @@ class BuyOrderServiceTest {
   private User buyer;
   private User superuser;
   private Player player;
+
+  @Test
+  @DisplayName("Rechaza comprar cuando la última extracción no tiene métricas")
+  void rejectsPurchaseWhenLatestMetricsAreEmpty() {
+    // Arrange
+    statistics.row(
+        player.getId(),
+        LocalDate.of(2026, 10, 18),
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of());
+    // Act / Assert
+    assertThatThrownBy(
+            () -> buyOrderService.buy(buyer.getEmail(), new BuyOrderRequest(player.getId(), 1)))
+        .isInstanceOf(PlayerNotVisibleException.class);
+  }
 
   @BeforeEach
   void arrange() {

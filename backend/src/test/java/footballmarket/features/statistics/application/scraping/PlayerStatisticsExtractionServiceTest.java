@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import footballmarket.features.catalog.application.PlayerCatalogService;
+import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
 import footballmarket.features.statistics.application.PlayerStatisticsExtractionService;
 import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
@@ -60,7 +60,6 @@ class PlayerStatisticsExtractionServiceTest {
   @Autowired private PlayerStatisticsQueryService query;
   @Autowired private PlayerIdentitySynchronizationService identities;
   @Autowired private IdentityCatalogueFixture fixture;
-  @Autowired private PlayerCatalogService catalogue;
   @MockitoBean private WhoScoredStatisticsScrapingIntegration integration;
   @MockitoBean private WhoScoredIntegration identityIntegration;
   @MockitoSpyBean private WhoScoredProperties properties;
@@ -99,7 +98,7 @@ class PlayerStatisticsExtractionServiceTest {
                   "page-" + tournament);
             });
     identities.synchronize();
-    playerId = catalogue.getActivePlayers(0, 10).getContent().getFirst().getId();
+    playerId = fixture.playerContext("301").playerId();
     when(integration.openSession())
         .thenReturn(mock(WhoScoredStatisticsScrapingIntegration.Session.class));
     // getArgument con tipo: String.valueOf(genérico) infería char[] y rompía en tiempo de
@@ -199,7 +198,8 @@ class PlayerStatisticsExtractionServiceTest {
       assertThat(result.counters().completed()).isZero();
       assertThat(result.counters().failed()).isEqualTo(1);
       assertThat(result.counters().pending()).isEqualTo(5);
-      assertThat(query.getStatistics(playerId, null).status()).isEqualTo("NO_DATA");
+      assertThatThrownBy(() -> query.getStatistics(playerId, null))
+          .isInstanceOf(PlayerNotFoundException.class);
     }
 
     @Test

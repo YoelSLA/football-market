@@ -1,9 +1,11 @@
 package footballmarket.support;
 
+import footballmarket.features.catalog.domain.enums.ExternalProvider;
 import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.models.team.Team;
 import footballmarket.features.catalog.infraestructure.LeagueRepository;
+import footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.catalog.infraestructure.TeamRepository;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
@@ -31,6 +33,7 @@ public class PlayerStatisticsQueryData {
   private final PlayerStatisticsExtractionRunRepository runs;
   private final PlayerStatisticsRunItemRepository items;
   private final PlayerStatisticsRepository statistics;
+  private final PlayerExternalReferenceRepository references;
 
   @Autowired
   public PlayerStatisticsQueryData(
@@ -39,13 +42,35 @@ public class PlayerStatisticsQueryData {
       PlayerRepository players,
       PlayerStatisticsExtractionRunRepository runs,
       PlayerStatisticsRunItemRepository items,
-      PlayerStatisticsRepository statistics) {
+      PlayerStatisticsRepository statistics,
+      PlayerExternalReferenceRepository references) {
     this.leagues = leagues;
     this.teams = teams;
     this.players = players;
     this.runs = runs;
     this.items = items;
     this.statistics = statistics;
+    this.references = references;
+  }
+
+  /** Prepara elegibilidad de una identidad ya sincronizada, exclusivamente durante Arrange. */
+  @Transactional
+  public Long makeSynchronizedPlayerEligible(String externalId) {
+    Long playerId =
+        this.references
+            .findByProviderAndExternalId(ExternalProvider.FOOTBALL_DATA, externalId)
+            .orElseThrow()
+            .getPlayer()
+            .getId();
+    this.row(
+        playerId,
+        LocalDate.of(2026, 10, 23),
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of("goals_total", BigDecimal.ZERO));
+    return playerId;
   }
 
   @Transactional

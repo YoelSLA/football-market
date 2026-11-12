@@ -10,10 +10,16 @@ import footballmarket.features.catalog.domain.records.PlayerCandidate;
 import footballmarket.features.catalog.domain.records.PlayerSnapshot;
 import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import footballmarket.features.catalog.domain.records.TeamCandidate;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
+import footballmarket.support.PlayerCatalogQueryData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,16 +35,35 @@ import org.springframework.test.context.TestExecutionListeners;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import({
+  TestcontainersConfiguration.class,
+  PlayerCatalogQueryData.class,
+  PlayerStatisticsQueryData.class
+})
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
 @org.junit.jupiter.api.Tag("integration")
 class PlayerCatalogServiceTest {
   @Autowired private PlayerCatalogService playerCatalogService;
+  @Autowired private PlayerCatalogQueryData catalogData;
+  @Autowired private PlayerStatisticsQueryData statistics;
 
   private PlayerCandidate candidate(String id, String name) {
     return new PlayerCandidate(id, name, "Team", "League", "Forward", null, null, "100");
+  }
+
+  private PlayerCatalogQueryData.Fixture eligiblePlayer(String name) {
+    var fixture = catalogData.player(name, "Forward", "Spain", null);
+    statistics.row(
+        fixture.playerId(),
+        LocalDate.of(2026, 10, 23),
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of("goals_total", BigDecimal.ZERO));
+    return fixture;
   }
 
   private PlayerSnapshot snapshot(PlayerCandidate... candidates) {
@@ -79,14 +104,8 @@ class PlayerCatalogServiceTest {
       assertThat(result.created()).isEqualTo(1);
       assertThat(result.discardedInvalid()).isZero();
 
-      // Verify
-      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
-          .singleElement()
-          .satisfies(
-              player -> {
-                assertThat(player.getName()).isEqualTo("José Pérez");
-                assertThat(player.getPosition()).isEqualTo("Midfielder");
-              });
+      // Sin extracción posterior, el alta no forma parte del catálogo elegible.
+      assertThat(playerCatalogService.getActivePlayers(0, 20)).isEmpty();
     }
 
     @Test
@@ -98,16 +117,7 @@ class PlayerCatalogServiceTest {
       assertThat(result.created()).isEqualTo(1);
       assertThat(result.updated()).isZero();
       assertThat(result.markedInactive()).isZero();
-      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
-          .singleElement()
-          .satisfies(
-              local -> {
-                assertThat(local.getId()).isNotNull();
-                assertThat(local.getName()).isEqualTo("New Player");
-                assertThat(local.getDateOfBirth()).isNull();
-                assertThat(local.getNationality()).isNull();
-                assertThat(local.getImageUrl()).isNull();
-              });
+      assertThat(playerCatalogService.getActivePlayers(0, 20)).isEmpty();
     }
 
     @Test
@@ -115,6 +125,7 @@ class PlayerCatalogServiceTest {
     void actualizaJugadoresExistentes() {
       PlayerCandidate original = candidate("91002", "Old");
       playerCatalogService.applySynchronization(snapshot(original));
+      statistics.makeSynchronizedPlayerEligible("91002");
       Long internalId =
           playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
       PlayerCandidate changed =
@@ -141,6 +152,7 @@ class PlayerCatalogServiceTest {
     void reactivaJugadorInactivoCuandoReaparece() {
       PlayerCandidate player = candidate("91003", "Player");
       playerCatalogService.applySynchronization(snapshot(player));
+      statistics.makeSynchronizedPlayerEligible("91003");
       Long id = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
       playerCatalogService.applySynchronization(snapshot());
       PlayerSynchronizationResult result =
@@ -158,6 +170,8 @@ class PlayerCatalogServiceTest {
       PlayerCandidate present = candidate("91004", "Present");
       PlayerCandidate absent = candidate("91005", "Absent");
       playerCatalogService.applySynchronization(snapshot(present, absent));
+      statistics.makeSynchronizedPlayerEligible("91004");
+      statistics.makeSynchronizedPlayerEligible("91005");
       PlayerSynchronizationResult result =
           playerCatalogService.applySynchronization(snapshot(present));
       assertThat(result.markedInactive()).isEqualTo(1);
@@ -172,6 +186,8 @@ class PlayerCatalogServiceTest {
       PlayerCandidate active = candidate("91006", "Active");
       PlayerCandidate inactive = candidate("91007", "Inactive");
       playerCatalogService.applySynchronization(snapshot(active, inactive));
+      statistics.makeSynchronizedPlayerEligible("91006");
+      statistics.makeSynchronizedPlayerEligible("91007");
       playerCatalogService.applySynchronization(snapshot(active));
       PlayerSynchronizationResult result =
           playerCatalogService.applySynchronization(snapshot(active));
@@ -193,7 +209,7 @@ class PlayerCatalogServiceTest {
       PlayerSynchronizationResult result = playerCatalogService.applySynchronization(photo);
       assertThat(result.obtained()).isEqualTo(2);
       assertThat(result.discardedInvalid()).isEqualTo(1);
-      assertThat(playerCatalogService.getActivePlayers(0, 20).getTotalElements()).isEqualTo(1);
+      assertThat(playerCatalogService.getActivePlayers(0, 20).getTotalElements()).isZero();
     }
 
     @Test
@@ -205,13 +221,7 @@ class PlayerCatalogServiceTest {
       PlayerSynchronizationResult result =
           playerCatalogService.applySynchronization(snapshot(first, duplicate));
       assertThat(result.created()).isEqualTo(1);
-      assertThat(playerCatalogService.getActivePlayers(0, 20).getContent())
-          .singleElement()
-          .satisfies(
-              local -> {
-                assertThat(local.getName()).isEqualTo("First");
-                assertThat(local.getLeague().getName()).isEqualTo("League");
-              });
+      assertThat(playerCatalogService.getActivePlayers(0, 20)).isEmpty();
     }
 
     @Test
@@ -233,6 +243,7 @@ class PlayerCatalogServiceTest {
       PlayerCandidate original =
           new PlayerCandidate("44", "N", "T", "L", "P", birth, "Spain", "100");
       playerCatalogService.applySynchronization(snapshot(original));
+      statistics.makeSynchronizedPlayerEligible("44");
       PlayerCandidate degraded =
           new PlayerCandidate("44", "N", "T", "L", "P", null, nationality, "100");
       playerCatalogService.applySynchronization(snapshot(degraded));
@@ -252,6 +263,7 @@ class PlayerCatalogServiceTest {
       PlayerCandidate original =
           new PlayerCandidate("44", "N", "T", "L", "P", LocalDate.of(1990, 1, 1), "Spain", "100");
       playerCatalogService.applySynchronization(snapshot(original));
+      statistics.makeSynchronizedPlayerEligible("44");
       PlayerCandidate changed =
           new PlayerCandidate(
               "44", "N", "T", "L", "P", LocalDate.of(1991, 1, 1), "Argentina", "100");
@@ -267,6 +279,7 @@ class PlayerCatalogServiceTest {
       // Arrange
       PlayerCandidate player = candidate("91011", "Player");
       playerCatalogService.applySynchronization(snapshot(player));
+      statistics.makeSynchronizedPlayerEligible("91011");
 
       // Act
       PlayerSynchronizationResult result =
@@ -290,6 +303,7 @@ class PlayerCatalogServiceTest {
     void revierteAnteFalloTecnico() {
       PlayerCandidate existing = candidate("44", "Original");
       playerCatalogService.applySynchronization(snapshot(existing));
+      statistics.makeSynchronizedPlayerEligible("44");
       PlayerCandidate changed = candidate("44", "Changed");
       PlayerCandidate tooLong = candidate("45", "X".repeat(256));
       assertThatThrownBy(
@@ -307,10 +321,9 @@ class PlayerCatalogServiceTest {
     @Test
     @DisplayName("La segunda página devuelve el jugador restante y metadatos correctos")
     void devuelveLaPaginaSolicitada() {
-      PlayerCandidate first = candidate("93001", "First");
-      PlayerCandidate second = candidate("93002", "Second");
-      PlayerCandidate third = candidate("93003", "Third");
-      playerCatalogService.applySynchronization(snapshot(first, second, third));
+      eligiblePlayer("First");
+      eligiblePlayer("Second");
+      eligiblePlayer("Third");
       Page<Player> result = playerCatalogService.getActivePlayers(1, 2);
       assertThat(result.getContent()).extracting(Player::getName).containsExactly("Third");
       assertThat(result.getNumber()).isEqualTo(1);
@@ -324,10 +337,9 @@ class PlayerCatalogServiceTest {
     @Test
     @DisplayName("La consulta no expone jugadores inactivos")
     void noDevuelveJugadoresInactivos() {
-      PlayerCandidate active = candidate("93007", "Active");
-      PlayerCandidate absent = candidate("93008", "Absent");
-      playerCatalogService.applySynchronization(snapshot(active, absent));
-      playerCatalogService.applySynchronization(snapshot(active));
+      eligiblePlayer("Active");
+      var inactive = eligiblePlayer("Inactive");
+      statistics.deactivate(inactive.playerId());
       Page<Player> result = playerCatalogService.getActivePlayers(0, 20);
       assertThat(result.getContent()).extracting(Player::getName).containsExactly("Active");
       assertThat(result.getTotalElements()).isEqualTo(1);
@@ -349,15 +361,34 @@ class PlayerCatalogServiceTest {
   @DisplayName("Consulta individual de un jugador visible")
   class PlayerDetail {
     @Test
+    @DisplayName("Distingue elegibilidad por métricas sin exigir score ni cotización")
+    void appliesMetricsEligibilityToDetail() {
+      // Arrange
+      var eligible = catalogData.player("Con métricas", "Forward", "Spain", null);
+      var excluded = catalogData.player("Sin métricas", "Forward", "France", null);
+      statistics.row(
+          eligible.playerId(),
+          LocalDate.of(2026, 10, 23),
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ZERO));
+
+      // Act / Assert
+      assertThat(playerCatalogService.getVisiblePlayerById(eligible.playerId()).getId())
+          .isEqualTo(eligible.playerId());
+      assertThatExceptionOfType(PlayerNotFoundException.class)
+          .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(excluded.playerId()));
+    }
+
+    @Test
     @DisplayName("Devuelve la identidad real con equipo y liga cargados")
     void devuelveJugadorVisible() {
-      playerCatalogService.applySynchronization(snapshot(candidate("94001", "Joel Robles")));
+      var player = eligiblePlayer("Joel Robles");
+      Player found = playerCatalogService.getVisiblePlayerById(player.playerId());
 
-      Player player = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst();
-
-      Player found = playerCatalogService.getVisiblePlayerById(player.getId());
-
-      assertThat(found.getId()).isEqualTo(player.getId());
+      assertThat(found.getId()).isEqualTo(player.playerId());
       assertThat(found.getName()).isEqualTo("Joel Robles");
       assertThat(found.getTeam()).isNotNull();
       assertThat(found.getLeague()).isNotNull();
@@ -367,9 +398,7 @@ class PlayerCatalogServiceTest {
     @Test
     @DisplayName("Un identificador inexistente produce la ausencia del jugador")
     void fallaSiElJugadorNoExiste() {
-      playerCatalogService.applySynchronization(snapshot(candidate("94002", "Existente")));
-
-      Long id = playerCatalogService.getActivePlayers(0, 20).getContent().getFirst().getId();
+      long id = eligiblePlayer("Existente").playerId();
 
       assertThatExceptionOfType(PlayerNotFoundException.class)
           .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(id + 100_000L))
@@ -379,18 +408,9 @@ class PlayerCatalogServiceTest {
     @Test
     @DisplayName("Un jugador inactivo es indistinguible de uno inexistente")
     void fallaSiElJugadorEstaInactivo() {
-      PlayerCandidate visible = candidate("94003", "Visible");
-      PlayerCandidate absent = candidate("94004", "Inactivo");
-      playerCatalogService.applySynchronization(snapshot(visible, absent));
-
-      Long inactiveId =
-          playerCatalogService.getActivePlayers(0, 100).getContent().stream()
-              .filter(player -> player.getName().equals("Inactivo"))
-              .map(Player::getId)
-              .findFirst()
-              .orElseThrow();
-
-      playerCatalogService.applySynchronization(snapshot(visible));
+      eligiblePlayer("Visible");
+      long inactiveId = eligiblePlayer("Inactivo").playerId();
+      statistics.deactivate(inactiveId);
 
       assertThatExceptionOfType(PlayerNotFoundException.class)
           .isThrownBy(() -> playerCatalogService.getVisiblePlayerById(inactiveId))

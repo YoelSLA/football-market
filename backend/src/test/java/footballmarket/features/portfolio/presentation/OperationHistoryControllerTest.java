@@ -67,6 +67,34 @@ class OperationHistoryControllerTest {
   class Consulta {
 
     @Test
+    @DisplayName("Conserva la operación histórica entregada aunque el jugador no sea elegible")
+    void conservaOperacionHistorica() throws Exception {
+      // Arrange
+      when(historyService.history(SUBJECT))
+          .thenReturn(
+              List.of(
+                  new OperationHistoryEntry(
+                      93L,
+                      OperationType.BUY,
+                      42L,
+                      "Jugador histórico",
+                      4,
+                      125L,
+                      500L,
+                      EXECUTED_AT)));
+
+      // Act / Assert
+      mvc.perform(get("/api/users/me/transactions").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$", hasSize(1)))
+          .andExpect(jsonPath("$[0].transactionId").value(93))
+          .andExpect(jsonPath("$[0].playerId").value(42))
+          .andExpect(jsonPath("$[0].unitPrice").value(125))
+          .andExpect(jsonPath("$[0].totalAmount").value(500));
+      verify(historyService).history(SUBJECT);
+    }
+
+    @Test
     @DisplayName("Devuelve el array con los ocho campos contractuales y propaga el subject")
     void devuelveHistorial() throws Exception {
       // Arrange

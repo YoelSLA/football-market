@@ -5,8 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-import footballmarket.features.catalog.application.PlayerCatalogService;
-import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.identity.application.PlayerIdentitySynchronizationService;
 import footballmarket.features.statistics.application.JsonStatisticsUpdateService;
 import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
@@ -60,7 +58,6 @@ class JsonStatisticsUpdateServiceTest {
   @Autowired private ExtractionRunManager runs;
   @Autowired private PlayerStatisticsQueryService query;
   @Autowired private PlayerIdentitySynchronizationService identities;
-  @Autowired private PlayerCatalogService catalogue;
   @Autowired private IdentityCatalogueFixture fixture;
   @Autowired private WhoScoredRequestPacer pacer;
   @MockitoBean private WhoScoredStatisticsIntegration integration;
@@ -69,6 +66,7 @@ class JsonStatisticsUpdateServiceTest {
 
   private List<WhoScoredProperties.Competition> bindings;
   private Long playerId;
+  private Long playerLeagueId;
 
   @BeforeEach
   void arrangeConfirmedPlayer() {
@@ -103,15 +101,15 @@ class JsonStatisticsUpdateServiceTest {
                   "page-" + tournament);
             });
     identities.synchronize();
-    this.playerId = catalogue.getActivePlayers(0, 10).getContent().getFirst().getId();
+    var context = fixture.playerContext("301");
+    this.playerId = context.playerId();
+    this.playerLeagueId = context.leagueId();
   }
 
   /** Competencia del proveedor equivalente a la liga del jugador bajo prueba. */
   private String playerTournament() {
-    Player player = catalogue.getActivePlayers(0, 10).getContent().getFirst();
-    Long leagueId = player.getTeam().getLeague().getId();
     for (WhoScoredProperties.Competition competition : this.bindings) {
-      if (competition.leagueId().equals(leagueId)) {
+      if (competition.leagueId().equals(this.playerLeagueId)) {
         return Integer.toString(competition.tournamentId());
       }
     }

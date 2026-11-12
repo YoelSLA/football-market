@@ -328,7 +328,7 @@ class QuoteQueryServiceTest {
     void filteredPagePreservesGlobalPosition() {
       // Arrange
       catalogue.prepare();
-      List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
+      List<Player> players = List.of(catalogue.player("301"), catalogue.player("302"));
       Player first = players.get(0);
       Player second = players.get(1);
       LocalDate day = LocalDate.of(2026, 10, 20);
@@ -362,7 +362,8 @@ class QuoteQueryServiceTest {
     void ordersPlayersByCurrentPrice() {
       // Arrange
       catalogue.prepare();
-      List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
+      List<Player> players =
+          List.of(catalogue.player("301"), catalogue.player("302"), catalogue.player("303"));
       Player mostExpensive = players.get(0);
       Player cheapest = players.get(1);
       Player carriedForward = players.get(2);
@@ -393,7 +394,7 @@ class QuoteQueryServiceTest {
     void showsCarriedForwardPrice() {
       // Arrange
       catalogue.prepare();
-      Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+      Player player = catalogue.player("301");
       LocalDate marketDate = LocalDate.of(2026, 10, 17);
       LocalDate quoteDate = LocalDate.of(2026, 10, 20);
       quoteData.prepareMetrics(player, marketDate);
@@ -415,7 +416,7 @@ class QuoteQueryServiceTest {
     void excludesPlayersWithoutMetrics() {
       // Arrange
       catalogue.prepare();
-      List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
+      List<Player> players = List.of(catalogue.player("301"), catalogue.player("302"));
       Player cotizable = players.get(0);
       Player withoutMetrics = players.get(1);
       LocalDate marketDate = LocalDate.of(2026, 10, 17);
@@ -449,7 +450,7 @@ class QuoteQueryServiceTest {
     void showsSingleEntryWhenRowsTie() {
       // Arrange
       catalogue.prepare();
-      Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+      Player player = catalogue.player("301");
       LocalDate marketDate = LocalDate.of(2026, 10, 17);
       Instant calculatedAt = Instant.parse("2026-10-17T09:00:00Z");
       quoteData.prepareMetrics(player, marketDate);
@@ -472,7 +473,7 @@ class QuoteQueryServiceTest {
     void showsSingleEntryWithEveryOrigin() {
       // Arrange
       catalogue.prepare();
-      Player player = playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+      Player player = catalogue.player("301");
       LocalDate marketDate = LocalDate.of(2026, 10, 17);
       quoteData.prepareMetrics(player, marketDate);
       quoteData.persistInitial(player, marketDate, Instant.parse("2026-10-17T09:00:00Z"));
@@ -513,7 +514,7 @@ class QuoteQueryServiceTest {
   }
 
   private Player firstPlayer() {
-    return playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+    return catalogue.player("301");
   }
 
   static class QueryClock extends Clock {

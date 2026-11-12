@@ -1,5 +1,16 @@
 # Informe de investigación: Catálogo de jugadores
 
+## Investigación del delta — 2026-11-11
+
+| Decisión | Motivo y evidencia | Alternativa descartada |
+| --- | --- | --- |
+| EXISTS de métricas en fecha máxima por jugador | `PlayerStatisticsRepository.findPricablePlayerIds` y `PlayerQuoteRepository.RANKED_QUOTES` ya usan fecha máxima y cualquier fila informada; cero cuenta | Cualquier fecha histórica, o filtrar después de paginar |
+| Alinear identidad y estadísticas en `findVisibleById` y revisar demás consumidores | Estadísticas comparte la elegibilidad de identidad; mercado también la consume, mientras las lecturas financieras históricas deben preservarse | Permitir consultar estadísticas de un jugador que el detalle rechaza o filtrar ciegamente las tenencias históricas |
+| Aplicar criterio a score y mercado | Ambos repositorios de valuación consultan cotización pero no métricas actuales; `TokenListingRepository.findMarket` comprueba visibilidad clásica | Suponer que una cotización antigua prueba elegibilidad actual |
+| Mantener lecturas financieras históricas | Portfolio usa `findAllByIdInWithTeam`, sin filtro de visibilidad | Eliminar registros o ocultar posiciones existentes |
+
+No se ejecutaron pruebas, consultas a base ni proveedores; estas decisiones son diseño pendiente de implementación.
+
 ## Decisiones técnicas
 
 ### Identidad del jugador y referencias externas

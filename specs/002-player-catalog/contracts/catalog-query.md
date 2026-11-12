@@ -1,5 +1,11 @@
 # Ampliación propuesta de lectura del catálogo — SPEC-005
 
+## Delta de elegibilidad acordado — 2026-11-11
+
+Este bloque sustituye las afirmaciones posteriores de población visible sin requisito de estadísticas y de compatibilidad idéntica de contenido. Para listado, conteo y opciones globales se exige, además de la visibilidad previa, alguna fila con `presentMetrics > 0` en la fecha máxima de extracción del jugador. Si hay dos fuentes en esa fecha basta una; cero informado cuenta y una fila vacía por sí sola no. Sin score o cotización se sigue apareciendo. El predicado se aplica antes de búsqueda, filtros, orden y paginación, también al conteo y a cada opción global.
+
+`GET /api/players/{id}` y `GET /api/players/{id}/statistics` con ID válido de jugador no elegible devuelven el 404 seguro existente, como para uno no visible; formato/rango inválido y autenticación conservan contratos previos. Para un jugador elegible sin snapshot confirmado en el contexto consultado, estadísticas conserva 200 `NO_DATA` con 60 ausencias, conforme a [SPEC-009](../../009-player-detail/contracts/player-statistics.md). Mercado y rankings excluyen al no elegible, incluso con cotización o valuación histórica; compras y ventas se rechazan sin movimientos. Tenencias e historial permanecen visibles y los datos históricos no se borran. No se alteran las formas JSON ni el orden predeterminado por este delta, pero la población cambia para todos los consumidores.
+
 Diseño documental 2026-10-25, no endpoint ya implementado ni autorización de código. Responsable funcional del rediseño: SPEC-005 FR-023–038. Conserva sincronización, visibilidad, identidad y operaciones de SPEC-002. Las referencias a `team`/`league` texto del contrato histórico no sustituyen los campos internos actuales `teamId/teamName`, `leagueId/leagueName`.
 
 ## GET /api/players

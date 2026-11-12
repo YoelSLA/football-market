@@ -48,6 +48,7 @@ class ScoreRankingQueryServiceTest {
     void ordersEntriesAndAssignsPositions() {
       // Arrange
       catalogue.prepare();
+      data.prepareCatalogueMetrics();
       List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
       Player lowerIdentifier =
           players.stream().min(java.util.Comparator.comparing(Player::getId)).orElseThrow();
@@ -81,6 +82,7 @@ class ScoreRankingQueryServiceTest {
     void maintainsTotalOrderAcrossRepeatedQueries() {
       // Arrange
       catalogue.prepare();
+      data.prepareCatalogueMetrics();
       List<Player> players =
           playerCatalogue.getActivePlayers(0, 10).getContent().stream()
               .sorted(java.util.Comparator.comparing(Player::getId))
@@ -116,6 +118,7 @@ class ScoreRankingQueryServiceTest {
     void exposesAttributeFinalScore() {
       // Arrange
       catalogue.prepare();
+      data.prepareCatalogueMetrics();
       List<Player> players =
           playerCatalogue.getActivePlayers(0, 10).getContent().stream()
               .sorted(java.util.Comparator.comparing(Player::getId))
