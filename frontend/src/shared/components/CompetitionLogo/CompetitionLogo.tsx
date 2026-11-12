@@ -4,6 +4,7 @@ import { getLeagueShield } from "@/shared/utils/leagueShield";
 import styles from "./CompetitionLogo.module.scss";
 
 export interface CompetitionLogoProps {
+	competitionId?: number;
 	competitionName: string;
 	src?: string | null;
 	className?: string;
@@ -13,6 +14,7 @@ export interface CompetitionLogoProps {
 }
 
 export default function CompetitionLogo({
+	competitionId,
 	competitionName,
 	src,
 	className,
@@ -21,7 +23,7 @@ export default function CompetitionLogo({
 	decoding = "async",
 }: CompetitionLogoProps) {
 	const [failedUrl, setFailedUrl] = useState<string | null>(null);
-	const url = src ?? getLeagueShield(competitionName);
+	const url = src ?? getLeagueShield(competitionName, competitionId);
 	const isAvailable = Boolean(url && url !== failedUrl);
 	const classNames = [styles.competitionLogo, className]
 		.filter(Boolean)

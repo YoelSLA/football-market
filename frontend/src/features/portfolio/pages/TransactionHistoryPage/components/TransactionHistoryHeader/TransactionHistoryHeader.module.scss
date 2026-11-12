@@ -1,0 +1,73 @@
+@use "@/styles/abstracts" as ds;
+
+.transactionHistoryHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-2xs;
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: 100%;
+	padding: ds.$space-2xs;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-2xs;
+		min-width: 0;
+	}
+
+	&__iconWrapper {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 40px;
+		height: 40px;
+		border-radius: 8px;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$accent-gain;
+	}
+
+	&__icon {
+		width: 20px;
+		height: 20px;
+		stroke-width: 2.5;
+	}
+
+	&__titleWrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 18px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__description {
+		margin: 0;
+		font-size: 12px;
+		line-height: 1.3;
+		color: ds.$text-subtle-on-dark;
+	}
+
+	&__count {
+		display: inline-flex;
+		align-items: center;
+		flex-shrink: 0;
+		margin: 0;
+		padding: 4px ds.$space-2xs;
+		border: 1px solid ds.$border-panel;
+		border-radius: 8px;
+		background-color: ds.$surface-panel-from;
+		color: ds.$accent-highlight;
+		font-size: 12px;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+}

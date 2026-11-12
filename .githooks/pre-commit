@@ -1,44 +1,71 @@
 #!/bin/bash
 
+set -u
+
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root" || exit 1
+
 echo "🚀 Ejecutando pre-commit..."
 
-echo ""
-echo "🔧 Verificando backend con Spotless..."
+needs_backend=false
+needs_frontend=false
+seen_path=false
 
-cd backend || {
-    echo "❌ No se encontró la carpeta backend."
-    echo "🚫 Commit cancelado."
-    exit 1
-}
+while IFS= read -r -d '' path; do
+    seen_path=true
+    case "$path" in
+        docs/*|specs/*|tp/*|*.md)
+            ;;
+        backend/*)
+            needs_backend=true
+            ;;
+        frontend/*)
+            needs_frontend=true
+            ;;
+        *)
+            # Configuración compartida, hooks y rutas desconocidas se validan de forma fail-closed.
+            needs_backend=true
+            needs_frontend=true
+            ;;
+    esac
+done < <(git diff --cached --name-only --no-renames --diff-filter=ACDMRTUXB -z --)
 
-if ! ./gradlew spotlessCheck --no-daemon; then
-    echo ""
-    echo "❌ Hay archivos del backend sin formatear."
-    echo "💡 Ejecutá ./gradlew spotlessApply dentro de la carpeta backend."
-    echo "🚫 Commit cancelado."
-    exit 1
-fi
-
-cd ..
-
-echo ""
-echo "🔧 Verificando frontend con Biome..."
-
-cd frontend || {
-    echo "❌ No se encontró la carpeta frontend."
-    echo "🚫 Commit cancelado."
-    exit 1
-}
-
-if ! npm run biome:check; then
-    echo ""
-    echo "❌ Biome encontró problemas en el frontend."
-    echo "💡 Ejecutá npm run biome:fix dentro de la carpeta frontend."
+if [[ "$seen_path" == false ]]; then
+    echo "❌ No se pudieron clasificar archivos staged."
     echo "🚫 Commit cancelado."
     exit 1
 fi
 
-cd ..
+if [[ "$needs_backend" == false && "$needs_frontend" == false ]]; then
+    echo "✅ Commit exclusivamente documental: no requiere controles ejecutables."
+    exit 0
+fi
+
+if [[ "$needs_backend" == true ]]; then
+    echo ""
+    echo "🔧 Verificando backend con Spotless..."
+
+    if ! (cd backend && ./gradlew spotlessCheck --no-daemon); then
+        echo ""
+        echo "❌ Hay archivos del backend sin formatear."
+        echo "💡 Ejecutá ./gradlew spotlessApply dentro de la carpeta backend."
+        echo "🚫 Commit cancelado."
+        exit 1
+    fi
+fi
+
+if [[ "$needs_frontend" == true ]]; then
+    echo ""
+    echo "🔧 Verificando frontend con Biome..."
+
+    if ! (cd frontend && npm run biome:check); then
+        echo ""
+        echo "❌ Biome encontró problemas en el frontend."
+        echo "💡 Ejecutá npm run biome:fix dentro de la carpeta frontend."
+        echo "🚫 Commit cancelado."
+        exit 1
+    fi
+fi
 
 echo ""
 echo "✅ Pre-commit finalizado correctamente."

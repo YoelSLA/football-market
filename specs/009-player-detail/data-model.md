@@ -1,255 +1,153 @@
 # Modelo de datos: Detalle individual del jugador
 
-## Modelo de presentación vigente — rediseño visual 2026-11-12
-
-No cambia el modelo persistido, el snapshot backend, el DTO ni el Model remoto frontend. El rediseño reutiliza `PlayerDetail`, `PlayerStatistics` y sus 60 `PlayerMetric` con las mismas reglas de contexto, fuente, cero y ausencia, e integra la cotización oficial proveniente de `PlayerQuotes`.
-
-### Estado local de la Page
-
-| Campo | Valores | Regla |
-| --- | --- | --- |
-| `playerId` | entero positivo o null | Del parámetro de ruta; identifica el conjunto de controles vigente |
-| `activeTab` | `'quotes'` / `'summary'` / `'catalog'` | `'quotes'` inicial por defecto; cambiar de pestaña no consulta otro snapshot |
-| `search` | texto | Búsqueda local normalizada por nombre o clave en catálogo |
-| `category` | `'all'` o una de ocho categorías | Filtro único, combinable con búsqueda en catálogo |
-
-El filtro `unit` de la implementación anterior se retira del estado visible y del contrato del Page Hook. Limpiar restablece `search=""` y `category="all"`. Cambiar jugador restablece ambos filtros y la pestaña sin conservar controles del ID anterior.
-
-### Modelos de presentación derivados
-
-- **Métrica de catálogo**: definición canónica + unidad visible + valor/source existente + `priority` 0/1/2 + etiqueta de relevancia. No persiste ni modifica el Model remoto.
-- **Grupo de catálogo**: categoría canónica + conteo total + métricas filtradas en orden disponible P→S→B y ausente al final.
-- **Resumen posicional**: cuatro tarjetas KPI principales (`SummaryKpiCard`) con prioridades y fallbacks deportivos para asegurar relevancia sin repetir métricas de cabecera ni duplicar entre paneles, y exactamente dos paneles temáticos específicos por posición (`SummaryPanel`) con filas de altura acotada (`min-height: 44px; max-height: 58px;`). Se eliminan definitivamente las barras de progreso sin escala (`PlayerStatisticsBars`) y el bloque de estadísticas destacadas (`PlayerSportsSummary`).
-- **Cotización oficial**: precio en créditos, badges de variación semántica (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y cálculo de cambio absoluto en créditos (`formatQuoteAbsoluteChange`).
-
-Estados remotos (`loading`, `error`, `AVAILABLE`, `PARTIAL`, `NO_DATA`) y conservación de respuesta compatible permanecen según el modelo funcional de 2026-10-25.
+**Estado**: Modelo vigente del sistema.
+**Referencias normativas**: [spec.md](spec.md), [plan.md](plan.md), [player-statistics.md](contracts/player-statistics.md) y [metric-glossary.md](contracts/metric-glossary.md).
 
 ---
 
-## Modelo vigente — rediseño 2026-10-25
-
-Este bloque gobierna el rediseño; lo posterior a «Antecedente histórico» conserva evidencia anterior. No introduce tablas ni modifica entidades de extracción. Identidad mantiene el contrato existente, separado de estadísticas.
+## 1. Entidades y modelos de lectura del backend
 
 ### Entidades persistidas reutilizadas
 
-| Entidad | Campos necesarios | Invariantes de consulta |
+| Entidad | Campos principales | Invariantes de consulta |
 | --- | --- | --- |
-| `Player` | ID, activo, equipo/liga, posición e identidad existentes | Visibilidad por `findVisibleById`; inexistente e inactivo indistinguibles |
-| `PlayerStatistics` | ID, jugador, extractionDate, source, seasonKey/label, providerCompetitionId, providerTeamId, contextStatus, observedAt, runItem y 60 valores nullable | Única por jugador/fecha/canal; solo contexto RESOLVED con item COMPLETED coherente; no deducir confirmación por existencia |
-| Item de extracción | ID, jugador, fecha, canal, result | Es el item referenciado por la fila; resultado COMPLETED tras publicación atómica |
-| `MetricCatalog` | Clave canónica, unidad, orden y cobertura de canal | Exactamente 60 claves; no añadir métricas ni inferir disponibilidad por cobertura |
+| `Player` | `id`, `name`, `teamId`, `teamName`, `leagueId`, `leagueName`, `position`, `dateOfBirth`, `nationality`, `imageUrl`, `fallbackImageUrl`, `active` | Visibilidad restringida por `findVisibleById`: jugador activo, equipo vigente y liga válida. Inexistente o no visible responden indistintamente 404. |
+| `PlayerStatistics` | `id`, `playerId`, `extractionDate`, `source`, `seasonKey`, `seasonLabel`, `competitionKey`, `observedAt`, `contextStatus`, 60 valores métricos (`BigDecimal` nullable) | Solo filas con contexto `RESOLVED` e ítem de extracción `COMPLETED`. Unicidad por `(extraction_date, source, player_id)`. |
+| `MetricCatalog` | `key`, `category`, `unit`, `canonicalOrder`, `coverage` | Catálogo canónico de exactamente 60 métricas de WhoScored. |
 
-`observedAt` en la fila corresponde al instante de confirmación usado por el writer, no a un evento de partido. Mantener `extractionDate` como fecha visible de extracción.
+### Modelo de lectura backend (`PlayerStatisticsSnapshot`)
 
-### Model de lectura backend
+Representa la composición determinista del snapshot estadístico para un jugador:
 
-`PlayerStatisticsSnapshot` (no entidad persistida): `playerId`, `requestedSeasonKey` nullable, `status` (`AVAILABLE`, `PARTIAL`, `NO_DATA`), `seasonKey`, `seasonLabel`, `extractionDate`, `competitionKey`, `competitionName` nullable y `metrics` de 60 entradas. Contexto nulo si no existe snapshot; `requestedSeasonKey` puede conservarse para explicar una búsqueda vacía. `competitionName` solo desde correspondencia local fiable de la clave de competición persistida; sin correspondencia, null y «Competición no disponible», sin inferir desde equipo/liga actuales ni afirmar que el nombre está almacenado en la fila.
+- `playerId` (`Long`): identificador del jugador.
+- `requestedSeasonKey` (`String` o `null`): temporada solicitada en la petición.
+- `status` (`SnapshotStatus`):
+  - `AVAILABLE`: 60 métricas con valor no nulo.
+  - `PARTIAL`: 1 a 59 métricas con valor no nulo.
+  - `NO_DATA`: 0 métricas con valor (jugador sin extracciones confirmadas).
+- `seasonKey` (`String` o `null`): temporada efectiva del snapshot resuelto.
+- `seasonLabel` (`String` o `null`): etiqueta legible de la temporada.
+- `extractionDate` (`LocalDate` o `null`): fecha efectiva de la extracción.
+- `competitionKey` (`String` o `null`): clave identificadora de la competición persistida.
+- `competitionName` (`String` o `null`): nombre de la competición si existe correspondencia local fiable; `null` en caso contrario.
+- `metrics` (`List<SnapshotMetricValue>`): lista de exactamente 60 elementos en orden canónico. Cada elemento contiene:
+  - `key` (`String`): clave canónica WhoScored.
+  - `unit` (`MetricUnit`): `SEASON_TOTAL`, `PER_MATCH`, `PERCENTAGE` o `AVERAGE_RATING`.
+  - `value` (`BigDecimal` o `null`): valor numérico o nulo si no hay registro.
+  - `source` (`MetricSource` o `null`): procedencia (`JSON`, `SCRAPING` o `null`).
 
-Cada valor: `key`, `unit`, `value` (`BigDecimal` o null), `source` (`JSON`, `SCRAPING` o null). Fuente nula si valor nulo; cero conserva su fuente. Procedencia por métrica, no un único origen que oculte composición. `competitionKey` identifica el contexto persistido del proveedor, no el ID de liga local ni una URL; no usar el equipo actual para reetiquetarlo.
-
-Selección: filtrar jugador, temporada si se pide y confirmación; fecha DESC → JSON antes de scraping para anclar contexto → observedAt DESC → ID DESC. Con ancla JSON, completar nulos solo desde scraping de igual jugador/seasonKey/fecha/competitionKey. Si JSON no existe, ancla scraping. No retroceder de fecha para rellenar ausencias. No unir temporadas o competiciones ni depender de estado global de run. Consultas dentro de transacción read-only repeatable-read; límite en Repository antes de materializar historia.
-
-Disponibilidad del snapshot: 60 no nulos → AVAILABLE; 1–59 → PARTIAL; 0 o sin candidato → NO_DATA. Una fila de 57 valores JSON es PARTIAL respecto del catálogo completo, no error de extracción. `NO_DATA` de la respuesta no equivale al resultado interno del item. No imponer presencia de minutos/apariciones para mostrar valores conocidos.
-
-### DTO y Model frontend
-
-Contrato HTTP en [contracts/player-statistics.md](contracts/player-statistics.md), DTO record backend y `PlayerStatisticsResponseDTO` frontend conceptualmente separados de `PlayerStatistics` Model frontend. Service invoca Mapper tipado; UI nunca recibe DTO.
-
-Metadatos frontend: `MetricDefinition` con key, label español, category y orden estable de spec; nombres/categorías/unidades visibles de [contracts/metric-glossary.md](contracts/metric-glossary.md), unidades técnicas contrastadas con backend. `PositionProfile` selecciona exactamente cuatro tarjetas, series y adicionales de spec. Posiciones: Goalkeeper→arquero, Defence/Defender→defensor, Midfield/Midfielder→mediocampista, Offence/Forward→delantero. No crear subposiciones; desconocida presenta generales y aviso.
-
-Relevancia P/S/B fija por posición, independiente de `value !== null`. Titularidades principal en cuatro perfiles; tiros al arco B/S/S/P; segunda amarilla S/S/S/S. No modificar tarjetas o series al recibirlas. Categorías y cantidades: General 5, Ataque 19, Pases 10, Regates 5, Duelos 3, Defensa 10, Portería 4, Disciplina 4.
-
-### Estado de interacción
-
-- Identidad: loading, invalid-id, not-found, error, ready (sesión invalidada por infraestructura existente).
-- Estadísticas: idle hasta identidad vigente → loading → error sin respuesta o ready con disponibilidad AVAILABLE/PARTIAL/NO_DATA. Refetch del mismo jugador/temporada conserva la última respuesta exitosa de Query Cache, su disponibilidad y fecha original; error de actualización se comunica además del contenido, con advertencia y reintento, nunca simula ausencia confirmada ni éxito nuevo. Cambio de contexto retira valores incompatibles. Sin temporada explícita, se conserva el último contexto resuelto del mismo jugador como lectura anterior, no se adivina temporada nueva. Una nueva respuesta exitosa NO_DATA reemplaza la anterior. No duplicar respuesta en un store para implementar esta regla.
-- Estado cliente local: pestaña inicial Resumen, texto y categoría; reset al cambiar ID. La temporada resuelta no crea selector. Query cache es única autoridad de datos remotos.
-- Navegación A→B: no presentar respuesta de A bajo B ni hacer una request para A en el render inicial de B; cancelar mediante signal y validar el ID vigente. Respuesta tardía no modifica controles ni contexto de B.
-- Filtros: intersección categoría/texto normalizado; ordenar disponibles P→S→B y luego ausentes, con desempate por orden canónico. Cero participa como disponible. Error y carga no convierten las 60 filas en ausencias confirmadas.
-
-Sin modelos de valoración, precios, percentiles o radar en el diseño vigente.
+**Reglas de selección de snapshot**:
+1. Filtrar por jugador y temporada (`seasonKey` si se especifica; en su defecto, última fecha disponible del jugador).
+2. Ordenar por fecha descendente (`extractionDate DESC`).
+3. Anclar contexto en la fuente `JSON`; desempatar por `observedAt DESC` e `id DESC`.
+4. Si hay valores nulos en el ancla JSON, completar exclusivamente con registros `SCRAPING` de la misma fecha, jugador, temporada y competición.
+5. Si no existe registro JSON, anclar en la extracción de `SCRAPING` confirmada.
 
 ---
 
-## Antecedente histórico del modelo anterior
+## 2. Modelos y DTOs del frontend
 
-## Contratos HTTP
+### Identidad del jugador (`PlayerDetail`)
 
-### PlayerDetailResponseDTO (nuevo, `GET /api/players/{id}`)
-
-Reutiliza el mismo conjunto de campos que `PlayerResponseDTO` del catálogo; la respuesta
-individual no introduce campos nuevos.
+Mapeado desde `PlayerDetailResponseDTO` (`GET /api/players/{id}`):
 
 | Campo | Tipo | Reglas |
 | --- | --- | --- |
-| `id` | `number` | Identificador interno requerido. |
-| `name` | `string` | Nombre requerido. |
-| `teamId` | `number` | Identificador interno del equipo actual; requerido. |
-| `teamName` | `string` | Nombre del equipo actual; requerido. |
-| `leagueId` | `number` | Identificador interno de la liga; requerido. |
-| `leagueName` | `string` | Nombre de la liga; requerido. |
-| `position` | `string` | Posición persistida; requerida, sin catálogo cerrado. |
-| `dateOfBirth` | `string \| null` | Fecha `yyyy-MM-dd` o `null` si la fuente no la informa. |
-| `nationality` | `string \| null` | Nacionalidad o `null`. |
-| `imageUrl` | `string \| null` | Retrato principal persistido o `null`. |
-| `fallbackImageUrl` | `string \| null` | Retrato alternativo o `null`. |
+| `id` | `number` | Identificador interno positivo. |
+| `name` | `string` | Nombre del jugador. |
+| `teamId` / `teamName` | `number` / `string` | Identificador y nombre del equipo actual. |
+| `leagueId` / `leagueName` | `number` / `string` | Identificador y nombre de la liga. |
+| `position` | `string` | Posición textual (`Goalkeeper`, `Defender`, `Midfielder`, `Forward`). |
+| `dateOfBirth` | `string \| null` | Fecha ISO (`yyyy-MM-dd`) o `null` («No disponible»). |
+| `nationality` | `string \| null` | País o `null` («No disponible»). |
+| `imageUrl` / `fallbackImageUrl` | `string \| null` | URLs de imágenes con degradación a icono genérico. |
+| `active` | `boolean` | Siempre `true` en respuestas exitosas de detalle. |
 
-Reglas transversales:
+### Estadísticas del jugador (`PlayerStatistics`)
 
-- La respuesta solo contiene jugadores que cumplen la visibilidad del catálogo: `active = true`,
-  equipo vigente y liga válida. Un jugador existente pero no visible responde `404` con el
-  contrato global de errores, sin revelar identidad ni estado.
-- No se exponen identificadores ni referencias de proveedores, ni información de scraping,
-  imágenes, sincronizaciones o auditoría.
-- No se incluyen estadísticas ni cotizaciones en esta respuesta: pertenecen a la fuente de
-  demostración del frontend y a la integración posterior.
-
-### ErrorResponseDTO (contrato global existente, sin cambios)
+Mapeado desde `PlayerStatisticsResponseDTO` (`GET /api/players/{id}/statistics`):
 
 | Campo | Tipo | Reglas |
 | --- | --- | --- |
-| `timestamp` | `string` | Momento de la respuesta. |
-| `status` | `number` | Código HTTP; en esta consulta, 400, 401 o 404. Los fallos técnicos locales de lectura no tienen código asignado en esta SPEC. |
-| `error` | `string` | Razón HTTP. |
-| `code` | `string` | Identificador estable del error. |
-| `message` | `string` | Texto legible, nunca identificador programático. |
-| `path` | `string` | Ruta solicitada. |
+| `playerId` | `number` | Identificador del jugador. |
+| `status` | `'AVAILABLE' \| 'PARTIAL' \| 'NO_DATA'` | Disponibilidad del snapshot. |
+| `seasonKey` / `seasonLabel` | `string \| null` | Temporada resuelta. |
+| `extractionDate` | `string \| null` | Fecha ISO de extracción. |
+| `competitionKey` / `competitionName` | `string \| null` | Contexto de competición o fallback accesible. |
+| `metrics` | `PlayerMetric[]` | Array de exactamente 60 elementos canónicos. |
 
-Códigos previstos para la consulta individual:
+Cada `PlayerMetric` contiene:
+- `key`: clave canónica según [metric-glossary.md](contracts/metric-glossary.md).
+- `unit`: unidad técnica del backend (`SEASON_TOTAL`, `PER_MATCH`, `PERCENTAGE`, `AVERAGE_RATING`).
+- `value`: número o `null`.
+- `source`: procedencia (`JSON`, `SCRAPING` o `null`).
 
-| Situación | HTTP | `code` |
-| --- | --- | --- |
-| `id` con formato inválido | 400 | `INVALID_PARAMETER_TYPE` (handler existente) |
-| Sin sesión válida o vencida | 401 | Sin cuerpo contractual (comportamiento vigente) |
-| Jugador inexistente, inactivo o no visible | 404 | Código estable propio de «jugador no encontrado» |
-| Fallo técnico local al resolver la identidad | Sin código asignado en esta SPEC | La UI lo trata como error de comunicación con reintento |
+### Cotizaciones del jugador (`PlayerQuote`)
 
-## Model frontend
-
-### PlayerDetail
-
-Representación de la identidad real consultada. Reutiliza el concepto `Player` del catálogo
-ampliado con los campos que el catálogo ya expone pero la tarjeta no usa.
-
-| Campo | Tipo | Origen y reglas |
-| --- | --- | --- |
-| `id` | `number` | Del DTO; identifica también la fuente de demostración. |
-| `name` | `string` | Del DTO. |
-| `teamId` / `teamName` | `number` / `string` | Del DTO. |
-| `leagueId` / `leagueName` | `number` / `string` | Del DTO. |
-| `position` | `string` | Del DTO. |
-| `dateOfBirth` | `string \| null` | Del DTO; `null` se presenta como «No disponible». |
-| `nationality` | `string \| null` | Del DTO; mismo tratamiento que la fecha. |
-| `imageUrl` / `fallbackImageUrl` | `string \| null` | Del DTO; se prueban en orden antes del icono genérico. |
-| `active` | `true` | Inferido por el Mapper: la consulta individual solo devuelve jugadores visibles. |
-
-### PlayerSampleSeason (nuevo, demostración)
+Integrado desde `GET /api/players/{id}/quotes` y `GET /api/players/{id}/quotes/current`:
 
 | Campo | Tipo | Reglas |
 | --- | --- | --- |
-| `playerId` | `number` | Dueño de las estadísticas simuladas. |
-| `season` | `string` | Temporada fija `2025/2026`. |
-| `matches` | `number` | Entero `>= 0`. |
-| `goals` | `number` | Entero `>= 0`; `0` cuando `matches = 0`. |
-| `assists` | `number` | Entero `>= 0`; `0` cuando `matches = 0`. |
-| `minutesPlayed` | `number` | Entero `>= 0`; `0` cuando `matches = 0`. |
-| `isDemo` | `true` | Marca de procedencia; alimenta la etiqueta «Datos de demostración». |
+| `currentPrice` | `number \| null` | Precio oficial actual en créditos. |
+| `previousPrice` | `number \| null` | Precio de la sesión anterior o referencia base. |
+| `quoteDate` | `string \| null` | Fecha ISO de la cotización oficial. |
+| `absoluteChange` | `number \| null` | Diferencia en créditos (`currentPrice - previousPrice`). |
+| `percentageChange` | `number \| null` | Variación porcentual calculada. |
+| `quoteHistory` | `TokenQuotePoint[]` | Serie cronológica de cotizaciones para el gráfico interactivo. |
 
-Invariantes:
+---
 
-- Los cuatro valores se derivan de una función determinista de (`playerId`, `season`): el mismo
-  par produce siempre el mismo resultado.
-- No se exige que pares distintos produzcan combinaciones distintas. La spec solo requiere que
-  el valor no sea un bloque fijo común a todo el catálogo, sin unicidad matemática por métrica.
-- `matches = 0` implica goles, asistencias y minutos `0`.
-- No se persiste ni se envía al backend.
+## 3. Estado local y de interacción de la página
 
-### TokenQuotePoint (nuevo, demostración)
+El hook `usePlayerDetailPage` centraliza el estado local y la coordinación de consultas:
 
-| Campo | Tipo | Reglas |
+| Campo | Tipo / Valores | Comportamiento |
 | --- | --- | --- |
-| `playerId` | `number` | Dueño de la serie. |
-| `date` | `string` | Fecha `yyyy-MM-dd` del período fijo de demostración. |
-| `price` | `number` | Precio del token en créditos, `>= 0`. |
-| `isDemo` | `true` | Marca de procedencia. |
+| `playerId` | `number` | Identificador del jugador obtenido de la ruta activa. |
+| `activeTab` | `'quotes'` \| `'summary'` \| `'catalog'` | Pestaña activa. Predeterminada inicial: `'quotes'`. |
+| `search` | `string` | Texto de búsqueda local para filtrar métricas en el catálogo. |
+| `category` | `'all'` \| categoría canónica | Filtro de categoría en el catálogo. |
 
-Invariantes:
+### Invariantes de estado y caché
 
-- El caso normal genera una cotización diaria durante treinta días consecutivos del período fijo
-  de demostración, ordenadas cronológicamente y estables entre recargas.
-- El precio y la fecha actuales coinciden exactamente con el último punto.
-- No depende del reloj del navegador ni de aleatoriedad por renderizado.
+1. **Aislamiento por jugador**: Al cambiar de `playerId`, se reinician `search=""`, `category="all"` y la pestaña vuelve a `'quotes'`. Se cancelan peticiones pendientes del jugador anterior mediante `AbortSignal`.
+2. **Conservación de respuesta compatible**: Si una actualización en segundo plano (refetch) falla por error de red, se mantiene visible la última respuesta exitosa en caché del mismo `playerId` con advertencia de desactualización y opción de reintento.
+3. **Semántica de nulo frente a cero**: Un valor `0` es un dato válido medido y confirmado; un valor `null` indica ausencia de datos y se representa con un guion (`-`), sin equivalencias entre ambos.
 
-### TokenQuoteSnapshot (nuevo, demostración)
+---
 
-| Campo | Tipo | Reglas |
-| --- | --- | --- |
-| `playerId` | `number` | Dueño de la serie. |
-| `price` | `number \| null` | Último punto de la serie; `null` si la serie está vacía. |
-| `date` | `string \| null` | Fecha del último punto; `null` si la serie está vacía. |
-| `absoluteChange` | `number \| null` | Último menos anterior; `null` con menos de dos puntos. |
-| `percentageChange` | `number \| null` | `null` con un punto, serie vacía o precio anterior `0`. |
-| `direction` | `"up" \| "down" \| "flat" \| "unknown"` | Señal derivado del cambio; `unknown` con menos de dos puntos; nunca el único indicador. |
-| `isDemo` | `true` | Marca de procedencia. |
+## 4. Modelos derivados de presentación
 
-Representación de una serie vacía: `price` y `date` son `null`, `absoluteChange` y
-`percentageChange` son `null` y `direction` es `unknown`. No se inventa un precio de cero ni una
-fecha sustituta; la UI informa que no hay historial disponible.
+### Tarjetas KPI principales (`SummaryKpiCard`)
 
-### TokenQuoteSeries (nuevo, demostración)
+Cuatro tarjetas fijas por posición:
+- `title`: nombre de la métrica (12 px).
+- `value`: valor formateado (28 px bold).
+- `icon`: icono representativo (24 px en caja de 48×48 px).
+- `context`: información contextual o subtítulo sin redundancia de unidades.
 
-| Campo | Tipo | Reglas |
-| --- | --- | --- |
-| `playerId` | `number` | Dueño de la serie. |
-| `points` | `TokenQuotePoint[]` | Ordered cronológicamente; vacío y de un punto son estados válidos. |
-| `snapshot` | `TokenQuoteSnapshot` | Derivado de `points`; nunca calculado de forma independiente. |
+### Paneles temáticos de resumen (`SummaryPanel`)
 
-## Constantes de demostración
+Dos paneles específicos según la posición del jugador:
+- Arquero: *Atajadas por zona* y *Distribución y juego con pies*.
+- Defensor: *Acciones defensivas* y *Duelos y disciplina*.
+- Mediocampista: *Construcción y distribución* y *Posesión y equilibrio*.
+- Delantero: *Definición por zona* y *Juego ofensivo y generación*.
 
-| Constante | Valor | Uso |
-| --- | --- | --- |
-| Temporada deportiva | `2025/2026` | Etiqueta común de estadísticas y resumen deportivo. |
-| Período financiero | Treinta días consecutivos con una cotización diaria | Serie de cotización; fechas fijas, no relativas al reloj. No se exige que coincidan con la temporada deportiva 2025/2026. |
-| Unidad de cotización | Créditos | Etiqueta de precio del token. |
+Cada fila de panel cumple:
+- `min-height: 44px; max-height: 58px;`
+- Espaciado armónico vertical (`justify-content: space-evenly`).
 
-La elección concreta de las treinta fechas del período se define en la implementación como
-constantes fijas del módulo de demostración, independientes del reloj y estables para toda la
-demostración. No se exige que ese período coincida con la temporada deportiva 2025/2026, cuya
-relación con las cotizaciones no está definida por el enunciado.
+### Grupos del catálogo (`MetricCategoryGroup`)
 
-## Estados de la pantalla
+Estructura de agrupación para las 60 métricas canónicas:
+- General (5 métricas)
+- Ataque (19 métricas)
+- Pases (10 métricas)
+- Regates (5 métricas)
+- Duelos (3 métricas)
+- Defensa (10 métricas)
+- Portería (4 métricas)
+- Disciplina (4 métricas)
 
-| Estado | Origen | Contenido permitido |
-| --- | --- | --- |
-| `loading` | Consulta de identidad en curso | Indicador de carga y navegación; sin datos. |
-| `not-found` | `404` | «Jugador no encontrado» y regreso al catálogo; sin simulaciones. |
-| `invalid-id` | `400` o id no numérico | Mensaje de identificador inválido y regreso. |
-| `unauthenticated` | `401` | Flujo de acceso existente; sin datos privados. |
-| `error` | Fallo técnico o de red | Mensaje y reintento; sin identidad ficticia. |
-| `ready` | Identidad real resuelta | Identidad, estadísticas y cotización de demostración. |
-
-## Recursos gráficos decorativos (2026-10-13)
-
-No forman parte del modelo: no se persisten, no viajan por la API y no amplían el contrato. Se
-resuelven en la capa de presentación a partir de datos ya presentes en la identidad del jugador.
-
-| Recurso | Origen del dato | Procedencia | Resultado |
-| --- | --- | --- | --- |
-| Escudo del equipo | `teamName` | Registro local de escudos importados en build, con coincidencia por nombre normalizado | URL de recurso o `null` ante ausencia o colisión |
-| Bandera de nacionalidad | `nationality` | Servicio externo de banderas consultado en runtime | URL de recurso o `null` ante ausencia |
-| Retrato | `imageUrl`, `fallbackImageUrl` | Contrato del backend, con icono genérico local como último recurso | Recurso local del icono genérico |
-
-`null` produce un marcador de posición accesible y nunca oculta el dato textual. La bandera es la
-única dependencia de red añadida el 2026-10-13 y su falla no puede impedir comprender el catálogo.
-
-## Relación entre entidades
-
-```text
-PlayerDetail (identidad real)
-  ├─ informa breadcrumb, ficha principal y navbar activa
-  └─ PlayerSampleSeason (por playerId + 2025/2026)
-  └─ TokenQuoteSeries (por playerId, 30 puntos fijos)
-        └─ TokenQuoteSnapshot (derivado del último y penúltimo punto)
-```
-
-Las entidades de demostración dependen solo de `playerId`; nunca se asocian a un ID no resuelto.
+Orden de presentación: Disponibles por prioridad (Principal → Secundaria → Base) y al final las métricas ausentes (`value === null`).

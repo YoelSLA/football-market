@@ -4,6 +4,8 @@ import footballmarket.common.presentation.ErrorResponses;
 import footballmarket.common.presentation.dtos.ErrorResponseDTO;
 import footballmarket.features.portfolio.domain.exceptions.FinancialPositionIntegrityException;
 import footballmarket.features.portfolio.domain.exceptions.PortfolioIntegrityException;
+import footballmarket.features.portfolio.presentation.exceptions.InvalidOperationHistoryCriteriaException;
+import footballmarket.features.portfolio.presentation.exceptions.InvalidOperationHistoryDateRangeException;
 import footballmarket.features.portfolio.presentation.exceptions.InvalidPortfolioPageException;
 import footballmarket.features.portfolio.presentation.exceptions.InvalidPortfolioStatusException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +19,22 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Order(100)
 @RestControllerAdvice
 public class PortfolioExceptionHandler {
+
+  /** Traduce criterios inválidos del historial. */
+  @ExceptionHandler(InvalidOperationHistoryCriteriaException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidOperationHistoryCriteria(
+      InvalidOperationHistoryCriteriaException exception, HttpServletRequest request) {
+    return ErrorResponses.build(
+        exception.getMessage(), "INVALID_PARAMETER_TYPE", HttpStatus.BAD_REQUEST, request);
+  }
+
+  /** Traduce un rango temporal vacío o invertido. */
+  @ExceptionHandler(InvalidOperationHistoryDateRangeException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidOperationHistoryDateRange(
+      InvalidOperationHistoryDateRangeException exception, HttpServletRequest request) {
+    return ErrorResponses.build(
+        exception.getMessage(), "INVALID_DATE_RANGE", HttpStatus.BAD_REQUEST, request);
+  }
 
   /**
    * Traduce parámetros de paginación inválidos en consultas de cartera.

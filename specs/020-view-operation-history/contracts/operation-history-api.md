@@ -1,85 +1,115 @@
 # Contrato HTTP: Historial personal de operaciones
 
-**Feature**: SPEC-020 · **Rama**: `feat/020-view-operation-history` · **Fecha**: 2026-10-24
+**Endpoint**: `GET /api/users/me/transactions`
+**Estado**: Contrato backend vigente del sistema.
+**Referencias normativas**: [spec.md](../spec.md), [plan.md](../plan.md) y [data-model.md](../data-model.md).
 
-Este documento es la referencia funcional y normativa del endpoint. Las anotaciones OpenAPI, los
-DTO y las pruebas funcionales de Controller deben permanecer coherentes con él.
+---
 
-## GET /api/users/me/transactions
+## 1. Solicitud
 
-Devuelve todas las operaciones confirmadas en las que participó el usuario autenticado.
+```http
+GET /api/users/me/transactions?page=0&size=20&type=BUY&sort=NEWEST
+Authorization: Bearer <JWT>
+```
 
-### Identidad y autorización
+### Parámetros de consulta (Query parameters)
 
-- Requiere JWT Bearer válido.
-- La identidad se obtiene exclusivamente del subject del JWT.
-- No acepta path variable, query parameter ni body para seleccionar usuario.
-- Una solicitud sin autenticación válida responde `401` antes de ejecutar el caso de uso.
+| Parámetro | Tipo | Default | Reglas |
+| --- | --- | --- | --- |
+| `page` | integer | `0` | Índice de página basado en cero; `page >= 0`. |
+| `size` | integer | `20` | Tamaño de página; `1 <= size <= 100`. |
+| `search` | string | `null` | Texto de búsqueda comparado con el nombre actual normalizado del jugador. |
+| `type` | string | `null` | Filtro por tipo de operación: `BUY` o `SELL`. |
+| `executedFrom` | string (ISO-8601) | `null` | Instante temporal inicial inclusivo con offset. |
+| `executedBefore` | string (ISO-8601) | `null` | Instante temporal final exclusivo con offset; debe ser estrictamente posterior a `executedFrom`. |
+| `sort` | string | `NEWEST` | Valores permitidos: `NEWEST`, `OLDEST`, `AMOUNT_DESC`, `AMOUNT_ASC`. |
 
-### Request
+---
 
-Sin body y sin parámetros. Paginación, filtros, exportación, estadísticas y agregaciones no forman
-parte del contrato.
-
-### Response 200 OK
-
-Array JSON completo, ordenado por `executedAt` descendente y, en empate, por `transactionId`
-descendente.
+## 2. Respuesta 200 — Éxito
 
 ```json
-[
-  {
-    "transactionId": 92,
-    "type": "SELL",
-    "playerId": 41,
-    "playerName": "Joel Robles",
-    "quantity": 5,
-    "unitPrice": 125,
-    "totalAmount": 625,
-    "executedAt": "2026-10-24T14:30:00Z"
+{
+  "summary": {
+    "totalTransactions": 124,
+    "buyTransactions": 76,
+    "sellTransactions": 48,
+    "boughtTokens": 231,
+    "soldTokens": 109,
+    "purchasedVolume": 1245000,
+    "soldVolume": 892000
+  },
+  "transactions": [
+    {
+      "transactionId": 92,
+      "type": "BUY",
+      "player": {
+        "id": 41,
+        "name": "Lionel Messi",
+        "imageUrl": "https://example.test/player-cutout.png",
+        "fallbackImageUrl": "https://example.test/player-thumbnail.png",
+        "team": {
+          "id": 17,
+          "name": "Inter Miami CF"
+        },
+        "league": {
+          "id": 8,
+          "name": "Major League Soccer"
+        }
+      },
+      "quantity": 5,
+      "unitPrice": 125,
+      "totalAmount": 625,
+      "executedAt": "2026-11-10T14:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 0,
+    "size": 20,
+    "totalElements": 124,
+    "totalPages": 7
   }
-]
+}
 ```
 
-| Campo | Tipo | Regla |
+### Reglas de campos de respuesta
+
+- **`summary`**: Métricas agregadas sobre todo el conjunto filtrado. Los volúmenes se expresan en centésimas de crédito y no representan rentabilidad ni ganancias.
+- **`transactions`**: Subconjunto paginado de transacciones. Si no hay transacciones o filtros sin coincidencias, devuelve array vacío `[]`.
+- **`transactions[].type`**: `BUY` si el usuario de la sesión fue comprador; `SELL` si fue vendedor.
+- **`transactions[].player`**: Perfil actual del jugador en el catálogo; `imageUrl` y `fallbackImageUrl` pueden ser `null`.
+- **`transactions[].quantity` / `unitPrice` / `totalAmount` / `executedAt`**: Valores inmutables confirmados.
+- **`pagination`**: Información de paginación server-side. Si `page` excede las páginas reales, conserva `totalElements` y `totalPages` válidos devolviendo `transactions: []`.
+
+---
+
+## 3. Criterios de ordenamiento determinista
+
+Todos los criterios garantizan resultados reproducibles sin duplicación ni salto de filas entre páginas:
+
+| Criterio | Clave primaria de orden | Desempate determinista |
 | --- | --- | --- |
-| `transactionId` | entero 64 bits | Identificador persistido de la transacción |
-| `type` | string | `BUY` si la sesión corresponde al comprador; `SELL` si corresponde al vendedor |
-| `playerId` | entero 64 bits | Identificador interno del jugador |
-| `playerName` | string | Nombre persistido del jugador |
-| `quantity` | entero | Tokens transferidos |
-| `unitPrice` | entero 64 bits | Precio histórico por token, en centésimas de crédito |
-| `totalAmount` | entero 64 bits | Importe histórico total, en centésimas de crédito |
-| `executedAt` | string `date-time` | Instante de confirmación ISO-8601 con offset |
+| `NEWEST` (default) | `executedAt DESC` | `transactionId DESC` |
+| `OLDEST` | `executedAt ASC` | `transactionId ASC` |
+| `AMOUNT_DESC` | `totalAmount DESC` | `executedAt DESC, transactionId DESC` |
+| `AMOUNT_ASC` | `totalAmount ASC` | `executedAt DESC, transactionId DESC` |
 
-Los precios y el importe se copian del registro confirmado; no se calculan con cotizaciones
-vigentes. No se exponen comprador, vendedor, saldos, tenencias ni datos de otra persona.
+---
 
-### Historial vacío
+## 4. Respuestas de error
 
-Un usuario autenticado sin operaciones recibe `200 OK` con:
-
-```json
-[]
-```
-
-### Errores
-
-| Situación | HTTP | Cuerpo |
+| Código HTTP | `code` en cuerpo | Causa |
 | --- | --- | --- |
-| JWT ausente, inválido o vencido | 401 | Emitido por Spring Security; no se garantiza cuerpo |
-| El subject válido no corresponde a un usuario persistido | 401 | La autenticación persistida rechaza la sesión sin revelar historiales |
-| Fallo interno inesperado | 500 | `ErrorResponseDTO`, sin datos financieros parciales |
+| **400 Bad Request** | `INVALID_PARAMETER_TYPE` | Formato o rango inválido en `page`, `size`, `type` o `sort`. |
+| **400 Bad Request** | `INVALID_DATE_RANGE` | `executedFrom` es igual o posterior a `executedBefore`. |
+| **401 Unauthorized** | — | Token JWT ausente, inválido, vencido o con subject no persistido en la base de datos. |
+| **500 Server Error** | `INTERNAL_ERROR` | Fallo interno en la ejecución; no expone información parcial. |
 
-### Solo lectura e idempotencia
+---
 
-La operación se ejecuta en transacción `readOnly`. Repetirla sobre el mismo estado devuelve la misma
-colección y no crea, modifica ni elimina transacciones, saldos, tenencias, publicaciones o
-cotizaciones.
+## 5. Seguridad y transaccionalidad
 
-## Referencias
-
-- [`../spec.md`](../spec.md)
-- [`../data-model.md`](../data-model.md)
-- [`../research.md`](../research.md)
-- `docs/backend/architecture.md` §1.7
+- La ruta requiere autenticación obligatoria mediante token Bearer JWT.
+- La identidad se deriva exclusivamente del token; no se permite suplantación de usuario.
+- La operación es transaccional y de solo lectura (`@Transactional(readOnly = true)`).

@@ -1,16 +1,31 @@
 package footballmarket.features.portfolio.application;
 
-import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
-import java.util.List;
+import footballmarket.features.portfolio.domain.records.OperationHistoryView;
+import java.time.OffsetDateTime;
 
 /** Consulta de solo lectura del historial financiero del usuario autenticado. */
 public interface OperationHistoryService {
 
   /**
-   * Devuelve todas las operaciones confirmadas de la identidad de sesión, en orden descendente.
+   * Devuelve una página de operaciones confirmadas y los agregados del conjunto filtrado.
    *
    * @param subjectEmail subject del JWT autenticado
-   * @return compras y ventas propias con sus valores históricos
+   * @param page página basada en cero
+   * @param size tamaño entre uno y cien
+   * @param search nombre actual opcional del jugador
+   * @param type tipo opcional BUY o SELL
+   * @param executedFrom instante inicial inclusivo
+   * @param executedBefore instante final exclusivo
+   * @param sort orden cerrado del contrato
+   * @return historial personal paginado
    */
-  List<OperationHistoryEntry> history(String subjectEmail);
+  OperationHistoryView history(
+      String subjectEmail,
+      int page,
+      int size,
+      String search,
+      String type,
+      OffsetDateTime executedFrom,
+      OffsetDateTime executedBefore,
+      String sort);
 }

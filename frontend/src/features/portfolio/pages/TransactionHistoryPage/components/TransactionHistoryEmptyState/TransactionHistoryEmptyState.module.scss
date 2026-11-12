@@ -1,0 +1,71 @@
+@use "@/styles/abstracts" as ds;
+
+.transactionHistoryEmptyState {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: minmax(0, 440px);
+	grid-template-rows: auto auto auto auto;
+	align-items: center;
+	align-content: center;
+	justify-content: center;
+	justify-items: center;
+	gap: 4px;
+	flex: 1;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 0;
+	padding: ds.$space-2xs;
+
+	// 5. 🔤 Typography
+	text-align: center;
+
+	&__icon {
+		// 4. 📦 Box Model
+		width: 32px;
+		height: 32px;
+		margin-bottom: 4px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-dimmed-on-dark;
+		stroke-width: 2;
+	}
+
+	&__title {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 15px;
+		font-weight: 700;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
+	}
+
+	&__description {
+		// 4. 📦 Box Model
+		margin: 0;
+		max-width: 440px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		line-height: 1.35;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
+	}
+
+	&__action {
+		// 4. 📦 Box Model
+		min-height: 34px;
+		margin-top: ds.$space-2xs;
+		padding: 6px 12px;
+		border-radius: 6px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 600;
+	}
+}

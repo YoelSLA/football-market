@@ -173,7 +173,7 @@ class PlayerStatisticsCoverageTest {
 
     @Test
     @DisplayName("Confirmar otro canal o la fecha siguiente no completa la campaña de scraping")
-    void campañasIndependientes() {
+    void campanasIndependientes() {
       // Arrange
       Long playerId = playerWithReference("100");
       confirm(playerId, MetricSource.JSON, PlayerExtractionResult.COMPLETED);

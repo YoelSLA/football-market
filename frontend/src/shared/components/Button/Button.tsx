@@ -3,10 +3,22 @@ import styles from "./Button.module.scss";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	unstyled?: boolean;
+	variant?: "primary" | "secondary";
 }
 
+const BUTTON_VARIANT_CLASSES = {
+	primary: styles.button_primary,
+	secondary: styles.button_secondary,
+} as const;
+
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-	{ className, type = "button", unstyled = false, ...props },
+	{
+		className,
+		type = "button",
+		unstyled = false,
+		variant = "primary",
+		...props
+	},
 	ref,
 ) {
 	return (
@@ -17,9 +29,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
 			className={
 				unstyled
 					? className
-					: className
-						? `${styles.button} ${className}`
-						: styles.button
+					: [styles.button, BUTTON_VARIANT_CLASSES[variant], className]
+							.filter(Boolean)
+							.join(" ")
 			}
 		/>
 	);

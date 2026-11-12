@@ -1,227 +1,98 @@
 # Guía de validación: Detalle individual del jugador
 
-## Validación vigente — rediseño visual 2026-11-12
-
-Después de la implementación del rediseño, contrastar la página de detalle del jugador con el [wireframe canónico](../../docs/wireframes/player-detail.md) usando un jugador real de cada posición. La validación visual comprueba la estructura de cabecera de 3 zonas, las 3 pestañas ordenadas, el resumen deportivo compacto de 4 KPI + 2 paneles temáticos, la paleta de tokens semánticos y la ausencia de scroll en escritorio.
-
-| Área | Resultado esperado |
-| --- | --- |
-| Cabecera | Tres zonas compactas: identidad a la izquierda (avatar 90×90 px enmarcado), tres micro-tarjetas titulares de 94 px en el centro, y caja de cotización oficial de 94 px a la derecha con precio en créditos, badges (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y variación absoluta en créditos. |
-| Pestañas | Tres pestañas ordenadas a todo el ancho (40 px): `[ Cotizaciones ]` (predeterminada), `[ Resumen deportivo ]` y `[ Todas las estadísticas ]`. |
-| Cotizaciones | Pestaña con gráfico SVG interactivo de evolución histórica, tooltip de cotización y detalle del valor oficial. |
-| Resumen deportivo | Cuatro tarjetas KPI superiores (`SummaryKpiCard`) con iconos de 24 px en caja de 48×48 px, títulos de 12 px, valores de 28 px bold sin unidades redundantes ni elipsis que corten texto; y exactamente dos paneles temáticos específicos por posición (`SummaryPanel`) con filas acotadas (`min-height: 44px; max-height: 58px;`) y espaciado armónico (`justify-content: space-evenly`), sin barras de progreso ni bloque de destacadas. |
-| Arquero | KPI: Calificación WhoScored, Tiros al arco recibidos, Porterías a cero, Atajadas/partido · Paneles: Atajadas por zona, Distribución y juego con pies. |
-| Defensor | KPI: Calificación WhoScored, Entradas/partido, Intercepciones/partido, Duelos aéreos ganados · Paneles: Acciones defensivas, Duelos y disciplina. |
-| Mediocampista | KPI: Calificación WhoScored, Asistencias, Entradas/partido, Regates exitosos · Paneles: Construcción y distribución, Posesión y equilibrio. |
-| Delantero | KPI: Calificación WhoScored, Tiros al arco, Goles/partido, Regates exitosos · Paneles: Definición por zona, Juego ofensivo y generación. |
-| Catálogo | Exploración superior con búsqueda, limpiar, 8 categorías con conteo y `aria-pressed`, leyenda de relevancia accesible y 60 métricas canónicas agrupadas. |
-| Estados | Carga, error con reintento, respuesta anterior compatible, NO_DATA (60 ausencias) y PARTIAL coinciden con el wireframe sin inventar valores. Semántica `null` ≠ `0` estrictamente respetada. |
-| Paleta semántica | Colores sólidos mediante `background-color` con tokens `$surface-page-deep`, `$surface-card-dark`, `$surface-panel-to`, `$surface-accent-deep`, `$surface-accent-dark`, `$accent-sports-green`, `$border-panel`. Cero gradientes, cero sombras decorativas. |
-| Responsive y Scroll | En escritorio (1920×1080, 1920×913, 1366×768, 1280×800): cero scroll vertical y horizontal en Resumen deportivo verificado con Playwright (`hasVerticalScroll: false`, `hasHorizontalScroll: false`). En tablet (768 px) y móvil (360 px): desplazamiento vertical natural sin overflow horizontal. |
-| Accesibilidad | Navegación por teclado (flechas, Tab, Home, End), foco visible, insignias y contrastes legibles sin depender exclusivamente del color. |
-
-No ejecutar sincronización ni modificar datos para fabricar escenarios. No corresponde build ni test durante PLAN.
+**Estado**: Guía de validación vigente del sistema.
+**Referencias normativas**: [spec.md](spec.md), [wireframe canónico](../../docs/wireframes/player-detail.md), [player-statistics.md](contracts/player-statistics.md) y [data-model.md](data-model.md).
 
 ---
 
-## Guía vigente del rediseño — 2026-10-25
+## 1. Verificaciones automatizadas
 
-Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md); referencia visual: [wireframe canónico](../../docs/wireframes/player-detail.md).
+Comandos ejecutables para verificar la integridad del código y contratos:
 
-### Prerrequisitos y arranque futuro
-
-Preparación de fixtures T049: usar un jugador visible por posición y temporada explícita `seasonKey`, dos fechas ordenadas, filas JSON/scraping coincidentes y una de competición distinta; preparar cero/nulo y tres métricas exclusivas scraping. Agregar inexistente, inactivo, fila huérfana e item no confirmado. Las fixtures backend viven solo en Testcontainers; no alterar PostgreSQL de desarrollo para estos casos. Concurrencia se prueba en Repository mediante dos transacciones coordinadas (T058), no con helpers de persistencia durante Act de Service. Para UI, elegir IDs/temporadas reales disponibles localmente y provocar error de lectura mediante herramientas del navegador del usuario: comparar contexto/fecha previos, cambio A→B y reintento; sin datos compatibles no se muestran valores.
-
-Backend configurado con PostgreSQL y datos reales existentes, credencial de usuario válida; frontend con Node del repositorio y `VITE_API_URL=http://localhost:8080/api`. Usar la configuración local existente sin publicar credenciales. No instalar dependencias nuevas.
-
-Comandos opcionales de arranque a cargo del usuario, en terminales separadas:
+### Frontend
 
 ```bash
-# Directorio backend/
-./gradlew bootRun
+# Desde el directorio frontend/
+npm run biome:check
+npm run scss:check-imports
+npm run build
 ```
 
-```bash
-# Directorio frontend/ con dependencias ya instaladas
-npm run dev
-```
-
-Consultar el endpoint con la sesión existente desde la aplicación o cliente HTTP autorizado. No ejecutar POST de sync/evaluate/requote para abrir el detalle. Usar temporada y jugador reales de la base local; no copiar cifras del mockup.
-
-### Escenarios de validación de producto a cargo del usuario
-
-| Escenario | Resultado esperado |
-| --- | --- |
-| Abrir desde catálogo, URL directa y recargar | Identidad real, Resumen inicial, exactamente dos pestañas y retorno existente |
-| Jugador con varias fechas confirmadas | Última fecha del jugador/temporada; fecha real visible, independiente de campaña poblacional |
-| Empate y contexto | JSON ancla en misma fecha; observación/ID deterministas; no fusionar competición distinta |
-| JSON cero y scraping positivo | Conservar 0 y fuente JSON |
-| JSON nulo y scraping coincidente | Valor real de scraping con fuente SCRAPING |
-| Respaldo de otra fecha/temporada/competición | No completar; mostrar Sin datos |
-| Solo scraping confirmado | Mostrar sus valores sin exigir snapshot JSON |
-| Fila huérfana, item no COMPLETED o contexto no resuelto | No seleccionarla como confirmada; no sustituir error técnico por ausencia |
-| Sin datos de jugador visible | Mantener identidad/tabs; 60 claves con ausencia explícita, sin mocks |
-| Fallo estadístico, carga y reintento | Estados distintos; identidad y retorno permanecen, sin datos de otro jugador |
-| Cuatro posiciones | Cuatro tarjetas, dos paneles específicos y un bloque de destacadas según el wireframe; sin duplicados, cálculos nuevos ni finanzas |
-| Todas las estadísticas | 60 claves únicas en grupos; categorías 5/19/10/5/3/10/4/4; búsqueda nombre/clave sin acentos/mayúsculas intersecta categoría; relevancia y unidad visibles; limpiar restaura todo |
-| Orden y aparición de tres claves | P→S→B disponibles, luego ausentes; cero disponible; nuevos valores reordenan catálogo sin cambiar Resumen |
-| Privacidad | Visitante/sesión vencida no accede; inexistente e inactivo mismo no encontrado; ID inválido 400 |
-| Navegación rápida A→B | Respuesta tardía no altera B ni mezcla identidad/contexto/valores |
-| Teclado | Tabs flechas/Home/End, foco y selección; buscador, categorías y reintento accesibles; gráficos comprensibles por texto |
-| Viewports 360/768/1280 × 640/800 | Orden del wireframe conservado; sin recortes ni overflow horizontal del documento; scroll en PageLayout desktop, natural móvil; controles siempre alcanzables |
-| Catálogo y otras rutas | Navegación, retrato fallback y sesión sin regresiones; no borrar consumidores compartidos de demos |
-| Nombre histórico de competición | Nombre solo con correspondencia fiable; sin ella «Competición no disponible», nunca liga actual como sustituto |
-| ID inválido frente a ausencia | Ambas lecturas 400 para formato/rango inválido/cero/negativo; válido inexistente/no visible 404; estadísticas ausentes de visible 200 NO_DATA |
-| Error de actualización con respuesta previa | Mismo jugador/temporada: conservar fecha/valores anteriores con error, advertencia y reintento; otro contexto no conserva valores; nueva respuesta exitosa NO_DATA reemplaza anterior |
-| Glosario de presentación | Las 60 etiquetas y unidades siguen `contracts/metric-glossary.md`, sin multiplicar porcentajes persistidos ni convertir tasas |
-
-No forzar cambios en datos reales para fabricar casos. Los casos imposibles de obtener con datos locales se cubren mediante fixtures backend en tests escritos durante implementación; no datos simulados del producto ni tests frontend.
-
-### Comprobaciones técnicas futuras
-
-Los tests backend aplicables se escriben en las categorías normativas. El usuario puede ejecutar, desde `backend/`, tras su implementación:
+### Backend
 
 ```bash
+# Desde el directorio backend/
 ./gradlew test --tests 'footballmarket.controllers.PlayerControllerTest'
+./gradlew test --tests 'footballmarket.controllers.PlayerStatisticsControllerTest'
 ```
-
-La selección exacta de nuevos tests de Model/Service/Repository se entregará en Testing Report cuando existan; no se presenta un nombre supuesto como clase disponible. Las pruebas de repositorio deben usar PostgreSQL/Testcontainers según normas. No crear ni ejecutar tests frontend.
-
-Builds únicamente tras modificar código, bajo AGENTS del área: `./gradlew build -x test` en backend y `npm run build` en frontend. No corresponden a este cambio documental; inspeccionar scripts/hooks antes de cualquier ejecución. Registrar evidencia del usuario; build no acredita tests, revisión ni cierre.
 
 ---
 
-## Antecedente histórico de validación anterior — no ejecutar para el nuevo alcance
+## 2. Escenarios de validación funcional y visual
 
-Esta guía describe escenarios manuales verificables. El agente no ejecuta tests; el usuario
-ejecuta los comandos indicados.
+### Escenario 1: Cabecera compacta de tres zonas
 
-## Prerrequisitos
+1. Navegar a `/players/{id}` con un jugador visible.
+2. Comprobar la disposición en tres zonas horizontales en escritorio:
+   - **Identidad (izquierda)**: avatar de 90×90 px con borde sutil, nombre, equipo actual con escudo si está disponible, liga y posición.
+   - **Métricas titulares (centro)**: tres micro-tarjetas de 94 px de altura que sintetizan los datos más relevantes según la posición del jugador.
+   - **Cotización oficial (derecha)**: tarjeta de 94 px de altura que presenta el precio actual en créditos, insignia de variación (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y variación absoluta en créditos.
 
-- Node.js 24.19.0 o compatible con el requisito `>=24`.
-- JDK y Gradle del backend, más una base de datos de desarrollo con el catálogo sincronizado y
-  al menos un usuario válido. Constitution §2.1 permite datos descartables.
-- Origen del frontend permitido por CORS cuando frontend y backend usan orígenes distintos.
-- `frontend/.env` con:
+### Escenario 2: Tres pestañas ordenadas y navegación
 
-```dotenv
-VITE_API_URL=http://localhost:8080/api
-```
+1. Al acceder a la página, verificar que la pestaña inicial activa por defecto es **`[ Cotizaciones ]`**.
+2. Comprobar el orden visual de las pestañas a todo el ancho:
+   `[ Cotizaciones ]` → `[ Resumen deportivo ]` → `[ Todas las estadísticas ]`.
+3. Navegar con teclado (flechas izquierda/derecha, Tab, Home, End): el foco y el indicador visual de pestaña activa deben responder de forma accesible.
 
-El contrato esperado está en [contracts/player-detail.md](contracts/player-detail.md); los
-entidades y estados están en [data-model.md](data-model.md).
+### Escenario 3: Pestaña de Cotizaciones
 
-## Preparación y ejecución
+1. En la pestaña `Cotizaciones`, inspeccionar el gráfico interactivo SVG de evolución histórica.
+2. Pasar el cursor o interactuar con los puntos de cotización: debe mostrarse el tooltip con la fecha y el precio en créditos correspondiente.
+3. Contrastar el último punto del gráfico con la cotización oficial mostrada en la cabecera.
 
-```bash
-# Backend, desde backend/
-./gradlew bootRun
+### Escenario 4: Resumen deportivo (4 KPI + 2 paneles temáticos)
 
-# Frontend, desde frontend/
-npm ci
-npm run dev
-```
+1. Seleccionar la pestaña `Resumen deportivo`.
+2. Verificar las cuatro tarjetas KPI superiores (`SummaryKpiCard`):
+   - Icono temático de 24 px en contenedor de 48×48 px.
+   - Título de métrica en 12 px legible.
+   - Valor numérico destacado en 28 px bold, sin unidades redundantes adosadas al número (ej. `0,4`, no `0,4 regates regates/partido`).
+3. Verificar exactamente dos paneles temáticos (`SummaryPanel`) correspondientes al perfil posicional del jugador:
+   - **Arquero**: *Atajadas por zona* y *Distribución y juego con pies*.
+   - **Defensor**: *Acciones defensivas* y *Duelos y disciplina*.
+   - **Mediocampista**: *Construcción y distribución* y *Posesión y equilibrio*.
+   - **Delantero**: *Definición por zona* y *Juego ofensivo y generación*.
+4. Comprobar que las filas de cada panel tienen una altura acotada entre 44 px y 58 px con espaciado armónico (`justify-content: space-evenly`).
+5. Confirmar la ausencia total de barras de progreso relativas sin escala y de bloques redundantes de destacadas.
 
-Abrir la URL informada por Vite, iniciar sesión y navegar a `/players`.
+### Escenario 5: Catálogo completo de 60 métricas
 
-## Escenarios de validación
+1. Seleccionar la pestaña `Todas las estadísticas`.
+2. Verificar las 8 categorías normativas (General 5, Ataque 19, Pases 10, Regates 5, Duelos 3, Defensa 10, Portería 4, Disciplina 4).
+3. Utilizar el buscador de métricas en el encabezado: debe filtrar por texto o clave canónica sin distinguir mayúsculas ni acentos.
+4. Seleccionar un filtro de categoría: debe actualizar el conteo visible y reflejar el estado con `aria-pressed`.
+5. Presionar el botón de limpieza de filtros: debe restablecer la búsqueda y mostrar todas las categorías.
+6. Verificar que las métricas con datos se ordenan por relevancia (Principal → Secundaria → Base) y que las métricas ausentes se ubican al final con guion (`-`).
 
-### Acceso y protección de la ruta
+### Escenario 6: Cero scroll en escritorio
 
-1. Sin sesión válida, abrir `/players/7821` con un id existente.
-2. Confirmar que no se muestra el detalle y se navega a `/login`.
-3. Iniciar sesión y volver a la URL; confirmar que la identidad se consulta con credenciales.
-4. Invalidar o expirar la sesión durante la carga; confirmar retirada del detalle y retorno a
-   `/login`.
+1. En resoluciones de escritorio (1920×1080, 1920×913, 1366×768, 1280×800), abrir la pestaña `Resumen deportivo`.
+2. Verificar que el contenido completo de la cabecera, pestañas, 4 KPI y 2 paneles encaja perfectamente en el viewport sin generar barra de desplazamiento vertical ni horizontal en la ventana principal.
 
-### Identidad real desde el backend
+### Escenario 7: Adaptación responsive
 
-1. Desde `/players`, seleccionar un jugador y confirmar la navegación a `/players/{id}`.
-2. Recargar la página sin caché del catálogo y confirmar que la identidad se obtiene igual.
-3. Contrastar nombre, equipo, liga, posición con la tarjeta del catálogo.
-4. Verificar el orden de imagen: principal, alternativa y finalmente icono genérico.
-5. Con un jugador sin fecha ni nacionalidad, confirmar «No disponible» y no datos inventados.
+1. Redimensionar el viewport a tablet (768 px):
+   - La cabecera se reorganiza en dos filas compactas.
+   - Los 4 KPI se organizan en cuadrícula de 2 columnas.
+   - El desplazamiento vertical natural funciona fluidamente sin overflow horizontal.
+2. Redimensionar a móvil (360 px):
+   - La cabecera apila la identidad y muestra las tres micro-tarjetas en fila simétrica.
+   - Los KPI y paneles se apilan en una sola columna legible.
 
-### Estados y errores
+### Escenario 8: Manejo de estados y errores
 
-1. Abrir un id con formato inválido: mensaje de identificador inválido y regreso al catálogo.
-2. Abrir un id inexistente: «Jugador no encontrado».
-3. Con un jugador existente pero inactivo en la base: misma respuesta 404, sin revelar identidad
-   ni estado.
-4. Detener el backend y reintentar: mensaje de error con acción de reintento, sin bloques de
-   demostración y sin identidad ficticia.
-5. Cambiar rápidamente entre dos ids y confirmar que solo se presenta el último.
-
-### Estadísticas de demostración
-
-1. Anotar Partidos, Goles, Asistencias y Minutos de dos jugadores distintos.
-2. Recargar tres veces y confirmar que los valores no cambian.
-3. Contrastar la tarjeta «Rendimiento deportivo» del detalle con las tarjetas del catálogo:
-   partidos, goles y asistencias coinciden para la temporada 2025/2026.
-4. Confirmar la etiqueta «Datos de demostración» y que no existe selector de temporada.
-5. Confirmar que un jugador sin minutos simulados muestra cero sin errores.
-
-### Cotización y evolución
-
-1. Verificar treinta cotizaciones diarias con fechas consecutivas dentro del período fijo.
-2. Confirmar que el precio y la fecha mostrados coinciden con el último punto del gráfico.
-3. Contrastar la variación con los dos últimos puntos. El caso de **precio anterior cero no es
-   reproducible** con la fuente de demostración vigente: `tokenQuoteSeries.ts` fija `MIN_PRICE = 40`,
-   por lo que `percentageChange` nunca se resuelve como `null` por base cero en la interfaz.
-   Verificación controlada propuesta, sin alterar el generador aprobado: comprobar la rama
-   `previous.price === 0` de `buildSnapshot` de forma aislada en una consola o sesión de depuración
-   local, invocándola con una serie de dos puntos cuyo penúltimo precio sea `0`, y contrastar que
-   devuelve `percentageChange: null` y `direction` coherente con la variación absoluta. Esa
-   comprobación es puntual, del usuario y no forma parte de la serie de demostración ni de ningún
-   requisito observable en la pantalla.
-4. Cambiar la fecha del sistema del navegador y recargar: la serie no cambia.
-5. Confirmar que los valores aparecen como precio del token en créditos y como demostración,
-   nunca como valor de transferencia.
-
-### Navegación y presentación
-
-1. En escritorio, verificar navbar superior con marca, Inicio, Jugadores activo y sector de
-   usuario autenticado; comprobar el retorno al catálogo desde el breadcrumb.
-2. Confirmar que todos los controles visibles tienen comportamiento real y foco visible.
-3. A 768 y 360 píxeles de ancho, usar el menú desplegable con teclado y confirmar ausencia de
-   desplazamiento horizontal.
-4. Verificar que la pantalla mantiene la jerarquía de la referencia: ficha azul, tarjeta
-   «Rendimiento deportivo» superior derecha, evolución inferior izquierda y estadísticas
-   inferiores derechas.
-5. Recorrer la evolución mediante su representación textual accesible.
-6. Recorrer `/home`, `/players` y `/players/:id` con sesión activa y confirmar que las tres
-   pantallas presentan la misma navbar, con la sección correcta marcada como activa en cada una.
-7. Navegar por la navbar entre secciones y comprobar que conserva la sesión y no provoca
-   desplazamiento horizontal.
-8. Bloquear la red y recargar el detalle de un jugador con nacionalidad y equipo: la bandera
-   nacional **no se muestra en el detalle**. La bandera y el escudo son recursos decorativos
-   opcionales del catálogo (SPEC-005 FR-022) y FR-023 de esta SPEC solo **permite**, sin exigir,
-   acompañar la identidad con ellos; el detalle mantiene la identidad textual como canal único.
-   Comprobar por ello la degradación de la bandera y la ausencia de escudo en la **tarjeta del
-   catálogo** de `/players`, que es donde ambos recursos sí se representan.
-
-> Nota de revisión documental — 2026-10-13: este escenario exigía en su redacción original escudo
-> local y bandera degradando en `/players/:id`. La exigencia no se corresponde con un requisito
-> vigente: FR-023 es una habilitación («puede»), no un deber, y ninguna US de SPEC-009 muestra
-> escudo ni bandera en la ficha principal. Mostrarlos exigiría una decisión de producto sobre el
-> diseño aprobado de la ficha, que este documento no sustituye.
-
-## Comandos de verificación permitidos
-
-El agente no ejecuta tests ni builds. Para esta feature:
-
-| Área | Comando | Quién lo ejecuta |
-| --- | --- | --- |
-| Backend | `./gradlew build -x test` desde `backend/` | Agente, tras cambios de código backend |
-| Backend | `./gradlew test` (suite) | Usuario |
-| Frontend | `npm run build` desde `frontend/` | Agente, tras cambios de código frontend |
-| Frontend | `npm run biome:check` | Usuario o agente según autorización |
-
-El build y los tests no acreditan CODE REVIEW ni TESTING: corresponden a gates humanos
-posteriores.
-
-## Criterio de cierre de esta guía
-
-Todos los escenarios deben cumplirse con evidencia observada. El incumplimiento de un
-escenario devuelve la US a `IN PROGRESS`; la causa se registra en `tasks.md` y en Trello según el
-workflow vigente.
+1. **Identificador inválido**: Navegar a `/players/abc` o `/players/-1` → Mensaje de identificador inválido (HTTP 400) y botón para volver al catálogo.
+2. **Jugador no encontrado o inactivo**: Navegar a un id inexistente o inactivo → Mensaje de jugador no encontrado (HTTP 404).
+3. **Sin sesión**: Acceder sin credenciales → Redirección automática a `/login` por `AuthGuard`.
+4. **Fallo de actualización (refetch)**: Si se interrumpe la conexión tras haber cargado la página, la interfaz debe conservar los datos previos exitosos de la Query Cache, mostrando un aviso visible de fallo con opción de reintento.
