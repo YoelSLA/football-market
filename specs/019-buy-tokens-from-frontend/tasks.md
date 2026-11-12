@@ -136,3 +136,14 @@ P-01 + P-04 → P-05
 P-03 + P-05 → P-06 → P-07 → P-08 → P-09
 P-09 → P-10 → P-11 → P-12
 ```
+
+## Refactorización: Separación en dos páginas de mercado (Oficial vs P2P)
+
+- [X] **RF-01** Actualizar navegación principal (`sections.ts`): dos pestañas bajo Mercado («Mercado Oficial» en `/market/buy` y «Mercado P2P» en `/market/p2p`), retirando el selector interno `MarketSelector`.
+- [X] **RF-02** Actualizar `AppRouter.tsx` y `AppLayout.tsx` para alojar `/market/buy` y `/market/p2p` con layouts contenidos.
+- [X] **RF-03** Desacoplar `MarketBuyPage`: eliminar `MarketSelector`, `useCommunityMarketPage`, `CommunityMarketPanel` y `BuyListingModal`; especializar encabezado para «Mercado Oficial».
+- [X] **RF-04** Simplificar `useMarketBuyPage`: retirar estado de pestañas `marketTab` y parámetro URL `mode`.
+- [X] **RF-05** Crear `MarketP2PPage` en `features/market/pages/MarketP2PPage/` con su propio `MarketP2PHeader`, migrando componentes comunitarios y modal P2P.
+- [X] **RF-06** Simplificar `useCommunityMarketPage`: habilitar por defecto, retirar `mode=community` de URL preservando `player=<id>`, y exponer `availableCredits`.
+- [X] **RF-07** Limpieza: eliminar componente obsoleto `MarketSelector` y tipo `MarketTab`.
+- [X] **RF-08** Verificación: `npm run biome:fix` y `npm run build` en 0 errores.

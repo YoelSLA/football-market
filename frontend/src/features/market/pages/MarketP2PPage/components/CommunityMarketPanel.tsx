@@ -12,12 +12,7 @@ interface Props {
 export default function CommunityMarketPanel({ community }: Props) {
 	if (community.selectedPlayer) {
 		return (
-			<div
-				id="panel-community"
-				role="tabpanel"
-				aria-labelledby="tab-community"
-				className={styles.communityPanel__content}
-			>
+			<div className={styles.communityPanel__content}>
 				<CommunityListingsPanel
 					player={community.selectedPlayer}
 					onBack={community.closePlayer}
@@ -29,12 +24,7 @@ export default function CommunityMarketPanel({ community }: Props) {
 
 	return (
 		<>
-			<div
-				id="panel-community"
-				role="tabpanel"
-				aria-labelledby="tab-community"
-				className={styles.communityPanel__content}
-			>
+			<div className={styles.communityPanel__content}>
 				<CommunityMarketFilters
 					filters={community.filters}
 					leagues={community.leagues}

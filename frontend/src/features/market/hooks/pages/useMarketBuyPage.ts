@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { authQueryKeys, useCurrentUserQuery } from "@/features/auth";
 import { marketQueryKeys } from "@/features/market/constants";
 import { useBuyQuantityForm } from "@/features/market/form";
@@ -12,7 +11,6 @@ import type {
 	BuyEstimation,
 	BuyResult,
 	MarketPlayer,
-	MarketTab,
 } from "@/features/market/types";
 import {
 	calculateEstimation,
@@ -65,20 +63,6 @@ export function useMarketBuyPage(params?: UseMarketBuyPageParams) {
 			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
 	);
 	const revision = useAuthStore((state) => state.revision);
-	const [searchParams, setSearchParams] = useSearchParams();
-
-	// Pestaña activa del mercado (Emisión Oficial vs Oferta de Usuarios)
-	const marketTab: MarketTab =
-		searchParams.get("mode") === "community" ? "community" : "official";
-	const setMarketTab = useCallback(
-		(tab: MarketTab) => {
-			const next = new URLSearchParams(searchParams);
-			next.set("mode", tab);
-			if (tab === "official") next.delete("player");
-			setSearchParams(next);
-		},
-		[searchParams, setSearchParams],
-	);
 
 	// Catálogo de jugadores y paginación
 	const [currentPage, setCurrentPage] = useState(0);
@@ -298,9 +282,6 @@ export function useMarketBuyPage(params?: UseMarketBuyPageParams) {
 						: null;
 
 	return {
-		// Pestaña de mercado
-		marketTab,
-		setMarketTab,
 		// Catálogo y paginación
 		players,
 		isLoadingPlayers,

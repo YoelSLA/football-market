@@ -307,13 +307,13 @@ vencimiento y saldo, y compra el lote completo mediante `listingId`.
 
 | ID | Requisito |
 |---|---|
-| FR-20 | `/market/buy` DEBE conservar las modalidades «Emisión oficial» y «Ofertas de usuarios» dentro de la misma Page y ruta protegida. La modalidad seleccionada DEBE reflejarse como `mode=official` o `mode=community` en la URL. |
+| FR-20 | La sección Mercado DEBE separar las modalidades en dos pestañas y páginas protegidas independientes: «Mercado Oficial» en `/market/buy` (emisión oficial del superusuario) y «Mercado P2P» en `/market/p2p` (ofertas de usuarios), retirando el selector interno `MarketSelector`. |
 | FR-21 | La modalidad P2P DEBE consultar una vez `GET /api/listings`, sin parámetros inventados, y tratar `listings` como el conjunto completo de publicaciones comprables para esa sesión. |
 | FR-22 | El frontend DEBE validar y mapear cada publicación a un Model propio con `listingId`, `sellerId`, `playerId`, `quantity`, `unitPrice`, `totalAmount`, `status`, `createdAt` y `expiresAt`. Importes y precios permanecen en centésimas en Models y DTOs. |
 | FR-23 | El catálogo P2P DEBE agrupar por `playerId`, calcular conteo de publicaciones, suma segura de `quantity` y mínimo `unitPrice`, y presentar cada jugador una sola vez. No DEBE sumar ni mostrar una publicación inválida como válida. |
 | FR-24 | Los metadatos del jugador DEBEN resolverse mediante la API pública de `features/players` y su caché de TanStack Query. No se duplicarán DTOs, mappers ni requests HTTP de players dentro de market. Un jugador imposible de resolver no se mostrará como dato completo inventado. |
 | FR-25 | El catálogo agrupado DEBE permitir búsqueda normalizada por jugador o club, filtro por liga y posición, y orden por mejor precio, cantidad ofrecida o nombre. Filtrar y ordenar preceden a la paginación local de 12 jugadores. |
-| FR-26 | Seleccionar un jugador DEBE establecer `mode=community&player=<id>` sin abandonar `/market/buy`; cerrar o volver DEBE retirar `player` y conservar modalidad y filtros. Back/Forward y recarga DEBEN reconstruir la vista desde la URL y datos remotos. |
+| FR-26 | En `/market/p2p`, seleccionar un jugador DEBE establecer `player=<id>` en la URL; cerrar o volver DEBE retirar `player` y conservar filtros. Back/Forward y recarga DEBEN reconstruir la vista desde la URL y datos remotos. |
 | FR-27 | El detalle DEBE mostrar todas las publicaciones comprables del jugador presentes en la respuesta vigente de `/api/listings`, con cantidad fija, precio unitario, total y vencimiento. No DEBE ofrecer compra parcial ni campo de cantidad. |
 | FR-28 | El orden inicial del detalle DEBE ser `unitPrice` ascendente, luego `expiresAt` ascendente y finalmente `listingId` ascendente. La UI PUEDE ofrecer orden alternativo por total o vencimiento sin modificar el conjunto. |
 | FR-29 | La identidad del vendedor NO DEBE mostrarse. `sellerId` se conserva solo como dato contractual y no se resuelve mediante APIs adicionales ni se presenta como nombre público. |

@@ -63,10 +63,16 @@ export const NAV_SECTIONS: NavSection[] = [
 		path: "/market/buy",
 		tabs: [
 			{
-				key: "market-buy",
-				label: "Comprar tokens",
+				key: "market-official",
+				label: "Mercado Oficial",
 				icon: ShoppingCart,
 				path: "/market/buy",
+			},
+			{
+				key: "market-p2p",
+				label: "Mercado P2P",
+				icon: UsersRound,
+				path: "/market/p2p",
 			},
 			{
 				key: "market-sell",

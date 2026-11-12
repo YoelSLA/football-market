@@ -14,8 +14,8 @@ export default function MarketHeader({
 	return (
 		<header className={styles.marketHeader}>
 			<PageHeading
-				title="Comprar tokens"
-				description="Explorá el mercado y adquirí tokens de futbolistas."
+				title="Mercado Oficial"
+				description="Explorá el mercado y adquirí tokens directamente de la emisión oficial."
 				icon={ShoppingCart}
 			/>
 			<div className={styles.marketHeader__metrics}>

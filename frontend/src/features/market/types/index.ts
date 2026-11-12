@@ -21,7 +21,6 @@ export type {
 	MarketQuote,
 	MarketQuoteFailure,
 	MarketQuoteStatus,
-	MarketTab,
 	PlayerHolding,
 	SellEstimation,
 	SellQuantityForm,
