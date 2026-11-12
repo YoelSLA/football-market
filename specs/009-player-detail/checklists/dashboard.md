@@ -2,10 +2,14 @@
 
 **Purpose**: Evaluar requisitos de catálogo, perfiles, interacción y presentación; no comportamiento de implementación.
 **Created**: 2026-10-25
-**Feature**: [spec.md](../spec.md), [plan.md](../plan.md), [modelo](../data-model.md), [mockup](../../../referencias-imagenes/spec-009-player-detail-statistics-mockup.png).
+**Feature**: [spec.md](../spec.md), [plan.md](../plan.md), [modelo](../data-model.md), [wireframe canónico](../../../docs/wireframes/player-detail.md). Las [capturas anteriores por posición](../../../referencias-imagenes/arquero-stats.png) son antecedente de estilo.
 **Profundidad y destinatario**: estándar; revisor de requisitos antes de Tasks.
 
 **Review Ownership**: Propiedad del revisor. `[x]` indica aprobación de calidad de requisitos, no implementación completa. Todos los criterios generados quedan sin marcar. La evaluación asistida autorizada se expresa mediante resultados documentales, no aprobaciones.
+
+> El wireframe del 2026-11-09 modifica la base visual evaluada en este checklist. Sus marcas se
+> conservan como evidencia histórica y deberán reevaluarse durante la nueva fase CHECKLIST; este
+> enlace no extiende la aceptación del 2026-10-25 al rediseño actual.
 
 ## Completitud de alcance y contenido
 

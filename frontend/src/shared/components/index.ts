@@ -1,5 +1,7 @@
 export type { ButtonProps } from "./Button";
 export { default as Button } from "./Button";
+export type { CompetitionLogoProps } from "./CompetitionLogo";
+export { default as CompetitionLogo } from "./CompetitionLogo";
 export type { DrawerProps } from "./Drawer";
 export { default as Drawer } from "./Drawer";
 export { default as Field } from "./Field";

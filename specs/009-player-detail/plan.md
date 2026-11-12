@@ -1,6 +1,101 @@
 # Implementation Plan: Detalle individual del jugador
 
-**Plan vigente del rediseño** — 2026-10-25 · Rama real `feat/009-player-detail-whoscored-stats-dashboard` · [Spec y Clarify](spec.md).
+## Plan vigente — rediseño visual 2026-11-12
+
+**Rama**: `feat/009-player-statistics-layout` · **Spec**: [spec.md](spec.md) · **Referencia visual canónica**: [docs/wireframes/player-detail.md](../../docs/wireframes/player-detail.md).
+
+### Summary
+
+Adaptar la presentación del detalle del jugador según el wireframe canónico y los requerimientos aprobados. Se consolidan tres pestañas ordenadas («Cotizaciones» predeterminada, «Resumen deportivo» y «Todas las estadísticas»). La cabecera se compone en tres zonas horizontales (identidad a la izquierda con avatar 90×90 px, tres micro-tarjetas titulares centrales de 94 px y caja de cotización oficial de 94 px a la derecha con precio en créditos, badges semánticos de variación y cambio absoluto en créditos). El Resumen deportivo se estructura en 4 tarjetas KPI principales superiores (`SummaryKpiCard`) y exactamente 2 paneles temáticos específicos por posición (`SummaryPanel`) con filas de altura acotada y espaciado armónico, eliminando definitivamente las barras de progreso y el bloque de estadísticas destacadas. Se aplica una paleta semántica de colores sólidos basada en design tokens, garantizando legibilidad y ausencia total de scroll vertical y horizontal en escritorio (1920×1080, 1920×913, 1366×768 y 1280×800) y scroll documental natural en tablet y móvil. No modifica backend, rutas, persistencia ni dependencias globales.
+
+### Technical Context
+
+- **Stack efectivo**: React 19.3.0, TypeScript 7.0.2, Sass Modules, TanStack Query y Lucide mediante `shared/icons`; sin dependencias nuevas.
+- **Área afectada**: `frontend/src/features/players/pages/PlayerDetailPage/` y sus subcomponentes, Page Hooks de controles locales (`usePlayerDetailPage`, `usePlayerDetailControls`), queries de cotización (`usePlayerQuotesQuery`, `usePlayerCurrentQuoteQuery`), utilidades de formateo (`playerQuotes.ts`, `playerStatisticsView.ts`, `formatDate.ts`) y design tokens en `_colors.scss`.
+- **Datos**: se consumen `PlayerStatistics` (60 métricas) y `PlayerQuotes` (cotización oficial y evolución); semántica `null` ≠ `0` estrictamente conservada; sin migraciones ni contratos backend nuevos.
+- **Estado**: TanStack Query continúa como autoridad remota. Pestaña activa (`'quotes' | 'summary' | 'catalog'`), búsqueda y categoría pertenecen al estado local por jugador coordinado por los Page Hooks.
+- **Responsive**: Viewports escritorio 1920×1080, 1920×913, 1366×768 y 1280×800 con cero scroll de documento y cero scroll de contenedor en Resumen deportivo; tablet (768 px) y móvil (360 px) con desplazamiento vertical documental natural sin overflow horizontal.
+- **Testing y validación**: Conforme a la Constitución, no se ejecutan ni crean tests frontend ni backend. Validaciones estáticas (`npm run biome:check`, `npm run scss:check-imports`), verificación de build (`npm run build`) y verificación automatizada de scroll con Playwright en Chrome DevTools.
+- **Unknowns**: ninguno. Perfiles posicionales, prioridades, fallbacks deportivos, badges de cotización y tokens semánticos cerrados y verificados.
+
+### Constitution Check
+
+| Garantía | Antes del diseño | Después del diseño |
+| --- | --- | --- |
+| Simplicidad y proporcionalidad | Reutilizar la implementación existente | Conforme: componentes específicos sin sobrecomponentización ni abstracciones innecesarias |
+| Coherencia contractual | Mantener 60 métricas y endpoints oficiales de cotización | Conforme: no cambia HTTP ni DTOs remotos; compatibilidad total de datos |
+| Arquitectura frontend | Page compone; subcomponentes locales presentan; Hooks coordinan | Conforme: separación estricta de responsabilidades sin duplicar estado remoto |
+| Sistema de diseño | Reutilizar design tokens semánticos y convenciones SCSS | Conforme: colores sólidos mediante `background-color`, sin gradientes ni sombras |
+| Accesibilidad | Tabs accesibles, foco visible, semántica ARIA | Conforme: badges, estados y métricas comprensibles sin depender exclusivamente del color |
+| Verificación | No ejecutar tests | Conforme: cero tests ejecutados; validación estática, build y verificación visual de scroll |
+
+### Phase 0 — Research & Decisiones
+
+1. **Cabecera compacta de 3 zonas**:
+   - Izquierda (`PlayerOverviewIdentity`): Avatar enmarcado (90×90 px), nombre, dorsal/club, liga, posición, país y fecha de nacimiento.
+   - Centro (`PlayerOverviewHeadlineMetrics`): 3 micro-tarjetas titulares específicas por posición (94 px de alto, `$surface-accent-deep`, borde `$border-panel`), iconos 18px, etiquetas 10.5px, valores 22px bold.
+   - Derecha (`PlayerOverviewQuote`): Caja de cotización oficial de 94 px de alto (`$surface-accent-deep`, borde `$border-panel`) con precio en créditos (`22px bold`, icono moneda FM 22px `#f5c518`), badges semánticos (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y variación absoluta en créditos (`· +0,05 créditos vs. anterior`).
+2. **Resumen deportivo de 4 KPI + 2 paneles temáticos**:
+   - Eliminación definitiva de `PlayerStatisticsBars` (por falta de escala válida) y de `PlayerSportsSummary` (bloque de destacadas que duplicaba información).
+   - 4 tarjetas KPI principales (`SummaryKpiCard`): Iconos ampliados a 24px (en contenedor de 48×48 px), etiquetas 12px, valores 28px bold, subtítulos 12px con `line-height: 1.35`. Sin unidades redundantes que repitan el título/subtítulo. Se eliminan recortes por `text-overflow: ellipsis` evitando que se corten los descenders (`g`, `p`, `y`).
+   - 2 paneles temáticos específicos (`SummaryPanel`): Lista de 4 métricas con iconos de 20px (encabezado) y 18px (filas), títulos 16px, etiquetas 14px, valores tabulares 16px. Filas acotadas entre `min-height: 44px` y `max-height: 58px` con `justify-content: space-evenly`, evitando el estiramiento vertical desmedido en pantallas altas.
+3. **Pestañas del detalle**:
+   - Pestaña 1: «Cotizaciones» (`PlayerQuotesTab`, predeterminada), con gráfico histórico de evolución.
+   - Pestaña 2: «Resumen deportivo» (`PlayerSummaryTab` -> `PlayerStatisticsSummary`).
+   - Pestaña 3: «Todas las estadísticas» (`PlayerCatalogTab` -> `PlayerStatisticsCatalog`).
+4. **Paleta de tokens de colores sólidos**:
+   - `$surface-page-deep`: `#011522` (fondo de la página de detalle)
+   - `$surface-card-dark`: `#092337` (tarjetas KPI)
+   - `$surface-panel-to`: `#071a30` / `$surface-panel-from`: `#0c233e` (paneles temáticos y catálogo)
+   - `$surface-accent-deep`: `#011f14` (micro-tarjetas de cabecera y caja de cotización)
+   - `$surface-accent-dark`: `#003d2a` (marco de avatar en cabecera)
+   - `$accent-sports-green`: `#00e676` (acento deportivo en iconos, bordes activos y variaciones positivas)
+   - `$border-panel`: `#2b5378` (bordes estructurales)
+   - Cero gradientes, cero sombras decorativas, cero efectos de iluminación.
+
+### Phase 1 — Diseño de Composición y Componentes
+
+#### Árbol de componentes definitivo
+
+```text
+PlayerDetailPage
+├── PageLayout
+├── PlayerDetailNav (breadcrumb hacia catálogo con retorno seguro)
+├── PlayerDetailStatus (estados de carga, error y no encontrado de identidad)
+├── PlayerOverview (cabecera compacta de 3 zonas y 125 px de altura neta)
+│   ├── PlayerOverviewIdentity (avatar 90×90, metadatos del jugador)
+│   ├── PlayerOverviewHeadlineMetrics (3 micro-tarjetas titulares de 94 px)
+│   └── PlayerOverviewQuote (caja de cotización de 94 px con badges y variación absoluta)
+└── PlayerStatisticsSection (gestión de pestañas y estados estadísticos)
+    ├── PlayerStatisticsTabs (3 pestañas ordenadas: Cotizaciones, Resumen deportivo, Todas las estadísticas)
+    ├── PlayerQuotesTab (gráfico SVG interactivo de evolución de cotización)
+    ├── PlayerSummaryTab -> PlayerStatisticsSummary (resumen deportivo compacto)
+    │   ├── 4x SummaryKpiCard (tarjetas KPI con iconos de 24px y valores de 28px)
+    │   └── 2x SummaryPanel (paneles temáticos específicos con filas de altura acotada)
+    ├── PlayerCatalogTab -> PlayerStatisticsCatalog (8 categorías, búsqueda y 60 métricas)
+    └── PlayerStatisticsNotice (advertencia accesible de datos parciales o consulta previa)
+```
+
+#### Retiro de componentes obsoletos
+- `PlayerBreadcrumb`: retirado y reemplazado por `PlayerDetailNav`.
+- `PlayerStatisticsBars`: eliminado definitivamente (barras sin escala eliminadas del Resumen).
+- `PlayerSportsSummary`: eliminado definitivamente (bloque de destacadas retirado para evitar redundancia).
+
+#### Layout y gestión de scroll
+- **Desktop (≥1280 px)**: Layout vertical flexbox acotado (`display: flex; flex-direction: column; height: 100%`). Cabecera fija (125 px) + navegación (32 px) + tabs (40 px) = 209 px superior. La pestaña «Resumen deportivo» ajusta sus KPI y paneles temáticos sin desbordar el contenedor en 1920×1080, 1920×913, 1366×768 y 1280×800 (`hasVerticalScroll: false`, `hasHorizontalScroll: false`). La pestaña «Todas las estadísticas» dispone de scroll vertical interno confinado exclusivamente a su lista de métricas.
+- **Tablet y móvil (<1280 px)**: Columnas colapsan ordenadamente (KPIs en 2 cols a 768 px y 1 col a 360 px; paneles en 1 col); desplazamiento vertical natural de página sin desbordamiento horizontal.
+
+### Phase 2 — Implementación y Validación
+
+- **Calidad de código y estilo**: `npm run biome:check` (0 errores, 0 advertencias), `npm run scss:check-imports` (satisfactorio).
+- **Compilación**: `npm run build` exitoso sin errores de tipos TypeScript ni empaquetado.
+- **Verificación visual y de scroll**: Comprobada mediante Playwright en Chrome DevTools en las 4 resoluciones de escritorio normativas con sesión autenticada. Cero scroll vertical y cero scroll horizontal en Resumen deportivo. Scroll natural documental verificado en anchos móviles.
+
+---
+
+## Antecedente de planificación — dashboard real 2026-10-25
+
+**Plan anterior** — rama `feat/009-player-detail-whoscored-stats-dashboard`. Se conserva como evidencia del diseño funcional ya implementado. El plan visual vigente anterior gobierna cualquier contradicción de composición.
 
 Las secciones vigentes terminan antes de «Antecedente histórico». Se preservan los planes y decisiones anteriores como evidencia, no como requisitos del nuevo dashboard. `tasks.md` no se modifica ni se considera vigente para este alcance por existir.
 
@@ -55,7 +150,7 @@ Decisiones y alternativas en [research.md](research.md), sección vigente. Inves
 - `constants/playerStatisticsCatalog.ts`: nombres españoles, unidades visibles y categorías exactas de [contracts/metric-glossary.md](contracts/metric-glossary.md), orden y prioridades de la matriz; `playerStatisticsProfiles.ts`: tarjetas, series y adicionales por posición. Tipos en `types/models.ts`, DTO en `types/dtos.ts`; transformaciones en mapper, agrupación/filtrado/orden puro sobre Model en `utils/`. Barrels exponen solo lo necesario.
 - Catálogo: ocho categorías; buscar sin mayúsculas/acentos por clave o nombre, intersección con categoría. Disponibles P→S→B; ausentes al final, orden estable de spec. Sin paginación inicial necesaria para 60 filas: lista agrupada accesible con scroll de PageLayout; no agregar páginas, selector o totales derivados del mockup como requisito.
 - Resumen: exactamente cuatro tarjetas de cada perfil y gráficos/adicionales definidos en spec. Barras en unidades originales con valores textuales; falta un valor → aviso y sin barra; cero → 0 visible; si todos son cero no se divide por cero. No generar proporciones de zonas, medias ni totales desde tasas.
-- Responsive: conservar tokens y flex/min-width:0/min-height:0, sin alturas fijas. PageLayout posee scroll desktop; móvil conserva scroll natural vigente. Columnas se apilan; filas largas se adaptan sin overflow de documento. No tocar layouts compartidos para corregir esta Page.
+- Responsive: implementar el orden y composición del [wireframe canónico](../../docs/wireframes/player-detail.md), conservar tokens y flex/min-width:0/min-height:0, sin alturas fijas. PageLayout posee scroll desktop; móvil conserva scroll natural vigente. Columnas se apilan; filas largas se adaptan sin overflow de documento. No tocar layouts compartidos para corregir esta Page.
 - Accesibilidad: tablist/tabpanel, aria-selected/controls, roving tabindex y flechas/Home/End; buscador etiquetado, categorías con selección perceptible, feedback role=status y errores role=alert, foco y reintento. Tabla/listado mantiene nombre/unidad/valor en móvil, gráfico con alternativa textual; no depender del color.
 
 ### Archivos afectados durante implementación futura

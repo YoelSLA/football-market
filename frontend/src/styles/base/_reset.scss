@@ -98,3 +98,59 @@ button:not(:disabled) {
 	outline: 3px solid ds.$focus-ring-light;
 	outline-offset: 3px;
 }
+
+/* ============================================================
+ * Barras de desplazamiento globales (Scrollbars)
+ * ============================================================ */
+
+/* Estandar CSS (Firefox y motores compatibles) */
+* {
+	// 7. ⚙️ Behavior
+	scrollbar-width: thin;
+	scrollbar-color: ds.$border-panel ds.$surface-transparent;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+	*:hover,
+	*:active {
+		// 7. ⚙️ Behavior
+		scrollbar-color: ds.$accent-gain ds.$surface-transparent;
+	}
+}
+
+/* Pseudo-elementos WebKit (Chrome, Edge, Safari, Opera) */
+@supports selector(::-webkit-scrollbar) {
+	* {
+		// 7. ⚙️ Behavior
+		scrollbar-width: auto;
+		scrollbar-color: auto;
+	}
+
+	*::-webkit-scrollbar {
+		// 4. 📦 Box Model
+		width: 6px;
+		height: 6px;
+	}
+
+	*::-webkit-scrollbar-track {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-transparent;
+	}
+
+	*::-webkit-scrollbar-thumb {
+		// 6. 🎨 Visual
+		background-color: ds.$border-panel;
+		border-radius: 9999px;
+
+		&:hover,
+		&:active {
+			// 6. 🎨 Visual
+			background-color: ds.$accent-gain;
+		}
+	}
+
+	*::-webkit-scrollbar-corner {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-transparent;
+	}
+}

@@ -1,22 +1,22 @@
-import { BarChart3, List } from "@/shared/icons";
+import { PLAYER_DETAIL_TABS } from "@/features/players/constants";
+import type { StatisticsTab } from "@/features/players/types";
 import styles from "./PlayerStatisticsTabs.module.scss";
 
+export type { StatisticsTab };
+
 interface Props {
-	activeTab: "summary" | "catalog";
-	onChange: (tab: "summary" | "catalog") => void;
+	activeTab: StatisticsTab;
+	onChange: (tab: StatisticsTab) => void;
 }
+
 export default function PlayerStatisticsTabs({ activeTab, onChange }: Props) {
-	const tabs = [
-		{ key: "summary" as const, label: "Resumen", Icon: BarChart3 },
-		{ key: "catalog" as const, label: "Todas las estadísticas", Icon: List },
-	];
 	return (
 		<div
 			className={styles.playerStatisticsTabs}
 			role="tablist"
-			aria-label="Estadísticas del jugador"
+			aria-label="Información y estadísticas del jugador"
 		>
-			{tabs.map(({ key, label, Icon }, index) => (
+			{PLAYER_DETAIL_TABS.map(({ key, label, Icon }, index) => (
 				<button
 					key={key}
 					type="button"
@@ -30,9 +30,20 @@ export default function PlayerStatisticsTabs({ activeTab, onChange }: Props) {
 						if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key))
 							return;
 						event.preventDefault();
-						const next =
-							event.key === "Home" ? 0 : event.key === "End" ? 1 : 1 - index;
-						onChange(tabs[next].key);
+						let next = index;
+						if (event.key === "Home") {
+							next = 0;
+						} else if (event.key === "End") {
+							next = PLAYER_DETAIL_TABS.length - 1;
+						} else if (event.key === "ArrowRight") {
+							next = (index + 1) % PLAYER_DETAIL_TABS.length;
+						} else if (event.key === "ArrowLeft") {
+							next =
+								(index - 1 + PLAYER_DETAIL_TABS.length) %
+								PLAYER_DETAIL_TABS.length;
+						}
+
+						onChange(PLAYER_DETAIL_TABS[next].key);
 						const buttons =
 							event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>(
 								"button",
@@ -41,7 +52,7 @@ export default function PlayerStatisticsTabs({ activeTab, onChange }: Props) {
 					}}
 				>
 					<Icon size={18} aria-hidden="true" />
-					{label}
+					<span>{label}</span>
 				</button>
 			))}
 		</div>

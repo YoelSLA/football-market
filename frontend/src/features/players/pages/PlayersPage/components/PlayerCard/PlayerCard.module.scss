@@ -111,9 +111,8 @@
 
 	&__leagueIcon {
 		// 4. 📦 Box Model
-		width: 24px;
-		height: 24px;
-		object-fit: contain;
+		width: 28px;
+		height: 28px;
 	}
 
 	&__header {
@@ -177,12 +176,6 @@
 
 		// 5. 🔤 Typography
 		font-size: 10px;
-		img {
-			// 4. 📦 Box Model
-			width: 18px;
-			height: 18px;
-			object-fit: contain;
-		}
 	}
 
 	&__statistics {

@@ -7,6 +7,8 @@
 
 	// 7. ⚙️ Behavior
 	overflow-y: auto;
+	scrollbar-gutter: stable;
+
 	&__header {
 		// 3. 🧩 Layout
 		display: flex;

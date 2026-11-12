@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { CompetitionLogo } from "@/shared/components";
 import styles from "./ImageSelect.module.scss";
 
 export interface ImageSelectOption {
 	value: string;
 	label: string;
 	image?: string | null;
+	imageType?: "competition";
 }
 
 interface Props {
@@ -119,6 +121,22 @@ export default function ImageSelect({
 	};
 
 	const listId = `listbox-${label.replace(/\s+/g, "-").toLowerCase()}`;
+	const renderImage = (option: ImageSelectOption, defaultClassName: string) => {
+		if (option.imageType === "competition") {
+			return (
+				<CompetitionLogo
+					competitionName={option.label}
+					src={option.image}
+					className={styles.imageSelect__competitionLogo}
+					decorative
+				/>
+			);
+		}
+
+		return option.image ? (
+			<img className={defaultClassName} src={option.image} alt="" />
+		) : null;
+	};
 
 	return (
 		<div className={styles.imageSelect} ref={rootRef}>
@@ -137,13 +155,7 @@ export default function ImageSelect({
 				onClick={() => !disabled && setOpen((value) => !value)}
 				onKeyDown={handleKeyDown}
 			>
-				{selected?.image && (
-					<img
-						className={styles.imageSelect__thumb}
-						src={selected.image}
-						alt=""
-					/>
-				)}
+				{selected && renderImage(selected, styles.imageSelect__thumb)}
 				<span className={styles.imageSelect__value}>{displayLabel}</span>
 				<span className={styles.imageSelect__caret} aria-hidden="true">
 					▾
@@ -178,13 +190,7 @@ export default function ImageSelect({
 								}
 							}}
 						>
-							{option.image && (
-								<img
-									className={styles.imageSelect__optionImage}
-									src={option.image}
-									alt=""
-								/>
-							)}
+							{renderImage(option, styles.imageSelect__optionImage)}
 							<span>{option.label}</span>
 						</div>
 					))}

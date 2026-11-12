@@ -8,6 +8,8 @@ export const playersQueryKeys = {
 	detail: (id: number) => ["players", "detail", id] as const,
 	sampleSeason: (id: number) => ["players", "demo-season", id] as const,
 	tokenQuote: (id: number) => ["players", "demo-quotes", id] as const,
+	quotes: (id: number) => ["players", "quotes", id] as const,
+	currentQuote: (id: number) => ["players", "quotes", "current", id] as const,
 	statistics: (id: number, seasonKey: string | null) =>
 		["players", "statistics", id, seasonKey ?? "auto"] as const,
 	scoreRanking: ["players", "ranking", "score"] as const,

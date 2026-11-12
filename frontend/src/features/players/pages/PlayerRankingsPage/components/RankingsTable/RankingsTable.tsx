@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { PlayerRankingItem, RankingMode } from "@/features/players/types";
 import {
-	NationalityFlag,
+	CompetitionLogo,
 	PlayerPortrait,
 	TeamBadge,
 } from "@/shared/components";
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default function RankingsTable({ items, mode }: Props) {
+	const location = useLocation();
 	const formatValue = (player: PlayerRankingItem) => {
 		if (mode === "PERFORMANCE") {
 			return player.score !== undefined
@@ -90,6 +91,7 @@ export default function RankingsTable({ items, mode }: Props) {
 							<td className={styles.td_player}>
 								<Link
 									to={`/players/${player.playerId}`}
+									state={{ from: `${location.pathname}${location.search}` }}
 									className={styles.playerLink}
 									title={`Ver detalle de ${player.playerName}`}
 								>
@@ -117,13 +119,12 @@ export default function RankingsTable({ items, mode }: Props) {
 
 							<td className={styles.td_league}>
 								<div className={styles.leagueContainer}>
-									{player.leagueFlag && (
-										<NationalityFlag
-											src={player.leagueFlag}
-											nationality={player.leagueName}
-											className={styles.leagueFlag}
-										/>
-									)}
+									<CompetitionLogo
+										src={player.leagueFlag}
+										competitionName={player.leagueName}
+										className={styles.leagueFlag}
+										decorative
+									/>
 									<span className={styles.leagueName}>{player.leagueName}</span>
 								</div>
 							</td>
