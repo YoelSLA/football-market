@@ -1,7 +1,12 @@
 package footballmarket.features.market.infraestructure;
 
 import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.portfolio.domain.records.OperationHistoryAggregate;
+import java.time.OffsetDateTime;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -44,20 +49,67 @@ public interface MarketTransactionRepository extends JpaRepository<MarketTransac
           + " order by t.executedAt asc, t.id asc")
   List<MarketTransaction> findFinancialHistory(@Param("userId") Long userId);
 
-  /**
-   * Carga el historial personal completo en el orden contractual de presentación.
-   *
-   * <p>La consulta dedicada conserva el orden ascendente de {@link #findFinancialHistory(Long)},
-   * utilizado por la reconstrucción contable, y recupera en una sola lectura los participantes y el
-   * jugador necesarios para interpretar cada operación.
-   *
-   * @param userId usuario que debe figurar como comprador o vendedor
-   * @return transacciones propias desde la más reciente, con desempate por identidad descendente
-   */
+  /** Carga una página filtrada con todas las relaciones to-one necesarias para la respuesta. */
+  @EntityGraph(attributePaths = {"buyer", "seller", "player", "player.team", "player.team.league"})
   @Query(
-      "select t from MarketTransaction t join fetch t.buyer join fetch t.seller"
-          + " join fetch t.player"
-          + " where t.buyer.id = :userId or t.seller.id = :userId"
-          + " order by t.executedAt desc, t.id desc")
-  List<MarketTransaction> findOperationHistory(@Param("userId") Long userId);
+      value =
+          "select t from MarketTransaction t join t.player p"
+              + " where (t.buyer.id = :userId or t.seller.id = :userId)"
+              + " and (:type is null or (:type = 'BUY' and t.buyer.id = :userId)"
+              + " or (:type = 'SELL' and t.seller.id = :userId))"
+              + " and (:search is null or cast(function('catalog_normalize_name', cast(:search as string)) as string) = ''"
+              + " or cast(function('catalog_normalize_name', p.name) as string) like"
+              + " concat('%', replace(replace(replace(cast(function('catalog_normalize_name', cast(:search as string)) as string),"
+              + " '!', '!!'), '%', '!%'), '_', '!_'), '%') escape '!')"
+              + " and (:filterExecutedFrom = false or t.executedAt >= :executedFrom)"
+              + " and (:filterExecutedBefore = false or t.executedAt < :executedBefore)",
+      countQuery =
+          "select count(t) from MarketTransaction t join t.player p"
+              + " where (t.buyer.id = :userId or t.seller.id = :userId)"
+              + " and (:type is null or (:type = 'BUY' and t.buyer.id = :userId)"
+              + " or (:type = 'SELL' and t.seller.id = :userId))"
+              + " and (:search is null or cast(function('catalog_normalize_name', cast(:search as string)) as string) = ''"
+              + " or cast(function('catalog_normalize_name', p.name) as string) like"
+              + " concat('%', replace(replace(replace(cast(function('catalog_normalize_name', cast(:search as string)) as string),"
+              + " '!', '!!'), '%', '!%'), '_', '!_'), '%') escape '!')"
+              + " and (:filterExecutedFrom = false or t.executedAt >= :executedFrom)"
+              + " and (:filterExecutedBefore = false or t.executedAt < :executedBefore)")
+  Page<MarketTransaction> findOperationHistory(
+      @Param("userId") Long userId,
+      @Param("search") String search,
+      @Param("type") String type,
+      @Param("filterExecutedFrom") boolean filterExecutedFrom,
+      @Param("executedFrom") OffsetDateTime executedFrom,
+      @Param("filterExecutedBefore") boolean filterExecutedBefore,
+      @Param("executedBefore") OffsetDateTime executedBefore,
+      Pageable pageable);
+
+  /** Calcula indicadores sobre el mismo conjunto filtrado, con independencia de la página. */
+  @Query(
+      "select new footballmarket.features.portfolio.domain.records.OperationHistoryAggregate("
+          + " count(t),"
+          + " coalesce(sum(case when t.buyer.id = :userId then 1 else 0 end), 0),"
+          + " coalesce(sum(case when t.seller.id = :userId then 1 else 0 end), 0),"
+          + " coalesce(sum(case when t.buyer.id = :userId then t.quantity else 0 end), 0),"
+          + " coalesce(sum(case when t.seller.id = :userId then t.quantity else 0 end), 0),"
+          + " coalesce(sum(case when t.buyer.id = :userId then t.totalAmount else 0 end), 0),"
+          + " coalesce(sum(case when t.seller.id = :userId then t.totalAmount else 0 end), 0))"
+          + " from MarketTransaction t join t.player p"
+          + " where (t.buyer.id = :userId or t.seller.id = :userId)"
+          + " and (:type is null or (:type = 'BUY' and t.buyer.id = :userId)"
+          + " or (:type = 'SELL' and t.seller.id = :userId))"
+          + " and (:search is null or cast(function('catalog_normalize_name', cast(:search as string)) as string) = ''"
+          + " or cast(function('catalog_normalize_name', p.name) as string) like"
+          + " concat('%', replace(replace(replace(cast(function('catalog_normalize_name', cast(:search as string)) as string),"
+          + " '!', '!!'), '%', '!%'), '_', '!_'), '%') escape '!')"
+          + " and (:filterExecutedFrom = false or t.executedAt >= :executedFrom)"
+          + " and (:filterExecutedBefore = false or t.executedAt < :executedBefore)")
+  OperationHistoryAggregate aggregateOperationHistory(
+      @Param("userId") Long userId,
+      @Param("search") String search,
+      @Param("type") String type,
+      @Param("filterExecutedFrom") boolean filterExecutedFrom,
+      @Param("executedFrom") OffsetDateTime executedFrom,
+      @Param("filterExecutedBefore") boolean filterExecutedBefore,
+      @Param("executedBefore") OffsetDateTime executedBefore);
 }

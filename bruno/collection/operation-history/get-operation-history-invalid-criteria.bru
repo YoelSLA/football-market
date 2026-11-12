@@ -1,0 +1,31 @@
+meta {
+  name: Rechazar criterio inválido (400)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/users/me/transactions?type=TRANSFER
+  body: none
+  auth: bearer
+}
+
+params:query {
+  type: TRANSFER
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}
