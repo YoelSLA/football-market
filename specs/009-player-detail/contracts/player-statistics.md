@@ -1,61 +1,130 @@
-# Contrato propuesto: consulta individual de estadísticas
+# Contrato HTTP: Consulta individual de estadísticas
 
-> **PLAN visual 2026-11-12:** el contrato HTTP y la selección de snapshot no cambian. La
-> implementación reutiliza esta respuesta y aplica el contrato de presentación del
-> [wireframe canónico](../../../docs/wireframes/player-detail.md): cabecera de 3 zonas con cotización oficial
-> y badges de variación, cuatro tarjetas KPI principales, dos paneles temáticos específicos (sin barras
-> de progreso ni bloque de destacadas) y catálogo agrupado por 8 categorías. No se agregan parámetros
-> de unidad, endpoints ni campos de respuesta.
+**Endpoint**: `GET /api/players/{id}/statistics`
+**Estado**: Contrato vigente del sistema.
+**Referencias normativas**: [spec.md](../spec.md), [plan.md](../plan.md), [data-model.md](../data-model.md) y [metric-glossary.md](metric-glossary.md).
 
-Diseño de PLAN de SPEC-009, 2026-10-25. No acredita endpoint implementado. Complementa la identidad existente sin modificar su respuesta ni el catálogo. Fuente funcional: `spec.md` FR-025–048 y Clarify; FR-045 define competición legible/fallback, FR-046 distingue IDs/no encontrado/ausencia, FR-047 conserva respuesta compatible ante error y FR-048 referencia el glosario.
+---
 
-## Solicitud
+## 1. Solicitud
 
-`GET /api/players/{id}/statistics?seasonKey=<clave-canónica>` con Bearer y reglas de autenticación existentes. `id` Long positivo obligatorio; inválido, no numérico o fuera de rango → 400. `seasonKey` string opcional no vacío de máximo 255 caracteres, comparación exacta parametrizada con el valor persistido (no usar seasonLabel como identidad ni interpretar rangos a partir de la etiqueta). Temporada válida sin registros → ausencia exitosa, no jugador no encontrado. El detalle no agrega un selector visual.
+```http
+GET /api/players/7821/statistics?seasonKey=2025-2026
+Authorization: Bearer <JWT>
+```
 
-Sin `seasonKey`, seleccionar la última extracción confirmada disponible del jugador y devolver su contexto real. Con ella, filtrar por esa temporada antes de seleccionar fecha. No hay parámetros de canal, fecha, recálculo, fuente ni población. La consulta no escribe ni llama a WhoScored.
+### Parámetros
 
-## Respuesta 200
+| Parámetro | Ubicación | Tipo | Reglas |
+| --- | --- | --- | --- |
+| `id` | path | integer (`Long`) | Identificador interno del jugador; requerido, número entero positivo (`id > 0`). Inválido o menor a 1 produce HTTP 400. |
+| `seasonKey` | query | string | Clave canónica de la temporada; opcional, longitud máxima 255 caracteres. Comparación exacta con el valor persistido. |
 
-| Campo | Tipo JSON | Semántica |
+**Comportamiento de selección de temporada**:
+- **Sin `seasonKey`**: Selecciona la última extracción confirmada disponible del jugador y devuelve su contexto real.
+- **Con `seasonKey`**: Filtra por la temporada solicitada antes de seleccionar la fecha más reciente. Si el jugador no registra extracciones en esa temporada, responde HTTP 200 con estado `NO_DATA` y métricas en `null`, nunca HTTP 404.
+
+---
+
+## 2. Respuesta 200 — Éxito
+
+```json
+{
+  "playerId": 7821,
+  "requestedSeasonKey": "2025-2026",
+  "status": "PARTIAL",
+  "seasonKey": "2025-2026",
+  "seasonLabel": "Temporada 2025/2026",
+  "extractionDate": "2026-10-18",
+  "competitionKey": "12",
+  "competitionName": "Primera Division",
+  "metrics": [
+    {
+      "key": "minutes_played_total",
+      "unit": "SEASON_TOTAL",
+      "value": 1890,
+      "source": "JSON"
+    },
+    {
+      "key": "appearances_total",
+      "unit": "SEASON_TOTAL",
+      "value": 21,
+      "source": "JSON"
+    },
+    {
+      "key": "whoscored_rating_average",
+      "unit": "AVERAGE_RATING",
+      "value": 6.84,
+      "source": "JSON"
+    },
+    {
+      "key": "pass_completion_percentage",
+      "unit": "PERCENTAGE",
+      "value": 78.5,
+      "source": "SCRAPING"
+    },
+    {
+      "key": "goals_total",
+      "unit": "SEASON_TOTAL",
+      "value": 0,
+      "source": "JSON"
+    },
+    {
+      "key": "cross_assists_per_match",
+      "unit": "PER_MATCH",
+      "value": null,
+      "source": null
+    }
+  ]
+}
+```
+
+### Semántica de campos principales
+
+| Campo | Tipo | Significado |
 | --- | --- | --- |
-| `playerId` | integer | Identidad interna solicitada y visible |
-| `requestedSeasonKey` | string o null | Parámetro explícito o null |
-| `status` | string | AVAILABLE: 60 valores; PARTIAL: 1–59; NO_DATA: ninguno |
-| `seasonKey` | string o null | Temporada real del snapshot; null sin snapshot |
-| `seasonLabel` | string o null | Etiqueta persistida, nunca temporada simulada |
-| `extractionDate` | string ISO date o null | Fecha real seleccionada, no reloj del navegador |
-| `competitionKey` | string o null | Identidad opaca de competición del snapshot persistido; no liga actual ni instrucción de consulta externa |
-| `competitionName` | string o null | Nombre legible solo con correspondencia fiable disponible para la clave del snapshot; null si no puede determinarse sin inventar información |
-| `metrics` | array | Exactamente 60 elementos únicos de MetricCatalog, en su orden canónico |
+| `playerId` | integer (`Long`) | Identificador del jugador consultado. |
+| `requestedSeasonKey` | string o `null` | Parámetro explícito de la solicitud o `null` si no se especificó. |
+| `status` | string | `AVAILABLE` (60 valores presentes), `PARTIAL` (1 a 59 valores) o `NO_DATA` (0 valores). |
+| `seasonKey` | string o `null` | Clave canónica de la temporada resuelta; `null` si no hay snapshot. |
+| `seasonLabel` | string o `null` | Etiqueta descriptiva persistida; `null` si no hay snapshot. |
+| `extractionDate` | string ISO date o `null` | Fecha efectiva de la extracción confirmada; `null` si no hay snapshot. |
+| `competitionKey` | string o `null` | Identificador persistido de la competición en el proveedor. |
+| `competitionName` | string o `null` | Nombre legible resuelto por correspondencia local; `null` («Competición no disponible») si no se puede determinar fehacientemente. |
+| `metrics` | array | Lista de exactamente 60 elementos únicos en orden canónico según [metric-glossary.md](metric-glossary.md). |
 
-Cada elemento contiene `key` (string canónica), `unit` (SEASON_TOTAL, PER_MATCH, PERCENTAGE o AVERAGE_RATING), `value` (number o null) y `source` (JSON, SCRAPING o null). Son números JSON desde BigDecimal, no strings localizados. La unidad SEASON_TOTAL se presenta en minutos/partidos/goles/etc. según metadatos de la clave; no implica que todos los acumulados sean goles.
+### Elementos de `metrics`
 
-Etiquetas y unidades visibles: [metric-glossary.md](metric-glossary.md), 60 claves. `competitionName` es enriquecimiento opcional de lectura, no dato histórico actualmente persistido ni razón para agregar tabla o llamar a proveedores. Solo resolverlo con una correspondencia local explícita e inequívoca de la clave del snapshot con información disponible; la asociación actual jugador→equipo→liga no acredita esa correspondencia. Sin ella, null y UI «Competición no disponible». Sin snapshot, competitionKey/competitionName null.
+Cada elemento del array contiene:
+- `key`: clave canónica WhoScored (string).
+- `unit`: unidad técnica (`SEASON_TOTAL`, `PER_MATCH`, `PERCENTAGE` o `AVERAGE_RATING`).
+- `value`: valor numérico (`BigDecimal`) o `null` si la métrica no estuvo presente en la extracción. El número `0` se conserva íntegramente como dato válido.
+- `source`: origen del valor (`JSON`, `SCRAPING` o `null` si el valor es nulo).
 
-No se publican números de ejemplo para evitar convertir cifras del mockup en estadísticas reales. La forma se documenta mediante tabla; ejemplos futuros de OpenAPI/tests deben indicar su naturaleza de fixtures, nunca cargarse como fallback del producto.
+---
 
-## Selección y composición normativa del contrato
+## 3. Reglas de selección y composición del snapshot
 
-1. Comprobar elegibilidad igual que identidad: jugador activo, equipo y liga visibles; inexistente o no visible → mismo 404 PLAYER_NOT_FOUND, sin exponer estadísticas.
-2. Solo filas con contexto RESOLVED e item referenciado COMPLETED, coherentes en jugador/fecha/canal. No exigir confirmación poblacional ni run global COMPLETED. Ignorar filas huérfanas o de contexto sin resolver.
-3. Elegir fecha mayor del jugador y temporada pedida; si no se pide, última fecha del jugador. Dentro de fecha, JSON ancla antes de scraping; luego observedAt e ID mayores como desempate determinista. El ancla determina temporada y competición; no es una elección de la temporada más numerosa ni del equipo actual.
-4. Completar desde scraping solo con jugador, temporada, fecha y competición exactamente iguales al ancla JSON. Cada valor JSON no nulo se conserva, incluido cero. Clave ausente en ambos → value/source null. Las tres claves exclusivas scraping también requieren coincidencia de contexto. Sin JSON en esa fecha usar scraping confirmado, nunca JSON de una fecha anterior.
-5. Emitir 60 entradas incluso sin snapshot. Sin candidato: contexto null, valores/source null, status NO_DATA. Fallos de consulta no se convierten en esta respuesta.
+1. **Elegibilidad y visibilidad**: La consulta aplica la misma política que la identidad (`findVisibleById`). Jugadores inexistentes o no visibles responden HTTP 404 (`PLAYER_NOT_FOUND`).
+2. **Confirmación estricta**: Solo se seleccionan filas con contexto `RESOLVED` y cuyo ítem de ejecución asociado esté en estado `COMPLETED`. Se ignoran filas huérfanas o con contexto no resuelto.
+3. **Anclaje en JSON**: Se busca la fecha más reciente del jugador. Si coinciden extracciones de distintas fuentes para esa fecha, la fuente `JSON` ancla el contexto; se desempata por `observedAt DESC` e `id DESC`.
+4. **Respaldo determinista con SCRAPING**: Si la fila JSON ancla contiene métricas nulas, solo se completan desde registros `SCRAPING` cuya fecha, jugador, temporada y competición coincidan exactamente con el ancla. Claves ausentes en ambas fuentes permanecen con `value: null` y `source: null`.
+5. **Garantía de 60 entradas**: La respuesta siempre entrega el catálogo completo de 60 métricas. Si el jugador no registra extracciones confirmadas, el estado es `NO_DATA`, los metadatos de contexto son `null` y las 60 métricas contienen `value: null` y `source: null`.
 
-## Errores y seguridad
+---
 
-- 400: parámetros inválidos, contrato global existente.
-- 401: credencial ausente/expirada; conservar flujo global de sesión.
-- 404: PLAYER_NOT_FOUND para inexistente/no visible, idéntica política que identidad.
-- 500: fallo interno de lectura, contrato global; frontend ofrece reintento y mantiene identidad ya obtenida. No introducir 502 de proveedor: no hay consulta externa.
+## 4. Errores y seguridad
 
-La política de FR-046 se aplica a ambas lecturas: ID decimal positivo dentro de Long; formato inválido/cero/negativo/fuera de rango → 400, válido inexistente/no visible → 404; jugador visible sin estadísticas → 200 NO_DATA. El endpoint de identidad existente no tiene validación positiva explícita: requiere alineación futura acotada para cero/negativos, conservando DTO, rutas y visibilidad. Este documento no afirma que ese cambio esté implementado.
+| Código HTTP | Condición | Comportamiento |
+| --- | --- | --- |
+| **400 Bad Request** | Formato de `id` inválido, no numérico o menor/igual a cero (`id <= 0`). | Devuelve `INVALID_PARAMETER_TYPE`. |
+| **401 Unauthorized** | Credencial JWT ausente o expirada. | Redirección a `/login`. |
+| **404 Not Found** | Jugador inexistente o inactivo/no visible. | Devuelve `PLAYER_NOT_FOUND` idéntico al de identidad. |
+| **500 Server Error** | Fallo interno al leer la base de datos. | La interfaz retiene la identidad ya cargada, comunica el error y ofrece botón de reintento. |
 
-No requiere roles operativos de sincronización ni amplía permisos existentes. No exponer entidades JPA, IDs de runs/items o información financiera. OpenAPI de Controller/DTO y tests funcionales de Controller deben sostener este contrato en implementación, sin depender de REST Docs retirado.
+### Retención de respuesta compatible en frontend
 
-## Contrato de presentación
-
-Usar los perfiles, matriz y componentes aprobados de `../spec.md` dentro de la jerarquía del [wireframe canónico](../../../docs/wireframes/player-detail.md). Etiquetas, categorías y prioridades son metadatos de presentación de la feature, no valores del proveedor. Fuente nullable por métrica mantiene trazabilidad; número cero siempre disponible. Tres pestañas ordenadas (`Cotizaciones` por defecto, `Resumen deportivo` con 4 KPI y 2 paneles temáticos específicos, y `Todas las estadísticas` con 60 métricas), buscador y categorías locales en encabezado; sin radar, xG/xA, percentiles ni barras sin escala de referencia.
-
-Error de actualización: conservar solo la última respuesta exitosa del mismo playerId/seasonKey resuelto, mostrando su fecha original, el error, reintento y «Mostrando la última consulta disponible; no se pudo actualizar». No hacer pasar esa respuesta por una actualización exitosa ni convertirla a NO_DATA. No mezclarla con una selección explícita distinta; sin respuesta compatible presentar error sin valores. Para consulta sin seasonKey, una actualización fallida puede conservar el último contexto resuelto del mismo jugador identificado como anterior; no afirmar conocer la temporada de una respuesta que falló. Una respuesta nueva exitosa sustituye la anterior incluso si es NO_DATA.
+Si una actualización periódica o manual falla por desconexión:
+- Si existe una lectura previa exitosa del mismo `playerId`, se conserva visible en pantalla indicando: *«Mostrando la última consulta disponible; no se pudo actualizar»* y se ofrece botón de reintento.
+- Una nueva respuesta exitosa (incluso si es `NO_DATA`) reemplaza completamente la lectura anterior.
+- Navegar a otro jugador reinicia el estado y no retiene datos del jugador previo.
