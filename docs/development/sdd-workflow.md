@@ -14,7 +14,7 @@ Infraestructura efectiva: `.opencode/commands/`, `.specify/scripts/bash/`, `.spe
 
 ## 2. Responsabilidades y trazabilidad
 
-Cada funcionalidad tiene una carpeta real en `specs/`, una `spec.md` que define sus User Stories y un `tasks.md` que es la fuente única de sus tareas técnicas.
+Cada funcionalidad tiene una carpeta real en `specs/`, cuya estructura obligatoria y permanente está compuesta por la tríada `spec.md` (requisitos y User Stories vigentes), `plan.md` (diseño y decisiones técnicas vigentes) y `tasks.md` (fuente única de tareas técnicas vigentes). Estos tres archivos son permanentes y no deben eliminarse nunca de la carpeta de la spec, aunque su contenido se simplifique o actualice para reflejar exclusivamente el estado actual del sistema. Documentos auxiliares (como contratos de prueba obsoletos o checklists informales) pueden eliminarse cuando dejen de tener valor normativo, previa verificación de su preservación en el historial de Git.
 
 - Las **User Stories** se identifican, definen, refinan y verifican en `spec.md`. No requieren Issue propia ni tarjeta individual.
 - Las **tareas `Txxx`** viven exclusivamente en `tasks.md`. MUST NOT convertirse en Issues, tarjetas ni checklists de seguimiento, ni duplicar su estado.
@@ -90,12 +90,16 @@ El `<scope>` del directorio de la SPEC y el de su rama van en **inglés**, confo
 
 ### 5.1 Inicio de un issue desde GitHub
 
-El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue en GitHub: verifica el issue y sus dependencias, materializa la SPEC, crea y publica la rama desde `origin/dev`, la vincula al issue, actualiza el seguimiento en GitHub Projects y deja el contexto preparado para el flujo SDD. Su definición es `.opencode/commands/start-issue.md`.
+El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue en GitHub: verifica el issue y sus dependencias, materializa la SPEC (creando una nueva o preparando la evolución de una existente), crea y publica la rama desde `origin/dev`, la vincula al issue, actualiza el seguimiento en GitHub Projects y deja el contexto preparado para el flujo SDD. Su definición es `.opencode/commands/start-issue.md`.
 
 Reglas de la operación:
 
 - El identificador de la SPEC lo provee la persona que invoca el comando. MUST NOT generarse, inferirse ni asignarse automáticamente; si falta, el comando se detiene y lo pide.
-- Antes de modificar el issue, MUST verificarse que el identificador no esté en uso, cruzando specs locales, ramas remotas, issues de GitHub e items del proyecto, y registrando el resultado de cada fuente. Ante cualquier coincidencia el comando se detiene y reporta; MUST NOT reasignarse ni corregirse el número.
+- Antes de determinar el modo operativo, MUST comprobarse que el árbol de trabajo esté limpio y sincronizarse `dev` con `origin/dev` (`git fetch origin`, `git checkout dev`, `git merge --ff-only origin/dev`).
+- El comando distingue dos modos operativos según la existencia de la carpeta de la SPEC:
+  - **Modo A (Creación de SPEC nueva)**: cuando no existe la carpeta `specs/<spec_id>-<scope>`, MUST verificarse que el identificador no esté en uso, cruzando las 4 fuentes: specs locales, ramas remotas, issues de GitHub e items del proyecto, y registrando el resultado de cada fuente. Ante cualquier coincidencia el comando se detiene y reporta; MUST NOT reasignarse ni corregirse el número.
+  - **Modo B (Evolución de SPEC existente)**: cuando la carpeta `specs/<spec_id>-<scope>` ya existe en el repositorio, el comando habilita que un nuevo issue evolucione la funcionalidad existente bajo el enfoque Spec-Anchored. Valida la existencia de la tríada obligatoria permanente (`spec.md`, `plan.md`, `tasks.md`), verifica que no exista colisión de rama activa o PR abierto en remoto para esa SPEC, y reutiliza la spec existente (`--reuse`, `SPEC_ACTION=reused`) sin sobrescribir los artefactos existentes. La rama conserva obligatoriamente el scope original del directorio de la spec (`<type>/<num>-<existing-scope>`), conforme a `docs/development/git-workflow.md`.
+- Todo nuevo ciclo de trabajo debe partir rigurosamente de `origin/dev`. Si ya existía una rama local previa para la funcionalidad, MUST auditarse su estado, commits y relación con `origin/dev`. Queda estrictamente prohibido eliminarla, resetearla o sobrescribirla automáticamente; ante cualquier discrepancia o desalineación técnica, el comando se detiene y solicita confirmación del usuario.
 - MUST preservarse íntegramente el body del issue —incluidos RF, CA, dependencias y referencias—, los labels, el milestone, las asignaciones y las relaciones con otros issues. La conservación se verifica comparando el estado previo con el resultante, no se presume.
 - La rama se crea desde `origin/dev` y se publica; su referencia remota se vincula al issue en una sola operación.
 - El registro de seguimiento pasa a `In Progress` al crear y publicar la rama, que es el inicio del trabajo sobre el issue, conforme a §4.
@@ -113,7 +117,7 @@ Leer la definición del comando correspondiente y ejecutar solo la operación au
 - **CLARIFY:** siempre obligatorio después de SPECIFY. Resolver decisiones funcionales y registrarlas en spec, no solo chat. Cero preguntas es válido si el escaneo acredita claridad; omitir no equivale a completar. Al finalizar la fase CLARIFY (con la especificación clarificada, confirmada y subida a la rama remota), MUST crearse siempre el Pull Request hacia `dev` vinculando el issue correspondiente si aún no existe, para asegurar visibilidad temprana y trazabilidad continua.
 - **PLAN:** diseño implementable, Constitution Check antes y después, contratos y consumidores. Mantener plan, research, data-model, contracts y quickstart pertinentes, justificando no aplicabilidad. Corregir requisitos upstream, no ocultarlos en diseño. La documentación del contrato HTTP de una feature se sostiene en sus `contracts/`, en las anotaciones OpenAPI de Controllers y DTO y en los tests funcionales de Controller; ninguna tarea de entrega puede depender de una herramienta de documentación retirada sin sustituirla por esas fuentes.
 - **CHECKLIST:** obligatorio; general de calidad más especializados aplicables, selección justificada. Generación no es evaluación; respetar propiedad del revisor, no marcar para avanzar.
-- **TASKS:** preservar IDs y avance; cobertura, dependencias, rutas, tareas compartidas y verificabilidad. Incluir creación o modificación de tests backend cuando las normas aplicables lo exijan; no tests frontend ni tareas humanas de autorización. Tareas completas significan implementación completa, no cierre.
+- **TASKS:** al reanudar tareas en curso de un mismo issue, preservar IDs y avance existente. Al iniciar un nuevo issue o ciclo de evolución sobre una SPEC existente, las tareas completadas de ciclos anteriores se consideran archivadas en los commits y diffs de Git; `tasks.md` se actualiza y simplifica para listar exclusivamente las tareas activas correspondientes al nuevo alcance, evitando acumular registros históricos en la documentación viva. Mantener cobertura, dependencias, rutas, tareas compartidas y verificabilidad. Incluir creación o modificación de tests backend cuando las normas aplicables lo exijan; no tests frontend ni tareas humanas de autorización. Tareas completas significan implementación completa, no cierre.
 - **ANALYZE:** `/speckit.analyze` estrictamente read-only. Contrastar Constitution, spec y clarificaciones, diseño, Tasks y checklists. Contradicciones normativas o funcionales, alcance no aprobado, cobertura insuficiente o criterio obligatorio no verificable son blockers. Hallazgos editoriales sin impacto material se reportan y no impiden avanzar. `Dependency ≠ Blocker`: dependencias técnicas conocidas, identificadas y resolubles mediante orden técnico y autorizaciones no son blockers.
 
 Si ANALYZE detecta una corrección mecánica inequívoca, el orquestador MAY realizar una única corrección **fuera del comando**, en operación separada. Informar exactamente lo corregido y detener. No hay loops autónomos de análisis y corrección.
@@ -194,6 +198,8 @@ Mantener la trazabilidad SPEC ↔ User Stories ↔ Tasks ↔ rama ↔ commits �
 imponer rama por US ni commit por tarea. Reutilizar la identidad de la spec: no renumerar, no
 reset y no hacer stash de cambios ajenos.
 
+Cualquier modificación funcional en el sistema debe sincronizar en el mismo cambio los requisitos vigentes (`spec.md`), los contratos (`contracts/`), la implementación de código y las pruebas backend pertinentes (principios IV y V de la Constitución). Antes de podar o eliminar cualquier sección histórica, requisito derogado o documento auxiliar de una spec, MUST verificarse que dicho contenido esté comprometido y preservado en el historial de Git (`git log -- <archivo>`), asegurando que la simplificación documental hacia el estado vigente no provoque pérdida de trazabilidad histórica.
+
 Declarar en el commit la spec, las User Stories o las tareas correspondientes y el alcance
 compartido, con hashes reales cuando existan. Vincular el Pull Request a la funcionalidad y a su
 registro de seguimiento; vincularlo no acredita implementación, revisión ni cierre. El Pull Request
@@ -249,9 +255,13 @@ tablero sostiene **una Issue por funcionalidad**: 12 items con identificador `SP
 mantenimiento. Sus secciones son evidencia y referencias históricas, no un índice vigente, y sus
 enlaces a documentos o anclas que cambiaron describen el estado de aquel momento.
 
-Las aprobaciones anteriores, los informes de revisión y testing, los registros de las
-especificaciones históricas y los Sync Impact Reports **no se eliminan ni se reescriben**. Cuando
-correspondan al alcance aprobado, mantienen su validez como evidencia.
+Las aprobaciones anteriores, los informes de auditoría, las evidencias de testing históricas y
+los Sync Impact Reports **no se eliminan ni se reescriben**, manteniendo su validez permanente como
+evidencia histórica de los gates aprobados. Por el contrario, los artefactos normativos de
+especificación (`spec.md`, `plan.md`, `tasks.md`, modelos y contratos) constituyen **documentación viva**
+(Constitución §V) que describe exclusivamente el comportamiento, diseño técnico y tareas vigentes del
+sistema, delegando el historial de cambios e iteraciones pasadas a Git tras verificar su persistencia en
+el repositorio.
 
 Esta sección no ejecuta el lifecycle, no modifica sistemas de seguimiento y no acredita fases
 históricas. Los hallazgos H1–H4 y el conflicto de tests de `tasks.md` de SPEC-007 permanecen fuera
