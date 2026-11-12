@@ -33,7 +33,7 @@
 		// 7. ⚙️ Behavior
 		overflow-y: auto;
 		overflow-x: hidden;
-		scrollbar-width: thin;
+		scrollbar-gutter: stable;
 	}
 }
 

@@ -1,8 +1,9 @@
-import { useState } from "react";
 import type { MarketPlayer } from "@/features/market/types";
-import { PlayerPortrait, TeamBadge } from "@/shared/components";
-import { Globe } from "@/shared/icons";
-import { getLeagueShield } from "@/shared/utils/leagueShield";
+import {
+	CompetitionLogo,
+	PlayerPortrait,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./MarketPlayerSummary.module.scss";
 
 interface Props {
@@ -23,15 +24,11 @@ const POSITION_BADGES: Record<string, string> = {
 };
 
 export default function MarketPlayerSummary({ player }: Props) {
-	const [leagueShieldFailed, setLeagueShieldFailed] = useState(false);
-
 	const position = POSITION_BADGES[player.position] ?? player.position;
 	const badgeClass =
 		position === "ARQ"
 			? styles.marketPlayerSummary__badge_goalkeeper
 			: styles.marketPlayerSummary__badge_outfield;
-
-	const leagueShield = getLeagueShield(player.leagueName);
 
 	return (
 		<div className={styles.marketPlayerSummary}>
@@ -59,17 +56,11 @@ export default function MarketPlayerSummary({ player }: Props) {
 						<span>{player.teamName}</span>
 					</p>
 					<p>
-						{leagueShield && !leagueShieldFailed ? (
-							<img
-								src={leagueShield}
-								alt=""
-								className={styles.marketPlayerSummary__metaIcon}
-								aria-hidden="true"
-								onError={() => setLeagueShieldFailed(true)}
-							/>
-						) : (
-							<Globe aria-hidden="true" />
-						)}
+						<CompetitionLogo
+							competitionName={player.leagueName}
+							className={styles.marketPlayerSummary__competitionLogo}
+							decorative
+						/>
 						<span>{player.leagueName}</span>
 					</p>
 				</div>

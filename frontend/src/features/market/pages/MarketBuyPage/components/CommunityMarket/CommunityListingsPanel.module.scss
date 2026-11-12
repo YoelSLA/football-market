@@ -12,6 +12,8 @@
 
 	// 7. ⚙️ Behavior
 	overflow-y: auto;
+	scrollbar-gutter: stable;
+
 	&__back {
 		// 4. 📦 Box Model
 		margin-bottom: 0.75rem;

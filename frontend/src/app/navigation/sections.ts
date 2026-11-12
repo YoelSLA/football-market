@@ -8,7 +8,6 @@ import {
 	Puzzle,
 	ShoppingCart,
 	Tag,
-	TrendingUp,
 	Trophy,
 	UsersRound,
 } from "@/shared/icons";
@@ -55,12 +54,6 @@ export const NAV_SECTIONS: NavSection[] = [
 				label: "Ranking",
 				icon: Trophy,
 				path: "/players/ranking",
-			},
-			{
-				key: "players-quote-history",
-				label: "Historial de cotizaciones",
-				icon: TrendingUp,
-				path: null,
 			},
 		],
 	},
