@@ -84,6 +84,12 @@
 	border-radius: 2px;
 }
 
+.imageSelect__competitionLogo {
+	// 4. 📦 Box Model
+	width: 20px;
+	height: 20px;
+}
+
 .imageSelect__value {
 	// 3. 🧩 Layout
 	flex: 1;

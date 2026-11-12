@@ -1,6 +1,10 @@
 import type { PlayerRankingItem } from "@/features/players/types";
 import { getNationalityFlag } from "@/features/players/utils";
-import { NationalityFlag, TeamBadge } from "@/shared/components";
+import {
+	CompetitionLogo,
+	NationalityFlag,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./RankingPlaceMeta.module.scss";
 
 interface Props {
@@ -28,7 +32,7 @@ function getLeagueCountryFlag(leagueName: string): string | null {
 }
 
 export default function RankingPlaceMeta({ player }: Props) {
-	const flag = getLeagueCountryFlag(player.leagueName) ?? player.leagueFlag;
+	const flag = getLeagueCountryFlag(player.leagueName);
 
 	return (
 		<div className={styles.meta}>
@@ -43,11 +47,18 @@ export default function RankingPlaceMeta({ player }: Props) {
 			</div>
 
 			<div className={styles.meta__leagueRow}>
-				{flag && (
+				{flag ? (
 					<NationalityFlag
 						src={flag}
 						nationality={player.leagueName}
 						className={styles.meta__flag}
+					/>
+				) : (
+					<CompetitionLogo
+						src={player.leagueFlag}
+						competitionName={player.leagueName}
+						className={styles.meta__competitionLogo}
+						decorative
 					/>
 				)}
 				<span className={styles.meta__leagueName}>{player.leagueName}</span>

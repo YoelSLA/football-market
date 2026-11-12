@@ -1,0 +1,144 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsCategoryFilters {
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1 1 0;
+	align-items: center;
+	gap: 8px;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: 4px 2px;
+
+	// 6. 🎨 Visual
+	scrollbar-width: thin;
+	scrollbar-color: ds.$border-panel transparent;
+
+	&__button {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		min-height: 40px;
+		padding: 0 12px;
+		border: 1px solid ds.$border-panel;
+		border-radius: 8px;
+
+		// 5. 🔤 Typography
+		font: inherit;
+		font-size: 13px;
+		font-weight: 500;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-dark;
+		color: ds.$text-muted-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+		transition:
+			background-color 160ms ease,
+			border-color 160ms ease,
+			color 160ms ease;
+
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
+			width: 18px;
+			height: 18px;
+		}
+
+		small {
+			// 3. 🧩 Layout
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+
+			// 4. 📦 Box Model
+			min-width: 20px;
+			padding: 2px 5px;
+			border-radius: 5px;
+
+			// 5. 🔤 Typography
+			font-size: 11px;
+			font-weight: 600;
+			font-variant-numeric: tabular-nums;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-panel-from;
+			color: ds.$text-muted-on-dark;
+		}
+
+		&:hover {
+			border-color: ds.$accent-nav;
+			background-color: ds.$surface-panel-to;
+			color: ds.$text-primary-on-dark;
+		}
+
+		&[aria-pressed="true"] {
+			// 5. 🔤 Typography
+			font-weight: 700;
+
+			// 6. 🎨 Visual
+			border-color: ds.$accent-sports-green;
+			background-color: ds.$surface-nav-active;
+			color: ds.$accent-highlight;
+
+			small {
+				color: ds.$accent-highlight;
+				background-color: ds.$surface-dark;
+			}
+		}
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 2px;
+		}
+	}
+}
+
+@include ds.down(ds.$bp-tablet) {
+	.playerStatisticsCategoryFilters {
+		gap: 6px;
+
+		&__button {
+			min-height: 38px;
+			padding: 0 10px;
+			font-size: 12px;
+
+			svg {
+				width: 16px;
+				height: 16px;
+			}
+
+			small {
+				font-size: 10px;
+			}
+		}
+	}
+}
+
+@include ds.down(ds.$bp-2xs) {
+	.playerStatisticsCategoryFilters {
+		&__button {
+			min-height: 36px;
+			padding: 0 8px;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.playerStatisticsCategoryFilters__button {
+		transition: none;
+	}
+}

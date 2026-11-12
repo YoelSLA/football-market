@@ -1,8 +1,32 @@
 # Guía de validación: Detalle individual del jugador
 
+## Validación vigente — rediseño visual 2026-11-12
+
+Después de la implementación del rediseño, contrastar la página de detalle del jugador con el [wireframe canónico](../../docs/wireframes/player-detail.md) usando un jugador real de cada posición. La validación visual comprueba la estructura de cabecera de 3 zonas, las 3 pestañas ordenadas, el resumen deportivo compacto de 4 KPI + 2 paneles temáticos, la paleta de tokens semánticos y la ausencia de scroll en escritorio.
+
+| Área | Resultado esperado |
+| --- | --- |
+| Cabecera | Tres zonas compactas: identidad a la izquierda (avatar 90×90 px enmarcado), tres micro-tarjetas titulares de 94 px en el centro, y caja de cotización oficial de 94 px a la derecha con precio en créditos, badges (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`), fecha oficial y variación absoluta en créditos. |
+| Pestañas | Tres pestañas ordenadas a todo el ancho (40 px): `[ Cotizaciones ]` (predeterminada), `[ Resumen deportivo ]` y `[ Todas las estadísticas ]`. |
+| Cotizaciones | Pestaña con gráfico SVG interactivo de evolución histórica, tooltip de cotización y detalle del valor oficial. |
+| Resumen deportivo | Cuatro tarjetas KPI superiores (`SummaryKpiCard`) con iconos de 24 px en caja de 48×48 px, títulos de 12 px, valores de 28 px bold sin unidades redundantes ni elipsis que corten texto; y exactamente dos paneles temáticos específicos por posición (`SummaryPanel`) con filas acotadas (`min-height: 44px; max-height: 58px;`) y espaciado armónico (`justify-content: space-evenly`), sin barras de progreso ni bloque de destacadas. |
+| Arquero | KPI: Calificación WhoScored, Tiros al arco recibidos, Porterías a cero, Atajadas/partido · Paneles: Atajadas por zona, Distribución y juego con pies. |
+| Defensor | KPI: Calificación WhoScored, Entradas/partido, Intercepciones/partido, Duelos aéreos ganados · Paneles: Acciones defensivas, Duelos y disciplina. |
+| Mediocampista | KPI: Calificación WhoScored, Asistencias, Entradas/partido, Regates exitosos · Paneles: Construcción y distribución, Posesión y equilibrio. |
+| Delantero | KPI: Calificación WhoScored, Tiros al arco, Goles/partido, Regates exitosos · Paneles: Definición por zona, Juego ofensivo y generación. |
+| Catálogo | Exploración superior con búsqueda, limpiar, 8 categorías con conteo y `aria-pressed`, leyenda de relevancia accesible y 60 métricas canónicas agrupadas. |
+| Estados | Carga, error con reintento, respuesta anterior compatible, NO_DATA (60 ausencias) y PARTIAL coinciden con el wireframe sin inventar valores. Semántica `null` ≠ `0` estrictamente respetada. |
+| Paleta semántica | Colores sólidos mediante `background-color` con tokens `$surface-page-deep`, `$surface-card-dark`, `$surface-panel-to`, `$surface-accent-deep`, `$surface-accent-dark`, `$accent-sports-green`, `$border-panel`. Cero gradientes, cero sombras decorativas. |
+| Responsive y Scroll | En escritorio (1920×1080, 1920×913, 1366×768, 1280×800): cero scroll vertical y horizontal en Resumen deportivo verificado con Playwright (`hasVerticalScroll: false`, `hasHorizontalScroll: false`). En tablet (768 px) y móvil (360 px): desplazamiento vertical natural sin overflow horizontal. |
+| Accesibilidad | Navegación por teclado (flechas, Tab, Home, End), foco visible, insignias y contrastes legibles sin depender exclusivamente del color. |
+
+No ejecutar sincronización ni modificar datos para fabricar escenarios. No corresponde build ni test durante PLAN.
+
+---
+
 ## Guía vigente del rediseño — 2026-10-25
 
-Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md).
+Guía para el usuario **después de una implementación autorizada**. No acredita implementación ni resultados; el agente no ejecutó estos comandos, tests o builds. No preparar datos disparando sincronizaciones/valoraciones desde esta guía. Contrato: [player-statistics.md](contracts/player-statistics.md); selección y estados: [data-model.md](data-model.md); referencia visual: [wireframe canónico](../../docs/wireframes/player-detail.md).
 
 ### Prerrequisitos y arranque futuro
 
@@ -38,13 +62,13 @@ Consultar el endpoint con la sesión existente desde la aplicación o cliente HT
 | Fila huérfana, item no COMPLETED o contexto no resuelto | No seleccionarla como confirmada; no sustituir error técnico por ausencia |
 | Sin datos de jugador visible | Mantener identidad/tabs; 60 claves con ausencia explícita, sin mocks |
 | Fallo estadístico, carga y reintento | Estados distintos; identidad y retorno permanecen, sin datos de otro jugador |
-| Cuatro posiciones | Cuatro tarjetas exactas, series y adicionales de spec; sin cálculos nuevos ni finanzas |
-| Todas las estadísticas | 60 claves únicas; categorías 5/19/10/5/3/10/4/4; búsqueda nombre/clave sin acentos/mayúsculas intersecta categoría; limpiar restaura todo |
+| Cuatro posiciones | Cuatro tarjetas, dos paneles específicos y un bloque de destacadas según el wireframe; sin duplicados, cálculos nuevos ni finanzas |
+| Todas las estadísticas | 60 claves únicas en grupos; categorías 5/19/10/5/3/10/4/4; búsqueda nombre/clave sin acentos/mayúsculas intersecta categoría; relevancia y unidad visibles; limpiar restaura todo |
 | Orden y aparición de tres claves | P→S→B disponibles, luego ausentes; cero disponible; nuevos valores reordenan catálogo sin cambiar Resumen |
 | Privacidad | Visitante/sesión vencida no accede; inexistente e inactivo mismo no encontrado; ID inválido 400 |
 | Navegación rápida A→B | Respuesta tardía no altera B ni mezcla identidad/contexto/valores |
 | Teclado | Tabs flechas/Home/End, foco y selección; buscador, categorías y reintento accesibles; gráficos comprensibles por texto |
-| Viewports 360/768/1280 × 640/800 | Sin recortes ni overflow horizontal del documento; scroll en PageLayout desktop, natural móvil; controles siempre alcanzables |
+| Viewports 360/768/1280 × 640/800 | Orden del wireframe conservado; sin recortes ni overflow horizontal del documento; scroll en PageLayout desktop, natural móvil; controles siempre alcanzables |
 | Catálogo y otras rutas | Navegación, retrato fallback y sesión sin regresiones; no borrar consumidores compartidos de demos |
 | Nombre histórico de competición | Nombre solo con correspondencia fiable; sin ella «Competición no disponible», nunca liga actual como sustituto |
 | ID inválido frente a ausencia | Ambas lecturas 400 para formato/rango inválido/cero/negativo; válido inexistente/no visible 404; estadísticas ausentes de visible 200 NO_DATA |

@@ -1,0 +1,182 @@
+@use "@/styles/abstracts" as ds;
+
+.identityBlock {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: 14px;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	&__portrait {
+		// 3. 🧩 Layout
+		flex: 0 0 auto;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		width: 88px;
+		height: 88px;
+		border-radius: 12px;
+
+		// 6. 🎨 Visual
+		object-fit: contain;
+		background-color: ds.$surface-accent-dark;
+		border: 1.5px solid ds.$accent-sports-green;
+	}
+
+	&__info {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__name {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: clamp(20px, 1.5vw, 24px);
+		font-weight: 700;
+		line-height: 1.1;
+		color: ds.$text-primary-on-dark;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__teamLine,
+	&__metaLine {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 5px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		line-height: 1.25;
+	}
+
+	&__teamLine {
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__metaLine {
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__team,
+	&__league,
+	&__metaItem {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__team,
+	&__league {
+		// 4. 📦 Box Model
+		overflow: hidden;
+
+		// 5. 🔤 Typography
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+	}
+
+	&__metaItem {
+		// 5. 🔤 Typography
+		white-space: nowrap;
+
+		img {
+			// 4. 📦 Box Model
+			width: 16px;
+			max-height: 12px;
+
+			// 6. 🎨 Visual
+			object-fit: contain;
+		}
+	}
+
+	&__iconShield {
+		flex-shrink: 0;
+		color: ds.$accent-sports-green;
+	}
+
+	&__iconCalendar {
+		flex-shrink: 0;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__separator {
+		// 5. 🔤 Typography
+		user-select: none;
+		font-size: 11px;
+		font-weight: 300;
+		margin: 0 2px;
+
+		// 6. 🎨 Visual
+		color: ds.$border-panel;
+	}
+}
+
+@media (max-width: 1279px) {
+	.identityBlock {
+		&__portrait {
+			width: 75px;
+			height: 75px;
+		}
+	}
+}
+
+@media (max-width: 600px) {
+	.identityBlock {
+		gap: 9px;
+
+		&__portrait {
+			width: 64px;
+			height: 64px;
+			border-radius: 8px;
+		}
+
+		&__info {
+			gap: 4px;
+		}
+
+		&__name {
+			font-size: 18px;
+		}
+
+		&__teamLine,
+		&__metaLine {
+			gap: 4px;
+			font-size: 10px;
+		}
+
+		&__team img {
+			width: 14px;
+			height: 14px;
+		}
+
+		&__metaItem {
+			gap: 3px;
+
+			img {
+				width: 14px;
+			}
+		}
+	}
+}

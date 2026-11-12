@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { getLeagueClassification } from "@/features/players/constants";
 import type { Player } from "@/features/players/types";
 import {
+	CompetitionLogo,
 	NationalityFlag,
 	PlayerPortrait,
 	TeamBadge,
@@ -23,6 +24,7 @@ const positions: Record<string, string> = {
 const number = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
 
 export default function PlayerCard({ player }: Props) {
+	const location = useLocation();
 	const league = getLeagueClassification(player.leagueName);
 	const stats = player.statistics;
 	const values = [
@@ -42,13 +44,11 @@ export default function PlayerCard({ player }: Props) {
 						teamName={player.teamName}
 						leagueName={player.leagueName}
 					/>
-					{league.image && (
-						<img
-							className={styles.playerCard__leagueIcon}
-							src={league.image}
-							alt={player.leagueName}
-						/>
-					)}
+					<CompetitionLogo
+						competitionName={player.leagueName}
+						src={league.image}
+						className={styles.playerCard__leagueIcon}
+					/>
 					<NationalityFlag
 						key={player.nationality}
 						nationality={player.nationality}
@@ -66,11 +66,20 @@ export default function PlayerCard({ player }: Props) {
 			</div>
 			<header className={styles.playerCard__header}>
 				<h2>
-					<Link to={`/players/${player.id}`}>{player.name}</Link>
+					<Link
+						to={`/players/${player.id}`}
+						state={{ from: `${location.pathname}${location.search}` }}
+					>
+						{player.name}
+					</Link>
 				</h2>
 				<p>{player.teamName}</p>
 				<div className={styles.playerCard__league}>
-					{league.image && <img src={league.image} alt="" />}
+					<CompetitionLogo
+						competitionName={player.leagueName}
+						src={league.image}
+						decorative
+					/>
 					<span>{player.leagueName}</span>
 				</div>
 				<small>

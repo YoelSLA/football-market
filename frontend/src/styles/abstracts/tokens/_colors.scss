@@ -22,6 +22,18 @@
 // Superficie principal de la aplicación (shell, navbar, vistas financieras).
 $surface-page: #03172c;
 
+// Superficie de fondo oscura profunda para pantallas analíticas y de detalle.
+$surface-page-deep: #011522;
+
+// Superficie sólida elevada para tarjetas y mosaicos sobre fondos oscuros profundos.
+$surface-card-dark: #092337;
+
+// Superficie oscura profunda con matiz verde para bloques destacados de métricas y cotización.
+$surface-accent-deep: #011f14;
+
+// Superficie oscura con matiz verde para contenedores de iconos y elementos de acento visual.
+$surface-accent-dark: #003d2a;
+
 // Fondo principal de las pantallas de autenticación.
 $surface-page-auth: #111b40;
 
@@ -295,6 +307,9 @@ $accent-gain: #00dfa0;
 
 // Acento verde del estado activo de la navegación.
 $accent-nav: #4ade80;
+
+// Acento cromático verde vibrante de alta visibilidad para indicadores deportivos y elementos activos.
+$accent-sports-green: #00e676;
 
 // Resultado total de ganancias en cartera.
 $accent-total: #45df9d;

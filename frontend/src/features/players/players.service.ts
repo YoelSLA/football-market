@@ -1,12 +1,19 @@
-import { http } from "@/infrastructure/http";
+import axios from "axios";
+import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toPlayerCatalogFilters,
 	toPlayerDetail,
+	toPlayerQuote,
+	toPlayerQuoteHistory,
 	toPlayersPage,
 	toStatistics,
 } from "./players.mapper";
 import type {
 	PlayerDetail,
+	PlayerQuote,
+	PlayerQuoteHistory,
+	PlayerQuoteHistoryResponseDTO,
+	PlayerQuoteResponseDTO,
 	PlayerResponseDTO,
 	PlayerStatistics,
 	PlayersPage,
@@ -99,6 +106,48 @@ async function getQuoteRanking(
 	return data;
 }
 
+async function getCurrentQuote(
+	playerId: number,
+	signal?: AbortSignal,
+): Promise<PlayerQuote | null> {
+	try {
+		const { data } = await http.get<PlayerQuoteResponseDTO>(
+			`/players/${playerId}/quotes/current`,
+			{
+				authenticated: true,
+				signal,
+			},
+		);
+		return toPlayerQuote(data);
+	} catch (error: unknown) {
+		if (axios.isCancel(error)) {
+			throw error;
+		}
+		if (
+			axios.isAxiosError(error) &&
+			error.response?.status === 404 &&
+			getErrorCode(error) === "QUOTE_NOT_FOUND"
+		) {
+			return null;
+		}
+		throw error;
+	}
+}
+
+async function getQuoteHistory(
+	playerId: number,
+	signal?: AbortSignal,
+): Promise<PlayerQuoteHistory> {
+	const { data } = await http.get<PlayerQuoteHistoryResponseDTO>(
+		`/players/${playerId}/quotes`,
+		{
+			authenticated: true,
+			signal,
+		},
+	);
+	return toPlayerQuoteHistory(data);
+}
+
 export const playersService = {
 	getPage,
 	getById,
@@ -106,4 +155,6 @@ export const playersService = {
 	getFilters,
 	getScoreRanking,
 	getQuoteRanking,
+	getCurrentQuote,
+	getQuoteHistory,
 };

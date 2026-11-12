@@ -1,17 +1,17 @@
 meta {
   name: Sincronizar jugadores
   type: http
-  seq: 1
+  seq: 3
 }
 
 post {
   url: {{baseUrl}}/api/players/sync
+  body: none
   auth: bearer
 }
 
 headers {
   authorization: Bearer {{auth_token}}
-  accept: application/json
 }
 
 auth:bearer {

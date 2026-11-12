@@ -1,21 +1,35 @@
 # Feature Specification: Detalle individual y estadísticas reales del jugador
 
-**Feature Branch vigente**: `feat/009-player-detail-whoscored-stats-dashboard`
-**Created**: 2026-10-12 · **Revisión**: 2026-10-25
-**Status vigente**: Ready for planning — Clarify del rediseño completado documentalmente; no autoriza ni ejecuta PLAN o implementación.
-**Input vigente**: Rediseñar SPEC-009 con exactamente dos pestañas, estadísticas reales persistidas de WhoScored, resumen por posición y catálogo de 60 métricas; sin dependencia de valoraciones o cotizaciones.
+**Feature Branch vigente**: `feat/009-player-statistics-layout`
+**Created**: 2026-10-12 · **Revisión**: 2026-11-12
+**Status vigente**: IMPLEMENT completado y verificado (Cabecera de 3 zonas con cotización oficial y badges de variación, Resumen deportivo compacto con 4 KPI y 2 paneles temáticos específicos sin barras ni destacadas, paleta de tokens semánticos sólidos, y ausencia total de scroll en desktop comprobada).
+**Input vigente**: Rediseñar la presentación existente de SPEC-009 según el wireframe y las decisiones aprobadas, integrando cotizaciones oficiales en cabecera y primera pestaña, resumen deportivo compacto y catálogo de 60 métricas reales, sin reconstruir capacidades existentes ni alterar el backend.
 
 ## Trazabilidad del rediseño
 
 Esta revisión reutiliza `009-player-detail`. El [issue #72](https://github.com/YoelSLA/football-market/issues/72) mantiene su título y referencia al [issue original #51](https://github.com/YoelSLA/football-market/issues/51). No es una nueva asignación de identidad.
 
-Las secciones anteriores a «Antecedente histórico» son la especificación vigente. Todo el contenido posterior se conserva íntegro como evidencia histórica, incluidos sus IDs, decisiones y aprobaciones; no gobierna el nuevo dashboard cuando contradiga esta revisión. Los nuevos requisitos usan FR-025 en adelante para no reutilizar IDs históricos con otro significado. US1 conserva identidad y navegación, US2 sustituye la demostración por datos reales, US3 queda retirada para este alcance (finanzas) y US4 conserva adaptación y accesibilidad; US5 incorpora el catálogo completo.
+Las secciones anteriores a «Antecedente histórico» son la especificación vigente. Todo el contenido posterior se conserva íntegro como evidencia histórica, incluidos sus IDs, decisiones y aprobaciones; no gobierna el nuevo dashboard cuando contradiga esta revisión. Los nuevos requisitos usan FR-025 en adelante para no reutilizar IDs históricos con otro significado. US1 conserva identidad y navegación, US2 sustituye la demostración por datos reales y consolida el resumen de 4 KPI + 2 paneles temáticos, US3 incorpora la visualización de cotizaciones oficiales de tokens en cabecera y pestaña dedicada y US4 conserva adaptación y accesibilidad; US5 incorpora el catálogo completo.
 
-La sustitución de mocks y la retirada de los bloques financieros del detalle afectan el alcance evaluado anteriormente. La propuesta inicial de radar queda sustituida por métricas en unidades originales por decisión del usuario. Las aprobaciones históricas no autorizan implementar este rediseño. Plan, contratos, tareas y checklists previos se conservan, pero requieren revisión posterior por impacto; no se presentan como coherentes ni aprobados para este alcance.
-
-Referencia visual: [mockup de estadísticas](../../referencias-imagenes/spec-009-player-detail-statistics-mockup.png). Se conserva su jerarquía de identidad, pestañas, indicadores, gráficos y catálogo, no sus cifras, equipo de ejemplo, xG, xA, percentiles, totales derivados ni controles sin datos confirmados. La zona del radar se dedica a estadísticas destacadas con valores originales, sin radar normalizado ni comparación poblacional. El catálogo canónico es el de [SPEC-012, §Catálogo de métricas](../012-player-statistics-scraping/spec.md#catálogo-de-métricas): 60 claves; 57 cubiertas por JSON, no 60 valores garantizados por jugador.
+La referencia funcional y visual vigente es el [wireframe ASCII del detalle del jugador](../../docs/wireframes/player-detail.md), actualizado en noviembre de 2026 y resumido en «Estructura visual aprobada». El catálogo canónico es el de [SPEC-012, §Catálogo de métricas](../012-player-statistics-scraping/spec.md#catálogo-de-métricas): 60 claves; 57 cubiertas por JSON, no 60 valores garantizados por jugador.
 
 ## Clarifications
+
+### Session 2026-11-11 / 2026-11-12
+
+- Q: ¿Qué estructura visual y métricas componen el Resumen deportivo definitivo? → A: Se eliminan definitivamente las barras de progreso (por carecer de una escala comparativa válida) y el bloque inferior de «Estadísticas destacadas» (para evitar duplicaciones y sobrecarga visual). El resumen se estructura en 4 tarjetas KPI principales superiores y exactamente 2 paneles temáticos específicos por posición, con filas de altura acotada (`min-height: 44px; max-height: 58px;`) y espaciado armónico (`justify-content: space-evenly`), eliminando el estiramiento infinito de filas.
+- Q: ¿Cómo se manejan las unidades y tipografías en las tarjetas KPI? → A: Se eliminan las unidades redundantes que repiten el sustantivo ya presente en la etiqueta o subtítulo (ej. `0,4` y debajo `regates/partido`, en vez de `0,4 regates regates/partido`). Solo se conserva el símbolo `%` al lado del valor cuando la métrica es de porcentaje. Los valores aumentan a 28px (`font-weight: 800`), las etiquetas a 12px y los iconos a 24px en cajas de 48×48px. Se eliminan recortes por ellipsis artificial asegurando que los trazos descendentes no se corten.
+- Q: ¿Cómo se integra la cotización oficial en la cabecera? → A: Contenedor simétrico de 94px de alto a la derecha, con precio destacado en créditos (`1,00 crédito` / `1,05 créditos`), icono de moneda FM (`#f5c518`), badges semánticos explícitos (`Cotización inicial` cuando no hay precio previo o es `INITIAL`, `Sin variación` cuando la variación es cero, `▲ +X,XX %` cuando sube, `▼ -X,XX %` cuando baja) y variación absoluta en créditos en la metadata (`· +0,05 créditos vs. anterior`) cuando existe variación calculable.
+- Q: ¿Cuál es la paleta de colores aprobada? → A: Paleta semántica con colores estrictamente sólidos (`background-color`), sin gradientes, sin efectos de iluminación ni sombras decorativas: `$surface-page-deep` (`#011522`), `$surface-card-dark` (`#092337`), `$surface-panel-to` (`#071a30`), `$surface-panel-from` (`#0c233e`), `$surface-accent-deep` (`#011f14`), `$surface-accent-dark` (`#003d2a`), `$accent-sports-green` (`#00e676`), `$border-panel` (`#2b5378`).
+- Q: ¿Cómo se valida la ausencia de scroll en desktop? → A: Verificación automatizada con Playwright en Chrome DevTools en viewports de 1920×1080, 1920×913, 1366×768 y 1280×800 comprobando `hasVerticalScroll: false` y `hasHorizontalScroll: false`. En tablet y móvil se mantiene scroll documental natural.
+
+### Session 2026-11-09
+
+- Q: ¿El rediseño sustituye la funcionalidad estadística existente o reorganiza su presentación? → A: Reorganiza la implementación vigente. Se conservan consulta, estados, perfiles posicionales y 60 métricas; no se reconstruyen ni se cambian contratos backend sin una necesidad demostrada.
+- Q: ¿Cuál es la referencia de layout? → A: El wireframe ASCII aprobado: cabecera compacta de tres zonas (125 px en desktop), cuatro tarjetas complementarias en Resumen, dos paneles específicos por posición y un catálogo por categorías sin panel lateral permanente.
+- Q: ¿Cómo se evita repetir información en Resumen? → A: La cabecera presenta tres métricas titulares según posición. Las cuatro tarjetas de Resumen son estrictamente complementarias y no repiten ninguna métrica de la cabecera. Los dos paneles específicos desarrollan desgloses por zonas o tipologías.
+- Q: ¿Cómo se gobiernan las dimensiones y el scroll en desktop? → A: En la resolución de referencia (1920×913 px con 108 px de navegación global), la zona superior (209 px: breadcrumb 32px + cabecera 125px + separación 12px + pestañas 40px) permanece fija. El desplazamiento vertical pertenece con exclusividad al contenedor interno de la pestaña activa (`flex: 1; min-height: 0; overflow-y: auto;`), con 596 px como presupuesto de referencia (no como altura fija en CSS), sin scroll global en ventana. Tablet y móvil mantienen scroll documental natural.
+- Q: ¿Cómo se exploran las 60 métricas? → A: Mediante búsqueda y categorías visibles en el encabezado del catálogo. La posición solo determina prioridad y orden; nunca oculta métricas. No se exige conservar el filtro de unidad si duplica la información ya visible en cada fila.
 
 ### Session 2026-10-25
 
@@ -27,39 +41,39 @@ Referencia visual: [mockup de estadísticas](../../referencias-imagenes/spec-009
 
 ### User Story 1 - Consultar identidad y navegar (Priority: P1)
 
-Como usuario autenticado, quiero abrir un jugador desde el catálogo o directamente y reconocer su identidad sin depender de la navegación anterior.
+Como usuario autenticado, quiero abrir un jugador desde el catálogo o directamente y reconocer su identidad en una cabecera compacta de tres zonas (125 px en desktop) con sus tres métricas titulares y fecha de corte, sin depender de la navegación anterior.
 
 **Why this priority**: Evita atribuir estadísticas a otra persona y mantiene la entrada existente.
-**Independent Test**: Abrir desde catálogo, recargar y abrir directamente; contrastar identidad y retorno.
+**Independent Test**: Abrir desde catálogo, recargar y abrir directamente; contrastar identidad, las 3 métricas de cabecera y el retorno.
 **Acceptance Scenarios**:
 
-1. **Given** un jugador visible y sesión válida, **When** abro su detalle, **Then** veo su identidad real y las dos pestañas, con Resumen seleccionada inicialmente.
+1. **Given** un jugador visible y sesión válida, **When** abro su detalle, **Then** veo su cabecera compacta de tres zonas (identidad a la izquierda con foto de 90px, tres micro-tarjetas titulares en el centro según posición y temporada + fecha a la derecha) y las dos pestañas, con Resumen seleccionada inicialmente.
 2. **Given** campos opcionales o imagen ausentes, **When** se presenta la identidad, **Then** no se inventan atributos y se mantiene el fallback de imagen existente.
 3. **Given** un visitante, ID inválido o jugador inexistente/inactivo, **When** intenta acceder, **Then** se conserva respectivamente el acceso protegido, identificador inválido o no encontrado, sin revelar identidad privada.
 4. **Given** navegación de A a B con respuestas tardías, **When** terminan las consultas, **Then** ningún bloque de A se muestra como perteneciente a B.
 
 ### User Story 2 - Comprender rendimiento real según posición (Priority: P1)
 
-Como usuario, quiero interpretar cuatro tarjetas, estadísticas destacadas y gráficos relevantes para la posición del jugador con sus unidades y contexto deportivo.
+Como usuario, quiero interpretar cuatro tarjetas KPI principales complementarias y desduplicadas (sin repetir las tres métricas titulares de cabecera ni duplicar unidades) y dos paneles temáticos específicos con métricas relevantes para la posición del jugador con sus unidades y contexto deportivo, sin barras de progreso sin escala ni bloque de destacadas.
 
 **Why this priority**: Es el valor principal del nuevo detalle y reemplaza los datos de demostración.
 **Independent Test**: Revisar un arquero, defensor, mediocampista y delantero con estadísticas persistidas, incluidos datos parciales.
 **Acceptance Scenarios**:
 
-1. **Given** estadísticas reales disponibles, **When** abro Resumen, **Then** veo identidad, exactamente las cuatro tarjetas de mi perfil y los gráficos y estadísticas adicionales definidos abajo, con temporada, unidades y procedencia identificables, sin radar ni percentiles.
-2. **Given** un cero real y una métrica ausente, **When** se presentan, **Then** el primero conserva su cero y la segunda indica «No disponible», sin sustituirla por cero.
-3. **Given** estadísticas presentes pero ninguna valoración ni cotización calculada, **When** consulto el resumen, **Then** funciona sin solicitar recálculos ni mostrar datos financieros.
-4. **Given** información insuficiente para un gráfico, **When** se presenta el resumen, **Then** informa la limitación y mantiene visibles los valores disponibles, sin dibujar rendimiento ficticio ni sustituir silenciosamente las métricas de las tarjetas.
+1. **Given** estadísticas reales disponibles, **When** abro Resumen, **Then** veo las cuatro tarjetas KPI complementarias de mi perfil (desduplicadas contra la cabecera y sin unidades redundantes) y los dos paneles temáticos específicos de mi posición con filas acotadas, con temporada, unidades y procedencia identificables, sin radar, sin percentiles, sin barras de progreso y sin bloque de destacadas.
+2. **Given** un cero real y una métrica ausente, **When** se presentan, **Then** el primero conserva su cero y la segunda indica «Sin datos», sin sustituirla por cero.
+3. **Given** estadísticas presentes pero ninguna valoración ni cotización calculada, **When** consulto el resumen, **Then** funciona sin solicitar recálculos ni mostrar datos financieros erróneos.
+4. **Given** información insuficiente, **When** se presenta el resumen, **Then** informa la limitación y mantiene visibles los valores disponibles con semántica «Sin datos», sin inventar rendimiento ficticio.
 
 ### User Story 4 - Usar el dashboard dentro del viewport (Priority: P2)
 
-Como usuario, quiero consultar ambas pestañas con teclado o puntero en escritorio, tablet y móvil, manteniendo el estilo de Football Market.
+Como usuario, quiero consultar las tres pestañas con teclado o puntero en escritorio, tablet y móvil sin scroll vertical ni horizontal en escritorio (zona superior fija de 209 px y distribución flexible que aprovecha el espacio disponible) y con desplazamiento documental natural en tablet y móvil, manteniendo el estilo de Football Market.
 
-**Why this priority**: El catálogo y sus gráficos deben ser legibles sin perder navegación.
-**Independent Test**: Revisar ambas pestañas a anchos de 360, 768 y 1280 píxeles y alturas de 640 y 800 píxeles.
+**Why this priority**: El catálogo, las cotizaciones y el resumen deben ser legibles sin perder navegación.
+**Independent Test**: Revisar las tres pestañas a anchos de 360, 768 y 1280 píxeles y alturas de 640 y 800 píxeles (además de 1920×913 y 1920×1080).
 **Acceptance Scenarios**:
 
-1. **Given** cualquiera de esos viewports, **When** navego por ambas pestañas, **Then** el contenido se adapta al ancho y permite desplazamiento vertical sin recortes ni superposiciones; no exige que las 60 métricas entren simultáneamente en pantalla.
+1. **Given** cualquiera de esos viewports, **When** navego por las tres pestañas, **Then** en desktop la zona superior (breadcrumb, cabecera y pestañas) permanece fija y el Resumen deportivo se adapta a la altura disponible con cero scroll de documento y de contenedor; en Todas las estadísticas únicamente la lista de métricas se desplaza verticalmente; en tablet y móvil la página usa desplazamiento vertical natural sin scroll horizontal; no exige que las 60 métricas entren simultáneamente en pantalla.
 2. **Given** teclado o ausencia de percepción del color, **When** uso pestañas, buscador, categorías y retorno, **Then** hay foco visible, selección perceptible y alternativas textuales para los gráficos.
 3. **Given** cualquier estado del detalle, **When** uso la navegación existente, **Then** conservo los destinos y capacidades de sesión del sitio y puedo volver al catálogo.
 
@@ -91,40 +105,79 @@ Como usuario, quiero encontrar cualquiera de las 60 métricas por categoría y n
 ### Functional Requirements
 
 - **FR-025**: Mantener detalle privado, acceso desde catálogo y URL directa, identidad interna, elegibilidad y diferencias entre ID inválido, sesión inválida, no encontrado y fallo de comunicación existentes (US1).
-- **FR-026**: Presentar únicamente las pestañas «Resumen» y «Todas las estadísticas», con Resumen inicial; cambiar pestaña conserva jugador y contexto deportivo (US1, US5).
+- **FR-026**: Presentar tres pestañas ordenadas: «Cotizaciones» (predeterminada), «Resumen deportivo» y «Todas las estadísticas»; cambiar pestaña conserva jugador y contexto deportivo. En desktop (referencia 1920×913 px y 1920×1080 px), la zona superior fija (209 px: breadcrumb 32 px, cabecera 125 px, separación 12 px y pestañas 40 px) permanece estática; el contenido se ajusta de forma flexible aprovechando la altura disponible sin provocar scroll vertical ni horizontal en ventana en escritorio. En tablet y móvil, desplazamiento documental natural sin overflow horizontal (US1, US4, US5).
 - **FR-027**: Consumir exclusivamente estadísticas reales persistidas por el backend; consultar no inicia scraping, sincronización, valoración o recotización y no requiere resultados financieros (US2).
 - **FR-028**: Identificar temporada, liga cuando esté disponible, fecha de extracción y procedencia de los valores consultados; no etiquetar como actual una campaña distinta ni mezclar contextos sin advertencia (US2).
 - **FR-029**: Diferenciar carga, error recuperable con reintento, ausencia completa y disponibilidad parcial. Cero es dato válido, ausencia no es cero; ninguna situación se rellena con simulaciones (US2).
-- **FR-030**: Mostrar en Resumen identidad, exactamente cuatro tarjetas por posición y los gráficos y estadísticas adicionales especificados en los perfiles siguientes, siempre sujetos a disponibilidad. Una tarjeta sin valor conserva su etiqueta y muestra «Sin datos» (US2).
+- **FR-030**: Mostrar en Resumen deportivo cuatro tarjetas KPI principales superiores desduplicadas por posición (sin repetir las tres métricas de cabecera y sin unidades redundantes que repitan el título/subtítulo) y exactamente dos paneles temáticos específicos por posición con filas de altura acotada (`min-height: 44px; max-height: 58px;`) y espaciado armónico (`justify-content: space-evenly`), eliminando el estiramiento vertical forzado, las barras sin escala comparativa válida y el bloque de estadísticas destacadas. Una tarjeta sin valor conserva su etiqueta y muestra «Sin datos» (US2).
 - **FR-031**: Las visualizaciones conservan unidades, etiquetas y valores textuales. No mezclar magnitudes de distinta unidad en un mismo eje; no convertir tasas en acumulados ni representar categorías como partes de un total sin una regla definida (US2, US4).
-- **FR-032**: No incluir radar, percentiles, promedios poblacionales, normalizaciones ni indicadores derivados nuevos. Sustituir la zona del radar del mockup por estadísticas destacadas en unidades originales. No reutilizar scores ni atributos de SPEC-013 como sustitutos de estadísticas. Las tasas ya canónicas y persistidas no son indicadores nuevos (US2).
-- **FR-033**: Exponer exactamente las 60 claves canónicas de SPEC-012, con nombre comprensible en español, categoría, unidad original y valor real o «No disponible». No añadir xG, xA ni otras métricas del mockup ajenas al catálogo (US5).
+- **FR-032**: No incluir radar, percentiles, promedios poblacionales, normalizaciones ni indicadores derivados nuevos. Se eliminan las barras de progreso sin escala de referencia válida y el bloque de destacadas, consolidando la información en las cuatro tarjetas KPI y los dos paneles temáticos específicos. No reutilizar scores ni atributos de SPEC-013 como sustitutos de estadísticas (US2).
+- **FR-033**: Exponer exactamente las 60 claves canónicas de SPEC-012, con nombre comprensible en español, categoría, unidad original y valor real o «Sin datos». No añadir xG, xA ni otras métricas del mockup ajenas al catálogo (US5).
 - **FR-034**: Agrupar en General, Ataque, Pases, Regates, Duelos, Defensa, Portería y Disciplina. Cada clave pertenece a una sola categoría; General incluye minutos, apariciones, titularidades y rating; los demás grupos siguen la naturaleza deportiva del catálogo, no el canal de extracción (US5).
-- **FR-035**: Buscar por nombre visible o clave canónica sin distinguir mayúsculas ni acentos, aplicar coincidencia parcial y combinar con categoría. Mostrar cantidad de resultados y permitir limpiar filtros; todas las métricas siguen accesibles aunque la presentación se divida en páginas (US5).
+- **FR-035**: Buscar por nombre visible o clave canónica sin distinguir mayúsculas ni acentos, aplicar coincidencia parcial y combinar con una categoría seleccionable desde controles visibles en el encabezado del catálogo. Mostrar cantidad de resultados y permitir limpiar filtros; todas las métricas siguen accesibles aunque la presentación se divida en páginas. No exigir un panel lateral ni un filtro de unidad para acceder al catálogo (US5).
 - **FR-036**: No inventar acumulados, mapas de eventos, coordenadas ni series temporales desde agregados de temporada. Los gráficos representan exclusivamente desgloses realmente disponibles (US2).
 - **FR-037**: Preservar navbar, sesión, retorno al catálogo, identidad e imágenes existentes; no rediseñar otras páginas ni cambiar las rutas de entrada. La compatibilidad con catálogo no implica perpetuar sus mocks ni presentarlos como estadísticas reales del detalle (US1, US4).
-- **FR-038**: Mantener colores, tipografía y jerarquía actuales del sitio, tomando el mockup como referencia visual. Adaptar ancho y altura disponibles, con desplazamiento vertical natural y sin desbordamiento horizontal de la página en los viewports de US4 (US4).
+- **FR-038**: Mantener la paleta de colores sólidos basada en tokens semánticos aprobados (`$surface-page-deep`, `$surface-card-dark`, `$surface-panel-to`, `$surface-panel-from`, `$surface-accent-deep`, `$surface-accent-dark`, `$accent-sports-green`, `$border-panel`), sin gradientes, sin efectos de iluminación y sin sombras decorativas, tomando el wireframe canónico como referencia visual (US4).
 - **FR-039**: Mantener teclado, foco visible, etiquetas, selección de pestaña perceptible y alternativa textual a toda visualización; no depender solo del color (US4).
-- **FR-040**: No mostrar cotización ni historial financiero en estas dos pestañas. Su retirada de esta vista no autoriza eliminar capacidades, componentes compartidos ni contratos consumidos fuera de ella (US2).
+- **FR-040**: Mostrar la cotización oficial vigente del token institucional y su evolución histórica consumiendo `GET /api/players/{id}/quotes`. La cotización oficial se integra en la cabecera compacta a la derecha y como contenido interactivo principal de la primera pestaña («Cotizaciones») (US2, US3).
 - **FR-041**: Consultar la última extracción confirmada disponible del jugador para la temporada seleccionada y mostrar su fecha real. No aplicar la selección poblacional de SPEC-013 ni exigir que otros jugadores tengan datos. Ordenar fechas de extracción de más reciente a más antigua; dentro de un mismo canal y contexto, desempatar por instante de observación más reciente y, si persiste el empate, por identificador de registro mayor. En la fecha y contexto seleccionados, JSON tiene prioridad: scraping solo completa valores JSON nulos, incluidas sus tres claves exclusivas (`starts_total`, `shots_on_target_total`, `second_yellow_total`), cuando coinciden jugador, temporada, fecha de extracción y contexto de competición. Un cero JSON es válido y nunca activa respaldo. No buscar valores en fechas o contextos diferentes. Si únicamente existe scraping confirmado en la fecha seleccionada, usar sus valores disponibles sin exigir JSON. La respuesta distingue ausencia de valor de fallo de consulta y conserva la procedencia efectiva por métrica, sin prescribir rutas nuevas ni almacenamiento.
 - **FR-042**: En cada categoría de Todas las estadísticas, ordenar disponibles por Principal → Secundaria → Poco relevante, y después las métricas sin datos. Dentro de cada nivel mantener el orden de la matriz canónica siguiente. Conservar categoría y clasificación de relevancia aun cuando falte el valor; «Sin datos» es disponibilidad, no una reclasificación deportiva permanente (US5).
 - **FR-043**: Todas las estadísticas incluye las 60 claves incluso para un jugador sin estadísticas. Mostrar «Sin datos» por valor ausente; carga y error de consulta conservan sus estados propios y no se presentan como ausencia confirmada. Una métrica numérica cero sigue siendo disponible (US5).
 - **FR-044**: La relevancia de las tres claves actualmente ausentes es fija según la matriz, independiente de su disponibilidad. Al aparecer valores reales, incluido cero, presentar el valor y aplicar automáticamente su prioridad en Todas las estadísticas, sin cambiar tarjetas, gráficos ni adicionales del Resumen (US5).
-- **FR-045**: Identificar la competición del snapshot con nombre legible solo cuando exista una correspondencia fiable de su clave histórica con información disponible. En ausencia de nombre mostrar «Competición no disponible», conservando la clave como contexto, sin inventar nombres, consultar proveedores ni usar la liga actual del jugador como sustituto. El nombre de la liga actual de identidad permanece separado del contexto estadístico (US2).
+- **FR-045**: Identificar la competición del snapshot con nombre legible solo cuando exista una correspondencia fiable de su clave histórica con información disponible en el catálogo o contrato. La cabecera se optimiza a 125 px en desktop omitiendo la línea de competición, procedencia y contexto estadístico general; el nombre de la liga actual de identidad permanece en el bloque izquierdo (US1, US2).
 - **FR-046**: En identidad y estadísticas, formato de ID inválido (no entero decimal positivo o fuera del rango Long) recibe 400; ID válido inexistente o no visible, 404 indistinguible. Jugador visible sin estadísticas para la consulta recibe respuesta estadística exitosa con estado NO_DATA y 60 ausencias, no 404. Es contrato requerido para la implementación futura, no afirmación de que la identidad existente ya valide cero/negativos (US1, US5).
 - **FR-047**: Ante fallo de actualización, conservar únicamente la última respuesta exitosa del mismo jugador y temporada resuelta, con sus valores, disponibilidad y fecha de extracción originales, mostrando el error y «Mostrando la última consulta disponible; no se pudo actualizar» con reintento. El error no convierte valores en Sin datos ni los etiqueta como recién obtenidos. Si no existe respuesta previa compatible, presentar error sin estadísticas; nunca usar datos de otro jugador o temporada. Si el contexto pedido cambia, retirar la respuesta incompatible. Una respuesta exitosa NO_DATA sustituye la anterior: no conservar valores antiguos para ocultar la ausencia nueva (US2).
 - **FR-048**: Las etiquetas, categorías y unidades visibles de las 60 claves son las del [glosario canónico de presentación](contracts/metric-glossary.md). El glosario no añade métricas ni cálculos; PERCENTAGE se presenta como porcentaje ya persistido, no se multiplica por 100. Las prioridades continúan en la matriz posicional (US5).
+- **FR-049**: Componer la cabecera del detalle en tres zonas horizontales en desktop (altura neta 125 px con `box-sizing: border-box`): identidad a la izquierda con retrato de 90×90 px enmarcado en verde (`$surface-accent-dark`, borde `$accent-sports-green`), tres micro-tarjetas de métricas titulares en el centro (94 px de alto, `$surface-accent-deep`, borde `$border-panel`) e indicador financiero de cotización oficial a la derecha (94 px de alto, `$surface-accent-deep`, borde `$border-panel`) con precio en créditos, moneda FM, badges semánticos (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`) y variación absoluta en créditos en la metadata cuando aplique. En ausencia de datos, mostrar «Sin datos» o «Sin cotización» según corresponda (US1, US2, US3, US4).
+- **FR-050**: Presentar las tres pestañas inmediatamente después de la cabecera y usar todo el ancho disponible (altura fija 40 px). En Resumen deportivo, las cuatro tarjetas KPI forman una fila superior (con iconos de 24px, títulos de 12px, valores de 28px y subtítulos sin redundancia ni recortes) y los dos paneles temáticos específicos se distribuyen en dos columnas inferiores armoniosas. En tablet colapsan a 2 columnas (KPIs) y 1 columna (paneles), y en móvil a 1 columna apilada sin desplazamiento horizontal de página (US2, US4).
+- **FR-051**: En Todas las estadísticas, sustituir el panel lateral permanente y la tabla cromáticamente alternada por una cabecera de exploración con búsqueda, limpiar y categorías con conteo, seguida de grupos de métricas por categoría. Cada fila comunica nombre, relevancia, unidad y valor; la selección no depende solo del color (US4, US5).
+- **FR-052**: Diferenciar Principal, Secundaria y Poco relevante mediante texto o símbolo accesible además del color. Una métrica ausente conserva su relevancia, se desplaza después de las disponibles dentro de su categoría y muestra «Sin datos»; cero continúa siendo disponible (US4, US5).
 
-### Perfiles posicionales del Resumen
+### Estructura visual aprobada
 
-Cada lista está ordenada por prioridad de presentación. Las cuatro tarjetas son fijas para el perfil, sin sustitución automática ante ausencia. Las estadísticas adicionales no repiten las tarjetas. Para posición desconocida se conserva el estado informativo existente y se muestran minutos, apariciones y calificación si existen, sin inventar un perfil.
+La estructura completa se conserva en el [wireframe canónico](../../docs/wireframes/player-detail.md). El resumen siguiente es normativo respecto de jerarquía y composición; las dimensiones exactas pertenecen a PLAN y al sistema de diseño existente.
 
-| Posición | Cuatro tarjetas, en orden | Gráficos específicos: barras con valores originales | Estadísticas adicionales, en orden |
-| --- | --- | --- | --- |
-| Arquero | `saves_per_match` (Atajadas/partido); `pass_completion_percentage` (Precisión de pases, %); `successful_long_balls_per_match` (Pases largos acertados/partido); `whoscored_rating_average` (Calificación media) | Atajadas por zona: `six_yard_box_saves_per_match`, `penalty_area_saves_per_match`, `outside_box_saves_per_match`. Distribución: `accurate_short_passes_per_match`, `inaccurate_short_passes_per_match`, `successful_long_balls_per_match`, `inaccurate_long_balls_per_match` | Principales: `minutes_played_total`, `appearances_total`. Secundarias: `clearances_per_match`, `aerial_duels_won_per_match`, `passes_per_match`, `yellow_cards_total`, `red_cards_total` |
-| Defensor | `tackles_per_match` (Entradas/partido); `interceptions_per_match` (Intercepciones/partido); `clearances_per_match` (Despejes/partido); `aerial_duels_won_per_match` (Duelos aéreos ganados/partido) | Acciones defensivas: `tackles_per_match`, `interceptions_per_match`, `clearances_per_match`, `blocked_shots_per_match`, `blocked_crosses_per_match`, `blocked_passes_per_match`. Duelos aéreos: `aerial_duels_won_per_match`, `aerial_duels_lost_per_match` | Principales: `minutes_played_total`, `appearances_total`, `whoscored_rating_average`, `pass_completion_percentage`, `dribbled_past_per_match`, `attempted_tackles_per_match`. Secundarias: `fouls_committed_per_match`, `yellow_cards_total`, `red_cards_total` |
-| Mediocampista | `passes_per_match` (Pases/partido); `pass_completion_percentage` (Precisión de pases, %); `key_passes_per_match` (Pases clave/partido); `assists_total` (Asistencias, total temporada) | Distribución: `accurate_short_passes_per_match`, `inaccurate_short_passes_per_match`, `successful_long_balls_per_match`, `inaccurate_long_balls_per_match`. Creación: `long_key_passes_per_match`, `short_key_passes_per_match` | Principales: `minutes_played_total`, `appearances_total`, `whoscored_rating_average`, `assists_per_match`, `successful_dribbles_per_match`, `tackles_per_match`, `interceptions_per_match`, `dispossessed_per_match`, `bad_controls_per_match`. Secundarias: `goals_total`, `fouls_committed_per_match` |
-| Delantero | `goals_total` (Goles, total temporada); `assists_total` (Asistencias, total temporada); `shots_per_match` (Tiros/partido); `whoscored_rating_average` (Calificación media) | Tiros por zona: `six_yard_box_shots_per_match`, `penalty_area_shots_per_match`, `outside_box_shots_per_match`. Asistencias por tipo: `cross_assists_per_match`, `corner_assists_per_match`, `through_ball_assists_per_match`, `free_kick_assists_per_match`, `throw_in_assists_per_match`, `other_assists_per_match` | Principales: `minutes_played_total`, `appearances_total`, `goals_per_match`, `assists_per_match`, `key_passes_per_match`, `successful_dribbles_per_match`, `aerial_duels_won_per_match`, `offsides_per_match`. Secundarias: `pass_completion_percentage`, `yellow_cards_total`, `red_cards_total` |
+```text
+Cabecera compacta (125 px en desktop)
+├── Zona Izquierda (Identidad): Retrato (90×90 px), nombre, equipo, liga, posición, nacionalidad y nacimiento
+├── Zona Centro (Métricas titulares): 3 micro-tarjetas compactas por posición (94 px)
+└── Zona Derecha (Cotización oficial): precio en créditos, badge de variación y fecha/diferencia (94 px)
+
+Pestañas: [Cotizaciones] [Resumen deportivo] [Todas las estadísticas] (40 px)
+
+Cotizaciones (región flexible con gráfico histórico de evolución)
+└── Gráfico SVG interactivo de cotización histórica con tooltip y detalle de cotización vigente
+
+Resumen deportivo (región flexible balanceada sin scroll en desktop)
+├── Fila de cuatro tarjetas KPI complementarias (iconos 24px, valores 28px, sin unidades redundantes)
+├── Panel temático posicional A (lista de 4 métricas con iconos verdes y divisores limpios)
+└── Panel temático posicional B (lista de 4 métricas con iconos verdes y divisores limpios)
+
+Todas las estadísticas (región flexible con scroll interno exclusivo)
+├── Título, total de resultados y posición usada para priorizar
+├── Búsqueda + limpiar
+├── Categorías: Todas, General, Ataque, Pases, Regates, Duelos,
+│   Defensa, Portería y Disciplina
+└── Grupos por categoría con relevancia, unidad, valor o «Sin datos»
+```
+
+Orden responsive obligatorio:
+
+1. Cabecera: identidad y cotización/métricas antes que contexto; en móvil se presenta una fila simétrica de 3 micro-tarjetas compactas.
+2. Resumen deportivo: cuatro tarjetas KPI → dos paneles temáticos específicos.
+3. Catálogo: búsqueda → categorías → resultados agrupados por categoría.
+4. Los controles pueden envolver o desplazarse horizontalmente dentro de su propia fila solo si permanecen accesibles; la página no adquiere scroll horizontal en ningún ancho.
+
+### Perfiles posicionales de Cabecera y Resumen
+
+Cada lista está ordenada por prioridad de presentación. Las tres métricas de cabecera y las cuatro tarjetas KPI de Resumen deportivo son fijas para el perfil, sin sustitución automática ante ausencia. Las cuatro tarjetas de Resumen son estrictamente complementarias y desduplicadas (no repiten las métricas de cabecera). Para posición desconocida se conserva el estado informativo existente y se muestran minutos, apariciones y calificación si existen, sin inventar un perfil.
+
+| Posición | Tres métricas titulares de cabecera | Cuatro tarjetas KPI de Resumen | Panel temático A (4 métricas con valores originales) | Panel temático B (4 métricas con valores originales) |
+| --- | --- | --- | --- | --- |
+| Arquero | `saves_per_match` (Atajadas/partido); `pass_completion_percentage` (Precisión pases, %); `successful_long_balls_per_match` (Pases largos/partido) | `whoscored_rating_average` (Calificación media); `appearances_total` (Partidos temporada); `clearances_per_match` (Despejes/partido); `passes_per_match` (Pases/partido) | Atajadas por sector: `penalty_area_saves_per_match`, `outside_box_saves_per_match`, `six_yard_box_saves_per_match` | Distribución y juego con los pies: `passes_per_match`, `inaccurate_short_passes_per_match`, `inaccurate_long_balls_per_match` |
+| Defensor | `tackles_per_match` (Entradas/partido); `interceptions_per_match` (Intercepciones/partido); `clearances_per_match` (Despejes/partido) | `whoscored_rating_average` (Calificación media); `aerial_duels_won_per_match` (Duelos aéreos ganados/partido); `pass_completion_percentage` (Precisión de pases, %); `blocked_shots_per_match` (Tiros bloqueados/partido) | Contención y duelos: `attempted_tackles_per_match`, `blocked_passes_per_match`, `dribbled_past_per_match`, `blocked_crosses_per_match` | Juego aéreo y disciplina: `aerial_duels_lost_per_match`, `fouls_committed_per_match`, `yellow_cards_total`, `red_cards_total` |
+| Mediocampista | `passes_per_match` (Pases/partido); `pass_completion_percentage` (Precisión pases, %); `key_passes_per_match` (Pases clave/partido) | `whoscored_rating_average` (Calificación media); `assists_total` (Asistencias, total temporada); `tackles_per_match` (Entradas/partido); `successful_dribbles_per_match` (Regates exitosos/partido) | Construcción y distribución: `accurate_short_passes_per_match`, `successful_long_balls_per_match`, `short_key_passes_per_match`, `successful_crosses_per_match` | Posesión y equilibrio: `dispossessed_per_match`, `bad_controls_per_match`, `aerial_duels_won_per_match`, `fouls_committed_per_match` |
+| Delantero | `goals_total` (Goles, total temporada); `shots_per_match` (Tiros/partido); `assists_total` (Asistencias, total temporada) | `whoscored_rating_average` (Calificación media); `shots_on_target_total` (Tiros al arco, total temporada); `goals_per_match` (Goles/partido); `successful_dribbles_per_match` (Regates exitosos/partido) | Definición por zona: `penalty_area_shots_per_match`, `six_yard_box_shots_per_match`, `outside_box_shots_per_match`, `offsides_per_match` | Juego ofensivo y generación: `key_passes_per_match`, `aerial_duels_won_per_match`, `dispossessed_per_match`, `successful_crosses_per_match` |
 
 Los gráficos no suman categorías, no generan porcentajes y no comparan contra otras personas. Un desglose por zona no es mapa de eventos. Las atajadas representan actividad, no eficacia ni goles evitados. Datos parciales muestran solo barras conocidas con aviso de incompletitud; si todos los valores conocidos son cero se muestran explícitamente como cero, no como gráfico sin datos.
 
@@ -221,11 +274,15 @@ Disponibilidad observada en la consulta PostgreSQL del análisis previo: 950 reg
 - **SC-022**: Con dos fechas confirmadas del mismo jugador y temporada se selecciona la más reciente, independientemente de las campañas de otros jugadores. Los empates dentro de un canal/contexto respetan observación e identificador; JSON cero no se sustituye, JSON nulo admite respaldo coincidente y scraping de fecha o contexto distinto nunca completa la consulta (FR-041).
 - **SC-023**: El contexto estadístico ofrece nombre fiable o «Competición no disponible», sin reemplazo por liga actual; los 60 nombres/categorías/unidades coinciden con el glosario. ID inválido, jugador no encontrado y ausencia estadística están diferenciados en todos los escenarios correspondientes (FR-045/046/048).
 - **SC-024**: Ante error de actualización se conserva solo la respuesta previa compatible, con fecha original, advertencia y reintento; cambio de jugador/temporada no muestra esa respuesta, y una consulta exitosa NO_DATA reemplaza los valores anteriores (FR-047).
+- **SC-025**: Para cada una de las cuatro posiciones, Resumen presenta exactamente cuatro tarjetas, dos paneles específicos y un bloque de destacadas; este último no contiene ninguna clave ya presente en tarjetas o paneles, mientras los paneles pueden desarrollar indicadores introducidos por las tarjetas según el wireframe canónico (FR-030, FR-050).
+- **SC-026**: En 360, 768 y 1280 píxeles de ancho, la cabecera, tarjetas, paneles, búsqueda, categorías y filas permanecen legibles y operables, en el orden aprobado y sin scroll horizontal de página (FR-038–039, FR-049–051).
+- **SC-027**: Todas las estadísticas permite alcanzar las 60 claves usando únicamente búsqueda y categorías; cada resultado muestra relevancia, unidad y valor o ausencia, y limpiar restaura exactamente 60 resultados (FR-035, FR-042–043, FR-051–052).
+- **SC-028**: Una revisión del árbol de la página no encuentra los paneles genéricos repetidos «posición», «participación y distribución» ni una segunda presentación de calificación cuando ya ocupa una tarjeta; permanecen los datos exigidos por el perfil en su ubicación única (FR-030, FR-050).
 
 ## Assumptions
 
 - La sesión, navegación e identidad existentes se conservan; no se añaden roles ni gestión de sesión.
-- El mockup no autoriza selector de temporadas, percentiles en cada fila ni métricas nuevas. Se presenta el contexto seleccionado; el selector queda fuera de este rediseño salvo decisión posterior.
+- El wireframe no autoriza selector de temporadas, percentiles en cada fila ni métricas nuevas. Se presenta el contexto seleccionado; el selector queda fuera de este rediseño salvo decisión posterior.
 - No se exige que todos los jugadores tengan las 60 métricas; el catálogo completo es distinto de la cobertura real.
 - Los controles de calidad de producto descritos son criterios futuros, no comprobaciones ejecutadas por el agente.
 
@@ -242,7 +299,7 @@ Disponibilidad observada en la consulta PostgreSQL del análisis previo: 950 reg
 - Implementación durante Specify; PLAN, TASKS y autorizaciones de implementación.
 - Sincronización, scraping, cálculo de valoraciones o cotizaciones y cambios en esas features.
 - Compra/venta, historial financiero, ranking, favoritos y nuevas pestañas.
-- Mapas de eventos, series por partido y métricas ajenas a las 60 canónicas; cifras del mockup como datos reales.
+- Mapas de eventos, series por partido y métricas ajenas a las 60 canónicas; cifras ilustrativas del wireframe o de las capturas anteriores como datos reales.
 - xG, xA, percentiles, radares, promedios comparativos e indicadores derivados con cálculos no definidos.
 - Eliminación automática de contratos o componentes históricos y rediseño del catálogo.
 
@@ -257,6 +314,8 @@ Actualización de Specify tras el análisis completo: FR-032 resuelto por exclus
 Evidencia de CLARIFY — 2026-10-25: tres preguntas formuladas y tres respuestas explícitas incorporadas en la sesión vigente. Resueltos FR-041 y prioridad futura de las tres claves; FR-044 y SC-021/022 verifican el comportamiento. «Confirmada» conserva el significado de SPEC-012: fila publicada atómicamente con item de jugador `COMPLETED`, no mera existencia de una fila ni cobertura poblacional. La temporada seleccionada es el contexto de la consulta; no añade selector de temporadas a la interfaz. El contexto es el de la competición de la liga local resuelto por SPEC-012; no se seleccionan competiciones adicionales. La unicidad por jugador/fecha/canal de SPEC-012 limita empates; observación e ID fijan orden estable sin fusionar registros incompatibles.
 
 Escaneo de alcance, dominio/datos, interacción, calidad no funcional aplicable, integración, excepciones, restricciones, terminología, señales de aceptación y placeholders: claro tras estas respuestas. Rendimiento cuantitativo e instrumentación no se agregan como requisitos; diseño de consulta y contratos concretos corresponde a PLAN. No quedan marcadores abiertos en el alcance vigente. Checklist documental vigente 13/16 → 16/16; no implica aceptación del producto ni extiende aprobaciones históricas. Sin hooks: `.specify/extensions.yml` ausente. No se ejecutaron tests, PLAN, TASKS, implementación, commits, push ni cambios del seguimiento. Siguiente paso permitido bajo un nuevo encargo: `/speckit.plan`.
+
+Evidencia de CLARIFY — rediseño visual 2026-11-09: se ejecutó el escaneo completo de alcance y comportamiento, dominio y datos, interacción, estados, accesibilidad, integración, límites, terminología y señales de aceptación contra el [wireframe canónico](../../docs/wireframes/player-detail.md). No se formularon preguntas nuevas: las cuatro decisiones ya registradas en la sesión del 2026-11-09 resuelven la reorganización de la implementación existente, la referencia visual, la deduplicación de destacadas y la exploración de las 60 métricas. Rendimiento operativo, observabilidad e infraestructura no cambian y no justifican requisitos nuevos para un rediseño presentacional. El checklist vigente permanece 16/16 sin cambios de marcadores. No existe `.specify/extensions.yml`, por lo que no hay hooks de CLARIFY. El cierre operativo de CLARIFY y el Pull Request hacia `dev` quedaron completados posteriormente; PLAN se completó de forma local y CHECKLIST conserva su gate de revisión independiente. Ninguna de esas etapas autoriza implementación.
 
 ---
 

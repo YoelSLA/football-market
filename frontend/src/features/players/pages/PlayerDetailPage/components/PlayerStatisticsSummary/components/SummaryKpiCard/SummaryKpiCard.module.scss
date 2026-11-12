@@ -1,0 +1,109 @@
+@use "@/styles/abstracts" as ds;
+
+.summaryKpiCard {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: 14px;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: 14px 18px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	color: ds.$text-body-on-dark;
+
+	&__icon {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+
+		// 4. 📦 Box Model
+		width: 48px;
+		height: 48px;
+		border: 1px solid ds.$accent-sports-green;
+		border-radius: 10px;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-accent-dark;
+		color: ds.$accent-sports-green;
+	}
+
+	&__content {
+		// 3. 🧩 Layout
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__title {
+		// 4. 📦 Box Model
+		margin: 0 0 2px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		line-height: 1.25;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__valueWrapper {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: baseline;
+		gap: 4px;
+	}
+
+	&__value {
+		// 5. 🔤 Typography
+		font-size: 28px;
+		font-weight: 800;
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+
+		&_null {
+			// 5. 🔤 Typography
+			font-size: 14px;
+			font-weight: 500;
+			font-style: italic;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__unit {
+		// 5. 🔤 Typography
+		font-size: 14px;
+		font-weight: 600;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__subtitle {
+		// 3. 🧩 Layout
+		display: block;
+
+		// 4. 📦 Box Model
+		margin-top: 3px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		line-height: 1.35;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+}

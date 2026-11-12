@@ -10,29 +10,7 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 	overscroll-behavior-y: contain;
-	scrollbar-width: thin;
-	scrollbar-color: ds.$border-panel ds.$surface-page;
 	scrollbar-gutter: stable;
-	&::-webkit-scrollbar {
-		// 4. 📦 Box Model
-		width: .4rem;
-	}
-
-	&::-webkit-scrollbar-track {
-		// 6. 🎨 Visual
-		background-color: ds.$surface-page;
-	}
-
-	&::-webkit-scrollbar-thumb {
-		// 6. 🎨 Visual
-		border: 1px solid ds.$surface-page;
-		border-radius: 1rem;
-		background-color: ds.$border-panel;
-		&:hover {
-			// 6. 🎨 Visual
-			background-color: ds.$accent-highlight;
-		}
-	}
 
 	&__grid {
 		// 3. 🧩 Layout

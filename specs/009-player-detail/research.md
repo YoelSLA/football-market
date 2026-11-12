@@ -1,5 +1,24 @@
 # Research: Detalle individual del jugador
 
+## Investigación vigente — rediseño visual 2026-11-12
+
+Este bloque consolida el delta de presentación del [wireframe canónico](../../docs/wireframes/player-detail.md) y las decisiones acordadas durante el rediseño visual definitivo. Las decisiones de 2026-10-25 siguen vigentes para consulta, snapshot, contratos y arquitectura ya implementados.
+
+| Decisión | Razón y evidencia | Alternativas descartadas |
+| --- | --- | --- |
+| 4 KPI principales + 2 paneles temáticos | Las barras de progreso carecían de escala comparativa válida y el bloque de destacadas duplicaba información. 4 KPI superiores y 2 paneles temáticos específicos por posición organizan la información de forma clara y sin redundancias | Mantener barras relativas arbitrarias; mantener bloque de destacadas duplicado; radar chart |
+| Filas de paneles acotadas (`min-height: 44px; max-height: 58px;`) con `justify-content: space-evenly` | Evita que las filas se estiren indefinidamente en pantallas altas y garantiza que los paneles encajen de forma natural en resoluciones con altura menor (768px, 800px) | `flex: 1` sin límite en filas; alturas fijas en píxeles que provocan desbordamiento |
+| Eliminación de unidades redundantes en KPI cards | La unidad redundante repite innecesariamente el concepto ya expresado en el título/subtítulo (ej. `0,4` y debajo `regates/partido`). Solo `%` se mantiene al lado del valor | Mostrar `0,4 regates regates/partido`; abreviaciones crípticas |
+| Iconos de 24px en KPI y valores de 28px bold | Mejora sustancial de jerarquía visual y legibilidad en escritorio | Iconos diminutos de 18px; tipografía secundaria comprimida |
+| Eliminación de `text-overflow: ellipsis` en subtítulos de KPI | El ellipsis forzado con altura fija recortaba trazos descendentes (`g`, `p`, `y`). Ajustar `line-height: 1.35` y padding interno resuelve el clipping | Cortar texto; ocultar información esencial |
+| Paleta semántica con colores estrictamente sólidos | Garantiza máxima legibilidad, contraste adecuado y diseño profesional alineado con Football Market sin distracciones | Gradientes, sombras decorativas, efectos de brillo |
+| Cabecera compacta de 3 zonas con cotización oficial de 94 px | Integra precio en créditos, badges semánticos (`Cotización inicial`, `Sin variación`, `▲ +X,XX %`, `▼ -X,XX %`) y diferencia absoluta en créditos sin inventar datos | Ocultar cotización; inventar variaciones cuando no existe precio previo |
+| Cero scroll vertical y horizontal en escritorio | Verificación automatizada con Playwright en 1920×1080, 1920×913, 1366×768 y 1280×800 (`hasVerticalScroll: false`, `hasHorizontalScroll: false`) | Permitir scroll anidado en el resumen; recortar contenidos esenciales |
+
+No hay NEEDS CLARIFICATION. No se agregan paquetes, endpoints, modelos remotos, cálculos deportivos ni recursos gráficos.
+
+---
+
 ## Investigación vigente — rediseño 2026-10-25
 
 Estas decisiones desarrollan exclusivamente el alcance vigente de `spec.md`. Las secciones R-01 y siguientes se conservan como investigación histórica; las decisiones sobre mocks, finanzas o herramientas retiradas no se aplican al rediseño.
