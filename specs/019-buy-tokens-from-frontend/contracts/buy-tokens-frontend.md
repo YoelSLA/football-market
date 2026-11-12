@@ -1,8 +1,13 @@
 # Contratos de consumo de Market (SPEC-019)
 
-**Fuentes autoritativas:** [cotizaciones SPEC-016](../../016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md) y [compra SPEC-010](../../010-buy-tokens/contracts/buy-tokens.md). Este documento no redefine esos endpoints. [Spec](../spec.md) · [Plan](../plan.md) · [Modelo](../data-model.md).
+**Fuentes autoritativas:** [catálogo oficial SPEC-010 / Issue #90](market-official.md), [cotizaciones SPEC-016](../../016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md) y [compra SPEC-010](../../010-buy-tokens/contracts/buy-tokens.md). Este documento no redefine esos endpoints. [Spec](../spec.md) · [Plan](../plan.md) · [Modelo](../data-model.md).
 
-## Lectura de cotización real
+## Catálogo de emisión oficial (Evolución SPEC-010 / Issue #90)
+
+El contrato de lectura consolidada del Mercado Oficial está definido en detalle en [market-official.md](market-official.md) (`GET /api/market/official`).
+Este endpoint consolida la consulta deportiva con la cotización vigente y la variación porcentual en una única petición paginada con filtros y ordenamiento en el servidor, sustituyendo las consultas N+1 por jugador para la vista de catálogo.
+
+## Lectura de cotización real (Histórico / Respaldo)
 
 `GET /api/players/{id}/quotes/current`, autenticado, desde `marketService.getCurrentQuote(id, signal)`:
 

@@ -236,3 +236,56 @@ El detalle se deriva de la misma query y se actualiza atómicamente con el catá
 - El contrato backend no fija orden; el frontend impone ordenamiento ascendente por precio unitario, vencimiento e id.
 - Si el volumen deja de ser moderado, se evaluará otro alcance con agregación/paginación server-side; no
   se anticipa en esta implementación.
+
+## Evolución del diseño — Catálogo consolidado del Mercado Oficial (SPEC-010 / Issue #90)
+
+### Decisión arquitectónica y nuevo flujo de datos
+
+La integración del catálogo oficial consolida la identidad deportiva de los jugadores y sus cotizaciones vigentes
+en una única llamada a `GET /api/market/official`, eliminando las consultas individuales N+1 de cotización
+(`useMarketQuotesQuery`) dentro de la vista de catálogo.
+
+El flujo transaccional de compra `POST /api/orders/buy`, el diálogo `BuyTokenModal` y la totalidad de la
+modalidad Mercado P2P (`/market/p2p`) se preservan sin modificaciones.
+
+```text
+AppRouter (/market/buy)
+  └─ MarketBuyPage
+       └─ useMarketBuyPage (coordinador oficial)
+            ├─ sincronización con searchParams de la URL (?page=0&name=...&leagueId=...&teamId=...&sort=...)
+            ├─ usePlayersFiltersQuery() ── GET /api/players/filters (ligas y equipos en cascada)
+            ├─ useOfficialMarketQuery(params) ── GET /api/market/official
+            │    └─ marketService.getOfficialCatalog(params)
+            │         ↓
+            │       DTO paginado con cotización integrada
+            ├─ MarketHeader (título Oficial, saldo disponible y métricas)
+            ├─ OfficialMarketPanel
+            │    ├─ MarketFilters (filtros dinámicos en cascada, hasQuote, minPrice/maxPrice y orden)
+            │    ├─ MarketBuyCatalog (grilla de jugadores)
+            │    │    └─ MarketPlayerCard (datos deportivos, variación% del backend y botón Comprar)
+            │    └─ MarketPagination (control de páginas server-side)
+            └─ BuyTokenModal (abierto al pulsar Comprar con datos consolidados)
+                 └─ useBuyQuantityForm + useBuyTokensMutation ── POST /api/orders/buy
+```
+
+### Componentes y adaptaciones técnicas
+
+1. **`marketService.getOfficialCatalog(params, signal)`:**
+   - Construye los query params normalizados: `page`, `size` (12), `name`, `leagueId`, `teamId`, `position`, `nationality`, `hasQuote`, `minPrice`, `maxPrice` (en centésimas) y `sort`.
+   - Realiza la solicitud autenticada a `GET /api/market/official` según el contrato [market-official.md](contracts/market-official.md).
+   - Mapper `toOfficialMarketPage(dto)` valida el sobre paginado y transforma cada entrada a `OfficialMarketPlayer`.
+2. **Selectores dinámicos en cascada (`MarketFilters`):**
+   - Consume las opciones de ligas y equipos desde `GET /api/players/filters` a través de la API pública de `features/players`.
+   - La selección de `leagueId` filtra la lista de equipos correspondientes a esa liga. Limpiar o cambiar la liga deselecciona el equipo.
+   - Reemplaza los campos obsoletos de inventario por el selector `hasQuote` (*"Todas"*, *"Con cotización"*, *"Sin cotización"*) y los inputs numéricos `minPrice` y `maxPrice` (en créditos).
+   - Valida en cliente `minPrice <= maxPrice` antes de aplicar los filtros.
+3. **Sincronización reactiva con la URL:**
+   - Todos los filtros, el orden (`sort`) y la página (`page`) se reflejan en los query params de `/market/buy`.
+   - Modificar cualquier filtro resetea la página a `0`.
+   - La navegación Back/Forward y recarga del navegador reconstruye el estado directamente desde la URL.
+4. **Adaptación de `MarketPlayerCard`:**
+   - Consume directamente la cotización integrada y `variationPercentage` provistos por el backend.
+   - Si `quote === null`, renderiza la etiqueta "Sin cotización" y deshabilita el botón "Comprar", sin inventar cotizaciones demo ni timestamps.
+5. **Aislamiento y no regresión:**
+   - No modifica contratos ni comportamiento de `/market/p2p`.
+   - No altera el schema de mutación ni el payload `{ playerId, quantity }` de `POST /api/orders/buy`.

@@ -354,3 +354,63 @@ vigente y sus controles pendientes salvo modificación explícita posterior.
   comprador; las propias quedan excluidas por contrato.
 - El saldo posterior se muestra solo si el contrato de usuario disponible conserva precisión suficiente;
   de lo contrario se muestra saldo disponible y el backend decide la suficiencia.
+
+---
+
+## Evolución normativa — Catálogo del Mercado Oficial con cotizaciones integradas (SPEC-010 / Issue #90)
+
+Esta evolución actualiza la modalidad **Mercado Oficial** (`/market/buy`) para consumir el endpoint consolidado
+`GET /api/market/official`, sustituyendo la consulta fragmentada anterior (`usePlayersQuery` + consultas N+1
+de cotización) y activando funcionalmente los filtros, ordenamiento y paginación en el servidor con
+sincronización bidireccional en la URL.
+
+Se preservan íntegros el endpoint y flujo transaccional de compra `POST /api/orders/buy` y la totalidad
+de la modalidad Mercado P2P (`/market/p2p`, FR-20 a FR-34).
+
+### User Story 8 — Explorar el catálogo oficial con cotizaciones integradas y filtros (Priority: P1)
+
+Como usuario autenticado en el Mercado Oficial (`/market/buy`), quiero consultar el catálogo de emisión
+oficial con cotizaciones vigentes integradas, variaciones porcentuales y filtros deportivos y financieros,
+para explorar el mercado primario de forma ágil y preparar compras informadas.
+
+**Independent Test**: Navegar a `/market/buy`, aplicar filtros combinados (nombre, liga, equipo dependiente,
+cotización y rango de precio), verificar la respuesta unificada con cotizaciones y ordenar por precio o variación.
+
+**Acceptance Scenarios**:
+
+1. **Given** usuario autenticado en `/market/buy`, **When** carga la página, **Then** se invoca `GET /api/market/official` y se presenta la lista paginada de jugadores con sus cotizaciones vigentes consolidadas y variación porcentual provista por el backend.
+2. **Given** jugador sin cotización vigente en el sistema, **When** aparece en el catálogo, **Then** muestra el bloque de cotización como «Sin cotización» y mantiene deshabilitado el botón "Comprar", sin inventar precios ni valores demo.
+3. **Given** usuario selecciona una liga en `MarketFilters`, **When** se despliega el selector de equipos, **Then** las opciones de equipos se restringen dinámicamente a los pertenecientes a esa liga, obtenidos de `GET /api/players/filters`.
+4. **Given** filtros aplicados en la interfaz (búsqueda, liga, equipo, cotización, rango de precios o criterio de orden), **When** se modifican, **Then** la URL se actualiza reactivamente con los query params correspondientes (`name`, `leagueId`, `teamId`, `position`, `hasQuote`, `minPrice`, `maxPrice`, `sort`, `page`), permitiendo recarga y navegación Back/Forward determinista.
+5. **Given** usuario ingresa un rango de precios con `minPrice > maxPrice`, **When** intenta aplicar el filtro, **Then** el frontend muestra un error inline de validación y bloquea la solicitud, previniendo el error `400 INVALID_PRICE_RANGE`.
+6. **Given** usuario ordena por cotización o variación porcentual (ascendente o descendente), **When** se reciben los resultados, **Then** los activos sin cotización o sin variación previa calculable se ubican obligatoriamente al final (`NULLS LAST`).
+7. **Given** usuario pulsa "Comprar" en una ficha con cotización válida, **When** abre el diálogo, **Then** se reutiliza `BuyTokenModal` con los datos ya consolidados y se ejecuta la compra existente mediante `POST /api/orders/buy`.
+
+### Requisitos funcionales — Catálogo del Mercado Oficial
+
+| ID | Requisito |
+|---|---|
+| FR-35 | La página `/market/buy` DEBE consultar el catálogo consolidado mediante `GET /api/market/official`, enviando los parámetros de paginación (`page`, `size`), filtros deportivos (`name`, `leagueId`, `teamId`, `position`, `nationality`), filtro de disponibilidad de cotización (`hasQuote`), filtros financieros (`minPrice`, `maxPrice` en centésimas) y ordenamiento (`sort`). |
+| FR-36 | El frontend DEBE sincronizar bidireccionalmente los filtros, orden y página con los query params de la URL en `/market/buy`, utilizando exactamente las claves del contrato HTTP (`name`, `leagueId`, `teamId`, `position`, `nationality`, `hasQuote`, `minPrice`, `maxPrice`, `sort`, `page`). La carga inicial, recarga y navegación en el historial DEBEN reconstruir la vista fielmente desde la URL. |
+| FR-37 | Las opciones de los selectores de liga y equipo en `MarketFilters` DEBEN poblarse dinámicamente consumiendo `GET /api/players/filters`. La selección de una liga DEBE restringir en cascada las opciones del selector de equipos a los clubes pertenecientes a dicha liga; limpiar o alterar la liga seleccionada DEBE limpiar la selección del equipo. |
+| FR-38 | Cada activo del catálogo oficial DEBE mostrar sus datos deportivos, cotización unitaria vigente en créditos y centésimas, y variación porcentual calculada por el backend. Si el activo no registra cotización (`quote === null`), DEBE exhibir «Sin cotización» y deshabilitar la acción de compra. |
+| FR-39 | La variación porcentual calculada por el backend (`variationPercentage`) DEBE presentarse en la tarjeta del jugador con indicador direccional visual (↗ verde para subas, ↘ rojo para bajas, → neutro si no hay cambio). Si `variationPercentage` es nulo (sin precio anterior válido), se mostrará indicación neutra de ausencia de variación previa. |
+| FR-40 | Los campos de rango de precios en la interfaz DEBEN ingresarse en créditos y convertirse a centésimas enteras no negativas para la consulta HTTP. El frontend DEBE validar que `minPrice <= maxPrice` antes de emitir la consulta; ante valores invertidos DEBE advertir con error inline y bloquear el envío. |
+| FR-41 | El ordenamiento DEBE permitir ordenar sobre la totalidad de la base de datos por cotización (`price,asc`, `price,desc`), variación porcentual (`variation,asc`, `variation,desc`), nombre (`name,asc`, `name,desc`) e id natural (`id,asc`). Los valores nulos (sin cotización o sin variación calculable) DEBEN situarse al final (`NULLS LAST`) en ambos sentidos. |
+| FR-42 | La respuesta y la interfaz del Mercado Oficial NO DEBEN exponer stock disponible, saldo del superusuario ni tenencias remanentes, preservando el principio de sigilo de inventario. |
+| FR-43 | Seleccionar "Comprar" en un jugador con cotización válida DEBE abrir `BuyTokenModal` manteniendo inalterado el contrato de compra `POST /api/orders/buy` con `{ playerId, quantity }`. |
+| FR-44 | Tras una compra confirmada, el frontend DEBE invalidar la caché de `GET /api/market/official`, el saldo de créditos del usuario y el portfolio, y presentar la notificación de éxito existente. |
+| FR-45 | La evolución del Mercado Oficial NO DEBE modificar, interrumpir ni introducir regresiones en las rutas, contratos, hooks y componentes del Mercado P2P (`/market/p2p`, FR-20 a FR-34). |
+
+### Entidades adicionales del Mercado Oficial
+
+- **OfficialMarketPlayerDTO**: DTO de lectura del catálogo consolidado con datos deportivos y bloque `quote` nullable.
+- **OfficialMarketQuoteDTO**: bloque embebido con `unitPrice`, `previousPrice`, `variationPercentage`, `performanceScore`, `multiplier`, `calculationOrigin`, `effectiveDate` y `calculatedAt`.
+- **OfficialMarketPageDTO**: sobre paginado con `content`, `page`, `size`, `totalElements` y `totalPages`.
+- **OfficialMarketQueryParams**: objeto tipado de parámetros de búsqueda, filtros en cascada, cotización y orden.
+
+### Criterios de éxito adicionales
+
+- **SC-11**: La carga del Mercado Oficial en `/market/buy` resuelve el catálogo completo de la página en un único request HTTP consolidado (`GET /api/market/official`), eliminando las consultas individuales N+1 de cotización.
+- **SC-12**: Al compartir o recargar una URL con filtros (ej. `/market/buy?leagueId=1&teamId=10&hasQuote=true&sort=price,desc`), el estado completo de filtros y resultados se reconstruye idénticamente.
+- **SC-13**: Cambiar la liga seleccionada actualiza inmediatamente la lista de equipos dependientes sin inconsistencias.
