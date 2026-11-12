@@ -6,18 +6,21 @@
 
 ### Alcance y aceptación (US1)
 
-- El listado, sus conteos y las opciones de filtros globales incluyen únicamente jugadores con métricas persistidas: al menos una métrica informada en su último registro, conforme a SPEC-016 FR-003. Cero es un valor informado; una fila vacía no hace elegible al jugador. No se exige score ni cotización para aparecer en catálogo.
+- El listado, sus conteos y las opciones de filtros globales incluyen únicamente jugadores con métricas persistidas: al menos una métrica informada en alguno de los registros de su fecha de extracción más reciente, conforme a SPEC-016 FR-003. Cero es un valor informado; una fila vacía no hace elegible al jugador por sí sola. No se exige score ni cotización para aparecer en catálogo.
 - Aplicar elegibilidad en backend antes de búsqueda, filtros, orden y paginación; las opciones globales provienen de todo el universo elegible, no de la página actual. Se preservan los demás criterios de visibilidad y seguridad.
 - La consulta de detalle utiliza la misma elegibilidad: un ID sin métricas no permite eludir la exclusión navegando directamente. No se elimina el jugador ni se alteran sincronización, identidad o métricas.
+- La consulta individual de estadísticas aplica la misma elegibilidad que identidad: jugador no elegible responde 404. Para un jugador elegible sin snapshot confirmado en la temporada o contexto consultados, conserva 200 `NO_DATA` con las 60 métricas ausentes.
+- Un jugador que deja de tener métricas informadas en los registros de su fecha más reciente queda excluido del mercado y de los rankings mientras no sea elegible, aunque conserve cotizaciones o valoraciones anteriores. Esos antecedentes se conservan; esta exclusión no elimina datos históricos.
+- Si un usuario ya posee tokens de ese jugador, su tenencia y su historial permanecen visibles; se impiden nuevas compras y ventas mientras el jugador no sea elegible.
 - **Aceptación**: un jugador con métricas aparece en listado y puede consultarse por ID; uno sin métricas no aparece, no aporta opciones exclusivas de filtros y no es accesible por detalle. Totales y páginas se calculan después de excluirlo. Jugador con métricas y sin score sigue siendo visible.
 
-Este bloque sustituye las exclusiones previas de detalle solo en cuanto a elegibilidad y amplía el contrato de lectura documentado en `contracts/catalog-query.md`; no autoriza rediseñar SPEC-009 ni modificarla. La decisión sobre la respuesta exacta para detalle no elegible se resuelve en CLARIFY reutilizando el contrato existente.
+Este bloque sustituye las exclusiones previas de detalle solo en cuanto a elegibilidad y amplía el contrato de lectura documentado en `contracts/catalog-query.md`; la corrección autorizada alinea SPEC-009 sin rediseñar su dashboard. Un ID válido de jugador no elegible responde 404 «Jugador no encontrado» en identidad y estadísticas, igual que un jugador no visible, sin exponer su identidad.
 
 **Impacto SDD**: revisar contratos, plan, modelo, research, quickstart, tasks y checklists afectados antes de ANALYZE. No se acreditan implementación ni aprobaciones del delta. CODE REVIEW, TESTING y cierre pendientes para el cambio; evidencia histórica intacta.
 
-**Validación de SPECIFY**: población, límites y aceptación definidos; respuesta de detalle no elegible pendiente de CLARIFY. Sin modificar marcadores históricos del revisor. Issue #55 CLOSED observada; no se encontró item de esa issue en los 29 items recuperados del proyecto. Seguimiento del delta PENDING; no se afirma sincronización ni se reabre remotamente.
+**Validación de SPECIFY**: población, límites y aceptación definidos; la respuesta de detalle no elegible quedó aclarada en la sesión de CLARIFY. Sin modificar marcadores históricos del revisor. Issue #55 CLOSED observada; no se encontró item de esa issue en los 29 items recuperados del proyecto. Seguimiento del delta PENDING; no se afirma sincronización ni se reabre remotamente.
 
-**Evidencia**: mecanismo real `--reuse`, `FEATURE_NUM=002`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; rama actual preservada. CLARIFY pendiente, preparación global incompleta.
+**Evidencia**: mecanismo real `--reuse`, `FEATURE_NUM=002`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; rama preservada en aquella operación. CLARIFY fue ejecutado y sus respuestas se registraron en la sesión 2026-11-11; su publicación e incorporación al PR #86 siguen pendientes. Preparación global incompleta.
 
 ---
 
@@ -36,6 +39,13 @@ El usuario autorizó el 2026-10-25 preparar en SPEC-005 búsqueda/filtros global
 **Input**: Catálogo local de jugadores de fútbol con identidad propia de FootballMarket, consultable por una API paginada y actualizado exclusivamente mediante una sincronización manual con Football-Data.org. Las identidades de proveedores externos se modelan como referencias externas independientes del jugador.
 
 ## Clarifications
+
+### Session 2026-11-11
+
+- Q: ¿Qué debe responder el detalle cuando se solicita por ID un jugador que existe, pero no tiene métricas? → A: 404 «Jugador no encontrado», igual que un jugador no visible, sin exponer su identidad.
+- Q: Si un jugador deja de tener métricas informadas en su último registro, ¿qué debe pasar con su presencia en el mercado y los rankings, aunque conserve cotizaciones o valoraciones anteriores? → A: Excluirlo del mercado y de los rankings mientras no sea elegible, conservando sus cotizaciones y valoraciones históricas.
+- Q: ¿Qué debe pasar con los tokens que un usuario ya posee si ese jugador deja de ser elegible por falta de métricas? → A: Mantener visibles la tenencia y el historial, pero impedir nuevas compras y ventas mientras no sea elegible.
+- Q: ¿Qué ocurre si en la fecha de extracción más reciente una fuente tiene métricas y la otra no? → A: El jugador es elegible si al menos uno de los registros de esa fecha contiene una métrica informada.
 
 ### Session 2026-09-30
 

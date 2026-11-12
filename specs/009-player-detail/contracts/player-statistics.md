@@ -2,6 +2,8 @@
 
 Diseño de PLAN de SPEC-009, 2026-10-25. No acredita endpoint implementado. Complementa la identidad existente sin modificar su respuesta ni el catálogo. Fuente funcional: `spec.md` FR-025–048 y Clarify; FR-045 define competición legible/fallback, FR-046 distingue IDs/no encontrado/ausencia, FR-047 conserva respuesta compatible ante error y FR-048 referencia el glosario.
 
+**Alineación 2026-11-11**: identidad y estadísticas aplican la elegibilidad de [SPEC-002](../../002-player-catalog/spec.md): al menos una métrica informada en alguna fila de la fecha de extracción más reciente, además de la visibilidad previa. Un jugador no elegible recibe 404 en ambas lecturas. Si el jugador es elegible pero no hay snapshot confirmado para la temporada o contexto consultados, la respuesta estadística sigue siendo 200 `NO_DATA`, con 60 ausencias. Esto no cambia la selección del snapshot ni acredita implementación.
+
 ## Solicitud
 
 `GET /api/players/{id}/statistics?seasonKey=<clave-canónica>` con Bearer y reglas de autenticación existentes. `id` Long positivo obligatorio; inválido, no numérico o fuera de rango → 400. `seasonKey` string opcional no vacío de máximo 255 caracteres, comparación exacta parametrizada con el valor persistido (no usar seasonLabel como identidad ni interpretar rangos a partir de la etiqueta). Temporada válida sin registros → ausencia exitosa, no jugador no encontrado. El detalle no agrega un selector visual.
@@ -30,7 +32,7 @@ No se publican números de ejemplo para evitar convertir cifras del mockup en es
 
 ## Selección y composición normativa del contrato
 
-1. Comprobar elegibilidad igual que identidad: jugador activo, equipo y liga visibles; inexistente o no visible → mismo 404 PLAYER_NOT_FOUND, sin exponer estadísticas.
+1. Comprobar elegibilidad igual que identidad: jugador activo, equipo y liga visibles y métricas según la alineación anterior; inexistente o no elegible → mismo 404 PLAYER_NOT_FOUND, sin exponer estadísticas.
 2. Solo filas con contexto RESOLVED e item referenciado COMPLETED, coherentes en jugador/fecha/canal. No exigir confirmación poblacional ni run global COMPLETED. Ignorar filas huérfanas o de contexto sin resolver.
 3. Elegir fecha mayor del jugador y temporada pedida; si no se pide, última fecha del jugador. Dentro de fecha, JSON ancla antes de scraping; luego observedAt e ID mayores como desempate determinista. El ancla determina temporada y competición; no es una elección de la temporada más numerosa ni del equipo actual.
 4. Completar desde scraping solo con jugador, temporada, fecha y competición exactamente iguales al ancla JSON. Cada valor JSON no nulo se conserva, incluido cero. Clave ausente en ambos → value/source null. Las tres claves exclusivas scraping también requieren coincidencia de contexto. Sin JSON en esa fecha usar scraping confirmado, nunca JSON de una fecha anterior.
@@ -43,7 +45,7 @@ No se publican números de ejemplo para evitar convertir cifras del mockup en es
 - 404: PLAYER_NOT_FOUND para inexistente/no visible, idéntica política que identidad.
 - 500: fallo interno de lectura, contrato global; frontend ofrece reintento y mantiene identidad ya obtenida. No introducir 502 de proveedor: no hay consulta externa.
 
-La política de FR-046 se aplica a ambas lecturas: ID decimal positivo dentro de Long; formato inválido/cero/negativo/fuera de rango → 400, válido inexistente/no visible → 404; jugador visible sin estadísticas → 200 NO_DATA. El endpoint de identidad existente no tiene validación positiva explícita: requiere alineación futura acotada para cero/negativos, conservando DTO, rutas y visibilidad. Este documento no afirma que ese cambio esté implementado.
+La política de FR-046 se aplica a ambas lecturas: ID decimal positivo dentro de Long; formato inválido/cero/negativo/fuera de rango → 400, válido inexistente/no elegible → 404; jugador elegible sin snapshot confirmado para la consulta → 200 NO_DATA. El endpoint de identidad existente no tiene validación positiva explícita: requiere alineación futura acotada para cero/negativos, conservando DTO y rutas. Este documento no afirma que ese cambio esté implementado.
 
 No requiere roles operativos de sincronización ni amplía permisos existentes. No exponer entidades JPA, IDs de runs/items o información financiera. OpenAPI de Controller/DTO y tests funcionales de Controller deben sostener este contrato en implementación, sin depender de REST Docs retirado.
 

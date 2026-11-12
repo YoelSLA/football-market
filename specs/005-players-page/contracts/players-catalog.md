@@ -1,5 +1,9 @@
 # Contrato consumido: catálogo de jugadores
 
+## Delta de elegibilidad acordado — 2026-11-11
+
+El cliente consume el universo, conteos y opciones definidos en [contrato SPEC-002](../../002-player-catalog/contracts/catalog-query.md#delta-de-elegibilidad-acordado--2026-11-11), sin filtrar la página en el navegador. Identidad y estadísticas de un jugador no elegible responden 404; si es elegible pero carece de snapshot confirmado en el contexto consultado, estadísticas responde 200 `NO_DATA`. El detalle 404 se presenta como no encontrado. Los campos de tarjeta que falten siguen en «Sin datos» y cero sigue siendo cero; no se exige score. Los consumidores de portfolio conservan acceso a tenencias e historial aunque el detalle no sea visible.
+
 ## Contrato vigente del rediseño (propuesto, no implementado)
 
 Referencia canónica: [SPEC-002, catalog-query.md](../../002-player-catalog/contracts/catalog-query.md). La UI solicita `GET /api/players` con page=0, size=12, sort=name,asc e includeStatistics=true, enviando solo criterios no vacíos; obtiene opciones mediante `GET /api/players/filters` sobre el conjunto completo visible. No filtra/ordena el contenido de una sola página ni obtiene estadísticas con peticiones por jugador. Fuentes técnicas se conservan en tipos internos, no en tarjetas.
