@@ -1,12 +1,17 @@
 meta {
-  name: Consultar historial de sincronizaciones
+  name: Consultar cotización a una fecha
   type: http
-  seq: 1
+  seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/players/images/sync-runs?page=0&size=20
+  url: {{baseUrl}}/api/players/2/quotes?date=2026-10-20
+  body: none
   auth: bearer
+}
+
+params:query {
+  date: 2026-10-20
 }
 
 headers {

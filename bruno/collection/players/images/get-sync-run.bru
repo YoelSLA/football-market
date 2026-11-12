@@ -1,11 +1,11 @@
 meta {
-  name: Consultar historial de cotizaciones
+  name: Consultar resumen de una sincronización
   type: http
-  seq: 1
+  seq: 7
 }
 
 get {
-  url: {{baseUrl}}/api/players/2/quotes
+  url: {{baseUrl}}/api/players/images/sync-runs/1
   body: none
   auth: bearer
 }

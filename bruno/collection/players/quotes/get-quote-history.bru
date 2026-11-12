@@ -1,11 +1,12 @@
 meta {
-  name: Sincronizar imágenes (forzar)
+  name: Consultar historial de cotizaciones
   type: http
-  seq: 1
+  seq: 9
 }
 
-post {
-  url: {{baseUrl}}/api/players/images/sync?force=true
+get {
+  url: {{baseUrl}}/api/players/4/quotes
+  body: none
   auth: bearer
 }
 

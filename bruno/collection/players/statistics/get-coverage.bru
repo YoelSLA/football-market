@@ -1,11 +1,12 @@
 meta {
-  name: Identificar jugadores desde catálogo actual
+  name: Consultar cobertura de la campaña
   type: http
-  seq: 1
+  seq: 3
 }
 
-post {
-  url: {{baseUrl}}/api/players/identities/whoscored/sync
+get {
+  url: {{baseUrl}}/api/players/statistics/whoscored/coverage?source=SCRAPING
+  body: none
   auth: bearer
 }
 

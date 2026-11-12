@@ -1,11 +1,12 @@
 meta {
-  name: Consultar ranking por score
+  name: Consultar cotización vigente
   type: http
-  seq: 1
+  seq: 2
 }
 
 get {
-  url: {{baseUrl}}/api/players/ranking/score
+  url: {{baseUrl}}/api/players/2/quotes/current
+  body: none
   auth: bearer
 }
 

@@ -1,18 +1,17 @@
 meta {
-  name: Ejecutar lote de scraping de estadísticas
+  name: Consultar estadísticas de un jugador
   type: http
-  seq: 3
+  seq: 4
 }
 
-post {
-  url: {{baseUrl}}/api/players/statistics/whoscored/sync/scraping
-  body: json
+get {
+  url: {{baseUrl}}/api/players/2/statistics
+  body: none
   auth: bearer
 }
 
 headers {
   authorization: Bearer {{auth_token}}
-  content-type: application/json
   accept: application/json
 }
 

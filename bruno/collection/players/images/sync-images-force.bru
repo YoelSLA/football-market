@@ -1,11 +1,12 @@
 meta {
-  name: Consultar detalle de una sincronización
+  name: Sincronizar imágenes (forzar)
   type: http
-  seq: 1
+  seq: 2
 }
 
-get {
-  url: {{baseUrl}}/api/players/images/sync-runs/1/items?page=0&size=20
+post {
+  url: {{baseUrl}}/api/players/images/sync?force=true
+  body: none
   auth: bearer
 }
 

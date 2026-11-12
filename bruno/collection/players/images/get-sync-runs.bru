@@ -1,11 +1,11 @@
 meta {
-  name: Consultar estadísticas de un jugador
+  name: Consultar historial de sincronizaciones
   type: http
-  seq: 1
+  seq: 5
 }
 
 get {
-  url: {{baseUrl}}/api/players/2/statistics
+  url: {{baseUrl}}/api/players/images/sync-runs?page=0&size=20
   body: none
   auth: bearer
 }

@@ -1,11 +1,12 @@
 meta {
-  name: Consultar cotización a una fecha
+  name: Actualizar métricas desde JSON
   type: http
   seq: 1
 }
 
-get {
-  url: {{baseUrl}}/api/players/7821/quotes?date=2026-10-20
+post {
+  url: {{baseUrl}}/api/players/statistics/whoscored/sync/json
+  body: none
   auth: bearer
 }
 

@@ -1,17 +1,18 @@
 meta {
-  name: Consultar cobertura de la campaña
+  name: Ejecutar lote de scraping de estadísticas
   type: http
   seq: 2
 }
 
-get {
-  url: {{baseUrl}}/api/players/statistics/whoscored/coverage?source=SCRAPING
-  body: none
+post {
+  url: {{baseUrl}}/api/players/statistics/whoscored/sync/scraping
+  body: json
   auth: bearer
 }
 
 headers {
   authorization: Bearer {{auth_token}}
+  content-type: application/json
   accept: application/json
 }
 

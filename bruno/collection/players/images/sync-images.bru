@@ -1,11 +1,12 @@
 meta {
-  name: Actualizar métricas desde JSON
+  name: Sincronizar imágenes manualmente
   type: http
-  seq: 1
+  seq: 3
 }
 
 post {
-  url: {{baseUrl}}/api/players/statistics/whoscored/sync/json
+  url: {{baseUrl}}/api/players/images/sync?force=false
+  body: none
   auth: bearer
 }
 

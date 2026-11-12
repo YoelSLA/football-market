@@ -1,11 +1,12 @@
 meta {
-  name: Consultar estadísticas de un jugador por temporada
+  name: Identificar jugadores desde catálogo actual
   type: http
-  seq: 1
+  seq: 3
 }
 
-get {
-  url: {{baseUrl}}/api/players/7821/statistics?seasonKey=2025-2026
+post {
+  url: {{baseUrl}}/api/players/identities/whoscored/sync
+  body: none
   auth: bearer
 }
 
