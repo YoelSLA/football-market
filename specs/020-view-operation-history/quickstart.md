@@ -1,78 +1,87 @@
-# Guía de validación: Historial personal de operaciones (SPEC-020)
+# Guía de validación: Historial personal de operaciones (Backend)
 
-**Feature**: SPEC-020 · **Rama**: `feat/020-view-operation-history` · **Fecha**: 2026-10-24
+**Estado**: Guía de validación backend vigente.
+**Referencias normativas**: [spec.md](spec.md), [contracts/operation-history-api.md](contracts/operation-history-api.md) y [plan.md](plan.md).
 
-Esta guía describe cómo validar el resultado; no implementa la feature. La ejecución de tests y de
-los comandos de prueba corresponde al usuario. Ninguno se ejecutó durante PLAN.
+---
 
-## 1. Prerrequisitos
+## 1. Verificaciones automatizadas
 
-- Java 21.
-- Docker disponible para las pruebas con PostgreSQL/Testcontainers.
-- Implementación de SPEC-020 completada y aplicación configurada con JWT.
-- Datos aislados con dos usuarios distintos, jugadores y transacciones confirmadas de compra y venta.
-
-## 2. Comandos para el usuario
-
-Desde `backend/`:
+Comandos ejecutables desde el directorio `backend/` para validar la implementación:
 
 ```bash
-./gradlew lightweightTest
-./gradlew integrationTest
-./gradlew test
+# Pruebas de integración con PostgreSQL real (Testcontainers)
+./gradlew integrationTest --tests '*OperationHistoryPersistenceTest' --tests '*OperationHistoryServiceTest'
+
+# Pruebas unitarias y de capa web (MockMvc)
+./gradlew lightweightTest --tests '*OperationHistoryControllerTest'
 ```
 
-El control permitido al agente después de cambios de código backend, que no acredita tests, es:
+Control de compilación backend sin ejecución de pruebas:
 
 ```bash
 ./gradlew build -x test
 ```
 
-## 3. Escenarios automatizados esperados
+---
 
-| Categoría | Escenario | Resultado esperado |
-| --- | --- | --- |
-| Controller | JWT válido | 200 y array con los ocho campos exactos del contrato |
-| Controller | Sin JWT o JWT inválido | 401 y Service no invocado |
-| Controller | Respuesta vacía | 200 con `[]` |
-| Repository | Usuario comprador y vendedor | Recupera ambas transacciones una vez cada una |
-| Repository | Transacciones ajenas | No aparecen |
-| Repository | Mismo `executedAt` | Orden descendente estable por `id` |
-| Service | Comprador | Tipo `BUY` y valores históricos intactos |
-| Service | Vendedor | Tipo `SELL` y valores históricos intactos |
-| Service | Usuario sin operaciones | Colección vacía |
-| Regresión | Consulta repetida sobre el mismo estado | Devuelve la misma colección ordenada y sin filas duplicadas |
+## 2. Escenarios de validación HTTP manual
 
-## 4. Validación HTTP manual
+Con la aplicación en ejecución y un token JWT válido exportado en `TOKEN`:
 
-Con la aplicación levantada por el usuario y un token de prueba en `TOKEN`:
+### Escenario 1: Consulta básica paginada
 
 ```bash
 curl -i \
   -H "Authorization: Bearer $TOKEN" \
-  http://localhost:8080/api/users/me/transactions
+  "http://localhost:8080/api/users/me/transactions?page=0&size=20&sort=NEWEST"
 ```
 
-Comprobar:
+**Verificaciones esperadas**:
+1. Respuesta HTTP 200 con estructura que contiene `summary`, `transactions` y `pagination`.
+2. Las transacciones se presentan tipificadas como `BUY` o `SELL` según el rol de la sesión.
+3. El primer elemento es el más reciente en el tiempo (`executedAt DESC`).
+4. Cada transacción incluye el perfil actual del jugador (`id`, `name`, `team`, `league`) y valores históricos inmutables (`quantity`, `unitPrice`, `totalAmount`).
 
-1. Solo aparecen operaciones de la identidad del token.
-2. Una compra se presenta como `BUY` y una venta como `SELL`.
-3. Cada transacción aparece una sola vez.
-4. El primer elemento es el más reciente; los empates se resuelven por id descendente.
-5. `unitPrice` y `totalAmount` coinciden con el registro histórico, en centésimas.
-6. Un usuario sin operaciones recibe `[]`.
+### Escenario 2: Filtrado por tipo y búsqueda
 
-Sin cabecera:
+```bash
+curl -i \
+  -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8080/api/users/me/transactions?type=BUY&search=Messi"
+```
+
+**Verificaciones esperadas**:
+1. Todas las transacciones devueltas tienen `type: "BUY"`.
+2. El resumen `summary` refleja únicamente los totales e importes del subconjunto filtrado.
+
+### Escenario 3: Validación de rango de fechas erróneo (HTTP 400)
+
+```bash
+curl -i \
+  -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:8080/api/users/me/transactions?executedFrom=2026-11-10T15:00:00Z&executedBefore=2026-11-10T14:00:00Z"
+```
+
+**Verificaciones esperadas**:
+1. Respuesta HTTP 400 Bad Request.
+2. Cuerpo con código `INVALID_DATE_RANGE`.
+
+### Escenario 4: Protección de autenticación (HTTP 401)
 
 ```bash
 curl -i http://localhost:8080/api/users/me/transactions
 ```
 
-Resultado esperado: `401`, sin exposición de operaciones.
+**Verificaciones esperadas**:
+1. Respuesta HTTP 401 Unauthorized sin revelar datos.
 
-## 5. Referencias
+### Escenario 5: Usuario sin transacciones o sin coincidencias
 
-- Contrato: [`contracts/operation-history-api.md`](contracts/operation-history-api.md)
-- Modelo: [`data-model.md`](data-model.md)
-- Decisiones: [`research.md`](research.md)
-- Especificación: [`spec.md`](spec.md)
+Con un token de un usuario sin operaciones confirmadas:
+
+**Verificaciones esperadas**:
+1. Respuesta HTTP 200 OK.
+2. `transactions: []`.
+3. Todos los campos de `summary` en cero (`totalTransactions: 0`, `purchasedVolume: 0`, etc.).
+4. `pagination.totalElements: 0` y `pagination.totalPages: 0`.

@@ -1,9 +1,55 @@
 @use "@/styles/abstracts" as ds;
 
 .button {
-	border: 0;
-	border-radius: .6rem;
-	padding: .85rem 1rem;
-	background: ds.$action-primary;
-	color: ds.$text-inverse;
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	// 4. 📦 Box Model
+	padding: 0.85rem 1rem;
+
+	// 6. 🎨 Visual
+	border-radius: 0.6rem;
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease,
+		opacity 0.15s ease;
+
+	&:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$accent-highlight;
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		// 7. ⚙️ Behavior
+		cursor: not-allowed;
+		opacity: 0.55;
+	}
+
+	&_primary {
+		// 6. 🎨 Visual
+		border: 1px solid ds.$action-primary;
+		background-color: ds.$action-primary;
+		color: ds.$text-inverse;
+	}
+
+	&_secondary {
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		background-color: ds.$surface-data-control-soft;
+		color: ds.$text-label-on-dark;
+
+		&:not(:disabled):hover {
+			// 6. 🎨 Visual
+			border-color: ds.$action-selected-accent-border;
+			background-color: ds.$action-selected-accent-subtle;
+			color: ds.$action-link;
+		}
+	}
 }

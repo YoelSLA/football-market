@@ -6,14 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.application.exceptions.ValuationEvaluationException;
 import footballmarket.features.valuation.application.exceptions.ValuationSnapshotUnavailableException;
 import footballmarket.features.valuation.domain.enums.ValuationExclusionReason;
 import footballmarket.features.valuation.domain.records.ValuationEvaluationSummary;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -45,15 +43,13 @@ class ValuationControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private ValuationEvaluationService service;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("valuation@example.com"))
-        .thenReturn(
-            new User(1L, "valuation.user", "valuation@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("valuation@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

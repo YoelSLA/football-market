@@ -1,0 +1,51 @@
+@use "@/styles/abstracts" as ds;
+
+.nav {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	width: var(--pagination-control-size);
+	height: var(--pagination-control-size);
+	min-height: var(--pagination-control-size);
+	padding: 0;
+
+	// 5. 🔤 Typography
+	line-height: 1;
+
+	// 6. 🎨 Visual
+	border: 1px solid var(--pagination-control-border);
+	border-radius: var(--pagination-control-radius);
+	background-color: var(--pagination-control-background);
+	color: var(--pagination-control-color);
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+
+	// 8. ✨ Animation
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease;
+	&:hover:not(:disabled) {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-glass-interactive;
+		border-color: ds.$action-selected-accent;
+		color: ds.$text-inverse;
+	}
+
+	&:disabled {
+		// 7. ⚙️ Behavior
+		opacity: 0.3;
+		cursor: not-allowed;
+	}
+
+	&:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 1px;
+	}
+}

@@ -9,6 +9,7 @@ import footballmarket.features.quote.application.exceptions.QuoteNotFoundExcepti
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
+import footballmarket.features.quote.domain.models.QuoteAdjustment;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
@@ -26,6 +27,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -33,7 +36,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.bean.override.convention.TestBean;
 
-@SpringBootTest
+@SpringBootTest(
+    properties = {
+      "market.quote.strategy=POSITIONAL_PERFORMANCE",
+      "market.quote.adjustment-factor=0.10",
+      "market.quote.variation-cap=0.10",
+      "market.quote.min-price-floor=1"
+    })
 @ActiveProfiles("test")
 @Import({
   TestcontainersConfiguration.class,
@@ -114,6 +123,38 @@ class QuoteQueryServiceTest {
   @Nested
   @DisplayName("Cotización vigente")
   class Current {
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @DisplayName(
+        "Las entradas manual y automática publican los mismos precios para los mismos insumos")
+    void bothEntriesPublishEquivalentPrices(boolean automatic) {
+      // Arrange: el recálculo prepara el estado; el caso bajo prueba es su lectura pública.
+      catalogue.prepare();
+      data.prepareConfirmedJsonCampaign(LocalDate.of(2026, 10, 18));
+      valuation.evaluate();
+      initialization.initialize(LocalDate.of(2026, 10, 17));
+      List<Player> players = playerCatalogue.getActivePlayers(0, 10).getContent();
+      if (automatic) {
+        recalculation.recalculateAutomatic();
+      } else {
+        recalculation.recalculate(
+            "POSITIONAL_PERFORMANCE", new BigDecimal("0.10"), new BigDecimal("0.10"), 1L);
+      }
+      // Act / Assert
+      for (Player player : players) {
+        PlayerQuote current = queryService.findCurrent(player.getId());
+        assertThat(current.getOrigin()).isEqualTo(QuoteOrigin.RECOMPUTED);
+        assertThat(current.getStrategyName()).isEqualTo(ValuationStrategy.POSITIONAL_PERFORMANCE);
+        assertThat(current.getScore()).isNotNull();
+        QuoteAdjustment expected =
+            QuoteAdjustment.calculate(
+                100L, current.getScore(), new BigDecimal("0.10"), new BigDecimal("0.10"), 1L);
+        assertThat(current.getPrice()).isEqualTo(expected.price());
+        assertThat(current.getPreviousPrice()).isEqualTo(100L);
+        assertThat(queryService.findHistory(player.getId())).hasSize(2);
+      }
+    }
 
     @Test
     @DisplayName("Devuelve la última cotización persistida del jugador")

@@ -1,54 +1,79 @@
+@use "@/styles/abstracts" as ds;
+
 .meta {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
 	gap: 3px;
-
 	&__clubRow,
 	&__leagueRow {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		gap: 6px;
 
+		// 4. 📦 Box Model
 		min-width: 0;
 
+		// 5. 🔤 Typography
 		font-size: 12px;
-		color: #cbd5e1;
+
+		// 6. 🎨 Visual
+		color: ds.$text-pagination;
 	}
 
 	&__shield {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
 
+		// 4. 📦 Box Model
 		width: 15px;
 		height: 15px;
-
 		object-fit: contain;
 	}
 
 	&__shieldPlaceholder {
+		// 5. 🔤 Typography
 		font-size: 12px;
-		color: #64748b;
+
+		// 6. 🎨 Visual
+		color: ds.$border-subtle;
 	}
 
 	&__flag {
+		// 3. 🧩 Layout
 		flex-shrink: 0;
 
+		// 4. 📦 Box Model
 		width: 18px;
 		height: 12px;
-
 		object-fit: cover;
 
+		// 6. 🎨 Visual
 		border-radius: 2px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 1px 3px ds.$shadow-black-deep;
+	}
+
+	&__competitionLogo {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 20px;
+		height: 20px;
 	}
 
 	&__teamName,
 	&__leagueName {
-		color: #cbd5e1;
+		// 5. 🔤 Typography
 		font-weight: 500;
-
 		white-space: nowrap;
-		overflow: hidden;
 		text-overflow: ellipsis;
+
+		// 6. 🎨 Visual
+		color: ds.$text-pagination;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
 	}
 }

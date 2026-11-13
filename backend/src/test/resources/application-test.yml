@@ -1,3 +1,8 @@
+market:
+  quote:
+    schedule:
+      enabled: false
+
 spring:
   datasource:
     hikari:
@@ -7,6 +12,10 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    validate-on-migrate: true
+    out-of-order: false
+    baseline-on-migrate: false
+    clean-disabled: true
 
   jpa:
     properties:
@@ -53,6 +62,8 @@ logging:
 # los IDs devueltos por el catálogo aislado antes de iniciar la sincronización.
 whoscored:
   statistics:
+    schedule:
+      enabled: false
     scraping-workers: 4
     json-workers: 3
     request-interval-ms: 1

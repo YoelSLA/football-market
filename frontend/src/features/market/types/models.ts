@@ -13,6 +13,12 @@ export interface MarketPlayer {
 	fallbackImageUrl: string | null;
 }
 
+export interface PlayerHolding extends MarketPlayer {
+	totalQuantity: number;
+	availableQuantity: number;
+	reservedQuantity: number;
+}
+
 export interface MarketQuote {
 	price: number; // en centésimas
 	effectiveDate: string; // fecha de vigencia
@@ -86,4 +92,31 @@ export interface SellEstimation {
 
 export interface SellQuantityForm {
 	quantity: string;
+}
+
+export interface MarketListing {
+	listingId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	createdAt: string;
+	expiresAt: string;
+}
+
+export interface CommunityMarketPlayer extends MarketPlayer {
+	listings: MarketListing[];
+	listingCount: number;
+	availableQuantity: number;
+	minimumUnitPrice: number;
+}
+
+export type CommunityMarketSort = "price" | "quantity" | "name";
+
+export interface CommunityMarketFilters {
+	search: string;
+	league: string;
+	position: string;
+	sort: CommunityMarketSort;
 }

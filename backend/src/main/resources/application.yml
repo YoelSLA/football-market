@@ -10,6 +10,11 @@ valuation:
   attribute-penalty-maximum-impact: ${VALUATION_ATTRIBUTE_PENALTY_MAXIMUM_IMPACT:0.10}
 
 spring:
+  task:
+    scheduling:
+      pool:
+        size: 1
+      thread-name-prefix: market-batch-
   profiles:
     active: dev
 
@@ -97,6 +102,10 @@ market:
   listing:
     expiration-duration: ${MARKET_LISTING_EXPIRATION_DURATION:PT24H}
   quote:
+    strategy: ${MARKET_QUOTE_STRATEGY:POSITIONAL_PERFORMANCE}
+    schedule:
+      cron: ${MARKET_QUOTE_SCHEDULE_CRON:0 0 0 * * MON}
+      enabled: ${MARKET_QUOTE_SCHEDULE_ENABLED:true}
     # Control de variabilidad de las cotizaciones. Los valores por defecto están disponibles sin
     # configuración explícita y el operador puede ajustarlos en cada ejecución.
     adjustment-factor: ${MARKET_QUOTE_ADJUSTMENT_FACTOR:0.10}

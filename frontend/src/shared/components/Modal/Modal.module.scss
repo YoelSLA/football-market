@@ -2,58 +2,90 @@
 
 .modal {
 	&__accessibleTitle {
+		// 2. 📍 Positioning
 		position: absolute;
+
+		// 4. 📦 Box Model
 		width: 1px;
 		height: 1px;
 		padding: 0;
-		overflow: hidden;
-		clip-path: inset(50%);
+
+		// 5. 🔤 Typography
 		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		clip-path: inset(50%);
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
 	}
 
 	&__overlay {
+		// 2. 📍 Positioning
 		position: fixed;
 		inset: 0;
 		z-index: 1000;
+
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
+
+		// 4. 📦 Box Model
 		padding: 1rem;
-		background-color: rgba(ds.$surface-finance-base, 0.7);
+
+		// 6. 🎨 Visual
+		background-color: ds.$overlay-backdrop-deep;
+
+		// 7. ⚙️ Behavior
 		overflow-y: auto;
 		overscroll-behavior: contain;
 	}
 
 	&__backdrop {
+		// 2. 📍 Positioning
 		position: absolute;
 		inset: 0;
+
+		// 4. 📦 Box Model
 		width: 100%;
 		height: 100%;
 		padding: 0;
+
+		// 6. 🎨 Visual
 		border: 0;
-		background: transparent;
+		background-color: ds.$surface-transparent;
 	}
 
 	&__dialog {
+		// 2. 📍 Positioning
 		position: relative;
 		z-index: 1;
-		width: 100%;
-		max-width: 29rem;
-		max-height: calc(100dvh - 2rem);
-		overflow-y: auto;
-		overscroll-behavior: contain;
-		margin: auto;
-		background: linear-gradient(125deg, ds.$surface-finance-panel-from, ds.$surface-finance-base);
-		border: 1px solid ds.$border-finance;
-		border-radius: 0.65rem;
-		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-		color: ds.$text-on-dark;
-		outline: none;
+
+		// 3. 🧩 Layout
 		display: flex;
 		flex-direction: column;
 
+		// 4. 📦 Box Model
+		width: 100%;
+		max-width: 29rem;
+		max-height: calc(100dvh - 2rem);
+		margin: auto;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-panel-from;
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.65rem;
+		box-shadow: 0 20px 25px -5px ds.$shadow-black-modal, 0 8px 10px -6px ds.$shadow-black-modal;
+		color: ds.$text-body-on-dark;
+		outline: none;
+
+		// 7. ⚙️ Behavior
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		&:focus-visible {
-			outline: 2px solid ds.$focus-ring-on-dark;
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
 			outline-offset: 2px;
 		}
 	}

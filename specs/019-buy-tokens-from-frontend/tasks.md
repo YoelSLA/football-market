@@ -84,3 +84,85 @@ T-02 → T-17/T-18 (usuario), T-19 (agente: build permitido)
 ```
 
 La dependencia T-16 → T-11 → T-02 corresponde a la primera implementación. La propuesta posterior de filtros funcionales/catálogo completo fue sustituida por el rediseño visual: los controles nuevos permanecen deshabilitados y pendientes, sin lógica de filtro/stock. Los límites de players/portfolio/backend se mantienen. No crear tests frontend. Esta preparación documental no implementa nuevas capacidades, no renueva autorizaciones y no acredita CONVERGE ni cierre; primero deben resolverse las verificaciones e integración pendientes.
+
+## Ampliación P2P aprobada (2026-11-04)
+
+Estas tareas agregan la compra secundaria sin reabrir ni borrar las tareas históricas de compra oficial.
+La autorización de preparación documental no acredita implementación ni reemplaza el gate frontend.
+
+### Fase P1 — lógica, datos y estructura
+
+- [x] **P-01** Extender DTOs, Models y Mapper de market para `/listings` y `{listingId}`, con validación
+  estricta del sobre, enteros/fechas/estado y respuesta de compra; sin exponer DTO fuera de Service/Mapper.
+- [x] **P-02** Ampliar `market.service.ts` con lectura autenticada cancelable de publicaciones y compra por
+  listing; mantener compra directa compatible y sin endpoints duplicados.
+- [x] **P-03** Añadir query keys, `useCommunityMarketQuery` y `useBuyListingMutation`; sin retry automático
+  del POST y con invalidación de listings solo por coordinación del Page Hook.
+- [x] **P-04** Reutilizar desde la API pública de players `useAllPlayersQuery` y `Player`, ya expuestos, para
+  resolver detalles por ids únicos; no exportar Service ni DTO. Reutilizar caché existente.
+- [x] **P-05** Implementar utilidades puras de agrupación, filtros, orden y paginación local de 12, con
+  desempates deterministas y aritmética segura.
+- [x] **P-06** Ampliar `useMarketBuyPage` para `mode`/`player` en URL, estado P2P, selección, traducción de
+  errores, doble envío e invalidaciones de auth/portfolio/holdings/listings.
+- [x] **P-07** Crear estructura JSX accesible de catálogo agrupado, detalle completo, cards/filas de listing,
+  estados y `BuyListingModal`, reutilizando componentes existentes y sin CSS fino.
+- [x] **P-08** Revisar estáticamente consumidores, diff y contratos; ejecutar build y Biome acotado a los
+  archivos P2P permitidos por `frontend/AGENTS.md`, sin tests. Build y Biome satisfactorios el 2026-11-04;
+  Vite conserva la advertencia no bloqueante preexistente por chunk superior a 500 kB.
+
+### Gate obligatorio P2P
+
+- [x] **P-09 — USUARIO** Revisar Fase P1 y autorizar explícitamente la maquetación fina. Autorización recibida
+  el 2026-11-04: «Apruebo la Fase P1 de SPEC-019 P2P y autorizo P-10 y P-11.» El agente se detiene
+  aquí aunque el build sea satisfactorio. No se infiere aprobación de silencio, `ok` genérico ni tareas.
+
+### Fase P2 — maquetación fina
+
+- [x] **P-10** Implementar exclusivamente SCSS y wrappers de layout permitidos para catálogo, detalle y modal
+  conforme a wireframes, tokens y patrones visuales vigentes. Build y Biome acotado satisfactorios el
+  2026-11-04; sin cambios de contratos, datos, eventos ni ARIA.
+- [ ] **P-11** Auditar visualmente 375/768/1440 cuando el entorno lo permita, sin ejecutar compras ni tests;
+  registrar limitaciones y solicitar confirmación visual humana. Intento del 2026-11-04 bloqueado por
+  redirección legítima de `AuthGuard` a `/login`; no se inventaron credenciales ni evidencia autenticada.
+
+### Verificación humana
+
+- [ ] **P-12 — USUARIO** Validar catálogo agrupado, filtros/página, URL/Back/Forward, todas las publicaciones,
+  payload exclusivo `listingId`, errores concurrentes, resultado e interacción por teclado.
+
+```text
+P-01 → P-02 → P-03
+P-01 + P-04 → P-05
+P-03 + P-05 → P-06 → P-07 → P-08 → P-09
+P-09 → P-10 → P-11 → P-12
+```
+
+## Refactorización: Separación en dos páginas de mercado (Oficial vs P2P)
+
+- [X] **RF-01** Actualizar navegación principal (`sections.ts`): dos pestañas bajo Mercado («Mercado Oficial» en `/market/buy` y «Mercado P2P» en `/market/p2p`), retirando el selector interno `MarketSelector`.
+- [X] **RF-02** Actualizar `AppRouter.tsx` y `AppLayout.tsx` para alojar `/market/buy` y `/market/p2p` con layouts contenidos.
+- [X] **RF-03** Desacoplar `MarketBuyPage`: eliminar `MarketSelector`, `useCommunityMarketPage`, `CommunityMarketPanel` y `BuyListingModal`; especializar encabezado para «Mercado Oficial».
+- [X] **RF-04** Simplificar `useMarketBuyPage`: retirar estado de pestañas `marketTab` y parámetro URL `mode`.
+- [X] **RF-05** Crear `MarketP2PPage` en `features/market/pages/MarketP2PPage/` con su propio `MarketP2PHeader`, migrando componentes comunitarios y modal P2P.
+- [X] **RF-06** Simplificar `useCommunityMarketPage`: habilitar por defecto, retirar `mode=community` de URL preservando `player=<id>`, y exponer `availableCredits`.
+- [X] **RF-07** Limpieza: eliminar componente obsoleto `MarketSelector` y tipo `MarketTab`.
+- [X] **RF-08** Verificación: `npm run biome:fix` y `npm run build` en 0 errores.
+
+## Evolución: Catálogo del Mercado Oficial con cotizaciones integradas (SPEC-010 / Issue #90)
+
+- [ ] **OF-01** Definir DTOs y modelos de dominio en `features/market/types/` (`OfficialMarketPlayerDTO`, `OfficialMarketQuoteDTO`, `OfficialMarketPageDTO`, `OfficialMarketQueryParams` y `OfficialMarketPlayer`) según el contrato `contracts/market-official.md`.
+- [ ] **OF-02** Implementar mapper seguro `toOfficialMarketPage(dto)` y `toOfficialMarketQueryParams(params)` en `market.mapper.ts`.
+- [ ] **OF-03** Implementar servicio HTTP `marketService.getOfficialCatalog()` en `market.service.ts` y hook TanStack Query `useOfficialMarketQuery(params)` en `features/market/hooks/queries/`.
+- [ ] **OF-04** Integrar selector en cascada en `MarketFilters`: consumir `usePlayersFiltersQuery()` para obtener ligas y equipos dinámicos, restringiendo los equipos a la liga activa.
+- [ ] **OF-05** Refactorizar y activar `MarketFilters`: reemplazar opciones obsoletas de tenencias por `hasQuote` (*"Todas"*, *"Con cotización"*, *"Sin cotización"*), inputs de rango `minPrice`/`maxPrice` en créditos con validación `minPrice <= maxPrice`, y opciones de ordenamiento (`price`, `variation`, `name`, `id`).
+- [ ] **OF-06** Adaptar `MarketPlayerCard` y `MarketBuyCatalog`: presentar cotización integrada y `variationPercentage` provistos por el backend con indicadores visuales de tendencia; gestionar estado "Sin cotización" con botón de compra deshabilitado.
+- [ ] **OF-07** Coordinar en `useMarketBuyPage`: sincronizar reactivamente filtros, orden y paginación con query params de la URL (`/market/buy`), incorporar debounce para la búsqueda por texto y conectar `openBuyModal` con datos consolidados.
+- [ ] **OF-08** Limpieza de consultas fragmentadas: retirar `useMarketQuotesQuery` y llamadas N+1 de cotización del flujo del Mercado Oficial.
+- [ ] **OF-09** Verificación técnica estática: ejecutar `npm run biome:check`, `npm run build`, `npm run scss:check-imports` y `git diff --check`.
+- [ ] **OF-10 — GATE BACKEND** Integración y verificación E2E: validar la consulta, filtros, ordenamiento `NULLS LAST` y compra contra el endpoint real `GET /api/market/official` una vez disponible en backend.
+
+```text
+OF-01 → OF-02 → OF-03
+OF-04 + OF-05 → OF-06
+OF-03 + OF-06 → OF-07 → OF-08 → OF-09 → OF-10
+```

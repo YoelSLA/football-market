@@ -1,134 +1,116 @@
-# Feature Specification: Historial personal de operaciones
+# Feature Specification: Historial personal de operaciones (Backend)
 
 **Feature Branch**: `feat/020-view-operation-history`
+**Estado**: Especificación viva del backend.
+**Referencias normativas**: [contracts/operation-history-api.md](contracts/operation-history-api.md), [data-model.md](data-model.md) y [SPEC-025](../../specs/025-view-transaction-history/spec.md).
 
-**Created**: 2026-10-24
-
-**Status**: Ready for implementation
-
-**Input**: User description: "Implementar la consulta backend del historial personal de operaciones confirmadas de compra y venta para el usuario autenticado, usando la identidad de la sesión y sin modificar datos financieros."
-
-**Trazabilidad**: SPEC-020 materializa `REQ-S2-10` de la issue [#21](https://github.com/YoelSLA/football-market/issues/21), conforme a la asignación explícita registrada en `specs/assignments.md`. Satisface el historial de operaciones requerido por `tp/enunciado.md` §3.4 y §4. La issue #27 es consumidora futura y queda fuera de alcance.
+---
 
 ## Clarifications
 
-### Session 2026-10-24
+- **Identidad de sesión**: La identidad del usuario se obtiene exclusivamente del JWT autenticado. No se admite parámetro de usuario que permita consultar historiales ajenos.
+- **Fuente de verdad**: Toda transacción en `MarketTransaction` representa una operación confirmada y append-only; no existen transacciones pendientes en esta fuente.
+- **Participantes distintos**: SPEC-010 y SPEC-011 garantizan que comprador y vendedor sean usuarios distintos; esta consulta interpreta cada transacción como `BUY` o `SELL` según el rol del usuario autenticado.
+- **Inmutabilidad financiera**: Cantidad, precio unitario, importe total e instante de ejecución reflejan estrictamente los valores confirmados y no se recalculan con cotizaciones actuales.
+- **Perfil actual del jugador**: Nombre, imágenes, equipo y liga representan el catálogo actual; no constituyen snapshots históricos.
+- **Capacidades de consulta**: El endpoint incluye paginación en base de datos, filtros combinables (`search`, `type`, `executedFrom`, `executedBefore`), orden cerrado determinista y agregados (`summary`) sobre el conjunto filtrado.
 
-- Q: Si el usuario autenticado figura simultáneamente como comprador y vendedor en una misma transacción, ¿cómo debe mostrarse esa operación? → A: Ese estado no forma parte del alcance de esta consulta: SPEC-010 y SPEC-011 garantizan que comprador y vendedor sean usuarios distintos.
-- Q: ¿Qué se considera una transacción confirmada para esta consulta? → A: Toda transacción persistida en `MarketTransaction` ya está confirmada; no existen transacciones pendientes o sin confirmar en esa fuente.
-- Q: ¿Es necesario conservar el criterio de usabilidad basado en una “validación representativa”? → A: No; ese criterio no es necesario para esta consulta backend y se elimina del alcance.
-- Q: ¿El nombre del jugador debe conservar una versión histórica? → A: No; el nombre del jugador es inmutable y se obtiene del jugador relacionado porque nunca cambia.
+---
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing
 
-### User Story 1 - Consultar el historial personal (Priority: P1)
+### User Story 1 - Consultar el historial paginado con filtros y agregados (Priority: P1)
 
-Como usuario autenticado, quiero consultar todas mis operaciones financieras confirmadas para revisar cronológicamente mi actividad de compra y venta en el mercado.
+Como usuario autenticado, quiero consultar mis operaciones de compra y venta confirmadas con paginación, filtros y resumen de actividad para revisar mis movimientos financieros en el mercado.
 
-**Why this priority**: Es el valor principal de la funcionalidad y completa la consulta de historial exigida para el portfolio del usuario.
-
-**Independent Test**: Puede verificarse con un usuario que haya comprado y vendido tokens: la consulta devuelve ambas operaciones una sola vez, con todos sus datos registrados, interpretadas desde la perspectiva del usuario y ordenadas de la más reciente a la más antigua.
+**Independent Test**: Con un usuario con compras y ventas confirmadas, consultar `GET /api/users/me/transactions`: devuelve las transacciones propias interpretadas como `BUY` o `SELL`, con valores históricos, perfil actual del jugador, resumen agregado del conjunto filtrado y metadatos de paginación.
 
 **Acceptance Scenarios**:
-
-1. **Given** un usuario autenticado que figura como comprador en operaciones confirmadas, **When** consulta su historial, **Then** cada una aparece como `BUY` con identificador de transacción, jugador, cantidad, precio unitario, importe total y fecha y hora de ejecución.
-2. **Given** un usuario autenticado que figura como vendedor en operaciones confirmadas, **When** consulta su historial, **Then** cada una aparece como `SELL` con identificador de transacción, jugador, cantidad, precio unitario, importe total y fecha y hora de ejecución.
-3. **Given** un usuario con operaciones de compra y venta confirmadas, **When** consulta su historial, **Then** obtiene una sola entrada por transacción en la que participó, sin crear un registro adicional para representar la venta.
-4. **Given** varias operaciones del usuario, **When** consulta su historial, **Then** se presentan desde la ejecución más reciente hasta la más antigua y, cuando dos ejecuciones tienen la misma fecha y hora, el identificador de transacción determina un orden descendente estable.
+1. **Given** un usuario autenticado comprador en transacciones confirmadas, **When** consulta su historial, **Then** cada una aparece como `BUY` con identificador, perfil actual del jugador, cantidad, precio unitario, importe total y fecha/hora de ejecución.
+2. **Given** un usuario autenticado vendedor en transacciones confirmadas, **When** consulta su historial, **Then** cada una aparece como `SELL` con los mismos datos históricos.
+3. **Given** una consulta con parámetros de paginación (`page`, `size`), **When** se ejecuta, **Then** devuelve únicamente el subconjunto solicitado y metadatos con `totalElements` y `totalPages`.
+4. **Given** filtros de búsqueda por nombre, tipo (`BUY`/`SELL`) o rango de fechas, **When** se aplican, **Then** `transactions`, `summary` y `pagination` aplican exactamente los mismos predicados.
+5. **Given** un criterio de ordenamiento (`NEWEST`, `OLDEST`, `AMOUNT_DESC`, `AMOUNT_ASC`), **When** se solicita, **Then** el resultado se ordena según el criterio con desempate determinista por ejecución e ID.
 
 ---
 
 ### User Story 2 - Proteger la privacidad del historial (Priority: P1)
 
-Como usuario autenticado, quiero que la consulta determine mi identidad desde mi sesión para impedir que otra persona seleccione mi cuenta y acceda a mis operaciones privadas.
+Como usuario autenticado, quiero que mi historial sea estrictamente confidencial para que ningún tercero pueda acceder a mis transacciones privadas.
 
-**Why this priority**: La confidencialidad de la actividad financiera es inseparable del valor de la consulta y no puede postergarse respecto del flujo principal.
-
-**Independent Test**: Puede verificarse con dos usuarios con operaciones diferentes: cada sesión obtiene únicamente sus propias operaciones y la consulta no ofrece ningún dato para elegir arbitrariamente otra identidad.
+**Independent Test**: Dos usuarios autenticados distintos consultan el endpoint: cada uno obtiene únicamente sus operaciones y no existe parámetro alguno para solicitar la información de otro usuario.
 
 **Acceptance Scenarios**:
-
-1. **Given** dos usuarios autenticados con historiales distintos, **When** cada uno realiza la consulta desde su sesión, **Then** cada respuesta contiene exclusivamente las transacciones donde el usuario de esa sesión fue comprador o vendedor.
-2. **Given** una solicitud sin una sesión válida, **When** intenta consultar el historial personal, **Then** la solicitud se rechaza sin exponer operaciones financieras.
-3. **Given** una sesión válida, **When** se solicita el historial personal, **Then** la operación no admite un identificador de usuario que permita reemplazar la identidad de la sesión.
-4. **Given** una credencial válida cuyo subject no corresponde a un usuario persistido, **When** solicita el historial personal, **Then** la solicitud se rechaza con `401` sin revelar la existencia de usuarios ni operaciones.
+1. **Given** dos usuarios con transacciones distintas, **When** consultan el endpoint, **Then** cada respuesta contiene únicamente operaciones donde el usuario autenticado fue comprador o vendedor.
+2. **Given** una solicitud sin token JWT o con token inválido/expirado, **When** consulta el historial, **Then** se rechaza con HTTP 401 sin revelar datos.
+3. **Given** una credencial válida cuyo subject no existe en la base de datos, **When** solicita el historial, **Then** se rechaza con HTTP 401.
 
 ---
 
-### User Story 3 - Consultar un historial vacío (Priority: P2)
+### User Story 3 - Consultar un historial vacío o sin coincidencias (Priority: P2)
 
-Como usuario autenticado sin operaciones confirmadas, quiero recibir un resultado vacío y exitoso para distinguir la ausencia de actividad de un error de consulta.
+Como usuario sin transacciones o con filtros sin coincidencias, quiero recibir una respuesta exitosa con colección vacía e indicadores en cero para distinguir la ausencia de operaciones de un error.
 
-**Why this priority**: Es necesario para que usuarios nuevos o inactivos puedan usar la misma consulta sin tratamientos excepcionales.
-
-**Independent Test**: Puede verificarse con un usuario autenticado que no figure como comprador ni vendedor en ninguna transacción confirmada; la consulta finaliza correctamente con una colección vacía.
+**Independent Test**: Con un usuario nuevo sin operaciones o con filtros que no arrojan resultados, la consulta responde HTTP 200 con `transactions: []`, indicadores en cero y metadatos de paginación coherentes.
 
 **Acceptance Scenarios**:
+1. **Given** un usuario sin transacciones confirmadas, **When** consulta su historial, **Then** responde HTTP 200 con `transactions: []`, indicadores de `summary` en cero y `totalElements: 0`.
+2. **Given** un usuario con transacciones que aplica filtros sin coincidencias, **When** ejecuta la consulta, **Then** responde HTTP 200 con `transactions: []`, indicadores de `summary` en cero y `totalElements: 0`.
 
-1. **Given** un usuario autenticado sin operaciones confirmadas, **When** consulta su historial, **Then** recibe una respuesta exitosa con una colección vacía.
+---
 
 ### Edge Cases
 
-- La consulta consume la garantía de SPEC-010 y SPEC-011 de que comprador y vendedor son usuarios distintos; cada participante visualiza la transacción una sola vez desde su único rol.
-- Si varias transacciones comparten exactamente la misma fecha y hora de ejecución, se ordenan por identificador de transacción descendente para conservar un resultado determinista.
-- Las transacciones en las que el usuario no es comprador ni vendedor se excluyen aunque involucren al mismo jugador que alguna operación propia.
-- Los valores financieros históricos se muestran tal como quedaron registrados al ejecutar la operación; una cotización vigente posterior no altera sus precios ni importes.
-- Una solicitud sin autenticación válida se rechaza sin revelar si existen operaciones para usuario alguno.
-- Una credencial válida cuyo subject no corresponda a un usuario persistido se rechaza con `401` sin revelar la existencia de usuarios ni operaciones.
+- **Desempate determinista**: Dos operaciones con igual valor de ordenación se desempatan por fecha de ejecución descendente/ascendente e identificador descendente/ascendente, garantizando resultados reproducibles.
+- **Página fuera de rango**: Si `page` excede las páginas disponibles, responde HTTP 200 con `transactions: []` y metadatos correctos de `totalElements` y `totalPages`.
+- **Rango de fechas inválido**: Si `executedFrom` es igual o posterior a `executedBefore`, la petición se rechaza con HTTP 400 y código `INVALID_DATE_RANGE`.
+- **Imágenes nulas**: Si el jugador carece de `imageUrl` o `fallbackImageUrl`, se devuelven como `null` en el JSON.
+- **Transacciones de terceros**: Transacciones donde el usuario no participó como comprador ni vendedor nunca se incluyen, aun si refieren a un jugador que el usuario negoció en otra ocasión.
 
-## Requirements *(mandatory)*
+---
+
+## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: El sistema MUST permitir que un usuario autenticado consulte su historial personal de operaciones financieras confirmadas.
-- **FR-002**: La identidad consultada MUST obtenerse exclusivamente de la sesión autenticada y la consulta MUST NOT aceptar un identificador que permita seleccionar arbitrariamente otro usuario.
-- **FR-003**: El historial MUST incluir exclusivamente las transacciones confirmadas en las que el usuario autenticado figure como comprador o como vendedor.
-- **FR-004**: Cada transacción MUST aparecer exactamente una vez en el resultado; el sistema MUST NOT crear ni requerir un segundo registro para representar la perspectiva de venta.
-- **FR-005**: Una transacción MUST presentarse como `BUY` cuando el usuario autenticado sea su comprador y como `SELL` cuando sea su vendedor.
-- **FR-006**: Cada operación MUST incluir el identificador de la transacción, el tipo `BUY` o `SELL`, la identificación y el nombre del jugador, la cantidad de tokens, el precio unitario registrado, el importe total registrado y la fecha y hora de ejecución.
-- **FR-007**: Los datos financieros de cada operación MUST reflejar los valores registrados al confirmarse la transacción y MUST NOT recalcularse con información vigente al momento de la consulta.
-- **FR-008**: El resultado MUST ordenarse por fecha y hora de ejecución descendente y, a igualdad de ese valor, por identificador de transacción descendente.
-- **FR-009**: Cuando el usuario no tenga operaciones confirmadas, el sistema MUST responder exitosamente con una colección vacía.
-- **FR-010**: Una solicitud sin autenticación válida o con una credencial válida cuyo subject no corresponda a un usuario persistido MUST rechazarse con `401`, sin exponer operaciones ni información que permita inferir la existencia o el historial de otro usuario.
-- **FR-011**: La consulta MUST ejecutarse como una operación de solo lectura y MUST NOT realizar operaciones de escritura.
-- **FR-012**: La funcionalidad MUST preservar sin cambios observables los flujos vigentes de compra directa, publicación de ventas, cancelación de publicaciones y liquidación de publicaciones.
-- **FR-013**: El historial MUST devolverse como una única colección completa; esta funcionalidad MUST NOT incorporar paginación, filtros avanzados, exportaciones, estadísticas ni agregaciones.
-- **FR-014**: El historial MUST obtenerse de los registros persistidos existentes de `MarketTransaction` y MUST NOT introducir registros duplicados ni una fuente financiera paralela para representar las ventas.
-- **FR-015**: La operación de consulta MUST ejecutarse bajo una garantía transaccional de solo lectura.
+- **FR-001**: El sistema MUST exponer el endpoint `GET /api/users/me/transactions` para consultar el historial personal de operaciones financieras confirmadas del usuario autenticado.
+- **FR-002**: La identidad del usuario MUST obtenerse exclusivamente del subject del JWT y el endpoint MUST NOT aceptar identificadores de usuario en ruta, consulta o cuerpo.
+- **FR-003**: El historial MUST incluir exclusivamente transacciones confirmadas donde el usuario autenticado sea comprador o vendedor.
+- **FR-004**: Cada transacción MUST aparecer exactamente una vez en la respuesta, tipificada como `BUY` si el usuario es comprador o como `SELL` si es vendedor.
+- **FR-005**: Cantidad, precio unitario, importe total e instante de ejecución MUST reflejar los valores históricos confirmados y MUST NOT recalcularse con cotizaciones vigentes.
+- **FR-006**: Cada operación MUST incluir el perfil actual del jugador: `id`, `name`, `imageUrl` (nullable), `fallbackImageUrl` (nullable), equipo actual (`id`, `name`) y liga actual (`id`, `name`).
+- **FR-007**: El endpoint MUST soportar paginación server-side con parámetros `page` (default 0, `>= 0`) y `size` (default 20, entre 1 y 100), informando `page`, `size`, `totalElements` y `totalPages`.
+- **FR-008**: El endpoint MUST admitir filtros opcionales: búsqueda de texto normalizado sobre el nombre del jugador (`search`), tipo de operación (`type: BUY|SELL`) y rango de fechas (`executedFrom` inclusivo, `executedBefore` exclusivo).
+- **FR-009**: El endpoint MUST soportar ordenamiento cerrado mediante el parámetro `sort` con valores `NEWEST` (default), `OLDEST`, `AMOUNT_DESC` y `AMOUNT_ASC`, aplicando desempates estables por ejecución e ID.
+- **FR-010**: El endpoint MUST devolver en `summary` los agregados calculados sobre todo el conjunto filtrado: `totalTransactions`, `buyTransactions`, `sellTransactions`, `boughtTokens`, `soldTokens`, `purchasedVolume` y `soldVolume` en centésimas de crédito.
+- **FR-011**: Cuando no existan operaciones o coincidencias, el sistema MUST responder exitosamente HTTP 200 con `transactions: []`, indicadores en cero y metadatos de paginación válidos.
+- **FR-012**: Peticiones con parámetros de tipo inválido MUST responder HTTP 400 con `INVALID_PARAMETER_TYPE`; rangos de fecha inconsistentes (`executedFrom >= executedBefore`) MUST responder HTTP 400 con `INVALID_DATE_RANGE`.
+- **FR-013**: Solicitudes sin credenciales válidas o con un subject no asociado a un usuario persistido MUST responder HTTP 401 sin exponer información.
+- **FR-014**: La consulta MUST ejecutarse bajo transacción de solo lectura (`@Transactional(readOnly = true)`) y MUST NOT ejecutar escrituras ni alterar datos financieros.
+- **FR-015**: La consulta MUST paginar en base de datos y evitar el problema de N+1 mediante precarga de asociaciones to-one (`buyer`, `seller`, `player`, `team`, `league`).
 
-### Key Entities
+---
 
-- **Transacción de mercado (`MarketTransaction`)**: Registro financiero confirmado existente que constituye la fuente de verdad de una operación. Relaciona comprador, vendedor y jugador, e incluye identificador, cantidad de tokens, precio unitario, importe total y fecha y hora de ejecución.
-- **Operación del historial**: Vista de una transacción desde la perspectiva del usuario autenticado. Añade la interpretación `BUY` o `SELL` sin crear ni duplicar la transacción original.
-- **Usuario autenticado**: Persona identificada por la sesión vigente, cuya participación como comprador o vendedor delimita el historial visible.
-- **Jugador**: Activo cuyos tokens fueron negociados; se identifica y nombra en cada operación mostrada.
+## Key Entities
 
-## Success Criteria *(mandatory)*
+- **Transacción de mercado (`MarketTransaction`)**: Registro confirmado e inmutable en base de datos que constituye la fuente de verdad.
+- **Entrada del historial (`OperationHistoryEntry`)**: Proyección de una transacción desde la perspectiva del usuario (`BUY` o `SELL`).
+- **Agregados del historial (`OperationHistoryAggregate`)**: Totales e importes calculados sobre el conjunto de operaciones filtradas.
+- **Criterios de consulta (`OperationHistoryCriteria`)**: Parámetros validados de paginación, filtros y orden.
 
-### Measurable Outcomes
+---
 
-- **SC-001**: En el 100% de los escenarios de aceptación, cada transacción propia confirmada aparece una sola vez y con los ocho datos obligatorios completos.
-- **SC-002**: En el 100% de las consultas con operaciones, el resultado respeta el orden descendente por ejecución y el desempate descendente por identificador.
-- **SC-003**: En el 100% de las verificaciones con usuarios distintos, ninguna respuesta contiene una transacción ajena ni permite seleccionar la identidad de otro usuario.
-- **SC-004**: En el 100% de las consultas de usuarios sin operaciones, la consulta finaliza exitosamente con una colección vacía.
+## Success Criteria
 
-## Assumptions
+- **SC-001**: En el 100% de las consultas, cada transacción propia aparece una sola vez con los datos financieros históricos intactos y el perfil actual del jugador.
+- **SC-002**: En el 100% de las consultas paginadas, el resultado respeta el orden y desempates deterministas sin duplicaciones ni omisiones entre páginas.
+- **SC-003**: En el 100% de las verificaciones con identidades distintas, ninguna respuesta expone operaciones ajenas ni admite suplantación de identidad.
+- **SC-004**: En el 100% de las consultas sin operaciones, el sistema responde HTTP 200 con `transactions: []` y resumen en cero.
 
-- Toda transacción persistida en `MarketTransaction` representa una operación confirmada; esa fuente no contiene transacciones pendientes o sin confirmar. Esta funcionalidad no redefine sus reglas de confirmación ni auditoría.
-- Los registros financieros existentes conservan los valores históricos necesarios para informar precio unitario, importe total y fecha y hora de ejecución.
-- El nombre de un jugador es inmutable; por lo tanto, el nombre obtenido de la entidad relacionada coincide con el correspondiente a todas sus operaciones históricas.
-- El historial personal se expone mediante una operación dedicada al usuario actual, coherente con la preferencia de un recurso personal como `/api/users/me/transactions`; el contrato definitivo se documentará durante la planificación.
-- La colección completa, sin paginación, es suficiente para el volumen esperado en esta entrega; una futura necesidad de paginación requerirá una decisión de alcance separada.
-- La interfaz frontend del historial corresponde a la issue #27 y no forma parte de esta SPEC.
-- La feature depende de los registros producidos por las funcionalidades de compra (`REQ-S2-06`) y venta (`REQ-S2-07`), pero no modifica sus comportamientos.
-- SPEC-010 y SPEC-011 son responsables de impedir que una misma persona sea compradora y vendedora en una transacción; SPEC-020 consume esa garantía y no vuelve a validarla.
+---
 
 ## Out of Scope
 
-- La interfaz frontend para visualizar el historial.
-- Filtros avanzados, exportaciones, estadísticas, agregaciones y paginación.
-- Cambios en las reglas contables del portfolio.
-- Cambios en la persistencia o auditoría de compras y ventas, salvo que una fase posterior demuestre una carencia indispensable y el alcance se autorice explícitamente.
-- Cambios en compra directa, publicación de ventas, cancelación de publicaciones o liquidación de publicaciones.
-- El registro de auditoría de invocaciones a servicios previsto para Sprint 3.
-- La definición y validación de SLA de rendimiento, que se abordará como requisito transversal en el próximo sprint.
+- Interfaz gráfica de usuario (especificada e implementada en SPEC-025).
+- Exportación de transacciones a formatos externos (CSV, PDF, Excel).
+- Modificaciones en las reglas contables, tablas de persistencia o migraciones de base de datos.

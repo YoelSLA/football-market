@@ -35,6 +35,15 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('backend/**/*.gradle*', 'backend/gradle/libs.versions.toml', 'backend/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      - name: Validate Flyway history
+        env:
+          FLYWAY_BASE_REF: ${{ github.event_name == 'pull_request' && 'origin/dev' || 'HEAD^' }}
+        run: bash .githooks/flyway-migrations.sh "$FLYWAY_BASE_REF" HEAD
+
+      - name: Validate Flyway layout
+        working-directory: backend
+        run: ./gradlew validateMigrationLayout --stacktrace
+
       - name: Build and test
         working-directory: backend
         env:

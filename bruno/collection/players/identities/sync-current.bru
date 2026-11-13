@@ -1,0 +1,27 @@
+meta {
+  name: Identificar jugadores desde catálogo actual
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/players/identities/whoscored/sync
+  body: none
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

@@ -1,0 +1,49 @@
+@use "@/styles/abstracts" as ds;
+
+.page {
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-height: 0;
+	min-width: 0;
+	width: 100%;
+	padding: 8px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page;
+	color: ds.$text-title-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+
+	&__header {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		padding-bottom: 1.2rem;
+	}
+
+	@media (max-width: 1099px) {
+		// 4. 📦 Box Model
+		padding: 1rem;
+	}
+
+	@media (max-width: 639px) {
+		// 4. 📦 Box Model
+		height: auto;
+		min-height: 100%;
+		padding: .55rem;
+
+		// 7. ⚙️ Behavior
+		overflow: visible;
+
+		&__header {
+			// 4. 📦 Box Model
+			padding-bottom: .5rem;
+		}
+	}
+}

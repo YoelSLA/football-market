@@ -116,6 +116,33 @@ export interface TokenQuoteSeries {
 	snapshot: TokenQuoteSnapshot;
 }
 
+/** Origen de la cotización según el backend. */
+export type PlayerQuoteOrigin = "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD";
+
+/** Cotización persistida real del jugador con datos de auditoría y cálculo de variación. */
+export interface PlayerQuote {
+	effectiveDate: string;
+	price: number;
+	previousPrice: number | null;
+	multiplier: number;
+	score: number | null;
+	strategy: string | null;
+	strategyVersion: string | null;
+	sourceValuationDate: string | null;
+	origin: PlayerQuoteOrigin;
+	calculatedAt: string;
+	absoluteChange: number | null;
+	percentageChange: number | null;
+	direction: "up" | "down" | "flat" | "unknown";
+}
+
+/** Historial completo de cotizaciones de un jugador. */
+export interface PlayerQuoteHistory {
+	playerId: number;
+	quotes: PlayerQuote[];
+	currentQuote: PlayerQuote | null;
+}
+
 /** Valor original persistido: ausencia y cero son estados diferentes. */
 export interface PlayerMetric {
 	key: string;

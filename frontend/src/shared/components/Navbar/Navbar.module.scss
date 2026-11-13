@@ -1,10 +1,15 @@
 @use "@/styles/abstracts" as ds;
 
 .navbar {
+	// 3. 🧩 Layout
 	box-sizing: border-box;
 	flex-shrink: 0;
+
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
+
+	// 6. 🎨 Visual
 	border-radius: 0;
-	background: ds.$surface-finance-base;
+	background-color: ds.$surface-page;
 }

@@ -36,8 +36,9 @@ sobrescriben sin necesidad justificada.
 
 Limitar los cambios a la tarea y a la coherencia de sus elementos afectados. Refactorizar solo
 con beneficio concreto, preservando el comportamiento ajeno y revisando consumidores antes de
-eliminar o renombrar elementos. Eliminar el código muerto dentro del alcance y mantener
-comentarios útiles y actualizados, sin repetir lo evidente.
+eliminar o renombrar elementos. Eliminar el código muerto y la documentación obsoleta o redundante
+dentro del alcance, y mantener especificaciones y comentarios útiles y actualizados, sin repetir lo
+evidente ni conservar texto derogado.
 
 Entre alternativas técnicamente válidas, elegir la más sencilla que satisfaga los requisitos y
 preserve las garantías de este documento.
@@ -133,9 +134,17 @@ ramas, commits y Pull Requests están en
 [`docs/development/git-workflow.md`](../../docs/development/git-workflow.md).
 
 Ningún estado se deduce de la existencia de archivos, de tareas marcadas, de controles
-técnicos, de commits, de merges ni de Pull Requests abiertos. Los registros que contienen
-información histórica conservan su validez como evidencia y no se reescriben para reflejar un
-estado posterior.
+técnicos, de commits, de merges ni de Pull Requests abiertos. Los registros de autorizaciones
+humanas y eventos de auditoría conservan su validez como evidencia y no se reescriben para
+reflejar un estado posterior.
+
+Por el contrario, los artefactos de especificación (`specs/`): `spec.md`, `plan.md`, `tasks.md`,
+modelos y contratos, constituyen **documentación viva**. Deben describir exclusivamente el
+comportamiento, arquitectura, tareas y requisitos **vigentes** del sistema. La conservación del
+historial, de las versiones anteriores y de las decisiones técnicas superadas queda delegada
+íntegramente a Git (commits, ramas y diffs). Queda prohibido acumular dentro de los artefactos
+normativos activos secciones de «antecedentes históricos», tareas de iteraciones previas ya
+reemplazadas, contratos de demostración derogados o capas superpuestas de revisiones pasadas.
 
 ### VI. Mínimo alcance necesario
 
@@ -369,4 +378,4 @@ impacto que se conserva **íntegro** en
 a la Constitución y no dentro de ella.
 
 
-**Version**: 9.1.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-10-26
+**Version**: 9.2.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-11-12

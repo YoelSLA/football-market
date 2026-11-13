@@ -1,8 +1,15 @@
 import {
+	type CanonicalMetricKey,
 	getPositionProfile,
+	getSummaryPositionProfile,
 	METRIC_DEFINITIONS,
+	METRIC_ICONS,
+	type MetricSlotConfig,
+	type SummaryPanelConfig,
+	type SummaryPositionProfile,
 } from "@/features/players/constants";
 import type { PlayerMetric, PlayerStatistics } from "@/features/players/types";
+import { Activity, type LucideIcon } from "@/shared/icons";
 
 export function getStatisticsPosition(position: string): number {
 	const names = ["goalkeeper", "defence", "midfield", "offence"];
@@ -96,12 +103,55 @@ export function getMetricPriority(key: string, position: string): number {
 			: 1;
 }
 
+export type MetricPriorityLevel = 0 | 1 | 2;
+export type MetricPriorityLabel = "Principal" | "Secundaria" | "Poco relevante";
+
+export const METRIC_PRIORITY_LABELS: Record<
+	MetricPriorityLevel,
+	MetricPriorityLabel
+> = {
+	0: "Principal",
+	1: "Secundaria",
+	2: "Poco relevante",
+};
+
+export function getMetricPriorityLabel(
+	key: string,
+	position: string,
+): MetricPriorityLabel {
+	const priority = getMetricPriority(key, position) as MetricPriorityLevel;
+	return METRIC_PRIORITY_LABELS[priority] ?? "Secundaria";
+}
+
+export const STATISTIC_CATEGORIES = [
+	"General",
+	"Ataque",
+	"Pases",
+	"Regates",
+	"Duelos",
+	"Defensa",
+	"Portería",
+	"Disciplina",
+] as const;
+
+export type StatisticCategory = (typeof STATISTIC_CATEGORIES)[number];
+
+export function getCategoryCounts(): Record<string, number> {
+	const counts: Record<string, number> = {
+		all: METRIC_DEFINITIONS.length,
+	};
+	for (const def of METRIC_DEFINITIONS) {
+		counts[def.category] = (counts[def.category] ?? 0) + 1;
+	}
+	return counts;
+}
+
 export function getPlayerStatisticsCatalog(
 	metrics: PlayerMetric[],
 	position: string,
 	search: string,
 	category: string,
-	unit: string,
+	_unit?: string,
 ) {
 	const normalize = (text: string) =>
 		text
@@ -112,8 +162,10 @@ export function getPlayerStatisticsCatalog(
 	const query = normalize(search);
 	return METRIC_DEFINITIONS.map((definition, order) => {
 		const metric = metrics.find((item) => item.key === definition.key);
+		const priority = getMetricPriority(definition.key, position);
 		return {
 			...definition,
+			icon: getMetricIcon(definition.key),
 			unit: getMetricUnit(definition.key),
 			technicalUnit:
 				metric?.unit ??
@@ -126,13 +178,13 @@ export function getPlayerStatisticsCatalog(
 							: "AVERAGE_RATING"),
 			value: metric?.value ?? null,
 			order,
-			priority: getMetricPriority(definition.key, position),
+			priority,
+			priorityLabel: getMetricPriorityLabel(definition.key, position),
 		};
 	})
 		.filter(
 			(item) =>
 				(category === "all" || category === item.category) &&
-				(unit === "all" || unit === item.technicalUnit) &&
 				(!query || normalize(`${item.key} ${item.label}`).includes(query)),
 		)
 		.sort((a, b) => {
@@ -155,9 +207,99 @@ export function getPlayerStatisticsCatalog(
 		});
 }
 
-export function getStatisticsPanels(position: string) {
+export interface CatalogCategoryGroup {
+	category: string;
+	totalCount: number;
+	metrics: ReturnType<typeof getPlayerStatisticsCatalog>;
+}
+
+export function getPlayerStatisticsCatalogGroups(
+	metrics: ReturnType<typeof getPlayerStatisticsCatalog>,
+): CatalogCategoryGroup[] {
+	const categoryOrder = [
+		"General",
+		"Ataque",
+		"Pases",
+		"Regates",
+		"Duelos",
+		"Defensa",
+		"Portería",
+		"Disciplina",
+	];
+
+	return categoryOrder
+		.map((category) => {
+			const categoryMetrics = metrics.filter((m) => m.category === category);
+			return {
+				category,
+				totalCount: categoryMetrics.length,
+				metrics: categoryMetrics,
+			};
+		})
+		.filter((group) => group.metrics.length > 0);
+}
+
+export const HEADLINE_STATISTICS_KEYS = [
+	[
+		"saves_per_match",
+		"pass_completion_percentage",
+		"successful_long_balls_per_match",
+	],
+	["tackles_per_match", "interceptions_per_match", "clearances_per_match"],
+	["passes_per_match", "pass_completion_percentage", "key_passes_per_match"],
+	["goals_total", "shots_per_match", "assists_total"],
+] as const;
+
+export function getHeaderStatisticsKeys(position: string): string[] {
 	const index = getStatisticsPosition(position);
-	const groups = [
+	return index >= 0 && index < HEADLINE_STATISTICS_KEYS.length
+		? [...HEADLINE_STATISTICS_KEYS[index]]
+		: [];
+}
+
+/**
+ * Obtiene las claves para el bloque único de estadísticas destacadas en Resumen.
+ * Deduplica estrictamente contra la cabecera, las tarjetas del perfil y los dos paneles específicos.
+ */
+export function getHighlightedStatisticsKeys(position: string): string[] {
+	const profile = getStatisticsProfile(position);
+	if (!profile) {
+		return [
+			"minutes_played_total",
+			"appearances_total",
+			"whoscored_rating_average",
+		];
+	}
+
+	const headerKeys = new Set(getHeaderStatisticsKeys(position));
+	const cardKeys = new Set(profile.cards);
+	const panelKeys = new Set(
+		getStatisticsPanels(position).flatMap((panel) => panel.keys),
+	);
+
+	return profile.additional.filter(
+		(key) => !headerKeys.has(key) && !cardKeys.has(key) && !panelKeys.has(key),
+	);
+}
+
+export function getHighlightedStatistics(
+	statistics: PlayerStatistics,
+	position: string,
+) {
+	const keys = getHighlightedStatisticsKeys(position);
+	return keys.map((key) => getStatisticsMetric(statistics, key));
+}
+
+export interface StatisticsPanelDefinition {
+	title: string;
+	keys: string[];
+}
+
+export function getStatisticsPanels(
+	position: string,
+): StatisticsPanelDefinition[] {
+	const index = getStatisticsPosition(position);
+	const groups: StatisticsPanelDefinition[][] = [
 		[
 			{
 				title: "Atajadas por zona",
@@ -166,7 +308,6 @@ export function getStatisticsPanels(position: string) {
 					"penalty_area_saves_per_match",
 					"outside_box_saves_per_match",
 				],
-				zones: true,
 			},
 			{
 				title: "Distribución de pases",
@@ -218,7 +359,6 @@ export function getStatisticsPanels(position: string) {
 					"penalty_area_shots_per_match",
 					"outside_box_shots_per_match",
 				],
-				zones: true,
 			},
 			{
 				title: "Asistencias por tipo",
@@ -240,4 +380,87 @@ export function getStatisticsProfile(position: string) {
 	return getStatisticsPosition(position) < 0
 		? null
 		: getPositionProfile(position);
+}
+
+export {
+	getSummaryPositionProfile,
+	type MetricSlotConfig,
+	type SummaryPanelConfig,
+	type SummaryPositionProfile,
+};
+
+export interface ResolvedSummaryMetric {
+	key: string;
+	label: string;
+	value: number | null;
+	formattedValue: string;
+	unit: string;
+	subtitle: string;
+	isNull: boolean;
+	icon: LucideIcon;
+}
+
+export function getMetricIcon(key: string): LucideIcon {
+	return METRIC_ICONS[key as CanonicalMetricKey] ?? Activity;
+}
+
+export function getMetricSubtitle(key: string, unit: string): string {
+	if (key === "whoscored_rating_average") return "promedio WhoScored";
+	if (key === "pass_completion_percentage") return "precisión de pases";
+	if (key === "shots_on_target_total") return "tiros temporada";
+	if (key === "goals_per_match") return "goles/partido";
+	if (key === "assists_per_match") return "asistencias/partido";
+	if (key === "appearances_total") return "partidos temporada";
+	if (key === "starts_total") return "titular en temporada";
+	if (key === "minutes_played_total") return "minutos temporada";
+	if (key === "aerial_duels_won_per_match") return "ganados/partido";
+	if (key === "clearances_per_match") return "despejes/partido";
+	if (key === "passes_per_match") return "pases/partido";
+	if (key === "tackles_per_match") return "entradas/partido";
+	if (key === "blocked_shots_per_match") return "bloqueos/partido";
+	if (key === "successful_dribbles_per_match") return "regates/partido";
+	if (key.endsWith("_per_match")) return "por partido";
+	if (key.endsWith("_total")) return "total temporada";
+	return unit || "por partido";
+}
+
+export function resolveSummaryMetric(
+	statistics: PlayerStatistics,
+	slot: MetricSlotConfig,
+): ResolvedSummaryMetric {
+	const primaryMetric = statistics.metrics.find((m) => m.key === slot.key);
+	let selectedKey = slot.key;
+	let selectedValue: number | null = primaryMetric?.value ?? null;
+
+	if (selectedValue === null && slot.fallbackKey) {
+		const fallbackMetric = statistics.metrics.find(
+			(m) => m.key === slot.fallbackKey,
+		);
+		if (fallbackMetric && fallbackMetric.value !== null) {
+			selectedKey = slot.fallbackKey;
+			selectedValue = fallbackMetric.value;
+		}
+	}
+
+	const def = METRIC_DEFINITIONS.find((item) => item.key === selectedKey);
+	const label = def?.label ?? selectedKey;
+	const unit = def?.unit ?? "";
+	const formattedValue = formatStatisticsValue(selectedValue);
+	const isNull = selectedValue === null;
+	const icon = getMetricIcon(selectedKey);
+	const subtitle =
+		slot.subtitle && selectedKey === slot.key
+			? slot.subtitle
+			: getMetricSubtitle(selectedKey, unit);
+
+	return {
+		key: selectedKey,
+		label,
+		value: selectedValue,
+		formattedValue,
+		unit: unit === "%" ? "%" : unit,
+		subtitle,
+		isNull,
+		icon,
+	};
 }

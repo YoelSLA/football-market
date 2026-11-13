@@ -1,10 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { authQueryKeys, useCurrentUserQuery } from "@/features/auth";
 import { marketQueryKeys } from "@/features/market/constants";
 import { useBuyQuantityForm } from "@/features/market/form";
 import { useBuyTokensMutation } from "@/features/market/hooks/mutations";
 import { useMarketQuotesQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
+import { toMarketPlayer } from "@/features/market/market.mapper";
 import type {
 	BuyEstimation,
 	BuyResult,
@@ -14,11 +16,13 @@ import {
 	calculateEstimation,
 	getMarketQuoteMessage,
 } from "@/features/market/utils";
-import { getErrorCode } from "@/infrastructure/http";
+import { usePlayersQuery } from "@/features/players";
+import { portfolioQueryKeys } from "@/features/portfolio";
+import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 
 interface UseMarketBuyPageParams {
-	players: MarketPlayer[];
+	players?: MarketPlayer[];
 	onPurchaseSuccess?: (playerId: number) => void;
 }
 
@@ -48,19 +52,43 @@ function mapErrorCodeToMessage(error: unknown): string {
 
 /**
  * Hook de coordinación para MarketBuyPage (SPEC-019).
- * Coordina formulario, queries de cotizaciones reales, mutación de compra,
- * notificaciones, prevención de doble envío e invalidación de claves propias.
+ * Coordina catálogo paginado, cotizaciones reales, compra de tokens,
+ * créditos de sesión, notificaciones e invalidaciones de caché.
  */
-export function useMarketBuyPage({
-	players,
-	onPurchaseSuccess,
-}: UseMarketBuyPageParams) {
+export function useMarketBuyPage(params?: UseMarketBuyPageParams) {
 	const queryClient = useQueryClient();
 	const { notifySuccess, notifyError } = useMarketToast();
 	const authenticated = useAuthStore(
 		(state) =>
 			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
 	);
+	const revision = useAuthStore((state) => state.revision);
+
+	// Catálogo de jugadores y paginación
+	const [currentPage, setCurrentPage] = useState(0);
+	const playersQuery = usePlayersQuery(currentPage);
+	const currentUser = useCurrentUserQuery(true, revision);
+
+	const players: MarketPlayer[] = useMemo(() => {
+		if (params?.players) {
+			return params.players;
+		}
+		return playersQuery.data?.players.map(toMarketPlayer) ?? [];
+	}, [params?.players, playersQuery.data?.players]);
+
+	const totalPages = playersQuery.data?.totalPages ?? 0;
+	const totalPlayers = playersQuery.data?.totalElements;
+	const pageSize = playersQuery.data?.size;
+	const isLoadingPlayers = playersQuery.isPending || playersQuery.isFetching;
+	const isPlayersError = playersQuery.isError;
+	const playersErrorMessage = isPlayersError
+		? getErrorMessage(
+				playersQuery.error,
+				"No se pudo cargar el listado de jugadores del mercado.",
+			)
+		: null;
+	const retryPlayers = playersQuery.refetch;
+	const availableCredits = currentUser.data?.availableCredits;
 
 	// IDs visibles de la página actual
 	const playerIds = useMemo(() => players.map((p) => p.id), [players]);
@@ -176,11 +204,29 @@ export function useMarketBuyPage({
 				queryKey: marketQueryKeys.currentQuote(selectedPlayer.id),
 			});
 
+			// Invalida saldo del usuario autenticado
+			queryClient.invalidateQueries({
+				queryKey: authQueryKeys.all,
+			});
+
+			// Invalida summary de Portfolio
+			queryClient.invalidateQueries({
+				queryKey: portfolioQueryKeys.summary,
+			});
+
+			// Invalida todas las holdings usando el prefijo derivado de portfolioQueryKeys.holdings
+			const holdingsPrefix = portfolioQueryKeys
+				.holdings("ALL", 0, 1)
+				.slice(0, 2);
+			queryClient.invalidateQueries({
+				queryKey: holdingsPrefix,
+			});
+
 			// Notificación toast compuesta con el nombre del jugador
 			notifySuccess(selectedPlayer.name, result);
 
-			// Callback hacia la app para invalidar Portfolio
-			onPurchaseSuccess?.(selectedPlayer.id);
+			// Callback opcional hacia consumidores externos
+			params?.onPurchaseSuccess?.(selectedPlayer.id);
 
 			setIsSuccess(true);
 			setPurchaseResult(result);
@@ -205,7 +251,7 @@ export function useMarketBuyPage({
 		selectedQuote,
 		queryClient,
 		notifySuccess,
-		onPurchaseSuccess,
+		params?.onPurchaseSuccess,
 		closeBuyModal,
 		notifyError,
 	]);
@@ -236,6 +282,18 @@ export function useMarketBuyPage({
 						: null;
 
 	return {
+		// Catálogo y paginación
+		players,
+		isLoadingPlayers,
+		isPlayersError,
+		playersErrorMessage,
+		retryPlayers,
+		currentPage,
+		totalPages,
+		totalPlayers,
+		pageSize,
+		setCurrentPage,
+		availableCredits,
 		// Quotes query
 		quotesQuery,
 		// Modal state
@@ -261,3 +319,5 @@ export function useMarketBuyPage({
 		handleConfirmBuy,
 	};
 }
+
+export type MarketBuyState = ReturnType<typeof useMarketBuyPage>;

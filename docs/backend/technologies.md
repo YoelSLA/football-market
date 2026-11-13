@@ -21,7 +21,7 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Jakarta Validation | Gestionada por Spring Boot 4.1.1 | Validación estructural de los DTO de entrada HTTP. |
 | PostgreSQL | 18 en tests; no fijada para desarrollo y producción | Base de datos relacional. Testcontainers levanta la imagen `postgres:18`; el proyecto no fija actualmente la versión del servidor utilizada fuera de tests. |
 | pgJDBC | Gestionada por Spring Boot 4.1.1 | Driver JDBC y dependencia de compilación para clasificar errores de PostgreSQL por SQLSTATE, tabla y constraint estructurados, sin interpretar mensajes. |
-| Flyway | Gestionada por Spring Boot 4.1.1 | Aplicación de las migraciones SQL versionadas de usuarios y jugadores. |
+| Flyway | Gestionada por Spring Boot 4.1.1 | Autoridad del esquema PostgreSQL. Historial atómico con timestamps UTC, validación al migrar, orden estricto e inmutabilidad de las migraciones integradas en `dev`; Hibernate valida el resultado. |
 | SpringDoc OpenAPI | 2.8.13 | Documentación del contrato HTTP: generación de la especificación OpenAPI y UI a partir de los endpoints y sus anotaciones. |
 | Spring Boot Actuator | Gestionada por Spring Boot 4.1.1 | Monitoreo del backend. La exposición por HTTP es restrictiva y explícita, nunca el comodín `*`. Ver §Monitoreo con Actuator. |
 | Lombok | Gestionada por Spring Boot 4.1.1 | Generación en compilación de constructores, getters y constructores sin argumentos usados por componentes y Models. |

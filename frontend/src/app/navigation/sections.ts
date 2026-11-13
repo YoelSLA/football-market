@@ -2,13 +2,11 @@ import type { NavSection } from "@/shared/components";
 import {
 	BarChart3,
 	FileText,
-	History,
 	LayoutDashboard,
 	Package,
 	Puzzle,
 	ShoppingCart,
 	Tag,
-	TrendingUp,
 	Trophy,
 	UsersRound,
 } from "@/shared/icons";
@@ -56,12 +54,6 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: Trophy,
 				path: "/players/ranking",
 			},
-			{
-				key: "players-quote-history",
-				label: "Historial de cotizaciones",
-				icon: TrendingUp,
-				path: null,
-			},
 		],
 	},
 	{
@@ -71,10 +63,16 @@ export const NAV_SECTIONS: NavSection[] = [
 		path: "/market/buy",
 		tabs: [
 			{
-				key: "market-buy",
-				label: "Comprar tokens",
+				key: "market-official",
+				label: "Mercado Oficial",
 				icon: ShoppingCart,
 				path: "/market/buy",
+			},
+			{
+				key: "market-p2p",
+				label: "Mercado P2P",
+				icon: UsersRound,
+				path: "/market/p2p",
 			},
 			{
 				key: "market-sell",
@@ -86,12 +84,6 @@ export const NAV_SECTIONS: NavSection[] = [
 				key: "market-orders",
 				label: "Mis órdenes",
 				icon: Puzzle,
-				path: null,
-			},
-			{
-				key: "market-history",
-				label: "Historial de operaciones",
-				icon: History,
 				path: null,
 			},
 		],
@@ -119,14 +111,7 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: FileText,
 				badgeTone: "gold",
 				label: "Historial de transacciones",
-				path: null,
-			},
-			{
-				key: "portfolio-stats",
-				label: "Estadísticas/gráficos",
-				path: null,
-				icon: BarChart3,
-				badgeTone: "violet",
+				path: "/portfolio/transactions",
 			},
 		],
 	},

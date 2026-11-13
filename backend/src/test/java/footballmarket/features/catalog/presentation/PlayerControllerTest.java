@@ -5,9 +5,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.application.PlayerSynchronizationOrchestrator;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
@@ -20,6 +17,7 @@ import footballmarket.features.catalog.domain.records.PlayerSynchronizationResul
 import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSnapshot;
 import footballmarket.integrations.footballdata.exceptions.FootballDataUnavailableException;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -58,16 +56,14 @@ class PlayerControllerTest {
   @Autowired private SecretKey key;
   @MockitoBean private PlayerCatalogService service;
   @MockitoBean private PlayerStatisticsQueryService statisticsService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   @MockitoBean private PlayerSynchronizationOrchestrator orchestrator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("catalog@example.com"))
-        .thenReturn(
-            new User(1L, "catalog.user", "catalog@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("catalog@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

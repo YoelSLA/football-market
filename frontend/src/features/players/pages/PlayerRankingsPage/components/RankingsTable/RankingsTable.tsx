@@ -1,6 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { PlayerRankingItem, RankingMode } from "@/features/players/types";
-import genericPlayerImage from "@/shared/assets/Player Generic-Icon.png";
+import {
+	CompetitionLogo,
+	PlayerPortrait,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./RankingsTable.module.scss";
 import TableMedal from "./TableMedal";
 
@@ -10,6 +14,7 @@ interface Props {
 }
 
 export default function RankingsTable({ items, mode }: Props) {
+	const location = useLocation();
 	const formatValue = (player: PlayerRankingItem) => {
 		if (mode === "PERFORMANCE") {
 			return player.score !== undefined
@@ -86,18 +91,15 @@ export default function RankingsTable({ items, mode }: Props) {
 							<td className={styles.td_player}>
 								<Link
 									to={`/players/${player.playerId}`}
+									state={{ from: `${location.pathname}${location.search}` }}
 									className={styles.playerLink}
 									title={`Ver detalle de ${player.playerName}`}
 								>
-									<img
-										src={player.playerAvatar || genericPlayerImage}
+									<PlayerPortrait
+										src={player.playerAvatar}
+										name={player.playerName}
 										alt=""
 										className={styles.playerAvatar}
-										loading="lazy"
-										onError={(e) => {
-											(e.currentTarget as HTMLImageElement).src =
-												genericPlayerImage;
-										}}
 									/>
 									<span className={styles.playerName}>{player.playerName}</span>
 								</Link>
@@ -105,35 +107,24 @@ export default function RankingsTable({ items, mode }: Props) {
 
 							<td className={styles.td_team}>
 								<div className={styles.teamContainer}>
-									{player.teamBadge ? (
-										<img
-											src={player.teamBadge}
-											alt=""
-											className={styles.teamBadge}
-											loading="lazy"
-										/>
-									) : (
-										<span
-											className={styles.badgePlaceholder}
-											aria-hidden="true"
-										>
-											◇
-										</span>
-									)}
+									<TeamBadge
+										src={player.teamBadge}
+										teamName={player.teamName}
+										leagueName={player.leagueName}
+										className={styles.teamBadge}
+									/>
 									<span className={styles.teamName}>{player.teamName}</span>
 								</div>
 							</td>
 
 							<td className={styles.td_league}>
 								<div className={styles.leagueContainer}>
-									{player.leagueFlag && (
-										<img
-											src={player.leagueFlag}
-											alt=""
-											className={styles.leagueFlag}
-											loading="lazy"
-										/>
-									)}
+									<CompetitionLogo
+										src={player.leagueFlag}
+										competitionName={player.leagueName}
+										className={styles.leagueFlag}
+										decorative
+									/>
 									<span className={styles.leagueName}>{player.leagueName}</span>
 								</div>
 							</td>

@@ -88,8 +88,32 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
 | [TD-035](#td-035--doble-división-potencial-de-estadísticas-json-y-auditoría-histórica-pendiente) | Doble división potencial de estadísticas JSON y auditoría histórica pendiente | Backend / Datos | Alta | Pendiente | 2026-10-29 12:59:24 |
 | [TD-036](#td-036--acoplamiento-de-paquete-entre-referencias-del-catálogo-e-identidad-whoscored) | Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored | Backend / Arquitectura | Media | Pendiente | 2026-10-28 16:08:35 |
+| [TD-037](#td-037--excepción-inesperada-json-deja-la-campaña-activa) | Excepción inesperada JSON deja la campaña activa | Backend / Disponibilidad | Alta | En curso | 2026-11-05 22:01:33 |
+| [TD-038](#td-038--fallo-de-cierre-scraping-oculto-en-el-log-automático) | Fallo de cierre scraping oculto en el log automático | Backend / Observabilidad | Media | En curso | 2026-11-06 13:22:21 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-038 — Fallo de cierre scraping oculto en el log automático
+
+- **Registro:** 2026-11-06 13:22:21 (`America/Argentina/Buenos_Aires`).
+- **Estado:** En curso. **Prioridad:** Media (hallazgo P2). **Área:** Backend / Observabilidad.
+- **Evidencia estática:** en `PlayerStatisticsSynchronizationServiceImpl.synchronizeScraping`, un error de ejecución y otro de cierre se propagaban como excepción original con cierre suprimido. El scheduler solo reconoce cierres fallidos en `ScheduledStatisticsSyncException`, por lo que registraba `closeFailed=false` para esa combinación.
+- **Impacto:** el registro ocultaba el fallo de cierre y no permitía identificar correctamente el estado operativo de la campaña. Relacionado con TD-037, sin modificar su alcance JSON.
+- **Corrección autorizada:** únicamente en la entrada automática, señalar el motivo seguro y conservar excepción original como causa y error de cierre como suprimido. La entrada manual mantiene la excepción y suprimidos originales. No se cambia el scheduler para considerar cualquier excepción suprimida como fallo de cierre.
+- **Verificación pendiente:** regresiones de fachada automática/manual y log scraping sin secretos/trazas ni evaluación posterior. Escritas, no ejecutadas ni compiladas por el agente.
+- **Criterio de cierre:** revisión humana de la corrección y ejecución satisfactoria de esas regresiones desde los tests de Service y scheduler de SPEC-024.
+- **Historial:** 2026-11-06 13:22:21 — hallazgo reportado por el usuario, comprobado por lectura y corrección expresamente autorizada. Implementación y tests escritos; no se declara resolución sin evidencia funcional humana.
+
+### TD-037 — Excepción inesperada JSON deja la campaña activa
+
+- **Registro:** 2026-11-05 22:01:33 (`America/Argentina/Buenos_Aires`).
+- **Estado:** En curso. **Prioridad:** Alta. **Área:** Backend / Disponibilidad.
+- **Evidencia estática:** `PlayerStatisticsSynchronizationServiceImpl.synchronizeJson` abre el run antes de seleccionar pendientes y recorrer workers. Una excepción inesperada del selector o propagada por `ExtractionWorkerPool.forEach` sale sin llegar a `closeRun`. Este recorrido ya existía antes de SPEC-024; no se ha ejecutado para demostrarlo.
+- **Impacto:** queda un run `RUNNING`; `ExtractionRunManager.open` rechaza una nueva entrada JSON hasta que resulte recuperable por su presupuesto de 24 horas. Puede afectar la disponibilidad manual tras un fallo automático (SPEC-024, FR-006).
+- **Propuesta:** acordar cierre seguro tras fallos e interrupción del coordinador, manteniendo el error original, transacciones y confirmaciones previas. No se corrige ni se amplía el contrato manual en esta entrega.
+- **Criterio de cierre:** regresión desde la fachada real que provoque un fallo inesperado o interrupción del coordinador y demuestre cierre y relanzamiento inmediato sin pérdida de datos, ejecutada y validada por el usuario.
+- **Historial:** 2026-11-05 22:01:33 — detectada al revisar T003 de SPEC-024; registrada sin afirmar resolución ni ampliar las tareas autorizadas.
+- **Actualización — 2026-11-05 22:43:13:** tras la corrección upstream autorizada y la reanudación solicitada por el usuario, se implementa el cierre del recorrido JSON automático después de limpiar workers, preservando error principal, interrupción y fallo de cierre. Se escriben regresiones de relanzamiento manual, confirmaciones conservadas y fallo de cierre con PostgreSQL real y una inyección técnica acotada a una sentencia en testing. Build sin tests satisfactorio; tests y validación humana pendientes. El comportamiento JSON manual preexistente se conserva, conforme al plan. No se declara resuelta la deuda ni se garantiza disponibilidad si la DB impide cerrar.
 
 ### TD-035 — Doble división potencial de estadísticas JSON y auditoría histórica pendiente
 
@@ -421,6 +445,36 @@ cotización queda libre para una segunda ejecución que ya no puede reproducir e
 alcances transaccionales distintos, sin una decisión sobre qué ocurre cuando el segundo nivel falla
 después de que el primero confirmó.
 
+**Reevaluación en IMPLEMENT de SPEC-023 (2026-11-04).** La deuda sigue pendiente. Las rutas actuales
+son `backend/src/main/java/footballmarket/features/quote/application/internal/QuotePlayerPublisher.java`
+(`publish`, `REQUIRES_NEW`) y
+`backend/src/main/java/footballmarket/features/quote/application/impl/QuoteRecalculationServiceImpl.java`
+(`recalculate`, transacción externa y guardado final del resumen). FR-013 y US3 de SPEC-023 exigen
+conservar las cotizaciones válidas previas ante fallo completo; el diseño de `research.md` §16 mantiene
+las confirmaciones independientes, por lo que no garantiza esa conservación si falla el guardado del
+resumen. IMPLEMENT se detuvo tras T001–T010: resolver esa contradicción requiere decisión upstream y
+nuevo ANALYZE. No se cambió la política transaccional ni se ejecutaron tests para dar la deuda por
+resuelta.
+
+**Decisión de alcance en SPEC-023 (2026-11-04).** El equipo resolvió que la ejecución automática **no**
+es responsable de las cotizaciones que ya quedaron confirmadas por jugadores individuales cuando falla
+el guardado del resumen: compensarlas excede su alcance. SPEC-023 ajustó FR-013, SC-003 y sus supuestos
+para declarar ese límite explícitamente, sin cambiar la política transaccional. La deuda **sigue
+pendiente**: la decisión acota la responsabilidad de la feature, no resuelve la falta de atomicidad
+entre las cotizaciones confirmadas y su resumen de ejecución. La lectura previa de FR-013 como exigencia
+de conservar también las cotizaciones confirmadas durante la corrida fallida queda superada por esta
+decisión de alcance.
+
+**Evidencia humana adicional (2026-11-04).** En
+`QuoteAutomaticRecalculationFailureTest.retriesManuallyWhenAutomaticAttemptLeavesNoExecution`, el
+fallo técnico inducido al cerrar la corrida deja la fecha sin resumen, pero conserva las cinco
+filas `CARRIED_FORWARD` ya confirmadas. La salida aportada por el usuario muestra que el reintento
+manual se acepta y termina con `failedPlayers=5` por `uq_player_quote` (SQLSTATE `23505`): intenta
+insertar nuevamente esas filas. `findReferenceDatesByPlayerId` excluye las filas arrastradas, por lo
+que no evita esos intentos repetidos. Poder reintentar no implica recuperar exitosamente los datos.
+Se corrigió la expectativa adicional de cero fallos del test de SPEC-023, no el comportamiento
+productivo; TD-024 permanece pendiente.
+
 **Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
 consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.
 
@@ -447,6 +501,8 @@ distinga "en curso" de "terminada" y permita reconciliar las filas confirmadas c
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-11-04 | Reevaluación durante IMPLEMENT de SPEC-023; se registró el bloqueo y la detención tras T001–T010. |
+| 2026-11-04 | Decisión de alcance de SPEC-023: la ejecución automática no compensa cotizaciones ya confirmadas por jugadores individuales. La deuda permanece `Pendiente`; no se modificó código ni se declara resuelta. |
 
 ### TD-025 — `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada
 
@@ -1353,6 +1409,7 @@ una base migrada con la versión previa.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 17:48:44 | Registro inicial en `docs/TECHNICAL_DEBT.md`, tras auditoría técnica de solo lectura del 2026-10-14. La reescritura se produjo en el commit `dd6fda3` al cerrar SPEC-007 y no fue registrada en su momento, por lo que la fecha registrada es la de su incorporación a este documento. |
+| 2026-11-07 | Se preparó una reconstrucción completa del historial con migraciones timestamp UTC, validación estática, control Git de inmutabilidad y pruebas de reconstrucción e incremento. La deuda permanece pendiente hasta que el nuevo historial se integre en `dev`, se recree y valide una base PostgreSQL vacía y exista evidencia de los tests; no se alteró ninguna base durante la preparación. |
 
 ### TD-005 — Perfil `dev` activo por defecto con credenciales de base de datos versionadas
 

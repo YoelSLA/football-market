@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import type { PlayerRankingItem } from "@/features/players/types";
 import styles from "./RankingPlaceHeader.module.scss";
 
@@ -7,10 +7,12 @@ interface Props {
 }
 
 export default function RankingPlaceHeader({ player }: Props) {
+	const location = useLocation();
 	return (
 		<div className={styles.header}>
 			<Link
 				to={`/players/${player.playerId}`}
+				state={{ from: `${location.pathname}${location.search}` }}
 				className={styles.header__nameLink}
 				title={`Ver ficha detallada de ${player.playerName}`}
 			>

@@ -1,36 +1,36 @@
 .podiumSection {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	flex: 0 0 176px;
 	flex-direction: column;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
 	height: 176px;
 }
 
 .podiumGrid {
-	// Layout
+	// 3. 🧩 Layout
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	align-items: stretch;
 	gap: 16px;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	width: 100%;
 	height: 100%;
 }
 
 .podiumColumn {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
-
 	&_center {
+		// 2. 📍 Positioning
 		z-index: 2;
 	}
 }
@@ -38,16 +38,21 @@
 // Responsive
 @media (max-width: 1100px) {
 	.podiumSection {
-		height: auto;
+		// 3. 🧩 Layout
 		flex-basis: auto;
+
+		// 4. 📦 Box Model
+		height: auto;
 	}
 
 	.podiumGrid {
+		// 3. 🧩 Layout
 		grid-template-columns: 1fr;
 		gap: 12px;
 	}
 
 	.podiumColumn_center {
+		// 3. 🧩 Layout
 		order: -1;
 	}
 }

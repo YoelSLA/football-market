@@ -1,23 +1,24 @@
 .rank {
 	// Posicionamiento
+	// 2. 📍 Positioning
 	position: relative;
 	z-index: 1;
 
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	width: 62px;
-
 	&__icon {
+		// 3. 🧩 Layout
 		display: block;
 
+		// 4. 📦 Box Model
 		width: 62px;
 		height: 62px;
-
 		object-fit: contain;
 	}
 }

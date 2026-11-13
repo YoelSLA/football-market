@@ -71,7 +71,7 @@ class PortfolioPersistenceTest {
 
     @Test
     @DisplayName("No devuelve las tenencias de otro propietario")
-    void aíslaElPropietario() {
+    void aislaElPropietario() {
       // Arrange
       User buyer = data.registerBuyer();
       User seller = data.registerSuperuser();

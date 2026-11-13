@@ -9,10 +9,12 @@ import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
+import footballmarket.features.portfolio.domain.records.OperationHistoryView;
+import footballmarket.features.portfolio.presentation.exceptions.InvalidOperationHistoryCriteriaException;
+import footballmarket.features.portfolio.presentation.exceptions.InvalidOperationHistoryDateRangeException;
 import footballmarket.support.OperationHistoryTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.OffsetDateTime;
-import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,82 +37,140 @@ class OperationHistoryServiceTest {
   @Autowired private OperationHistoryTestData data;
 
   @Nested
-  @DisplayName("Interpretación del historial")
-  class Interpretacion {
+  @DisplayName("Consulta paginada")
+  class ConsultaPaginada {
 
     @Test
-    @DisplayName("Interpreta compra y venta y conserva todos los valores históricos")
-    void interpretaRolesYValores() {
+    @DisplayName("Interpreta roles, conserva valores y devuelve el perfil actual")
+    void interpretaRolesValoresYPerfil() {
       // Arrange
       User owner = data.registerUser();
       User superuser = data.registerSuperuser();
       User buyer = data.registerUser();
       Player player = data.createPlayer();
-      MarketTransaction buy = data.record(owner, superuser, player, 4, 125L, BUY_TIME);
+      data.record(owner, superuser, player, 4, 125L, BUY_TIME);
       MarketTransaction sell = data.record(buyer, owner, player, 2, 150L, SELL_TIME);
+
       // Act
-      List<OperationHistoryEntry> result = historyService.history(owner.getEmail().toUpperCase());
+      OperationHistoryView result = history(owner.getEmail(), 0, 20, null, null, "NEWEST");
+
       // Assert
-      assertThat(result).hasSize(2);
-      assertThat(result.get(0))
-          .isEqualTo(
-              new OperationHistoryEntry(
-                  sell.getId(),
-                  OperationType.SELL,
-                  player.getId(),
-                  player.getName(),
-                  2,
-                  150L,
-                  300L,
-                  SELL_TIME));
-      assertThat(result.get(1))
-          .isEqualTo(
-              new OperationHistoryEntry(
-                  buy.getId(),
-                  OperationType.BUY,
-                  player.getId(),
-                  player.getName(),
-                  4,
-                  125L,
-                  500L,
-                  BUY_TIME));
+      assertThat(result.summary())
+          .isEqualTo(new OperationHistoryView.Summary(2, 1, 1, 4, 2, 500, 300));
+      assertThat(result.pagination().totalElements()).isEqualTo(2);
+      assertThat(result.transactions()).hasSize(2);
+      OperationHistoryEntry first = result.transactions().get(0);
+      assertThat(first.transactionId()).isEqualTo(sell.getId());
+      assertThat(first.type()).isEqualTo(OperationType.SELL);
+      assertThat(first.player().id()).isEqualTo(player.getId());
+      assertThat(first.player().name()).isEqualTo(player.getName());
+      assertThat(first.player().team().id()).isEqualTo(player.getTeam().getId());
+      assertThat(first.player().league().id()).isEqualTo(player.getLeague().getId());
+      assertThat(first.totalAmount()).isEqualTo(300L);
     }
 
     @Test
-    @DisplayName("Excluye las transacciones de otros usuarios")
-    void excluyeOperacionesAjenas() {
+    @DisplayName("Aplica tipo, búsqueda, fechas, orden y paginación al mismo conjunto")
+    void aplicaCriterios() {
       // Arrange
       User owner = data.registerUser();
-      User other = data.registerUser();
       User superuser = data.registerSuperuser();
       Player player = data.createPlayer();
-      data.record(other, superuser, player, 1, 100L, BUY_TIME);
+      data.record(owner, superuser, player, 1, 100L, BUY_TIME);
+      data.record(owner, superuser, player, 2, 200L, SELL_TIME);
+
       // Act
-      List<OperationHistoryEntry> result = historyService.history(owner.getEmail());
+      OperationHistoryView result =
+          history(
+              owner.getEmail(),
+              0,
+              1,
+              player.getName(),
+              "BUY",
+              BUY_TIME.minusSeconds(1),
+              SELL_TIME.plusSeconds(1),
+              "AMOUNT_DESC");
+
       // Assert
-      assertThat(result).isEmpty();
+      assertThat(result.summary().totalTransactions()).isEqualTo(2);
+      assertThat(result.summary().buyTransactions()).isEqualTo(2);
+      assertThat(result.transactions()).hasSize(1);
+      assertThat(result.transactions().get(0).totalAmount()).isEqualTo(400L);
+      assertThat(result.pagination().totalPages()).isEqualTo(2);
     }
 
     @Test
-    @DisplayName("Devuelve una colección vacía cuando el usuario no tiene operaciones")
+    @DisplayName("Devuelve resumen y página vacíos cuando no existen operaciones")
     void devuelveHistorialVacio() {
       // Arrange
       User owner = data.registerUser();
 
       // Act
-      List<OperationHistoryEntry> result = historyService.history(owner.getEmail());
+      OperationHistoryView result = history(owner.getEmail(), 0, 20, null, null, "NEWEST");
 
       // Assert
-      assertThat(result).isEmpty();
+      assertThat(result.summary().totalTransactions()).isZero();
+      assertThat(result.transactions()).isEmpty();
+      assertThat(result.pagination().totalElements()).isZero();
+    }
+  }
+
+  @Nested
+  @DisplayName("Validación de criterios")
+  class Validacion {
+
+    @Test
+    @DisplayName("Rechaza paginación, tipo y orden inválidos")
+    void rechazaCriteriosInvalidos() {
+      // Arrange
+      User owner = data.registerUser();
+
+      // Act / Assert
+      assertThatThrownBy(() -> history(owner.getEmail(), -1, 20, null, null, "NEWEST"))
+          .isInstanceOf(InvalidOperationHistoryCriteriaException.class);
+      assertThatThrownBy(() -> history(owner.getEmail(), 0, 20, null, "OTHER", "NEWEST"))
+          .isInstanceOf(InvalidOperationHistoryCriteriaException.class);
+      assertThatThrownBy(() -> history(owner.getEmail(), 0, 20, null, null, "OTHER"))
+          .isInstanceOf(InvalidOperationHistoryCriteriaException.class);
+    }
+
+    @Test
+    @DisplayName("Rechaza un rango temporal vacío o invertido")
+    void rechazaRangoInvalido() {
+      // Arrange
+      User owner = data.registerUser();
+
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  historyService.history(
+                      owner.getEmail(), 0, 20, null, null, SELL_TIME, BUY_TIME, "NEWEST"))
+          .isInstanceOf(InvalidOperationHistoryDateRangeException.class);
     }
 
     @Test
     @DisplayName("Rechaza un subject que no corresponde a un usuario persistido")
     void rechazaSubjectSinUsuario() {
       // Act / Assert
-      assertThatThrownBy(() -> historyService.history("missing@example.com"))
-          .isInstanceOf(CurrentUserNotFoundException.class)
-          .hasMessage("La identidad de la sesión no es válida.");
+      assertThatThrownBy(() -> history("missing@example.com", 0, 20, null, null, "NEWEST"))
+          .isInstanceOf(CurrentUserNotFoundException.class);
     }
+  }
+
+  private OperationHistoryView history(
+      String email, int page, int size, String search, String type, String sort) {
+    return history(email, page, size, search, type, null, null, sort);
+  }
+
+  private OperationHistoryView history(
+      String email,
+      int page,
+      int size,
+      String search,
+      String type,
+      OffsetDateTime from,
+      OffsetDateTime before,
+      String sort) {
+    return historyService.history(email, page, size, search, type, from, before, sort);
   }
 }

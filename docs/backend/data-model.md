@@ -15,7 +15,7 @@ dominio, consultar [arquitectura del backend](architecture.md) §1.5; para el fl
 | Aspecto | Valor |
 | --- | --- |
 | Motor | PostgreSQL |
-| Migraciones | `backend/src/main/resources/db/migration/` (Flyway; inventario efectivo en esa carpeta) |
+| Migraciones | `backend/src/main/resources/db/migration/` (28 migraciones Flyway timestamp UTC) |
 | Validación de arranque | `spring.jpa.hibernate.ddl-auto: validate` |
 | Base de desarrollo | `football_market_dev` |
 
@@ -158,8 +158,8 @@ La sincronización obtiene referencias WhoScored en una sola operación actual �
 Solo persiste referencias de catálogo en `player_external_references`; candidatos, snapshots,
 completitud de ligas y decisiones son datos transitorios durante la invocación.
 
-`V20261101000000__remove_player_identity_audit.sql` retira las cinco tablas de auditoría de V9
-y sus secuencias, sin modificar V9. Se conserva el índice parcial
+El historial reconstruido no crea las antiguas tablas y secuencias de auditoría de identidad. Se
+conserva el índice parcial
 `uk_player_external_references_whoscored_player`, que impide dos identidades WhoScored para un
 mismo jugador, y la unicidad `(provider, external_id)`. Los casos de revisión del catálogo en
 `pending_review_cases` permanecen intactos.
@@ -281,7 +281,6 @@ erDiagram
         bigint not_derivable_metrics
         bigint provider_calls
         varchar failure_code
-        int max_players
     }
     PLAYER_STATISTICS_EXTRACTION_RUNS ||--o{ PLAYER_STATISTICS_RUN_ITEMS : "procesa"
     PLAYER_STATISTICS_RUN_ITEMS ||--o{ PLAYER_STATISTICS_INCIDENTS : "acumula"

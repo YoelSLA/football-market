@@ -1,0 +1,81 @@
+@use "@/styles/abstracts" as ds;
+
+.playerOverview {
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: minmax(350px, 1.2fr) minmax(370px, 1.05fr) minmax(230px, 0.75fr);
+	align-items: center;
+	gap: 16px;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	height: 125px;
+	min-width: 0;
+	padding: 12px 20px;
+	flex-shrink: 0;
+
+	// 6. 🎨 Visual
+	color: ds.$text-body-on-dark;
+	background-color: ds.$surface-page-deep;
+	border: 1px solid ds.$border-panel;
+	border-radius: 16px;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+}
+
+@media (max-width: 1279px) {
+	.playerOverview {
+		// 3. 🧩 Layout
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 8px 16px;
+
+		// 4. 📦 Box Model
+		height: auto;
+		min-height: 169px;
+		padding: 10px 14px;
+
+		&__headlineMetrics {
+			// 3. 🧩 Layout
+			grid-column: 1 / -1;
+			grid-row: 2;
+
+			// 4. 📦 Box Model
+			width: 100%;
+		}
+
+		&__quoteContext {
+			// 3. 🧩 Layout
+			grid-column: 2;
+			grid-row: 1;
+		}
+	}
+}
+
+@media (max-width: 600px) {
+	.playerOverview {
+		// 3. 🧩 Layout
+		grid-template-columns: minmax(0, 1fr);
+		gap: 7px;
+
+		// 4. 📦 Box Model
+		min-height: 195px;
+		padding: 9px 8px;
+
+		&__quoteContext {
+			// 3. 🧩 Layout
+			grid-column: 1;
+			grid-row: 2;
+		}
+
+		&__headlineMetrics {
+			// 3. 🧩 Layout
+			grid-column: 1;
+			grid-row: 3;
+		}
+	}
+}

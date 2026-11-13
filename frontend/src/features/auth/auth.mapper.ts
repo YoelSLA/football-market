@@ -28,6 +28,7 @@ export function toCurrentUser(dto: CurrentUserDTO): CurrentUser {
 		username: dto.username,
 		email: dto.email,
 		role: dto.role,
+		availableCredits: dto.availableCredits,
 	};
 }
 

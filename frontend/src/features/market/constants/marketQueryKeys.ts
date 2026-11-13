@@ -6,4 +6,5 @@ export const marketQueryKeys = {
 	all: ["market"] as const,
 	currentQuote: (playerId: number) =>
 		["market", "current-quote", playerId] as const,
+	listings: () => ["market", "listings"] as const,
 };

@@ -84,7 +84,9 @@ public class QuoteController {
       summary = "Recalcular las cotizaciones",
       description =
           "Ejecuta una única corrida para la fecha UTC actual con la estrategia y los límites "
-              + "indicados. Todos los parámetros salvo la estrategia tienen valores por defecto.")
+              + "indicados. Todos los parámetros salvo la estrategia tienen valores por defecto. "
+              + "El resumen identifica origin=MANUAL, result y failureReason derivado; "
+              + "no expone detalles internos de los fallos individuales.")
   @ApiResponse(
       responseCode = "200",
       description = "Resumen persistido de la corrida",
@@ -121,7 +123,9 @@ public class QuoteController {
       description =
           "Devuelve el resumen de las ejecuciones de la fecha consultada. Como máximo hay una "
               + "ejecución por fecha de cotización; una fecha sin ejecuciones devuelve una lista "
-              + "vacía, no un error.")
+              + "vacía, no un error. Cada resumen incluye el origen MANUAL o AUTOMATIC, "
+              + "el resultado SUCCESS o FAILED y un motivo cerrado de fallo individual, "
+              + "nulo si hubo éxito.")
   @ApiResponse(
       responseCode = "200",
       description = "Ejecuciones de la fecha",

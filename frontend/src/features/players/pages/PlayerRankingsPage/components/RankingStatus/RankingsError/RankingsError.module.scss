@@ -1,26 +1,29 @@
 @use "@/styles/abstracts" as ds;
 
 .errorAlert {
-	// Layout
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	gap: 16px;
-
 	// Espaciado
+	// 4. 📦 Box Model
 	padding: 16px 20px;
-
 	// Apariencia
-	background: rgba(239, 68, 68, 0.12);
-	border: 1px solid rgba(239, 68, 68, 0.35);
+	// 6. 🎨 Visual
+	background-color: ds.$status-error-subtle;
+	border: 1px solid ds.$status-error-border;
 	border-radius: 10px;
-	color: ds.$text-on-dark;
-
+	color: ds.$text-body-on-dark;
 	&__icon {
-		color: #f87171;
+		// 3. 🧩 Layout
 		flex-shrink: 0;
+
+		// 6. 🎨 Visual
+		color: ds.$state-negative;
 	}
 
 	&__content {
+		// 3. 🧩 Layout
 		display: flex;
 		flex: 1;
 		flex-direction: column;
@@ -28,49 +31,72 @@
 	}
 
 	&__title {
+		// 5. 🔤 Typography
 		font-size: 14px;
 		font-weight: 700;
-		color: #f87171;
+
+		// 6. 🎨 Visual
+		color: ds.$state-negative;
 	}
 
 	&__message {
+		// 4. 📦 Box Model
 		margin: 0;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
-		color: ds.$text-on-dark-muted;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
 	}
 
 	&__retryButton {
+		// 3. 🧩 Layout
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
+
+		// 4. 📦 Box Model
 		padding: 8px 14px;
-		background: rgba(239, 68, 68, 0.2);
-		border: 1px solid rgba(239, 68, 68, 0.5);
-		border-radius: 6px;
-		color: #ffffff;
+
+		// 5. 🔤 Typography
 		font-size: 13px;
 		font-weight: 600;
-		cursor: pointer;
-		transition: background-color 0.15s ease;
 
+		// 6. 🎨 Visual
+		background-color: ds.$status-error-badge;
+		border: 1px solid ds.$status-error-button-border;
+		border-radius: 6px;
+		color: ds.$text-inverse;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		// 8. ✨ Animation
+		transition: background-color 0.15s ease;
 		&:hover {
-			background: rgba(239, 68, 68, 0.35);
+			// 6. 🎨 Visual
+			background-color: ds.$status-error-button-hover;
 		}
 
 		&:focus-visible {
-			outline: 2px solid ds.$focus-ring-on-dark;
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
 		}
 	}
 }
 
 @media (max-width: 768px) {
 	.errorAlert {
+		// 3. 🧩 Layout
 		flex-direction: column;
 		align-items: flex-start;
-
 		&__retryButton {
-			width: 100%;
+			// 3. 🧩 Layout
 			justify-content: center;
+
+			// 4. 📦 Box Model
+			width: 100%;
 		}
 	}
 }

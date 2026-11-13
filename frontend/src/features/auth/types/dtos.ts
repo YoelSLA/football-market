@@ -20,4 +20,5 @@ export type CurrentUserDTO = {
 	username: string;
 	email: string;
 	role: UserRole;
+	availableCredits: number;
 };

@@ -1,0 +1,104 @@
+@use "@/styles/abstracts" as ds;
+
+.sellCard {
+	// 3. 🧩 Layout
+	display: grid;
+	align-content: start;
+	gap: .75rem;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: .85rem;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: .65rem;
+	background-color: ds.$surface-panel-from;
+	&__amounts {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: .45rem;
+		span {
+			// 4. 📦 Box Model
+			min-width: 0;
+			padding: .45rem .35rem;
+
+			// 5. 🔤 Typography
+			font-size: .67rem;
+
+			// 6. 🎨 Visual
+			border-radius: .45rem;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-label-on-dark;
+		}
+
+		strong {
+			// 3. 🧩 Layout
+			display: block;
+
+			// 4. 📦 Box Model
+			margin-top: .2rem;
+
+			// 5. 🔤 Typography
+			font-size: .8rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__offer {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: end;
+		gap: .55rem;
+		p {
+			// 4. 📦 Box Model
+			min-width: 0;
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: .67rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		p strong {
+			// 3. 🧩 Layout
+			display: block;
+
+			// 4. 📦 Box Model
+			margin-top: .3rem;
+
+			// 5. 🔤 Typography
+			font-size: 1rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
+		}
+
+		button {
+			// 4. 📦 Box Model
+			min-height: 2.5rem;
+			padding: .55rem .75rem;
+
+			// 5. 🔤 Typography
+			font-size: .78rem;
+			white-space: nowrap;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$accent-gain;
+			background-color: ds.$surface-control-active;
+			color: ds.$accent-gain;
+		}
+	}
+
+	&__quoteStatus {
+		// 3. 🧩 Layout
+		grid-column: 1 / -1;
+	}
+}
+

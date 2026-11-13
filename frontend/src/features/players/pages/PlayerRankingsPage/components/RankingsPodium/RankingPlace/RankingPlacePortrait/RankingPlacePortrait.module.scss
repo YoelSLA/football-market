@@ -1,25 +1,29 @@
+@use "@/styles/abstracts" as ds;
+
 .portrait {
 	// Posicionamiento
+	// 2. 📍 Positioning
 	position: relative;
 	z-index: 1;
 
-	// Layout
+	// 3. 🧩 Layout
 	flex-shrink: 0;
-
 	// Dimensiones
+	// 4. 📦 Box Model
 	width: 105px;
 	height: 128px;
-
 	// Apariencia
-	background: #091b2c;
-	border: 1px solid rgba(255, 255, 255, 0.12);
+	// 6. 🎨 Visual
+	background-color: ds.$surface-data-portrait;
+	border: 1px solid ds.$border-glass-subtle;
 	border-radius: 10px;
-	overflow: hidden;
 
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 	&__image {
+		// 4. 📦 Box Model
 		width: 100%;
 		height: 100%;
-
 		object-fit: cover;
 		object-position: top center;
 	}
