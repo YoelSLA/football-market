@@ -1,5 +1,61 @@
 # Quickstart: validación del ranking por score
 
+## Guía vigente del delta — 2026-11-12
+
+Guía manual para la API paginada definida en [`contracts/score-ranking-http.md`](contracts/score-ranking-http.md).
+La ruta anterior y sus instrucciones se conservan debajo como antecedente histórico.
+
+### Requisitos y ejecución
+
+Requiere backend en ejecución, PostgreSQL migrado, jugadores con alguna estadística con métricas en su fecha de extracción más reciente,
+informadas, cotizaciones y valuaciones persistidas, además de un JWT válido. Tests y builds quedan
+fuera de esta fase y son responsabilidad del usuario conforme a las instrucciones del repositorio.
+
+### Consultas
+
+```bash
+# Primera página (defaults page=0, size=20)
+curl -s -H "Authorization: Bearer $TOKEN" \\
+  'http://localhost:8080/api/rankings/score'
+
+# Filtrado y página subsiguiente
+curl -s -H "Authorization: Bearer $TOKEN" \\
+  'http://localhost:8080/api/rankings/score?page=1&size=20&name= jugador &leagueId=4&position=Forward'
+
+# Podio y total global
+curl -s -H "Authorization: Bearer $TOKEN" \\
+  'http://localhost:8080/api/rankings/score?page=0&size=3'
+```
+
+Esperado: respuesta paginada con encabezado de la última ejecución finalizada; score DESC, ID ASC y
+posiciones globales. El `totalElements` de una página filtrada corresponde solo a sus filtros; el
+total global y podio se obtienen sin filtros con `page=0&size=3`. `filterOptions` no cambia al paginar
+ni filtrar. Las solicitudes separadas no prometen un snapshot compartido.
+
+### Casos de aceptación manual
+
+| Caso | Resultado |
+| --- | --- |
+| Recorrer páginas en datos estables | Sin duplicados/omisiones y posiciones globales conservadas. |
+| Encontrar jugador fuera de primera página por filtros | El filtro se procesa en backend y devuelve el jugador; los filtros son AND. |
+| Filtros sin coincidencias o página fuera de rango | `200`, contenido vacío y totales del conjunto filtrado; opciones globales. |
+| Ejecutar sin filtros `page=0&size=3` | Posiciones 1–3 globales y `totalElements` global. |
+| `page=-1`, `size=0` o `size=101` | `400 INVALID_REQUEST`. |
+| Última ejecución abierta más reciente | Se ignora; encabezado toma última finalizada por inicio e ID. |
+| Ejecución finalizada sin valuaciones | Encabezado no nulo, página vacía. |
+| Sin JWT válido | `401`. |
+
+No realizar cambios manuales en producción ni preparar datos mediante escritura fuera de los mecanismos
+autorizados del proyecto. La verificación de mutaciones debe comparar datos antes/después si se dispone
+de un entorno controlado.
+
+---
+
+## Quickstart histórico anterior al delta (no seguir para el contrato vigente)
+
+La guía siguiente queda reemplazada por la guía vigente al inicio de este documento y se conserva
+solo como antecedente.
+
 **Feature**: `018-consultar-rankings-de-jugadores`
 **Spec**: [`spec.md`](spec.md) · **Contrato**: [`contracts/score-ranking-http.md`](contracts/score-ranking-http.md)
 

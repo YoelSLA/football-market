@@ -12,6 +12,7 @@ import type {
 	PlayersPage,
 	PlayersPageResponseDTO,
 	QuoteRankingResponseDTO,
+	RankingQuery,
 	ScoreRankingResponseDTO,
 } from "./types";
 
@@ -79,21 +80,35 @@ async function getFilters(
 	return toPlayerCatalogFilters(data);
 }
 
+function toRankingParams(query: RankingQuery) {
+	return {
+		page: query.page,
+		size: query.size,
+		name: query.name || undefined,
+		leagueId: query.leagueId,
+		position: query.position || undefined,
+	};
+}
+
 async function getScoreRanking(
+	query: RankingQuery,
 	signal: AbortSignal,
 ): Promise<ScoreRankingResponseDTO> {
-	const { data } = await http.get<ScoreRankingResponseDTO>(
-		"/players/ranking/score",
-		{ authenticated: true, signal },
-	);
+	const { data } = await http.get<ScoreRankingResponseDTO>("/rankings/score", {
+		authenticated: true,
+		params: toRankingParams(query),
+		signal,
+	});
 	return data;
 }
 
 async function getQuoteRanking(
+	query: RankingQuery,
 	signal: AbortSignal,
 ): Promise<QuoteRankingResponseDTO> {
-	const { data } = await http.get<QuoteRankingResponseDTO>("/players/ranking", {
+	const { data } = await http.get<QuoteRankingResponseDTO>("/rankings/quote", {
 		authenticated: true,
+		params: toRankingParams(query),
 		signal,
 	});
 	return data;

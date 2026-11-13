@@ -42,8 +42,7 @@ public class IdentityCatalogueFixture {
   /** Snapshot completo de identidad persistida, sin exigir métricas ni elegibilidad. */
   @Transactional(readOnly = true)
   public List<Player> identitySnapshot() {
-    List<Long> leagueIds =
-        this.leagueRepository.findAll().stream().map(League::getId).toList();
+    List<Long> leagueIds = this.leagueRepository.findAll().stream().map(League::getId).toList();
     return this.players.findIdentitySnapshot(leagueIds);
   }
 

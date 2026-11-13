@@ -146,20 +146,46 @@ export type TacticalPosition = "DEL" | "MED" | "DEF" | "POR";
 
 export type RankingMode = "PERFORMANCE" | "VALUATION";
 
+export type RankingOrigin = "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD";
+
+/** Parámetros efectivos enviados al endpoint de ranking. `page` es base cero. */
+export interface RankingQuery {
+	page: number;
+	size: number;
+	name?: string;
+	leagueId?: number;
+	position?: string;
+}
+
+export interface RankingFilterOptions {
+	leagues: { id: number; name: string }[];
+	positions: string[];
+}
+
 export interface PlayerRankingItem {
 	position: number;
 	playerId: number;
 	playerName: string;
 	playerAvatar: string | null;
-	teamName: string;
+	teamName: string | null;
 	teamBadge: string | null;
-	leagueName: string;
+	leagueName: string | null;
 	leagueFlag: string | null;
-	tacticalPosition: TacticalPosition;
+	tacticalPosition: TacticalPosition | null;
 	score?: number;
+	/** Cotización en créditos, convertida desde las centésimas del contrato. */
 	price?: number;
 	formattedDate: string;
-	origin?: "RECOMPUTED" | "CARRIED_FORWARD";
+	origin?: RankingOrigin;
+}
+
+export interface RankingPage {
+	items: PlayerRankingItem[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	filterOptions: RankingFilterOptions;
 }
 
 export interface RankingMetadata {
@@ -167,19 +193,11 @@ export interface RankingMetadata {
 	strategyName: string | null;
 	strategyLabel: string;
 	referenceDate: string | null;
-	totalClassified: number;
-	quoteOriginSummary?: string;
+	totalClassified: number | null;
 }
 
 export interface RankingFilterCriteria {
-	searchTerm: string;
-	selectedLeague: string;
-	selectedPosition: string;
-}
-
-export interface RankingPaginationState {
-	currentPage: number;
-	pageSize: number;
-	totalItems: number;
-	totalPages: number;
+	name: string;
+	leagueId: string;
+	position: string;
 }

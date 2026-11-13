@@ -52,7 +52,7 @@ Respuesta 200:
 
 Vacío/sin coincidencias: `content:[]`, `totalElements:0`, `totalPages:0`, opciones globales conservadas. Página fuera de rango: contenido vacío con totales reales; no es error. Parámetros inválidos: 400 INVALID_REQUEST, sin llamar al caso de uso ante error estructural. JWT inválido/ausente: 401. Fallo técnico: 500 INTERNAL_ERROR sin detalle interno.
 
-**Podio**: misma ruta con `page=0&size=3` y sin filtros. UI puede usar `size=8` para conservar tamaño visual actual y traduce página base uno a base cero. No derivar podio de tabla filtrada. Las dos solicitudes no prometen snapshot compartido; bajo datos estables coinciden con posiciones globales. Respuestas tardías y cambios de modo/filtro pertenecen a SPEC-022.
+**Podio**: misma ruta con `page=0&size=3` y sin filtros; esta consulta devuelve las entradas del podio y no depende del tamaño elegido para la tabla. La tabla usa su propia consulta paginada, cuyo `size` determina SPEC-022. El tamaño `8` del alcance histórico correspondía al tamaño de página de la tabla en la UI anterior, no a una necesidad del podio, y no es un valor normativo para el consumo vigente. No derivar el podio de la tabla filtrada. Las dos solicitudes no prometen snapshot compartido; bajo datos estables coinciden con posiciones globales. Respuestas tardías y cambios de modo/filtro pertenecen a SPEC-022.
 
 **Compatibilidad**: SPEC-018 debe acordar su propio contrato `/api/rankings/score` antes de adaptar ambos modos. La lista de ejecuciones conserva envolvente pero cambia cardinalidad y significado de `notRepricedPlayers`; actualizar consumidores, DTO, anotaciones OpenAPI y tests backend conjuntamente. No afirmar que estas rutas/shape ya existen.
 

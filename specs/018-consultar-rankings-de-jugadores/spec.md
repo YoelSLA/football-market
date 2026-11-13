@@ -1,28 +1,44 @@
 # Feature Specification: Consultar ranking de jugadores por score
 
-## Revisión vigente — 2026-11-10 (SPECIFY)
+## Revisión vigente — 2026-11-12 (CLARIFY)
 
-**Status vigente del cambio**: Draft. Preparación documental; IMPLEMENT AUTHORIZATION: NONE. Se reutiliza SPEC-018 y se preservan las evidencias históricas.
+**Status vigente del cambio**: Draft. Se reutiliza SPEC-018 y se preservan las evidencias históricas. La autorización de implementación registrada y su base se consultan en `sdd-gates.md`; su vigencia se evalúa por impacto de los cambios posteriores, no se deduce de este estado.
 
-- **FR-001**: Renombrar la consulta por score a `GET /api/rankings/score`. Ambos rankings —este y `GET /api/rankings/quote` de SPEC-016— se paginan en backend y reciben los filtros de tabla aprobados en SPEC-022: nombre, liga y posición. La aplicación de filtros, conteos, orden y selección de página se hace en backend, no sobre una descarga completa en frontend.
-- **FR-002**: La última ejecución persistida determina la estrategia del ranking por score, pero ya puede haber varias ejecuciones por día. CLARIFY debe fijar el desempate temporal determinista entre esas ejecuciones; la fecha sola deja de identificar la última.
-- **FR-003 / FR-006 / FR-007**: Preservar elegibilidad, score final persistido, orden descendente y desempate por ID. Los filtros no reasignan las posiciones oficiales globales; las posiciones de una página filtrada pueden tener saltos.
-- Ambos modos deben permitir obtener sus tres líderes globales sin filtros independientemente de la página filtrada. No se cambia la población del ranking por filtros del podio ni se recalculan scores o precios al leer.
-- Preservar JWT y errores seguros. El renombre es un cambio observable de contrato: PLAN debe actualizar consumidores, documentación OpenAPI y tests backend en conjunto; no se afirma que las rutas nuevas ya existan.
+- **FR-001**: El ranking de score se consulta en `GET /api/rankings/score`. Su paginación y filtros se resuelven en backend; no se descarga el ranking completo para filtrar, contar, ordenar ni paginar.
+- **FR-002**: La «última ejecución persistida» es la ejecución **finalizada** con mayor `startedAt` y, a igualdad, mayor `id`. Los contextos sin cierre no cuentan. Esa ejecución determina únicamente la estrategia y la fecha de cotización que encabezan la respuesta.
+- **FR-003**: La población del ranking incluye exclusivamente jugadores con cotización vigente y con valuación de la estrategia seleccionada. No se añaden otros criterios poblacionales, salvo la condición de métricas definida por FR-022.
+- **FR-004**: Para cada jugador elegible, usar la valuación más reciente de la estrategia seleccionada y su score final persistido (`finalScore` o `finalGrl`). No recalcular ni alterar scores, precios o valuaciones al consultar.
+- **FR-005**: Ordenar globalmente por score descendente y `playerId` ascendente. Calcular las posiciones sobre el ranking global antes de aplicar filtros o paginación; no renumerar resultados filtrados.
+- **FR-006**: La respuesta paginada incluye `strategy`, `quoteDate`, `content`, `page`, `size`, `totalElements`, `totalPages` y `filterOptions`, conforme a FR-019 y al contrato vigente. Las entradas incluyen los campos permitidos por FR-020.
+- **FR-007**: La consulta es de solo lectura, requiere JWT válido, conserva respuestas de error seguras y no expone identificadores internos ni detalles técnicos.
 
-**Aceptación US1–US3**: recorrer páginas sin duplicados bajo datos estables; encontrar por filtro un jugador fuera de la primera página; totales correspondientes al conjunto filtrado; conservar posiciones globales y Top 3 del modo sin filtrar. Sin datos, devolver una página vacía sin inventar posiciones; sin JWT, conservar rechazo. CLARIFY debe precisar parámetros/límites y forma paginada, además de la selección de última ejecución.
+- **FR-018 (contrato paginado)**: `GET /api/rankings/score` acepta `page` (base 0, por defecto 0), `size` (entre 1 y 100, por defecto 20), `name`, `leagueId` y `position`; no admite ordenamiento ni selección de estrategia o fecha. Un valor inválido de `page` o `size` responde `400 INVALID_REQUEST`; una página fuera de rango responde `200` con `content` vacío y los totales del conjunto filtrado. `name` y `position` se recortan en los extremos y se comparan sin distinguir mayúsculas; `name` coincide parcialmente y `%` y `_` son literales; `leagueId` exige igualdad y un ID positivo desconocido da cero coincidencias. Los filtros se combinan con AND.
+- **FR-019 (sobre de respuesta)**: La respuesta contiene `strategy`, `quoteDate`, `content`, `page`, `size`, `totalElements`, `totalPages` y `filterOptions`. `totalElements` y `totalPages` corresponden al conjunto filtrado; `filterOptions` contiene las ligas (`id`, `name`) y las posiciones únicas del universo elegible, sin opciones sin jugadores elegibles. Sin ejecución finalizada, totales y opciones son vacíos/cero; con ejecución finalizada pero sin valuaciones aplicables, el encabezado se conserva y totales y opciones son vacíos/cero.
+- **FR-020 (entrada)**: Cada entrada contiene `position`, `playerId`, `score`, `valuationDate` y `player` con `name`, `position`, `imageUrl`, `team` (`id`, `name`, `crestUrl`) y `league` (`id`, `name`). `player` y `name` son obligatorios; los demás datos son nulos cuando faltan en lo persistido y no se inventan. No se añaden identificadores de valuación, versión de estrategia ni detalles internos.
+- **FR-021 (podio y total global)**: Los tres líderes globales se obtienen de la misma ruta sin filtros con `page=0&size=3`; sus posiciones 1–3 y el `totalElements` de esa solicitud constituyen el podio y el total global, independientes de la página y de los filtros de la tabla. No se añade un campo de podio ni una ruta adicional, y no se promete un snapshot compartido entre solicitudes independientes.
+- **FR-022 (elegibilidad delta)**: Además de cotización vigente y valuación aplicable, MUST existir al menos una fila del jugador en `player_statistics` con `present_metrics > 0` y `extraction_date` igual a la fecha de extracción más reciente de ese jugador. Si hay varias fuentes en esa fecha, basta una fila con métricas; una fila sin métricas no excluye al jugador si otra de la misma fecha sí las tiene. Es el criterio del ranking por cotización de SPEC-016, acordado por el usuario.
+- **Respuestas vacías obligatorias**: Sin ejecución finalizada, responder `200` con `strategy` y `quoteDate` nulos, `content: []`, `totalElements: 0`, `totalPages: 0` y opciones vacías; con ejecución finalizada pero sin valuaciones aplicables, mantener encabezado no nulo y responder página vacía con totales en cero y opciones vacías; sin coincidencias de filtro, responder `200` con contenido y totales filtrados en cero pero opciones globales; una página válida fuera de rango conserva los totales filtrados reales y opciones globales.
+- **Otros casos obligatorios**: Ignorar ejecuciones sin cierre; `page` negativo o `size` fuera de 1–100 produce `400`; el podio sin filtros conserva las posiciones 1–3 aunque la tabla filtrada muestre saltos.
 
-Sustituye las prohibiciones anteriores de paginación/filtros y la garantía de una ejecución por fecha. La propiedad del ranking por cotización sigue en SPEC-016; SPEC-018 define score y coordina coherencia del contrato compartido con SPEC-022.
+**Escenarios de aceptación vigentes US1–US3**:
 
-**Impacto SDD**: plan, research, modelo, contrato, quickstart, tasks y checklists pendientes de revisión por impacto; ANALYZE anterior no acredita el delta. Autorizaciones históricas no habilitan este cambio; CODE REVIEW, TESTING y cierre pendientes para el alcance nuevo.
+1. **US1 — Página y filtros**: dado un universo elegible con más de una página, cuando se consulta una página y/o filtros válidos, entonces filtros se combinan con AND en backend, se devuelven solo las filas de esa página, los totales corresponden al conjunto filtrado y las opciones al universo elegible global (FR-001, FR-006, FR-018–FR-020; SC-011, SC-014; T033–T040, T047).
+2. **US1 — Selección y presentación**: dada una ejecución finalizada y valuaciones aplicables, la respuesta expone el encabezado de esa ejecución y cada fila usa la valuación más reciente, los campos permitidos y el score final persistido (FR-002–FR-004, FR-006, FR-020, FR-022; SC-013–SC-014; T032–T039).
+3. **US2 — Orden y posiciones globales**: dados scores distintos y empatados, se ordena por score descendente e ID ascendente; las posiciones se calculan globalmente antes de filtros/página y no se renumeran. Sin filtros, `page=0&size=3` devuelve los líderes disponibles y el total global (FR-005, FR-018, FR-021; SC-012, SC-016; T041–T043).
+4. **US3 — Sin datos o coincidencias**: sin ejecución finalizada, con ejecución pero sin valuaciones aplicables, sin coincidencias y con página fuera de rango, se devuelve `200` con la forma de contenido, encabezado, totales y opciones fijada en FR-018–FR-019 (SC-015; T044–T046).
+5. **Contrato y seguridad transversales**: parámetros de página/tamaño inválidos dan `400 INVALID_REQUEST`, JWT ausente/inválido da `401` y los fallos técnicos dan `500 INTERNAL_ERROR` sin parcial ni detalles internos; la lectura no altera datos (FR-007, FR-018; SC-017; T035, T045–T046).
 
-**Validación de SPECIFY**: endpoints, alcance y aceptación definidos; paginación, filtros y última ejecución requieren CLARIFY. No se marcan checklists del revisor ni se acredita ANALYZE. Issue #19 CLOSED e item Done observados, correspondientes al alcance histórico. Seguimiento del delta PENDING, sin escritura remota.
+Este bloque y los requisitos delta FR-018–FR-021 sustituyen, para el alcance vigente, las prohibiciones anteriores de paginación/filtros, la garantía de una ejecución por fecha, la entrada limitada a `playerId` y la exclusión de filtros/paginación de «Fuera de alcance». La propiedad del ranking por cotización sigue en SPEC-016; SPEC-018 define score y coordina coherencia del contrato compartido con SPEC-022.
 
-**Evidencia**: script real `--reuse`, `FEATURE_NUM=018`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`. CLARIFY pendiente; no se declara preparación completa ni implementación.
+**Impacto SDD**: plan, research, modelo, contrato, quickstart, tasks y checklists del delta están materializados y se consideran en este ANALYZE. Este análisis no acredita autorización de implementación. Las autorizaciones históricas no habilitan el delta; CODE REVIEW, TESTING y cierre permanecen pendientes para el alcance nuevo.
+
+**Validación de SPECIFY/CLARIFY**: endpoints, alcance, criterios y decisiones de paginación, filtros y selección de la última ejecución quedaron definidos el 2026-11-12. La revisión de `checklists/minimum-scope.md` está registrada en ese artefacto; no equivale a aprobación de CODE REVIEW, TESTING o cierre. Como observación histórica, la issue #19 figuraba CLOSED y el item Done; el estado posterior del seguimiento se verifica en GitHub, no se deduce de esta nota.
+
+**Evidencia**: script real `--reuse`, `FEATURE_NUM=018`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`. CLARIFY ejecutado el 2026-11-12 con cinco decisiones integradas; artefactos del delta revisados documentalmente. El resultado de ANALYZE se informa por separado y no acredita implementación ni autorización.
 
 ---
 
-## Base anterior — conservada para trazabilidad
+## Base anterior — histórica, sustituida por la revisión vigente
 
 <!-- MUST seguir Constitution y docs/development/sdd-workflow.md.
 Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
@@ -43,6 +59,14 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 
 ## Clarifications
 
+### Session 2026-11-12
+
+- Q: Cuando existen varias ejecuciones de cotización en el mismo día, ¿cómo se determina de forma determinista cuál es la «última ejecución persistida» que fija la estrategia y la fecha del ranking? → A: La ejecución finalizada con mayor `startedAt` y, a igualdad, mayor `id`; los contextos sin cierre se ignoran.
+- Q: ¿Qué forma de respuesta paginada y qué parámetros debe exponer `GET /api/rankings/score` para ser coherente con `GET /api/rankings/quote`? → A: Replicar el contrato de cotización: `content`, `page`, `size`, `totalElements`, `totalPages` y `filterOptions`; `page` base 0 con default 0, `size` entre 1 y 100 con default 20, filtros `name`, `leagueId` y `position`; `400 INVALID_REQUEST` ante valores inválidos y `200` con página vacía fuera de rango.
+- Q: ¿Cada entrada del ranking por score debe incluir los datos identificatorios del jugador o conservar únicamente `playerId`? → A: Incluir `player` con nombre, posición, imagen, equipo y liga, con campos nulos cuando falten datos persistidos; se conservan `position`, `playerId`, `score` y `valuationDate`. Sustituye la respuesta previa que limitaba la entrada a `playerId`.
+- Q: ¿Cómo debe obtener la interfaz el total global de jugadores clasificados, distinto del total del conjunto filtrado que muestra la tabla? → A: `totalElements` de la tabla es el total filtrado; el total global es el `totalElements` de la solicitud sin filtros `page=0&size=3` usada para el podio. No se añade otro campo.
+- Q: ¿Cómo debe obtener SPEC-022 los tres líderes globales del ranking por score sin filtros, manteniéndolos independientes de la página y de los filtros de tabla? → A: De la misma ruta paginada sin filtros con `page=0&size=3`; las posiciones 1–3 son las globales y no se añade un campo de podio ni una ruta adicional.
+
 ### Session 2026-10-23
 
 - Q: ¿Qué valor persistido de la valuación debe usar el ranking como «score» cuando la última ejecución de cotización usó la estrategia `GENERAL_ATTRIBUTES`? → A: El resultado final de cada estrategia: `finalGrl` (GRL) para `GENERAL_ATTRIBUTES` y `finalScore` para `POSITIONAL_PERFORMANCE`.
@@ -54,13 +78,15 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 
 ### User Story 1 - Consultar el ranking por score de la última ejecución (Priority: P1)
 
+**Estado**: historia base del alcance anterior; sus principios funcionales compatibles se conservan en FR-001–FR-007 vigentes y sus tareas delta están en `tasks.md`.
+
 Como usuario del mercado, quiero consultar un ranking de jugadores ordenado por el score más reciente de la estrategia registrada en la última ejecución de cotización persistida, para conocer qué jugadores obtuvieron los mejores resultados según la valoración vigente del mercado.
 
 **Why this priority**: Es la funcionalidad central y la parte de `REQ-S2-08` que aún falta. Sin ella no existe una clasificación por score basada en la información ya persistida.
 
-**Independent Test**: Puede verificarse con datos persistidos de una última ejecución de cotización, jugadores con cotización vigente y valuaciones de la estrategia usada, comprobando el encabezado de la respuesta, la población incluida, el score de cada entrada, su fecha de valuación y el orden completo con posiciones consecutivas.
+**Independent Test**: Puede verificarse con datos persistidos de una ejecución finalizada, jugadores elegibles y varias páginas; comprobar encabezado, filtros backend, orden y posiciones globales, datos de entrada y metadatos paginados.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios históricos**: el contrato detallado y vigente de la consulta paginada está definido en FR-018–FR-021 y en `contracts/score-ranking-http.md`.
 
 1. **Given** una última ejecución de cotización persistida con estrategia y fecha de cotización, y jugadores con cotización vigente y valuaciones de esa estrategia, **When** se consulta el ranking por score, **Then** la respuesta expone la estrategia y la fecha de cotización de esa ejecución, y devuelve una entrada por jugador elegible con su posición, su score y la fecha de la valuación utilizada.
 2. **Given** un conjunto de jugadores elegibles con scores distintos, **When** se consulta el ranking, **Then** las entradas se ordenan por score descendente y las posiciones van de 1 a n sin posiciones compartidas.
@@ -72,13 +98,15 @@ Como usuario del mercado, quiero consultar un ranking de jugadores ordenado por 
 
 ### User Story 2 - Profundizar la resolución de empates de score (Priority: P2)
 
+**Estado**: escenarios históricos de empate; aplican solo en cuanto sean compatibles con el orden global y la paginación de FR-005/FR-018.
+
 Como usuario del mercado, quiero que un empate de score se resuelva de forma completa y estable aun cuando varios jugadores compartan el mismo valor, para que la clasificación no dependa del orden en que se recuperan los datos y pueda compararse entre consultas.
 
 **Why this priority**: La US1 cubre el flujo principal y el desempate básico entre dos jugadores. Esta historia profundiza ese mismo caso para empates múltiples y consultas repetidas, de modo que el orden sea reproducible y auditable.
 
-**Independent Test**: Puede verificarse con datos que incluyan al menos tres jugadores con el mismo score y otro grupo de empate con un score distinto, comprobando el orden dentro de cada grupo, el orden entre grupos, la continuidad de las posiciones y la estabilidad de la respuesta en consultas repetidas.
+**Independent Test**: Se verifica con los casos de empate y posición global definidos en FR-005 y sus tareas asociadas.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios históricos**: los criterios aplicables al delta se conservan en FR-005 y FR-018–FR-021.
 
 1. **Given** tres o más jugadores elegibles con el mismo score, **When** se consulta el ranking, **Then** aparecen ordenados por identificador de jugador ascendente y reciben posiciones consecutivas distintas.
 2. **Given** varios grupos de score, cada uno con empates internos, **When** se consulta el ranking, **Then** los grupos se ordenan por score descendente, dentro de cada grupo desempata el identificador de jugador ascendente y las posiciones van de 1 a n sin compartirse.
@@ -88,19 +116,21 @@ Como usuario del mercado, quiero que un empate de score se resuelva de forma com
 
 ### User Story 3 - Consultar el ranking cuando no hay información disponible (Priority: P3)
 
+**Estado**: escenarios base conservados como antecedente; las formas HTTP vigentes de respuestas vacías se definen en FR-018–FR-019.
+
 Como usuario del mercado, quiero obtener una respuesta válida cuando todavía no existen ejecuciones de cotización o cuando la última ejecución no produjo valuaciones para su estrategia, para distinguir la ausencia de datos de un error.
 
 **Why this priority**: La respuesta debe ser predecible y no inventar posiciones ni puntuaciones cuando no hay información que clasificar.
 
-**Independent Test**: Puede verificarse primero sin ejecuciones de cotización y luego con una ejecución cuya estrategia no tiene valuaciones persistidas, comprobando en ambos casos que la respuesta es válida y que el arreglo de entradas está vacío.
+**Independent Test**: La forma completa de las respuestas vacías se verifica conforme a FR-018–FR-019 y T035/T044/T045.
 
-**Acceptance Scenarios**:
+**Acceptance Scenarios históricos**: las respuestas vacías vigentes se especifican en FR-018–FR-019.
 
 1. **Given** un sistema sin ejecuciones de cotización persistidas, **When** se consulta el ranking por score, **Then** la respuesta devuelve estrategia y fecha nulas, junto con un arreglo de entradas vacío.
 2. **Given** una ejecución de cotización persistida cuya estrategia no tiene ninguna valuación, **When** se consulta el ranking, **Then** la respuesta devuelve el encabezado con estrategia y fecha, y un arreglo de entradas vacío.
 3. **Given** una ejecución en la que todos los jugadores fueron arrastrados por no tener valuación de su estrategia, **When** se consulta el ranking, **Then** el encabezado no es nulo y el arreglo de entradas está vacío.
 
-### Edge Cases
+### Edge Cases históricos
 
 Todos los casos límite de esta sección son **obligatorios**: están exigidos por el requisito `REQ-S2-08` y por los criterios de aceptación acordados para esta feature.
 
@@ -113,15 +143,15 @@ Todos los casos límite de esta sección son **obligatorios**: están exigidos p
 
 ## Requirements *(mandatory)*
 
-### Functional Requirements
+### Functional Requirements históricos — no normativos para el delta vigente
 
-- **FR-001**: El sistema MUST permitir consultar un ranking de jugadores ordenado por el score de la estrategia registrada en la última ejecución de cotización persistida. La consulta MUST NOT declarar ni utilizar parámetros de estrategia, fecha, ordenamiento, paginación o filtros. Los query parameters no declarados se ignoran y MUST NOT alterar la estrategia, la población, el orden ni el contenido del ranking.
-- **FR-002**: La última ejecución de cotización persistida MUST determinar únicamente la estrategia del ranking y la fecha de cotización que encabezan la respuesta. Se garantiza una única ejecución de cotización por fecha.
+- **FR-001**: El sistema MUST permitir consultar un ranking de jugadores ordenado por el score de la estrategia registrada en la última ejecución de cotización persistida. La consulta MUST NOT declarar ni utilizar parámetros de estrategia, fecha, ordenamiento, paginación o filtros. Los query parameters no declarados se ignoran y MUST NOT alterar la estrategia, la población, el orden ni el contenido del ranking. **Histórico: sustituido por FR-018–FR-021 de la revisión vigente.**
+- **FR-002**: La última ejecución de cotización persistida MUST determinar únicamente la estrategia del ranking y la fecha de cotización que encabezan la respuesta. Se garantiza una única ejecución de cotización por fecha. **Histórico: la selección vigente está definida en la revisión CLARIFY y el contrato vigente.**
 - **FR-003**: La población del ranking MUST estar formada exclusivamente por los jugadores que tienen cotización vigente y al menos una valuación persistida de la estrategia de la última ejecución.
 - **FR-004**: El score de cada jugador MUST ser el de su valuación más reciente actualmente persistida de esa estrategia, entendida como la de mayor fecha de valuación. El esquema admite una sola valuación por jugador, fecha, estrategia y versión; una nueva evaluación de la misma fecha reemplaza la fila anterior. La valuación elegida no tiene que haber sido utilizada por la última ejecución de cotización ni queda limitada por su fecha; por ello, su score puede ser distinto del empleado para calcular la última cotización. El score MUST corresponder al resultado final de la estrategia: `finalScore` para `POSITIONAL_PERFORMANCE` y `finalGrl` (GRL) para `GENERAL_ATTRIBUTES`. El score bruto MUST NOT utilizarse.
 - **FR-006**: El orden del ranking MUST ser por score descendente. A igualdad de score, MUST desempatar el identificador de jugador ascendente.
 - **FR-007**: Las posiciones MUST ir de 1 a n, en correspondencia con el orden establecido, sin posiciones compartidas ni saltos.
-- **FR-008**: Cada entrada del ranking MUST identificar al jugador mediante `playerId`, e incluir su posición, su score y la fecha de la valuación utilizada. La entrada MUST NOT incluir nombre ni otros datos del jugador.
+- **FR-008**: Cada entrada del ranking MUST identificar al jugador mediante `playerId`, e incluir su posición, su score y la fecha de la valuación utilizada. La entrada MUST NOT incluir nombre ni otros datos del jugador. **Histórico: el contenido vigente de la entrada está definido por FR-020.**
 - **FR-009**: La respuesta MUST exponer la estrategia y la fecha de cotización de la última ejecución persistida. La versión de la estrategia MUST NOT formar parte de la respuesta ni utilizarse para filtrar resultados.
 - **FR-010**: Si no existe ninguna ejecución de cotización persistida, la respuesta MUST devolver estrategia y fecha nulas, y un arreglo de entradas vacío.
 - **FR-011**: Si existe una ejecución de cotización persistida pero no hay ninguna valuación de su estrategia, la respuesta MUST devolver el encabezado con estrategia y fecha, y un arreglo de entradas vacío.
@@ -131,7 +161,7 @@ Todos los casos límite de esta sección son **obligatorios**: están exigidos p
 - **FR-016**: La consulta MUST exigir un JWT válido y MUST NOT introducir roles ni permisos nuevos: cualquier usuario autenticado obtiene el mismo ranking. Una solicitud sin JWT o con JWT inválido MUST responder `401` sin devolver datos del ranking.
 - **FR-017**: Las respuestas de la consulta, incluidas las de error, MUST NOT exponer identificadores internos de valuación, la versión de la estrategia, trazas, mensajes técnicos ni otros detalles de implementación.
 
-### Key Entities *(include if feature involves data)*
+### Key Entities históricas *(include if feature involves data)*
 
 - **Ejecución de cotización**: registro persistido de una corrida del mercado; aporta la estrategia registrada y la fecha de cotización que encabezan el ranking, pero no identifica la valuación mostrada. Existe como máximo una por fecha de cotización.
 - **Estrategia**: criterio de valoración usado en la ejecución; identifica la estrategia que encabeza el ranking. Su versión no forma parte de la respuesta ni interviene en la selección de jugadores.
@@ -141,7 +171,17 @@ Todos los casos límite de esta sección son **obligatorios**: están exigidos p
 
 ## Success Criteria *(mandatory)*
 
-### Measurable Outcomes
+### Measurable Outcomes vigentes
+
+- **SC-011**: Las consultas válidas devuelven únicamente la página solicitada después de aplicar en backend todos los filtros con AND; los totales reflejan el conjunto filtrado y las opciones corresponden al universo elegible sin filtros.
+- **SC-012**: En todas las páginas y filtros, cada jugador conserva su posición en el ranking global ordenado por score descendente e ID ascendente; no se renumeran los resultados filtrados.
+- **SC-013**: El 100 % de las entradas corresponde a jugadores con cotización vigente, alguna estadística de la fecha de extracción más reciente con `present_metrics > 0` y valuación aplicable; cada score es el valor final persistido de la última valuación elegida.
+- **SC-014**: Cada respuesta `200` contiene el sobre paginado definido en FR-019 y entradas conformes a FR-020; la ejecución finalizada más reciente determina `strategy` y `quoteDate`.
+- **SC-015**: Sin ejecución o sin valuaciones aplicables, la respuesta `200` presenta encabezado según FR-019, contenido vacío, totales cero y opciones vacías; sin coincidencias presenta totales filtrados cero y opciones globales; una página fuera de rango conserva los totales filtrados reales.
+- **SC-016**: El podio consultado sin filtros con `page=0&size=3` contiene las posiciones globales 1–3 disponibles y reporta el total global en `totalElements`.
+- **SC-017**: Los parámetros inválidos de página/tamaño reciben `400 INVALID_REQUEST`; las solicitudes sin JWT válido reciben `401`; errores técnicos no presentan datos parciales ni detalles internos.
+
+### Measurable Outcomes históricos — alcance anterior
 
 - **SC-001**: El 100 % de las entradas del ranking se presenta en orden de score descendente, con desempate por identificador de jugador ascendente cuando los scores coinciden.
 - **SC-002**: Las posiciones del ranking son siempre consecutivas de 1 a n, sin valores repetidos ni compartidos, para cualquier población de resultados.
@@ -153,17 +193,17 @@ Todos los casos límite de esta sección son **obligatorios**: están exigidos p
 - **SC-009**: El 100 % de las solicitudes sin JWT válido recibe `401` y ninguna de ellas devuelve datos del ranking.
 - **SC-010**: El 100 % de las respuestas, incluidas las de error, contiene únicamente los campos declarados en el contrato y ningún identificador interno de valuación, versión de estrategia ni detalle técnico.
 
-## Fuera de alcance
+## Fuera de alcance histórico
 
 - Configurar, crear o seleccionar estrategias de valuación.
 - Persistir una estrategia activa independiente de la última ejecución.
 - Elegir la estrategia por parámetro de consulta.
 - Recalcular cotizaciones o valuaciones.
 - Implementar la interfaz web de visualización.
-- Agregar filtros, paginación, caché u optimizaciones no solicitadas.
+- Agregar filtros o paginación. **Histórico: filtros y paginación forman parte del delta aprobado y definido en FR-018–FR-021.**
 - Modificar el ranking por precio o su contrato.
 
-## Assumptions
+## Assumptions históricas
 
 - La versión de la estrategia no forma parte de la respuesta ni interviene en la clasificación.
 - El score se devuelve tal como está persistido, sin redondeo ni recálculo.
