@@ -1,5 +1,7 @@
 package footballmarket.features.valuation.infraestructure;
 
+import footballmarket.features.quote.domain.records.QuoteRankingPage.LeagueOption;
+import footballmarket.features.ranking.domain.records.ScoreRankingRow;
 import footballmarket.features.valuation.domain.models.AttributeValuation;
 import java.time.LocalDate;
 import java.util.List;
@@ -9,6 +11,27 @@ import org.springframework.data.repository.query.Param;
 
 /** Persistencia de valoraciones de atributos. */
 public interface AttributeValuationRepository extends JpaRepository<AttributeValuation, Long> {
+  @Query(
+      value = ScoreRankingSql.ATTRIBUTE + ScoreRankingSql.RANKED + ScoreRankingSql.PAGE,
+      nativeQuery = true)
+  List<ScoreRankingRow> findRankingPage(
+      String name, Long leagueId, String position, int size, long offset);
+
+  @Query(
+      value = ScoreRankingSql.ATTRIBUTE + ScoreRankingSql.RANKED + ScoreRankingSql.COUNT,
+      nativeQuery = true)
+  long countRanking(String name, Long leagueId, String position);
+
+  @Query(
+      value = ScoreRankingSql.ATTRIBUTE + ScoreRankingSql.RANKED + ScoreRankingSql.LEAGUES,
+      nativeQuery = true)
+  List<LeagueOption> findRankingLeagues();
+
+  @Query(
+      value = ScoreRankingSql.ATTRIBUTE + ScoreRankingSql.RANKED + ScoreRankingSql.POSITIONS,
+      nativeQuery = true)
+  List<String> findRankingPositions();
+
   void deleteByPlayerIdAndValuationDate(Long playerId, LocalDate valuationDate);
 
   /**

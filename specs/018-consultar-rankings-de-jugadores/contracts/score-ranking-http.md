@@ -1,5 +1,106 @@
 # Contrato HTTP: Ranking de jugadores por score
 
+## Contrato vigente del delta — 2026-11-12
+
+Este contrato sustituye las reglas incompatibles del antecedente. Es la fuente normativa funcional;
+OpenAPI y tests de Controller deberán mantenerse alineados durante la implementación. Todas las rutas
+requieren JWT válido y los errores usan `ErrorResponseDTO`.
+
+### `GET /api/rankings/score`
+
+Sin body ni parámetros de estrategia, fecha u ordenamiento.
+
+| Parámetro | Regla |
+| --- | --- |
+| `page` | Entero ≥0; default 0; base 0. |
+| `size` | Entero 1–100; default 20. |
+| `name` | Opcional; trim, vacío equivale a omisión; coincidencia parcial sin distinguir mayúsculas; `%` y `_` son literales. |
+| `leagueId` | Opcional, entero positivo; igualdad por ID; ID desconocido válido da página vacía. |
+| `position` | Opcional; trim de espacios en los extremos, vacío equivale a omisión; igualdad sin distinguir mayúsculas. |
+
+Los filtros se combinan con AND. No se acepta ordenamiento. El backend calcula posiciones globales
+antes de filtrar y paginar; no renumera las entradas filtradas.
+
+Respuesta `200`:
+
+```json
+{
+  "strategy": "POSITIONAL_PERFORMANCE",
+  "quoteDate": "2026-11-12",
+  "content": [{
+    "position": 7,
+    "playerId": 7821,
+    "score": 0.913400,
+    "valuationDate": "2026-11-10",
+    "player": {
+      "name": "Jugador",
+      "position": "Forward",
+      "imageUrl": null,
+      "team": {"id": 31, "name": "Equipo", "crestUrl": null},
+      "league": {"id": 4, "name": "Liga"}
+    }
+  }],
+  "page": 0,
+  "size": 20,
+  "totalElements": 12,
+  "totalPages": 1,
+  "filterOptions": {
+    "leagues": [{"id": 4, "name": "Liga"}],
+    "positions": ["Forward"]
+  }
+}
+```
+
+| Campo | Tipo / nulabilidad | Semántica |
+| --- | --- | --- |
+| `strategy`, `quoteDate` | nullable | Estrategia y fecha de la última ejecución finalizada; ambos nulos si no existe. |
+| `content` | array, no nulo | Página filtrada en orden global; vacío si no hay coincidencias o página fuera de rango. |
+| `page`, `size` | integer, no nulos | Valores efectivos de página. |
+| `totalElements` | long, no nulo | Conteo del conjunto filtrado, no solo de la página. |
+| `totalPages` | long, no nulo | Techo de `totalElements / size`; cero cuando no hay resultados. |
+| `filterOptions` | objeto, no nulo | Ligas y posiciones del universo elegible global, no afectadas por filtros/página. |
+
+Cada entrada incluye `position`, `playerId`, `score`, `valuationDate` y `player`. `player` y su `name`
+son obligatorios; `position`, `imageUrl`, `team`, `league` y sus campos pueden ser nulos cuando faltan
+en el catálogo. No se inventan valores. La posición es global, score final (`finalScore` o `finalGrl`)
+y `valuationDate` identifica la valuación elegida. No se exponen IDs de valuación ni versión.
+
+`filterOptions.leagues` son objetos `{id,name}` y `filterOptions.positions` es una lista de valores
+únicos; no aparecen opciones sin jugadores elegibles.
+
+### Podio y totales
+
+El podio se consulta por esta misma ruta sin filtros con `page=0&size=3`. Las entradas conservan las
+posiciones globales 1–3; el `totalElements` de esa respuesta es el total global. No hay campo de podio,
+ruta adicional ni garantía de snapshot compartido entre solicitudes.
+
+### Casos y errores
+
+| Situación | Resultado |
+| --- | --- |
+| Sin ejecución finalizada | `200`, estrategia/fecha nulas, `content: []`, total cero y opciones vacías. |
+| Ejecución finalizada sin valuaciones aplicables | `200` con encabezado no nulo, `content: []`, `totalElements: 0`, `totalPages: 0` y opciones vacías. |
+| Página fuera de rango o filtro sin resultados | `200`, `content: []`, conteo real del filtro y opciones globales. |
+| `page` negativo, `size` menor que 1 o mayor que 100 | `400 INVALID_REQUEST`. |
+| JWT ausente/inválido | `401`; no se devuelven datos. |
+| Fallo técnico | `500 INTERNAL_ERROR`; nunca respuesta parcial. |
+
+Errores no exponen trazas ni detalles técnicos. La consulta no escribe ni recalcula datos.
+
+### Coordinación con SPEC-022
+
+La revisión vigente de `specs/022-view-player-rankings/spec.md` referencia esta ruta. Sus artefactos
+de diseño anteriores, incluidos `plan.md`, `data-model.md` y `contracts/player-rankings-consumption.md`,
+todavía mencionan el contrato histórico `/api/players/ranking/score`; deberán alinearse mediante el
+flujo SDD de SPEC-022 antes de implementar su consumidor. Esta coordinación no modifica el frontend.
+
+---
+
+## Contrato histórico anterior al delta (no normativo; no implementar)
+
+El contrato siguiente se conserva para trazabilidad y queda reemplazado por el contrato vigente del
+delta al inicio de este documento.
+
 **Feature**: `018-consultar-rankings-de-jugadores`
 **Spec**: [`spec.md`](../spec.md) · **Data model**: [`../data-model.md`](../data-model.md)
 
@@ -110,13 +211,13 @@ autenticación: cualquier usuario autenticado obtiene el mismo ranking (FR-016).
 
 | Elemento del contrato | Requisitos |
 | --- | --- |
-| Ruta sin parámetros | FR-001 |
-| `strategy` y `quoteDate` | FR-002, FR-009 |
-| Población | FR-003 |
-| `score` y `valuationDate` | FR-004, FR-008, FR-012 |
-| Orden y `position` | FR-006, FR-007 |
-| Respuestas vacías | FR-010, FR-011 |
-| Solo lectura | FR-013 |
-| Errores | FR-014 |
-| JWT, roles y autorización | FR-016 |
-| No exposición de datos internos | FR-017 |
+| Ruta y consulta backend paginada | FR-001, FR-018 |
+| `strategy` y `quoteDate` | FR-002, FR-019 |
+| Población y score | FR-003, FR-004 |
+| Orden y posiciones globales | FR-005, FR-018 |
+| Sobre paginado y opciones | FR-006, FR-019 |
+| Entrada del ranking | FR-020 |
+| Podio y total global | FR-021 |
+| Elegibilidad por métricas | FR-003, FR-022 |
+| Solo lectura, JWT y errores seguros | FR-007 |
+| Respuestas vacías | FR-018, FR-019 |

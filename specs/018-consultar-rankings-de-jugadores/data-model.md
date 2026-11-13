@@ -1,5 +1,62 @@
 # Data Model: Consultar ranking de jugadores por score
 
+## Modelo vigente del delta — 2026-11-12
+
+Este bloque sustituye las reglas históricas incompatibles. El diseño es de solo lectura y no modifica
+el esquema persistido.
+
+### Fuentes y selección
+
+| Fuente | Uso vigente |
+| --- | --- |
+| `quote_executions` | Cabecera de la última ejecución finalizada por `started_at DESC, id DESC`; ignorar `finished_at IS NULL`. |
+| `player_quotes` | Elegibilidad: existe cotización vigente del jugador. |
+| `player_statistics` | Elegibilidad: al menos una fila con `present_metrics > 0` en la fecha de extracción más reciente del jugador, según SPEC-002/SPEC-016. |
+| `player_positional_valuations` | Estrategia `POSITIONAL_PERFORMANCE`; valor `final_score`. |
+| `player_attribute_valuations` | Estrategia `GENERAL_ATTRIBUTES`; valor `final_grl`. |
+| Catálogo de `players`, equipos y ligas | Identidad y valores globales de filtros de jugador. |
+
+La ejecución finalizada determina solo `strategy` y `quoteDate`; abiertos se ignoran. La valuación más
+reciente por jugador en la tabla de esa estrategia aporta el score y `valuationDate`. El universo
+requiere cotización y métrica elegibles, además de valuación. No se filtra la valuación por
+`quoteDate`. El esquema no cambia: no se crean tablas, columnas, índices o migraciones.
+
+### Modelo derivado
+
+**Consulta**: `page` (entero ≥0, default 0), `size` (1–100, default 20), `name`, `leagueId` positivo y
+`position`. Para `name` y `position`, recortar espacios en los extremos y tratar el valor vacío como
+filtro omitido; ambas comparaciones ignoran mayúsculas. En `name`, `%` y `_` son literales. Los filtros
+se combinan con AND.
+
+**Página del ranking**: `strategy` y `quoteDate` nullable; `content` no nulo; `page`, `size`,
+`totalElements` filtrado, `totalPages` y `filterOptions` globales. `filterOptions` incluye ligas
+`{id,name}` y posiciones únicas del universo elegible.
+
+**Entrada**: posición `row_number()` global antes de filtrar; `playerId`, score final persistido y
+`valuationDate`; `player` con `name`, `position`, `imageUrl`, `team{id,name,crestUrl}` y
+`league{id,name}`. `player` y `name` son obligatorios; datos de catálogo ausentes se representan como
+nulos donde el contrato lo permite.
+
+El ranking se ordena por score DESC y `playerId` ASC. `totalPages` es el techo de total filtrado entre
+size. Una página válida fuera de rango o filtro sin coincidencias mantiene totales reales y contenido
+vacío. La misma ruta con filtros omitidos, `page=0&size=3` entrega podio y total global mediante
+`totalElements`; no existe snapshot entre requests.
+
+### Consulta de datos
+
+Usar consultas SQL nativas y proyecciones en los repositorios existentes de valuación para resolver
+selección de última valuación, población elegible, `row_number()` global, filtros, página, conteo y
+opciones sin materializar el ranking entero. Mantener consultas distintas para las dos estrategias.
+La especificación de los filtros y su normalización es `research.md` §R2; la transacción es
+`readOnly`/`REPEATABLE_READ` por respuesta.
+
+---
+
+## Antecedente histórico
+
+El diseño siguiente describe el contrato anterior al delta de 2026-11-12 y queda subordinado al
+modelo vigente al inicio del documento. Se conserva como trazabilidad, no como modelo implementable.
+
 **Feature**: `018-consultar-rankings-de-jugadores`
 **Spec**: [`spec.md`](spec.md) · **Research**: [`research.md`](research.md)
 

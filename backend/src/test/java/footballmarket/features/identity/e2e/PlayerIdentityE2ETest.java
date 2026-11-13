@@ -134,8 +134,7 @@ class PlayerIdentityE2ETest {
         for (int index = 1; index <= 5; index++) {
           // La liga recién sincronizada aún no es elegible: sus jugadores no tienen métricas.
           Long leagueId = catalogueFixture.leagueId("League " + index);
-          bindings.add(
-              new WhoScoredProperties.Competition(leagueId, tournaments.get(index - 1)));
+          bindings.add(new WhoScoredProperties.Competition(leagueId, tournaments.get(index - 1)));
         }
         doReturn(bindings).when(properties).competitions();
         // Act

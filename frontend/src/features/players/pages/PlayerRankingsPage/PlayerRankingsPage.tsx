@@ -13,23 +13,16 @@ export default function PlayerRankingsPage() {
 		mode,
 		handleModeChange,
 		metadata,
-		podiumPlayers,
+		podiumItems,
 		tableItems,
-		allRankedItems,
-		filteredCount,
-		totalCount,
 		filters,
 		handleFilterChange,
 		handleClearFilters,
-		availableLeagues,
+		filterOptions,
+		hasActiveFilters,
 		pagination,
 		status,
 	} = usePlayerRankingsPage();
-
-	const hasActiveFilters =
-		Boolean(filters.searchTerm.trim()) ||
-		Boolean(filters.selectedLeague) ||
-		Boolean(filters.selectedPosition);
 
 	return (
 		<PageLayout>
@@ -48,37 +41,39 @@ export default function PlayerRankingsPage() {
 					<RankingsStatus
 						status={status}
 						mode={mode}
-						isEmpty={allRankedItems.length === 0}
-						isFilterEmpty={filteredCount === 0}
+						isGlobalEmpty={status.isGlobalEmpty}
+						isFilterEmpty={status.isFilterEmpty}
 						hasActiveFilters={hasActiveFilters}
 						onClearFilters={handleClearFilters}
 					>
-						<PlayerRankingsPodium topPlayers={podiumPlayers} mode={mode} />
+						{podiumItems.length > 0 && (
+							<PlayerRankingsPodium topPlayers={podiumItems} mode={mode} />
+						)}
 
 						<PlayerRankingsFilters
 							filters={filters}
 							onFilterChange={handleFilterChange}
 							onClearFilters={handleClearFilters}
-							availableLeagues={availableLeagues}
-							totalCount={totalCount}
-							filteredCount={filteredCount}
+							availableLeagues={filterOptions.leagues}
+							availablePositions={filterOptions.positions}
 						/>
 
-						{filteredCount > 0 && (
+						{tableItems.length > 0 && (
 							<PlayerRankingsTable items={tableItems} mode={mode} />
 						)}
 					</RankingsStatus>
 				</div>
 
-				{!status.isLoading &&
-				!status.isError &&
-				allRankedItems.length > 0 &&
-				filteredCount > 0 ? (
+				{!status.isLoading && !status.isError && pagination.totalItems > 0 ? (
 					<PlayerRankingsPagination
 						currentPage={pagination.currentPage}
 						totalPages={pagination.totalPages}
 						totalItems={pagination.totalItems}
+						itemsOnPage={pagination.itemsOnPage}
+						pageSize={pagination.pageSize}
+						pageSizeOptions={pagination.pageSizeOptions}
 						onPageChange={pagination.onPageChange}
+						onPageSizeChange={pagination.onPageSizeChange}
 					/>
 				) : null}
 			</main>

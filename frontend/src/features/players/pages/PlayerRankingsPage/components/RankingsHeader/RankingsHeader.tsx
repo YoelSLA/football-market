@@ -65,7 +65,7 @@ export default function RankingsHeader({
 							<div className={styles.metricColumn}>
 								<span className={styles.metricLabel}>Estrategia activa</span>
 								<strong className={styles.metricValue}>
-									{metadata.strategyName ?? "POSITIONAL_PERFORMANCE"}
+									{metadata.strategyLabel}
 								</strong>
 							</div>
 							<div className={styles.metricDivider} />
@@ -81,7 +81,9 @@ export default function RankingsHeader({
 									Jugadores clasificados
 								</span>
 								<strong className={styles.metricValue}>
-									{metadata.totalClassified.toLocaleString("es-AR")}
+									{metadata.totalClassified !== null
+										? metadata.totalClassified.toLocaleString("es-AR")
+										: "—"}
 								</strong>
 							</div>
 						</>
@@ -99,7 +101,9 @@ export default function RankingsHeader({
 									Jugadores clasificados
 								</span>
 								<strong className={styles.metricValue}>
-									{metadata.totalClassified.toLocaleString("es-AR")}
+									{metadata.totalClassified !== null
+										? metadata.totalClassified.toLocaleString("es-AR")
+										: "—"}
 								</strong>
 							</div>
 							<div className={styles.metricDivider} />
