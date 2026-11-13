@@ -41,3 +41,4 @@ se corrige con una fila nueva que la referencie.
 | SPEC-022 | Visualizar ranking de jugadores | YoelSLA | #25 | REQ-S2-13 | feat/022-view-player-rankings | 2026-10-27 |
 | SPEC-023 | Programar recálculo automático de cotizaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/40 | REQ-S2-11-B | feat/023-scheduler-quote-recalculation | 2026-11-03 |
 | SPEC-025 | Visualizar historial de transacciones | YoelSLA | https://github.com/YoelSLA/football-market/issues/27 | REQ-S2-16 | feat/025-view-transaction-history | 2026-11-10 |
+| SPEC-010 | Catálogo del Mercado Oficial con cotizaciones integradas | YoelSLA | https://github.com/YoelSLA/football-market/issues/90 | REQ-S2-06 | feat/010-buy-tokens | 2026-11-12 |

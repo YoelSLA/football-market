@@ -1,20 +1,24 @@
-# Feature Specification: Comprar tokens de un jugador (REQ-S2-06)
+# Feature Specification: SPEC-010 | Mercado Oficial: Compra de tokens y catálogo con cotizaciones integradas (REQ-S2-06, Issue #90)
 
 **Feature Branch**: `feat/010-buy-tokens`
 
 **Created**: 2026-10-14
 
-**Status**: En cierre — US01 DONE, FEATURE COMPLETION bloqueada por T078 y T079
+**Evolución**: 2026-11-12 (Sprint 3 — [Issue #90](https://github.com/YoelSLA/football-market/issues/90))
 
-**Input**: Comprar tokens mediante `POST /api/orders/buy`, contra el inventario inicial del superusuario y a la cotización vigente. La compra transfiere créditos y tokens de forma atómica y deja un registro financiero auditable.
+**Status**: Clarified
 
-## User Scenarios & Testing
+**Input**: User description: "Catálogo del Mercado Oficial con cotizaciones integradas ([Issue #90](https://github.com/YoelSLA/football-market/issues/90)) y compra de tokens al superusuario ([REQ-S2-06](https://github.com/YoelSLA/football-market/issues/49))."
+
+---
+
+## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Comprar tokens de un jugador (Priority: P1)
 
 Como usuario registrado, quiero comprar tokens de un jugador con mis créditos, a su precio vigente, para adquirir una posición en el mercado.
 
-**Why this priority**: Es la operación de entrada al mercado exigida por el TP; aporta una posición financiada y un comprobante de operación.
+**Why this priority**: Es la operación transaccional de entrada al mercado primario; aporta una posición financiada y un comprobante de operación auditable.
 
 **Independent Test**: Con un usuario habilitado, créditos suficientes, jugador visible, stock del superusuario y cotización disponible, solicitar una compra y comprobar el resultado, las transferencias y su registro financiero. Puede demostrarse sin realizar ventas ni consultar portfolio o historial.
 
@@ -41,7 +45,7 @@ Como usuario registrado, quiero comprar tokens de un jugador con mis créditos, 
 
 En todo rechazo se conservan saldos y tenencias y no se registra una compra confirmada (FR-011/014).
 
-### Prerrequisitos funcionales verificables
+### Prerrequisitos funcionales verificables de US1
 
 Estas condiciones habilitan US1; no son solicitudes al endpoint de compra ni historias independientes.
 
@@ -51,31 +55,71 @@ Estas condiciones habilitan US1; no son solicitudes al endpoint de compra ni his
 | AC17 | Jugador sin emisión inicial | Se habilita su inventario y posteriormente se repite la habilitación tras compras | Se asignan 100 tokens al superusuario una sola vez; repetir no repone el inventario vendido ni aumenta el total. | FR-016/017, SC-012 |
 | AC18 | Nuevo usuario que cumple las condiciones de registro | Se procesa su alta | El alta y su saldo inicial quedan disponibles juntos; si no puede asignarse el saldo, no se confirma el alta. | FR-015, SC-013 |
 
+---
+
+### User Story 2 - Consultar catálogo del Mercado Oficial con cotizaciones integradas (Priority: P1)
+
+Como usuario autenticado de Football Market, quiero consultar el catálogo de jugadores del Mercado Oficial con su cotización vigente integrada en una única respuesta, para explorar el mercado primario, filtrar y ordenar activos por criterios deportivos y financieros, y preparar decisiones de compra informadas.
+
+**Why this priority**: Es la capacidad de consulta fundamental del mercado primario requerida para el rediseño frontend (SPEC-019 / Issue #90). Resuelve el patrón N+1 de peticiones entre el catálogo y las cotizaciones, dotando a la aplicación de filtrado global (deportivo y financiero), ordenamiento por precio y variación, y sigilo sobre el inventario del superusuario.
+
+**Independent Test**: Con usuarios autenticados y datos deportivos y de cotizaciones persistidos, consultar `GET /api/market/official` aplicando combinaciones de filtros, ordenamientos y paginación, verificando que los resultados coincidan exactamente con los criterios de negocio sobre el conjunto total sin exponer stock remanente ni saldo del superusuario. Puede probarse, verificarse y desplegarse independientemente sin requerir la ejecución previa de órdenes de compra.
+
+**Acceptance Scenarios**:
+
+| ID | Given | When | Then |
+| --- | --- | --- | --- |
+| AC20 | Usuario autenticado en el sistema | Consulta `GET /api/market/official` con o sin paginación básica | 200 OK con metadatos (`page`, `size`, `totalElements`, `totalPages`) y la lista de jugadores activos y visibles con su cotización vigente consolidada sobre el total de la base de datos (CA-01). |
+| AC21 | Jugador activo con cotización vigente en el sistema | Se incluye en la respuesta del catálogo | Informa `price`, `previousPrice`, `variationPercentage`, `performanceScore`, `multiplier`, `calculationOrigin`, `effectiveDate` y `calculatedAt` (CA-02). |
+| AC22 | Activo con cotización vigente que no posee precio anterior válido (`previousPrice` nulo o `<= 0`) | Se incluye en la respuesta del catálogo | El campo `variationPercentage` se devuelve estrictamente como `null` (CA-03). |
+| AC23 | Jugador activo y visible que no registra cotización vigente en el sistema | Se incluye en la respuesta del catálogo | Devuelve la identidad deportiva completa y el bloque `quote` en `null` (CA-04). |
+| AC24 | Catálogo con jugadores de diversas identidades deportivas | Se filtra por `name` (normalizado con recorte de espacios y búsqueda parcial insensible a mayúsculas/acentos), `leagueId`, `teamId`, `position` o `nationality` | Si `name` normalizado queda vacío se ignora el filtro de nombre; si contiene texto, reduce el conjunto global antes de paginar, actualizando consistentemente `totalElements` y `totalPages` (CA-05). |
+| AC25 | Catálogo con activos con y sin cotización | Se consulta con `hasQuote=true`, `hasQuote=false` o sin el parámetro | `true`: restringe exclusivamente a jugadores con cotización; `false`: restringe a jugadores sin cotización; ausente: incluye ambos conjuntos (CA-06). |
+| AC26 | Catálogo con activos valorizados | Se envían `minPrice` y `maxPrice` (en centésimas) donde `0 <= minPrice <= maxPrice` | Filtra activos cuya cotización vigente se encuentra en el rango inclusive (CA-07). |
+| AC27 | Solicitud con `minPrice < 0`, `maxPrice < 0` o `minPrice > maxPrice` | Se envía la consulta | 400 Bad Request con código `INVALID_PRICE_RANGE` (CA-07). |
+| AC28 | Filtros sintácticamente válidos pero mutuamente excluyentes (ej. `hasQuote=false` y `minPrice=5000`) | Se envía la consulta | 200 OK con lista vacía (`content: []`), `totalElements: 0` y `totalPages: 0`, sin producir error 400 (CA-08). |
+| AC29 | Consulta con ordenamiento por `price`, `variation`, `name` o `id` (ascendente o descendente) | Se solicita el listado ordenado con un único criterio principal | Aplica ordenación sobre el conjunto total y sitúa los valores nulos en `price` o `variation` al final (`NULLS LAST`) tanto en ASC como en DESC. Múltiples criterios explícitos responden 400 `INVALID_SORT_PARAMETER` (CA-09). |
+| AC30 | Múltiples registros con valores idénticos en el criterio de ordenación principal | Se recorren páginas consecutivas sobre un estado de datos estable (sin modificaciones concurrentes) | El desempate determinista por `id ASC` garantiza no omitir ni repetir jugadores entre páginas (CA-10). |
+| AC31 | Cualquier consulta al catálogo de emisión oficial | Se inspecciona la respuesta | No se expone ningún campo de stock, inventario remanente ni saldo del superusuario; la presencia de un jugador no afirma stock disponible para compra (CA-11). |
+| AC32 | Solicitud sin credenciales de sesión válidas o con sesión expirada | Intenta consultar el catálogo | 401 Unauthorized sin acceso a datos de catálogo (CA-12). |
+| AC33 | Transacción de compra existente `POST /api/orders/buy` | Se ejecuta antes o después de consultar el catálogo | Mantiene inalterado su contrato, validaciones, códigos de error y persistencia financiera (CA-13). |
+
+---
+
 ### Edge Cases
 
-Clasificación conforme a Constitution §2.2; las mejoras recomendadas no condicionan la aceptación.
+Clasificación conforme a Constitution §2.2:
 
-- **OBLIGATORIO — solicitudes simultáneas:** conservar stock, saldos y tenencias (AC08/09, FR-011/013/017).
+- **OBLIGATORIO — solicitudes de compra simultáneas:** conservar stock, saldos y tenencias (AC08/09, FR-011/013/017).
 - **OBLIGATORIO — repetición de una compra:** tratarla como una operación nueva si cumple las condiciones (AC11, FR-021).
 - **OBLIGATORIO — importe no representable o fallo del registro financiero:** rechazar sin movimientos parciales (AC13/16, FR-011/014/022).
 - **OBLIGATORIO — comprador sin cuenta de créditos:** rechazar por créditos insuficientes, sin asignarlos durante la compra (FR-010/015).
 - **OBLIGATORIO — reejecución de la asignación inicial o reinicio:** conservar recursos y registros existentes, sin restaurar créditos ni reemitir tokens (FR-014/015/016).
-- **OBLIGATORIO — vendedor no identificable:** si el superusuario no existe o no puede resolverse, la compra se rechaza con 500 `INTERNAL_ERROR` genérico sin movimientos parciales ni auditoría (FR-023, AC19). Es integridad transaccional: un fallo posterior dejaría una compra parcial.
+- **OBLIGATORIO — vendedor no identificable:** si el superusuario no existe o no puede resolverse, la compra se rechaza con 500 `INTERNAL_ERROR` genérico sin movimientos parciales ni auditoría (FR-023, AC19).
+- **OBLIGATORIO — activo sin cotización en el catálogo oficial:** se devuelve con `quote: null` sin producir error de servidor (AC23, FR-027).
+- **OBLIGATORIO — cotización inicial sin precio previo:** se calcula con `variationPercentage: null` cuando `previousPrice` es nulo o `<= 0` (AC22, FR-028).
+- **OBLIGATORIO — precios negativos o rango invertido:** si `minPrice < 0`, `maxPrice < 0` o `minPrice > maxPrice`, responder 400 Bad Request `INVALID_PRICE_RANGE` antes de consultar datos (AC27, FR-031).
+- **OBLIGATORIO — nombre vacío o solo espacios en blanco:** normalizar aplicando recorte (`trim`); si el texto resultante queda vacío, se omite el filtro de nombre devolviendo todos los jugadores (AC24, FR-029).
+- **OBLIGATORIO — múltiples criterios de ordenamiento en la solicitud:** admitir estrictamente un único criterio de ordenación principal; responder 400 `INVALID_SORT_PARAMETER` si se envían múltiples criterios (AC29, FR-033).
+- **OBLIGATORIO — filtros válidos pero lógicamente excluyentes:** responder 200 OK con lista vacía y totales en cero, sin error 400 (AC28, FR-032).
+- **OBLIGATORIO — ordenamiento con valores nulos:** en `price` y `variation` (ASC y DESC), ubicar los nulos estrictamente al final (`NULLS LAST`) (AC29, FR-033).
+- **OBLIGATORIO — sigilo de inventario:** la respuesta de catálogo no debe revelar jamás el stock remanente del superusuario (AC31, FR-035).
+- **OBLIGATORIO — paginación fuera de rango:** si se solicita un número de página superior al total de páginas disponibles, responde 200 OK con `content: []`, conservando los totales globales (FR-036).
 - **RECOMENDADO — compra y desactivación simultáneas:** garantizar un orden estricto entre ambas es una mejora no bloqueante. Se exige elegibilidad al validar la compra, no que permanezca sin cambios hasta su confirmación (D3).
 
-Stock y créditos insuficientes, entradas inválidas, jugador inexistente o no visible y cotización ausente o inválida son validaciones obligatorias ya cubiertas por AC02–AC06, AC12/15 y FR-004–FR-010; no requieren escenarios borde adicionales. La asignación inicial se verifica en los prerrequisitos AC10/17/18.
+---
 
-## Requirements
+## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-Los requisitos siguientes son obligatorios para US1 o para sus prerrequisitos funcionales.
+#### Requisitos de Compra de Tokens (US1 y Prerrequisitos)
 
 - **FR-001**: El sistema MUST exponer `POST /api/orders/buy` para comprar tokens contra el superusuario.
 - **FR-002**: El sistema MUST aceptar solicitudes de compra solo de usuarios autenticados cuya identidad reconoce; el solicitante no puede elegir otra identidad de comprador.
 - **FR-003**: El sistema MUST autorizar la compra solo a usuarios normales según su rol vigente; el superusuario recibe 403 `SUPERUSER_CANNOT_BUY`.
 - **FR-004**: La solicitud MUST incluir `playerId` entero y `quantity`; entradas ausentes o no interpretables se rechazan con 400, sin ejecutar la compra.
-- **FR-005**: `quantity` MUST ser un literal entero JSON representable como Integer (−2147483648 a 2147483647) y estar entre 1 y 100 inclusive. Si está ausente, es `null`, string (incluso numérico), booleano, array, objeto, representación decimal (como `10.0`), notación exponencial (como `1e1`) o entero fuera del rango de Integer, MUST responder 400 `INVALID_REQUEST` antes de invocar `BuyOrderService`, conforme a FR-004. Un entero representable fuera de 1–100 MUST responder 400 `INVALID_QUANTITY`. No se permiten coerciones implícitas, redondeo ni truncamiento. Una cantidad válida permite continuar el caso de uso, sin omitir las restantes condiciones de compra.
+- **FR-005**: `quantity` MUST ser un literal entero JSON representable como Integer (−2147483648 a 2147483647) y estar entre 1 y 100 inclusive. Si está ausente, es `null`, string, booleano, array, objeto, decimal o entero fuera de rango, MUST responder 400 `INVALID_REQUEST`. Un entero representable fuera de 1–100 MUST responder 400 `INVALID_QUANTITY`. No se permiten coerciones implícitas, redondeo ni truncamiento.
 - **FR-006**: El sistema MUST comprobar que el jugador exista y esté activo y visible según las reglas vigentes del catálogo al validar la compra; responde 404 `PLAYER_NOT_FOUND` o `PLAYER_NOT_VISIBLE` en caso contrario.
 - **FR-007**: El sistema MUST utilizar el precio vigente por token: 409 `QUOTE_UNAVAILABLE` si no está disponible y 409 `INVALID_QUOTE_PRICE` si no es positivo. No utiliza precios de respaldo propios de la compra.
 - **FR-008**: El importe MUST ser `quantity × unitPrice`, utilizando el mismo precio aplicado en la transferencia, respuesta y auditoría. Los importes se expresan en centésimas de crédito.
@@ -84,93 +128,130 @@ Los requisitos siguientes son obligatorios para US1 o para sus prerrequisitos fu
 - **FR-011**: Una compra MUST confirmarse solo si se completan todos sus movimientos de créditos y tokens y su registro financiero. Ante cualquier fallo, los recursos deben quedar como antes de la operación, sin movimientos parciales; también en compras simultáneas.
 - **FR-012**: Una compra confirmada MUST restar al superusuario y sumar al comprador exactamente la cantidad comprada, incluyendo su primera tenencia.
 - **FR-013**: Una compra confirmada MUST debitar al comprador y acreditar al superusuario exactamente el mismo importe, sin crear ni perder créditos en la transferencia y sin saldos negativos.
-- **FR-014**: Cada compra confirmada MUST tener exactamente un registro financiero con autor (comprador autenticado), comprador, vendedor, jugador, cantidad, precio aplicado, importe, fecha/hora y saldos y tenencias anteriores y posteriores de ambas partes. Debe conservar los valores de la operación y permanecer sin modificaciones ni eliminaciones durante las operaciones normales del sistema. Una compra no confirmada no debe quedar registrada como exitosa.
-- **FR-015**: Cada usuario normal MUST recibir 100 créditos iniciales y el superusuario 0, una sola vez. Incluye usuarios preexistentes; en altas nuevas, cuenta y saldo se confirman juntos. Reejecutar la inicialización o reiniciar no sobrescribe cuentas ni restaura créditos consumidos. La compra nunca crea créditos para compensar una cuenta ausente.
-- **FR-016**: Cada jugador, existente o nuevo, MUST tener una única emisión inicial de 100 tokens, todos propiedad del superusuario, antes de operar. Repetir su habilitación o reiniciar el sistema no repone tokens vendidos ni vuelve a emitirlos. Toda llamada exitosa al aprovisionamiento del SUPERUSER MUST recuperar jugadores sin registro de emisión, incluidos inactivos, tanto si el propietario es nuevo como si ya existe (también con configuración deshabilitada). La emisión y su tenencia inicial se confirman en la misma transacción del aprovisionamiento; cualquier fallo revierte la operación completa. No se modifican emisiones existentes, tenencias de compradores, créditos existentes ni auditorías. Tenencias sin emisión o emisiones sin tenencia del propietario inicial MUST provocar rechazo, sin reparación automática; una tenencia con cantidad cero no se considera ausente.
+- **FR-014**: Cada compra confirmada MUST tener exactamente un registro financiero con autor, comprador, vendedor, jugador, cantidad, precio aplicado, importe, fecha/hora y saldos y tenencias anteriores y posteriores de ambas partes. Debe conservar los valores y permanecer sin modificaciones ni eliminaciones.
+- **FR-015**: Cada usuario normal MUST recibir 100 créditos iniciales y el superusuario 0, una sola vez. En altas nuevas, cuenta y saldo se confirman juntos. Reejecutar la inicialización o reiniciar no restaura créditos consumidos.
+- **FR-016**: Cada jugador MUST tener una única emisión inicial de 100 tokens, todos propiedad del superusuario, antes de operar. Repetir su habilitación o reiniciar no repone tokens vendidos ni vuelve a emitirlos.
 - **FR-017**: La suma de tenencias de cada jugador emitido MUST permanecer exactamente en 100 tras las operaciones válidas, incluso concurrentes; no hay sobreventa ni tenencias negativas.
 - **FR-018**: La respuesta exitosa MUST ser 200 con `transactionId`, `playerId`, `quantity`, `unitPrice`, `totalAmount` y `executedAt` de la compra confirmada.
-- **FR-019**: Las respuestas de error MUST respetar el [contrato público de compra](contracts/buy-tokens.md), sin revelar detalles internos. Los fallos de procesamiento, distintos de los rechazos de negocio documentados, responden 500 `INTERNAL_ERROR` genérico.
+- **FR-019**: Las respuestas de error MUST respetar el [contrato público de compra](contracts/buy-tokens.md), sin revelar detalles internos. Los fallos no controlados responden 500 `INTERNAL_ERROR`.
 - **FR-020**: El endpoint, autenticación, request, respuesta y errores MUST documentarse en OpenAPI.
-- **FR-021**: Cada solicitud de compra que cumpla las condiciones para confirmarse MUST representar una operación independiente, incluso cuando repita una solicitud anterior. Si el cliente no recibe una respuesta, no puede asumir que la compra haya fallado; repetir la solicitud puede confirmar una compra adicional.
-- **FR-022**: Si el importe de la compra o un saldo resultante no puede representarse correctamente, el sistema MUST rechazar con 500 `INTERNAL_ERROR` genérico, sin alterar créditos ni tokens ni registrar una compra confirmada.
-- **FR-023**: La compra MUST identificar al superusuario como vendedor persistido antes de mover recursos. Si no existe o no es identificable, el sistema MUST rechazar con 500 `INTERNAL_ERROR` genérico, sin débitos, sin crear ni modificar tenencias y sin registrar auditoría. La comprobación ocurre antes de cualquier transferencia y MUST NOT requerir un estado HTTP ni un código de error propio: reutiliza el fallo interno genérico ya definido en el contrato.
+- **FR-021**: Cada solicitud de compra válida MUST representar una operación independiente, incluso cuando repita una anterior.
+- **FR-022**: Si el importe de la compra o un saldo resultante no puede representarse correctamente, el sistema MUST rechazar con 500 `INTERNAL_ERROR` genérico, sin movimientos parciales.
+- **FR-023**: La compra MUST identificar al superusuario como vendedor persistido antes de mover recursos; si no es identificable, rechaza con 500 `INTERNAL_ERROR` genérico sin movimientos ni auditoría.
 
-### Key Entities
+#### Requisitos del Catálogo del Mercado Oficial (US2 — Issue #90)
 
-- **Usuario**: Persona registrada con un rol, una cuenta de créditos y tenencias. El superusuario es el propietario inicial de los tokens y el vendedor de las compras de esta funcionalidad; no compra.
-- **Jugador**: Recurso del catálogo cuya elegibilidad se valida antes de comprar.
-- **Tenencia**: Cantidad de tokens de un jugador propiedad de un usuario.
-- **Cuenta de créditos**: Recursos disponibles de un usuario para operar en el mercado.
-- **Compra registrada**: Operación confirmada entre comprador y vendedor para un jugador, con su detalle financiero y los estados anteriores y posteriores.
-- **Cotización vigente**: Precio actual de un token de un jugador, utilizado para determinar el importe de la compra.
+- **FR-024**: El sistema MUST exponer `GET /api/market/official` para la consulta paginada del catálogo de emisión oficial del mercado primario conforme al [contrato público del catálogo](contracts/official-catalog.md).
+- **FR-025**: El sistema MUST requerir autenticación para invocar `GET /api/market/official`; solicitudes sin sesión autenticada válida responden 401 Unauthorized.
+- **FR-026**: El catálogo MUST devolver exclusivamente jugadores activos y visibles según las reglas de elegibilidad del catálogo deportivo. La inclusión de un jugador en la respuesta no afirma disponibilidad de stock del superusuario.
+- **FR-027**: Cada activo devuelto MUST integrar su cotización vigente consolidada en la misma respuesta cuando exista (`price`, `previousPrice`, `variationPercentage`, `performanceScore`, `multiplier`, `calculationOrigin`, `effectiveDate`, `calculatedAt`). Si el jugador no registra cotización vigente, el bloque `quote` MUST devolverse como `null`.
+- **FR-028**: Si un activo tiene cotización pero no posee un precio previo válido (`previousPrice` es nulo o `<= 0`), el campo `variationPercentage` MUST devolverse como `null`. Una variación calculable con precio idéntico al anterior MUST devolverse como `0.0`.
+- **FR-029**: El sistema MUST admitir filtros deportivos sobre el conjunto completo de la base de datos antes de paginar: `name` (búsqueda parcial insensible a mayúsculas y acentos tras aplicar recorte de espacios; si queda vacío se ignora el filtro), `leagueId`, `teamId`, `position` y `nationality`.
+- **FR-030**: El sistema MUST admitir el filtro booleano `hasQuote`: si está ausente devuelve activos con y sin cotización; si es `true` restringe la consulta y los totales exclusivamente a jugadores con cotización; si es `false` restringe exclusivamente a jugadores sin cotización.
+- **FR-031**: El sistema MUST admitir filtros por rango de precio unitario vigente (`minPrice` y `maxPrice` en centésimas de crédito no negativas) aplicados de forma inclusiva sobre el universo completo. Si `minPrice < 0`, `maxPrice < 0` o `minPrice > maxPrice`, MUST responder 400 Bad Request con código `INVALID_PRICE_RANGE`.
+- **FR-032**: Combinaciones de filtros válidos sintácticamente pero sin coincidencias lógicas (ej. `hasQuote=false` combinado con rango de precio) MUST responder 200 OK con `content: []`, `totalElements: 0` y `totalPages: 0`, sin producir error 400.
+- **FR-033**: El endpoint MUST soportar exactamente un **único criterio de ordenamiento principal explícito** entre `price`, `variation`, `name` e `id` en sentidos ascendente (`asc`) y descendente (`desc`). En ordenamientos por `price` o `variation`, los valores nulos MUST posicionarse al final (`NULLS LAST`), tanto en sentido ascendente como descendente. Múltiples criterios explícitos o parámetros inválidos MUST responder 400 Bad Request con código `INVALID_SORT_PARAMETER`.
+- **FR-034**: La paginación MUST desempatar de forma determinista por identificador de jugador (`id ASC`) ante igualdad en los criterios de ordenamiento principales, garantizando que no se omitan ni repitan elementos al recorrer páginas consecutivas sobre conjuntos de datos estables (sin modificaciones concurrentes).
+- **FR-035**: El catálogo MUST respetar el sigilo de inventario: la respuesta no debe exponer el stock, tenencias ni balances remanentes del superusuario.
+- **FR-036**: La respuesta paginada MUST proporcionar metadatos estándar (`page`, `size`, `totalElements`, `totalPages`) coherentes con los filtros aplicados sobre la totalidad de los datos.
 
-## Success Criteria
+---
+
+### Key Entities *(mandatory)*
+
+- **Usuario**: Persona registrada en el sistema. Los usuarios normales compran tokens; el superusuario es el emisor y vendedor en el mercado primario.
+- **Jugador**: Recurso del catálogo con identidad deportiva (nombre, posición, nacionalidad, equipo, liga e imágenes) cuya elegibilidad se valida para operar.
+- **Cotización vigente**: Valuación canónica de un jugador en una fecha de vigencia, que define su precio unitario, precio previo, score técnico, multiplicador y variación porcentual.
+- **Catálogo Oficial**: Proyección de lectura consolidada que combina la identidad deportiva del jugador con su cotización vigente para el mercado primario.
+- **Tenencia**: Cantidad de tokens de un jugador que posee un usuario determinado.
+- **Cuenta de créditos**: Balance monetario disponible de un usuario en el sistema.
+- **Compra registrada**: Asiento financiero inmutable que documenta la transferencia de créditos y tokens entre comprador y superusuario.
+
+---
+
+## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
 - **SC-001**: Cada compra confirmada entrega los datos de FR-018 y transfiere exactamente la cantidad solicitada y su importe, incluida la primera compra de un jugador por el usuario.
 - **SC-008**: Después de compras sucesivas, el total de tokens por jugador emitido sigue siendo 100 y la suma de créditos de las partes no cambia por las transferencias.
 - **SC-009**: Ninguna compra confirmada o rechazada deja créditos o tenencias negativos.
-- **SC-010**: Hay exactamente un registro completo por compra confirmada y ninguno de compra exitosa por operación rechazada. Ante cualquier fallo, incluido un importe no representable o un fallo de registro, los saldos y tenencias quedan intactos. Los registros históricos conservan su contenido durante las operaciones normales.
-- **SC-011**: Las compras simultáneas confirman únicamente cantidades que pueden abastecerse y financiarse, sin doble gasto ni sobreventa, y conservan los resultados SC-008–SC-010.
+- **SC-010**: Hay exactamente un registro completo por compra confirmada y ninguno de compra exitosa por operación rechazada. Ante cualquier fallo, saldos y tenencias quedan intactos.
+- **SC-011**: Las compras simultáneas confirman únicamente cantidades que pueden abastecerse y financiarse, sin doble gasto ni sobreventa.
 - **SC-012**: Cada jugador recibe una sola emisión de 100 tokens; repetir su habilitación o reiniciar no incrementa el total ni restaura inventario vendido (AC17).
 - **SC-013**: Cada usuario, nuevo o preexistente, recibe su saldo inicial una sola vez; no hay altas confirmadas sin saldo inicial ni restauración de créditos consumidos (AC10/18).
-- **SC-014**: Las respuestas de aceptación y rechazo coinciden con el contrato público documentado en OpenAPI, incluidos campos, unidades monetarias, autenticación, errores y ausencia de revelaciones prohibidas.
+- **SC-014**: Las respuestas de aceptación y rechazo coinciden con los contratos públicos documentados en OpenAPI, incluidos campos, unidades monetarias, autenticación, errores y ausencia de revelaciones prohibidas.
 - **SC-016**: Dos solicitudes iguales que cumplen las condiciones producen dos compras con identificadores y registros financieros distintos.
+- **SC-017**: La consulta `GET /api/market/official` consolida la identidad deportiva y la cotización vigente en una única respuesta, eliminando el patrón N+1 de peticiones individuales en clientes consumidores.
+- **SC-018**: Todos los filtros (deportivos, financieros y de cotización) y ordenamientos se aplican sobre la totalidad de la base de datos antes de generar la paginación, reflejándose consistentemente en `totalElements` y `totalPages`.
+- **SC-019**: El 100% de las consultas ordenadas por precio o variación ubican los valores nulos al final de la colección (`NULLS LAST`), tanto en sentido ascendente como descendente.
+- **SC-020**: El 100% de las respuestas del catálogo oficial respetan el sigilo de inventario, sin exponer cantidades remanentes de emisión ni saldos del superusuario.
+- **SC-021**: El endpoint de compra `POST /api/orders/buy` mantiene el 100% de compatibilidad hacia atrás en sus contratos, validaciones y efectos transaccionales.
 
-**Referencias consolidadas**: SC-002–SC-007 quedan integrados en SC-014, con sus comportamientos cubiertos por AC02/03/04/06/07/15. SC-015 queda integrado en SC-010 y SC-014, con cobertura en AC13. Estos IDs se conservan como referencias, no como criterios adicionales.
+---
 
 ## Assumptions
 
-No se requieren supuestos funcionales adicionales a las decisiones aprobadas y las dependencias siguientes.
+- **A01**: El mecanismo canónico de cotizaciones persistidas de `SPEC-016` (feature `quote`) es la única fuente de la verdad para determinar el precio vigente de un activo.
+- **A02**: La autenticación se resuelve mediante los mecanismos de seguridad vigentes (JWT/Spring Security) sin introducir protocolos alternativos.
+- **A03**: Los importes monetarios y precios unitarios se expresan uniformemente en centésimas de crédito (integer/Long: 100 unidades = 1.00 crédito).
+- **A04**: Los clientes consumidores gestionan la paginación con índice base 0 conforme al estándar del backend.
+- **A05**: La disponibilidad de stock del superusuario es dinámica y se protege estrictamente en la transacción de compra; el catálogo no garantiza reserva previa.
 
-### Dependencias funcionales
-
-- **SPEC-001/003**: registro, identificación y autenticación de usuarios; distinción entre usuario normal y superusuario único.
-- **SPEC-002/007**: catálogo con existencia y elegibilidad vigentes de los jugadores.
-- **REQ-S2-03**: cotización vigente por token. Su cálculo y la fórmula de evolución no pertenecen a la compra.
-- **Prerrequisitos de US1**: saldo inicial e inventario emitido conforme a AC10/17/18. Sin precio válido, vendedor o recursos disponibles no se confirma la compra; la ausencia de vendedor se rechaza explícitamente conforme a FR-023 y AC19.
-
-Los objetivos de rendimiento generales corresponden al proyecto, conforme a TP §5.3; no se fija aquí un umbral no acordado ni se confunde rapidez con integridad de compras simultáneas.
+---
 
 ## Clarifications
 
-### Session 2026-10-14
+### Session 2026-10-14 & 2026-10-15 (Compra de tokens)
 
 | ID | Decisión vigente |
 | --- | --- |
 | CL-01 | Importes en centésimas: 1 crédito = 100 unidades. |
 | CL-02 | La cotización consumida expresa precio por token; el precio inicial definido por TP es 1 crédito. |
 | CL-03 | La compra consume el precio vigente; la fórmula y creación de cotizaciones pertenecen a REQ-S2-01/03. |
-| CL-04 | Se conservan los estados anteriores y posteriores de saldos y tenencias, y el precio aplicado con su procedencia; comprar no cambia la cotización. |
-| CL-05 | El superusuario no puede comprar tokens, independientemente de su saldo de créditos o de la disponibilidad de tokens del jugador. |
+| CL-04 | Se conservan los estados anteriores y posteriores de saldos y tenencias; comprar no cambia la cotización. |
+| CL-05 | El superusuario no puede comprar tokens. |
 | D1 | Cada solicitud válida es una compra nueva, aunque repita una anterior. |
-| D2 | Usuario normal inicia con 100 créditos y superusuario con 0; incluye usuarios preexistentes. El alta y el saldo inicial se confirman juntos, sin restauración posterior. |
-| D4 | Si un importe no puede representarse correctamente, no hay movimientos ni compra confirmada y se responde 500 genérico. |
+| D2 | Usuario normal inicia con 100 créditos y superusuario con 0. |
+| D3 | Opción A aprobada: se comprueba elegibilidad al validar la compra; orden compra/desactivación es recomendado no bloqueante. |
+| D4 | Importe no representable rechaza con 500 sin movimientos ni compra confirmada. |
 | D5 | Stock insuficiente: rechazo total sin revelar stock; tampoco se revela saldo en errores de créditos. |
 
-### Session 2026-10-15
+### Session 2026-11-12 (Evolución Issue #90 — Catálogo del Mercado Oficial)
 
-- **D3 — opción A aprobada**: se comprueba elegibilidad al validar la compra. Garantizar un orden estricto con una desactivación simultánea posterior es recomendado y no bloqueante; no cambia las garantías obligatorias entre compradores simultáneos.
-- **Emisión inicial**: 100 tokens por jugador, propiedad inicial del superusuario, una sola vez y sin reposición del inventario vendido (FR-016).
+| ID | Decisión vigente |
+| --- | --- |
+| D6 | La presencia de un jugador en el catálogo oficial refleja su elegibilidad y visibilidad general, pero no afirma stock disponible para compra. El inventario se valida exclusivamente en `POST /api/orders/buy`. |
+| D7 | `variationPercentage` es estrictamente `null` si `previousPrice` es nulo o menor o igual a cero (cotizaciones iniciales o sin variación válida). Variación cero se expresa como `0.0`. |
+| D8 | El filtro `hasQuote` tiene semántica tri-estado: ausente incluye todos; `true` restringe a activos con cotización; `false` restringe a activos sin cotización. |
+| D9 | Filtros sintácticamente válidos pero mutuamente excluyentes o sin coincidencias lógicas responden `200 OK` con `content: []` y totales en 0. El error `400 Bad Request` queda reservado para parámetros con sintaxis o rango inválidos (`minPrice > maxPrice`, paginación negativa, etc.). |
+| D10 | En ordenamientos por `price` o por `variation` (ascendente y descendente), los valores nulos siempre se ubican al final (`NULLS LAST`). |
+| D11 | El desempate determinista por `id ASC` aplica sobre conjuntos de datos sin modificaciones concurrentes entre consultas consecutivas. |
+| D12 | Si `minPrice < 0` o `maxPrice < 0`, la solicitud se rechaza con `400 Bad Request` (`INVALID_PRICE_RANGE`), ya que los precios monetarios son valores no negativos. |
+| D13 | El parámetro `sort` admite exactamente un único criterio principal de ordenamiento explícito; solicitudes con múltiples criterios o parámetros repetidos se rechazan con `400 Bad Request` (`INVALID_SORT_PARAMETER`). |
+| D14 | El filtro `name` se normaliza aplicando recorte de espacios (`trim`); si tras recortar el valor queda vacío, se omite el filtrado de nombre sin emitir error. |
 
-## Precondición operativa de recuperación (H06)
-
-El arranque normal utiliza aprovisionamiento habilitado antes de admitir sincronizaciones normales
-del catálogo. No se ejecutan sincronizaciones concurrentes con aprovisionamientos manuales
-posteriores. La recuperación no proporciona coordinación distribuida ni garantiza atomicidad
-global entre múltiples instancias. La ausencia de emisión, no el stock cero o parcialmente
-vendido, identifica a un jugador pendiente.
+---
 
 ## Out of Scope
 
-- Venta, ofertas y mercado secundario (REQ-S2-07).
-- Portfolio y consulta de historial (REQ-S2-09/10); el registro sí queda preparado para futuras consultas.
-- Cálculo, recálculo, consulta y fórmula de cotizaciones (REQ-S2-01/03/04/05/11).
-- Frontend, scraping, recargas, comisiones, spreads, órdenes pendientes y ejecuciones parciales.
-- Ordenamiento estricto compra/desactivación y reparación automática de alteraciones manuales ajenas a las operaciones normales.
+- Modificar el flujo, contrato, validaciones o persistencia de `POST /api/orders/buy`.
+- Exponer el inventario, stock remanente o balance del superusuario.
+- Incluir en la respuesta del catálogo el desglose completo de 60 métricas de `player_statistics`.
+- Modificar pantallas, hojas de estilo o componentes frontend (correspondiente a `SPEC-019`).
+- Implementar funcionalidades del mercado secundario P2P o venta de tokens (`SPEC-011`).
+- Generar cotizaciones retroactivas o recalcular precios durante la consulta de lectura.
+
+---
 
 ## Trazabilidad
 
-- **REQ origen**: [REQ-S2-06](https://trello.com/c/aJe4VVNt).
-- **Fuentes**: `tp/enunciado.md` §3.3, §4, §5.2 y §6; `tp/entregas.md`, Sprint 2 (03/11/2026).
+- **REQ origen**: [REQ-S2-06 (#49)](https://github.com/YoelSLA/football-market/issues/49) (Compra de tokens al superusuario).
+- **Issue de evolución**: [Issue #90](https://github.com/YoelSLA/football-market/issues/90) (`SPEC-010 | Catálogo del Mercado Oficial con cotizaciones integradas`, Sprint 3).
+- **Contratos asociados**:
+  - [Contrato de Compra Directa](contracts/buy-tokens.md) (`POST /api/orders/buy`)
+  - [Contrato de Catálogo Oficial](contracts/official-catalog.md) (`GET /api/market/official`)
+- **Dependencias funcionales**:
+  - `SPEC-002` ([#17](https://github.com/YoelSLA/football-market/issues/17)): Catálogo deportivo base.
+  - `SPEC-016` ([#18](https://github.com/YoelSLA/football-market/issues/18) / [#39](https://github.com/YoelSLA/football-market/issues/39)): Cotización vigente canónica.
+  - `SPEC-019` ([#42](https://github.com/YoelSLA/football-market/issues/42)): Interfaz web de compra de tokens (consumidora de este endpoint).
