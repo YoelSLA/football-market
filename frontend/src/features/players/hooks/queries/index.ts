@@ -1,8 +1,10 @@
 export { useAllPlayersQuery } from "./useAllPlayersQuery";
 export { usePlayerCatalogFiltersQuery } from "./usePlayerCatalogFiltersQuery";
+export { usePlayerCurrentQuoteQuery } from "./usePlayerCurrentQuoteQuery";
 export { usePlayerDetailQuery } from "./usePlayerDetailQuery";
 export { usePlayerQuoteRankingPodiumQuery } from "./usePlayerQuoteRankingPodiumQuery";
 export { usePlayerQuoteRankingQuery } from "./usePlayerQuoteRankingQuery";
+export { usePlayerQuotesQuery } from "./usePlayerQuotesQuery";
 export { usePlayerSampleSeasonQuery } from "./usePlayerSampleSeasonQuery";
 export { usePlayerScoreRankingPodiumQuery } from "./usePlayerScoreRankingPodiumQuery";
 export { usePlayerScoreRankingQuery } from "./usePlayerScoreRankingQuery";

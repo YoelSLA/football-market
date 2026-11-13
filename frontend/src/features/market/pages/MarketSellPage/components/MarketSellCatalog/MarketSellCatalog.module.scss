@@ -9,8 +9,8 @@
 	// 7. ⚙️ Behavior
 	overflow: auto;
 	overscroll-behavior: contain;
-	scrollbar-width: thin;
-	scrollbar-color: ds.$border-panel ds.$surface-page;
+	scrollbar-gutter: stable;
+
 	&__grid {
 		// 3. 🧩 Layout
 		display: grid;

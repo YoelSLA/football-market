@@ -120,3 +120,21 @@ export interface QuoteRankingResponseDTO {
 	totalPages: number;
 	filterOptions: RankingFilterOptionsDTO;
 }
+
+export interface PlayerQuoteResponseDTO {
+	effectiveDate: string;
+	price: number;
+	previousPrice: number | null;
+	multiplier: number | string;
+	score: number | string | null;
+	strategy: string | null;
+	strategyVersion: string | null;
+	sourceValuationDate: string | null;
+	origin: "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD" | string;
+	calculatedAt: string;
+}
+
+export interface PlayerQuoteHistoryResponseDTO {
+	playerId: number;
+	quotes: PlayerQuoteResponseDTO[];
+}

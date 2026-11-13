@@ -94,8 +94,6 @@ export interface SellQuantityForm {
 	quantity: string;
 }
 
-export type MarketTab = "official" | "community";
-
 export interface MarketListing {
 	listingId: number;
 	sellerId: number;

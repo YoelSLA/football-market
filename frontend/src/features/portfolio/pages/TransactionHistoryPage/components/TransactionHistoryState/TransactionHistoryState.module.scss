@@ -1,0 +1,41 @@
+@use "@/styles/abstracts" as ds;
+
+.transactionHistoryState {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	flex-direction: column;
+	gap: ds.$space-2xs;
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 0;
+	padding: ds.$space-2xs;
+	text-align: center;
+
+	&__loading,
+	&__errorMessage,
+	&__errorDetail {
+		margin: 0;
+	}
+
+	&__loading {
+		color: ds.$text-subtle-on-dark;
+		font-size: 13px;
+	}
+
+	&__errorMessage {
+		color: ds.$state-error-on-dark;
+		font-size: 13px;
+		font-weight: 600;
+	}
+
+	&__errorDetail {
+		color: ds.$text-dimmed-on-dark;
+		font-size: 12px;
+	}
+
+	&__retryButton {
+		margin: 0;
+	}
+}

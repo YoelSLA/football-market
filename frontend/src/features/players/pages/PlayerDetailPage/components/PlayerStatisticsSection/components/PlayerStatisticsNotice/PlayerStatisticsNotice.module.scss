@@ -1,0 +1,38 @@
+@use "@/styles/abstracts" as ds;
+
+.notice {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	padding: 10px 14px;
+	margin-bottom: 12px;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 6px;
+	background-color: ds.$surface-panel-to;
+
+	&__title {
+		// 3. 🧩 Layout
+		display: block;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 600;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__description {
+		// 4. 📦 Box Model
+		margin: 2px 0 0;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+}

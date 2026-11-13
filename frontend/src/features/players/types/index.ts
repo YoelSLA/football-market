@@ -2,6 +2,8 @@ export type {
 	PlayerCatalogFiltersDTO,
 	PlayerCatalogStatisticsDTO,
 	PlayerMetricResponseDTO,
+	PlayerQuoteHistoryResponseDTO,
+	PlayerQuoteResponseDTO,
 	PlayerResponseDTO,
 	PlayerStatisticsResponseDTO,
 	PlayersPageResponseDTO,
@@ -19,6 +21,9 @@ export type {
 	PlayerCatalogStatistics,
 	PlayerDetail,
 	PlayerMetric,
+	PlayerQuote,
+	PlayerQuoteHistory,
+	PlayerQuoteOrigin,
 	PlayerRankingItem,
 	PlayerSampleSeason,
 	PlayerSampleStatistics,
@@ -37,3 +42,9 @@ export type {
 	TokenQuoteSeries,
 	TokenQuoteSnapshot,
 } from "./models";
+export type {
+	PlayerDetailState,
+	PlayerHeadlineMetric,
+	QueryState,
+	StatisticsTab,
+} from "./playerDetail";

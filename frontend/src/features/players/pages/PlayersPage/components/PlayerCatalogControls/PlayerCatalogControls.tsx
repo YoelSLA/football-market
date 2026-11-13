@@ -6,7 +6,6 @@ import type {
 import { getNationalityFlag } from "@/features/players/utils";
 import { Button } from "@/shared/components";
 import { Globe, List, Shield, UsersRound, X } from "@/shared/icons";
-import { getLeagueShield } from "@/shared/utils/leagueShield";
 import { getTeamShield } from "@/shared/utils/teamShield";
 import ImageSelect, { type ImageSelectOption } from "./ImageSelect";
 import styles from "./PlayerCatalogControls.module.scss";
@@ -50,7 +49,7 @@ export default function PlayerCatalogControls({
 		...(options?.leagues.map((league) => ({
 			value: String(league.id),
 			label: league.name,
-			image: getLeagueShield(league.name),
+			imageType: "competition" as const,
 		})) ?? []),
 	];
 

@@ -11,7 +11,7 @@ handoffs:
 
 ## Reglas locales obligatorias
 
-MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Plan autorizado; el siguiente paso es Checklists evaluados, no Tasks automáticamente. MUST NOT ejecutar tests ni hooks incompatibles. MUST preservar artefactos existentes fuera del alcance y registrar evidencia de fase.
+MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Plan autorizado; el siguiente paso es Checklists evaluados, no Tasks automáticamente. `plan.md` forma parte de la tríada obligatoria permanente junto a `spec.md` y `tasks.md`; como documentación viva (Constitución §V), describe exclusivamente el diseño técnico y contratos vigentes, delegando el historial a Git. MUST NOT ejecutar tests ni hooks incompatibles. MUST preservar artefactos existentes fuera del alcance y registrar evidencia de fase.
 
 **Modelo normativo (Arquitectura de 3 niveles - Nivel 1)**: Principal `Claude Opus 5.5` (`opencode/claude-opus-5-5`) | Respaldo `GPT Astra` (`opencode/gpt-6-astra`) para arquitectura estructural y APIs.
 

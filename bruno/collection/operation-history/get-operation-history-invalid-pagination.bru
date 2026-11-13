@@ -1,0 +1,32 @@
+meta {
+  name: Rechazar paginación fuera de rango (400)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/users/me/transactions?page=-1&size=101
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: -1
+  size: 101
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

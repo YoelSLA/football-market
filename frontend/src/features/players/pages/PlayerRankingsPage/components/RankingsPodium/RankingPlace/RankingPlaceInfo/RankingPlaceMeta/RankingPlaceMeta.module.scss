@@ -54,6 +54,15 @@
 		box-shadow: 0 1px 3px ds.$shadow-black-deep;
 	}
 
+	&__competitionLogo {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 20px;
+		height: 20px;
+	}
+
 	&__teamName,
 	&__leagueName {
 		// 5. 🔤 Typography

@@ -1,0 +1,99 @@
+@use "@/styles/abstracts" as ds;
+
+.playerStatisticsRelevanceLegend {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 12px;
+
+	// 4. 📦 Box Model
+	min-height: 40px;
+	padding-left: 12px;
+	border-left: 1px solid ds.$border-panel;
+
+	// 5. 🔤 Typography
+	white-space: nowrap;
+
+	&__title {
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 700;
+
+		// 6. 🎨 Visual
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__item {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 400;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__dot {
+		// 3. 🧩 Layout
+		display: inline-block;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+
+		&_principal {
+			background-color: ds.$accent-highlight;
+		}
+
+		&_secondary {
+			background-color: ds.$accent-nav;
+		}
+
+		&_low {
+			background-color: ds.$text-muted-on-dark;
+		}
+	}
+}
+
+@include ds.down(ds.$bp-tablet) {
+	.playerStatisticsRelevanceLegend {
+		gap: 8px;
+		padding-left: 10px;
+
+		&__title {
+			font-size: 11px;
+		}
+
+		&__item {
+			gap: 4px;
+			font-size: 11px;
+		}
+
+		&__dot {
+			width: 7px;
+			height: 7px;
+		}
+	}
+}
+
+@include ds.down(ds.$bp-2xs) {
+	.playerStatisticsRelevanceLegend {
+		gap: 6px;
+		padding-left: 8px;
+
+		&__title {
+			font-size: 10px;
+		}
+
+		&__item {
+			font-size: 10px;
+		}
+	}
+}

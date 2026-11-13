@@ -11,12 +11,7 @@ interface Props {
 export default function OfficialMarketPanel({ marketBuy }: Props) {
 	return (
 		<>
-			<div
-				id="panel-official"
-				role="tabpanel"
-				aria-labelledby="tab-official"
-				className={styles.officialPanel__content}
-			>
+			<div className={styles.officialPanel__content}>
 				<MarketFilters />
 				<MarketBuyCatalog
 					isLoading={marketBuy.isLoadingPlayers}

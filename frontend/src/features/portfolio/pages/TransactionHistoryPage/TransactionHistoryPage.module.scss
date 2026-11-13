@@ -1,0 +1,16 @@
+@use "@/styles/abstracts" as ds;
+
+.transactionHistoryPage {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: ds.$space-2xs;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	padding: ds.$space-2xs;
+	overflow: hidden;
+	background-color: ds.$surface-page;
+	color: ds.$text-strong-on-dark;
+}

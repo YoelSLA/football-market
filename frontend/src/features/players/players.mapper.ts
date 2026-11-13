@@ -280,3 +280,5 @@ export function toQuoteRankingMetadata(
 		totalClassified: globalTotal,
 	};
 }
+
+export { toPlayerQuote, toPlayerQuoteHistory } from "./utils/playerQuotes";

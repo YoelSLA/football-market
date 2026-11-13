@@ -1,0 +1,165 @@
+@use "@/styles/abstracts" as ds;
+
+.catalog {
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: 0.25rem;
+
+	// 7. ⚙️ Behavior
+	overflow-y: auto;
+	scrollbar-gutter: stable;
+
+	&__header {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+
+		// 4. 📦 Box Model
+		margin-bottom: 0.8rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
+		h2 {
+			// 5. 🔤 Typography
+			font-size: 1rem;
+		}
+
+		span {
+			// 5. 🔤 Typography
+			font-size: 0.75rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.8rem;
+	}
+}
+
+.card {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	min-height: 13.5rem;
+	padding: 1rem;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 0.7rem;
+	background-color: ds.$surface-panel-from;
+	color: ds.$text-title-on-dark;
+	h3 {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 1.05rem;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
+
+	&__identity {
+		// 4. 📦 Box Model
+		min-height: 2rem;
+		margin: 0.3rem 0 0.8rem;
+
+		// 5. 🔤 Typography
+		font-size: 0.78rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+
+	&__metrics {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.5rem;
+
+		// 4. 📦 Box Model
+		margin: 0 0 1rem;
+		div {
+			// 4. 📦 Box Model
+			padding: 0.5rem;
+
+			// 6. 🎨 Visual
+			border-radius: 0.45rem;
+			background-color: ds.$surface-card-subtle;
+			&:last-child {
+				// 3. 🧩 Layout
+				grid-column: 1 / -1;
+			}
+		}
+
+		dt {
+			// 5. 🔤 Typography
+			font-size: 0.68rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-muted-on-dark;
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0.15rem 0 0;
+
+			// 5. 🔤 Typography
+			font-size: 0.9rem;
+			font-weight: 700;
+		}
+	}
+
+	&__action {
+		// 4. 📦 Box Model
+		width: 100%;
+		margin-top: auto;
+	}
+}
+
+.state {
+	// 3. 🧩 Layout
+	display: grid;
+	place-content: center;
+
+	// 4. 📦 Box Model
+	min-height: 14rem;
+	padding: 2rem;
+
+	// 5. 🔤 Typography
+	text-align: center;
+
+	// 6. 🎨 Visual
+	border: 1px dashed ds.$border-subtle;
+	border-radius: 0.7rem;
+	color: ds.$text-label-on-dark;
+}
+
+@media (max-width: 1050px) {
+	.catalog {
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+}
+
+@media (max-width: 700px) {
+	.catalog {
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: 1fr;
+		}
+	}
+}

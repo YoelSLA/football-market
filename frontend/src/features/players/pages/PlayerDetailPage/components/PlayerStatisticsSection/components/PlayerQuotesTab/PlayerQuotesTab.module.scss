@@ -1,0 +1,16 @@
+.playerQuotesTab {
+	display: grid;
+	grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr);
+	gap: 16px;
+	min-width: 0;
+}
+
+.playerQuotesTab[hidden] {
+	display: none;
+}
+
+@media (max-width: 800px) {
+	.playerQuotesTab {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

@@ -3,7 +3,9 @@ import { getTeamShield } from "@/shared/utils/teamShield";
 import styles from "./TeamBadge.module.scss";
 
 export interface TeamBadgeProps {
+	teamId?: number;
 	teamName: string;
+	leagueId?: number;
 	leagueName?: string;
 	src?: string | null;
 	className?: string;
@@ -12,7 +14,9 @@ export interface TeamBadgeProps {
 }
 
 export default function TeamBadge({
+	teamId,
 	teamName,
+	leagueId,
 	leagueName,
 	src,
 	className,
@@ -21,7 +25,9 @@ export default function TeamBadge({
 }: TeamBadgeProps) {
 	const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
-	const url = src ?? (leagueName ? getTeamShield(leagueName, teamName) : null);
+	const url =
+		src ??
+		(leagueName ? getTeamShield(leagueName, teamName, teamId, leagueId) : null);
 	const isAvailable = Boolean(url && url !== failedUrl);
 
 	const classNames = [

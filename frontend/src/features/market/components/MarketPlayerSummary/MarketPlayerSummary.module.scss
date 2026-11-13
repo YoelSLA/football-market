@@ -97,6 +97,12 @@
 		object-fit: contain;
 	}
 
+	&__competitionLogo {
+		// 4. 📦 Box Model
+		width: 1.25rem;
+		height: 1.25rem;
+	}
+
 	&__badge {
 		// 3. 🧩 Layout
 		display: inline-block;

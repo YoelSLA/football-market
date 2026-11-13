@@ -6,8 +6,7 @@ import java.time.OffsetDateTime;
 public record OperationHistoryEntry(
     Long transactionId,
     OperationType type,
-    Long playerId,
-    String playerName,
+    PlayerData player,
     int quantity,
     long unitPrice,
     long totalAmount,
@@ -18,4 +17,16 @@ public record OperationHistoryEntry(
     BUY,
     SELL
   }
+
+  /** Perfil actual del jugador asociado, no una fotografía histórica. */
+  public record PlayerData(
+      Long id,
+      String name,
+      String imageUrl,
+      String fallbackImageUrl,
+      RelatedData team,
+      RelatedData league) {}
+
+  /** Identidad y nombre actuales de una relación del catálogo. */
+  public record RelatedData(Long id, String name) {}
 }

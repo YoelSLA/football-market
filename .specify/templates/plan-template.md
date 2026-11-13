@@ -3,6 +3,9 @@
 **Branch**: `[type/###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
 
 <!-- MUST usar rama real según Constitution §7 y seguir docs/development/sdd-workflow.md.
+Documentación viva: este documento describe exclusivamente la arquitectura, diseño y decisiones
+técnicas vigentes y aplicables al sistema (Constitución §V). El historial de decisiones técnicas
+superadas se delega a Git. Forma parte de la tríada permanente obligatoria junto a spec.md y tasks.md.
 Plan no genera Tasks ni habilita Implement: siguen Checklists, Tasks y Analyze.
 Complexity Tracking registra decisiones, no autoriza violaciones de Constitution. -->
 

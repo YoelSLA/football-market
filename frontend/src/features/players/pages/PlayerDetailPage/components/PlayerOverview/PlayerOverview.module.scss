@@ -1,268 +1,78 @@
 @use "@/styles/abstracts" as ds;
 
 .playerOverview {
+	// 2. 📍 Positioning
+	position: relative;
+
 	// 3. 🧩 Layout
 	display: grid;
-	grid-template-columns: 180px minmax(0, 1fr) minmax(310px, 0.85fr);
-	gap: 24px;
+	grid-template-columns: minmax(350px, 1.2fr) minmax(370px, 1.05fr) minmax(230px, 0.75fr);
 	align-items: center;
+	gap: 16px;
 
 	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	height: 125px;
 	min-width: 0;
-	padding: 10px;
+	padding: 12px 20px;
+	flex-shrink: 0;
 
 	// 6. 🎨 Visual
-	border: 1px solid ds.$border-subtle;
-	border-radius: 10px;
-	background-color: ds.$surface-panel-from;
 	color: ds.$text-body-on-dark;
-	&__portrait {
-		// 4. 📦 Box Model
-		width: 180px;
-		height: 180px;
-		object-fit: contain;
+	background-color: ds.$surface-page-deep;
+	border: 1px solid ds.$border-panel;
+	border-radius: 16px;
 
-		// 6. 🎨 Visual
-		border-radius: 7px;
-		background-color: ds.$surface-nav-active;
-	}
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+}
 
-	&__identity {
-		// 4. 📦 Box Model
-		min-width: 0;
-		h1 {
-			// 4. 📦 Box Model
-			margin: 0 0 14px;
-
-			// 5. 🔤 Typography
-			font-size: clamp(24px, 1.8vw, 34px);
-			line-height: 1.15;
-			overflow-wrap: anywhere;
-		}
-	}
-
-	&__team {
+@media (max-width: 1279px) {
+	.playerOverview {
 		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 18px;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 8px 16px;
 
 		// 4. 📦 Box Model
-		margin-bottom: 14px;
+		height: auto;
+		min-height: 169px;
+		padding: 10px 14px;
 
-		// 5. 🔤 Typography
-		font-size: 14px;
-		span {
+		&__headlineMetrics {
 			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
-
-		img {
-			// 4. 📦 Box Model
-			width: 33px;
-			height: 36px;
-			object-fit: contain;
-		}
-	}
-
-	&__details {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-wrap: wrap;
-		gap: 18px;
-
-		// 4. 📦 Box Model
-		padding-top: 14px;
-		margin: 0;
-
-		// 6. 🎨 Visual
-		border-top: 1px solid ds.$border-subtle;
-		> div {
-			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			svg {
-				// 3. 🧩 Layout
-				flex-shrink: 0;
-
-				// 6. 🎨 Visual
-				color: ds.$accent-nav;
-			}
-		}
-
-		img {
-			// 4. 📦 Box Model
-			width: 28px;
-			max-height: 22px;
-			object-fit: contain;
-		}
-
-		dt {
-			// 4. 📦 Box Model
-			margin-top: 5px;
-
-			// 5. 🔤 Typography
-			font-size: 9px;
-			text-transform: uppercase;
-
-			// 6. 🎨 Visual
-			color: ds.$text-muted-on-dark;
-		}
-
-		dd {
-			// 4. 📦 Box Model
-			margin: 0;
-
-			// 5. 🔤 Typography
-			font-size: 13px;
-		}
-	}
-
-	&__context {
-		// 3. 🧩 Layout
-		align-self: stretch;
-		display: flex;
-		flex-direction: column;
-		align-items: end;
-
-		// 4. 📦 Box Model
-		padding: 0 4px;
-		min-width: 0;
-		dl {
-			// 3. 🧩 Layout
-			display: grid;
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+			grid-column: 1 / -1;
+			grid-row: 2;
 
 			// 4. 📦 Box Model
 			width: 100%;
-			padding: 12px;
-			margin: 12px 0 0;
-
-			// 6. 🎨 Visual
-			border: 1px solid ds.$border-subtle;
-			border-radius: 7px;
-			> div {
-				// 4. 📦 Box Model
-				padding: 0 10px;
-
-				// 5. 🔤 Typography
-				text-align: center;
-				&:first-child {
-					// 6. 🎨 Visual
-					border-right: 1px solid ds.$border-subtle;
-				}
-			}
-
-			svg {
-				// 6. 🎨 Visual
-				color: ds.$accent-highlight;
-			}
-
-			dt {
-				// 4. 📦 Box Model
-				margin: 7px 0;
-
-				// 5. 🔤 Typography
-				font-size: 10px;
-
-				// 6. 🎨 Visual
-				color: ds.$text-muted-on-dark;
-			}
-
-			dd {
-				// 4. 📦 Box Model
-				margin: 0;
-
-				// 5. 🔤 Typography
-				font-size: 12px;
-				overflow-wrap: anywhere;
-			}
 		}
 
-		p {
-			// 4. 📦 Box Model
-			margin: 8px 0 0;
-
-			// 5. 🔤 Typography
-			font-size: 10px;
-
-			// 6. 🎨 Visual
-			color: ds.$text-muted-on-dark;
+		&__quoteContext {
+			grid-column: 2;
+			grid-row: 1;
 		}
 	}
+}
 
-	&__season {
+@media (max-width: 600px) {
+	.playerOverview {
+		// 3. 🧩 Layout
+		grid-template-columns: minmax(0, 1fr);
+		gap: 7px;
+
 		// 4. 📦 Box Model
-		padding: 8px 12px;
-
-		// 5. 🔤 Typography
-		font-size: 11px;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-subtle;
-		border-radius: 5px;
-	}
-}
-
-@media (max-width: 1100px) {
-	.playerOverview {
-		// 3. 🧩 Layout
-		grid-template-columns: 130px minmax(0, 1fr);
-		gap: 16px;
-		&__portrait {
-			// 4. 📦 Box Model
-			width: 130px;
-			height: 150px;
-		}
-
-		&__context {
+		min-height: 195px;
+		padding: 9px 8px;
+		&__headlineMetrics {
 			// 3. 🧩 Layout
-			grid-column: 1 / -1;
-			align-items: start;
-		}
-	}
-}
-
-@media (max-width: 500px) {
-	.playerOverview {
-		// 3. 🧩 Layout
-		grid-template-columns: 80px minmax(0, 1fr);
-		gap: 12px;
-		&__portrait {
-			// 4. 📦 Box Model
-			width: 80px;
-			height: 110px;
+			grid-column: 1;
+			grid-row: 3;
 		}
 
-		&__identity h1 {
-			// 5. 🔤 Typography
-			font-size: 22px;
-		}
-
-		&__team {
-			// 3. 🧩 Layout
-			gap: 8px;
-
-			// 5. 🔤 Typography
-			font-size: 11px;
-			img {
-				// 4. 📦 Box Model
-				width: 22px;
-				height: 26px;
-			}
-		}
-
-		&__details {
-			// 3. 🧩 Layout
-			gap: 10px;
-			dd {
-				// 5. 🔤 Typography
-				font-size: 11px;
-			}
+		&__quoteContext {
+			grid-column: 1;
+			grid-row: 2;
 		}
 	}
 }

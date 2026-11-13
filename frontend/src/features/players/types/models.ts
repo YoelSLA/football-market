@@ -90,12 +90,12 @@ export interface PlayerSampleSeason {
 	isDemo: true;
 }
 
-/** Cotización diaria de demostración del token de un jugador. */
+/** Cotización del token adaptada al modelo esperado por el gráfico. */
 export interface TokenQuotePoint {
 	playerId: number;
 	date: string;
 	price: number;
-	isDemo: true;
+	isDemo?: true;
 }
 
 /** Cotización actual y variación derivadas de la serie. */
@@ -106,14 +106,41 @@ export interface TokenQuoteSnapshot {
 	absoluteChange: number | null;
 	percentageChange: number | null;
 	direction: "up" | "down" | "flat" | "unknown";
-	isDemo: true;
+	isDemo?: true;
 }
 
-/** Serie histórica de demostración con su snapshot derivado. */
+/** Serie histórica de cotizaciones con su snapshot derivado. */
 export interface TokenQuoteSeries {
 	playerId: number;
 	points: TokenQuotePoint[];
 	snapshot: TokenQuoteSnapshot;
+}
+
+/** Origen de la cotización según el backend. */
+export type PlayerQuoteOrigin = "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD";
+
+/** Cotización persistida real del jugador con datos de auditoría y cálculo de variación. */
+export interface PlayerQuote {
+	effectiveDate: string;
+	price: number;
+	previousPrice: number | null;
+	multiplier: number;
+	score: number | null;
+	strategy: string | null;
+	strategyVersion: string | null;
+	sourceValuationDate: string | null;
+	origin: PlayerQuoteOrigin;
+	calculatedAt: string;
+	absoluteChange: number | null;
+	percentageChange: number | null;
+	direction: "up" | "down" | "flat" | "unknown";
+}
+
+/** Historial completo de cotizaciones de un jugador. */
+export interface PlayerQuoteHistory {
+	playerId: number;
+	quotes: PlayerQuote[];
+	currentQuote: PlayerQuote | null;
 }
 
 /** Valor original persistido: ausencia y cero son estados diferentes. */

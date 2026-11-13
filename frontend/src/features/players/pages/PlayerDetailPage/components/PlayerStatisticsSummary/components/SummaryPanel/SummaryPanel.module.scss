@@ -1,0 +1,43 @@
+@use "@/styles/abstracts" as ds;
+
+.summaryPanel {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	padding: 16px 20px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 8px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-panel-to;
+	color: ds.$text-body-on-dark;
+
+	&__list {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+}
+
+@include ds.down(ds.$bp-tablet) {
+	.summaryPanel {
+		height: auto;
+		padding: 16px;
+
+		&__list {
+			flex: none;
+		}
+	}
+}
