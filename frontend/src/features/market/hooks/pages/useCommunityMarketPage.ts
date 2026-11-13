@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { authQueryKeys } from "@/features/auth";
+import { authQueryKeys, useCurrentUserQuery } from "@/features/auth";
 import { marketQueryKeys } from "@/features/market/constants";
 import { useBuyListingMutation } from "@/features/market/hooks/mutations";
 import { useCommunityMarketQuery } from "@/features/market/hooks/queries";
@@ -20,6 +20,7 @@ import {
 import { useAllPlayersQuery } from "@/features/players";
 import { portfolioQueryKeys } from "@/features/portfolio";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
+import { useAuthStore } from "@/infrastructure/storage";
 
 const PAGE_SIZE = 12;
 const INITIAL_FILTERS: CommunityMarketFilters = {
@@ -51,11 +52,14 @@ function p2pErrorMessage(error: unknown) {
 }
 
 export function useCommunityMarketPage(
-	enabled: boolean,
+	enabled = true,
 	onPurchaseSuccess?: (playerId: number) => void,
 ) {
 	const queryClient = useQueryClient();
 	const { notifySuccess, notifyError } = useMarketToast();
+	const revision = useAuthStore((state) => state.revision);
+	const currentUser = useCurrentUserQuery(true, revision);
+	const availableCredits = currentUser.data?.availableCredits;
 	const [searchParams, setSearchParams] = useSearchParams();
 	const listingsQuery = useCommunityMarketQuery(enabled);
 	const playersQuery = useAllPlayersQuery();
@@ -109,7 +113,6 @@ export function useCommunityMarketPage(
 	const openPlayer = useCallback(
 		(player: CommunityMarketPlayer) => {
 			const next = new URLSearchParams(searchParams);
-			next.set("mode", "community");
 			next.set("player", String(player.id));
 			setSearchParams(next);
 		},
@@ -206,6 +209,7 @@ export function useCommunityMarketPage(
 		].sort(),
 		players: visiblePlayers,
 		totalPlayers: filteredPlayers.length,
+		availableCredits,
 		page,
 		totalPages,
 		setPage,

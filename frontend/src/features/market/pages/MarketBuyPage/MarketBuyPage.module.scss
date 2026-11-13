@@ -27,14 +27,6 @@
 		padding-bottom: 1.2rem;
 	}
 
-	&__selector {
-		// 3. 🧩 Layout
-		flex-shrink: 0;
-
-		// 4. 📦 Box Model
-		padding-bottom: 1.2rem;
-	}
-
 	@media (max-width: 1099px) {
 		// 4. 📦 Box Model
 		padding: 1rem;
@@ -50,11 +42,6 @@
 		overflow: visible;
 
 		&__header {
-			// 4. 📦 Box Model
-			padding-bottom: .5rem;
-		}
-
-		&__selector {
 			// 4. 📦 Box Model
 			padding-bottom: .5rem;
 		}

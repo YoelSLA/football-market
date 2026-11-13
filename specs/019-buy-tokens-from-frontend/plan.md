@@ -6,7 +6,7 @@
 
 **Estado de entrega observado (2026-10-25):** código frontend presente y último build satisfactorio; la integración autenticada de cotizaciones reales y la compra E2E siguen pendientes. Sin quote válida no se habilita la compra. Este plan contiene antecedentes de alcance sustituidos explícitamente por decisiones posteriores; la preparación de cierre no los reactiva. Consultar [informe de implementación](implementation-report.md) y [trabajo requerido/futuro](future-work.md). No se ejecuta CONVERGE ni se declara cierre mientras falte esa evidencia.
 
-La ruta protegida `/market/buy` permite listar los jugadores visibles del catálogo sin consultar stock, consultar la cotización vigente persistida por jugador y comprar tokens directamente al superusuario mediante `POST /api/orders/buy`; el backend verifica stock al confirmar. `market` es independiente de cualquier otra feature. No se cambian comportamientos de `players`, `portfolio` ni backend; sus `index.ts` raíz podrán ampliar **solo** los exports necesarios en la futura implementación. `app` es el único punto de composición entre features.
+Las rutas protegidas del módulo Mercado separan la emisión oficial (`/market/buy` — Mercado Oficial) de las ofertas de usuarios (`/market/p2p` — Mercado P2P) en dos páginas y pestañas de navegación independientes. En `/market/buy`, se listan los jugadores visibles del catálogo sin consultar stock, se consulta la cotización vigente persistida por jugador y se compran tokens directamente al superusuario mediante `POST /api/orders/buy`; el backend verifica stock al confirmar. En `/market/p2p`, se consultan las publicaciones de la comunidad (`GET /api/listings`) agrupadas por jugador y se compran lotes completos mediante `POST /api/orders/buy`. `market` es independiente de cualquier otra feature. No se cambian comportamientos de `players`, `portfolio` ni backend; sus `index.ts` raíz podrán ampliar **solo** los exports necesarios en la futura implementación. `app` es el único punto de composición entre features.
 
 ## Contexto técnico
 
@@ -66,10 +66,10 @@ La key de cotización persistida de `market` es propia, por ejemplo `['market', 
 
 | Área | Archivos previstos | Responsabilidad |
 | --- | --- | --- |
-| `app` | `router/AppRouter/AppRouter.tsx`, `navigation/sections.ts`, `providers/AppProviders/AppProviders.tsx`, `market/MarketBuyRoute/` | Ruta/tab, ToastContainer global y composición de datos e invalidación Portfolio. |
+| `app` | `router/AppRouter/AppRouter.tsx`, `navigation/sections.ts`, `providers/AppProviders/AppProviders.tsx` | Rutas protegidas (`/market/buy`, `/market/p2p`), navegación en Navbar, ToastContainer global y layout contenido. |
 | `features/players` | Solo `index.ts` | Exportar contratos de lectura y tipo existentes, sin alterar lógica. |
 | `features/portfolio` | Solo `index.ts` | Exportar query keys existentes, sin alterar lógica. |
-| `features/market` | `pages/MarketBuyPage/` (Page, `MarketPlayerCard/`, `BuyTokenModal/` locales), `form/hooks/`, `form/schemas/`, `hooks/pages/useMarketBuyPage.ts`, `hooks/queries/useMarketQuotesQuery.ts`, `hooks/mutations/`, `market.service.ts`, `market.mapper.ts`, `constants/marketQueryKeys.ts`, `types/`, `utils/`, `index.ts` | Page/Hook coordinan operación y cotización; Components locales son solo UI, estilos y props. Crear solo carpetas realmente necesarias. |
+| `features/market` | `pages/MarketBuyPage/` (Oficial), `pages/MarketP2PPage/` (P2P), `form/hooks/`, `form/schemas/`, `hooks/pages/`, `hooks/queries/`, `hooks/mutations/`, `market.service.ts`, `market.mapper.ts`, `constants/marketQueryKeys.ts`, `types/`, `utils/`, `index.ts` | Páginas independientes: `MarketBuyPage` coordina emisión oficial y cotizaciones; `MarketP2PPage` coordina listings comunitarios y detalle de ofertas. Componentes locales reciben datos por props. |
 | `shared` | `components/Modal/` y barrel | Portal, foco, ARIA, ESC, overlay; ninguna lógica de compra. Reusar `Button` y `Field`. |
 | Configuración | `frontend/package.json`, `package-lock.json`, `docs/frontend/technologies.md` | Instalación y registro de React-Toastify. |
 
@@ -127,7 +127,7 @@ Service captura solo 404 + QUOTE_NOT_FOUND como null; otros fallos se convierten
 
 La falta de sesión del cliente HTTP se identifica en el Page Hook mediante la presencia de sesión pública de infrastructure/storage, no con acceso directo al almacenamiento ni cadenas de error de Axios. El interceptor global sigue siendo autoridad para limpiar sesión/redirigir ante 401; no modificar infraestructura.
 
-AppLayout aplica un modificador de contención exclusivamente cuando pathname corresponde a `/market/buy`; CSS de body/html usa `:has` de ese modificador, por lo que desaparece al navegar fuera. No se mutan estilos globales con efectos ni se codifica la altura del navbar. AppLayout y su contenido continúan la cadena flex con altura `100dvh`, min-height:0 y overflow:hidden incluso bajo breakpoints móviles solo en esta ruta.
+AppLayout normaliza la ruta y aplica un modificador de contención de scroll cuando el pathname corresponde a `/market/buy` o `/market/p2p`; el CSS de body/html usa `:has` de ese modificador, por lo que desaparece al navegar fuera. No se mutan estilos globales con efectos ni se codifica la altura del navbar. AppLayout y su contenido continúan la cadena flex con altura `100dvh`, min-height:0 y overflow:hidden incluso bajo breakpoints móviles en ambas rutas de mercado.
 
 MarketBuyPage distribuye encabezado, contenido y footer mediante flex, sin usar PageLayout como scroller. Contenido grid con min-height:0, filtros estáticos y main de jugadores con overflow-y:auto; footer no encoge. En móvil, filtros nativos details/summary y métricas compactas; panel de filtros expandido superpuesto, sin consumir altura del listado. Cambios exclusivamente de presentación; queries, compra, formulario, paginación y HTTP no se modifican. No cambiar PageLayout compartido ni el scroll de rutas ajenas.
 
@@ -135,27 +135,44 @@ Revalidar los criterios del revisor afectados por catálogo completo/filtros, ej
 
 ## Ampliación de diseño — mercado P2P (2026-11-04)
 
-### Decisión arquitectónica
+### Antecedente histórico: Alternativa A (mercado P2P unificado en `/market/buy`)
 
-La modalidad P2P se incorpora a `MarketBuyPage` y a su Page Hook; no crea una segunda feature ni un
-adaptador en `app`. `features/market` consume exclusivamente APIs públicas de `features/players`, permitido
-por la matriz vigente, y conserva el flujo `Page → Hook → Service`. El backend y sus contratos permanecen
-sin cambios.
+Inicialmente, la modalidad P2P se concibió como un modo interno dentro de `MarketBuyPage`, alternado mediante
+el componente `MarketSelector` y reflejado en la URL como `?mode=community`. Bajo ese esquema preliminar,
+ambas modalidades compartían el mismo contenedor de página y el mismo hook coordinador `useMarketBuyPage`.
+
+Esta alternativa fue sustituida por la refactorización arquitectónica (RF-01 a RF-08) para desacoplar
+ambos dominios y ofrecer navegación directa desde el Navbar.
+
+## Arquitectura vigente: Separación definitiva en dos páginas (Oficial vs P2P)
+
+La sección Mercado separa de forma definitiva las modalidades en dos páginas y rutas protegidas independientes,
+retirando el selector interno `MarketSelector` y el tipo `MarketTab`:
+
+- **Mercado Oficial (`/market/buy`):** emite tokens directamente desde el superusuario.
+- **Mercado P2P (`/market/p2p`):** permite la compraventa de publicaciones de tokens entre usuarios.
 
 ```text
-MarketBuyPage
-  └─ useMarketBuyPage
-       ├─ compra oficial existente
-       └─ useCommunityMarketQuery
-            ├─ marketService.getListings() ── GET /listings
-            └─ queries públicas de players para playerId únicos
-                 ↓
-            agrupación + filtros + orden + página local
-
-CommunityPlayerCatalog ── seleccionar ── CommunityListingsPanel
-                                              └─ BuyListingModal
-                                                   └─ useBuyListingMutation
-                                                        └─ POST /orders/buy {listingId}
+AppRouter (rutas protegidas AuthGuard)
+  ├─ /market/buy ── MarketBuyPage
+  │                   └─ useMarketBuyPage
+  │                        ├─ usePlayersQuery (catálogo deportivo de jugadores)
+  │                        ├─ useMarketQuotesQuery (cotización oficial por jugador)
+  │                        ├─ MarketHeader (especializado en emisión oficial)
+  │                        ├─ OfficialMarketPanel (MarketFilters + MarketBuyCatalog + MarketPagination)
+  │                        └─ BuyTokenModal (useBuyQuantityForm + useBuyTokensMutation → POST /api/orders/buy)
+  │
+  └─ /market/p2p ── MarketP2PPage
+                      └─ useCommunityMarketPage (habilitado por defecto)
+                           ├─ useCommunityMarketQuery (GET /api/listings)
+                           ├─ queries públicas de players para playerIds únicos (TanStack Query caché)
+                           │    ↓
+                           │   agrupación + filtros locales + orden + página local (12 jugadores)
+                           ├─ MarketP2PHeader (métricas P2P y saldo disponible)
+                           ├─ CommunityMarketPanel
+                           │    ├─ Vista catálogo: CommunityMarketFilters + CommunityMarket + MarketPagination
+                           │    └─ Vista detalle (?player=<id>): CommunityListingsPanel
+                           └─ BuyListingModal (useBuyListingMutation → POST /api/orders/buy {listingId})
 ```
 
 ### Datos y caché
@@ -164,36 +181,44 @@ CommunityPlayerCatalog ── seleccionar ── CommunityListingsPanel
 - Service recibe `unknown`, Mapper valida el sobre y cada DTO antes de producir Models.
 - La agrupación es una utilidad pura y usa aritmética segura; no muta la respuesta ni crea estado remoto
   duplicado.
-- Los metadatos se obtienen con queries públicas de players y se cachean por id. No se accede a Service,
-  DTO o archivos privados de esa feature.
+- Los metadatos de los jugadores se obtienen exclusivamente mediante las queries públicas de `features/players`
+  y se cachean por id. No se accede a Service, DTO o archivos privados de esa feature.
 - Mientras falten metadatos indispensables, se comunica carga íntegra; los fallos permiten reintentar.
 - La página local contiene 12 jugadores y se recalcula después de filtro/orden.
 
 ### Estado y URL
 
-`mode` y `player` son estado navegable. Búsqueda, liga, posición, orden y página pueden permanecer como
-estado local de la modalidad durante esta primera implementación; volver del detalle los conserva. Un
-`player` inválido o que ya no tenga publicaciones conduce al estado vacío del detalle sin revelar recursos.
+- La navegación entre modalidades se gestiona a nivel de aplicación en la barra de navegación superior
+  (`NAV_SECTIONS` en `sections.ts`). Se eliminó el parámetro `mode=community` de la URL.
+- En `/market/p2p`, la selección de un jugador establece `?player=<id>` en la URL; cerrar el detalle o volver
+  al catálogo retira `player` y conserva filtros y orden en memoria.
+- Un `player` inválido o que ya no tenga publicaciones vigentes conduce al estado vacío del detalle sin
+  revelar recursos. Back/Forward y recarga reconstruyen la vista de forma determinista desde la URL y los datos remotos.
 
-### Componentes previstos
+### Componentes y responsabilidades vigentes
 
-| Componente | Responsabilidad |
-|---|---|
-| `CommunityMarketCatalog` | Estados de carga/error/vacío y grilla agrupada. |
-| `CommunityPlayerCard` | Resumen del jugador, ofertas, tokens y mejor precio; navegación al detalle. |
-| `CommunityListingsPanel` | Cabecera del jugador, orden y colección completa de publicaciones. |
-| `CommunityListingCard` | Lote fijo y acción; semántica adaptable de fila en desktop/card en móvil. |
-| `BuyListingModal` | Confirmación/resultados P2P sin formulario de cantidad ni Hook propio. |
+| Componente | Ubicación | Responsabilidad |
+|---|---|---|
+| `MarketBuyPage` | `pages/MarketBuyPage/` | Coordinación de emisión oficial y diálogo de compra con formulario de cantidad. |
+| `MarketHeader` | `pages/MarketBuyPage/components/` | Encabezado especializado en emisión oficial y métricas del mercado primario. |
+| `OfficialMarketPanel` | `pages/MarketBuyPage/components/` | Contenedor de filtros, catálogo oficial y paginación (sin semántica de tabpanel). |
+| `BuyTokenModal` | `pages/MarketBuyPage/components/` | Modal oficial con selección de cantidad 1–100, cotización autoritativa y confirmación. |
+| `MarketP2PPage` | `pages/MarketP2PPage/` | Coordinación del mercado secundario P2P, catálogo agrupado y diálogo de compra. |
+| `MarketP2PHeader` | `pages/MarketP2PPage/components/` | Encabezado especializado en mercado P2P con saldo disponible y métricas comunitarias. |
+| `CommunityMarketPanel` | `pages/MarketP2PPage/components/` | Alterna entre vista de catálogo agrupado y detalle de publicaciones de un jugador. |
+| `CommunityMarket` | `pages/MarketP2PPage/components/` | Grilla responsiva de tarjetas de jugadores con ofertas comunitarias. |
+| `CommunityMarketFilters` | `pages/MarketP2PPage/components/` | Filtros locales de búsqueda, liga, posición y orden para el catálogo P2P. |
+| `CommunityListingsPanel` | `pages/MarketP2PPage/components/` | Listado completo de publicaciones activas para el jugador seleccionado. |
+| `BuyListingModal` | `pages/MarketP2PPage/components/` | Diálogo modal de confirmación de compra de lote fijo P2P mediante `listingId`. |
 
-Se reutilizan `MarketSelector`, `MarketFilters`, `MarketPlayerSummary`, `MarketPagination`, `Button` y
-`Modal` cuando sus contratos encajan. No se fuerza reutilización de `BuyTokenModal`: su formulario de
-cantidad y cotización directa representan otra responsabilidad.
+Se reutilizan `MarketFilters`, `MarketPlayerSummary`, `MarketPagination`, `Button` y `Modal` de forma compartida.
+`MarketSelector` y el tipo `MarketTab` quedan eliminados definitivamente.
 
 ### Errores e invalidaciones
 
-El Page Hook traduce códigos P2P y coordina refetch. Ante respuesta incierta no reintenta el POST. El éxito
-invalida `listings`, `authQueryKeys.all`, `portfolioQueryKeys.summary` y el prefijo de holdings. El detalle
-se deriva de la misma query y se actualiza atómicamente con el catálogo.
+El hook `useCommunityMarketPage` traduce códigos P2P y coordina refetch. Ante respuesta incierta no reintenta
+el POST. El éxito invalida `listings`, `authQueryKeys.all`, `portfolioQueryKeys.summary` y el prefijo de holdings.
+El detalle se deriva de la misma query y se actualiza atómicamente con el catálogo.
 
 ### Secuencia frontend obligatoria
 
@@ -204,10 +229,63 @@ se deriva de la misma query y se actualiza atómicamente con el catálogo.
 3. **Fase 2 — estética:** únicamente SCSS y wrappers de layout permitidos, contrastados con los wireframes;
    no cambiar contratos, datos, eventos ni ARIA validados.
 
-### Riesgos aceptados de la Alternativa A
+### Riesgos aceptados vigentes
 
-- `/listings` transfiere el mercado completo y la paginación local no reduce carga backend.
-- Resolver metadatos puede requerir múltiples lecturas, mitigadas por deduplicación y caché.
-- El contrato no fija orden; el frontend debe imponerlo.
+- `/api/listings` transfiere el mercado completo y la paginación local de 12 elementos no reduce carga backend.
+- Resolver metadatos puede requerir múltiples lecturas, mitigadas por deduplicación y caché de TanStack Query.
+- El contrato backend no fija orden; el frontend impone ordenamiento ascendente por precio unitario, vencimiento e id.
 - Si el volumen deja de ser moderado, se evaluará otro alcance con agregación/paginación server-side; no
   se anticipa en esta implementación.
+
+## Evolución del diseño — Catálogo consolidado del Mercado Oficial (SPEC-010 / Issue #90)
+
+### Decisión arquitectónica y nuevo flujo de datos
+
+La integración del catálogo oficial consolida la identidad deportiva de los jugadores y sus cotizaciones vigentes
+en una única llamada a `GET /api/market/official`, eliminando las consultas individuales N+1 de cotización
+(`useMarketQuotesQuery`) dentro de la vista de catálogo.
+
+El flujo transaccional de compra `POST /api/orders/buy`, el diálogo `BuyTokenModal` y la totalidad de la
+modalidad Mercado P2P (`/market/p2p`) se preservan sin modificaciones.
+
+```text
+AppRouter (/market/buy)
+  └─ MarketBuyPage
+       └─ useMarketBuyPage (coordinador oficial)
+            ├─ sincronización con searchParams de la URL (?page=0&name=...&leagueId=...&teamId=...&sort=...)
+            ├─ usePlayersFiltersQuery() ── GET /api/players/filters (ligas y equipos en cascada)
+            ├─ useOfficialMarketQuery(params) ── GET /api/market/official
+            │    └─ marketService.getOfficialCatalog(params)
+            │         ↓
+            │       DTO paginado con cotización integrada
+            ├─ MarketHeader (título Oficial, saldo disponible y métricas)
+            ├─ OfficialMarketPanel
+            │    ├─ MarketFilters (filtros dinámicos en cascada, hasQuote, minPrice/maxPrice y orden)
+            │    ├─ MarketBuyCatalog (grilla de jugadores)
+            │    │    └─ MarketPlayerCard (datos deportivos, variación% del backend y botón Comprar)
+            │    └─ MarketPagination (control de páginas server-side)
+            └─ BuyTokenModal (abierto al pulsar Comprar con datos consolidados)
+                 └─ useBuyQuantityForm + useBuyTokensMutation ── POST /api/orders/buy
+```
+
+### Componentes y adaptaciones técnicas
+
+1. **`marketService.getOfficialCatalog(params, signal)`:**
+   - Construye los query params normalizados: `page`, `size` (12), `name`, `leagueId`, `teamId`, `position`, `nationality`, `hasQuote`, `minPrice`, `maxPrice` (en centésimas) y `sort`.
+   - Realiza la solicitud autenticada a `GET /api/market/official` según el contrato [market-official.md](contracts/market-official.md).
+   - Mapper `toOfficialMarketPage(dto)` valida el sobre paginado y transforma cada entrada a `OfficialMarketPlayer`.
+2. **Selectores dinámicos en cascada (`MarketFilters`):**
+   - Consume las opciones de ligas y equipos desde `GET /api/players/filters` a través de la API pública de `features/players`.
+   - La selección de `leagueId` filtra la lista de equipos correspondientes a esa liga. Limpiar o cambiar la liga deselecciona el equipo.
+   - Reemplaza los campos obsoletos de inventario por el selector `hasQuote` (*"Todas"*, *"Con cotización"*, *"Sin cotización"*) y los inputs numéricos `minPrice` y `maxPrice` (en créditos).
+   - Valida en cliente `minPrice <= maxPrice` antes de aplicar los filtros.
+3. **Sincronización reactiva con la URL:**
+   - Todos los filtros, el orden (`sort`) y la página (`page`) se reflejan en los query params de `/market/buy`.
+   - Modificar cualquier filtro resetea la página a `0`.
+   - La navegación Back/Forward y recarga del navegador reconstruye el estado directamente desde la URL.
+4. **Adaptación de `MarketPlayerCard`:**
+   - Consume directamente la cotización integrada y `variationPercentage` provistos por el backend.
+   - Si `quote === null`, renderiza la etiqueta "Sin cotización" y deshabilita el botón "Comprar", sin inventar cotizaciones demo ni timestamps.
+5. **Aislamiento y no regresión:**
+   - No modifica contratos ni comportamiento de `/market/p2p`.
+   - No altera el schema de mutación ni el payload `{ playerId, quantity }` de `POST /api/orders/buy`.

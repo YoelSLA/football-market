@@ -1,27 +1,16 @@
 import { PageLayout } from "@/app/layouts";
-import {
-	useCommunityMarketPage,
-	useMarketBuyPage,
-} from "@/features/market/hooks";
+import { useMarketBuyPage } from "@/features/market/hooks";
 import BuyTokenModal from "./components/BuyTokenModal";
-import {
-	BuyListingModal,
-	CommunityMarketPanel,
-} from "./components/CommunityMarket";
 import MarketHeader from "./components/MarketHeader";
-import MarketSelector from "./components/MarketSelector";
 import OfficialMarketPanel from "./components/OfficialMarketPanel";
 import styles from "./MarketBuyPage.module.scss";
 
 /**
- * Página principal de compra de tokens en el mercado.
- * Coordina la cabecera, selector de modo y diálogos modales,
- * delegando la vista de emisión oficial a OfficialMarketPanel
- * y la oferta de usuarios a CommunityMarketPanel.
+ * Página de compra de tokens en el mercado oficial (emisión oficial del superusuario).
+ * Coordina la cabecera, catálogo de emisión oficial y el diálogo modal de compra.
  */
 export default function MarketBuyPage() {
 	const marketBuy = useMarketBuyPage();
-	const community = useCommunityMarketPage(marketBuy.marketTab === "community");
 
 	return (
 		<PageLayout>
@@ -32,18 +21,8 @@ export default function MarketBuyPage() {
 						availableCredits={marketBuy.availableCredits}
 					/>
 				</div>
-				<div className={styles.page__selector}>
-					<MarketSelector
-						selectedTab={marketBuy.marketTab}
-						onSelectTab={marketBuy.setMarketTab}
-					/>
-				</div>
 
-				{marketBuy.marketTab === "official" ? (
-					<OfficialMarketPanel marketBuy={marketBuy} />
-				) : (
-					<CommunityMarketPanel community={community} />
-				)}
+				<OfficialMarketPanel marketBuy={marketBuy} />
 
 				<BuyTokenModal
 					isOpen={marketBuy.isModalOpen}
@@ -66,17 +45,6 @@ export default function MarketBuyPage() {
 					onConfirm={marketBuy.handleConfirmBuy}
 					triggerRef={marketBuy.triggerRef}
 					initialFocusRef={marketBuy.initialFocusRef}
-				/>
-				<BuyListingModal
-					player={community.selectedPlayer}
-					listing={community.selectedListing}
-					isBusy={community.isBuying}
-					result={community.purchaseResult}
-					errorMessage={community.purchaseError}
-					availableCredits={marketBuy.availableCredits}
-					onClose={community.closeListing}
-					onConfirm={community.confirmListing}
-					triggerRef={community.triggerRef}
 				/>
 			</div>
 		</PageLayout>

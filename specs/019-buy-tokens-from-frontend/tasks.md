@@ -136,3 +136,33 @@ P-01 + P-04 → P-05
 P-03 + P-05 → P-06 → P-07 → P-08 → P-09
 P-09 → P-10 → P-11 → P-12
 ```
+
+## Refactorización: Separación en dos páginas de mercado (Oficial vs P2P)
+
+- [X] **RF-01** Actualizar navegación principal (`sections.ts`): dos pestañas bajo Mercado («Mercado Oficial» en `/market/buy` y «Mercado P2P» en `/market/p2p`), retirando el selector interno `MarketSelector`.
+- [X] **RF-02** Actualizar `AppRouter.tsx` y `AppLayout.tsx` para alojar `/market/buy` y `/market/p2p` con layouts contenidos.
+- [X] **RF-03** Desacoplar `MarketBuyPage`: eliminar `MarketSelector`, `useCommunityMarketPage`, `CommunityMarketPanel` y `BuyListingModal`; especializar encabezado para «Mercado Oficial».
+- [X] **RF-04** Simplificar `useMarketBuyPage`: retirar estado de pestañas `marketTab` y parámetro URL `mode`.
+- [X] **RF-05** Crear `MarketP2PPage` en `features/market/pages/MarketP2PPage/` con su propio `MarketP2PHeader`, migrando componentes comunitarios y modal P2P.
+- [X] **RF-06** Simplificar `useCommunityMarketPage`: habilitar por defecto, retirar `mode=community` de URL preservando `player=<id>`, y exponer `availableCredits`.
+- [X] **RF-07** Limpieza: eliminar componente obsoleto `MarketSelector` y tipo `MarketTab`.
+- [X] **RF-08** Verificación: `npm run biome:fix` y `npm run build` en 0 errores.
+
+## Evolución: Catálogo del Mercado Oficial con cotizaciones integradas (SPEC-010 / Issue #90)
+
+- [ ] **OF-01** Definir DTOs y modelos de dominio en `features/market/types/` (`OfficialMarketPlayerDTO`, `OfficialMarketQuoteDTO`, `OfficialMarketPageDTO`, `OfficialMarketQueryParams` y `OfficialMarketPlayer`) según el contrato `contracts/market-official.md`.
+- [ ] **OF-02** Implementar mapper seguro `toOfficialMarketPage(dto)` y `toOfficialMarketQueryParams(params)` en `market.mapper.ts`.
+- [ ] **OF-03** Implementar servicio HTTP `marketService.getOfficialCatalog()` en `market.service.ts` y hook TanStack Query `useOfficialMarketQuery(params)` en `features/market/hooks/queries/`.
+- [ ] **OF-04** Integrar selector en cascada en `MarketFilters`: consumir `usePlayersFiltersQuery()` para obtener ligas y equipos dinámicos, restringiendo los equipos a la liga activa.
+- [ ] **OF-05** Refactorizar y activar `MarketFilters`: reemplazar opciones obsoletas de tenencias por `hasQuote` (*"Todas"*, *"Con cotización"*, *"Sin cotización"*), inputs de rango `minPrice`/`maxPrice` en créditos con validación `minPrice <= maxPrice`, y opciones de ordenamiento (`price`, `variation`, `name`, `id`).
+- [ ] **OF-06** Adaptar `MarketPlayerCard` y `MarketBuyCatalog`: presentar cotización integrada y `variationPercentage` provistos por el backend con indicadores visuales de tendencia; gestionar estado "Sin cotización" con botón de compra deshabilitado.
+- [ ] **OF-07** Coordinar en `useMarketBuyPage`: sincronizar reactivamente filtros, orden y paginación con query params de la URL (`/market/buy`), incorporar debounce para la búsqueda por texto y conectar `openBuyModal` con datos consolidados.
+- [ ] **OF-08** Limpieza de consultas fragmentadas: retirar `useMarketQuotesQuery` y llamadas N+1 de cotización del flujo del Mercado Oficial.
+- [ ] **OF-09** Verificación técnica estática: ejecutar `npm run biome:check`, `npm run build`, `npm run scss:check-imports` y `git diff --check`.
+- [ ] **OF-10 — GATE BACKEND** Integración y verificación E2E: validar la consulta, filtros, ordenamiento `NULLS LAST` y compra contra el endpoint real `GET /api/market/official` una vez disponible en backend.
+
+```text
+OF-01 → OF-02 → OF-03
+OF-04 + OF-05 → OF-06
+OF-03 + OF-06 → OF-07 → OF-08 → OF-09 → OF-10
+```
