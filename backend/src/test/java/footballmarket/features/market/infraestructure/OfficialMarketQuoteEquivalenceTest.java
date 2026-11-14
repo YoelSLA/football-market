@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
+import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
+import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.support.MarketTestData;
 import footballmarket.support.TestcontainersConfiguration;
@@ -32,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 class OfficialMarketQuoteEquivalenceTest {
 
   @Autowired private OfficialMarketRepository officialMarketRepository;
+  @Autowired private QuoteExecutionRepository quoteExecutionRepository;
   @Autowired private PlayerQuoteRepository playerQuoteRepository;
   @Autowired private MarketTestData testData;
 
@@ -75,6 +79,8 @@ class OfficialMarketQuoteEquivalenceTest {
       LocalDate date = LocalDate.of(2026, 11, 10);
       Instant instant1 = Instant.parse("2026-11-10T08:00:00Z");
       Instant instant2 = Instant.parse("2026-11-10T14:00:00Z");
+      QuoteExecution execution1 = execution(date, instant1, 0, 1);
+      QuoteExecution execution2 = execution(date, instant2, 1, 0);
 
       // Initial
       playerQuoteRepository.save(
@@ -92,35 +98,39 @@ class OfficialMarketQuoteEquivalenceTest {
               Instant.parse("2026-11-01T08:00:00Z")));
 
       // Carried forward at date
-      playerQuoteRepository.save(
-          new PlayerQuote(
-              player,
-              date,
-              100L,
-              100L,
-              BigDecimal.ONE,
-              null,
-              null,
-              null,
-              null,
-              QuoteOrigin.CARRIED_FORWARD,
-              instant1));
-
-      // Recomputed at date
-      PlayerQuote recomputed =
+      PlayerQuote carriedForward =
           playerQuoteRepository.save(
               new PlayerQuote(
                   player,
                   date,
-                  150L,
                   100L,
-                  new BigDecimal("1.500000"),
-                  new BigDecimal("8.500000"),
-                  ValuationStrategy.POSITIONAL_PERFORMANCE,
-                  "v1",
-                  date,
-                  QuoteOrigin.RECOMPUTED,
-                  instant2));
+                  100L,
+                  BigDecimal.ONE,
+                  null,
+                  null,
+                  null,
+                  null,
+                  QuoteOrigin.CARRIED_FORWARD,
+                  instant1,
+                  execution1));
+
+      // Recomputed at date, replacing the carried-forward daily row
+      PlayerQuote recomputed =
+          new PlayerQuote(
+              player,
+              date,
+              150L,
+              100L,
+              new BigDecimal("1.500000"),
+              new BigDecimal("8.500000"),
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              date,
+              QuoteOrigin.RECOMPUTED,
+              instant2,
+              execution2);
+      carriedForward.replaceCalculation(recomputed);
+      recomputed = playerQuoteRepository.saveAndFlush(carriedForward);
 
       // Act
       List<PlayerQuote> quoteDomainList =
@@ -152,10 +162,12 @@ class OfficialMarketQuoteEquivalenceTest {
       testData.initializeMarket(player1);
 
       Player player2 = testData.createVisiblePlayer();
+      LocalDate initialDate = LocalDate.of(2026, 11, 1);
+      Instant initialInstant = Instant.parse("2026-11-01T08:00:00Z");
       playerQuoteRepository.save(
           new PlayerQuote(
               player2,
-              LocalDate.of(2026, 11, 1),
+              initialDate,
               200L,
               null,
               BigDecimal.ONE,
@@ -164,21 +176,25 @@ class OfficialMarketQuoteEquivalenceTest {
               null,
               null,
               QuoteOrigin.INITIAL,
-              Instant.parse("2026-11-01T08:00:00Z")));
+              initialInstant));
+      LocalDate recomputationDate = LocalDate.of(2026, 11, 11);
+      Instant recomputationInstant = Instant.parse("2026-11-11T10:00:00Z");
+      QuoteExecution execution = execution(recomputationDate, recomputationInstant, 1, 0);
       PlayerQuote player2Latest =
           playerQuoteRepository.save(
               new PlayerQuote(
                   player2,
-                  LocalDate.of(2026, 11, 11),
+                  recomputationDate,
                   300L,
                   200L,
                   new BigDecimal("1.500000"),
                   new BigDecimal("9.000000"),
                   ValuationStrategy.POSITIONAL_PERFORMANCE,
                   "v1",
-                  LocalDate.of(2026, 11, 11),
+                  recomputationDate,
                   QuoteOrigin.RECOMPUTED,
-                  Instant.parse("2026-11-11T10:00:00Z")));
+                  recomputationInstant,
+                  execution));
 
       // Act & Assert
       List<PlayerQuote> p1Canonical = playerQuoteRepository.findLatestByPlayerId(player1.getId());
@@ -194,6 +210,26 @@ class OfficialMarketQuoteEquivalenceTest {
       assertThat(marketP1.get(0).getQuoteId()).isEqualTo(p1Canonical.get(0).getId());
       assertThat(marketP2.get(0).getQuoteId()).isEqualTo(p2Canonical.get(0).getId());
       assertThat(marketP2.get(0).getQuoteId()).isEqualTo(player2Latest.getId());
+    }
+
+    private QuoteExecution execution(
+        LocalDate date, Instant instant, int recomputedRows, int carriedForwardRows) {
+      return quoteExecutionRepository.save(
+          new QuoteExecution(
+              date,
+              QuoteExecutionOrigin.MANUAL,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              recomputedRows + carriedForwardRows,
+              recomputedRows,
+              carriedForwardRows,
+              0,
+              0,
+              instant,
+              instant));
     }
   }
 }

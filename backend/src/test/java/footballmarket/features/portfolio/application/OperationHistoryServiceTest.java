@@ -9,6 +9,8 @@ import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
+import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.PlayerData;
+import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.RelatedData;
 import footballmarket.features.portfolio.domain.records.OperationHistoryView;
 import footballmarket.features.portfolio.presentation.exceptions.InvalidOperationHistoryCriteriaException;
 import footballmarket.features.portfolio.presentation.exceptions.InvalidOperationHistoryDateRangeException;
@@ -76,13 +78,21 @@ class OperationHistoryServiceTest {
           Map.of());
 
       // Act / Assert
-      assertThat(historyService.history(owner.getEmail()))
+      assertThat(
+              historyService
+                  .history(owner.getEmail(), 0, 20, null, null, null, null, "NEWEST")
+                  .transactions())
           .containsExactly(
               new OperationHistoryEntry(
                   own.getId(),
                   OperationType.BUY,
-                  player.getId(),
-                  player.getName(),
+                  new PlayerData(
+                      player.getId(),
+                      player.getName(),
+                      player.getImageUrl(),
+                      player.getFallbackImageUrl(),
+                      new RelatedData(player.getTeam().getId(), player.getTeam().getName()),
+                      new RelatedData(player.getLeague().getId(), player.getLeague().getName())),
                   4,
                   125L,
                   500L,
