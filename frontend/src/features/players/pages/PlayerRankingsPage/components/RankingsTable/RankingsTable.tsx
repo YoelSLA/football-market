@@ -1,5 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import type { PlayerRankingItem, RankingMode } from "@/features/players/types";
+import type {
+	PlayerRankingItem,
+	RankingMode,
+	RankingOrigin,
+} from "@/features/players/types";
 import {
 	CompetitionLogo,
 	PlayerPortrait,
@@ -7,6 +11,12 @@ import {
 } from "@/shared/components";
 import styles from "./RankingsTable.module.scss";
 import TableMedal from "./TableMedal";
+
+const ORIGIN_CLASSES: Record<RankingOrigin, string> = {
+	INITIAL: styles.originChip_carried,
+	RECOMPUTED: styles.originChip_recomputed,
+	CARRIED_FORWARD: styles.originChip_carried,
+};
 
 interface Props {
 	items: PlayerRankingItem[];
@@ -109,11 +119,13 @@ export default function RankingsTable({ items, mode }: Props) {
 								<div className={styles.teamContainer}>
 									<TeamBadge
 										src={player.teamBadge}
-										teamName={player.teamName}
-										leagueName={player.leagueName}
+										teamName={player.teamName ?? "Equipo no disponible"}
+										leagueName={player.leagueName ?? undefined}
 										className={styles.teamBadge}
 									/>
-									<span className={styles.teamName}>{player.teamName}</span>
+									<span className={styles.teamName}>
+										{player.teamName ?? "—"}
+									</span>
 								</div>
 							</td>
 
@@ -121,22 +133,28 @@ export default function RankingsTable({ items, mode }: Props) {
 								<div className={styles.leagueContainer}>
 									<CompetitionLogo
 										src={player.leagueFlag}
-										competitionName={player.leagueName}
+										competitionName={player.leagueName ?? "Liga"}
 										className={styles.leagueFlag}
 										decorative
 									/>
-									<span className={styles.leagueName}>{player.leagueName}</span>
+									<span className={styles.leagueName}>
+										{player.leagueName ?? "—"}
+									</span>
 								</div>
 							</td>
 
 							<td className={styles.td_role}>
-								<span
-									className={`${styles.positionBadge} ${
-										styles[`positionBadge_${player.tacticalPosition}`]
-									}`}
-								>
-									{player.tacticalPosition}
-								</span>
+								{player.tacticalPosition ? (
+									<span
+										className={`${styles.positionBadge} ${
+											styles[`positionBadge_${player.tacticalPosition}`]
+										}`}
+									>
+										{player.tacticalPosition}
+									</span>
+								) : (
+									<span className={styles.positionBadge}>—</span>
+								)}
 							</td>
 
 							<td className={styles.td_value}>
@@ -154,9 +172,7 @@ export default function RankingsTable({ items, mode }: Props) {
 									{player.origin && (
 										<span
 											className={`${styles.originChip} ${
-												player.origin === "RECOMPUTED"
-													? styles.originChip_recomputed
-													: styles.originChip_carried
+												ORIGIN_CLASSES[player.origin]
 											}`}
 										>
 											{player.origin}

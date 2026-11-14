@@ -8,7 +8,7 @@ import java.time.LocalDate;
 /**
  * Cotización persistida de un jugador con sus datos de auditoría.
  *
- * @param effectiveDate fecha de vigencia de la cotización
+ * @param effectiveDate día de vigencia de la cotización, independiente de la fecha del score
  * @param price precio vigente en centésimas de crédito
  * @param previousPrice precio anterior; nulo solo en la fila inicial
  * @param multiplier multiplicador aplicado, a seis decimales
@@ -23,7 +23,9 @@ import java.time.LocalDate;
     name = "QuoteResponse",
     description = "Cotización persistida de un jugador con sus datos de auditoría")
 public record QuoteResponseDTO(
-    @Schema(description = "Fecha de vigencia de la cotización", example = "2026-10-20")
+    @Schema(
+            description = "Día de vigencia de la cotización, no la fecha de la valuación",
+            example = "2026-10-20")
         LocalDate effectiveDate,
     @Schema(description = "Precio vigente en centésimas de crédito", example = "105") long price,
     @Schema(
@@ -49,7 +51,8 @@ public record QuoteResponseDTO(
             nullable = true)
         String strategyVersion,
     @Schema(
-            description = "Fecha de la valuación de origen; nula sin valuación",
+            description =
+                "Fecha original del score, que puede ser anterior a la vigencia; nula sin valuación",
             example = "2026-10-20",
             nullable = true)
         LocalDate sourceValuationDate,

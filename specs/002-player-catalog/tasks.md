@@ -1,5 +1,87 @@
 # Tareas: Catálogo de jugadores
 
+## Delta vigente — elegibilidad por métricas (2026-11-11)
+
+**Entrada**: [spec](spec.md), [plan](plan.md), [contrato](contracts/catalog-query.md), [modelo](data-model.md), [research](research.md), [quickstart](quickstart.md) y [checklist revisado](checklists/metrics-eligibility.md). Coordinación frontend: [SPEC-005/tasks.md](../005-players-page/tasks.md). Las tareas previas y sus estados se conservan como historia; las autorizaciones anteriores no habilitan este delta. ANALYZE sin blockers y autorización explícita de implementación registrados en [analysis-metrics-eligibility.md](analysis-metrics-eligibility.md). Tests backend los escribe el agente durante IMPLEMENT autorizado y los ejecuta el usuario; frontend exento. No hay infraestructura, migración ni dependencias nuevas previstas.
+
+### Preparación y fundamentos
+
+**Reanudación de IMPLEMENT (2026-11-11)**: ANALYZE conjunto sin blockers y autorización humana
+persistida en [analysis-metrics-eligibility.md](analysis-metrics-eligibility.md). La mención de
+ANALYZE/autorización pendientes en la entrada superior describe la generación de tareas, no el
+estado actual. Trabajo limitado actualmente a SPEC-002 por instrucción del usuario; cambios de
+SPEC-005 preservados, sin cierre parcial del alcance conjunto.
+
+**Estado del alcance (2026-11-11)**: implementación de consultas en T074/T075/T080/T081 y OpenAPI
+T076 completada; pruebas escritas en T071–T073, T077–T079, T084–T085. La cobertura HTTP individual
+de estadísticas está en `PlayerControllerTest`, porque el GET pertenece a `PlayerController`, no al
+controlador de extracción `PlayerStatisticsController`; no trasladar endpoints ni duplicar tests
+para satisfacer una ruta desactualizada del desglose. T083 y T090 contienen la guía y el inventario
+definitivo de suites. Las pruebas históricas de sincronización y los consumidores de primera
+extracción se adaptaron bajo T086–T089. Los builds sin tests no compilan ni ejecutan esas pruebas;
+su ejecución y aceptación permanecen humanas y no se declaran aprobadas.
+
+**Bloqueo resuelto durante IMPLEMENT**: la regla nueva afectaba también pruebas preexistentes de
+extracción de estadísticas, sincronización de imágenes/identidad y cotizaciones que obtenían
+jugadores recién sincronizados mediante `getActivePlayers`, antes de que existieran métricas. Se
+conservaron esos escenarios sin sembrar métricas artificiales en los casos de primera extracción o
+ausencia, y se adaptaron únicamente las precondiciones de Arrange. El desglose corregido T086–T090
+registra esa adaptación; el reanálisis autorizado no informó blockers. La ejecución de las suites
+sigue a cargo del usuario.
+
+No requiere tareas de inicialización ni cambios de esquema. El criterio base es fecha máxima de extracción por jugador, con al menos una fila de esa fecha y `presentMetrics > 0`; cero informado cuenta. No acotar la fecha máxima a filas con métricas ni exigir score/cotización.
+
+### US1 (P1) — listado, filtros y detalle
+
+**Criterio independiente**: con jugadores elegibles y no elegibles, el listado y filtros globales devuelven solo elegibles, con conteos/paginación consistentes; el detalle no elegible devuelve 404 y un elegible sin score permanece visible.
+
+- [X] T071 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/catalog/infraestructure/PlayerCatalogQueryRepositoryTest.java` con ausencia de filas, última fecha vacía tras fecha anterior con datos, dos fuentes en última fecha con una poblada, cero, activo/equipo/liga, búsquedas combinadas, conteo, paginación y cuatro opciones globales; usar PostgreSQL real de testing sin ejecutar pruebas.
+- [X] T072 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/catalog/application/PlayerCatalogQueryServiceTest.java` y `PlayerCatalogServiceTest.java` con catálogo, opciones y detalle para elegible sin score y no elegible, sin alterar sincronización; Service real y preparación permitida solo en Arrange.
+- [X] T073 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/catalog/presentation/PlayerControllerTest.java` para listado y opciones elegibles, detalle 404 `PLAYER_NOT_FOUND`, ID inválido y autenticación existente; documentar contrato HTTP sin ejecutar pruebas.
+- [X] T074 [US1] Modificar `backend/src/main/java/footballmarket/features/catalog/infraestructure/PlayerRepository.java` para aplicar `exists` de métricas de fecha máxima a contenido, conteo, `findByActiveTrue` y opciones globales antes de filtros/página; preservar orden y visibilidad previos, sin duplicar filas. Depende de T071.
+- [X] T075 [US1] Adaptar `backend/src/main/java/footballmarket/features/catalog/application/impl/PlayerCatalogServiceImpl.java`, `backend/src/main/java/footballmarket/features/catalog/infraestructure/PlayerRepository.java` y, si corresponde, `backend/src/main/java/footballmarket/features/statistics/application/impl/PlayerStatisticsQueryServiceImpl.java` para aplicar la misma elegibilidad y 404 en identidad y estadísticas; conservar 200 `NO_DATA` para elegibles sin snapshot confirmado en el contexto consultado y preservar consultas financieras históricas. Depende de T072–T074 y T084.
+- [X] T076 [US1] Alinear las anotaciones OpenAPI de `backend/src/main/java/footballmarket/features/catalog/presentation/PlayerController.java` y `backend/src/main/java/footballmarket/features/statistics/presentation/PlayerStatisticsController.java` y DTO afectados con `specs/002-player-catalog/contracts/catalog-query.md` y `specs/009-player-detail/contracts/player-statistics.md`, incluyendo cambio de población, 404 y `NO_DATA` sin alterar estructura ni seguridad. Depende de T073–T075 y T084.
+
+### US1 — consumidores de mercado, rankings y preservación financiera
+
+**Criterio independiente**: con cotización/valuación y tenencia histórica de un jugador cuya fecha reciente queda vacía, mercado y rankings lo excluyen, compras/ventas no generan movimientos, y tenencia e historial permanecen consultables.
+
+- [X] T077 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/market/infraestructure/TokenListingVisibilityPersistenceTest.java`, `backend/src/test/java/footballmarket/features/market/application/TokenListingServiceTest.java` y `BuyOrderServiceTest.java` con publicaciones públicas/detalle ajeno, publicación de venta y compra directa/secundaria para jugador no elegible con cotización histórica; cubrir ausencia de movimientos y conservación de operaciones propias conforme a sus APIs.
+- [X] T078 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/ranking/infraestructure/ScoreRankingQueryTest.java` y `backend/src/test/java/footballmarket/features/quote/infraestructure/QuoteRankingPersistenceTest.java` para ambas estrategias por score y ranking por precio: última fecha vacía, fuentes de la misma fecha, cotización/valuación histórica, orden, numeración, filtros y conteos aplicables.
+- [X] T079 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/portfolio/application/PortfolioServiceTest.java` y `backend/src/test/java/footballmarket/features/portfolio/presentation/PortfolioControllerTest.java` para preservar tenencias consultables cuando el jugador deja de ser elegible, sin borrar datos ni depender del detalle filtrado. El historial de operaciones tiene cobertura propia en T085.
+- [X] T080 [US1] Actualizar `backend/src/main/java/footballmarket/features/market/infraestructure/TokenListingRepository.java`, `backend/src/main/java/footballmarket/features/market/application/impl/TokenListingServiceImpl.java` y `BuyOrderServiceImpl.java` para excluir publicaciones públicas/detalle ajeno y rechazar compra/venta de jugadores no elegibles antes de movimientos; conservar cancelación/consulta propia y reservas. Depende de T074–T075 y T077.
+- [X] T081 [US1] Ajustar `backend/src/main/java/footballmarket/features/valuation/infraestructure/PositionalValuationRepository.java` y `AttributeValuationRepository.java` para aplicar elegibilidad antes del orden del ranking por score, conservando cotización y valuación requeridas; mantener y contrastar el predicado existente de `backend/src/main/java/footballmarket/features/quote/infraestructure/PlayerQuoteRepository.java`. Depende de T078.
+- [X] T082 [US1] Revisar y ajustar únicamente si es necesario `backend/src/main/java/footballmarket/features/portfolio/application/impl/PortfolioServiceImpl.java` y `backend/src/main/java/footballmarket/features/catalog/infraestructure/PlayerRepository.java` para conservar la lectura de posiciones históricas sin el filtro de detalle, conforme a T079; no borrar tenencias ni transacciones. Depende de T075 y T079.
+
+### Integración y dependencias
+
+- [X] T083 Actualizar `specs/002-player-catalog/quickstart.md` con las clases backend finalmente modificadas y comandos exactos para ejecución humana, escenarios de identidad/estadísticas, mercado/rankings/portfolio/historial y resultados pendientes; mantener `specs/002-player-catalog/contracts/catalog-query.md` coherente con OpenAPI. Depende de T076, T080–T082 y T084–T085.
+
+### Cobertura de correcciones ANALYZE
+
+- [X] T084 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/statistics/application/PlayerStatisticsQueryServiceTest.java` para jugador no elegible con 404 y jugador elegible sin snapshot confirmado en la temporada o contexto consultados con 200 `NO_DATA` y 60 ausencias; la cobertura HTTP del GET individual se amplía en `PlayerControllerTest`, controlador efectivo del recurso, conservando ID inválido y autenticación. No ejecutar tests.
+- [X] T085 [P] [US1] Ampliar `backend/src/test/java/footballmarket/features/portfolio/application/OperationHistoryServiceTest.java` y `backend/src/test/java/footballmarket/features/portfolio/presentation/OperationHistoryControllerTest.java` para conservar las operaciones confirmadas del usuario cuando el jugador deja de ser elegible; respetar privacidad, valores históricos y fronteras de Service/Controller. No ejecutar tests.
+
+### Adaptación autorizada de consumidores de pruebas existentes
+
+**Origen**: cambio de población de T074/T075 y consumidores encontrados durante IMPLEMENT;
+no agrega requisitos funcionales ni autoriza cambios en extracción, sincronización o producción.
+La preparación de Service usa solo APIs productivas o helpers compartidos exclusivamente en
+Arrange según `docs/backend/testing.md`; no acceder a persistencia en Act, Assert o Verify. Los
+tests Repository pueden usar persistencia real. No añadir métricas por defecto en escenarios que
+necesitan comprobar primera extracción, ausencia o elegibilidad; preservar assertions y separar
+responsabilidades sin agregar APIs productivas para pruebas. No ejecutar tests.
+
+- [X] T086 [US1] Adaptar las precondiciones y verificaciones afectadas en `backend/src/test/java/footballmarket/features/catalog/application/PlayerCatalogServiceTest.java`, `TeamIdentityAndRetirementTest.java`, `TeamEnrichmentServiceTest.java`, `backend/src/test/java/footballmarket/features/catalog/infraestructure/PlayerCatalogPersistenceTest.java` y helpers compartidos pertinentes: verificar sincronización e identidad sin asumir que el alta es inmediatamente elegible, conservar cobertura de altas, actualización, inactivación, duplicados y rollback, y mantener las fronteras de categoría. Coordinar con T071/T072/T075.
+- [X] T087 [US1] Adaptar `backend/src/test/java/footballmarket/features/statistics/infraestructure/PlayerSnapshotConsistencyPersistenceTest.java`, `backend/src/test/java/footballmarket/features/statistics/application/scraping/PlayerStatisticsExtractionServiceTest.java`, `backend/src/test/java/footballmarket/features/statistics/application/json/JsonStatisticsUpdateServiceTest.java` y sus helpers para obtener en Arrange identidades y contexto necesarios sin filtrar por métricas aún inexistentes; conservar los casos de primera extracción, ausencia, contexto e integridad. Coordinar con T084.
+- [X] T088 [US1] Adaptar los consumidores afectados en `backend/src/test/java/footballmarket/features/images/application/PlayerImageSynchronizationServiceTest.java`, `backend/src/test/java/footballmarket/features/quote/application/QuoteAutomaticRecalculationFailureTest.java`, `QuoteRecalculationServiceTest.java`, `QuoteQueryServiceTest.java` y `backend/src/test/java/footballmarket/features/quote/infraestructure/QuoteMarketOperationPersistenceTest.java`, junto con sus helpers de Arrange, para no asumir visibilidad sin métricas; conservar los escenarios originales y no sembrar datos que invaliden casos de ausencia. Coordinar con T077/T078.
+- [X] T089 [US1] Revisar los demás consumidores backend de `getActivePlayers`, `findByActiveTrue` y `findVisibleById` en `backend/src/test/java/`, incluidos `backend/src/test/java/footballmarket/features/ranking/application/ScoreRankingQueryServiceTest.java`, `backend/src/test/java/footballmarket/features/ranking/infraestructure/ScoreRankingQueryTest.java` y `backend/src/test/java/footballmarket/features/quote/infraestructure/QuoteRankingPersistenceTest.java`; adaptar únicamente precondiciones incompatibles, preservando orden, poblaciones y cobertura. No modificar fixtures globales de forma que alteren otras suites sin analizar sus consumidores. Coordinar con T078 y T086–T088.
+- [X] T090 [US1] Actualizar `specs/002-player-catalog/quickstart.md` y la evidencia de T083 con el inventario definitivo de suites y comandos concretos para ejecución humana, cubriendo también los consumidores adaptados en T086–T089; registrar verificaciones pendientes sin afirmar compilación o ejecución de tests. Depende de T083 y T086–T089.
+
+Orden: T071–T073, T077–T079 y T084–T085 preparan pruebas en archivos distintos; T074 y T084 → T075 → T076; T074–T075 → T080/T082; T081 es independiente de T080 salvo integración; T083 sigue al conjunto. T086–T088 se coordinan con los archivos y fixtures compartidos; T089 revisa el inventario remanente y T090 sigue a T083 y T086–T089. Los IDs T084–T090 se agregan al final para conservar la trazabilidad histórica. No paralelizar modificaciones de archivos compartidos. `[P]` no autoriza delegación. El MVP técnico de consulta es T071–T076 y T084, pero no autoriza entregar parcialmente el alcance compartido: mercado, rankings y preservación también son obligatorios. No hay tareas nuevas para US2 sincronización porque el delta no la modifica.
+
+---
+
 **Entrada**: `specs/002-player-catalog/spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/api.md` y `quickstart.md`.
 
 **Organización**: Las tareas se agrupan por historia de usuario. Todos los tests nuevos usan `@ActiveProfiles("test")`; los tests de Controller documentan los casos HTTP verificados con Spring REST Docs. Los errores gestionados usan `ErrorResponseDTO`.

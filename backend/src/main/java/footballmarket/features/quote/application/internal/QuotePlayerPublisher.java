@@ -1,9 +1,11 @@
 package footballmarket.features.quote.application.internal;
 
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteAdjustment;
+import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import java.math.BigDecimal;
@@ -16,21 +18,22 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Publica atómicamente la cotización de un jugador dentro de una corrida manual. */
+/** Publica atómicamente la cotización diaria de un jugador en una corrida manual o automática. */
 @Component
 public class QuotePlayerPublisher {
   private static final Logger LOGGER = LoggerFactory.getLogger(QuotePlayerPublisher.class);
   private final PlayerQuoteRepository quotes;
   private final QuoteScoreResolver scores;
+  private final PlayerRepository players;
 
-  public QuotePlayerPublisher(PlayerQuoteRepository quotes, QuoteScoreResolver scores) {
+  public QuotePlayerPublisher(
+      PlayerQuoteRepository quotes, QuoteScoreResolver scores, PlayerRepository players) {
     this.quotes = quotes;
     this.scores = scores;
+    this.players = players;
   }
 
-  /**
-   * Publica una fila recalculada o arrastrada, o evita escribir cuando no hay valuación posterior.
-   */
+  /** Inserta o actualiza la única fila diaria bajo el bloqueo compartido con inicialización. */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public PublicationResult publish(
       Player player,
@@ -39,18 +42,16 @@ public class QuotePlayerPublisher {
       BigDecimal adjustmentFactor,
       BigDecimal variationCap,
       long minPriceFloor,
-      Instant calculatedAt) {
+      Instant calculatedAt,
+      QuoteExecution execution) {
     try {
+      this.players.lockIdentityById(player.getId()).orElseThrow();
       PlayerQuote current = this.quotes.findLatestByPlayerId(player.getId()).getFirst();
+      if (current.getEffectiveDate().isAfter(quoteDate)) {
+        return new PublicationResult(Publication.NOT_REPRICED, Optional.empty());
+      }
       Optional<QuoteScoreResolver.ResolvedScore> resolved =
           this.scores.resolve(player.getId(), strategy);
-      LocalDate referenceDate = this.quotes.findReferenceDatesByPlayerId(player.getId()).getFirst();
-      if (resolved.isPresent() && !resolved.get().valuationDate().isAfter(referenceDate)) {
-        return new PublicationResult(Publication.NOT_REPRICED, Optional.empty());
-      }
-      if (resolved.isEmpty() && !quoteDate.isAfter(referenceDate)) {
-        return new PublicationResult(Publication.NOT_REPRICED, Optional.empty());
-      }
       PlayerQuote next =
           resolved
               .map(
@@ -62,8 +63,17 @@ public class QuotePlayerPublisher {
                           adjustmentFactor,
                           variationCap,
                           minPriceFloor,
-                          calculatedAt))
-              .orElseGet(() -> this.carriedForward(player, current, quoteDate, calculatedAt));
+                          calculatedAt,
+                          quoteDate,
+                          execution))
+              .orElseGet(
+                  () -> this.carriedForward(player, current, quoteDate, calculatedAt, execution));
+      Optional<PlayerQuote> existing =
+          this.quotes.findByPlayerIdAndEffectiveDate(player.getId(), quoteDate);
+      if (existing.isPresent()) {
+        existing.get().replaceCalculation(next);
+        next = existing.get();
+      }
       this.quotes.saveAndFlush(next);
       Publication publication =
           next.getOrigin() == QuoteOrigin.RECOMPUTED
@@ -74,8 +84,7 @@ public class QuotePlayerPublisher {
       LOGGER.error(
           "quote_player_publication_failed playerId={} stage=publish cause={}",
           player.getId(),
-          exception.getClass().getSimpleName(),
-          exception);
+          exception.getClass().getSimpleName());
       throw exception;
     }
   }
@@ -87,13 +96,15 @@ public class QuotePlayerPublisher {
       BigDecimal adjustmentFactor,
       BigDecimal variationCap,
       long minPriceFloor,
-      Instant calculatedAt) {
+      Instant calculatedAt,
+      LocalDate quoteDate,
+      QuoteExecution execution) {
     QuoteAdjustment adjustment =
         QuoteAdjustment.calculate(
             current.getPrice(), resolved.score(), adjustmentFactor, variationCap, minPriceFloor);
     return new PlayerQuote(
         player,
-        resolved.valuationDate(),
+        quoteDate,
         adjustment.price(),
         current.getPrice(),
         adjustment.multiplier(),
@@ -102,11 +113,16 @@ public class QuotePlayerPublisher {
         resolved.strategyVersion(),
         resolved.valuationDate(),
         QuoteOrigin.RECOMPUTED,
-        calculatedAt);
+        calculatedAt,
+        execution);
   }
 
   private PlayerQuote carriedForward(
-      Player player, PlayerQuote current, LocalDate quoteDate, Instant calculatedAt) {
+      Player player,
+      PlayerQuote current,
+      LocalDate quoteDate,
+      Instant calculatedAt,
+      QuoteExecution execution) {
     return new PlayerQuote(
         player,
         quoteDate,
@@ -118,7 +134,8 @@ public class QuotePlayerPublisher {
         current.getStrategyVersion(),
         null,
         QuoteOrigin.CARRIED_FORWARD,
-        calculatedAt);
+        calculatedAt,
+        execution);
   }
 
   /** Resultado observable de la publicación individual. */

@@ -48,7 +48,7 @@ public class PlayerController {
   @Operation(
       summary = "Consultar estadísticas reales de un jugador",
       description =
-          "Última extracción confirmada individual, filtrada por seasonKey si se indica. JSON prioritario con respaldo scraping solo del mismo contexto y fecha. Devuelve 60 métricas con ausencias explícitas; no escribe ni calcula valoraciones.")
+          "Para un jugador elegible, consulta la última extracción confirmada individual, filtrada por seasonKey si se indica. JSON prioritario con respaldo scraping solo del mismo contexto y fecha. Sin snapshot confirmado responde NO_DATA con 60 métricas ausentes. No escribe ni calcula valoraciones.")
   @ApiResponse(responseCode = "200", description = "Snapshot disponible, parcial o NO_DATA")
   @ApiResponse(
       responseCode = "400",
@@ -57,7 +57,7 @@ public class PlayerController {
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
       responseCode = "404",
-      description = "Jugador no encontrado o no visible",
+      description = "Jugador no encontrado, no visible o sin métricas en su fecha más reciente",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(
       responseCode = "500",
@@ -103,7 +103,7 @@ public class PlayerController {
   @Operation(
       summary = "Consultar jugadores activos",
       description =
-          "Consulta local de jugadores visibles con filtros globales name, leagueId, teamId, position y nationality antes de paginar. name ignora acentos/mayúsculas y trata comodines literalmente; sort admite id,asc (legado), name,asc o name,desc. includeStatistics=true agrega tres valores reales por lote, con ausencias explícitas; false conserva la respuesta anterior. Tamaño 1–100, predeterminado 20; requiere JWT, no calcula cotizaciones ni consulta proveedores.")
+          "Consulta local de jugadores visibles con al menos una métrica informada en su fecha de extracción más reciente; cero cuenta y no se exige score ni cotización. Aplica filtros globales name, leagueId, teamId, position y nationality antes de paginar. name ignora acentos/mayúsculas y trata comodines literalmente; sort admite id,asc (legado), name,asc o name,desc. includeStatistics=true agrega tres valores reales por lote, con ausencias explícitas; false conserva la estructura anterior. Tamaño 1–100, predeterminado 20; requiere JWT, no calcula cotizaciones ni consulta proveedores.")
   @ApiResponse(
       responseCode = "200",
       description = "Página visible con enriquecimiento opcional",
@@ -140,7 +140,7 @@ public class PlayerController {
   @Operation(
       summary = "Opciones globales de filtros de jugadores",
       description =
-          "Ligas, equipos, posiciones y nacionalidades únicas del conjunto visible. Independientes de la página y sin cascadas; no incluye datos inventados para opcionales ausentes.")
+          "Ligas, equipos, posiciones y nacionalidades únicas del conjunto visible con métricas informadas en la fecha más reciente. Independientes de la página y sin cascadas; no incluye datos inventados para opcionales ausentes.")
   @ApiResponse(
       responseCode = "200",
       description = "Opciones globales, listas vacías si no hay jugadores")
@@ -157,7 +157,7 @@ public class PlayerController {
   @Operation(
       summary = "Consultar un jugador visible",
       description =
-          "Consulta individual exclusivamente local por identificador interno, con el mismo criterio de visibilidad del catálogo: solo jugadores activos asociados a Team vigente y League válida. Un identificador inexistente, inactivo o no visible responde 404 con el mismo cuerpo, sin revelar la existencia del jugador. Expone los mismos campos que el catálogo, con dateOfBirth, nationality, imageUrl y fallbackImageUrl nullable. Requiere JWT válido.")
+          "Consulta individual exclusivamente local por identificador interno, con el mismo criterio del catálogo: jugador activo, equipo vigente, liga válida y alguna métrica informada en su fecha de extracción más reciente. Un identificador inexistente o no elegible responde 404 sin revelar la existencia del jugador. Expone los mismos campos que el catálogo, con dateOfBirth, nationality, imageUrl y fallbackImageUrl nullable. Requiere JWT válido.")
   @ApiResponse(responseCode = "200", description = "Jugador visible")
   @ApiResponse(
       responseCode = "400",

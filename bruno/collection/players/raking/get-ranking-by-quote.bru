@@ -5,9 +5,14 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/players/ranking
+  url: {{baseUrl}}/api/rankings/quote
   body: none
   auth: bearer
+}
+
+params:query {
+  page: 0
+  size: 20
 }
 
 headers {

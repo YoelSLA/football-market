@@ -83,9 +83,10 @@ public class QuoteController {
   @Operation(
       summary = "Recalcular las cotizaciones",
       description =
-          "Ejecuta una única corrida para la fecha UTC actual con la estrategia y los límites "
+          "Ejecuta una corrida identificable para el día UTC fijado al iniciar, con la estrategia y los límites "
               + "indicados. Todos los parámetros salvo la estrategia tienen valores por defecto. "
-              + "El resumen identifica origin=MANUAL, result y failureReason derivado; "
+              + "Admite manuales ilimitadas y actualiza la cotización del mismo día; omite solo fechas posteriores. "
+              + "El resumen identifica executionId, origin=MANUAL, result y failureReason derivado; "
               + "no expone detalles internos de los fallos individuales.")
   @ApiResponse(
       responseCode = "200",
@@ -99,7 +100,7 @@ public class QuoteController {
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(
       responseCode = "409",
-      description = "MARKET_NOT_INITIALIZED o EXECUTION_ALREADY_EXISTS",
+      description = "MARKET_NOT_INITIALIZED",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
@@ -121,8 +122,9 @@ public class QuoteController {
   @Operation(
       summary = "Consultar ejecuciones por fecha de cotización",
       description =
-          "Devuelve el resumen de las ejecuciones de la fecha consultada. Como máximo hay una "
-              + "ejecución por fecha de cotización; una fecha sin ejecuciones devuelve una lista "
+          "Devuelve todos los resúmenes finalizados de la fecha UTC consultada, ordenados por inicio e ID descendentes. "
+              + "Admite manuales múltiples y como máximo una automática por fecha. "
+              + "Los contextos sin cierre no se devuelven; una fecha sin ejecuciones devuelve una lista "
               + "vacía, no un error. Cada resumen incluye el origen MANUAL o AUTOMATIC, "
               + "el resultado SUCCESS o FAILED y un motivo cerrado de fallo individual, "
               + "nulo si hubo éxito.")

@@ -4,23 +4,26 @@ import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.quote.application.QuoteQueryService;
 import footballmarket.features.quote.application.exceptions.QuoteNotFoundException;
 import footballmarket.features.quote.application.internal.QuotePopulationSelector;
+import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
+import footballmarket.features.quote.domain.records.QuoteRankingPage;
+import footballmarket.features.quote.domain.records.QuoteRankingQuery;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import java.time.LocalDate;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Consulta del historial, de la cotización vigente y del ranking de un jugador.
  *
  * <p>El historial es la propia tabla de cotizaciones: la vigente es la fila de fecha de vigencia
- * máxima y, a igualdad de fecha, la fila {@code RECOMPUTED}, escrita después que la arrastrada. El
- * ranking reúne esa misma fila vigente de cada jugador cotizado y la ordena por precio descendente.
- * Ninguna consulta recalcula precios.
+ * máxima, con una única fila diaria por jugador. El ranking reúne esa misma fila vigente de cada
+ * jugador cotizado y la ordena por precio descendente. Ninguna consulta recalcula precios.
  */
 @Service
 @Transactional(readOnly = true)
@@ -70,18 +73,63 @@ public class QuoteQueryServiceImpl implements QuoteQueryService {
     if (pricable.isEmpty()) {
       return List.of();
     }
+    List<PlayerQuote> rows = this.quotes.findRanking(pricable);
     List<PlayerRankingEntry> ranking =
-        this.quotes.findRanking(pricable).stream()
-            .map(
-                quote ->
-                    new PlayerRankingEntry(
-                        quote.getPlayer().getId(),
-                        quote.getPrice(),
-                        quote.getEffectiveDate(),
-                        quote.getOrigin(),
-                        quote.getCalculatedAt()))
+        java.util.stream.IntStream.range(0, rows.size())
+            .mapToObj(
+                index -> {
+                  PlayerQuote quote = rows.get(index);
+                  return new PlayerRankingEntry(
+                      quote.getPlayer().getId(),
+                      quote.getPrice(),
+                      quote.getEffectiveDate(),
+                      quote.getOrigin(),
+                      quote.getCalculatedAt(),
+                      index + 1L,
+                      null);
+                })
             .toList();
     LOG.debug("quote_ranking_read player={} entries={}", pricable.size(), ranking.size());
     return ranking;
+  }
+
+  @Override
+  @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  public QuoteRankingPage findRanking(QuoteRankingQuery query) {
+    List<PlayerRankingEntry> entries =
+        this.quotes
+            .findRankingPage(
+                query.name(), query.leagueId(), query.position(), query.size(), query.offset())
+            .stream()
+            .map(
+                row ->
+                    new PlayerRankingEntry(
+                        row.getPlayerId(),
+                        row.getPrice(),
+                        row.getEffectiveDate(),
+                        QuoteOrigin.valueOf(row.getOrigin()),
+                        row.getCalculatedAt(),
+                        row.getPosition(),
+                        new QuoteRankingPage.PlayerIdentity(
+                            row.getName(),
+                            row.getPlayerPosition(),
+                            row.getImageUrl(),
+                            row.getTeamId() == null
+                                ? null
+                                : new QuoteRankingPage.TeamIdentity(
+                                    row.getTeamId(), row.getTeamName(), null),
+                            row.getLeagueId() == null
+                                ? null
+                                : new QuoteRankingPage.LeagueOption(
+                                    row.getLeagueId(), row.getLeagueName()))))
+            .toList();
+    long total = this.quotes.countRanking(query.name(), query.leagueId(), query.position());
+    return new QuoteRankingPage(
+        entries,
+        query.page(),
+        query.size(),
+        total,
+        this.quotes.findRankingLeagues(),
+        this.quotes.findRankingPositions());
   }
 }

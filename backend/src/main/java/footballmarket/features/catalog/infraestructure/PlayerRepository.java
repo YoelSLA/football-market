@@ -18,11 +18,18 @@ import org.springframework.stereotype.Repository;
 /** Consulta local del catálogo vigente con asociaciones disponibles al terminar la lectura. */
 @Repository
 public interface PlayerRepository extends JpaRepository<Player, Long> {
+  /** Elegibilidad en la fecha más reciente, considerando todas las fuentes de esa fecha. */
+  String HAS_LATEST_METRICS =
+      " and exists (select s.id from PlayerStatistics s where s.player = p"
+          + " and s.presentMetrics > 0 and s.extractionDate ="
+          + " (select max(latest.extractionDate) from PlayerStatistics latest where latest.player = p))";
+
   /** Mismo predicado de visibilidad y filtros para contenido y conteo, antes de paginar. */
   @EntityGraph(attributePaths = {"team", "team.league"})
   @Query(
       "select p from Player p join p.team t join t.league l"
           + " where p.active = true and t.current = true"
+          + HAS_LATEST_METRICS
           + " and (:leagueId is null or l.id = :leagueId)"
           + " and (:teamId is null or t.id = :teamId)"
           + " and (:position is null or p.position = :position)"
@@ -40,32 +47,41 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
       Pageable pageable);
 
   @Query(
-      "select distinct l from Player p join p.team t join t.league l where p.active=true and t.current=true order by l.name, l.id")
+      "select distinct l from Player p join p.team t join t.league l where p.active=true and t.current=true"
+          + HAS_LATEST_METRICS
+          + " order by l.name, l.id")
   List<League> findCatalogLeagues();
 
   @Query(
-      "select distinct t from Player p join p.team t join t.league l where p.active=true and t.current=true order by t.name, t.id")
+      "select distinct t from Player p join p.team t join t.league l where p.active=true and t.current=true"
+          + HAS_LATEST_METRICS
+          + " order by t.name, t.id")
   List<Team> findCatalogTeams();
 
   @Query(
-      "select distinct p.position from Player p join p.team t join t.league l where p.active=true and t.current=true and trim(p.position) <> '' order by p.position")
+      "select distinct p.position from Player p join p.team t join t.league l where p.active=true and t.current=true"
+          + HAS_LATEST_METRICS
+          + " and trim(p.position) <> '' order by p.position")
   List<String> findCatalogPositions();
 
   @Query(
-      "select distinct p.nationality from Player p join p.team t join t.league l where p.active=true and t.current=true and p.nationality is not null and trim(p.nationality) <> '' order by p.nationality")
+      "select distinct p.nationality from Player p join p.team t join t.league l where p.active=true and t.current=true"
+          + HAS_LATEST_METRICS
+          + " and p.nationality is not null and trim(p.nationality) <> '' order by p.nationality")
   List<String> findCatalogNationalities();
 
   @EntityGraph(attributePaths = {"team", "team.league"})
   @Query(
-      "select p from Player p join p.team t join t.league l where p.active = true and t.current = true")
+      "select p from Player p join p.team t join t.league l where p.active = true and t.current = true"
+          + HAS_LATEST_METRICS)
   Page<Player> findByActiveTrue(Pageable pageable);
 
   /**
    * Consulta individual con el mismo predicado de visibilidad del catálogo.
    *
    * <p>Replica exactamente el filtro de {@link #findByActiveTrue(Pageable)} (jugador activo con
-   * equipo vigente) y carga las asociaciones necesarias para la respuesta. Un jugador existente
-   * pero no visible no produce coincidencias.
+   * equipo vigente y métricas informadas en su fecha más reciente) y carga las asociaciones
+   * necesarias para la respuesta. Un jugador existente pero no visible no produce coincidencias.
    *
    * @param id identificador interno del jugador
    * @return jugador visible con su equipo y liga cargados, o vacío si no cumple la visibilidad
@@ -73,7 +89,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
   @EntityGraph(attributePaths = {"team", "team.league"})
   @Query(
       "select p from Player p join p.team t join t.league l"
-          + " where p.id = :id and p.active = true and t.current = true")
+          + " where p.id = :id and p.active = true and t.current = true"
+          + HAS_LATEST_METRICS)
   Optional<Player> findVisibleById(Long id);
 
   /**

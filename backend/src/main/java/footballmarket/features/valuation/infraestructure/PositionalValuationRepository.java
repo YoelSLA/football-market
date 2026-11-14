@@ -1,5 +1,7 @@
 package footballmarket.features.valuation.infraestructure;
 
+import footballmarket.features.quote.domain.records.QuoteRankingPage.LeagueOption;
+import footballmarket.features.ranking.domain.records.ScoreRankingRow;
 import footballmarket.features.valuation.domain.models.PositionalValuation;
 import java.time.LocalDate;
 import java.util.List;
@@ -9,6 +11,27 @@ import org.springframework.data.repository.query.Param;
 
 /** Persistencia de valoraciones posicionales. */
 public interface PositionalValuationRepository extends JpaRepository<PositionalValuation, Long> {
+  @Query(
+      value = ScoreRankingSql.POSITIONAL + ScoreRankingSql.RANKED + ScoreRankingSql.PAGE,
+      nativeQuery = true)
+  List<ScoreRankingRow> findRankingPage(
+      String name, Long leagueId, String position, int size, long offset);
+
+  @Query(
+      value = ScoreRankingSql.POSITIONAL + ScoreRankingSql.RANKED + ScoreRankingSql.COUNT,
+      nativeQuery = true)
+  long countRanking(String name, Long leagueId, String position);
+
+  @Query(
+      value = ScoreRankingSql.POSITIONAL + ScoreRankingSql.RANKED + ScoreRankingSql.LEAGUES,
+      nativeQuery = true)
+  List<LeagueOption> findRankingLeagues();
+
+  @Query(
+      value = ScoreRankingSql.POSITIONAL + ScoreRankingSql.RANKED + ScoreRankingSql.POSITIONS,
+      nativeQuery = true)
+  List<String> findRankingPositions();
+
   void deleteByPlayerIdAndValuationDate(Long playerId, LocalDate valuationDate);
 
   /**
@@ -32,6 +55,9 @@ public interface PositionalValuationRepository extends JpaRepository<PositionalV
           + "select q.id from PlayerQuote q where q.player.id = v.player.id) and not exists ("
           + "select newer.id from PositionalValuation newer where newer.player.id = v.player.id"
           + " and newer.valuationDate > v.valuationDate)"
+          + " and exists (select s.id from PlayerStatistics s where s.player.id = v.player.id"
+          + " and s.presentMetrics > 0 and s.extractionDate ="
+          + " (select max(latest.extractionDate) from PlayerStatistics latest where latest.player.id = v.player.id))"
           + " order by v.finalScore desc, v.player.id asc")
   List<PositionalValuation> findScoreRanking();
 }

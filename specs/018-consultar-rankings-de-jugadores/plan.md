@@ -1,6 +1,88 @@
 # Implementation Plan: Consultar ranking de jugadores por score
 
-**Branch**: `feat/018-consultar-rankings-de-jugadores` | **Date**: 2026-10-23 | **Spec**: [`spec.md`](spec.md)
+## Plan vigente del delta — 2026-11-12
+
+**Rama observada**: `feat/018-paginated-rankings`. El nombre difiere del scope del directorio de
+SPEC-018; se conserva y reporta la divergencia, sin renombrar la rama. **Spec**: [`spec.md`](spec.md).
+Este bloque actualiza el diseño histórico siguiente para cubrir el delta clarificado. No acredita
+implementación, ANALYZE, autorización de implementación ni sincronización del seguimiento.
+
+### Resumen y contexto técnico vigentes
+
+Actualizar el recurso de score a `GET /api/rankings/score`, coherente con el ranking paginado de
+cotizaciones de SPEC-016. La consulta recibe `page`, `size`, `name`, `leagueId` y `position`, combina
+los filtros en backend, calcula posiciones globales antes de filtrar y pagina sin descargar el ranking
+completo. La respuesta conserva `strategy` y `quoteDate`, y expone `content`, `page`, `size`,
+`totalElements`, `totalPages` y `filterOptions`. Cada entrada conserva posición, ID, score y fecha de
+valuación, y agrega la identidad persistida del jugador.
+
+El encabezado procede de la ejecución finalizada con mayor `startedAt` y, en empate, mayor `id`; los
+contextos abiertos no se consideran. La estrategia y fecha de cotización de esa ejecución solo fijan el
+encabezado y la tabla de valuaciones consultada. Dentro de ella se selecciona por jugador la
+valuación más reciente; el orden global es score final descendente y `playerId` ascendente. La
+población conserva las cotizaciones vigentes y requiere además la elegibilidad de SPEC-002/SPEC-016:
+al menos una fila de `player_statistics` con `present_metrics > 0` en la fecha de extracción más reciente del jugador, además de la valuación aplicable. No se
+recalculan ni escriben datos.
+
+La ruta de podio es la misma consulta sin filtros con `page=0&size=3`; su `totalElements` da el total
+global. Las opciones de filtro proceden del universo elegible sin filtros y se mantienen invariantes
+con página y filtros. No se añade ruta/campo de podio ni se promete snapshot compartido entre
+solicitudes independientes.
+
+### Contexto técnico actualizado
+
+| Área | Diseño vigente |
+| --- | --- |
+| Stack | Java 21, Spring Boot 4.1.1, Spring MVC/Data JPA, PostgreSQL; sin dependencias nuevas. |
+| Persistencia | Consultas SQL nativas acotadas en los repositorios de valuaciones existentes, con proyección para filas de ranking y queries separadas para página, conteo y opciones cuando corresponda. Sin migraciones. |
+| Aplicación | Service de ranking por score con interfaz e implementación, consulta de cabecera finalizada, filtros normalizados y transacción de solo lectura. |
+| Presentación | Controller, Request/Response DTO `record`, Mapper y OpenAPI se actualizan durante IMPLEMENT conforme al contrato diseñado; JWT heredado. |
+| Pruebas futuras | Repository para SQL/filtros/posiciones/opciones; Service con persistencia real; Controller para contrato, validación y seguridad, conforme a `docs/backend/testing.md`. Las ejecuta el usuario, no este agente. |
+| Alcance | Backend y artefactos de contrato. PLAN define contrato e impacto en consumidores; IMPLEMENT actualiza Controller/DTO, OpenAPI y tests backend conjuntamente. Sin frontend, escritura, caché ni esquema nuevo. |
+
+### Constitution Check del delta
+
+**Antes de investigación**: PASS. El delta se limita a requisitos clarificados; reusa patrón de paginación
+existente, aplica las garantías JWT/solo lectura, mantiene separados los roles de backend y no modifica
+tecnologías o esquema. La elegibilidad de métricas es necesaria por SPEC-002/SPEC-016, no una población
+nueva. El contrato es observable y exige actualizar consumidores, OpenAPI y tests en la implementación.
+No hay violaciones que requieran Complexity Tracking.
+
+**Después del diseño**: PASS. Las decisiones detalladas en [`research.md`](research.md) cubren
+selección SQL, población, posiciones, filtros, opciones, totales y transacción. La página filtrada y el
+podio se obtienen con el mismo orden/contrato; no se amplía la respuesta. `quickstart.md` describe
+validación manual, pero no se ejecuta build ni test en esta fase.
+
+### Estructura objetivo vigente
+
+Se conserva la estructura real `footballmarket.features.ranking.{application,domain,presentation}`.
+Actualizar Controller/DTO/Mapper/Service/Model dentro de esa feature y añadir proyecciones de dominio
+para filas consultadas; extender `QuoteExecutionRepository` y los repositorios de valuación pertinentes
+sin crear roles ni paquetes raíz. Mantener los repositorios de las dos estrategias como consultas
+separadas. El detalle de componentes y pruebas se desglosa en fases posteriores, no aquí.
+
+### Evidencia de fase vigente
+
+| Elemento | Valor observado |
+| --- | --- |
+| Fecha | 2026-11-12 |
+| Comando de preparación | `.specify/scripts/bash/setup-plan.sh --json`; plan existente conservado |
+| Feature | `specs/018-consultar-rankings-de-jugadores/spec.md` |
+| Plan | `specs/018-consultar-rankings-de-jugadores/plan.md` |
+| BRANCH del setup | `018-consultar-rankings-de-jugadores`; no coincide con la rama Git observada `feat/018-paginated-rankings` |
+| Artefactos de diseño actualizados | `plan.md`, `research.md`, `data-model.md`, `contracts/score-ranking-http.md`, `quickstart.md` |
+| Hooks | `.specify/extensions.yml` ausente; no hay hooks de extensión que ejecutar |
+| Estado al registrar la evidencia de PLAN | Checklists, Tasks, Analyze, implementación, tests, builds y handoffs estaban fuera de aquella ejecución de PLAN. Las checklists y Tasks del delta se añadieron/revisaron después; el ANALYZE del delta se ejecuta en su propia fase. |
+
+La referencia a SPEC-022 en T047 es una coordinación contractual entre dos features, no una exigencia de que SPEC-022 haya terminado su propia revisión CLARIFY/PLAN ni una dependencia que bloquee el trabajo backend de SPEC-018. SPEC-018 fija el contrato backend vigente; SPEC-022 deberá alinear su consumidor mediante su flujo SDD. No ampliar ni reabrir el alcance frontend desde este plan.
+
+---
+
+## Plan histórico — alcance anterior (solo evidencia, no diseño vigente)
+
+Todo el contenido desde este encabezado hasta el final describe el diseño reemplazado antes del delta 2026-11-12. Sus decisiones, Constitution Checks y objetivos no son implementables ni prevalecen sobre «Plan vigente del delta» al inicio.
+
+**Branch histórica**: `feat/018-consultar-rankings-de-jugadores` | **Date**: 2026-10-23 | **Spec**: [`spec.md`](spec.md)
 
 <!-- MUST usar rama real según Constitution §7 y seguir docs/development/sdd-workflow.md.
 Plan no genera Tasks ni habilita Implement: siguen Checklists, Tasks y Analyze.
@@ -85,7 +167,7 @@ No añade tablas, migraciones, dependencias, códigos de error ni cambios en el 
 | Verificación y testing | El agente no ejecutará tests. El control ejecutable admitido es `./gradlew build -x test` desde `backend/`, solo en la fase de implementación | PASS |
 | Autorizaciones humanas | El plan no implementa ni habilita Implement. La fase siguiente es la evaluación de checklists; Tasks y Analyze siguen después | PASS |
 
-**Resultado del gate previo a Phase 0**: PASS, sin violaciones que exijan Complexity Tracking.
+**Resultado histórico del gate previo a Phase 0**: PASS para el alcance anterior; el gate vigente del delta está arriba.
 
 ### Re-evaluación tras el diseño (Phase 1)
 
@@ -98,7 +180,7 @@ No añade tablas, migraciones, dependencias, códigos de error ni cambios en el 
 | §V Trazabilidad | El score proviene de la fila persistida y la fecha de valuación identifica el dato usado; el encabezado identifica la ejecución | PASS |
 | Verificación y testing | La validación descrita en [`quickstart.md`](quickstart.md) es manual y la ejecuta el usuario; no se ejecutaron builds ni tests en esta fase | PASS |
 
-**Resultado del gate posterior a Phase 1**: PASS. Sin violaciones justificables: la sección
+**Resultado histórico del gate posterior a Phase 1**: PASS para el alcance anterior. Sin violaciones justificables: la sección
 Complexity Tracking queda vacía.
 
 ## Project Structure
@@ -123,7 +205,7 @@ specs/018-consultar-rankings-de-jugadores/
 ```text
 backend/src/main/java/footballmarket/
 ├── controllers/
-│   ├── ScoreRankingController.java                  # GET /api/players/ranking/score
+│   ├── ScoreRankingController.java                  # Ruta histórica: GET /api/players/ranking/score
 │   ├── dtos/responses/
 │   │   ├── ScoreRankingResponseDTO.java             # strategy, quoteDate y ranking
 │   │   └── ScoreRankingEntryResponseDTO.java        # position, playerId, score, valuationDate

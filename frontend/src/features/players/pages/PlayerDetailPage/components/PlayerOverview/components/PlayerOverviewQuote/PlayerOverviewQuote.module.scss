@@ -1,154 +1,28 @@
 @use "@/styles/abstracts" as ds;
 
-.quoteContext {
-	// 3. 🧩 Layout
+.playerOverviewQuote {
 	display: flex;
+	min-width: 0;
 	flex-direction: column;
-	align-items: center;
+	align-items: flex-end;
 	justify-content: center;
 	gap: 5px;
-
-	// 4. 📦 Box Model
-	box-sizing: border-box;
-	min-width: 0;
-	height: 94px;
-	padding: 8px 16px;
-	border-radius: 12px;
-
-	// 6. 🎨 Visual
-	background-color: ds.$surface-accent-deep;
-	border: 1px solid ds.$border-panel;
-
-	&__main {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: 8px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
-
-	&__coinIcon {
-		flex-shrink: 0;
-		color: #f5c518;
-	}
-
-	&__price {
-		// 5. 🔤 Typography
-		font-size: 22px;
-		font-weight: 800;
-		line-height: 1.1;
-		white-space: nowrap;
-		letter-spacing: -0.01em;
-
-		// 6. 🎨 Visual
-		color: ds.$text-primary-on-dark;
-	}
-
-	&__badge {
-		// 3. 🧩 Layout
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 4px;
-
-		// 4. 📦 Box Model
-		padding: 3px 8px;
-		border-radius: 6px;
-
-		// 5. 🔤 Typography
-		font-size: 11px;
-		font-weight: 700;
-		line-height: 1.2;
-		white-space: nowrap;
-
-		&--up {
-			background-color: ds.$surface-accent-dark;
-			color: ds.$accent-sports-green;
-			border: 1px solid ds.$accent-sports-green;
-		}
-
-		&--down {
-			background-color: ds.$surface-status-closed;
-			color: ds.$state-loss;
-			border: 1px solid ds.$border-status-closed;
-		}
-
-		&--flat,
-		&--initial {
-			background-color: ds.$surface-panel-from;
-			color: ds.$text-muted-on-dark;
-			border: 1px solid ds.$border-panel;
-		}
-	}
-
-	&__meta {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: 5px;
-
-		// 4. 📦 Box Model
-		margin: 0;
-
-		// 5. 🔤 Typography
-		font-size: 11.5px;
-		line-height: 1.25;
-		white-space: nowrap;
-
-		// 6. 🎨 Visual
-		color: ds.$text-muted-on-dark;
-	}
-
-	&__diff_up {
-		color: ds.$accent-sports-green;
-		font-weight: 600;
-	}
-
-	&__diff_down {
-		color: ds.$state-loss;
-		font-weight: 600;
-	}
-
-	&__separator {
-		// 5. 🔤 Typography
-		user-select: none;
-		font-size: 11px;
-
-		// 6. 🎨 Visual
-		color: ds.$border-panel;
-	}
+	text-align: right;
 }
 
-@media (max-width: 600px) {
-	.quoteContext {
-		flex-direction: row;
-		align-items: center;
-		justify-content: space-between;
-		gap: 8px;
+.playerOverviewQuote__label {
+	color: ds.$text-muted-on-dark;
+	font-size: 10px;
+	text-transform: uppercase;
+}
 
-		// 4. 📦 Box Model
-		box-sizing: border-box;
-		width: 100%;
-		height: auto;
-		padding: 6px 12px;
+.playerOverviewQuote__price {
+	color: ds.$text-primary-on-dark;
+	font-size: 20px;
+	font-weight: 700;
+}
 
-		// 6. 🎨 Visual
-		background-color: ds.$surface-accent-deep;
-		border: 1px solid ds.$border-panel;
-		border-radius: 8px;
-
-		&__price {
-			font-size: 17px;
-		}
-
-		&__badge {
-			font-size: 10px;
-		}
-
-		&__meta {
-			font-size: 10px;
-		}
-	}
+.playerOverviewQuote__change {
+	color: ds.$accent-sports-green;
+	font-size: 11px;
 }

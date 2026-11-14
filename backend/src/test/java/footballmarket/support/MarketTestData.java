@@ -18,9 +18,12 @@ import footballmarket.features.market.infraestructure.UserCreditRepository;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +58,7 @@ public class MarketTestData {
   private final PlayerTokenRepository holdings;
   private final PlayerTokenEmissionRepository emissions;
   private final PlayerQuoteRepository quotes;
+  private final PlayerStatisticsQueryData statistics;
 
   private final AtomicLong sequence = new AtomicLong(900_000L);
 
@@ -82,7 +86,8 @@ public class MarketTestData {
       UserCreditRepository creditsRepo,
       PlayerTokenRepository holdingsRepo,
       PlayerTokenEmissionRepository emissionsRepo,
-      PlayerQuoteRepository quotesRepo) {
+      PlayerQuoteRepository quotesRepo,
+      PlayerStatisticsQueryData statisticsData) {
     users = usersRepo;
     leagues = leaguesRepo;
     teams = teamsRepo;
@@ -91,6 +96,7 @@ public class MarketTestData {
     holdings = holdingsRepo;
     emissions = emissionsRepo;
     quotes = quotesRepo;
+    statistics = statisticsData;
   }
 
   /**
@@ -166,7 +172,16 @@ public class MarketTestData {
    */
   @Transactional
   public Player createVisiblePlayer() {
-    return createPlayer(true, true);
+    Player player = createPlayer(true, true);
+    statistics.row(
+        player.getId(),
+        MARKET_DATE,
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of("goals_total", BigDecimal.ZERO));
+    return player;
   }
 
   /**

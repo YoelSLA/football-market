@@ -117,6 +117,7 @@ class FinancialPositionServiceTest {
     void publicarNoEsVender() {
       // Arrange
       market.emitInitialTokens(player, seller);
+      market.initializeMarket(player);
       CurrentQuote quote = new CurrentQuote(player.getId(), 100L, NOW, "fixture");
       when(quotes.currentQuote(player.getId())).thenReturn(Optional.of(quote));
       purchases.buy(owner.getEmail(), new BuyOrderRequest(player.getId(), 10));
@@ -252,6 +253,7 @@ class FinancialPositionServiceTest {
     void conservaInstantaneaDuranteCompra() throws Exception {
       // Arrange: escritor de precondiciones mediante la API pública del mercado, sin repositorios.
       market.emitInitialTokens(player, seller);
+      market.initializeMarket(player);
       CurrentQuote quote = new CurrentQuote(player.getId(), 100, NOW, null);
       when(quotes.currentQuote(player.getId())).thenReturn(Optional.of(quote));
       purchases.buy(owner.getEmail(), new BuyOrderRequest(player.getId(), 1));

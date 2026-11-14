@@ -2,7 +2,7 @@
 
 **Feature**: `009-player-detail`
 **Spec**: [spec.md](spec.md) · **Referencia visual canónica**: [docs/wireframes/player-detail.md](../../docs/wireframes/player-detail.md)
-**Status**: Implementado y verificado en `dev`
+**Status**: Diseño frontend integrado desde `dev`; alineación de cotizaciones oficiales con datos reales en esta integración.
 
 ## Summary
 
@@ -26,6 +26,7 @@ El diseño aplica una paleta semántica de colores sólidos basada en design tok
   - Identidad básica: `GET /api/players/{id}`
   - Estadísticas deportivas: `GET /api/players/{id}/statistics`
   - Cotizaciones del token: `GET /api/players/{id}/quotes` y `GET /api/players/{id}/quotes/current`
+  - La interfaz de cotizaciones obtiene el historial oficial persistido; no usa series ni snapshots de demostración.
 
 ## Árbol de Componentes Frontend
 
@@ -54,7 +55,7 @@ PlayerDetailPage
 - **Consultas remotas coordinadas**:
   - `usePlayerDetailQuery`: consulta de identidad del jugador. Si responde 404 (`PLAYER_NOT_FOUND`), la vista entra en estado no encontrado sin exponer datos.
   - `usePlayerStatisticsQuery`: consulta del snapshot estadístico confirmando temporada y 60 métricas. Se activa únicamente cuando la identidad fue resuelta con éxito.
-  - `usePlayerQuotesQuery`: consulta del historial y cotización vigente.
+  - `usePlayerQuotesQuery`: consulta del historial oficial persistido; la cabecera y la pestaña derivan precio, variación y serie de esa respuesta. El panel y el gráfico no reciben datos de demostración.
 - **Estado local por jugador (`usePlayerDetailControls`)**:
   - `activeTab`: `'quotes' | 'summary' | 'catalog'` (`'quotes'` predeterminada al ingresar).
   - `search`: filtro de texto para el catálogo.
@@ -88,7 +89,7 @@ PlayerDetailPage
 | Principio | Estado | Justificación |
 | --- | :---: | --- |
 | Simplicidad y calidad | Conforme | Solución directa sin dependencias adicionales de gráficos pesados; uso de SVG nativo y CSS estructurado. |
-| Coherencia de contratos | Conforme | Endpoints `GET /api/players/{id}`, `/statistics` y `/quotes` alineados con OpenAPI, DTOs y glosario canónico. |
+| Coherencia de contratos | Conforme | Endpoints `GET /api/players/{id}`, `/statistics` y `/quotes` alineados con OpenAPI, DTOs y glosario canónico; identidad y estadísticas conservan la regla de elegibilidad de SPEC-002. |
 | Seguridad e integridad | Conforme | Rutas privadas protegidas por Bearer JWT. Identificadores inválidos devuelven 400; inactivos e inexistentes 404 indistinguible sin revelar información. |
 | Mínimo alcance necesario | Conforme | Se reutilizan entidades existentes; no se agregaron tablas, migraciones, campos financieros hipotéticos ni indicadores derivados no autorizados. |
 | Idioma | Conforme | Código y contratos en inglés; textos visibles y documentación en español. |

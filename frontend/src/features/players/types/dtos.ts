@@ -62,30 +62,63 @@ export interface PlayerStatisticsResponseDTO {
 	metrics: PlayerMetricResponseDTO[];
 }
 
+export interface RankingPlayerDTO {
+	name: string;
+	position: string | null;
+	imageUrl: string | null;
+	team: {
+		id: number;
+		name: string;
+		crestUrl: string | null;
+	} | null;
+	league: {
+		id: number;
+		name: string;
+	} | null;
+}
+
+export interface RankingFilterOptionsDTO {
+	leagues: { id: number; name: string }[];
+	positions: string[];
+}
+
 export interface ScoreRankingEntryDTO {
 	position: number;
 	playerId: number;
 	score: number;
 	valuationDate: string;
+	player: RankingPlayerDTO;
 }
 
 export interface ScoreRankingResponseDTO {
 	strategy: string | null;
 	quoteDate: string | null;
-	ranking: ScoreRankingEntryDTO[];
+	content: ScoreRankingEntryDTO[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	filterOptions: RankingFilterOptionsDTO;
 }
 
 export interface QuoteRankingEntryDTO {
 	position: number;
 	playerId: number;
+	/** Precio vigente en centésimas. */
 	price: number;
 	effectiveDate: string;
-	origin: "RECOMPUTED" | "CARRIED_FORWARD";
+	origin: "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD";
 	calculatedAt: string;
+	player: RankingPlayerDTO;
 }
 
 export interface QuoteRankingResponseDTO {
-	ranking: QuoteRankingEntryDTO[];
+	content: QuoteRankingEntryDTO[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	filterOptions: RankingFilterOptionsDTO;
 }
 
 export interface PlayerQuoteResponseDTO {

@@ -8,6 +8,8 @@ import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.features.valuation.domain.enums.GeneralPosition;
 import footballmarket.features.valuation.domain.enums.MetricSourceSummary;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
@@ -18,6 +20,7 @@ import footballmarket.features.valuation.infraestructure.PositionalValuationRepo
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Map;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Prepara datos persistidos del ranking por score exclusivamente durante Arrange. */
@@ -27,18 +30,36 @@ public class ScoreRankingTestData {
   private final PositionalValuationRepository valuations;
   private final AttributeValuationRepository attributeValuations;
   private final QuoteExecutionRepository executions;
+  private final PlayerStatisticsQueryData statistics;
 
   public ScoreRankingTestData(
       PlayerRepository players,
       PlayerQuoteRepository quotes,
       PositionalValuationRepository valuations,
       AttributeValuationRepository attributeValuations,
-      QuoteExecutionRepository executions) {
+      QuoteExecutionRepository executions,
+      PlayerStatisticsQueryData statistics) {
     this.players = players;
     this.quotes = quotes;
     this.valuations = valuations;
     this.attributeValuations = attributeValuations;
     this.executions = executions;
+    this.statistics = statistics;
+  }
+
+  /** Prepara elegibilidad de la población de ranking, exclusivamente durante Arrange. */
+  @Transactional
+  public void prepareCatalogueMetrics() {
+    for (Player player : this.players.findAll()) {
+      this.statistics.row(
+          player.getId(),
+          LocalDate.of(2026, 9, 1),
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ZERO));
+    }
   }
 
   /** Persiste una valuación posicional adicional para comprobar la selección por fecha. */

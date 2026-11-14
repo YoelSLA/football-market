@@ -164,3 +164,39 @@ sincronización remota ni sustituye los artefactos SDD.
 
 - Aprobación humana de CODE REVIEW con el checklist de la sección 10 del informe y, tras ella, la fase
   de TESTING con ejecución de tests a cargo del usuario.
+
+## 2026-11-12 — ANALYZE del delta vigente
+
+- Alcance: delta clarificado de SPEC-018 en `spec.md`, `plan.md`, `tasks.md`, artefactos de diseño y checklists.
+- Prerrequisito: `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` resolvió `FEATURE_DIR` a `specs/018-consultar-rankings-de-jugadores` y confirmó `tasks.md` disponible.
+- Resultado del análisis: sin hallazgos CRITICAL ni HIGH; cero blockers CRITICAL. Se informó un hallazgo MEDIUM de especificidad en T048: faltaba la ruta completa de un Repository y no se identificaban los tests relacionados.
+- Corrección documental posterior: T048 ahora identifica los tres archivos productivos, los tests T033/T034 y la frontera de verificación prescrita en `docs/backend/testing.md`. Esta corrección es posterior a ANALYZE; no se afirma que el análisis se haya repetido sobre la nueva redacción.
+- Hooks: `.specify/extensions.yml` no existe; no había hooks before/after analyze.
+- Verificación: análisis estrictamente de solo lectura; no se ejecutaron tests ni builds, y no se modificó el seguimiento remoto.
+- Estado y autorización: el resultado permite considerar la preparación sin blockers CRITICAL/HIGH, pero **no constituye IMPLEMENT AUTHORIZATION**. La autorización de implementación del delta sigue siendo `NONE`; cualquier inicio de IMPLEMENT requiere autorización humana explícita y persistida.
+
+## 2026-11-12 — ANALYZE renovado tras corregir blockers
+
+- Base evaluada: delta vigente de `spec.md`, `plan.md`, `tasks.md`, artefactos de diseño y checklists, con T048 ya precisada y lista de tareas corregida.
+- Identificadores: las tareas retiradas T030/T031 permanecen retiradas; no se reutilizan. Las 19 tareas activas del delta son T032–T050, con referencias y dependencias revisadas.
+- Prerrequisito: `.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks` resolvió `FEATURE_DIR` a `specs/018-consultar-rankings-de-jugadores` y confirmó `tasks.md`.
+- Resultado inequívoco: **ANALYZE sin hallazgos ni blockers de ninguna severidad** (CRITICAL, HIGH, MEDIUM o LOW); sin incertidumbre fundamental. Se revisó cobertura de los 12 FR vigentes y 7 SC vigentes; la totalidad tiene tareas asociadas.
+- Checklists: sus marcadores `[x]` se tomaron únicamente como evidencia de revisión de calidad; no sustituyen este ANALYZE ni constituyen autorización.
+- Hooks: `.specify/extensions.yml` no existe; no hay hooks before/after analyze.
+- Límites/verificación: ANALYZE fue de solo lectura; no se ejecutaron tests, builds ni fases posteriores. El registro de esta evidencia es una operación documental separada. No se afirma sincronización remota.
+- Autorización: **IMPLEMENT AUTHORIZATION para el delta = NONE**. La ausencia de blockers completa la preparación según el workflow, pero no autoriza ni inicia IMPLEMENT; se requiere autorización humana explícita y persistida.
+
+## 2026-11-12 — IMPLEMENT AUTHORIZATION del delta
+
+- Autor: usuario de la sesión activa.
+- Evidencia: ante la pregunta explícita «¿Autorizás explícitamente IMPLEMENT de las tareas abiertas T032–T050 de SPEC-018, incluidos los prerrequisitos T049 y T050?», el usuario respondió «Si, tenes mi autorizacion.».
+- Alcance: T032–T050, incluidos los prerrequisitos T049 y T050, sobre la base del ANALYZE renovado registrado arriba.
+- Límites: no autoriza ejecutar tests, fases posteriores, handoffs ni cierre.
+- Seguimiento remoto: pendiente de verificación; este registro no afirma sincronización ni inicio del trabajo.
+
+## 2026-11-12 — ANALYZE y autorización sobre la base aclarada
+
+- Alcance: SPEC-018, delta T032–T050, con FR-022 precisado para admitir alguna estadística con métricas en la fecha de extracción más reciente y T049 con las rutas de migración existentes.
+- ANALYZE: sin blockers identificados en la revisión de requisitos, diseño, tareas y checklists; los seis criterios de `checklists/api-security-delta.md` están marcados por el revisor. No se ejecutaron tests ni builds.
+- Autorización humana: ante la propuesta de ejecutar ANALYZE y, si no encuentra blockers y la autorización sigue vigente, continuar con IMPLEMENT, el usuario respondió «Si porfavor, lo que sea para que hagas el codigo». Se conserva el alcance T032–T050 y la aclaración de FR-022 aceptada por el usuario.
+- Límites: no ejecutar tests ni fases posteriores a IMPLEMENT. Este registro no acredita revisión de código, testing ni cierre.

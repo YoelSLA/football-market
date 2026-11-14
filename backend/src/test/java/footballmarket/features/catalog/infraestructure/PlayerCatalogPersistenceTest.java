@@ -11,14 +11,20 @@ import footballmarket.features.catalog.domain.records.PlayerCandidate;
 import footballmarket.features.catalog.domain.records.PlayerSnapshot;
 import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import footballmarket.features.catalog.domain.records.TeamCandidate;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.PlayerReferenceReadGate;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -47,7 +53,11 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, PlayerReferenceReadGate.class})
+@Import({
+  TestcontainersConfiguration.class,
+  PlayerReferenceReadGate.class,
+  PlayerStatisticsQueryData.class
+})
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
@@ -60,6 +70,7 @@ class PlayerCatalogPersistenceTest {
   @Autowired private PlatformTransactionManager transactionManager;
   @Autowired private DataSource dataSource;
   @Autowired private JdbcTemplate jdbc;
+  @Autowired private PlayerStatisticsQueryData statistics;
 
   @AfterEach
   void removeRaceGate() {
@@ -82,6 +93,75 @@ class PlayerCatalogPersistenceTest {
   @Nested
   @DisplayName("Persistencia del modelo vigente")
   class Persistence {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @DisplayName("El alta conserva los textos canónicos sin depender de elegibilidad")
+    void persistsCanonicalPresentation(boolean reverse) {
+      // Arrange
+      PlayerCandidate upper =
+          new PlayerCandidate("91020", "JOSE PEREZ", "T", "L", "MIDFIELDER", null, null, "100");
+      PlayerCandidate natural =
+          new PlayerCandidate("91020", "José Pérez", "T", "L", "Midfielder", null, null, "100");
+
+      // Act
+      catalog.applySynchronization(reverse ? snapshot(natural, upper) : snapshot(upper, natural));
+
+      // Assert
+      assertThat(jdbc.queryForObject("SELECT name FROM players", String.class))
+          .isEqualTo("José Pérez");
+      assertThat(jdbc.queryForObject("SELECT position FROM players", String.class))
+          .isEqualTo("Midfielder");
+    }
+
+    @Test
+    @DisplayName("El alta conserva opcionales ausentes e identidad aun sin métricas")
+    void persistsNewPlayerWithoutMetrics() {
+      // Act
+      catalog.applySynchronization(snapshot(candidate("91001", "New Player")));
+
+      // Assert
+      assertThat(
+              jdbc.queryForObject(
+                  "SELECT count(*) FROM players WHERE name = 'New Player' AND date_of_birth IS NULL AND nationality IS NULL AND image_url IS NULL",
+                  Integer.class))
+          .isEqualTo(1);
+      assertThat(references.findByProviderAndExternalId(ExternalProvider.FOOTBALL_DATA, "91001"))
+          .hasValueSatisfying(reference -> assertThat(reference.getPlayer().getId()).isNotNull());
+    }
+
+    @Test
+    @DisplayName("Una identidad duplicada conserva la primera liga sin exigir métricas")
+    void persistsFirstLeagueForDuplicateIdentity() {
+      // Arrange
+      PlayerCandidate first =
+          new PlayerCandidate("91009", "First", "T", "L", "P", null, null, "100");
+      PlayerCandidate duplicate =
+          new PlayerCandidate("91009", "Duplicate", "T2", "L2", "P", null, null, "200");
+      PlayerSnapshot photo =
+          new PlayerSnapshot(
+              List.of(first, duplicate),
+              2,
+              0,
+              List.of(new LeagueCandidate("10", "L"), new LeagueCandidate("20", "L2")),
+              List.of(
+                  new TeamCandidate("100", "T", "10", true),
+                  new TeamCandidate("200", "T2", "20", true)),
+              List.of());
+
+      // Act
+      catalog.applySynchronization(photo);
+
+      // Assert
+      assertThat(jdbc.queryForObject("SELECT count(*) FROM players", Integer.class)).isEqualTo(1);
+      assertThat(jdbc.queryForObject("SELECT p.name FROM players p", String.class))
+          .isEqualTo("First");
+      assertThat(
+              jdbc.queryForObject(
+                  "SELECT l.name FROM players p JOIN teams t ON t.id=p.team_id JOIN leagues l ON l.id=t.league_id",
+                  String.class))
+          .isEqualTo("L");
+    }
+
     @Test
     @DisplayName(
         "La consulta carga equipo y liga fuera de transacción, filtra vigencia y no excluye por casos históricos")
@@ -99,6 +179,16 @@ class PlayerCatalogPersistenceTest {
       jdbc.update(
           "INSERT INTO pending_review_cases(category,cause_code,subject_type,subject_id,case_key,first_detected_at,last_detected_at,evidence) "
               + "VALUES ('PLAYER_TEAM_UNRESOLVED','TEAM_UNRESOLVED','PLAYER',601,'historical',now(),now(),'{}'::jsonb)");
+      for (long id : List.of(601L, 602L, 603L, 605L)) {
+        statistics.row(
+            id,
+            LocalDate.of(2026, 10, 1),
+            MetricSource.JSON,
+            "2026",
+            "1",
+            PlayerExtractionResult.COMPLETED,
+            Map.of("goals_total", BigDecimal.ZERO));
+      }
 
       // Act
       org.springframework.data.domain.Page<Player> first = catalog.getActivePlayers(0, 1);
@@ -172,6 +262,16 @@ class PlayerCatalogPersistenceTest {
           });
       jdbc.update(
           "UPDATE players SET image_url='https://images.example/portrait.jpg' WHERE name='Football player'");
+      for (Long id : jdbc.queryForList("SELECT id FROM players", Long.class)) {
+        statistics.row(
+            id,
+            LocalDate.of(2026, 10, 1),
+            MetricSource.JSON,
+            "2026",
+            "1",
+            PlayerExtractionResult.COMPLETED,
+            Map.of("goals_total", BigDecimal.ZERO));
+      }
       catalog.applySynchronization(snapshot(input));
       assertThat(catalog.getActivePlayers(0, 20).getContent()).hasSize(2);
       assertThat(
