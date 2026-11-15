@@ -7,9 +7,8 @@ interface Props {
 	filters: RankingFilterCriteria;
 	onFilterChange: (key: keyof RankingFilterCriteria, value: string) => void;
 	onClearFilters: () => void;
-	availableLeagues: string[];
-	totalCount: number;
-	filteredCount: number;
+	availableLeagues: { id: number; name: string }[];
+	availablePositions: string[];
 }
 
 export default function RankingsFilters({
@@ -17,11 +16,12 @@ export default function RankingsFilters({
 	onFilterChange,
 	onClearFilters,
 	availableLeagues,
+	availablePositions,
 }: Props) {
 	const hasActiveFilters =
-		Boolean(filters.searchTerm.trim()) ||
-		Boolean(filters.selectedLeague) ||
-		Boolean(filters.selectedPosition);
+		Boolean(filters.name.trim()) ||
+		Boolean(filters.leagueId) ||
+		Boolean(filters.position);
 
 	return (
 		<search className={styles.filtersBar} aria-label="Filtros del ranking">
@@ -30,8 +30,8 @@ export default function RankingsFilters({
 					<input
 						type="search"
 						placeholder="Buscar jugador..."
-						value={filters.searchTerm}
-						onChange={(e) => onFilterChange("searchTerm", e.target.value)}
+						value={filters.name}
+						onChange={(e) => onFilterChange("name", e.target.value)}
 						className={styles.searchInput}
 						aria-label="Buscar jugador por nombre"
 					/>
@@ -45,14 +45,14 @@ export default function RankingsFilters({
 				<div className={styles.selectWrapper}>
 					<select
 						id="filter-league-select"
-						value={filters.selectedLeague}
-						onChange={(e) => onFilterChange("selectedLeague", e.target.value)}
+						value={filters.leagueId}
+						onChange={(e) => onFilterChange("leagueId", e.target.value)}
 						className={styles.select}
 					>
 						<option value="">Todas las ligas</option>
 						{availableLeagues.map((league) => (
-							<option key={league} value={league}>
-								{league}
+							<option key={league.id} value={String(league.id)}>
+								{league.name}
 							</option>
 						))}
 					</select>
@@ -66,15 +66,16 @@ export default function RankingsFilters({
 				<div className={styles.selectWrapper}>
 					<select
 						id="filter-position-select"
-						value={filters.selectedPosition}
-						onChange={(e) => onFilterChange("selectedPosition", e.target.value)}
+						value={filters.position}
+						onChange={(e) => onFilterChange("position", e.target.value)}
 						className={styles.select}
 					>
 						<option value="">Todas las posiciones</option>
-						<option value="DEL">Delanteros (DEL)</option>
-						<option value="MED">Mediocampistas (MED)</option>
-						<option value="DEF">Defensores (DEF)</option>
-						<option value="POR">Arqueros (POR)</option>
+						{availablePositions.map((position) => (
+							<option key={position} value={position}>
+								{position}
+							</option>
+						))}
 					</select>
 				</div>
 			</div>

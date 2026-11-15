@@ -45,6 +45,23 @@ class AutomaticQuoteRecalculationSchedulerTest {
   @DisplayName("Disparos automáticos")
   class AutomaticTriggers {
     @Test
+    @DisplayName("Omite la automática ya registrada sin propagar el rechazo")
+    void skipsAlreadyRegisteredAutomaticExecution() {
+      // Arrange
+      when(service.recalculateAutomatic()).thenThrow(new ExecutionAlreadyExistsException());
+      AutomaticQuoteRecalculationScheduler scheduler = scheduler(true);
+      // Act / Assert
+      assertThatCode(scheduler::recalculate).doesNotThrowAnyException();
+      // Verify
+      assertThat(events.list)
+          .extracting(ILoggingEvent::getFormattedMessage)
+          .anyMatch(
+              message ->
+                  message.startsWith("quote_automatic_recalculation_skipped ")
+                      && message.endsWith("reason=EXECUTION_ALREADY_EXISTS"));
+    }
+
+    @Test
     @DisplayName("Registra el mercado no inicializado sin propagar el rechazo")
     void rejectsUninitializedMarket() {
       // Arrange
@@ -111,20 +128,15 @@ class AutomaticQuoteRecalculationSchedulerTest {
     }
 
     @Test
-    @DisplayName("Omite la fecha ya registrada sin propagar el rechazo")
-    void skipsExistingDate() {
+    @DisplayName("Cada disparo del mismo día vuelve a delegar sin exclusión por fecha")
+    void delegatesRepeatedTriggers() {
       // Arrange
-      when(service.recalculateAutomatic()).thenThrow(new ExecutionAlreadyExistsException());
       AutomaticQuoteRecalculationScheduler scheduler = scheduler(true);
       // Act / Assert
       assertThatCode(scheduler::recalculate).doesNotThrowAnyException();
+      assertThatCode(scheduler::recalculate).doesNotThrowAnyException();
       // Verify
-      assertThat(events.list)
-          .extracting(ILoggingEvent::getFormattedMessage)
-          .anyMatch(
-              message ->
-                  message.startsWith("quote_automatic_recalculation_skipped ")
-                      && message.endsWith("reason=EXECUTION_ALREADY_EXISTS"));
+      verify(service, org.mockito.Mockito.times(2)).recalculateAutomatic();
     }
   }
 

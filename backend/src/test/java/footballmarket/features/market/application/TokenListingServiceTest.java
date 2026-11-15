@@ -25,9 +25,14 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.MarketTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.TestcontainersConfiguration;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -167,11 +172,31 @@ class TokenListingServiceTest {
   @Autowired private TokenListingService listingService;
   @Autowired private BuyOrderService buyService;
   @Autowired private MarketTestData market;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @MockitoBean private QuoteSource quotes;
   @MockitoBean private java.time.Clock marketClock;
   private User seller;
   private User superuser;
   private Player player;
+
+  @Test
+  @DisplayName("Rechaza publicar una venta si la última extracción no tiene métricas")
+  void rejectsSaleWhenLatestMetricsAreEmpty() {
+    // Arrange
+    statistics.row(
+        player.getId(),
+        LocalDate.of(2026, 10, 18),
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of());
+    // Act / Assert
+    assertThatThrownBy(
+            () ->
+                listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 1)))
+        .isInstanceOf(PlayerNotVisibleException.class);
+  }
 
   @BeforeEach
   void arrange() {

@@ -1,5 +1,9 @@
 # Modelo de datos: Página de catálogo de jugadores
 
+## Modelo del delta — 2026-11-11
+
+`PlayerCatalogPage` y `FilterOptions` se construyen desde el conjunto elegible definido en [SPEC-002](../002-player-catalog/data-model.md), antes de filtros y paginación. Una tarjeta elegible aún puede tener `CatalogStatistics` parcial o sin resumen confirmado: cada valor ausente se muestra «Sin datos». Esta regla sustituye únicamente la afirmación anterior de que cualquier jugador sin métricas permanece visible. El estado de tenencia e historial no depende del resultado del detalle filtrado.
+
 ## Modelo vigente del rediseño
 
 - **PlayerCatalogCriteria**: name nullable normalizado con trim, leagueId/teamId nullable positivos, position/nationality nullable exactos, sort controlado y includeStatistics boolean. Page/size conservan sus validaciones. DTO de query distinto de Model aunque compartan campos.

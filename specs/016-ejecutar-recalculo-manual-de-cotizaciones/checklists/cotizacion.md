@@ -46,3 +46,43 @@
 - Link to relevant resources or documentation
 - Items are numbered sequentially for easy reference
 - La revisión de los ítems se realizó tras aplicar las resoluciones acordadas: eliminación del requisito de eficiencia (FR-030, FR-065), orden de precedencia de rechazos (FR-066) y una sola ejecución de cotización por fecha de cotización (FR-060)
+
+## Revisión general del delta — 2026-11-10
+
+**Propósito**: revisar completitud, claridad, consistencia y aceptación del cambio diario de SPEC-016, no su implementación.
+**Profundidad**: estándar. **Destinatario/momento**: revisor humano, tras PLAN y antes de TASKS.
+**Fuentes vigentes**: revisión de 2026-11-10 de [spec.md](../spec.md), [plan.md](../plan.md) y sus artefactos. Los ítems CHK001–CHK019 y su aprobación corresponden al alcance histórico; no acreditan evaluación del delta. Se conservan sin cambios.
+
+### Completitud y claridad
+
+- [x] CHK020 - ¿Está delimitado el delta entre cotización diaria, ranking por precio y responsabilidades externas de agenda, ranking por score e interfaz, sin incorporar funcionalidad de las otras specs? [Completitud, Spec §Revisión vigente — 2026-11-10, Plan §Coordinación contractual y orden técnico]
+- [x] CHK021 - ¿La regla diaria distingue explícitamente reutilizar un score antiguo de no disponer de score para la estrategia elegida, conservando la fórmula, topes, piso y redondeo aprobados? [Claridad, Spec §FR-005/FR-027, §FR-008, §FR-016]
+- [x] CHK022 - ¿La definición de día UTC fijado al inicio es inequívoca y consistente con fecha de vigencia, consulta de corridas y fecha de valuación auditada? [Claridad, Spec §FR-024/FR-060 — cambio de día, §Clarifications — Session 2026-11-10]
+
+### Consistencia y criterios de aceptación
+
+- [x] CHK023 - ¿La precedencia entre revisiones vigentes y antecedentes identifica sin contradicción ejecutable qué reglas anteriores quedan sustituidas, incluidos criterios de éxito y supuestos históricos? [Consistencia, Spec §Sustituciones, §Base anterior — conservada para trazabilidad, Plan §Antecedente de planificación]
+- [x] CHK024 - ~~¿Los cinco escenarios de aceptación del delta son objetivamente verificables y se corresponden con las cuatro respuestas de CLARIFY sin requisitos funcionales añadidos por el diseño?~~ Retirado como pendiente sobre visibilidad de resúmenes incompletos por decisión del usuario; no acredita conformidad integral de este criterio. [Medibilidad, Spec §Aceptación del cambio, §Clarifications — Session 2026-11-10]
+- [x] CHK025 - ¿Las posiciones oficiales, el desempate y la independencia del Top 3 respecto de filtros y página están definidos de manera coherente entre spec y contrato? [Consistencia, Spec §FR-039, Contrato §GET /api/rankings/quote]
+
+### Cobertura, límites y dependencias
+
+- [x] CHK026 - ¿Los requisitos cubren cotización ya existente del día, inicialización del mismo día, score neutro, score ausente y valuación llegada después de la cotización sin redefinir la fórmula financiera? [Cobertura, Spec §FR-008, §FR-024/FR-026, §Aceptación del cambio]
+- [x] CHK027 - ¿Se distinguen claramente fallo individual, omisión diaria y fallo de cierre global, con sus límites de reintento y sin confundir posibilidad de reintentar con recuperación garantizada? [Claridad, Spec §FR-060/FR-061, Research §R2, TD-024]
+- [x] CHK028 - ¿La exclusión de recuperación automática y compensación está documentada como límite de alcance y no como exención de garantías de integridad o trazabilidad exigidas? [Consistencia, Spec §FR-062, Research §R1/§R2, TD-024]
+- [x] CHK029 - ¿Están documentadas las dependencias de SPEC-018/022/023 y la adopción conjunta de contratos incompatibles, sin tratar su orden técnico conocido como un blocker por sí solo? [Dependencias, Plan §Coordinación contractual y orden técnico]
+- [x] CHK030 - ¿Los requisitos no funcionales reutilizan las obligaciones vigentes de seguridad y observabilidad sin añadir SLAs, cachés ni requisitos opcionales como condiciones obligatorias? [Proporcionalidad, Spec §FR-064/FR-065, Constitution §II/§VI]
+- [x] CHK031 - ¿Se distingue el diseño vigente del alcance histórico de Tasks y de las aprobaciones anteriores, sin presentar tareas históricas completadas como cobertura o autorización del delta? [Trazabilidad, Spec §Evidencia posterior — 2026-11-10, Tasks §Phase 1/§Phase 4]
+
+### Notas del delta
+
+- Generación de CHECKLIST registrada el 2026-11-10: 12 ítems nuevos; ninguno evaluado ni aceptado por el agente.
+- Selección de criterios aplicables: general de calidad aquí; contrato, autenticación y errores en [api.md](api.md); integridad, concurrencia y trazabilidad en [data.md](data.md). Son los riesgos materiales del delta; no se añade checklist UX porque el diseño visual pertenece a SPEC-022, ni performance porque no se acordaron objetivos nuevos.
+- Revisión humana de los criterios aplicables: **PENDIENTE**. Debe registrarse antes de TASKS; generar estos archivos no la sustituye.
+- `[x]` significa conformidad del revisor con la calidad del requisito, no implementación completa. `/speckit.implement` lee los marcadores y no los modifica.
+
+**Evaluación asistida solicitada por el usuario — 2026-11-10**: 11/12 ítems del delta contemplados en las fuentes referenciadas y marcados por solicitud explícita; no constituye aprobación de IMPLEMENT, CODE REVIEW, TESTING ni cierre. Supera el estado de evaluación pendiente anterior solo para esta revisión documental. Marcadores históricos intactos.
+
+**Pendiente CHK024**: PLAN añadió que solo se consultan resúmenes finalizados y que un contexto sin cierre no se devuelve; la respuesta de CLARIFY y FR-061 dicen todos los resúmenes del día, sin aprobar expresamente esa exclusión. Falta alinear el diseño con el requisito o acordar esa decisión upstream. Es el mismo hallazgo de api.md CHK004 y data.md CHK004, no tres cambios independientes. No se exige resolver TD-024 ni añadir recuperación automática para completar este criterio.
+
+**Decisión posterior del usuario — 2026-11-10**: retirado ese pendiente; la visibilidad de resúmenes incompletos no condiciona el delta de ejecución diaria. Se tacha para conservar trazabilidad, no se marca aprobado. La decisión no elimina auditoría financiera ni garantías de unicidad diaria y no resuelve TD-024.

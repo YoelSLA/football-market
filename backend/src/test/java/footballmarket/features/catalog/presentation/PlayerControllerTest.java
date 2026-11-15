@@ -182,6 +182,34 @@ class PlayerControllerTest {
     }
 
     @Test
+    @DisplayName("Expone únicamente las opciones globales entregadas por el servicio")
+    void returnsEligibleFilterOptions() throws Exception {
+      // Arrange
+      var filters =
+          new footballmarket.features.catalog.domain.records.PlayerCatalogFilters(
+              List.of(
+                  new footballmarket.features.catalog.domain.records.PlayerCatalogFilters
+                      .LeagueOption(9, "Liga")),
+              List.of(
+                  new footballmarket.features.catalog.domain.records.PlayerCatalogFilters
+                      .TeamOption(8, "Equipo", 9)),
+              List.of("Forward"),
+              List.of("Spain"));
+      when(service.catalogFilters()).thenReturn(filters);
+
+      // Act / Assert
+      mvc.perform(get("/api/players/filters").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.leagues", hasSize(1)))
+          .andExpect(jsonPath("$.leagues[0].id").value(9))
+          .andExpect(jsonPath("$.teams", hasSize(1)))
+          .andExpect(jsonPath("$.teams[0].id").value(8))
+          .andExpect(jsonPath("$.positions[0]").value("Forward"))
+          .andExpect(jsonPath("$.nationalities[0]").value("Spain"));
+      verify(service).catalogFilters();
+    }
+
+    @Test
     @DisplayName("Las opciones no son públicas")
     void protectsFilterOptions() throws Exception {
       // Act / Assert

@@ -13,11 +13,15 @@ import footballmarket.features.portfolio.presentation.exceptions.InvalidPortfoli
 import footballmarket.features.portfolio.presentation.exceptions.InvalidPortfolioStatusException;
 import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.FinancialTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.PortfolioTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -51,6 +55,7 @@ class PortfolioServiceTest {
   @Autowired private PortfolioService portfolioService;
   @Autowired private PortfolioTestData data;
   @Autowired private FinancialTestData financial;
+  @Autowired private PlayerStatisticsQueryData statistics;
 
   @MockitoBean private QuoteSource quotes;
 
@@ -90,6 +95,37 @@ class PortfolioServiceTest {
   @Nested
   @DisplayName("Composición del portfolio")
   class Composicion {
+
+    @Test
+    @DisplayName("Conserva la tenencia cuando la última extracción no informa métricas")
+    void conservaTenenciaSinMetricasRecientes() {
+      // Arrange
+      User buyer = data.registerBuyer();
+      User seller = data.registerSuperuser();
+      Player player = data.createVisiblePlayer();
+      data.buy(buyer, seller, player, 10, 100L, FIRST);
+      statistics.row(
+          player.getId(),
+          LocalDate.of(2026, 10, 18),
+          MetricSource.JSON,
+          "2026",
+          "1",
+          PlayerExtractionResult.COMPLETED,
+          Map.of());
+
+      // Act
+      PortfolioView view = portfolioService.portfolio(buyer.getEmail(), 0, 20, null);
+
+      // Assert
+      assertThat(view.positions())
+          .singleElement()
+          .satisfies(
+              position -> {
+                assertThat(position.playerId()).isEqualTo(player.getId());
+                assertThat(position.quantity()).isEqualTo(10);
+                assertThat(position.acquisitionCost()).isEqualTo(1000L);
+              });
+    }
 
     @Test
     @DisplayName(

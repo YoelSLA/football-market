@@ -1,155 +1,77 @@
-# Implementation Plan: Visualizar ranking de jugadores (SPEC-022)
+# Plan de implementación: Visualizar ranking de jugadores
 
-**Branch**: `feat/022-view-player-rankings` | **Date**: 2026-10-27 | **Spec**: [`spec.md`](spec.md)
+**Rama observada**: `feat/018-paginated-rankings` (distinta de la rama histórica de SPEC-022; no se renombró) · **Fecha**: 2026-11-12 · **Spec**: [`spec.md`](spec.md)
 
-<!-- MUST usar rama real según Constitution §7 y seguir docs/development/sdd-workflow.md.
-Plan no genera Tasks ni habilita Implement: siguen Checklists, Tasks y Analyze.
-Complexity Tracking registra decisiones, no autoriza violaciones de Constitution. -->
+**Input**: `specs/022-view-player-rankings/spec.md` — revisión vigente 2026-11-12.
 
-**Input**: Feature specification from `specs/022-view-player-rankings/spec.md`
+## Resumen
 
-## Summary
+Actualizar la vista de ranking en `/players/ranking` para consumir los rankings paginados de rendimiento y cotización. La tabla envía al backend paginación y filtros; el podio usa una consulta independiente sin filtros con `page=0&size=3`. Ambas vistas consumen la identidad `player` devuelta por sus contratos, conservan orden y posiciones globales, y presentan metadatos/opciones recibidos. No se incorpora lógica de negocio de ranking en el frontend ni dependencia nueva.
 
-SPEC-022 habilita la vista de **Ranking de jugadores** en el frontend, accesible mediante la ruta `/players/ranking` y la pestaña *Ranking* de la barra secundaria de la sección Jugadores. La funcionalidad permite al usuario alternar entre dos modalidades visuales oficiales extraídas de los mockups normativos:
-1. **Por rendimiento**: consume `GET /api/players/ranking/score`, exhibiendo la estrategia activa de valuación, la fecha de corrida y la clasificación de jugadores por score a 6 decimales.
-2. **Por cotización**: consume `GET /api/players/ranking`, exhibiendo el precio vigente del token en el mercado, su vigencia y badge de origen (`RECOMPUTED`/`CARRIED_FORWARD`).
+## Contexto técnico
 
-La arquitectura visual implementa un **Podio Top 3** superior con laureles jerárquicos (Oro #1 centro, Plata #2 izquierda, Bronce #3 derecha) y una **Tabla detallada paginada** (10 filas por defecto) con barra de filtrado reactivo del lado cliente (búsqueda por nombre, selector de liga y selector de posición deportiva), garantizando la conservación de la numeración oficial del ranking en todo momento. Los datos identificatorios del jugador (foto, escudo, bandera de liga, demarcación) se enriquecen instantáneamente cruzando con el catálogo cacheado de `useAllPlayersQuery()`.
+| Aspecto | Diseño |
+| --- | --- |
+| Lenguaje/plataforma | TypeScript 7.0.2, React 19.3.0, Node 24.19.0; SPA web. |
+| Dependencias | Axios, TanStack Query, React Router y Sass existentes; sin dependencias nuevas. |
+| Estado/datos | Estado de query en TanStack Query; estado de criterios de tabla dentro de la Page/Hook permitido. Sin persistencia local específica. |
+| Contratos | Score: SPEC-018 `GET /api/rankings/score`; quote: SPEC-016 `GET /api/rankings/quote`. Ver `contracts/player-rankings-consumption.md`. Son contratos objetivo; su estado de implementación se comprueba en sus specs y no se presume. |
+| Verificación | Frontend exento temporalmente de tests. No crear ni ejecutar tests. Quickstart manual; sin build en PLAN. |
+| Alcance | Una Page de ranking, componentes locales necesarios, coordinación de query, filtros/página, navegación y presentación. No tocar backend, APIs, persistencia ni catálogo. |
+| Rendimiento | Consultas limitadas a una página de tabla y tres entradas del podio; no descargar listas completas. Sin SLA nuevo. |
+| Restricciones | JWT por infraestructura HTTP existente; no exponer errores técnicos; conservar posiciones globales; accesibilidad y responsive según spec y arquitectura frontend. |
 
----
+## Constitution Check — previo a Phase 0
 
-## Technical Context
-
-**Language/Version**: TypeScript 7.0.2 en modo estricto; React 19.3.0; Node 24.19.0 (`.nvmrc`).
-
-**Primary Dependencies**: React 19.3.0 · React Router DOM 7.18.4 · TanStack Query 5.103.1 · Axios 1.20.0 · Sass 1.104.1 · Lucide React 1.59.0 · Vite 8.3.0 · Biome 2.5.14. **Cero dependencias nuevas**: reutilización integral del stack existente.
-
-**Storage**: No aplica almacenamiento local persistente propio. La sesión reside en `infrastructure/storage` y el estado remoto se almacena y deduplica en la memoria de TanStack Query (`staleTime: 30000`).
-
-**Testing**: **No aplica.** El frontend se encuentra temporalmente exento de testing según la Constitución (*Verificación y testing*) y `frontend/AGENTS.md` («Por el momento no crear tests de frontend ni incorporar infraestructura para ellos»). La verificación técnica se realiza mediante `npm run build` en `frontend/` y la validación manual guiada por [`quickstart.md`](quickstart.md).
-
-**Target Platform**: Navegador web moderno (escritorio y móvil), con adaptabilidad responsiva verificada entre 320 px y 1920 px de ancho.
-
-**Project Type**: Single Page Application (SPA) en React/TypeScript consumiendo la API REST de Spring Boot.
-
-**Performance Goals**: Una sola consulta HTTP por modalidad (`score` o `ranking`) con caché de 30 s; la alternancia no repite tráfico innecesario. Hidratación en memoria en $O(1)$ usando mapa indexado del catálogo de jugadores. DOM ultraligero (< 25 nodos principales en pantalla) mediante paginación cliente de 10 elementos.
-
-**Constraints**: Sin librerías externas de UI o componentes de tablas. Estilos exclusivamente con SCSS Modules y roles semánticos de `styles/abstracts/themes/_default.scss`. Trazabilidad estricta sin alterar contratos del backend ni ejecutar tests prohibidos.
-
-**Scale/Scope**: 1 página principal (`PlayerRankingsPage`), 5 subcomponentes de presentación (`RankingsHeader`, `RankingsPodium`, `RankingsFilters`, `RankingsTable`, `RankingsPagination`), 2 funciones de servicio, 2 mappers de transformación, 2 query hooks y 1 hook de página (`usePlayerRankingsPage`), 1 ruta nueva y activación de 1 pestaña en navegación.
-
----
-
-## Constitution Check
-
-*GATE: Evaluado antes del diseño y re-evaluado post-diseño.*
-
-| Principio | Verificación | Resultado |
+| Principio | Evaluación | Resultado |
 | --- | --- | --- |
-| **§I Simplicidad y calidad** | Cero dependencias añadidas. Sin sobre-ingeniería: componentes atómicos enfocados con responsabilidades únicas y limpias. No se crea un store global redundante ni librerías pesadas. | ✅ |
-| **§II Proporcionalidad del alcance** | El alcance responde exactamente a `spec.md` y a los mockups normativos. El menú de tres puntos ('...') fue evaluado y excluido formalmente para evitar alcance innecesario. | ✅ |
-| **§III Seguridad e integridad** | La autenticación se delega al token JWT administrado por la infraestructura del cliente. No se manejan datos sensibles en local storage. | ✅ |
-| **§IV Coherencia de contratos** | Se consumen fielmente los contratos de SPEC-018 (`score` y `ranking`) documentados en [`contracts/player-rankings-consumption.md`](contracts/player-rankings-consumption.md) sin alteraciones ni suposiciones no documentadas. | ✅ |
-| **§V Trazabilidad y fuente de verdad** | SPEC-022 ↔ US1-US3 ↔ Pull Request [#76](https://github.com/YoelSLA/football-market/pull/76) ↔ Rama `feat/022-view-player-rankings`. Los estados del proceso se conservan en artefactos. | ✅ |
-| **Verificación y testing** | El agente no ejecuta tests. Frontend exento: no se crean tests automáticos. Verificación mediante `npm run build` y validación de `quickstart.md`. | ✅ |
-| **Idioma** | Código, identificadores, DTOs y tipos en inglés. Documentación, comentarios y textos de interfaz en español con tuteo amigable. | ✅ |
-| **Autorizaciones humanas** | Este plan prepara la arquitectura técnica; no autoriza implementación inmediata. La implementación requiere Checklists, Tasks, Analyze y autorización humana explícita. | ✅ |
+| I. Simplicidad/calidad | Reutiliza transporte, queries, componentes/recursos y estilos existentes; sin nuevas dependencias o capas innecesarias. | PASS |
+| II y VI. Proporcionalidad/mínimo alcance | Solo presenta y consulta contratos aprobados; paginación, filtros y podio son requisitos vigentes. No incluye enriquecimiento desde catálogo ni funcionalidades adicionales. | PASS |
+| III. Seguridad/integridad | Conserva autenticación JWT existente; no manipula credenciales ni revela detalles técnicos. | PASS |
+| IV. Coherencia contractual | Los dos contratos fuente se referencian; DTO/mapper/UI deben ajustarse conjuntamente durante implementación. La fase no afirma que sus endpoints objetivo estén desplegados. | PASS |
+| V. Trazabilidad | Reutiliza SPEC-022, issue y rama existentes; la rama no se modifica. Estado remoto no verificado ni actualizado. | PASS |
+| Verificación y autorizaciones | No tests/build en PLAN; frontend sin tests. PLAN no autoriza IMPLEMENT. | PASS |
 
-**Complexity Tracking**: Cero violaciones normativas. No requiere registro de excepciones.
+Sin violaciones constitucionales; Complexity Tracking no requiere excepción.
 
----
+## Investigación y decisiones (Phase 0)
 
-## Project Structure
+Decisiones, rationale y alternativas están en [`research.md`](research.md): reutilizar TanStack Query/Axios; separar query de tabla y podio; consumir player y filterOptions del backend; mantener estado de filtros/paginación local a la Page; conservar posiciones globales; reutilizar tema, componentes y recursos. No quedan `NEEDS CLARIFICATION` técnicas que impidan el diseño conforme a los contratos actuales.
 
-### Documentation (this feature)
+## Diseño y contratos (Phase 1)
 
-```text
-specs/022-view-player-rankings/
-├── plan.md              # Este documento (/speckit.plan)
-├── spec.md              # Especificación funcional aprobada (Specify + Clarify)
-├── research.md          # Fase 0: Decisiones técnicas e investigación
-├── data-model.md        # Fase 1: Estructuras de datos, DTOs y estado
-├── quickstart.md        # Fase 1: Guía de validación de extremo a extremo
-├── contracts/
-│   └── player-rankings-consumption.md  # Contrato HTTP de consumo
-└── checklists/
-    └── requirements.md  # Checklist de calidad (16/16 aprobado)
-```
+- [`data-model.md`](data-model.md) define los DTOs conceptuales, filtros, estado de consulta y transformación a presentación.
+- [`contracts/player-rankings-consumption.md`](contracts/player-rankings-consumption.md) referencia los contratos autoritativos de SPEC-018 y SPEC-016 y define los límites del consumidor.
+- [`quickstart.md`](quickstart.md) aporta escenarios manuales, sin ejecutar verificaciones.
 
-### Source Code Planned Layout
+### Estructura objetivo
 
-```text
-frontend/src/
-├── app/
-│   ├── navigation/
-│   │   └── sections.ts             # Activa path: "/players/ranking" para la pestaña 'players-ranking'
-│   └── router/
-│       └── AppRouter/
-│           └── AppRouter.tsx        # Registra <Route path="/players/ranking" element={<PlayerRankingsPage />} />
-│
-└── features/players/
-    ├── pages/
-    │   ├── PlayerRankingsPage/
-    │   │   ├── PlayerRankingsPage.tsx                 # Contenedor principal de la página
-    │   │   ├── PlayerRankingsPage.module.scss         # Layout y estilos generales
-    │   │   ├── index.ts
-    │   │   └── components/
-    │   │       ├── RankingsHeader/
-    │   │       │   ├── RankingsHeader.tsx             # Título, toggle de modo y tarjetas de metadatos
-    │   │       │   ├── RankingsHeader.module.scss
-    │   │       │   └── index.ts
-    │   │       ├── RankingsPodium/
-    │   │       │   ├── RankingsPodium.tsx             # Tarjetas destacadas Top 3 (#1 centro, #2 izq, #3 der)
-    │   │       │   ├── RankingsPodium.module.scss
-    │   │       │   └── index.ts
-    │   │       ├── RankingsFilters/
-    │   │       │   ├── RankingsFilters.tsx            # Buscador, selectores de liga y posición, limpiar
-    │   │       │   ├── RankingsFilters.module.scss
-    │   │       │   └── index.ts
-    │   │       ├── RankingsTable/
-    │   │       │   ├── RankingsTable.tsx              # Tabla detallada clasificada
-    │   │       │   ├── RankingsTable.module.scss
-    │   │       │   └── index.ts
-    │   │       └── RankingsPagination/
-    │   │           ├── RankingsPagination.tsx         # Paginador numérico y selector de filas
-    │   │           ├── RankingsPagination.module.scss
-    │   │           └── index.ts
-    │   └── index.ts                                   # Exporta PlayerRankingsPage
-    │
-    ├── hooks/
-    │   ├── pages/
-    │   │   ├── usePlayerRankingsPage.ts               # Hook de coordinación de estado, modo y filtros
-    │   │   └── index.ts
-    │   └── queries/
-    │       ├── usePlayerScoreRankingQuery.ts          # Consulta TanStack Query para /api/players/ranking/score
-    │       ├── usePlayerQuoteRankingQuery.ts          # Consulta TanStack Query para /api/players/ranking
-    │       └── index.ts
-    │
-    ├── types/
-    │   ├── dtos.ts                                    # ScoreRankingResponseDTO, QuoteRankingResponseDTO
-    │   └── models.ts                                  # PlayerRankingItem, RankingMode, RankingMetadata
-    │
-    ├── players.service.ts                             # Métodos getScoreRanking() y getQuoteRanking()
-    ├── players.mapper.ts                              # toScoreRankingItem() y toQuoteRankingItem()
-    └── index.ts                                       # API pública de la feature
-```
+Seguir la arquitectura real de `frontend/src/features/players/`: una Page modular para el ranking con los Components locales que requieran responsabilidades distintas; Services/Mapper y Hooks en sus ubicaciones autorizadas; DTOs y Models separados en `types/`. La Page de la feature se publica desde los barrels correspondientes; rutas y navegación global se registran en `frontend/src/app/`. Los estilos propios usan módulos colocalizados y tokens/recursos existentes. No crear carpetas o componentes por uniformidad; consultar la matriz de dependencias y contratos de rol al implementar.
 
----
+El alcance concreto de archivos se determina al descomponer Tasks desde el árbol vigente, no se fija una lista especulativa de componentes. No se modifican salidas generadas.
 
-## Plan de Ejecución por Componentes
+## Constitution Check — posterior al diseño
 
-1. **Tipos y Servicios**:
-   - Incorporar `ScoreRankingResponseDTO`, `QuoteRankingResponseDTO` y entidades en `types/`.
-   - Incorporar llamadas HTTP en `players.service.ts` con manejo de señales `AbortSignal`.
-   - Implementar mappers para transformar y formatear los datos del backend y fusionarlos con el catálogo de jugadores.
-2. **Hooks de Consulta y Página**:
-   - `usePlayerScoreRankingQuery` y `usePlayerQuoteRankingQuery` con caching estándar.
-   - `usePlayerRankingsPage` para coordinar el modo activo, filtros de cliente, paginación y ordenamiento inalterable.
-3. **Componentes Visuales**:
-   - `RankingsHeader`: Toggle de modo (*Por rendimiento* / *Por cotización*) y métricas de cabecera.
-   - `RankingsPodium`: Podio #1, #2, #3 con laureles, avatares, marcas de agua y valores.
-   - `RankingsFilters`: Barra reactiva de búsqueda, selectores y botón de limpieza.
-   - `RankingsTable`: Tabla con columnas `#`, `Jugador`, `Equipo`, `Liga`, `Posición`, `Score/Cotización`, `Fecha/Vigencia` y enlace a detalle `/players/:id`.
-   - `RankingsPagination`: Controles accesibles de página.
-4. **Integración de Enrutamiento y Navegación**:
-   - Activar la ruta `/players/ranking` en `sections.ts` y en `AppRouter.tsx`.
+| Principio | Re-evaluación | Resultado |
+| --- | --- | --- |
+| Simplicidad y mínimo alcance | Dos consultas paginadas necesarias, sin dataset completo, catálogo adicional, nueva dependencia ni abstracción global. | PASS |
+| Seguridad y contratos | Esquemas y errores delegados a contratos backend referenciados; UI consume datos tipados y conserva JWT común. | PASS |
+| Arquitectura | Diseño respeta modularidad frontend, API pública, responsabilidades de roles y estilos colocalizados; ubicación fina se confirma en implementación conforme a matrices. | PASS |
+| Verificación | Guía manual; no test, build ni control ejecutable realizado. | PASS |
+
+## Evidencia de PLAN
+
+| Elemento | Resultado |
+| --- | --- |
+| Setup oficial | `.specify/scripts/bash/setup-plan.sh --json` |
+| `FEATURE_SPEC` | `specs/022-view-player-rankings/spec.md` |
+| `IMPL_PLAN` | `specs/022-view-player-rankings/plan.md` |
+| `SPECS_DIR` | `specs/022-view-player-rankings` |
+| `BRANCH` devuelto por setup | `022-view-player-rankings`; `git branch --show-current`: `feat/018-paginated-rankings`. La rama activa no corresponde al scope de SPEC-022; se conserva intacta y se reporta la divergencia. |
+| Artefactos de diseño | `plan.md`, `research.md`, `data-model.md`, `contracts/player-rankings-consumption.md`, `quickstart.md`. |
+| Hooks | `.specify/extensions.yml` ausente; hooks before/after-plan omitidos según definición. |
+| Límites | No se ejecutaron tests, build, checklists, Tasks, Analyze, implementación ni handoff. No se modificó `spec.md` ni seguimiento remoto. |
+
+**Vigencia de esta evidencia**: la tabla anterior es una instantánea del cierre de PLAN el 2026-11-12. No describe el estado SDD posterior: CHECKLIST, TASKS y ANALYZE se registraron después en los artefactos de la Feature. Esta aclaración no altera el registro histórico de PLAN.
+
+La fase PLAN termina aquí. El paso de proceso siguiente es evaluación de checklists; Tasks no se ejecuta automáticamente y no hay autorización de implementación derivada de este plan.

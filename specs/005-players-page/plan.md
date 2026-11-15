@@ -1,5 +1,18 @@
 # Implementation Plan: Página de catálogo de jugadores
 
+## Plan del delta — catálogo con métricas (2026-11-11)
+
+**Alcance**: [spec.md](spec.md), coordinado con [plan SPEC-002](../002-player-catalog/plan.md). Este bloque sustituye las afirmaciones anteriores que mantenían visible al jugador sin métricas; no acredita implementación ni publicación en el PR #86.
+
+- La UI consume listado, conteos y opciones globales elegibles del backend, sin filtrar la página ni exigir score, cotización o las tres métricas de tarjeta. Mantiene «Sin datos» para cifras ausentes, incluso cuando otra métrica hace elegible al jugador, y muestra cero real.
+- Revisar `players.service.ts`, Mapper, queries y `usePlayersPage` existentes para conservar parámetros, paginación, estados vacíos y corrección de páginas. Un ID directo no elegible recibe el 404 del contrato y se presenta mediante el estado existente de jugador no encontrado; no inventar datos ni cambiar seguridad.
+- Coordinar consumidores de mercado, rankings y portfolio conforme al plan 002: mercado y rankings excluyen al no elegible; tenencia e historial siguen visibles. No suponer que los caminos de portfolio puedan cargar siempre el detalle filtrado. Mantener APIs públicas entre features.
+- Constitution Check previo y posterior: filtro en backend antes de paginar, límites de arquitectura y contratos, seguridad existente y preservación financiera. No se agregan dependencias ni tests frontend; pruebas backend ejecutadas por el usuario. No hay código autorizado. La lógica y estructura frontend futura respeta la pausa humana intermedia de `frontend/AGENTS.md` si corresponde; no se anticipa trabajo estético.
+
+`setup-plan.sh --json` resolvió explícitamente SPEC-005 conservando su plan. Investigación, modelo, contrato y guía del delta acompañan esta revisión; CHECKLIST, TASKS y ANALYZE quedan pendientes de encargo y revisión correspondientes.
+
+---
+
 ## Plan vigente — preparación del rediseño con datos reales
 
 **Fecha**: 2026-10-25 · **Spec**: bloque vigente de [spec.md](spec.md). El plan anterior se conserva desde «Antecedente histórico». No modifica código, SPEC-009 ni Tasks históricas.

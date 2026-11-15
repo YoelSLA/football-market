@@ -30,6 +30,7 @@ export default function PlayerDetailPage() {
 							player={detail.player}
 							statistics={detail.statistics}
 							quote={detail.currentQuote}
+							quoteLoading={detail.quotesState === "loading"}
 						/>
 
 						<PlayerStatisticsSection

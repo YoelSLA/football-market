@@ -1,5 +1,9 @@
 # Modelo de datos: Catálogo de jugadores
 
+## Modelo del delta — 2026-11-11
+
+La elegibilidad es una propiedad derivada, no una columna: para cada jugador se obtiene la fecha máxima de extracción entre sus registros `PlayerStatistics`; es elegible si alguna fila de esa fecha tiene `presentMetrics > 0`. Sin filas o con todas las filas de la fecha vacías no es elegible. Un cero informado cuenta. Se preservan las restricciones de visibilidad y no se exige cotización o score para catálogo. La fecha máxima y el `exists` no dependen de valores anteriores ni de seleccionar una sola fuente. Tenencias, publicaciones propias, valoraciones, cotizaciones y transacciones se conservan cuando cambia la elegibilidad.
+
 ## Entidad `Player`
 
 | Atributo | Tipo | Restricciones | Notas |

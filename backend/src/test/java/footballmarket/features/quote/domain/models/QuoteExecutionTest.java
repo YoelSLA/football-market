@@ -43,7 +43,7 @@ class QuoteExecutionTest {
     void derivesIndividualFailure() {
       // Arrange
       QuoteExecution failed = execution(QuoteExecutionOrigin.AUTOMATIC, 1);
-      QuoteExecution reserved = execution(QuoteExecutionOrigin.MANUAL, 0);
+      QuoteExecution reserved = context();
       // Act
       reserved.complete(2, 1, 0, 0, 1, Instant.parse("2026-11-04T00:01:00Z"));
       // Assert
@@ -53,6 +53,42 @@ class QuoteExecutionTest {
       assertThat(reserved.result()).isEqualTo(failed.result());
       assertThat(reserved.failureReason()).isEqualTo(failed.failureReason());
     }
+
+    @Test
+    @DisplayName("Un contexto sin cierre no representa éxito y solo puede cerrarse una vez")
+    void rejectsUnfinishedResultAndRepeatedClose() {
+      // Arrange
+      QuoteExecution execution = context();
+      Instant finish = Instant.parse("2026-11-04T00:01:00Z");
+      // Act / Assert
+      assertThatThrownBy(execution::result).isInstanceOf(InvalidQuoteException.class);
+      assertThatThrownBy(() -> execution.complete(2, 1, 0, 0, 0, finish))
+          .isInstanceOf(InvalidQuoteException.class);
+      assertThat(execution.getFinishedAt()).isNull();
+      execution.complete(2, 1, 0, 1, 0, finish);
+      assertThat(execution.result()).isEqualTo(QuoteExecutionResult.SUCCESS);
+      assertThatThrownBy(() -> execution.complete(2, 0, 0, 2, 0, finish))
+          .isInstanceOf(InvalidQuoteException.class);
+      assertThat(execution.getRecomputedRows()).isEqualTo(1);
+    }
+  }
+
+  private QuoteExecution context() {
+    return new QuoteExecution(
+        LocalDate.of(2026, 11, 4),
+        QuoteExecutionOrigin.MANUAL,
+        ValuationStrategy.POSITIONAL_PERFORMANCE,
+        "v1",
+        new BigDecimal("0.10"),
+        new BigDecimal("0.10"),
+        1L,
+        0,
+        0,
+        0,
+        0,
+        0,
+        Instant.parse("2026-11-04T00:00:00Z"),
+        null);
   }
 
   private QuoteExecution execution(QuoteExecutionOrigin origin, int failures) {

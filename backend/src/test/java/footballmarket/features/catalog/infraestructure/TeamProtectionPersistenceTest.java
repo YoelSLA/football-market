@@ -8,6 +8,7 @@ import footballmarket.features.catalog.domain.records.PlayerCandidate;
 import footballmarket.features.catalog.domain.records.PlayerSnapshot;
 import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import footballmarket.features.catalog.domain.records.TeamCandidate;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.sql.Connection;
@@ -47,6 +48,7 @@ class TeamProtectionPersistenceTest {
   @Autowired private JdbcTemplate jdbc;
   @Autowired private DataSource dataSource;
   @Autowired private PlayerRepository players;
+  @Autowired private PlayerStatisticsQueryData statistics;
 
   private PlayerCandidate candidate(String id, String name, String teamId, String teamName) {
     return new PlayerCandidate(id, name, teamName, "League", "Forward", null, null, teamId);
@@ -165,6 +167,7 @@ class TeamProtectionPersistenceTest {
     @DisplayName("La consulta excluye un jugador activo cuyo equipo continúa retirado")
     void excludeRetiredTeamFromCatalog() {
       catalog.applySynchronization(initialPhoto());
+      statistics.makeSynchronizedPlayerEligible("1");
       Map<String, Object> original = jdbc.queryForMap("SELECT id, team_id FROM players");
       Object playerId = original.get("id");
       Object teamId = original.get("team_id");

@@ -22,6 +22,7 @@ import footballmarket.integrations.thesportsdb.TheSportsDbIntegration;
 import footballmarket.integrations.thesportsdb.TheSportsDbIntegration.PlayerData;
 import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbResponseException;
 import footballmarket.integrations.thesportsdb.exceptions.TheSportsDbUnavailableException;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.LocalDate;
@@ -50,6 +51,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class PlayerImageSynchronizationServiceTest {
   @Autowired private PlayerImageSynchronizationService synchronizationService;
   @Autowired private PlayerCatalogService catalogService;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @MockitoBean private TheSportsDbIntegration integration;
 
   /** Foto de origen controlada para conservar los escenarios de imágenes con el contrato V5. */
@@ -104,6 +106,7 @@ class PlayerImageSynchronizationServiceTest {
           new PlayerCandidate("b", "Name", "Team", "League", "Forward", null, null);
       PlayerSnapshot snapshot = snapshot(List.of(candidate), 1, 0);
       catalogService.applySynchronization(snapshot);
+      statistics.makeSynchronizedPlayerEligible("b");
       PlayerData result =
           new PlayerData(
               "123",
@@ -206,6 +209,7 @@ class PlayerImageSynchronizationServiceTest {
       PlayerCandidate candidate =
           new PlayerCandidate("g", "Name", "Team", "League", "Forward", null, null);
       catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
+      statistics.makeSynchronizedPlayerEligible("g");
       PlayerData photo =
           new PlayerData(
               "123",
@@ -236,6 +240,7 @@ class PlayerImageSynchronizationServiceTest {
       PlayerCandidate candidate =
           new PlayerCandidate("h", "Name", "Team", "League", "Forward", null, null);
       catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
+      statistics.makeSynchronizedPlayerEligible("h");
       PlayerData original =
           new PlayerData(
               "123",
@@ -451,6 +456,8 @@ class PlayerImageSynchronizationServiceTest {
       PlayerCandidate second =
           new PlayerCandidate("t", "Second", "Team", "League", "Forward", null, null);
       catalogService.applySynchronization(snapshot(List.of(first, second), 2, 0));
+      statistics.makeSynchronizedPlayerEligible("s");
+      statistics.makeSynchronizedPlayerEligible("t");
       PlayerData photo =
           new PlayerData(
               "123",
@@ -478,6 +485,7 @@ class PlayerImageSynchronizationServiceTest {
       PlayerCandidate candidate =
           new PlayerCandidate("m", "Name", "Team", "League", "Forward", null, null);
       catalogService.applySynchronization(snapshot(List.of(candidate), 1, 0));
+      statistics.makeSynchronizedPlayerEligible("m");
       PlayerData initial =
           new PlayerData(
               "123",

@@ -1,86 +1,25 @@
-# Guía Rápida de Validación: Visualizar ranking de jugadores (SPEC-022)
+# Guía rápida de validación: Visualizar ranking de jugadores (SPEC-022)
 
-**Feature**: `022-view-player-rankings`
-**Spec**: [`spec.md`](spec.md) · **Plan**: [`plan.md`](plan.md) · **Contratos**: [`contracts/player-rankings-consumption.md`](contracts/player-rankings-consumption.md)
+**Feature**: `022-view-player-rankings` · **Contrato**: [`contracts/player-rankings-consumption.md`](contracts/player-rankings-consumption.md)
 
-Esta guía documenta los pasos para verificar y validar de extremo a extremo la funcionalidad de ranking de jugadores en el frontend.
+Guía para validación manual por el usuario. No acredita ejecución, aceptación ni autorización. No crear ni ejecutar tests frontend.
 
----
+## Prerrequisitos
 
-## 1. Prerrequisitos
+- Backend y frontend disponibles según configuración vigente.
+- Usuario con sesión JWT válida.
+- Datos de ranking disponibles para ambos modos, si se verifican respuestas con contenido.
 
-1. Backend Football Market iniciado y en ejecución (puerto por defecto `http://localhost:8080`).
-2. Frontend con dependencias instaladas (`npm install` en `frontend/`).
-3. Usuario autenticado con sesión activa (token JWT).
+## Escenarios
 
----
+1. **Ruta y autenticación**: iniciar sesión y abrir `/players/ranking` desde la sección Jugadores y directamente por URL. Confirmar pestaña activa y solicitudes autenticadas.
+2. **Modo rendimiento**: comprobar `GET /api/rankings/score`; validar query de tabla según controles, sobre y filas conforme a SPEC-018, estrategia/fecha visibles y score/fecha por entrada.
+3. **Modo cotización**: cambiar a cotización y comprobar `GET /api/rankings/quote`; validar página, filtros, identidad, precio, vigencia y origen conforme a SPEC-016.
+4. **Podio**: inspeccionar una consulta sin filtros `page=0&size=3` independiente de la tabla. Confirmar orden/posiciones recibidas, que se muestran solo las entradas disponibles si hay menos de tres, y que cambiar filtros de tabla no cambia parámetros de podio. No exigir snapshot simultáneo entre ambas consultas.
+5. **Filtros y páginas**: combinar nombre, liga y posición; confirmar que los parámetros llegan al backend, opciones permanecen globales, el total es filtrado y posiciones no se renumeran. Cambiar filtros/tamaño/mode vuelve a página inicial; navegar conserva criterios.
+6. **Estados**: distinguir carga, respuesta vacía global, filtro sin coincidencias, error recuperable y expiración de sesión conforme a los manejadores existentes.
+7. **Identidad y responsive**: verificar que nombre y demás datos provienen de `player` de la respuesta, fallback si faltan datos opcionales y navegación a `/players/:id`. La adaptación responsive y la accesibilidad general siguen siendo requisitos de la Feature; la inspección visual de este delta queda a cargo del usuario según la decisión registrada en [`sdd-gates.md`](sdd-gates.md), y no se considera validada por esta guía ni por la implementación documental.
 
-## 2. Escenarios de Validación
+## Controles de fase
 
-### Escenario 1: Acceso a la vista desde la navegación
-1. Iniciar sesión en la plataforma y hacer clic en la pestaña **Jugadores** del Navbar principal.
-2. En la barra secundaria de navegación interna, hacer clic en la pestaña **Ranking**.
-3. **Resultado esperado**:
-   - La URL cambia a `/players/ranking`.
-   - La pestaña *Ranking* se muestra con estilo activo.
-   - La cabecera presenta el título *"Ranking de jugadores"* con el selector toggle posicionado en *"Por rendimiento"*.
-
-### Escenario 2: Podio Top 3 y tabla en Modo Rendimiento
-1. En la vista `/players/ranking` (modo *Por rendimiento* activo):
-2. Verificar el bloque superior de metadatos:
-   - Debe exhibir la estrategia activa (ej. `POSITIONAL_PERFORMANCE` formateada), fecha de valuación y total de clasificados.
-3. Observar la sección del Podio:
-   - El puesto **#1** ocupa el centro con distintivo de laurel dorado, imagen del jugador, nombre, equipo, liga y score con 6 decimales (`0,XXXXXX`).
-   - El puesto **#2** se ubica a la izquierda (laureles plateados).
-   - El puesto **#3** se ubica a la derecha (laureles bronceados).
-4. Observar la tabla de posiciones inferior:
-   - Los jugadores se presentan ordenados consecutivamente desde el puesto 1 en adelante.
-   - Las columnas `#`, `Jugador`, `Equipo`, `Liga`, `Posición` (pill DEL/MED/DEF/POR), `Score` y `Fecha de valuación` están completas.
-
-### Escenario 3: Alternar a Modo Cotización
-1. En la cabecera, hacer clic en el botón **Por cotización**.
-2. **Resultado esperado**:
-   - El botón *Por cotización* se activa visualmente con borde verde/destacado.
-   - El podio se actualiza mostrando a los 3 jugadores de mayor cotización de mercado con su precio en créditos (ej. `3,50 cr.`).
-   - La tabla muestra la columna de cotización y los badges de origen (`RECOMPUTED` o `CARRIED_FORWARD`).
-
-### Escenario 4: Filtrado en cliente sobre la tabla
-1. En la barra de herramientas, escribir el nombre de un jugador (ej. "Haaland") en *"Buscar jugador..."*.
-2. Seleccionar una liga específica en el desplegable de Liga.
-3. Seleccionar una posición táctica (ej. `DEL`).
-4. **Resultado esperado**:
-   - **El Podio Top 3 superior permanece invariable**, mostrando a los líderes globales absolutos.
-   - La tabla inferior filtra reactivamente solo los jugadores coincidentes.
-   - El número de posición ordinal `#` original de cada jugador se preserva (no se renumeran).
-   - El contador del pie se actualiza ("Mostrando X de Y jugadores").
-   - Al pulsar *"Limpiar filtros"*, la tabla restaura todos los elementos en la primera página.
-
-### Escenario 5: Paginación
-1. Con la tabla completa (sin filtros), verificar que se muestran 10 jugadores por página.
-2. Hacer clic en la página `2` o en la flecha siguiente `>`.
-3. **Resultado esperado**:
-   - La tabla muestra las posiciones del 11 al 20 fluidamente sin recargar la página.
-   - El botón de página actual se destaca.
-
-### Escenario 6: Navegación al detalle individual
-1. Hacer clic sobre el nombre, avatar o fila de cualquier jugador clasificado.
-2. **Resultado esperado**:
-   - La aplicación navega a `/players/:id`.
-   - Carga la página de detalle individual del jugador correspondiente.
-
-### Escenario 7: Validación de estados excepcionales (Vacío y Error)
-1. Simular respuesta vacía (`ranking: []`):
-   - La interfaz renderiza el componente `EmptyState` informando que no hay clasificaciones vigentes sin romper el diseño.
-2. Simular fallo de servidor (HTTP 500):
-   - La interfaz muestra una alerta de error accesible con el botón *"Reintentar"*. Al pulsarlo, se dispara nuevamente la petición.
-
----
-
-## 3. Verificación de Compilación (Build)
-
-Ejecutar desde el directorio `frontend/`:
-```bash
-npm run build
-```
-**Resultado esperado**:
-- Compilación de TypeScript y Vite exitosa con código de salida `0` y sin errores de tipos ni de rutas.
+Esta fase PLAN no modifica código y no ejecuta build. En fase de código frontend posterior, usar solo controles permitidos en `frontend/AGENTS.md`; el agente no ejecuta tests y la exención frontend permanece vigente.

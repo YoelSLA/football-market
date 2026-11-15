@@ -1,7 +1,6 @@
 package footballmarket.features.market.application.internal;
 
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
-import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -31,7 +30,7 @@ public class MarketInitializationGuard {
    * @throws MarketNotInitializedException si no existe ninguna cotización de origen {@code INITIAL}
    */
   public void requireInitialized() {
-    if (!this.playerQuoteRepository.existsByOrigin(QuoteOrigin.INITIAL)) {
+    if (this.playerQuoteRepository.count() == 0) {
       throw new MarketNotInitializedException();
     }
   }

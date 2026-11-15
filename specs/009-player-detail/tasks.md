@@ -2,6 +2,7 @@
 
 **Estado**: Implementado y verificado.
 **Referencia visual canónica**: [wireframe canónico](../../docs/wireframes/player-detail.md).
+**Integración autorizada 2026-11-12**: se conserva el diseño de `dev` con cotización en cabecera y pestaña dedicada. La lectura UI usa el historial oficial persistido; no se permiten datos de demostración como cotización del jugador.
 
 ---
 

@@ -1,9 +1,4 @@
 import { useId } from "react";
-import {
-	DEMO_DATA_LABEL,
-	DEMO_MESSAGES,
-	DEMO_QUOTE_UNIT_LABEL,
-} from "@/features/players/constants";
 import type { TokenQuoteSeries } from "@/features/players/types";
 import styles from "./PlayerQuoteEvolutionChart.module.scss";
 
@@ -35,7 +30,7 @@ function formatDayMonth(value: string): string {
 }
 
 /**
- * Evolución de la cotización de demostración en SVG propio, sin dependencia nueva.
+ * Evolución de las cotizaciones persistidas en SVG propio, sin dependencia nueva.
  * Conserva los 30 valores de la serie, muestra ejes con fechas y créditos, y expone
  * todos los valores en texto y tabla para que la serie sea comprensible sin depender
  * del dibujo ni del color.
@@ -54,8 +49,7 @@ export default function PlayerQuoteEvolutionChart({
 				aria-label="Evolución de la cotización"
 			>
 				<h2>Evolución de la cotización</h2>
-				<p role="status">{DEMO_MESSAGES.emptySeries}</p>
-				<p className={styles.playerQuoteChart__demo}>{DEMO_DATA_LABEL}</p>
+				<p role="status">Aún no hay historial oficial de cotizaciones.</p>
 			</section>
 		);
 
@@ -123,7 +117,7 @@ export default function PlayerQuoteEvolutionChart({
 		>
 			<header>
 				<h2>Evolución de la cotización</h2>
-				<span>{DEMO_QUOTE_UNIT_LABEL}</span>
+				<span>Créditos</span>
 			</header>
 
 			<svg
@@ -132,7 +126,7 @@ export default function PlayerQuoteEvolutionChart({
 				preserveAspectRatio="xMidYMid meet"
 				role="img"
 				focusable="false"
-				aria-label={`Serie de ${points.length} cotizaciones diarias en ${DEMO_QUOTE_UNIT_LABEL}, del ${points[0].date} al ${points.at(-1)?.date}, con precio mínimo ${min} y máximo ${max}`}
+				aria-label={`Serie de ${points.length} cotizaciones en créditos, del ${points[0].date} al ${points.at(-1)?.date}, con precio mínimo ${min} y máximo ${max}`}
 			>
 				<defs>
 					<linearGradient id={`${gradientId}-line`} x1="0" y1="0" x2="0" y2="1">
@@ -163,7 +157,7 @@ export default function PlayerQuoteEvolutionChart({
 					y={11}
 					textAnchor="start"
 				>
-					{DEMO_QUOTE_UNIT_LABEL}
+					Créditos
 				</text>
 
 				{yValues.map((value) => {
@@ -273,7 +267,7 @@ export default function PlayerQuoteEvolutionChart({
 				<summary>Valores de la serie</summary>
 				<table>
 					<caption className={styles.playerQuoteChart__caption}>
-						Cotizaciones diarias de demostración en {DEMO_QUOTE_UNIT_LABEL}
+						Cotizaciones oficiales en créditos
 					</caption>
 					<thead>
 						<tr>
@@ -291,7 +285,6 @@ export default function PlayerQuoteEvolutionChart({
 					</tbody>
 				</table>
 			</details>
-			<p className={styles.playerQuoteChart__demo}>{DEMO_DATA_LABEL}</p>
 		</section>
 	);
 }
