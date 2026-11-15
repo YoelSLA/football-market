@@ -1,0 +1,25 @@
+meta {
+  name: Consultar segunda página del catálogo
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/players
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 1
+  size: 20
+  includeStatistics: true
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+headers {
+  accept: application/json
+}

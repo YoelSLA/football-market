@@ -133,7 +133,7 @@ public class WhoScoredStatisticsScrapingIntegration {
     List<WhoScoredScrapedContextRow> rows = new ArrayList<>();
     java.util.concurrent.atomic.AtomicLong calls = new java.util.concurrent.atomic.AtomicLong();
     WhoScoredStructuredDataBlock[] data = {new WhoScoredStructuredDataBlock(List.of())};
-    String url = this.provider.baseUrl() + "/player/" + playerId + "/show";
+    String url = this.provider.baseUrl() + "/players/" + playerId + "/show";
     for (String section : WhoScoredScrapingSectionNavigator.SECTIONS) {
       Instant started = Instant.now();
       LOG.info("{} Sección {} iniciada", diagnostic, section);
