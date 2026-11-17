@@ -19,9 +19,9 @@ interface Props {
 	statisticsState: QueryState;
 	statisticsErrorMessage?: string | null;
 	quotes?: PlayerQuoteHistory;
-	quotesState?: QueryState;
+	quotesState: QueryState;
 	quotesErrorMessage?: string | null;
-	onRetryQuotes?: () => void;
+	onRetryQuotes: () => void;
 	activeTab: StatisticsTab;
 	onTabChange: (tab: StatisticsTab) => void;
 	onRetryStatistics: () => void;
@@ -37,8 +37,8 @@ export default function PlayerStatisticsSection({
 	statistics,
 	statisticsState,
 	statisticsErrorMessage,
-	quotes: _quotes,
-	quotesState = "ready",
+	quotes,
+	quotesState,
 	quotesErrorMessage,
 	onRetryQuotes,
 	activeTab,
@@ -53,14 +53,13 @@ export default function PlayerStatisticsSection({
 	return (
 		<div className={styles.statisticsSection}>
 			<PlayerStatisticsTabs activeTab={activeTab} onChange={onTabChange} />
-
 			<PlayerQuotesTab
 				activeTab={activeTab}
+				quotes={quotes}
 				quotesState={quotesState}
 				quotesErrorMessage={quotesErrorMessage}
 				onRetryQuotes={onRetryQuotes}
 			/>
-
 			{statisticsState === "error" && (
 				<section role="alert" className={styles.statisticsSection__bannerError}>
 					<div className={styles.statisticsSection__bannerText}>

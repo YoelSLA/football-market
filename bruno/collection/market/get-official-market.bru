@@ -1,0 +1,33 @@
+meta {
+  name: Consultar catálogo del mercado oficial
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/market/official
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 0
+  size: 20
+  ~name: Messi
+  ~leagueId: 1
+  ~teamId: 1
+  ~position: Forward
+  ~nationality: Argentina
+  ~hasQuote: true
+  ~minPrice: 100
+  ~maxPrice: 10000
+  ~sort: name,asc
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+headers {
+  accept: application/json
+}

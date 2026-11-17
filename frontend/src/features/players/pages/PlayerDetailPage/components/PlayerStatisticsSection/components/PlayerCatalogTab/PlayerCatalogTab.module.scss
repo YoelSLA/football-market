@@ -47,7 +47,6 @@
 		}
 	}
 }
-
 @include ds.down(ds.$bp-tablet) {
 	.catalogTab {
 		flex: none;
@@ -56,4 +55,3 @@
 		padding: 10px 0;
 	}
 }
-

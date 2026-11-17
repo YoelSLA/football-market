@@ -31,8 +31,10 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 
 	const visibleId = playerId;
 	const isCurrent = detail.data?.id === visibleId;
-	const player = isCurrent ? detail.data : undefined;
-
+	const playerNotFound =
+		getErrorCode(detail.error) === "PLAYER_NOT_FOUND" ||
+		getErrorCode(statistics.error) === "PLAYER_NOT_FOUND";
+	const player = isCurrent && !playerNotFound ? detail.data : undefined;
 	const retry = useCallback(() => void detail.refetch(), [detail]);
 	const retryStatistics = useCallback(
 		() => void statistics.refetch(),
@@ -46,20 +48,9 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 			? "ready"
 			: detail.isPending
 				? "loading"
-				: getErrorCode(detail.error) === "PLAYER_NOT_FOUND"
+				: playerNotFound
 					? "not-found"
 					: "error";
-
-	const quotesState: QueryState = quotes.isPending
-		? "loading"
-		: quotes.isError
-			? "error"
-			: "ready";
-
-	const quotesErrorMessage =
-		quotes.isError && quotes.error
-			? getErrorMessage(quotes.error, "Error al cargar cotizaciones")
-			: null;
 
 	const statisticsState: QueryState = statistics.isPending
 		? "loading"
@@ -70,6 +61,17 @@ export function usePlayerDetailPage(rawId: string | undefined) {
 	const statisticsErrorMessage =
 		statistics.isError && statistics.error
 			? getErrorMessage(statistics.error, "Error al cargar estadísticas")
+			: null;
+
+	const quotesState: QueryState = quotes.isPending
+		? "loading"
+		: quotes.isError
+			? "error"
+			: "ready";
+
+	const quotesErrorMessage =
+		quotes.isError && quotes.error
+			? getErrorMessage(quotes.error, "Error al cargar cotizaciones")
 			: null;
 
 	const errorMessage =

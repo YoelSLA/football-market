@@ -5,6 +5,37 @@ description: "Tareas de implementación de la página de catálogo de jugadores"
 
 # Tasks: Página de catálogo de jugadores
 
+## Delta vigente — catálogo con métricas (2026-11-11)
+
+**Entrada**: [spec](spec.md), [plan](plan.md), [contrato](contracts/players-catalog.md), [modelo](data-model.md), [quickstart](quickstart.md) y [checklist revisado](checklists/metrics-eligibility.md). El backend compartido y sus tests viven exclusivamente en [SPEC-002/tasks.md](../002-player-catalog/tasks.md), T071–T090; no se duplican aquí. T001–T068 y sus estados son históricos; su autorización no cubre este delta. ANALYZE sin blockers y autorización de implementación registrados en [SPEC-002/analysis-metrics-eligibility.md](../002-player-catalog/analysis-metrics-eligibility.md). No crear ni ejecutar tests frontend.
+
+### Preparación y fundamentos
+
+No se requiere infraestructura nueva. La UI consume el universo backend de SPEC-002; la ausencia de alguna cifra de tarjeta no excluye un jugador elegible. La implementación debe respetar la pausa humana intermedia de `frontend/AGENTS.md` cuando se modifique UI; no se planifica maquetado fino para este delta.
+
+### US1 (P1) — tarjetas y detalle
+
+**Criterio independiente**: con el backend compartido disponible, una tarjeta elegible muestra cero o «Sin datos» según cada valor, y un acceso directo no elegible presenta el estado existente de no encontrado.
+
+- [X] T069 [US1] Revisar e integrar el 404 de jugador no elegible en `frontend/src/features/players/hooks/pages/usePlayerDetailPage.ts` y `frontend/src/features/players/pages/PlayerDetailPage/components/PlayerDetailStatus/PlayerDetailStatus.tsx`, reutilizando `PLAYER_NOT_FOUND` y el estado existente, sin exponer datos obsoletos ni alterar el tratamiento de ID inválido o sesión. Depende de SPEC-002/T075–T076; modificar solo si la integración vigente no cubre el contrato.
+- [X] T070 [US1] Revisar `frontend/src/features/players/players.mapper.ts`, `frontend/src/features/players/players.service.ts` y `frontend/src/features/players/pages/PlayersPage/components/` para conservar `null`/cero en las tres cifras, mostrar «Sin datos» y no exigir cotización ni score al consumir jugadores elegibles; ajustar solo la incompatibilidad necesaria. Depende de SPEC-002/T074–T076.
+
+### US2 / US4 (P1) — paginación, búsqueda y filtros
+
+**Criterio independiente**: un jugador elegible fuera de la página inicial es encontrable mediante criterios globales; los no elegibles no aportan opciones ni totales y una página fuera de rango se corrige sin bucle.
+
+- [X] T071 [US4] Revisar `frontend/src/features/players/hooks/pages/usePlayersPage.ts`, `frontend/src/features/players/hooks/queries/usePlayersQuery.ts` y `frontend/src/features/players/hooks/queries/usePlayerCatalogFiltersQuery.ts` para consumir opciones y resultados del backend sin filtrar la página localmente; preservar criterios, estado vacío/error y búsqueda global. Depende de SPEC-002/T074–T076; ajustar únicamente lo necesario.
+- [X] T072 [US2] Revisar `frontend/src/features/players/hooks/pages/usePlayersPage.ts` y `frontend/src/features/players/pages/PlayersPage/components/` para conservar conteos backend, paginación y corrección a última página válida cuando se reduce el universo elegible, incluido total cero; sin tarjetas de relleno ni cambios visuales ajenos. Depende de T071.
+
+### Integración transversal
+
+- [X] T073 Revisar `frontend/src/features/portfolio/hooks/pages/usePortfolioHoldingsPage.ts` y `frontend/src/features/portfolio/pages/PortfolioHoldingsPage/` para que tenencias e historial sigan visibles sin depender del detalle filtrado; ajustar solo incompatibilidades con SPEC-002/T082, sin añadir comportamiento de mercado no acordado. Depende de SPEC-002/T080–T082.
+- [X] T074 Actualizar `specs/005-players-page/quickstart.md` con las comprobaciones humanas concretas de listado, filtros, cero/ausencia, detalle 404 y preservación de posiciones, de acuerdo con los cambios efectivos y sin afirmar ejecución. Depende de T069–T073 y SPEC-002/T083.
+
+Orden: SPEC-002/T074–T076 habilita T069–T071; T071 → T072; T073 depende de la integración financiera compartida; T074 sigue al conjunto. T069 y T071 son paralelizables por archivos distintos tras sus dependencias, pero no se marca `[P]` en revisiones condicionales que podrían requerir archivos compartidos. MVP técnico: US1/T069–T070 con backend; US2/US4 y consumidores siguen siendo parte obligatoria del alcance total. US3 de diseño visual no cambia. Los escenarios independientes son criterios para validación humana posterior, no tests ejecutados ni gates por historia.
+
+---
+
 ## Tareas vigentes del rediseño — 2026-10-26
 
 ### Implement authorization — 2026-10-26

@@ -49,7 +49,6 @@
 		}
 
 		&__quoteContext {
-			// 3. 🧩 Layout
 			grid-column: 2;
 			grid-row: 1;
 		}
@@ -65,17 +64,15 @@
 		// 4. 📦 Box Model
 		min-height: 195px;
 		padding: 9px 8px;
-
-		&__quoteContext {
-			// 3. 🧩 Layout
-			grid-column: 1;
-			grid-row: 2;
-		}
-
 		&__headlineMetrics {
 			// 3. 🧩 Layout
 			grid-column: 1;
 			grid-row: 3;
+		}
+
+		&__quoteContext {
+			grid-column: 1;
+			grid-row: 2;
 		}
 	}
 }

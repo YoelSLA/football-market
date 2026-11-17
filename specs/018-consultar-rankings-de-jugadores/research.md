@@ -1,5 +1,127 @@
 # Research: Consultar ranking de jugadores por score
 
+## Investigación vigente del delta — 2026-11-12
+
+Las decisiones siguientes sustituyen las incompatibles del antecedente histórico. La fuente funcional
+es [`spec.md`](spec.md); esta investigación concreta su implementación sin añadir requisitos.
+
+### R1. Superficie HTTP y paginación
+
+**Decision**: Actualizar la ruta a `GET /api/rankings/score`; aceptar `page` (base 0, default 0),
+`size` (1–100, default 20), `name`, `leagueId` y `position`. Reutilizar los defaults, normalización,
+validación y shape de página del ranking de cotización. El Response incluye `strategy`, `quoteDate`,
+`content`, `page`, `size`, `totalElements`, `totalPages` y `filterOptions`.
+
+**Rationale**: FR-018/019 fijan la compatibilidad con la superficie paginada aprobada y separan el total
+filtrado de las opciones globales. Controller/DTO/OpenAPI/tests deben actualizarse en conjunto cuando
+se implemente, conforme al contrato backend.
+
+**Alternatives considered**: conservar la ruta y el array completo se descarta por contradicción con
+FR-001/018; agregar ruta de podio o parámetros de estrategia, fecha u orden se descarta por FR-018/021.
+
+### R2. Validación y filtros
+
+**Decision**: `page < 0`, `size < 1` o `size > 100` → `400 INVALID_REQUEST`; una página válida sin
+filas → `200` y `content: []` con los totales reales. `name` trim/blank omitido, parcial case-insensitive
+con `%` y `_` escapados; `leagueId` positivo e igualdad; `position` trim/blank omitido e igualdad
+case-insensitive. Los filtros se combinan con AND. ID de liga positivo desconocido produce cero
+coincidencias, no error.
+
+**Rationale**: Reutiliza las reglas de `QuoteRankingQuery` y evita que el filtrado cambie el universo o
+las posiciones globales. Los filtros externos se validan en la frontera HTTP y sus límites funcionales
+se preservan en el Model de consulta.
+
+**Alternatives considered**: filtrar tras paginar o renumerar resultados se descarta por FR-003/018;
+interpretar `%`/`_` como comodines se descarta para mantenerlos literales como en cotizaciones.
+
+### R3. Ejecución que fija el encabezado
+
+**Decision**: Seleccionar la primera ejecución finalizada por `startedAt DESC, id DESC`, equivalente
+al orden de `quoteDate DESC, startedAt DESC, id DESC` dado que `quoteDate` deriva de `startedAt` en UTC.
+Aplicar `finished_at IS NOT NULL`; abierto más reciente no desplaza la última finalizada. Usar el
+método derivado que ordena por fecha de cotización, inicio e ID descendentes y restringe `finishedAt`
+no nulo, si el mapeo derivado lo expresa fielmente; de lo contrario, consulta explícita equivalente.
+
+**Rationale**: Cumple la decisión CLARIFY y puede aprovechar el índice existente
+`ix_quote_executions_date (quote_date DESC, started_at DESC, id DESC)`. La fila solo aporta estrategia
+y `quoteDate` del encabezado.
+
+**Alternatives considered**: última fila sin filtrar por finalización se descarta porque puede ser un
+contexto abierto; `quoteDate` solamente se descarta porque varias ejecuciones manuales pueden compartir
+fecha.
+
+### R4. Universo elegible, score y ranking global
+
+**Decision**: Para la estrategia de la última ejecución finalizada, seleccionar la última valuación
+persistida por jugador (`valuation_date DESC`, manteniendo la regla de unicidad vigente); puntuar con
+`final_score` o `final_grl`. Incluir jugadores con cotización vigente y elegibles por métricas: al menos
+una fila de `player_statistics` de su fecha de extracción más reciente debe tener `present_metrics > 0`,
+conforme a SPEC-002/SPEC-016. Si varias fuentes comparten esa fecha, basta una fila con métricas.
+Calcular `row_number()` sobre el universo elegible y ordenar por score DESC, `player_id` ASC antes de
+aplicar filtros y offset/limit. Seleccionar en SQL las filas de página; no cargar el ranking completo.
+
+**Rationale**: Preserva las reglas de score y empate del requisito y propaga la regla de población
+cotizable vigente. El `row_number()` previo al filtro permite mostrar posiciones oficiales sin saltos en
+las páginas filtradas; separar consultas de las dos estrategias conserva el tipo de score y tablas
+existentes.
+
+**Alternatives considered**: ranking/filtrado en memoria se descarta porque descargaría la población
+completa; posición calculada después del filtro se descarta porque reasignaría rangos; incluir jugadores
+sin métricas o sin cotización se descarta por las reglas de elegibilidad de las specs fuente.
+
+### R5. Conteos, opciones y podio
+
+**Decision**: `totalElements` cuenta el universo filtrado; `totalPages = ceil(totalElements / size)`.
+Calcular `filterOptions` sobre el universo elegible sin filtros: ligas distintas con jugadores y
+posiciones distintas; mantenerlas independientes de la página y filtros seleccionados. Obtener podio
+y total global mediante `page=0&size=3` sin filtros en esta misma ruta; no añadir campo ni endpoint.
+
+**Rationale**: Sigue FR-019/021 literalmente y el patrón de ranking de cotizaciones. El `totalElements`
+del request de podio equivale al tamaño global. Solicitudes distintas no comparten snapshot garantizado.
+
+**Alternatives considered**: reusar total filtrado como total global, opciones filtradas o campos
+duplicados de podio se descartan por la especificación.
+
+### R6. Identidad de jugador y contratos
+
+**Decision**: Proyectar `player` con `name`, `position`, `imageUrl`, `team{id,name,crestUrl}` y
+`league{id,name}` desde las relaciones persistidas. `player` y `name` son obligatorios; lo que no esté
+disponible en catálogo se representa como nulo, sin sustitutos inventados. Mantener `position` global,
+`playerId`, score y `valuationDate`.
+
+**Rationale**: FR-020 define la forma exacta; los tipos DTO son records y el Mapper es estructural.
+Actualizar contrato, anotaciones OpenAPI y tests HTTP en el mismo cambio de implementación.
+
+### R7. Persistencia, consistencia y errores
+
+**Decision**: Mantener lectura transaccional `readOnly` con `REPEATABLE_READ` para cabecera, conteo,
+opciones y contenido de una respuesta coherente; la garantía no se extiende entre requests. Usar SQL
+nativo y proyecciones donde el ranking global/filtrado lo requiera; ninguna migración o índice nuevo
+queda justificado actualmente. Fallos técnicos siguen como error seguro `500 INTERNAL_ERROR`; JWT
+ausente/inválido conserva `401`.
+
+**Rationale**: Las consultas tienen que resolver rank global antes de filtros eficientemente y los
+datos de una respuesta deben proceder de una instantánea coherente. La ausencia de resultados no es
+error. No introducir códigos ni degradaciones nuevas.
+
+**Alternatives considered**: snapshot compartido entre solicitudes, cache, vista materializada o
+escritura se descartan por no estar exigidos.
+
+### R8. Cobertura prevista en fases posteriores
+
+Al implementar, aplicar `docs/backend/testing.md`: Repository (SQL nativo, selección latest, métricas,
+filtros, total, posición global y opciones), Service (cabecera finalized, página vacía y datos), y
+Controller (contrato exacto, defaults/validación, errores y JWT). El endpoint y cada respuesta HTTP
+contractualmente distinta deben tener assertions de Controller. Tests son responsabilidad posterior;
+el agente no los ejecuta. La reorganización de ubicación sigue `features/ranking`.
+
+---
+
+## Antecedente histórico — 2026-10-23 (no normativo para el delta)
+
+Las decisiones siguientes son el plan original y quedan subordinadas/sustituidas por la investigación
+vigente del delta al inicio del documento. Se conservan únicamente para trazabilidad.
+
 **Feature**: `018-consultar-rankings-de-jugadores`
 **Spec**: [`spec.md`](spec.md)
 **Plan**: [`plan.md`](plan.md)

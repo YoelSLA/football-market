@@ -14,7 +14,6 @@ import footballmarket.features.market.application.exceptions.MarketNotInitialize
 import footballmarket.features.market.domain.records.MarketInitializationResult;
 import footballmarket.features.quote.application.QuoteMarketInitializationService;
 import footballmarket.features.quote.application.QuoteRecalculationService;
-import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.InvalidMinPriceFloorException;
 import footballmarket.features.quote.application.exceptions.InvalidVariationCapException;
@@ -128,6 +127,52 @@ class QuoteControllerTest {
   class RecalculationContract {
 
     @Test
+    @DisplayName("Consulta todas las corridas manuales y automática de una misma fecha")
+    void returnsMultipleDailyExecutions() throws Exception {
+      // Arrange
+      QuoteExecution firstManual = execution();
+      QuoteExecution secondManual = execution();
+      QuoteExecution automatic =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.AUTOMATIC,
+              ValuationStrategy.GENERAL_ATTRIBUTES,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              0,
+              1,
+              Instant.parse("2026-10-21T12:00:00Z"),
+              Instant.parse("2026-10-21T12:00:05Z"));
+      when(recalculationService.executions(LocalDate.of(2026, 10, 21)))
+          .thenReturn(List.of(automatic, secondManual, firstManual));
+      // Act / Assert
+      mvc.perform(
+              get("/api/quotes/executions")
+                  .header("Authorization", authorization)
+                  .queryParam("date", "2026-10-21"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executions.length()").value(3))
+          .andExpect(jsonPath("$.executions[0].origin").value("AUTOMATIC"))
+          .andExpect(jsonPath("$.executions[0].result").value("FAILED"))
+          .andExpect(jsonPath("$.executions[0].failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
+          .andExpect(jsonPath("$.executions[0].startedAt").value("2026-10-21T12:00:00Z"))
+          .andExpect(jsonPath("$.executions[1].origin").value("MANUAL"))
+          .andExpect(jsonPath("$.executions[1].result").value("SUCCESS"))
+          .andExpect(jsonPath("$.executions[2].origin").value("MANUAL"))
+          .andExpect(jsonPath("$.executions[2].result").value("SUCCESS"))
+          .andExpect(
+              jsonPath(
+                  "$.executions[*].quoteDate",
+                  org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("2026-10-21"))))
+          .andExpect(jsonPath("$.executions[*].id").isEmpty());
+    }
+
+    @Test
     @DisplayName("Devuelve el resumen completo de la ejecución")
     void returnsExecutionSummary() throws Exception {
       when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(execution());
@@ -138,6 +183,7 @@ class QuoteControllerTest {
                   .contentType("application/json")
                   .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executionId").value(1))
           .andExpect(jsonPath("$.quoteDate").value("2026-10-21"))
           .andExpect(jsonPath("$.origin").value("MANUAL"))
           .andExpect(jsonPath("$.result").value("SUCCESS"))
@@ -148,7 +194,7 @@ class QuoteControllerTest {
           .andExpect(jsonPath("$.variationCap").value(0.10))
           .andExpect(jsonPath("$.minPriceFloor").value(1))
           .andExpect(jsonPath("$.pricedPlayers").value(5))
-          .andExpect(jsonPath("$.recomputedRows").value(3))
+          .andExpect(jsonPath("$.recomputedRows").value(2))
           .andExpect(jsonPath("$.carriedForwardRows").value(2))
           .andExpect(jsonPath("$.notRepricedPlayers").value(1))
           .andExpect(jsonPath("$.failedPlayers").value(0))
@@ -174,7 +220,7 @@ class QuoteControllerTest {
           .andExpect(jsonPath("$.executions[0].variationCap").value(0.10))
           .andExpect(jsonPath("$.executions[0].minPriceFloor").value(1))
           .andExpect(jsonPath("$.executions[0].pricedPlayers").value(5))
-          .andExpect(jsonPath("$.executions[0].recomputedRows").value(3))
+          .andExpect(jsonPath("$.executions[0].recomputedRows").value(2))
           .andExpect(jsonPath("$.executions[0].carriedForwardRows").value(2))
           .andExpect(jsonPath("$.executions[0].notRepricedPlayers").value(1))
           .andExpect(jsonPath("$.executions[0].failedPlayers").value(0))
@@ -188,11 +234,49 @@ class QuoteControllerTest {
     }
 
     @Test
+    @DisplayName("POST repetidos del mismo día devuelven las identidades de ambas corridas")
+    void acceptsRepeatedHttpRuns() throws Exception {
+      // Arrange
+      QuoteExecution first = execution();
+      QuoteExecution second = execution();
+      org.springframework.test.util.ReflectionTestUtils.setField(second, "id", 2L);
+      when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(first, second);
+      // Act / Assert
+      for (int id = 1; id <= 2; id++) {
+        mvc.perform(
+                post("/api/quotes/recalculate")
+                    .header("Authorization", authorization)
+                    .contentType("application/json")
+                    .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.executionId").value(id))
+            .andExpect(jsonPath("$.quoteDate").value("2026-10-21"))
+            .andExpect(jsonPath("$.notRepricedPlayers").value(1))
+            .andExpect(jsonPath("$.failedPlayers").value(0));
+      }
+    }
+
+    @Test
     @DisplayName("Expone un motivo cerrado para fallos individuales sin detalles internos")
     void returnsFailedExecutionWithoutInternalDetails() throws Exception {
       // Arrange
-      QuoteExecution failed = execution();
-      failed.complete(5, 2, 2, 0, 1, Instant.parse("2026-10-21T10:00:05Z"));
+      QuoteExecution failed =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.MANUAL,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              0,
+              1,
+              Instant.parse("2026-10-21T10:00:00Z"),
+              Instant.parse("2026-10-21T10:00:05Z"));
+      org.springframework.test.util.ReflectionTestUtils.setField(failed, "id", 3L);
       when(recalculationService.recalculate(any(), any(), any(), any())).thenReturn(failed);
       // Act / Assert
       mvc.perform(
@@ -201,6 +285,7 @@ class QuoteControllerTest {
                   .contentType("application/json")
                   .content("{\"strategy\":\"POSITIONAL_PERFORMANCE\"}"))
           .andExpect(status().isOk())
+          .andExpect(jsonPath("$.executionId").value(3))
           .andExpect(jsonPath("$.origin").value("MANUAL"))
           .andExpect(jsonPath("$.result").value("FAILED"))
           .andExpect(jsonPath("$.failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
@@ -231,8 +316,10 @@ class QuoteControllerTest {
               1,
               Instant.parse("2026-10-21T10:00:00Z"),
               Instant.parse("2026-10-21T10:00:05Z"));
+      org.springframework.test.util.ReflectionTestUtils.setField(automatic, "id", 2L);
+      QuoteExecution manual = execution();
       when(recalculationService.executions(LocalDate.of(2026, 10, 21)))
-          .thenReturn(List.of(automatic));
+          .thenReturn(List.of(automatic, manual));
       when(recalculationService.executions(LocalDate.of(2026, 10, 22))).thenReturn(List.of());
       // Act / Assert
       mvc.perform(
@@ -240,7 +327,9 @@ class QuoteControllerTest {
                   .header("Authorization", authorization)
                   .queryParam("date", "2026-10-21"))
           .andExpect(status().isOk())
-          .andExpect(jsonPath("$.executions.length()").value(1))
+          .andExpect(jsonPath("$.executions.length()").value(2))
+          .andExpect(jsonPath("$.executions[0].executionId").value(2))
+          .andExpect(jsonPath("$.executions[1].executionId").value(1))
           .andExpect(jsonPath("$.executions[0].origin").value("AUTOMATIC"))
           .andExpect(jsonPath("$.executions[0].result").value("FAILED"))
           .andExpect(jsonPath("$.executions[0].failureReason").value("INDIVIDUAL_PLAYER_FAILURES"))
@@ -289,7 +378,6 @@ class QuoteControllerTest {
       assertRejection(new InvalidAdjustmentFactorException(), 400, "INVALID_ADJUSTMENT_FACTOR");
       assertRejection(new InvalidVariationCapException(), 400, "INVALID_VARIATION_CAP");
       assertRejection(new InvalidMinPriceFloorException(), 400, "INVALID_MIN_PRICE_FLOOR");
-      assertRejection(new ExecutionAlreadyExistsException(), 409, "EXECUTION_ALREADY_EXISTS");
     }
 
     private void assertRejection(RuntimeException exception, int statusCode, String code)
@@ -306,21 +394,24 @@ class QuoteControllerTest {
     }
 
     private QuoteExecution execution() {
-      return new QuoteExecution(
-          LocalDate.of(2026, 10, 21),
-          QuoteExecutionOrigin.MANUAL,
-          ValuationStrategy.POSITIONAL_PERFORMANCE,
-          "v1",
-          new BigDecimal("0.10"),
-          new BigDecimal("0.10"),
-          1L,
-          5,
-          3,
-          2,
-          1,
-          0,
-          Instant.parse("2026-10-21T10:00:00Z"),
-          Instant.parse("2026-10-21T10:00:05Z"));
+      QuoteExecution execution =
+          new QuoteExecution(
+              LocalDate.of(2026, 10, 21),
+              QuoteExecutionOrigin.MANUAL,
+              ValuationStrategy.POSITIONAL_PERFORMANCE,
+              "v1",
+              new BigDecimal("0.10"),
+              new BigDecimal("0.10"),
+              1L,
+              5,
+              2,
+              2,
+              1,
+              0,
+              Instant.parse("2026-10-21T10:00:00Z"),
+              Instant.parse("2026-10-21T10:00:05Z"));
+      org.springframework.test.util.ReflectionTestUtils.setField(execution, "id", 1L);
+      return execution;
     }
   }
 }

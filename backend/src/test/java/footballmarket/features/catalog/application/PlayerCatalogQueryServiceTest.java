@@ -39,10 +39,21 @@ class PlayerCatalogQueryServiceTest {
     @DisplayName("Ordena nombres sin alterar presentación y desempata por ID")
     void ordersByNameAndId() {
       // Arrange
-      data.player("Zulu", "Forward", null, null);
+      PlayerCatalogQueryData.Fixture zulu = data.player("Zulu", "Forward", null, null);
       PlayerCatalogQueryData.Fixture first = data.player("Ana", "Midfield", "Spain", null);
       PlayerCatalogQueryData.Fixture second =
           data.player("Ana", "Midfield", "Spain", first.teamId());
+      LocalDate date = LocalDate.of(2026, 10, 23);
+      for (PlayerCatalogQueryData.Fixture player : java.util.List.of(zulu, first, second)) {
+        statisticsData.row(
+            player.playerId(),
+            date,
+            MetricSource.JSON,
+            "2026",
+            "2",
+            PlayerExtractionResult.COMPLETED,
+            Map.of("goals_total", BigDecimal.ZERO));
+      }
       PlayerCatalogCriteria criteria =
           new PlayerCatalogCriteria(null, null, null, null, null, "name,asc", false);
       // Act
@@ -67,7 +78,7 @@ class PlayerCatalogQueryServiceTest {
     }
 
     @Test
-    @DisplayName("Mantiene jugadores sin métricas y distingue cero JSON de ausencia")
+    @DisplayName("Excluye jugadores sin métricas y distingue cero JSON de ausencia parcial")
     void enrichesWithoutExcludingPlayers() {
       // Arrange
       PlayerCatalogQueryData.Fixture first = data.player("Con datos", "Forward", null, null);
@@ -94,13 +105,14 @@ class PlayerCatalogQueryServiceTest {
       // Act
       PlayerCatalogPage page = service.queryCatalog(criteria, 0, 12);
       // Assert
-      assertThat(page.totalElements()).isEqualTo(2);
+      assertThat(page.totalElements()).isEqualTo(1);
       assertThat(page.content().getFirst().statistics().goalsTotal()).isZero();
       assertThat(page.content().getFirst().statistics().sources().goalsTotal())
           .isEqualTo(MetricSource.JSON);
       assertThat(page.content().getFirst().statistics().assistsTotal())
           .isEqualByComparingTo(BigDecimal.ONE);
-      assertThat(page.content().get(1).statistics().goalsTotal()).isNull();
+      assertThat(page.content().getFirst().statistics().appearancesTotal()).isNull();
+      assertThat(service.catalogFilters().positions()).containsExactly("Forward");
     }
   }
 }

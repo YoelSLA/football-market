@@ -66,15 +66,34 @@ class PlayerStatisticsQueryServiceTest {
     }
 
     @Test
-    @DisplayName("Jugador visible sin snapshot responde sin datos, no como jugador inexistente")
+    @DisplayName("Jugador elegible sin snapshot de la temporada responde sin datos")
     void returnsNoData() {
       // Arrange
       Long playerId = data.player("Empty");
+      data.row(
+          playerId,
+          DATE,
+          MetricSource.JSON,
+          "2025",
+          "2",
+          PlayerExtractionResult.COMPLETED,
+          Map.of("goals_total", BigDecimal.ZERO));
       // Act
       PlayerStatisticsSnapshot snapshot = service.getStatistics(playerId, "2026");
       // Assert
       assertThat(snapshot.status()).isEqualTo("NO_DATA");
       assertThat(snapshot.metrics()).hasSize(60);
+      assertThat(snapshot.metrics()).allSatisfy(metric -> assertThat(metric.value()).isNull());
+    }
+
+    @Test
+    @DisplayName("Un jugador sin métricas no revela estadísticas")
+    void hidesPlayerWithoutMetrics() {
+      // Arrange
+      Long playerId = data.player("Sin métricas");
+      // Act / Assert
+      assertThatExceptionOfType(PlayerNotFoundException.class)
+          .isThrownBy(() -> service.getStatistics(playerId, null));
     }
 
     @Test

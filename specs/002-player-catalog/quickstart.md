@@ -1,5 +1,62 @@
 # Guía rápida de validación
 
+## Delta de elegibilidad — verificación futura por el usuario
+
+### Inventario definitivo de suites y comandos (2026-11-12)
+
+El repositorio del catálogo aplica `exists` sobre métricas informadas en la fecha máxima del
+jugador a listado, conteo, opciones y detalle. Identidad, estadísticas y validaciones de compra y
+venta reutilizan ese acceso. Las publicaciones públicas y ambos repositorios de ranking por score
+aplican la misma condición. El ranking por precio ya la aplicaba. Las lecturas de portfolio e
+historial conservan caminos independientes del detalle filtrado. OpenAPI se actualizó en
+`PlayerController`, responsable efectivo de identidad y estadísticas individuales;
+`PlayerStatisticsController` mantiene los endpoints de extracción, no el GET individual.
+
+Build backend sin tests observado con resultado satisfactorio durante la implementación. Ese
+control no compila ni ejecuta las fuentes de test: la compilación, ejecución y aceptación de las
+suites siguientes corresponde exclusivamente al usuario.
+
+Suites del delta y de los consumidores adaptados:
+
+- Catálogo e identidad: `PlayerCatalogQueryRepositoryTest`, `PlayerCatalogQueryServiceTest`,
+  `PlayerCatalogServiceTest`, `PlayerCatalogPersistenceTest`, `PlayerControllerTest`,
+  `TeamIdentityAndRetirementTest`, `TeamEnrichmentServiceTest`,
+  `TeamProtectionPersistenceTest`, `PlayerIdentityE2ETest`.
+- Estadísticas y extracción: `PlayerStatisticsQueryServiceTest`,
+  `PlayerStatisticsExtractionServiceTest`, `JsonStatisticsUpdateServiceTest`,
+  `PlayerSnapshotConsistencyPersistenceTest`, `PlayerStatisticsCrossChannelJourneyE2ETest`,
+  `PlayerStatisticsSyncJourneyE2ETest`.
+- Mercado, portfolio e historial: `TokenListingVisibilityPersistenceTest`,
+  `TokenListingServiceTest`, `BuyOrderServiceTest`, `PortfolioServiceTest`,
+  `PortfolioControllerTest`, `OperationHistoryServiceTest`,
+  `OperationHistoryControllerTest`, `PlayerTokenEmissionPersistenceTest`,
+  `SuperuserMarketRecoveryPersistenceTest`.
+- Rankings, cotizaciones e imágenes: `ScoreRankingQueryTest`,
+  `ScoreRankingQueryServiceTest`, `QuoteRankingPersistenceTest`, `QuoteQueryServiceTest`,
+  `QuoteRecalculationServiceTest`, `QuoteAutomaticRecalculationFailureTest`,
+  `QuoteMarketOperationPersistenceTest`, `PlayerImageSynchronizationServiceTest`.
+
+Ejecución **exclusiva del usuario**, desde `backend/`, de las suites afectadas:
+
+```powershell
+.\gradlew.bat test --tests '*PlayerCatalogQueryRepositoryTest' --tests '*PlayerCatalogQueryServiceTest' --tests '*PlayerCatalogServiceTest' --tests '*PlayerCatalogPersistenceTest' --tests '*PlayerControllerTest' --tests '*TeamIdentityAndRetirementTest' --tests '*TeamEnrichmentServiceTest' --tests '*TeamProtectionPersistenceTest' --tests '*PlayerStatisticsQueryServiceTest' --tests '*PlayerStatisticsExtractionServiceTest' --tests '*JsonStatisticsUpdateServiceTest' --tests '*PlayerSnapshotConsistencyPersistenceTest' --tests '*TokenListingVisibilityPersistenceTest' --tests '*TokenListingServiceTest' --tests '*BuyOrderServiceTest' --tests '*PortfolioServiceTest' --tests '*PortfolioControllerTest' --tests '*OperationHistoryServiceTest' --tests '*OperationHistoryControllerTest' --tests '*ScoreRankingQueryTest' --tests '*ScoreRankingQueryServiceTest' --tests '*QuoteRankingPersistenceTest' --tests '*QuoteQueryServiceTest' --tests '*QuoteRecalculationServiceTest' --tests '*QuoteAutomaticRecalculationFailureTest' --tests '*QuoteMarketOperationPersistenceTest' --tests '*PlayerImageSynchronizationServiceTest' --tests '*PlayerIdentityE2ETest' --tests '*PlayerStatisticsCrossChannelJourneyE2ETest' --tests '*PlayerStatisticsSyncJourneyE2ETest' --tests '*PlayerTokenEmissionPersistenceTest' --tests '*SuperuserMarketRecoveryPersistenceTest'
+```
+
+Para incluir toda la regresión backend, ejecutar la suite completa desde `backend/`:
+
+```powershell
+.\gradlew.bat test
+```
+
+Escenarios cubiertos por las suites: sin registros; fecha anterior con datos y última vacía; dos
+fuentes en la última fecha con una poblada; cero informado; jugador elegible sin score; listado,
+búsqueda, conteos, páginas y opciones globales; 404 en identidad y estadísticas por ID no elegible;
+200 `NO_DATA` con 60 ausencias para elegible sin snapshot confirmado en el contexto consultado;
+exclusión de mercado y ambos rankings aunque existan precios o valuaciones antiguos; compras y
+ventas sin movimientos; tenencias e historial de operaciones consultables; sincronización y datos
+históricos sin alterar. El agente no ejecuta estos escenarios ni tests, ni declara la suite
+aprobada.
+
 ## Requisitos previos
 
 - Java 21 y PostgreSQL disponibles.
@@ -14,8 +71,9 @@
 
 ## Ejecución y controles
 
-Esta sección corresponde exclusivamente al usuario. El agente preparó los casos,
-pero no ejecutó tests, build, Spotless ni generó snippets durante la implementación.
+Esta sección corresponde exclusivamente al usuario. El agente preparó los casos y ejecutó solo el
+build backend permitido sin tests; no ejecutó tests ni Spotless de forma independiente, y no declara
+la suite aprobada.
 
 Desde `backend/`:
 

@@ -1,5 +1,34 @@
 # Guía de validación: Página de catálogo de jugadores
 
+## Delta de elegibilidad — verificación humana
+
+Integración revisada: `usePlayerDetailPage` convierte `PLAYER_NOT_FOUND` en el estado `not-found`
+existente y descarta datos en caché; `PlayerCard` conserva `null` y muestra «Sin datos», sin
+confundirlo con cero; `usePlayersPage` usa conteos y páginas del backend y corrige a la última
+página válida cuando el universo elegible se reduce; `usePortfolioHoldingsPage` mantiene las
+posiciones desde su propia consulta, sin depender del detalle público del jugador.
+
+Escenarios a comprobar por el usuario con el universo de métricas de SPEC-002:
+
+1. Catálogo: el listado solo contiene jugadores elegibles; aplicar cada filtro global y confirmar
+   que opciones, conteos, numeración y paginación coinciden con el backend.
+2. Búsqueda y vacío: un nombre sin coincidencias muestra el estado vacío sin tarjetas de relleno;
+   un catálogo con total cero no muestra paginador engañoso.
+3. Cifras: en una tarjeta elegible, un valor `null` muestra «Sin datos», mientras que un cero
+   informado se muestra como `0`; no se exige score ni cotización para mostrar la tarjeta.
+4. Detalle: un jugador excluido responde 404 y la página muestra «Jugador no encontrado» sin
+   reutilizar datos previos; un ID inválido conserva su estado específico y la sesión ausente su
+   flujo existente.
+5. Reducción del universo: si la página seleccionada deja de existir, la vista consulta y muestra
+   la última página válida con los conteos del backend.
+6. Posiciones e historial: un jugador que deja de ser elegible sigue apareciendo en las tenencias
+   y en el historial de operaciones propias, con sus valores históricos, aunque su detalle público
+   ya no sea visible.
+
+El build frontend `npm run build` y `npm run biome:fix` terminaron sin errores sobre el estado
+entregado. Esos controles no sustituyen la validación visual ni acreditan tests; no se crean ni
+ejecutan tests frontend y esta guía sigue pendiente de ejecución humana.
+
 ## Guía vigente del rediseño — ejecución humana futura
 
 Preflight de viabilidad 2026-10-26 (solo metadatos, sin migraciones ni pruebas): PostgreSQL local reporta UTF8 y pg_trgm1.6 disponible, no instalado. El rol consultado `postgres` tiene CREATE en base y esquema public. Esto no acredita que el rol efectivo de Flyway/deploy sea el mismo; antes de aplicar migraciones, el usuario debe verificar sus permisos de extensión/función/índice y que pg_trgm esté disponible en ese servidor. No se instala unaccent. El agente no aplica la migración ni inicia servicios para hacerlo indirectamente.

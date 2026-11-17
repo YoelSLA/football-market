@@ -12,13 +12,19 @@ interface Props {
 	player: PlayerDetail;
 	statistics: PlayerStatistics | undefined;
 	quote?: PlayerQuote | null;
+	quoteLoading?: boolean;
 }
 
-export default function PlayerOverview({ player, statistics, quote }: Props) {
+export default function PlayerOverview({
+	player,
+	statistics,
+	quote,
+	quoteLoading,
+}: Props) {
 	return (
 		<section
 			className={styles.playerOverview}
-			aria-label="Identidad y estadísticas principales del jugador"
+			aria-label="Identidad y cotización oficial del jugador"
 		>
 			<PlayerOverviewIdentity
 				name={player.name}
@@ -38,8 +44,9 @@ export default function PlayerOverview({ player, statistics, quote }: Props) {
 			/>
 
 			<PlayerOverviewQuote
-				className={styles.playerOverview__quoteContext}
 				quote={quote}
+				loading={quoteLoading}
+				className={styles.playerOverview__quoteContext}
 			/>
 		</section>
 	);

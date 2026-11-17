@@ -3,12 +3,15 @@ package footballmarket.features.quote.presentation;
 import footballmarket.features.market.domain.records.MarketInitializationResult;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
+import footballmarket.features.quote.domain.records.QuoteRankingPage;
+import footballmarket.features.quote.domain.records.QuoteRankingQuery;
+import footballmarket.features.quote.presentation.dtos.request.QuoteRankingQueryRequestDTO;
 import footballmarket.features.quote.presentation.dtos.response.InitializeMarketResponseDTO;
 import footballmarket.features.quote.presentation.dtos.response.PlayerRankingResponseDTO;
 import footballmarket.features.quote.presentation.dtos.response.QuoteHistoryResponseDTO;
+import footballmarket.features.quote.presentation.dtos.response.QuoteRankingPageResponseDTO;
 import footballmarket.features.quote.presentation.dtos.response.QuoteResponseDTO;
 import footballmarket.features.quote.presentation.dtos.response.RankingResponseDTO;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,6 +21,51 @@ import java.util.List;
  */
 public final class QuoteMapper {
   private QuoteMapper() {}
+
+  public static QuoteRankingQuery toRankingQuery(QuoteRankingQueryRequestDTO request) {
+    return new QuoteRankingQuery(
+        request.page(), request.size(), request.name(), request.leagueId(), request.position());
+  }
+
+  public static QuoteRankingPageResponseDTO toRankingPageResponse(QuoteRankingPage page) {
+    return new QuoteRankingPageResponseDTO(
+        page.content().stream()
+            .map(
+                entry ->
+                    new QuoteRankingPageResponseDTO.Entry(
+                        entry.position(),
+                        entry.playerId(),
+                        entry.price(),
+                        entry.effectiveDate(),
+                        entry.origin().name(),
+                        entry.calculatedAt(),
+                        toPlayerIdentity(entry.player())))
+            .toList(),
+        page.page(),
+        page.size(),
+        page.totalElements(),
+        page.totalPages(),
+        new QuoteRankingPageResponseDTO.FilterOptions(
+            page.leagues().stream()
+                .map(league -> new QuoteRankingPageResponseDTO.League(league.id(), league.name()))
+                .toList(),
+            page.positions()));
+  }
+
+  private static QuoteRankingPageResponseDTO.PlayerIdentity toPlayerIdentity(
+      QuoteRankingPage.PlayerIdentity player) {
+    return new QuoteRankingPageResponseDTO.PlayerIdentity(
+        player.name(),
+        player.position(),
+        player.imageUrl(),
+        player.team() == null
+            ? null
+            : new QuoteRankingPageResponseDTO.Team(
+                player.team().id(), player.team().name(), player.team().crestUrl()),
+        player.league() == null
+            ? null
+            : new QuoteRankingPageResponseDTO.League(player.league().id(), player.league().name()));
+  }
 
   /**
    * Mapea el resultado de la inicialización a su respuesta HTTP.
@@ -66,24 +114,23 @@ public final class QuoteMapper {
   /**
    * Mapea el ranking de jugadores por cotización vigente a su respuesta HTTP.
    *
-   * <p>La posición es el orden de la entrada, desde uno.
+   * <p>La posición procede del caso de uso, sin renumerarla en presentación.
    *
    * @param entries entradas del ranking, de mayor a menor precio
    * @return ranking del contrato de consulta
    */
   public static PlayerRankingResponseDTO toRankingResponse(List<PlayerRankingEntry> entries) {
-    List<RankingResponseDTO> ranking = new ArrayList<>(entries.size());
-    for (int index = 0; index < entries.size(); index++) {
-      PlayerRankingEntry entry = entries.get(index);
-      ranking.add(
-          new RankingResponseDTO(
-              index + 1,
-              entry.playerId(),
-              entry.price(),
-              entry.effectiveDate(),
-              entry.origin().name(),
-              entry.calculatedAt()));
-    }
-    return new PlayerRankingResponseDTO(List.copyOf(ranking));
+    return new PlayerRankingResponseDTO(
+        entries.stream()
+            .map(
+                entry ->
+                    new RankingResponseDTO(
+                        entry.position(),
+                        entry.playerId(),
+                        entry.price(),
+                        entry.effectiveDate(),
+                        entry.origin().name(),
+                        entry.calculatedAt()))
+            .toList());
   }
 }

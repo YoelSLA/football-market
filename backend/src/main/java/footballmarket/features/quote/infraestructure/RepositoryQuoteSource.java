@@ -16,9 +16,8 @@ import org.springframework.stereotype.Component;
  * Fuente de cotización real, sostenida por el repositorio canónico de cotizaciones.
  *
  * <p>Es el adaptador del puerto {@link QuoteSource} contra la tabla {@code player_quotes}: devuelve
- * la fila vigente del jugador, la de fecha de vigencia máxima y, a igualdad de fecha, la {@code
- * RECOMPUTED}, que fue escrita después que la arrastrada. No inventa datos: un jugador sin
- * cotización se devuelve como ausencia y el mercado la traduce al error de cotización no
+ * la fila diaria vigente del jugador, la de fecha de vigencia máxima. No inventa datos: un jugador
+ * sin cotización se devuelve como ausencia y el mercado la traduce al error de cotización no
  * disponible.
  *
  * <p>El instante que acompaña a la cotización es el instante de cálculo de esa fila, no el de la

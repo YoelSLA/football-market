@@ -19,14 +19,16 @@ export default function RankingPlaceHeader({ player }: Props) {
 				<h2 className={styles.header__name}>{player.playerName}</h2>
 			</Link>
 
-			<span
-				className={`${styles.positionBadge} ${
-					styles[`positionBadge_${player.tacticalPosition}`] ?? ""
-				}`}
-				title={`Posición: ${player.tacticalPosition}`}
-			>
-				{player.tacticalPosition}
-			</span>
+			{player.tacticalPosition ? (
+				<span
+					className={`${styles.positionBadge} ${
+						styles[`positionBadge_${player.tacticalPosition}`] ?? ""
+					}`}
+					title={`Posición: ${player.tacticalPosition}`}
+				>
+					{player.tacticalPosition}
+				</span>
+			) : null}
 		</div>
 	);
 }

@@ -1,10 +1,15 @@
 package footballmarket.features.ranking.application.impl;
 
 import footballmarket.features.quote.domain.models.QuoteExecution;
+import footballmarket.features.quote.domain.records.QuoteRankingPage.LeagueOption;
 import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
 import footballmarket.features.ranking.application.ScoreRankingQueryService;
 import footballmarket.features.ranking.domain.records.ScoreRanking;
 import footballmarket.features.ranking.domain.records.ScoreRankingEntry;
+import footballmarket.features.ranking.domain.records.ScoreRankingFilterOptions;
+import footballmarket.features.ranking.domain.records.ScoreRankingPage;
+import footballmarket.features.ranking.domain.records.ScoreRankingQuery;
+import footballmarket.features.ranking.domain.records.ScoreRankingRow;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.features.valuation.domain.models.AttributeValuation;
 import footballmarket.features.valuation.domain.models.PositionalValuation;
@@ -39,7 +44,8 @@ public class ScoreRankingQueryServiceImpl implements ScoreRankingQueryService {
 
   @Override
   public ScoreRanking findScoreRanking() {
-    QuoteExecution execution = this.executions.findTopByOrderByQuoteDateDesc().orElse(null);
+    QuoteExecution execution =
+        this.executions.findTopByFinishedAtIsNotNullOrderByStartedAtDescIdDesc().orElse(null);
     if (execution == null) {
       LOG.debug("score_ranking_read execution=none entries=0");
       return new ScoreRanking(null, null, List.of());
@@ -80,5 +86,76 @@ public class ScoreRankingQueryServiceImpl implements ScoreRankingQueryService {
       }
     }
     return List.copyOf(entries);
+  }
+
+  @Override
+  public ScoreRankingPage findScoreRanking(ScoreRankingQuery query) {
+    QuoteExecution execution =
+        this.executions.findTopByFinishedAtIsNotNullOrderByStartedAtDescIdDesc().orElse(null);
+    if (execution == null) {
+      return new ScoreRankingPage(
+          null,
+          null,
+          List.of(),
+          query.page(),
+          query.size(),
+          0,
+          new ScoreRankingFilterOptions(List.of(), List.of()));
+    }
+    boolean positional = execution.getStrategyName() == ValuationStrategy.POSITIONAL_PERFORMANCE;
+    List<ScoreRankingRow> rows =
+        positional
+            ? this.positionalValuations.findRankingPage(
+                query.name(), query.leagueId(), query.position(), query.size(), query.offset())
+            : this.attributeValuations.findRankingPage(
+                query.name(), query.leagueId(), query.position(), query.size(), query.offset());
+    long total =
+        positional
+            ? this.positionalValuations.countRanking(
+                query.name(), query.leagueId(), query.position())
+            : this.attributeValuations.countRanking(
+                query.name(), query.leagueId(), query.position());
+    List<LeagueOption> leagues =
+        positional
+            ? this.positionalValuations.findRankingLeagues()
+            : this.attributeValuations.findRankingLeagues();
+    List<String> positions =
+        positional
+            ? this.positionalValuations.findRankingPositions()
+            : this.attributeValuations.findRankingPositions();
+    List<ScoreRankingPage.Entry> entries =
+        rows.stream()
+            .map(
+                row ->
+                    new ScoreRankingPage.Entry(
+                        row.getPosition(),
+                        row.getPlayerId(),
+                        row.getScore(),
+                        row.getValuationDate(),
+                        new ScoreRankingPage.Player(
+                            row.getName(),
+                            row.getPlayerPosition(),
+                            row.getImageUrl(),
+                            row.getTeamId() == null
+                                ? null
+                                : new ScoreRankingPage.Team(
+                                    row.getTeamId(), row.getTeamName(), null),
+                            row.getLeagueId() == null
+                                ? null
+                                : new ScoreRankingFilterOptions.League(
+                                    row.getLeagueId(), row.getLeagueName()))))
+            .toList();
+    return new ScoreRankingPage(
+        execution.getStrategyName(),
+        execution.getQuoteDate(),
+        entries,
+        query.page(),
+        query.size(),
+        total,
+        new ScoreRankingFilterOptions(
+            leagues.stream()
+                .map(league -> new ScoreRankingFilterOptions.League(league.id(), league.name()))
+                .toList(),
+            positions));
   }
 }

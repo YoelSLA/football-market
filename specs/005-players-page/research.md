@@ -1,5 +1,11 @@
 # Investigación: Página de catálogo de jugadores
 
+## Investigación del delta — 2026-11-11
+
+- **Decisión**: consumir el universo elegible del backend; las cifras de tarjeta siguen nullable y el 404 de detalle usa el tratamiento existente. **Motivo**: el criterio abarca todas las métricas y no equivale a exigir las tres mostradas. **Alternativa descartada**: filtrar tarjetas en el navegador o exigir score.
+- **Decisión**: revisar mercado, rankings y portfolio junto al plan de SPEC-002. **Motivo**: son consumidores afectados y las tenencias históricas deben seguir visibles. **Alternativa descartada**: asumir que todos consumen únicamente el listado.
+- La decisión previa de no alterar elegibilidad del detalle queda sustituida por el delta; SPEC-009 se alinea en identidad y estadísticas sin rediseñar su dashboard.
+
 ## Investigación vigente — filtros globales y tarjetas reales
 
 | Decisión | Razón / evidencia | Alternativas descartadas |

@@ -4,7 +4,9 @@
 **Estado**: Contrato vigente del sistema.
 **Referencias normativas**: [spec.md](../spec.md), [plan.md](../plan.md), [data-model.md](../data-model.md) y [metric-glossary.md](metric-glossary.md).
 
----
+**Alineación 2026-11-11**: identidad y estadísticas aplican la elegibilidad de [SPEC-002](../../002-player-catalog/spec.md): al menos una métrica informada en alguna fila de la fecha de extracción más reciente, además de la visibilidad previa. Un jugador no elegible recibe 404 en ambas lecturas. Si el jugador es elegible pero no hay snapshot confirmado para la temporada o contexto consultados, la respuesta estadística sigue siendo 200 `NO_DATA`, con 60 ausencias. Esto no cambia la selección del snapshot ni acredita implementación.
+
+## Solicitud
 
 ## 1. Solicitud
 
@@ -105,22 +107,17 @@ Cada elemento del array contiene:
 
 ## 3. Reglas de selección y composición del snapshot
 
-1. **Elegibilidad y visibilidad**: La consulta aplica la misma política que la identidad (`findVisibleById`). Jugadores inexistentes o no visibles responden HTTP 404 (`PLAYER_NOT_FOUND`).
-2. **Confirmación estricta**: Solo se seleccionan filas con contexto `RESOLVED` y cuyo ítem de ejecución asociado esté en estado `COMPLETED`. Se ignoran filas huérfanas o con contexto no resuelto.
-3. **Anclaje en JSON**: Se busca la fecha más reciente del jugador. Si coinciden extracciones de distintas fuentes para esa fecha, la fuente `JSON` ancla el contexto; se desempata por `observedAt DESC` e `id DESC`.
-4. **Respaldo determinista con SCRAPING**: Si la fila JSON ancla contiene métricas nulas, solo se completan desde registros `SCRAPING` cuya fecha, jugador, temporada y competición coincidan exactamente con el ancla. Claves ausentes en ambas fuentes permanecen con `value: null` y `source: null`.
-5. **Garantía de 60 entradas**: La respuesta siempre entrega el catálogo completo de 60 métricas. Si el jugador no registra extracciones confirmadas, el estado es `NO_DATA`, los metadatos de contexto son `null` y las 60 métricas contienen `value: null` y `source: null`.
+1. Comprobar elegibilidad igual que identidad: jugador activo, equipo y liga visibles y métricas según la alineación anterior; inexistente o no elegible → mismo 404 PLAYER_NOT_FOUND, sin exponer estadísticas.
+2. Solo filas con contexto RESOLVED e item referenciado COMPLETED, coherentes en jugador/fecha/canal. No exigir confirmación poblacional ni run global COMPLETED. Ignorar filas huérfanas o de contexto sin resolver.
+3. Elegir fecha mayor del jugador y temporada pedida; si no se pide, última fecha del jugador. Dentro de fecha, JSON ancla antes de scraping; luego observedAt e ID mayores como desempate determinista. El ancla determina temporada y competición; no es una elección de la temporada más numerosa ni del equipo actual.
+4. Completar desde scraping solo con jugador, temporada, fecha y competición exactamente iguales al ancla JSON. Cada valor JSON no nulo se conserva, incluido cero. Clave ausente en ambos → value/source null. Las tres claves exclusivas scraping también requieren coincidencia de contexto. Sin JSON en esa fecha usar scraping confirmado, nunca JSON de una fecha anterior.
+5. Emitir 60 entradas incluso sin snapshot. Sin candidato: contexto null, valores/source null, status NO_DATA. Fallos de consulta no se convierten en esta respuesta.
 
 ---
 
 ## 4. Errores y seguridad
 
-| Código HTTP | Condición | Comportamiento |
-| --- | --- | --- |
-| **400 Bad Request** | Formato de `id` inválido, no numérico o menor/igual a cero (`id <= 0`). | Devuelve `INVALID_PARAMETER_TYPE`. |
-| **401 Unauthorized** | Credencial JWT ausente o expirada. | Redirección a `/login`. |
-| **404 Not Found** | Jugador inexistente o inactivo/no visible. | Devuelve `PLAYER_NOT_FOUND` idéntico al de identidad. |
-| **500 Server Error** | Fallo interno al leer la base de datos. | La interfaz retiene la identidad ya cargada, comunica el error y ofrece botón de reintento. |
+La política de FR-046 se aplica a ambas lecturas: ID decimal positivo dentro de Long; formato inválido/cero/negativo/fuera de rango → 400, válido inexistente/no elegible → 404; jugador elegible sin snapshot confirmado para la consulta → 200 NO_DATA. El endpoint de identidad existente no tiene validación positiva explícita: requiere alineación futura acotada para cero/negativos, conservando DTO y rutas. Este documento no afirma que ese cambio esté implementado.
 
 ### Retención de respuesta compatible en frontend
 

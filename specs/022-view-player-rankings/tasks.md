@@ -14,6 +14,8 @@ description: "Lista de tareas de implementación para SPEC-022: Visualizar ranki
 
 **Organization**: Tareas agrupadas por fases y por historias de usuario para posibilitar entrega incremental e independiente.
 
+**Revisión de alcance 2026-11-12**: Los T001–T034 y sus estados se conservan como registro del trabajo anterior. Sus descripciones relativas a paginación/filtros cliente, hidratación desde catálogo y contratos/rutas anteriores están supersedidas para el alcance vigente por las tareas T035–T048 y T050. No tomar esos detalles históricos como requisitos. T030 y T031 conservan sus asignaciones originales en este registro; ninguna tarea del delta reutiliza esos identificadores. La implementación debe coordinarse con los contratos de SPEC-018 y SPEC-016; SPEC-022 no modifica backend. Las checklists son propiedad del revisor y no se alteran en esta fase.
+
 ## Format: `[ID] [P?] [Story] Description`
 
 - **[P]**: Ejecutable en paralelo (archivos independientes, sin dependencias bloqueantes sin completar).
@@ -134,6 +136,8 @@ description: "Lista de tareas de implementación para SPEC-022: Visualizar ranki
 
 ## Implementation Strategy
 
+> **Vigencia**: la estrategia siguiente corresponde al alcance histórico anterior al delta paginado. Para el delta vigente, aplicar exclusivamente la estrategia de implementación de Phase 7; no descargar ni enriquecer desde catálogo.
+
 ### Enfoque MVP Primero (User Story 1)
 
 1. Completar Fase 1 (Setup) y Fase 2 (Foundational).
@@ -143,3 +147,52 @@ description: "Lista de tareas de implementación para SPEC-022: Visualizar ranki
 
 > [!IMPORTANT]
 > El agente no ejecuta tests de aplicación. Cada fase y alcance completado se somete a revisión humana (`CODE REVIEW`) y comprobación manual (`TESTING`) antes de avanzar al cierre.
+
+---
+
+## Phase 7: Adopción de contratos paginados y alineación de la interfaz (delta vigente)
+
+**Purpose**: Actualizar la implementación histórica para que consuma las páginas remotas de score/quote, haga la consulta global independiente del podio y use la identidad incluida en cada respuesta, conservando IDs y avance históricos.
+
+### User Story 1 — Consultar rankings paginados y podio global (P1)
+
+**Goal**: Consultar los endpoints y parámetros vigentes, mantener orden/posiciones globales y representar por separado la página filtrada y el Top 3 sin filtros.
+
+**Independent Test**: Con respuestas contractuales disponibles, alternar score/quote; comprobar endpoint, parámetros de tabla y podio (`page=0&size=3` sin filtros), filas de la página, posiciones globales, metadatos y datos `player` sin petición al catálogo.
+
+- [x] T035 [US1] Actualizar DTOs y tipos de respuestas paginadas, `content`, metadatos y `filterOptions` según `specs/022-view-player-rankings/data-model.md` y `specs/022-view-player-rankings/contracts/player-rankings-consumption.md` en `frontend/src/features/players/types/dtos.ts` y `frontend/src/features/players/types/models.ts`
+- [x] T036 [US1] Adaptar `getScoreRanking` y `getQuoteRanking` para `page`, `size`, `name`, `leagueId` y `position`, usando `GET /api/rankings/score` y `GET /api/rankings/quote` conforme a los contratos referenciados en `frontend/src/features/players/players.service.ts`
+- [x] T037 [US1] Mapear `content` de score y quote, identidad `player`, fechas, origen, metadatos y opciones globales sin catálogo, reordenamiento ni renumeración en `frontend/src/features/players/players.mapper.ts`
+- [x] T038 [P] [US1] Incluir modo, página, tamaño y filtros efectivos en query keys de tabla y una clave diferenciada para consulta de podio en `frontend/src/features/players/constants/playersQueryKeys.ts`
+- [x] T039 [P] [US1] Adaptar el hook de consulta score a los parámetros paginados contractuales en `frontend/src/features/players/hooks/queries/usePlayerScoreRankingQuery.ts`
+- [x] T040 [P] [US1] Adaptar el hook de consulta quote a los parámetros paginados contractuales en `frontend/src/features/players/hooks/queries/usePlayerQuoteRankingQuery.ts`
+- [x] T041 [US1] Coordinar modo, filtros, página base cero, tamaño, respuestas tardías y consultas independientes de tabla y podio (`page=0`, `size=3`, sin filtros) en `frontend/src/features/players/hooks/pages/usePlayerRankingsPage.ts`
+- [x] T042 [US1] Actualizar el ensamblado de la página para presentar contenido paginado y metadatos del servidor, sin descargar el catálogo para enriquecer filas, en `frontend/src/features/players/pages/PlayerRankingsPage/PlayerRankingsPage.tsx`
+- [x] T043 [US1] Adaptar la tabla para consumir las filas recibidas y mantener las posiciones globales y total filtrado en `frontend/src/features/players/pages/PlayerRankingsPage/components/RankingsTable/RankingsTable.tsx`
+- [x] T044 [US1] Conectar filtros de nombre, liga y posición a los parámetros remotos, reiniciar página ante cambio de filtro y limpiar criterios en `frontend/src/features/players/pages/PlayerRankingsPage/components/RankingsFilters/RankingsFilters.tsx`
+- [x] T045 [US1] Conectar controles de paginación/tamaño con los metadatos y parámetros del backend, conservando criterios al cambiar página, en `frontend/src/features/players/pages/PlayerRankingsPage/components/RankingsPagination/RankingsPagination.tsx`
+- [x] T046 [US1] Adaptar presentación del podio para usar solo el resultado independiente global y permitir menos de tres entradas sin rellenarlas en `frontend/src/features/players/pages/PlayerRankingsPage/components/RankingsPodium/RankingsPodium.tsx`
+- [x] T047 [US1] Presentar encabezado y opciones globales; integrar carga accesible, errores con reintento y estados vacíos que distingan ausencia global de datos y filtros sin coincidencias, sin alterar el manejo HTTP/autenticación común, en `frontend/src/features/players/pages/PlayerRankingsPage/PlayerRankingsPage.tsx`
+- [x] T048 [US1] Actualizar escenarios manuales para verificar endpoints, filtros/paginación remotos, podio independiente, identidad en respuesta, orden y estados según el contrato vigente en `specs/022-view-player-rankings/quickstart.md`
+
+> **T049 (registro histórico; consolidada en T047)**: La tarea anterior de estados de carga, error/reintento y vacío para `PlayerRankingsPage.tsx` no tiene trabajo independiente. La implementación está consolidada en T047 y su validación manual en T048.
+
+### User Story 3 — Navegación e identidad del jugador (P3)
+
+**Goal**: Mantener navegación a detalle usando `playerId` y datos `player` del contrato, con fallbacks solo para campos opcionales.
+
+**Independent Test**: Desde filas y tarjetas navegar a `/players/:id`; comprobar nombre/datos disponibles desde la respuesta y fallbacks para campos opcionales nulos, sin consulta de catálogo.
+
+- [x] T050 [US3] Verificar que enlaces de filas y tarjetas usan el identificador de respuesta y conservan navegación al detalle sin dependencia del catálogo en `frontend/src/features/players/pages/PlayerRankingsPage/components/RankingsTable/RankingsTable.tsx` y `frontend/src/features/players/pages/PlayerRankingsPage/components/RankingsPodium/RankingsPodium.tsx`
+
+### Dependencias y paralelismo del delta
+
+- T035 precede T036–T037; T036–T037 preceden T039–T042. T038 puede avanzar en paralelo con T035; T039 y T040 son independientes entre sí tras T035–T036. T043–T047 dependen de los modelos y coordinación T037–T042. T050 depende de los modelos/mappeo de T037. T048 se actualiza junto con los escenarios cubiertos y puede redactarse en paralelo a la implementación tras revisar contratos.
+- US1 es el MVP del delta. US2 depende de los estados coordinados de US1; US3 depende de la identidad mapeada de US1. La ruta web existente se conserva; no hay cambios backend ni tests frontend.
+
+### Estrategia de implementación del delta
+
+1. Alinear DTOs, servicios, mapper y consultas con los contratos autoritativos.
+2. Conectar estado de tabla y consulta independiente del podio; presentar filas y opciones remotas sin enriquecimiento desde catálogo.
+3. Completar estados vacíos/error, navegación y guía manual.
+4. La verificación manual queda a cargo del usuario; no crear ni ejecutar tests frontend. No marcar tareas por anticipado ni interpretar esta descomposición como autorización de implementación.

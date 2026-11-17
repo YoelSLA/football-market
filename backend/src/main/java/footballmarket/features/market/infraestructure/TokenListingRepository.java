@@ -54,6 +54,9 @@ public interface TokenListingRepository extends JpaRepository<TokenListing, Long
   @Query(
       "select l from TokenListing l join l.player p join p.team t join t.league league"
           + " where l.seller.id <> :viewerId and p.active = true and t.current = true"
+          + " and exists (select s.id from PlayerStatistics s where s.player = p"
+          + " and s.presentMetrics > 0 and s.extractionDate ="
+          + " (select max(latest.extractionDate) from PlayerStatistics latest where latest.player = p))"
           + " and l.status = footballmarket.features.market.domain.enums.TokenListingStatus.ACTIVE and l.expiresAt > :now")
   List<TokenListing> findMarket(Long viewerId, OffsetDateTime now);
 
