@@ -10,14 +10,35 @@ interface Props {
 }
 
 export default function CommunityMarketPanel({ community }: Props) {
-	if (community.selectedPlayer) {
+	if (community.selectedPlayerId !== null) {
 		return (
 			<div className={styles.communityPanel__content}>
-				<CommunityListingsPanel
-					player={community.selectedPlayer}
-					onBack={community.closePlayer}
-					onBuy={community.openListing}
-				/>
+				{community.isLoading ? (
+					<p role="status">Cargando publicaciones…</p>
+				) : community.isError ? (
+					<div role="alert">
+						<p>{community.errorMessage}</p>
+						<button type="button" onClick={community.retry}>
+							Reintentar
+						</button>
+					</div>
+				) : community.selectedPlayer ? (
+					<CommunityListingsPanel
+						player={community.selectedPlayer}
+						onBack={community.closePlayer}
+						onBuy={community.openListing}
+					/>
+				) : (
+					<section role="status" aria-labelledby="community-player-empty">
+						<h2 id="community-player-empty">Jugador sin ofertas disponibles</h2>
+						<p>
+							Las publicaciones pudieron vencer o dejar de estar disponibles.
+						</p>
+						<button type="button" onClick={community.closePlayer}>
+							Volver al catálogo
+						</button>
+					</section>
+				)}
 			</div>
 		);
 	}
@@ -37,6 +58,13 @@ export default function CommunityMarketPanel({ community }: Props) {
 					isError={community.isError}
 					errorMessage={community.errorMessage}
 					players={community.players}
+					totalPlayers={community.totalPlayers}
+					hasFilters={
+						community.filters.search !== "" ||
+						community.filters.league !== "all" ||
+						community.filters.position !== "all"
+					}
+					isUpdating={community.isUpdating}
 					onRetry={community.retry}
 					onOpenPlayer={community.openPlayer}
 				/>
@@ -49,6 +77,7 @@ export default function CommunityMarketPanel({ community }: Props) {
 						totalPlayers={community.totalPlayers}
 						visiblePlayers={community.players.length}
 						pageSize={12}
+						showSummary={false}
 						onPageChange={community.setPage}
 					/>
 				</div>

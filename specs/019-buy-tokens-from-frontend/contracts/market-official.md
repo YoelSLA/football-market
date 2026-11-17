@@ -1,97 +1,110 @@
-# Contrato de consumo: Catálogo del Mercado Oficial (SPEC-019 / SPEC-010)
+# Contrato de consumo: Mercado Oficial
 
-**Fuentes autoritativas:** [Issue #90](https://github.com/YoelSLA/football-market/issues/90) y [SPEC-010](../../010-buy-tokens/spec.md). Este documento define el contrato de lectura autenticada que consume el frontend en `/market/buy`. [Spec](../spec.md) · [Plan](../plan.md) · [Tasks](../tasks.md).
+**Fuente autoritativa**: [SPEC-010](../../010-buy-tokens/contracts/official-catalog.md). Este documento define la frontera consumidora de SPEC-019 sin redefinir el backend.
 
----
+## Catálogo consolidado
 
-## 1. Endpoint HTTP
+`GET /api/market/official`, autenticado.
 
-`GET /api/market/official`
+### Parámetros
 
-- **Seguridad:** Requiere encabezado `Authorization: Bearer <JWT>`. Sin sesión válida o token vencido responde `401 Unauthorized`.
-- **Propósito:** Devuelve el catálogo paginado de jugadores activos y visibles con su cotización vigente integrada en una única respuesta consolidada, aplicando filtros y ordenamiento en el servidor.
-- **Sigilo de inventario:** La respuesta no incluye existencias, stock remanente, balance del superusuario ni tenencias de emisión.
+| Parámetro | Tipo | Default backend | Uso frontend |
+| --- | --- | --- | --- |
+| `page` | entero `>= 0` | `0` | URL base 0. |
+| `size` | entero `1..100` | `20` | UI limitada a `12`, `24`, `48`; default UI `12`. |
+| `sort` | string | `id,asc` | Un criterio: `price`, `variation`, `name`, `id`; dirección `asc` o `desc`. |
+| `name` | string | omitido | Nombre/apellido; trim, parcial, insensible a mayúsculas y acentos. |
+| `leagueId` | entero | omitido | Identificador de liga. |
+| `teamId` | entero | omitido | Identificador de equipo. |
+| `position` | string | omitido | Posición normalizada, por ejemplo `POR`, `DEF`, `MED`, `DEL`. |
+| `nationality` | string | omitido | Nacionalidad. |
+| `hasQuote` | boolean | omitido | `true`, `false` o sin restricción. |
+| `minPrice` | entero `>= 0` | omitido | Centésimas, inclusivo. |
+| `maxPrice` | entero `>= 0` | omitido | Centésimas, inclusivo; debe ser `>= minPrice`. |
 
----
+La URL del navegador usa exactamente estas claves. El frontend no envía strings vacíos, nulos ni valores fuera de contrato. Todo filtro, orden o tamaño cambia `page` a `0`; la búsqueda se publica con debounce.
 
-## 2. Parámetros de consulta (Query Parameters)
-
-Todos los parámetros son opcionales y se envían como query params en la URL:
-
-| Parámetro | Tipo | Descripción | Validación / Valores |
-|---|---|---|---|
-| `page` | `number` | Índice de página (base 0). | Entero ≥ 0. Predeterminado: `0`. |
-| `size` | `number` | Cantidad de elementos por página. | Entero entre 1 y 100. Predeterminado: `20` (en UI: `12`). |
-| `name` | `string` | Búsqueda por nombre de jugador. | Texto normalizado insensible a mayúsculas y acentos. |
-| `leagueId` | `number` | Identificador de liga. | Entero positivo (Long). |
-| `teamId` | `number` | Identificador de equipo. | Entero positivo (Long). |
-| `position` | `string` | Posición deportiva del jugador. | Enum de posición (`Goalkeeper`, `Defence`, `Midfield`, `Offence`). |
-| `nationality` | `string` | Nacionalidad del jugador. | Texto normalizado. |
-| `hasQuote` | `boolean` | Filtro por disponibilidad de cotización vigente. | `true`: solo con cotización.<br>`false`: solo sin cotización.<br>Ausente: ambos. |
-| `minPrice` | `number` | Precio unitario mínimo en centésimas. | Entero ≥ 0. |
-| `maxPrice` | `number` | Precio unitario máximo en centésimas. | Entero ≥ 0. Si `minPrice > maxPrice` → `400 Bad Request`. |
-| `sort` | `string` | Criterio y dirección de ordenamiento. | `price,asc` \| `price,desc`<br>`variation,asc` \| `variation,desc`<br>`name,asc` \| `name,desc`<br>`id,asc` (orden natural predeterminado). |
-
-### Regla de ordenamiento `NULLS LAST`
-Para ordenamientos financieros (`price` y `variation`), los valores nulos (activos sin cotización o cotizaciones sin precio anterior válido) se posicionan obligatoriamente **al final de los resultados** (`NULLS LAST`), tanto en sentido ascendente como descendente.
-
----
-
-## 3. Esquema de respuesta exitosa (200 OK)
+### Respuesta 200
 
 ```ts
-export interface OfficialMarketPageDTO {
-  content: OfficialMarketPlayerDTO[];
+interface OfficialMarketPageResponseDTO {
+  content: OfficialMarketPlayerResponseDTO[];
   page: number;
   size: number;
   totalElements: number;
   totalPages: number;
 }
 
-export interface OfficialMarketPlayerDTO {
+interface OfficialMarketPlayerResponseDTO {
   id: number;
   name: string;
-  teamId: number;
-  teamName: string;
-  leagueId: number;
-  leagueName: string;
   position: string;
-  dateOfBirth: string | null;
   nationality: string | null;
+  teamId: number | null;
+  teamName: string | null;
+  teamBadgeUrl: string | null;
+  leagueId: number | null;
+  leagueName: string | null;
   imageUrl: string | null;
-  fallbackImageUrl: string | null;
-  quote: OfficialMarketQuoteDTO | null;
+  quote: OfficialMarketQuoteResponseDTO | null;
 }
 
-export interface OfficialMarketQuoteDTO {
-  unitPrice: number;                 // En centésimas de crédito
-  previousPrice: number | null;      // En centésimas; null en cotización inicial
-  variationPercentage: number | null;// Porcentaje de variación; null si previousPrice <= 0
-  performanceScore: number | null;   // Score de rendimiento técnico
-  multiplier: number;                // Multiplicador aplicado
-  calculationOrigin: string | null;  // INITIAL, RECOMPUTED, CARRIED_FORWARD
-  effectiveDate: string;             // YYYY-MM-DD
-  calculatedAt: string;              // ISO-8601 Instant
+interface OfficialMarketQuoteResponseDTO {
+  price: number;
+  previousPrice: number | null;
+  variationPercentage: number | null;
+  performanceScore: number;
+  multiplier: number;
+  calculationOrigin: string;
+  effectiveDate: string;
+  calculatedAt: string;
 }
 ```
 
----
+El Mapper valida la respuesta completa. El Model de UI conserva únicamente identidad deportiva, `price`, `previousPrice`, `variationPercentage` y `effectiveDate`; no conserva para presentación `performanceScore`, `multiplier`, `calculationOrigin` ni `calculatedAt`.
 
-## 4. Códigos de error y respuestas HTTP
+`quote: null` es éxito contractual: el jugador se muestra como «Sin cotización» y no se compra. `previousPrice: null` o `variationPercentage: null` muestran ausencia neutral de referencia; `variationPercentage: 0` muestra variación neutra real.
 
-| Código | Error Code | Causa | Manejo en Frontend |
-|---|---|---|---|
-| `400 Bad Request` | `INVALID_PRICE_RANGE` | `minPrice > maxPrice`. | Validación preventiva en cliente antes de emitir la consulta; muestra error inline. |
-| `400 Bad Request` | `INVALID_PARAMETER_TYPE` | Parámetro numérico no parseable. | Prevención por tipado estricto en el hook y serializador. |
-| `401 Unauthorized` | — | Sesión no autenticada o token JWT expirado. | Delegación al interceptor global de sesión para redirección a login. |
-| `500 Internal Error` | `INTERNAL_ERROR` | Error interno del servidor. | Mensaje seguro de reintento en el estado de error del catálogo. |
+### Errores
 
----
+| HTTP / código | Comportamiento consumidor |
+| --- | --- |
+| `400 INVALID_PRICE_RANGE` | No debe producirse desde controles válidos; si llega, mostrar error de consulta y permitir corregir/reintentar. |
+| `400 INVALID_PAGINATION` | Normalizar URL inválida; si llega, mostrar error seguro. |
+| `400 INVALID_PAGE_SIZE` | Normalizar a `12`; si llega, mostrar error seguro. |
+| `400 INVALID_SORT_PARAMETER` | Normalizar al default; si llega, mostrar error seguro. |
+| `400 INVALID_PARAMETER_TYPE` | Normalizar valores de URL; si llega, mostrar error seguro. |
+| `401` | Gestión global de sesión; no restaurar compra. |
+| `500 INTERNAL_ERROR`, red | Estado de error con reintento; no presentar datos inválidos como catálogo completo. |
+| Respuesta 200 inválida | Error de respuesta; no exponer DTO parcial ni habilitar compra. |
 
-## 5. Selectores dinámicos en cascada (`GET /api/players/filters`)
+### Query y caché
 
-Las opciones de los filtros deportivos se obtienen consumiendo `GET /api/players/filters` a través de la API pública de `features/players`:
+```text
+marketQueryKeys.officialAll() -> ["market", "official"]
+marketQueryKeys.official(criteria) -> ["market", "official", normalizedCriteria]
+```
 
-- **Ligas:** Se listan todas las ligas disponibles (`leagueId`, `leagueName`).
-- **Equipos (en cascada):** Si se selecciona una liga (`leagueId`), el selector de equipos se restringe exclusivamente a los equipos pertenecientes a esa liga.
-- Limpiar o cambiar la liga seleccionada reinicia automáticamente la selección del equipo.
+Una consulta reemplazada se cancela mediante `AbortSignal`. Abrir el modal reutiliza el Model de la página y no dispara otra lectura. Una compra oficial exitosa invalida el prefijo `officialAll()`.
+
+## Opciones deportivas
+
+`GET /api/players/filters`, autenticado, consumido mediante la API pública existente de `players`.
+
+```ts
+interface PlayerCatalogFiltersDTO {
+  leagues: { id: number; name: string }[];
+  teams: { id: number; name: string; leagueId: number }[];
+  positions: string[];
+  nationalities: string[];
+}
+```
+
+`market` no duplica este Service, Mapper ni query key. El equipo se restringe por `leagueId`; una liga ausente admite todas las opciones y una liga cambiada elimina un equipo incompatible.
+
+## Sigilo y límites
+
+- El catálogo no contiene stock, inventario, saldo ni tenencias del emisor oficial.
+- La presencia del jugador no garantiza stock; el POST decide disponibilidad.
+- La UI no compone múltiples criterios `sort` ni calcula orden global localmente.
+- La modalidad P2P no consume este endpoint ni comparte su query key.

@@ -80,13 +80,15 @@ export function filterCommunityPlayers(
 			if (filters.sort === "quantity")
 				return (
 					b.availableQuantity - a.availableQuantity ||
-					a.name.localeCompare(b.name, "es")
+					a.name.localeCompare(b.name, "es") ||
+					a.id - b.id
 				);
 			if (filters.sort === "name")
 				return a.name.localeCompare(b.name, "es") || a.id - b.id;
 			return (
 				a.minimumUnitPrice - b.minimumUnitPrice ||
-				a.name.localeCompare(b.name, "es")
+				a.name.localeCompare(b.name, "es") ||
+				a.id - b.id
 			);
 		});
 }

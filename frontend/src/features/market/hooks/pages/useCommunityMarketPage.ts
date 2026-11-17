@@ -1,8 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { authQueryKeys, useCurrentUserQuery } from "@/features/auth";
-import { marketQueryKeys } from "@/features/market/constants";
+import {
+	COMMUNITY_MARKET_PAGE_SIZE,
+	MARKET_SEARCH_DEBOUNCE_MS,
+	marketQueryKeys,
+} from "@/features/market/constants";
 import { useBuyListingMutation } from "@/features/market/hooks/mutations";
 import { useCommunityMarketQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
@@ -16,19 +20,13 @@ import type {
 import {
 	buildCommunityPlayers,
 	filterCommunityPlayers,
+	parseCommunityMarketCriteria,
+	serializeCommunityMarketCriteria,
 } from "@/features/market/utils";
 import { useAllPlayersQuery } from "@/features/players";
 import { portfolioQueryKeys } from "@/features/portfolio";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
 import { useAuthStore } from "@/infrastructure/storage";
-
-const PAGE_SIZE = 12;
-const INITIAL_FILTERS: CommunityMarketFilters = {
-	search: "",
-	league: "all",
-	position: "all",
-	sort: "price",
-};
 
 function p2pErrorMessage(error: unknown) {
 	switch (getErrorCode(error)) {
@@ -59,20 +57,45 @@ export function useCommunityMarketPage(
 	const { notifySuccess, notifyError } = useMarketToast();
 	const revision = useAuthStore((state) => state.revision);
 	const currentUser = useCurrentUserQuery(true, revision);
-	const availableCredits = currentUser.data?.availableCredits;
 	const [searchParams, setSearchParams] = useSearchParams();
+	const urlState = useMemo(
+		() => parseCommunityMarketCriteria(searchParams),
+		[searchParams],
+	);
+	const [searchDraft, setSearchDraft] = useState(urlState.search);
 	const listingsQuery = useCommunityMarketQuery(enabled);
 	const playersQuery = useAllPlayersQuery();
 	const buyMutation = useBuyListingMutation();
-	const [filters, setFilters] = useState(INITIAL_FILTERS);
-	const [page, setPage] = useState(0);
 	const [selectedListing, setSelectedListing] = useState<MarketListing | null>(
 		null,
 	);
+	const [purchasePlayer, setPurchasePlayer] =
+		useState<CommunityMarketPlayer | null>(null);
 	const [purchaseResult, setPurchaseResult] = useState<BuyResult | null>(null);
 	const [purchaseError, setPurchaseError] = useState<string | null>(null);
 	const submittingRef = useRef(false);
 	const triggerRef = useRef<HTMLElement | null>(null);
+
+	const replaceUrlState = useCallback(
+		(next: typeof urlState) =>
+			setSearchParams(serializeCommunityMarketCriteria(next), {
+				replace: true,
+			}),
+		[setSearchParams],
+	);
+
+	useEffect(() => setSearchDraft(urlState.search), [urlState.search]);
+	useEffect(() => {
+		if (searchDraft.trim() === urlState.search) return;
+		const timeout = window.setTimeout(() => {
+			replaceUrlState({
+				...urlState,
+				search: searchDraft.trim(),
+				page: 0,
+			});
+		}, MARKET_SEARCH_DEBOUNCE_MS);
+		return () => window.clearTimeout(timeout);
+	}, [replaceUrlState, searchDraft, urlState]);
 
 	const communityPlayers = useMemo(() => {
 		if (!listingsQuery.data || !playersQuery.data) return [];
@@ -81,60 +104,129 @@ export function useCommunityMarketPage(
 			playersQuery.data.players.map(toMarketPlayer),
 		);
 	}, [listingsQuery.data, playersQuery.data]);
+	const filters: CommunityMarketFilters = useMemo(
+		() => ({
+			search: urlState.search,
+			league: urlState.league,
+			position: urlState.position,
+			sort: urlState.sort,
+		}),
+		[urlState],
+	);
 	const filteredPlayers = useMemo(
 		() => filterCommunityPlayers(communityPlayers, filters),
 		[communityPlayers, filters],
 	);
-	const totalPages = Math.ceil(filteredPlayers.length / PAGE_SIZE);
+	const totalPages = Math.ceil(
+		filteredPlayers.length / COMMUNITY_MARKET_PAGE_SIZE,
+	);
 	const visiblePlayers = filteredPlayers.slice(
-		page * PAGE_SIZE,
-		(page + 1) * PAGE_SIZE,
+		urlState.page * COMMUNITY_MARKET_PAGE_SIZE,
+		(urlState.page + 1) * COMMUNITY_MARKET_PAGE_SIZE,
 	);
-	const playerId = Number(searchParams.get("player"));
-	const selectedPlayer = Number.isSafeInteger(playerId)
-		? (communityPlayers.find((player) => player.id === playerId) ?? null)
-		: null;
-	const isLoading =
-		listingsQuery.isPending ||
-		playersQuery.isPending ||
-		playersQuery.isFetching;
+	const selectedPlayer =
+		urlState.player === null
+			? null
+			: (communityPlayers.find((player) => player.id === urlState.player) ??
+				null);
+	const availableLeagues = useMemo(
+		() =>
+			[...new Set(communityPlayers.map((player) => player.leagueName))].sort(),
+		[communityPlayers],
+	);
+	const availablePositions = useMemo(
+		() =>
+			[...new Set(communityPlayers.map((player) => player.position))].sort(),
+		[communityPlayers],
+	);
+	const isLoading = listingsQuery.isPending || playersQuery.isPending;
+	const isUpdating =
+		!isLoading && (listingsQuery.isFetching || playersQuery.isFetching);
 	const isError = listingsQuery.isError || playersQuery.isError;
-	const errorMessage = isError
-		? getErrorMessage(
-				listingsQuery.error ?? playersQuery.error,
-				"No pudimos cargar las ofertas de usuarios.",
-			)
-		: null;
 
-	const updateFilters = useCallback((next: Partial<CommunityMarketFilters>) => {
-		setFilters((current) => ({ ...current, ...next }));
-		setPage(0);
-	}, []);
-	const openPlayer = useCallback(
-		(player: CommunityMarketPlayer) => {
-			const next = new URLSearchParams(searchParams);
-			next.set("player", String(player.id));
-			setSearchParams(next);
+	useEffect(() => {
+		if (isLoading || listingsQuery.isError || playersQuery.isError) return;
+		const leagueValid =
+			urlState.league === "all" || availableLeagues.includes(urlState.league);
+		const positionValid =
+			urlState.position === "all" ||
+			availablePositions.includes(urlState.position);
+		if (!leagueValid || !positionValid)
+			replaceUrlState({
+				...urlState,
+				league: leagueValid ? urlState.league : "all",
+				position: positionValid ? urlState.position : "all",
+				page: 0,
+			});
+	}, [
+		availableLeagues,
+		availablePositions,
+		isLoading,
+		listingsQuery.isError,
+		playersQuery.isError,
+		replaceUrlState,
+		urlState,
+	]);
+
+	useEffect(() => {
+		if (listingsQuery.isFetching || playersQuery.isFetching) return;
+		const lastPage = Math.max(0, totalPages - 1);
+		if (urlState.page > lastPage)
+			replaceUrlState({ ...urlState, page: lastPage });
+	}, [
+		listingsQuery.isFetching,
+		playersQuery.isFetching,
+		replaceUrlState,
+		totalPages,
+		urlState,
+	]);
+
+	const updateFilters = useCallback(
+		(next: Partial<CommunityMarketFilters>) => {
+			if (next.search !== undefined) {
+				setSearchDraft(next.search);
+				return;
+			}
+			replaceUrlState({ ...urlState, ...next, page: 0 });
 		},
-		[searchParams, setSearchParams],
+		[replaceUrlState, urlState],
 	);
-	const closePlayer = useCallback(() => {
-		const next = new URLSearchParams(searchParams);
-		next.delete("player");
-		setSearchParams(next);
-	}, [searchParams, setSearchParams]);
+	const clearFilters = useCallback(() => {
+		setSearchDraft("");
+		replaceUrlState({
+			...urlState,
+			search: "",
+			league: "all",
+			position: "all",
+			sort: "price",
+			page: 0,
+		});
+	}, [replaceUrlState, urlState]);
+	const openPlayer = useCallback(
+		(player: CommunityMarketPlayer) =>
+			replaceUrlState({ ...urlState, player: player.id }),
+		[replaceUrlState, urlState],
+	);
+	const closePlayer = useCallback(
+		() => replaceUrlState({ ...urlState, player: null }),
+		[replaceUrlState, urlState],
+	);
 	const openListing = useCallback(
 		(listing: MarketListing, trigger: HTMLElement | null) => {
+			if (!selectedPlayer || Date.parse(listing.expiresAt) <= Date.now())
+				return;
 			triggerRef.current = trigger;
 			setSelectedListing(listing);
+			setPurchasePlayer(selectedPlayer);
 			setPurchaseResult(null);
 			setPurchaseError(null);
 		},
-		[],
+		[selectedPlayer],
 	);
 	const closeListing = useCallback(() => {
 		if (buyMutation.isPending || submittingRef.current) return;
 		setSelectedListing(null);
+		setPurchasePlayer(null);
 		setPurchaseResult(null);
 		setPurchaseError(null);
 	}, [buyMutation.isPending]);
@@ -146,7 +238,10 @@ export function useCommunityMarketPage(
 			!selectedListing ||
 			buyMutation.isPending ||
 			submittingRef.current ||
-			purchaseResult
+			purchaseResult ||
+			Date.parse(selectedListing.expiresAt) <= Date.now() ||
+			(currentUser.data?.availableCredits !== undefined &&
+				currentUser.data.availableCredits < selectedListing.totalAmount)
 		)
 			return;
 		submittingRef.current = true;
@@ -154,11 +249,13 @@ export function useCommunityMarketPage(
 		try {
 			const result = await buyMutation.mutateAsync(selectedListing.listingId);
 			setPurchaseResult(result);
-			notifySuccess(selectedPlayer?.name ?? "Jugador", result);
+			notifySuccess(purchasePlayer?.name ?? "Jugador", result);
 			await Promise.all([
 				queryClient.invalidateQueries({ queryKey: marketQueryKeys.listings() }),
 				queryClient.invalidateQueries({ queryKey: authQueryKeys.all }),
-				queryClient.invalidateQueries({ queryKey: portfolioQueryKeys.summary }),
+				queryClient.invalidateQueries({
+					queryKey: portfolioQueryKeys.summary,
+				}),
 				queryClient.invalidateQueries({
 					queryKey: portfolioQueryKeys.holdings("ALL", 0, 1).slice(0, 2),
 				}),
@@ -175,57 +272,65 @@ export function useCommunityMarketPage(
 					"CANNOT_BUY_OWN_LISTING",
 					"INSUFFICIENT_STOCK",
 				].includes(getErrorCode(error) ?? "")
-			) {
+			)
 				await queryClient.invalidateQueries({
 					queryKey: marketQueryKeys.listings(),
 				});
-			}
 		} finally {
 			submittingRef.current = false;
 		}
 	}, [
 		buyMutation,
+		currentUser.data?.availableCredits,
 		notifyError,
 		notifySuccess,
 		onPurchaseSuccess,
+		purchasePlayer?.name,
 		purchaseResult,
 		queryClient,
 		selectedListing,
-		selectedPlayer?.name,
 	]);
 
 	return {
-		filters,
+		filters: { ...filters, search: searchDraft },
 		updateFilters,
-		clearFilters: () => {
-			setFilters(INITIAL_FILTERS);
-			setPage(0);
-		},
-		leagues: [
-			...new Set(communityPlayers.map((player) => player.leagueName)),
-		].sort(),
-		positions: [
-			...new Set(communityPlayers.map((player) => player.position)),
-		].sort(),
+		clearFilters,
+		leagues: availableLeagues,
+		positions: availablePositions,
 		players: visiblePlayers,
 		totalPlayers: filteredPlayers.length,
-		availableCredits,
-		page,
+		availableCredits: currentUser.data?.availableCredits,
+		page: urlState.page,
 		totalPages,
-		setPage,
+		setPage: (page: number) => replaceUrlState({ ...urlState, page }),
+		selectedPlayerId: urlState.player,
 		selectedPlayer,
 		openPlayer,
 		closePlayer,
 		selectedListing,
+		purchasePlayer,
 		openListing,
 		closeListing,
 		confirmListing,
 		purchaseResult,
 		purchaseError,
+		canConfirmListing: Boolean(
+			selectedListing &&
+				!purchaseResult &&
+				Date.parse(selectedListing.expiresAt) > Date.now() &&
+				(currentUser.data?.availableCredits === undefined ||
+					currentUser.data.availableCredits >= selectedListing.totalAmount),
+		),
 		isBuying: buyMutation.isPending || submittingRef.current,
 		isLoading,
+		isUpdating,
 		isError,
-		errorMessage,
+		errorMessage: isError
+			? getErrorMessage(
+					listingsQuery.error ?? playersQuery.error,
+					"No pudimos cargar las ofertas de usuarios.",
+				)
+			: null,
 		retry,
 		triggerRef,
 	};

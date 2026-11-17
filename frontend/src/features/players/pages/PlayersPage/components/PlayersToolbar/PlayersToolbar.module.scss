@@ -35,42 +35,10 @@
 	}
 
 	&__search {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: 8px;
-
 		// 4. 📦 Box Model
 		min-width: 200px;
 		width: 50%;
 		margin-left: auto;
-		padding: 6px 12px;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-subtle;
-		border-radius: 6px;
-		input {
-			// 3. 🧩 Layout
-			flex: 1;
-
-			// 4. 📦 Box Model
-			min-width: 0;
-
-			// 5. 🔤 Typography
-			font: inherit;
-			font-size: 12px;
-
-			// 6. 🎨 Visual
-			background-color: ds.$surface-transparent;
-			border: 0;
-			outline: 0;
-			color: inherit;
-		}
-
-		&:focus-within {
-			// 6. 🎨 Visual
-			outline: 2px solid ds.$focus-ring-dark;
-		}
 	}
 
 	&__optionsError {
@@ -110,4 +78,3 @@
 		}
 	}
 }
-

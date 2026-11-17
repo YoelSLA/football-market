@@ -1,13 +1,19 @@
 @use "@/styles/abstracts" as ds;
 
 .catalog {
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+
 	// 4. 📦 Box Model
 	min-width: 0;
-	padding: 0.25rem;
+	min-height: 0;
+	padding: 0;
 
 	// 7. ⚙️ Behavior
-	overflow-y: auto;
-	scrollbar-gutter: stable;
+	overflow: hidden;
 
 	&__header {
 		// 3. 🧩 Layout
@@ -16,7 +22,7 @@
 		justify-content: space-between;
 
 		// 4. 📦 Box Model
-		margin-bottom: 0.8rem;
+		height: 28px;
 
 		// 6. 🎨 Visual
 		color: ds.$text-title-on-dark;
@@ -37,8 +43,17 @@
 	&__grid {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.8rem;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 12px;
+		flex: 1;
+
+		// 4. 📦 Box Model
+		min-height: 0;
+		padding-right: .2rem;
+
+		// 7. ⚙️ Behavior
+		overflow-y: auto;
+		scrollbar-gutter: stable;
 	}
 }
 
@@ -49,8 +64,8 @@
 
 	// 4. 📦 Box Model
 	min-width: 0;
-	min-height: 13.5rem;
-	padding: 1rem;
+	min-height: 246px;
+	padding: 14px;
 
 	// 6. 🎨 Visual
 	border: 1px solid ds.$border-panel;
@@ -146,7 +161,16 @@
 	color: ds.$text-label-on-dark;
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1439px) {
+	.catalog {
+		&__grid {
+			// 3. 🧩 Layout
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+}
+
+@media (max-width: 1099px) {
 	.catalog {
 		&__grid {
 			// 3. 🧩 Layout
@@ -155,11 +179,12 @@
 	}
 }
 
-@media (max-width: 700px) {
-	.catalog {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
+@media (max-width: 639px) {
+	.catalog__grid {
+		// 3. 🧩 Layout
+		grid-template-columns: 1fr;
+
+		// 7. ⚙️ Behavior
+		overflow: visible;
 	}
 }

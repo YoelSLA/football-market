@@ -6,7 +6,7 @@ import MarketFilterSelect from "./MarketFilterSelect";
 
 interface Props {
 	scope: string;
-	active?: boolean;
+	active: boolean;
 	leagues?: string[];
 	positions?: string[];
 	search?: string;
@@ -27,7 +27,7 @@ const DIRECTION_OPTIONS = [
 	{ value: "desc", label: "Mayor a menor" },
 ] as const;
 
-export default function MarketFilterFields({
+export default function SellMarketFilterFields({
 	scope,
 	active,
 	leagues,
@@ -47,27 +47,23 @@ export default function MarketFilterFields({
 	const [sortField = "name", sortDirection = "asc"] = (sort ?? "").split(",");
 	const activeField = sortField || "name";
 	const activeDirection = sortDirection === "desc" ? "desc" : "asc";
-
 	const leagueOptions = active
 		? [
 				{ value: "all", label: "Todas las ligas" },
 				...(leagues?.map((value) => ({ value, label: value })) ?? []),
 			]
 		: [{ value: "all", label: "Todas las ligas" }];
-
 	const positionOptions = active
 		? [
 				{ value: "all", label: "Todas las posiciones" },
 				...(positions?.map((value) => ({ value, label: value })) ?? []),
 			]
 		: [{ value: "all", label: "Todas las posiciones" }];
-
 	const availabilityOptions = [
 		{ value: "all", label: "Todas" },
 		{ value: "available", label: "Con disponibles" },
 		{ value: "reserved", label: "Con reservados" },
 	];
-
 	const sortOptions = [
 		{ value: "name", label: "Nombre" },
 		{ value: "total", label: "Tenencia total" },
@@ -75,12 +71,9 @@ export default function MarketFilterFields({
 		{ value: "reserved", label: "Tokens reservados" },
 	];
 
-	const pendingSortOptions = [{ value: "price", label: "Precio actual" }];
-	const pendingPriceOptions = [{ value: "all", label: "Todos los precios" }];
-
 	return (
 		<fieldset
-			className={styles.marketFilterFields}
+			className={`${styles.marketFilterFields} ${styles.marketFilterFields_sell}`}
 			disabled={!active}
 			aria-label={active ? undefined : "Filtros pendientes"}
 		>
@@ -92,7 +85,6 @@ export default function MarketFilterFields({
 				active={active}
 				onChange={onSearchChange}
 			/>
-
 			<MarketFilterSelect
 				id={`${scope}-league`}
 				label="Liga"
@@ -102,7 +94,6 @@ export default function MarketFilterFields({
 				options={leagueOptions}
 				onChange={onLeagueChange}
 			/>
-
 			<MarketFilterSelect
 				id={`${scope}-position`}
 				label="Posición"
@@ -112,45 +103,34 @@ export default function MarketFilterFields({
 				options={positionOptions}
 				onChange={onPositionChange}
 			/>
-
-			{active ? (
-				<MarketFilterSelect
-					id={`${scope}-availability`}
-					label="Disponibilidad"
-					value={availability ?? "all"}
-					options={availabilityOptions}
-					onChange={onAvailabilityChange}
-				/>
-			) : (
-				<MarketFilterSelect
-					id={`${scope}-price`}
-					label="Precio actual"
-					defaultValue="all"
-					disabled
-					options={pendingPriceOptions}
-				/>
-			)}
-
-			{active ? (
-				<MarketFilterSelect
-					id={`${scope}-sort`}
-					label="Ordenar por"
-					value={activeField}
-					options={sortOptions}
-					onChange={(newField) => {
-						onSortChange?.(`${newField},${activeDirection}`);
-					}}
-				/>
-			) : (
-				<MarketFilterSelect
-					id={`${scope}-sort-pending`}
-					label="Ordenar por"
-					defaultValue="price"
-					disabled
-					options={pendingSortOptions}
-				/>
-			)}
-
+			<MarketFilterSelect
+				id={`${scope}-${active ? "availability" : "price"}`}
+				label={active ? "Disponibilidad" : "Precio actual"}
+				value={active ? (availability ?? "all") : undefined}
+				defaultValue={active ? undefined : "all"}
+				disabled={!active}
+				options={
+					active
+						? availabilityOptions
+						: [{ value: "all", label: "Todos los precios" }]
+				}
+				onChange={active ? onAvailabilityChange : undefined}
+			/>
+			<MarketFilterSelect
+				id={`${scope}-${active ? "sort" : "sort-pending"}`}
+				label="Ordenar por"
+				value={active ? activeField : undefined}
+				defaultValue={active ? undefined : "price"}
+				disabled={!active}
+				options={
+					active ? sortOptions : [{ value: "price", label: "Precio actual" }]
+				}
+				onChange={
+					active
+						? (newField) => onSortChange?.(`${newField},${activeDirection}`)
+						: undefined
+				}
+			/>
 			<div className={styles.marketFilterFields__direction}>
 				<span>Dirección</span>
 				{DIRECTION_OPTIONS.map((direction) => (
@@ -175,7 +155,6 @@ export default function MarketFilterFields({
 					</label>
 				))}
 			</div>
-
 			<Button
 				type="button"
 				className={styles.marketFilterFields__apply}

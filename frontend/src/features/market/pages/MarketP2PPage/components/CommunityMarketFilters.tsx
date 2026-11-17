@@ -30,6 +30,7 @@ export default function CommunityMarketFilters({
 				Buscar jugador o club
 				<input
 					type="search"
+					aria-label="Buscar jugador o club"
 					value={filters.search}
 					onChange={(event) => onChange({ search: event.target.value })}
 				/>
@@ -37,6 +38,7 @@ export default function CommunityMarketFilters({
 			<label>
 				Liga
 				<select
+					aria-label="Filtrar por liga"
 					value={filters.league}
 					onChange={(event) => onChange({ league: event.target.value })}
 				>
@@ -51,6 +53,7 @@ export default function CommunityMarketFilters({
 			<label>
 				Posición
 				<select
+					aria-label="Filtrar por posición"
 					value={filters.position}
 					onChange={(event) => onChange({ position: event.target.value })}
 				>
@@ -65,6 +68,7 @@ export default function CommunityMarketFilters({
 			<label>
 				Orden
 				<select
+					aria-label="Ordenar jugadores con ofertas"
 					value={filters.sort}
 					onChange={(event) =>
 						onChange({ sort: event.target.value as CommunityMarketSort })

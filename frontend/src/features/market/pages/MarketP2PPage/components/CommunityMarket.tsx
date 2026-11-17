@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { CommunityMarketPlayer } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
 import { Button } from "@/shared/components";
@@ -8,6 +9,9 @@ interface Props {
 	isError: boolean;
 	errorMessage: string | null;
 	players: CommunityMarketPlayer[];
+	totalPlayers: number;
+	hasFilters: boolean;
+	isUpdating: boolean;
 	onRetry: () => void;
 	onOpenPlayer: (player: CommunityMarketPlayer) => void;
 }
@@ -17,6 +21,9 @@ export default function CommunityMarket({
 	isError,
 	errorMessage,
 	players,
+	totalPlayers,
+	hasFilters,
+	isUpdating,
 	onRetry,
 	onOpenPlayer,
 }: Props) {
@@ -35,18 +42,25 @@ export default function CommunityMarket({
 		);
 	if (players.length === 0)
 		return (
-			<p className={styles.state}>
-				No hay jugadores con publicaciones que coincidan con la búsqueda.
-			</p>
+			<div className={styles.state} role="status">
+				<p>
+					{hasFilters
+						? "No hay resultados para los filtros seleccionados."
+						: "No hay publicaciones P2P disponibles."}
+				</p>
+				{!hasFilters && <Link to="/market/buy">Ir al Mercado Oficial</Link>}
+			</div>
 		);
 	return (
 		<section
 			className={styles.catalog}
 			aria-labelledby="community-market-title"
+			aria-busy={isUpdating ? "true" : undefined}
 		>
 			<header className={styles.catalog__header}>
 				<h2 id="community-market-title">Jugadores con ofertas</h2>
-				<span>{players.length} en esta página</span>
+				<span>{totalPlayers.toLocaleString("es-AR")} resultados</span>
+				{isUpdating && <span role="status">Actualizando ofertas…</span>}
 			</header>
 			<div className={styles.catalog__grid}>
 				{players.map((player) => (

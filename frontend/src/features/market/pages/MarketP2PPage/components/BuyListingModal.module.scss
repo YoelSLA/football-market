@@ -1,8 +1,11 @@
 @use "@/styles/abstracts" as ds;
 
 .dialog {
+	// 1. 🏷️ Custom Properties
+	--modal-custom-max-width: 560px;
+
 	// 4. 📦 Box Model
-	width: min(38rem, calc(100vw - 2rem));
+	width: min(560px, calc(100vw - 2rem));
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-panel-to;
@@ -13,10 +16,10 @@
 	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
-	gap: 0.9rem;
+	gap: 10px;
 
 	// 4. 📦 Box Model
-	padding: 1rem;
+	padding: 0;
 	&__header {
 		// 3. 🧩 Layout
 		display: flex;
@@ -24,7 +27,8 @@
 		justify-content: space-between;
 
 		// 4. 📦 Box Model
-		padding-bottom: 0.8rem;
+		height: 72px;
+		padding: 12px 18px;
 
 		// 6. 🎨 Visual
 		border-bottom: 1px solid ds.$border-panel;
@@ -46,7 +50,9 @@
 
 	&__player {
 		// 4. 📦 Box Model
-		padding: 0.65rem;
+		min-height: 84px;
+		margin-inline: 18px;
+		padding: 10px;
 
 		// 6. 🎨 Visual
 		border: 1px solid ds.$border-panel;
@@ -57,13 +63,14 @@
 		// 3. 🧩 Layout
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.6rem;
+		gap: 10px;
 
 		// 4. 📦 Box Model
-		margin: 0;
+		margin: 0 18px;
 		div {
 			// 4. 📦 Box Model
-			padding: 0.65rem;
+			min-height: 48px;
+			padding: 10px 12px;
 
 			// 6. 🎨 Visual
 			border-radius: 0.45rem;
@@ -88,13 +95,20 @@
 	}
 
 	&__total {
+		// 3. 🧩 Layout
+		grid-column: 1 / -1;
+
+		// 4. 📦 Box Model
+		min-height: 54px;
+
 		// 6. 🎨 Visual
 		border: 1px solid ds.$accent-gain;
 	}
 
 	&__notice {
 		// 4. 📦 Box Model
-		margin: 0;
+		min-height: 36px;
+		margin: 0 18px;
 
 		// 5. 🔤 Typography
 		font-size: 0.75rem;
@@ -105,6 +119,7 @@
 
 	&__error {
 		// 4. 📦 Box Model
+		margin-inline: 18px;
 		padding: 0.65rem;
 
 		// 6. 🎨 Visual
@@ -120,15 +135,23 @@
 		gap: 0.65rem;
 
 		// 4. 📦 Box Model
-		padding-top: 0.8rem;
+		height: 72px;
+		padding: 14px 18px 16px;
 
 		// 6. 🎨 Visual
 		border-top: 1px solid ds.$border-panel;
+
+		button {
+			// 4. 📦 Box Model
+			height: 42px;
+		}
 	}
 
 	&__success {
 		// 4. 📦 Box Model
-		padding: 1rem;
+		min-height: 296px;
+		margin: 0 18px;
+		padding: 18px;
 
 		// 5. 🔤 Typography
 		text-align: center;

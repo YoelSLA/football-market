@@ -1,71 +1,67 @@
-@use "@/styles/abstracts" as ds;
-
 .buyCatalog {
-	// 4. 📦 Box Model
-	min-height: 0;
-	min-width: 0;
-	padding-right: .2rem;
+  // 3. 🧩 Layout
+  display: flex;
+  flex: 1;
+  flex-direction: column;
 
-	// 7. ⚙️ Behavior
-	overflow-y: auto;
-	overflow-x: hidden;
-	overscroll-behavior-y: contain;
-	scrollbar-gutter: stable;
+  // 4. 📦 Box Model
+  min-height: 0;
+  min-width: 0;
+  padding-right: .2rem;
 
-	&__grid {
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: .85rem;
+  // 7. ⚙️ Behavior
+  overflow: hidden;
 
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
+  &__grid {
+    // 3. 🧩 Layout
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 12px;
 
-	&__status,
-	&__errorState {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
+    // 4. 📦 Box Model
+    min-height: 0;
+    min-width: 0;
+    padding-right: .2rem;
 
-		// 4. 📦 Box Model
-		min-height: 16rem;
-		padding: 1rem;
+    // 7. ⚙️ Behavior
+    overflow: hidden;
+  }
 
-		// 5. 🔤 Typography
-		text-align: center;
+  &__updating {
+    // 4. 📦 Box Model
+    padding-block: .5rem;
+  }
 
-		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
-	}
+  @media (max-width: 1439px) {
+    &__grid {
+      // 3. 🧩 Layout
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: auto;
 
-	&__retryBtn {
-		// 6. 🎨 Visual
-		background-color: ds.$surface-control-active;
-		color: ds.$accent-gain;
-		border: 1px solid ds.$accent-gain;
-	}
+      // 7. ⚙️ Behavior
+      overflow-y: auto;
+    }
+  }
 
-	@media (max-width: 1099px) {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
+  @media (max-width: 1099px) {
+    &__grid {
+      // 3. 🧩 Layout
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
 
-	@media (max-width: 850px) {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
-	}
+  @media (max-width: 639px) {
+    // 7. ⚙️ Behavior
+    overflow: visible;
 
-	@media (max-width: 639px) {
-		// 7. ⚙️ Behavior
-		overflow: visible;
-	}
+    &__grid {
+      // 3. 🧩 Layout
+      grid-template-columns: 1fr;
+
+      // 7. ⚙️ Behavior
+      overflow: visible;
+    }
+  }
 }
-

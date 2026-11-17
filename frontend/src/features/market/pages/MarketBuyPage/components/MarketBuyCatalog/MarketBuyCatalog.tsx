@@ -1,76 +1,87 @@
-import type { MarketPlayerQuoteState } from "@/features/market/hooks";
-import type { MarketPlayer } from "@/features/market/types";
-import { Button } from "@/shared/components";
+import type { OfficialMarketPlayer } from "@/features/market/types";
 import MarketPlayerCard from "../MarketPlayerCard";
+import MarketCatalogState from "./components/MarketCatalogState";
 import styles from "./MarketBuyCatalog.module.scss";
 
 interface Props {
 	isLoading: boolean;
+	isUpdating: boolean;
 	isError: boolean;
 	errorMessage?: string | null;
 	onRetry?: () => void;
-	players: MarketPlayer[];
-	getQuoteState: (playerId: number) => MarketPlayerQuoteState;
-	onBuyClick: (player: MarketPlayer, triggerEl: HTMLElement | null) => void;
+	players: OfficialMarketPlayer[];
+	hasFilters: boolean;
+	onBuyClick: (
+		player: OfficialMarketPlayer,
+		triggerEl: HTMLElement | null,
+	) => void;
 }
 
 export default function MarketBuyCatalog({
 	isLoading,
+	isUpdating,
 	isError,
 	errorMessage,
 	onRetry,
 	players,
-	getQuoteState,
+	hasFilters,
 	onBuyClick,
 }: Props) {
+	const renderContent = () => {
+		if (isLoading) {
+			return (
+				<MarketCatalogState
+					variant="loading"
+					message="Cargando Mercado Oficial…"
+				/>
+			);
+		}
+
+		if (isError) {
+			return (
+				<MarketCatalogState
+					variant="error"
+					message={errorMessage || "No se pudo cargar el Mercado Oficial."}
+					onRetry={onRetry}
+				/>
+			);
+		}
+
+		if (players.length === 0) {
+			return (
+				<MarketCatalogState
+					variant="empty"
+					message={
+						hasFilters
+							? "No hay resultados para los filtros seleccionados."
+							: "El Mercado Oficial no tiene jugadores disponibles."
+					}
+				/>
+			);
+		}
+
+		return (
+			<div className={styles.buyCatalog__grid}>
+				{players.map((player) => (
+					<MarketPlayerCard
+						key={player.id}
+						player={player}
+						onBuyClick={onBuyClick}
+					/>
+				))}
+			</div>
+		);
+	};
+
 	return (
-		<main className={styles.buyCatalog}>
-			{isLoading && (
-				<div role="status" className={styles.buyCatalog__status}>
-					<p>Cargando catálogo del mercado...</p>
-				</div>
+		<main className={styles.buyCatalog} aria-busy={isLoading || isUpdating}>
+			{isUpdating && !isLoading && !isError && (
+				<span className={styles.buyCatalog__updating} role="status">
+					Actualizando resultados…
+				</span>
 			)}
 
-			{!isLoading && isError && (
-				<div role="alert" className={styles.buyCatalog__errorState}>
-					<p>{errorMessage || "No se pudo cargar el listado del mercado."}</p>
-					{onRetry && (
-						<Button
-							type="button"
-							onClick={onRetry}
-							className={styles.buyCatalog__retryBtn}
-						>
-							Reintentar
-						</Button>
-					)}
-				</div>
-			)}
-
-			{!isLoading && !isError && players.length === 0 && (
-				<div className={styles.buyCatalog__status}>
-					<p>No hay jugadores disponibles en el mercado actualmente.</p>
-				</div>
-			)}
-
-			{!isLoading && !isError && players.length > 0 && (
-				<div className={styles.buyCatalog__grid}>
-					{players.map((player) => {
-						const quoteState = getQuoteState(player.id);
-						return (
-							<MarketPlayerCard
-								key={player.id}
-								player={player}
-								quote={quoteState.quote}
-								quoteStatus={quoteState.status}
-								quoteHttpStatus={quoteState.httpStatus}
-								canRetryQuote={quoteState.canRetry}
-								onRetryQuote={quoteState.onRetry}
-								onBuyClick={onBuyClick}
-							/>
-						);
-					})}
-				</div>
-			)}
+			{renderContent()}
 		</main>
 	);
 }

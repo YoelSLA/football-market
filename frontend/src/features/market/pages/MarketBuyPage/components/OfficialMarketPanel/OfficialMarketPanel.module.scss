@@ -2,12 +2,10 @@
 .officialPanel {
 	&__content {
 		// 3. 🧩 Layout
-		display: grid;
+		display: flex;
 		flex: 1;
-		grid-template-columns: minmax(15rem, 0.86fr) minmax(0, 3.14fr);
-		grid-template-rows: minmax(0, 1fr);
-		align-items: stretch;
-		gap: 1rem;
+		flex-direction: column;
+		gap: 8px;
 
 		// 4. 📦 Box Model
 		min-height: 0;
@@ -19,25 +17,9 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		padding-top: 1rem;
-	}
-}
-
-@media (max-width: 1099px) {
-	.officialPanel {
-		&__content {
-			// 3. 🧩 Layout
-			grid-template-columns: 13.5rem minmax(0, 1fr);
-		}
-	}
-}
-
-@media (max-width: 850px) {
-	.officialPanel {
-		&__content {
-			// 3. 🧩 Layout
-			grid-template-columns: 12rem minmax(0, 1fr);
-		}
+		height: 36px;
+		padding-top: 0;
+		margin-top: 8px;
 	}
 }
 
@@ -45,8 +27,7 @@
 	.officialPanel {
 		&__content {
 			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-			grid-template-rows: auto minmax(0, 1fr);
+			flex-direction: column;
 			gap: 0.5rem;
 		}
 

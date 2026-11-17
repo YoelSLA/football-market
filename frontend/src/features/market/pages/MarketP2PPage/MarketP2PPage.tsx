@@ -19,21 +19,19 @@ export default function MarketP2PPage() {
 		<PageLayout>
 			<div className={styles.page}>
 				<div className={styles.page__header}>
-					<MarketP2PHeader
-						totalPlayers={community.totalPlayers}
-						availableCredits={community.availableCredits}
-					/>
+					<MarketP2PHeader availableCredits={community.availableCredits} />
 				</div>
 
 				<CommunityMarketPanel community={community} />
 
 				<BuyListingModal
-					player={community.selectedPlayer}
+					player={community.purchasePlayer}
 					listing={community.selectedListing}
 					isBusy={community.isBuying}
 					result={community.purchaseResult}
 					errorMessage={community.purchaseError}
 					availableCredits={community.availableCredits}
+					canConfirm={community.canConfirmListing}
 					onClose={community.closeListing}
 					onConfirm={community.confirmListing}
 					triggerRef={community.triggerRef}

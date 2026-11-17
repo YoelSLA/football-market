@@ -1,21 +1,17 @@
 import { PageHeading } from "@/shared/components";
-import { Clock, Layers3, ShoppingCart, Wallet } from "@/shared/icons";
+import { ShoppingCart, Wallet } from "@/shared/icons";
 import styles from "./MarketHeader.module.scss";
 
 interface Props {
-	totalPlayers?: number;
 	availableCredits?: number;
 }
 
-export default function MarketHeader({
-	totalPlayers,
-	availableCredits,
-}: Props) {
+export default function MarketHeader({ availableCredits }: Props) {
 	return (
 		<header className={styles.marketHeader}>
 			<PageHeading
 				title="Mercado Oficial"
-				description="Explorá el mercado y adquirí tokens directamente de la emisión oficial."
+				description="Comprá tokens directamente a la emisión oficial con la cotización vigente."
 				icon={ShoppingCart}
 			/>
 			<div className={styles.marketHeader__metrics}>
@@ -30,30 +26,6 @@ export default function MarketHeader({
 								? `${availableCredits.toLocaleString("es-AR")} créditos`
 								: "No disponible"}
 						</strong>
-					</div>
-				</div>
-				<div
-					className={`${styles.marketHeader__metric} ${styles.marketHeader__metric_violet}`}
-				>
-					<span className={styles.marketHeader__tile}>
-						<Layers3 aria-hidden="true" />
-					</span>
-					<div>
-						<p>Jugadores disponibles</p>
-						<strong>
-							{totalPlayers?.toLocaleString("es-AR") ?? "No disponible"}
-						</strong>
-					</div>
-				</div>
-				<div
-					className={`${styles.marketHeader__metric} ${styles.marketHeader__metric_gold}`}
-				>
-					<span className={styles.marketHeader__tile}>
-						<Clock aria-hidden="true" />
-					</span>
-					<div>
-						<p>Órdenes pendientes</p>
-						<strong>No disponible</strong>
 					</div>
 				</div>
 			</div>

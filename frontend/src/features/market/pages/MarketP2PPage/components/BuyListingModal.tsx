@@ -16,6 +16,7 @@ interface Props {
 	result: BuyResult | null;
 	errorMessage: string | null;
 	availableCredits?: number;
+	canConfirm: boolean;
 	onClose: () => void;
 	onConfirm: () => void;
 	triggerRef: RefObject<HTMLElement | null>;
@@ -28,11 +29,15 @@ export default function BuyListingModal({
 	result,
 	errorMessage,
 	availableCredits,
+	canConfirm,
 	onClose,
 	onConfirm,
 	triggerRef,
 }: Props) {
 	if (!player || !listing) return null;
+	const isExpired = Date.parse(listing.expiresAt) <= Date.now();
+	const hasInsufficientCredits =
+		availableCredits !== undefined && availableCredits < listing.totalAmount;
 	return (
 		<Modal
 			className={styles.dialog}
@@ -64,9 +69,24 @@ export default function BuyListingModal({
 					<div className={styles.modal__success} role="status">
 						<h3>Compra confirmada</h3>
 						<p>Transacción #{result.transactionId}</p>
-						<p>
-							{result.quantity} tokens por {formatCredits(result.totalAmount)}
-						</p>
+						<dl>
+							<div>
+								<dt>Cantidad</dt>
+								<dd>{result.quantity} tokens</dd>
+							</div>
+							<div>
+								<dt>Precio unitario</dt>
+								<dd>{formatCredits(result.unitPrice)}</dd>
+							</div>
+							<div>
+								<dt>Total</dt>
+								<dd>{formatCredits(result.totalAmount)}</dd>
+							</div>
+							<div>
+								<dt>Ejecutada</dt>
+								<dd>{new Date(result.executedAt).toLocaleString("es-AR")}</dd>
+							</div>
+						</dl>
 						<Button onClick={onClose}>Volver a ofertas</Button>
 					</div>
 				) : (
@@ -85,6 +105,10 @@ export default function BuyListingModal({
 								<dt>Total</dt>
 								<dd>{formatCredits(listing.totalAmount)}</dd>
 							</div>
+							<div>
+								<dt>Vencimiento</dt>
+								<dd>{new Date(listing.expiresAt).toLocaleString("es-AR")}</dd>
+							</div>
 							{availableCredits != null && (
 								<div>
 									<dt>Saldo disponible</dt>
@@ -100,11 +124,25 @@ export default function BuyListingModal({
 								{errorMessage}
 							</p>
 						)}
+						{!errorMessage && !canConfirm && (
+							<p className={styles.modal__error} role="status">
+								{isExpired
+									? "La publicación venció. Volvé al detalle para actualizar las ofertas."
+									: hasInsufficientCredits
+										? "El saldo disponible no alcanza para comprar este lote."
+										: "La compra no está disponible."}
+							</p>
+						)}
 						<footer className={styles.modal__actions}>
 							<Button type="button" onClick={onClose} disabled={isBusy}>
 								Cancelar
 							</Button>
-							<Button type="button" onClick={onConfirm} disabled={isBusy}>
+							<Button
+								type="button"
+								onClick={onConfirm}
+								disabled={isBusy || !canConfirm}
+								aria-busy={isBusy ? "true" : undefined}
+							>
 								{isBusy
 									? "Procesando…"
 									: `Comprar por ${formatCredits(listing.totalAmount)}`}

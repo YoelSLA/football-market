@@ -3,3 +3,4 @@ export {
 	type MarketPlayerQuoteState,
 	useMarketQuotesQuery,
 } from "./useMarketQuotesQuery";
+export { useOfficialMarketQuery } from "./useOfficialMarketQuery";

@@ -1,6 +1,7 @@
 export {
 	PLAYERS_PAGE_SIZE,
 	useAllPlayersQuery,
+	usePlayerCatalogFiltersQuery,
 	usePlayerCurrentQuoteQuery,
 	usePlayerQuoteRankingQuery,
 	usePlayerQuotesQuery,
@@ -15,6 +16,7 @@ export {
 } from "./pages";
 export type {
 	Player,
+	PlayerCatalogFilters,
 	PlayerQuote,
 	PlayerQuoteHistory,
 	PlayerRankingItem,

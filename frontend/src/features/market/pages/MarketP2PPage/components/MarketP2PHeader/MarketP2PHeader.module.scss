@@ -9,6 +9,7 @@
 
 	// 4. 📦 Box Model
 	min-width: 0;
+	height: 56px;
 
 	// 6. 🎨 Visual
 	color: ds.$text-title-on-dark;
@@ -16,12 +17,12 @@
 	&__metrics {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 1rem;
-		flex: 1;
+		grid-template-columns: minmax(0, 260px);
+		justify-content: end;
+		flex: 0 1 260px;
 
 		// 4. 📦 Box Model
-		max-width: 60rem;
+		max-width: 260px;
 		min-width: 0;
 	}
 
@@ -29,10 +30,11 @@
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: .75rem;
 
 		// 4. 📦 Box Model
-		padding: .75rem;
+		height: 56px;
+		padding: .5rem .75rem;
 		min-width: 0;
 
 		// 6. 🎨 Visual
@@ -78,8 +80,8 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		width: 3.25rem;
-		height: 3.25rem;
+		width: 40px;
+		height: 40px;
 
 		// 6. 🎨 Visual
 		background-color: ds.$surface-highlight-glow;
@@ -87,8 +89,8 @@
 
 		svg {
 			// 4. 📦 Box Model
-			width: 2rem;
-			height: 2rem;
+			width: 24px;
+			height: 24px;
 		}
 	}
 
@@ -102,7 +104,7 @@
 		background-color: ds.$surface-caution-soft;
 	}
 
-	@media (max-width: 1200px) {
+	@media (max-width: 850px) {
 		// 3. 🧩 Layout
 		flex-direction: column;
 		align-items: stretch;
@@ -110,6 +112,7 @@
 		&__metrics {
 			// 4. 📦 Box Model
 			max-width: none;
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 

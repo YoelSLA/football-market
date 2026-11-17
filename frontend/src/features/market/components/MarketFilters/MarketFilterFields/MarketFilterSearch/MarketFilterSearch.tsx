@@ -8,6 +8,10 @@ interface Props {
 	disabled?: boolean;
 	active?: boolean;
 	onChange?: (value: string) => void;
+	label?: string;
+	accessibleLabel?: string;
+	placeholder?: string;
+	showLabel?: boolean;
 }
 
 export default function MarketFilterSearch({
@@ -17,6 +21,10 @@ export default function MarketFilterSearch({
 	disabled = false,
 	active = true,
 	onChange,
+	label = "Buscar jugador o club",
+	accessibleLabel,
+	placeholder = "Buscar jugador o club...",
+	showLabel = false,
 }: Props) {
 	return (
 		<label
@@ -27,22 +35,32 @@ export default function MarketFilterSearch({
 			}
 			htmlFor={id}
 		>
-			<Search className={styles.marketFilterSearch__icon} aria-hidden="true" />
-			<input
-				id={id}
-				className={styles.marketFilterSearch__input}
-				aria-label={
-					active ? "Buscar jugador o club" : "Buscar jugador o club (pendiente)"
-				}
-				placeholder="Buscar jugador o club..."
-				value={active ? (value ?? "") : undefined}
-				disabled={disabled}
-				onChange={
-					active && onChange
-						? (event) => onChange(event.target.value)
-						: undefined
-				}
-			/>
+			{showLabel && (
+				<span className={styles.marketFilterSearch__label}>{label}</span>
+			)}
+			<span className={styles.marketFilterSearch__control}>
+				<Search
+					className={styles.marketFilterSearch__icon}
+					aria-hidden="true"
+				/>
+				<input
+					id={id}
+					className={styles.marketFilterSearch__input}
+					aria-label={
+						active
+							? (accessibleLabel ?? label)
+							: `${accessibleLabel ?? label} (pendiente)`
+					}
+					placeholder={placeholder}
+					value={active ? (value ?? "") : undefined}
+					disabled={disabled}
+					onChange={
+						active && onChange
+							? (event) => onChange(event.target.value)
+							: undefined
+					}
+				/>
+			</span>
 		</label>
 	);
 }

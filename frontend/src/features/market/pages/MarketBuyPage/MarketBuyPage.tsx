@@ -16,10 +16,7 @@ export default function MarketBuyPage() {
 		<PageLayout>
 			<div className={styles.page}>
 				<div className={styles.page__header}>
-					<MarketHeader
-						totalPlayers={marketBuy.totalPlayers}
-						availableCredits={marketBuy.availableCredits}
-					/>
+					<MarketHeader availableCredits={marketBuy.availableCredits} />
 				</div>
 
 				<OfficialMarketPanel marketBuy={marketBuy} />
@@ -28,14 +25,12 @@ export default function MarketBuyPage() {
 					isOpen={marketBuy.isModalOpen}
 					player={marketBuy.selectedPlayer}
 					quote={marketBuy.selectedQuote}
-					quoteStatus={marketBuy.selectedQuoteState?.status ?? "loading"}
-					quoteHttpStatus={marketBuy.selectedQuoteState?.httpStatus}
-					canRetryQuote={marketBuy.selectedQuoteState?.canRetry ?? false}
-					onRetryQuote={marketBuy.selectedQuoteState?.onRetry ?? (() => {})}
 					confirmationBlockReason={marketBuy.confirmationBlockReason}
 					estimation={marketBuy.estimation}
 					formRegister={marketBuy.form.register}
 					formError={marketBuy.form.formState.errors.quantity?.message}
+					quantity={marketBuy.form.watch("quantity")}
+					onQuantityChange={marketBuy.form.setQuantity}
 					isBusy={marketBuy.isBusy}
 					canConfirm={marketBuy.canConfirm}
 					isSuccess={marketBuy.isSuccess}

@@ -9,13 +9,15 @@
 
 	// 6. 🎨 Visual
 	color: ds.$text-title-on-dark;
+
 	&__identity {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: flex-start;
-		gap: .85rem;
+		gap: var(--market-player-summary-gap, .85rem);
 
 		// 4. 📦 Box Model
+		height: var(--market-player-summary-height, auto);
 		min-width: 0;
 	}
 
@@ -24,8 +26,8 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		width: clamp(4.4rem, 5.2vw, 5.4rem);
-		height: clamp(4.8rem, 5.8vw, 5.8rem);
+		width: var(--market-player-portrait-width, clamp(4.4rem, 5.2vw, 5.4rem));
+		height: var(--market-player-portrait-height, clamp(4.8rem, 5.8vw, 5.8rem));
 		object-fit: cover;
 		object-position: top center;
 
@@ -41,20 +43,6 @@
 
 		// 4. 📦 Box Model
 		min-width: 0;
-		h3 {
-			// 4. 📦 Box Model
-			margin: .25rem 0 .35rem;
-
-			// 5. 🔤 Typography
-			font-size: clamp(.95rem, 1.1vw, 1.1rem);
-			font-weight: 700;
-			line-height: 1.25;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-
-			// 7. ⚙️ Behavior
-			overflow: hidden;
-		}
 
 		p {
 			// 3. 🧩 Layout
@@ -87,6 +75,26 @@
 		}
 	}
 
+	&__heading {
+		// 3. 🧩 Layout
+		display: contents;
+
+		h3 {
+			// 4. 📦 Box Model
+			margin: .25rem 0 .35rem;
+
+			// 5. 🔤 Typography
+			font-size: clamp(.95rem, 1.1vw, 1.1rem);
+			font-weight: 700;
+			line-height: 1.25;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+
+			// 7. ⚙️ Behavior
+			overflow: hidden;
+		}
+	}
+
 	&__metaIcon {
 		// 3. 🧩 Layout
 		flex-shrink: 0;
@@ -103,6 +111,12 @@
 		height: 1.25rem;
 	}
 
+	&__nationalityFlag {
+		// 4. 📦 Box Model
+		width: 1.25rem;
+		height: .85rem;
+	}
+
 	&__badge {
 		// 3. 🧩 Layout
 		display: inline-block;
@@ -117,6 +131,7 @@
 
 		// 6. 🎨 Visual
 		border-radius: .3rem;
+
 		&_goalkeeper {
 			// 6. 🎨 Visual
 			background-color: ds.$state-caution;
@@ -127,6 +142,50 @@
 			// 6. 🎨 Visual
 			background-color: ds.$action-selected;
 			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&_officialCard {
+		.marketPlayerSummary__identity {
+			// 3. 🧩 Layout
+			align-items: stretch;
+
+			// 4. 📦 Box Model
+			height: auto;
+			min-height: 72px;
+		}
+
+		.marketPlayerSummary__details {
+			// 3. 🧩 Layout
+			display: grid;
+			align-content: start;
+			gap: .18rem;
+		}
+
+		.marketPlayerSummary__heading {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: .5rem;
+
+			h3 {
+				// 3. 🧩 Layout
+				order: -1;
+
+				// 4. 📦 Box Model
+				margin: 0;
+			}
+		}
+
+		.marketPlayerSummary__details p {
+			// 4. 📦 Box Model
+			margin: 0;
+		}
+
+		.marketPlayerSummary__nationality {
+			// 6. 🎨 Visual
+			color: ds.$text-pagination;
 		}
 	}
 

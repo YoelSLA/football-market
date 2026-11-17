@@ -1,9 +1,11 @@
 import axios from "axios";
+import { OFFICIAL_MARKET_DEFAULT_PAGE_SIZE } from "@/features/market/constants";
 import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toBuyResult,
 	toMarketListings,
 	toMarketQuote,
+	toOfficialMarketPage,
 	toOrderBuyRequestDTO,
 	toOrderSellRequestDTO,
 	toSellResult,
@@ -12,6 +14,8 @@ import type {
 	BuyResult,
 	MarketListing,
 	MarketQuote,
+	OfficialMarketCriteria,
+	OfficialMarketPage,
 	OrderBuyResponseDTO,
 	OrderSellResponseDTO,
 	SellResult,
@@ -90,6 +94,29 @@ async function getListings(signal?: AbortSignal): Promise<MarketListing[]> {
 	return toMarketListings(data);
 }
 
+async function getOfficialMarket(
+	criteria: OfficialMarketCriteria,
+	signal?: AbortSignal,
+): Promise<OfficialMarketPage> {
+	const { data } = await http.get<unknown>("/market/official", {
+		authenticated: true,
+		signal,
+		params: {
+			page: criteria.page,
+			size: OFFICIAL_MARKET_DEFAULT_PAGE_SIZE,
+			sort: criteria.sort,
+			name: criteria.name || undefined,
+			leagueId: criteria.leagueId ?? undefined,
+			teamId: criteria.teamId ?? undefined,
+			position: criteria.position ?? undefined,
+			nationality: criteria.nationality ?? undefined,
+			minPrice: criteria.minPrice ?? undefined,
+			maxPrice: criteria.maxPrice ?? undefined,
+		},
+	});
+	return toOfficialMarketPage(data);
+}
+
 async function buyListing(listingId: number): Promise<BuyResult> {
 	const { data } = await http.post<OrderBuyResponseDTO>(
 		"/orders/buy",
@@ -107,5 +134,6 @@ export const marketService = {
 	buyTokens,
 	sellTokens,
 	getListings,
+	getOfficialMarket,
 	buyListing,
 };

@@ -9,30 +9,67 @@ interface Props {
 }
 
 export default function OfficialMarketPanel({ marketBuy }: Props) {
+	const hasFilters =
+		marketBuy.criteria.name !== "" ||
+		marketBuy.criteria.leagueId !== null ||
+		marketBuy.criteria.teamId !== null ||
+		marketBuy.criteria.position !== null ||
+		marketBuy.criteria.nationality !== null ||
+		marketBuy.criteria.minPrice !== null ||
+		marketBuy.criteria.maxPrice !== null;
 	return (
 		<>
 			<div className={styles.officialPanel__content}>
-				<MarketFilters />
+				<MarketFilters
+					variant="official"
+					search={marketBuy.searchDraft}
+					league={marketBuy.criteria.leagueId?.toString() ?? "all"}
+					team={marketBuy.criteria.teamId?.toString() ?? "all"}
+					position={marketBuy.criteria.position ?? "all"}
+					nationality={marketBuy.criteria.nationality ?? "all"}
+					sort={marketBuy.criteria.sort}
+					minPrice={marketBuy.minPriceDraft}
+					maxPrice={marketBuy.maxPriceDraft}
+					rangeError={marketBuy.rangeError}
+					isUpdating={marketBuy.isUpdatingPlayers}
+					officialOptions={marketBuy.filterOptions}
+					onSearchChange={marketBuy.setSearchDraft}
+					onLeagueChange={(value) => marketBuy.changeFilter("leagueId", value)}
+					onTeamChange={(value) => marketBuy.changeFilter("teamId", value)}
+					onPositionChange={(value) =>
+						marketBuy.changeFilter("position", value)
+					}
+					onNationalityChange={(value) =>
+						marketBuy.changeFilter("nationality", value)
+					}
+					onSortChange={(value) => marketBuy.changeFilter("sort", value)}
+					onMinPriceChange={marketBuy.setMinPriceDraft}
+					onMaxPriceChange={marketBuy.setMaxPriceDraft}
+					onClear={marketBuy.clearFilters}
+				/>
 				<MarketBuyCatalog
 					isLoading={marketBuy.isLoadingPlayers}
-					isError={marketBuy.isPlayersError}
+					isUpdating={marketBuy.isUpdatingPlayers}
+					isError={marketBuy.isPlayersError || marketBuy.filterOptionsError}
 					errorMessage={marketBuy.playersErrorMessage}
 					onRetry={marketBuy.retryPlayers}
 					players={marketBuy.players}
-					getQuoteState={marketBuy.quotesQuery.getQuoteState}
+					hasFilters={hasFilters}
 					onBuyClick={marketBuy.openBuyModal}
 				/>
 			</div>
-			<div className={styles.officialPanel__footer}>
-				<MarketPagination
-					page={marketBuy.currentPage}
-					totalPages={marketBuy.totalPages}
-					totalPlayers={marketBuy.totalPlayers}
-					visiblePlayers={marketBuy.players.length}
-					pageSize={marketBuy.pageSize}
-					onPageChange={marketBuy.setCurrentPage}
-				/>
-			</div>
+			{!marketBuy.isLoadingPlayers && !marketBuy.isPlayersError && (
+				<div className={styles.officialPanel__footer}>
+					<MarketPagination
+						page={marketBuy.criteria.page}
+						totalPages={marketBuy.totalPages}
+						visiblePlayers={marketBuy.players.length}
+						pageSize={marketBuy.pageSize}
+						showSummary={false}
+						onPageChange={marketBuy.setCurrentPage}
+					/>
+				</div>
+			)}
 		</>
 	);
 }

@@ -1,45 +1,81 @@
-# Quickstart: validación manual de compra desde el frontend
+# Quickstart: validación manual de SPEC-019
 
-**Ejecuta el usuario, no el agente.** Frontend exento de tests automatizados. Requiere backend con mercado inicializado y cotizaciones reales persistidas, JWT de usuario no superusuario, saldo y stock para un caso exitoso; `npm run dev` desde `frontend/` si corresponde. El build autorizado al agente para cambios futuros de código es `npm run build` (no equivale a testing).
+**Ejecución a cargo del usuario.** El frontend no tiene tests automatizados y el agente no ejecuta tests. Esta guía valida comportamiento observable después de implementar y no acredita aceptación por sí sola.
 
-## US1: mercado y modal
+## Prerrequisitos
 
-1. Sin sesión, visitar `/market/buy`: `AuthGuard` redirige al login. Con sesión, visitar Mercado > Comprar tokens: listado paginado de jugadores visibles, estado vacío/error con reintento, ficha propia y botón Comprar. Un jugador visible sin stock sigue en el listado; su POST devuelve `INSUFFICIENT_STOCK`.
-2. Abrir una ficha con cotización vigente: nombre, equipo, liga, posición, precio real de GET current, `calculatedAt` del backend; comparar precio e instante con respuesta HTTP. Nunca mostrar dato o `date` de la serie demo de players.
-3. Cancelar, pulsar ESC y hacer click fuera: en los tres casos no hay POST, se mantiene URL, página, scroll, pestaña activa y valores de cualquier filtro existente del mercado; el mercado permanece visible bajo el overlay y sin reflow. Este escenario no presupone crear filtros nuevos.
+- Backend disponible con `GET /api/market/official`, `GET /api/players/filters`, `GET /api/listings` y `POST /api/orders/buy`.
+- Usuario no administrador con sesión válida, créditos y al menos un caso oficial comprable.
+- Datos con jugador cotizado, jugador sin cotización, cotización inicial sin precio anterior y publicaciones P2P.
+- Frontend iniciado por el usuario desde `frontend/` mediante `npm run dev`.
+- DevTools disponibles para observar Network y TanStack Query sin exponer JWT ni datos sensibles.
 
-## US2: cantidad e importe
+## Gate de implementación frontend
 
-1. Al abrir cada nueva compra el campo muestra `1`; con cotización disponible, el resumen estima un token y Confirmar queda habilitado. Borrar el campo o introducir `0`, `101`, `-5`, `3.5`, letras o exponentes: error inline, Confirmar deshabilitado y sin POST. `"10"`, `"1"` y `"100"` son entradas textuales válidas que deben enviarse como números 10, 1 y 100.
-2. A 125 centésimas, cantidad inicial 1: «Importe estimado: 1,25 créditos (125 centésimas)»; al editar a `"10"`: «Importe estimado: 12,50 créditos (1.250 centésimas)». No presentar estimación como precio garantizado.
-3. GET current devuelve `404 QUOTE_NOT_FOUND`, precio inválido o falla de red: indicar falta de cotización/error; Confirmar deshabilitado; no sustituirla por demo.
+1. Validar primero lógica, estado y estructura semántica sin exigir fidelidad visual final.
+2. Confirmar DTOs, URL, query keys, filtros, compra e invalidaciones.
+3. Aprobar explícitamente el gate humano de Fase 1.
+4. Recién después validar SCSS y fidelidad al wireframe en Fase 2.
 
-## US3: compra y errores
+## Mercado Oficial: catálogo y contrato
 
-1. Confirmar una compra válida: único POST con `{playerId,quantity}` numérico, aun cuando el campo contenga texto `"10"`; sin `listingId`. Spinner y controles de cierre deshabilitados mientras envía.
-2. En éxito: toast no intrusivo con ID, jugador, cantidad, precio e importe ejecutados y `executedAt` de respuesta; si el precio cambió, prevalece el de POST. Cerrar manualmente o después de 2 s; modal no altera el mercado.
-3. Inspeccionar TanStack Query: market invalida solo `currentQuote(id)` real; app invalida `portfolioQueryKeys.summary` y todas las combinaciones `holdings(...)`. Al navegar a Portfolio, resumen y tenencias se actualizan; nunca invalidar `demo-quotes`.
-   Las cotizaciones de la ficha y el modal corresponden a la misma key por jugador; abrir el modal no crea una segunda petición GET. El toast agrega el nombre de la ficha al resultado del POST, pero el Model `BuyResult` y el Service solo contienen datos del backend.
-4. Cotejar uno por uno los diez códigos POST de FR-10 (`INVALID_REQUEST`, `INVALID_QUANTITY`, `INSUFFICIENT_CREDITS`, `INSUFFICIENT_STOCK`, `QUOTE_UNAVAILABLE`, `INVALID_QUOTE_PRICE`, `SUPERUSER_CANNOT_BUY`, `PLAYER_NOT_FOUND`, `PLAYER_NOT_VISIBLE`, `INTERNAL_ERROR`) con la tabla del [contrato](contracts/buy-tokens-frontend.md): cada uno tiene mensaje definido sin detalles sensibles. Para desconocido, red/500: fallback genérico; 401: redirección sin recuperar modal. Para GET 404 `QUOTE_NOT_FOUND`: ausencia de cotización, no mensaje de jugador del POST. Provocar casos manualmente cuando sea posible, sin afirmar que todos los errores hayan sido reproducidos.
+1. Abrir `/market/buy`: verificar una única solicitud `GET /api/market/official?page=0&size=8&sort=id,asc` equivalente y ninguna solicitud individual `/players/{id}/quotes/current`.
+2. Comparar la respuesta con las cards: identidad deportiva, precio, variación, precio anterior y `effectiveDate`. Confirmar que no se muestran `performanceScore`, `multiplier`, `calculationOrigin` ni `calculatedAt`.
+3. Para `quote: null`, comprobar card del mismo tamaño, «Sin cotización» y compra deshabilitada.
+4. Para variación `0`, comprobar indicador neutro real. Para `previousPrice` o `variationPercentage` nulos, comprobar ausencia neutral de referencia, no «0 %» inventado.
+5. Verificar fallbacks accesibles cuando equipo, liga, nacionalidad, escudo o retrato sean nulos.
 
-## US4: accesibilidad y referencias visuales
+## Filtros, URL y paginación
 
-1. Click rápido repetido en Confirmar: un POST. Mientras se procesa, `aria-busy`, spinner visible, Confirmar/Cancelar/overlay/ESC no cierran ni envían otro POST.
-2. Foco inicial en cantidad; Tab y Shift+Tab circulan en el diálogo, `role="dialog"`, `aria-modal="true"`, título y descripción asociados; tras cerrar regresa al botón Comprar que abrió el diálogo. Comprobar lector de pantalla básico.
-3. Comparar con `referencias-imagenes/04-mercado-comprar.png` y `referencias-imagenes/05-mercado-comprar-modal-abierto.png` a 375, 768 y 1440 px: mercado visible detrás, overlay semitransparente, cantidad inicial `1` como en ref. 05, sin scroll horizontal ni cambio de layout/scroll del mercado.
+1. Modificar búsqueda, liga, equipo, posición, nacionalidad, rango y orden: cada control actualiza automáticamente URL y consulta; no existen filtro de cotización, selector de tamaño ni botón Aplicar.
+2. Seleccionar una liga: solo aparecen sus equipos. Cambiarla o limpiarla elimina un equipo incompatible.
+3. Escribir rápidamente en búsqueda: observar una única consulta después del debounce, no una por pulsación.
+4. Introducir mínimo mayor que máximo o valor negativo: aparece error junto a los campos y no se emite una solicitud inválida.
+5. Cambiar cualquier filtro u orden desde una página posterior: la URL vuelve a `page=0`.
+6. Verificar el tamaño oficial fijo de 8: la respuesta y la grilla muestran como máximo dos filas de cuatro sin scroll vertical en el viewport desktop aprobado. El total aparece solo sobre la grilla.
+7. Recargar y recorrer Back/Forward: controles y resultados se reconstruyen desde `name`, `leagueId`, `teamId`, `position`, `nationality`, `minPrice`, `maxPrice`, `sort` y `page`.
+8. Editar manualmente URL con `hasQuote`, `size`, página, sort o tipos inválidos: la UI retira los parámetros heredados mediante `replace`, aplica defaults seguros y no conserva un criterio imposible como válido.
+9. Provocar error de red/500: mostrar error con reintento. Una combinación válida sin resultados debe mostrar «Sin resultados», distinta del mercado globalmente vacío.
 
-Las imágenes son guías de disposición y estilo: no representar como reales saldos, órdenes pendientes, variación 24 h ni estadísticas que esta feature no consulta.
+## Compra oficial
 
-Registrar resultados y tiempos (<200 ms apertura en condiciones del plan, ≤500 ms aviso tras respuesta) solo con evidencia observada. Estos escenarios quedan pendientes del usuario hasta que exista implementación y se ejecuten.
+1. Abrir un jugador cotizado: no aparece un GET adicional; el modal usa los datos consolidados y conserva URL, filtros, página y scroll.
+2. Confirmar que el modal solo muestra identidad deportiva, precio actual, variación, precio anterior, vigencia, cantidad y resumen.
+3. Verificar cantidad inicial `1`; `−/+` cambian una unidad y 1/5/10/50/100 reemplazan el valor por una cantidad absoluta.
+4. Probar vacío, letras, decimal, 0 y 101: error inline, confirmación bloqueada y sin POST. Probar `10`: payload numérico `{ playerId, quantity: 10 }`.
+5. Hacer clic repetido durante procesamiento: una sola solicitud. Cancelar, overlay y Escape permanecen bloqueados durante envío.
+6. En éxito, comparar transacción, cantidad, `unitPrice`, `totalAmount` y `executedAt` con la respuesta. El precio ejecutado prevalece sobre la estimación.
+7. Inspeccionar invalidaciones: prefijo oficial completo, usuario actual, resumen y todas las holdings. No invalidar datos demo ni generar GET individuales de cotización.
+8. Verificar mensajes seguros para los códigos de [contrato de compra](contracts/buy-tokens-frontend.md); 401 activa sesión y no restaura el modal.
 
-## Ajuste de scroll exclusivo de mercado
+## Layout aprobado
 
-### Diagnóstico sin compras
+1. En 1920 × 913 px comprobar navbar de 60 px, navegación secundaria de 48 px y página interior con 8 px de padding por lado.
+2. Confirmar encabezado compacto sin total, filtros horizontales en dos filas, barra única de resultados, grilla desplazable y paginación fija fuera del scroll.
+3. A 1920 y 1440 px verificar cuatro columnas; entre 1100 y 1439 px verificar tres columnas legibles.
+4. En 375, 768 y 1440 px comprobar ausencia de scroll horizontal, controles operables y modal contenido con scroll propio cuando haga falta.
+5. Validar foco inicial en cantidad, trampa de foco, Tab/Shift+Tab, Escape cuando está permitido, anuncios de carga/error y restitución de foco al botón Comprar.
+6. Contrastar cajas, dimensiones, gaps y estados con `docs/wireframes/official-market.md` sin modificar lógica validada durante la fase visual.
 
-Comprobar las cuatro pestañas con iconos (carrito/etiqueta/pieza de órdenes/historial), margen inferior de Aplicar y scrollbar oscura solo en main. Confirmar sigue deshabilitado mientras cotización esté cargando/pausada/ausente o haya error, cantidad inválida o envío; su motivo aparece junto al botón. El estado inicial válido de cantidad es `"1"`, no exige editar el input si la cotización existe.
+## Mercado P2P: catálogo, URL y detalle
 
-Inspeccionar GET current autenticado (URL con id, estado HTTP y cuerpo saneado, nunca JWT/cookies): 200 válido habilita con cantidad válida; 404 QUOTE_NOT_FOUND es ausencia; otro 404 es fallo HTTP; 401 activa gestión de sesión, 403 permisos; red/5xx y respuesta inválida muestran mensajes distintos y reintento de GET cuando corresponde. Refetch/pausa/error con datos previos en caché no habilitan compra. No pulsar Confirmar ni ejecutar inicialización/recálculo durante esta inspección. Sin esa evidencia no atribuir causa a falta de datos backend.
+1. Abrir `/market/p2p`: comprobar una única lectura `GET /api/listings` sin query parameters y la lectura vigente de metadatos deportivos.
+2. Verificar agrupación por jugador, conteo de publicaciones, suma de tokens y precio mínimo sobre la colección completa antes de filtrar o paginar.
+3. Escribir en búsqueda: `search` se refleja en la URL después de 300 ms de debounce. Cambiar liga, posición u orden: `league`, `position` y `sort` se reflejan inmediatamente.
+4. Desde una página posterior, cambiar filtro u orden: `page` vuelve a `0`. Navegar páginas conserva tamaño local fijo de 12 y actualiza `page` sin emitir otro GET de listings.
+5. Recargar, compartir la URL y recorrer Back/Forward: filtros, orden y página reconstruyen el mismo catálogo.
+6. Abrir un jugador: la URL agrega `player=<id>` conservando los demás parámetros; el detalle reemplaza catálogo/filtros/paginación y muestra todas las publicaciones ya recibidas, ordenadas por precio, vencimiento e ID.
+7. Cerrar el detalle: se elimina solo `player` y se restaura el catálogo previo. Un jugador inexistente o sin ofertas muestra estado vacío con regreso, sin consulta adicional `/listings/{id}`.
 
-Sin ejecutar compras, inspeccionar `/market/buy` en 375/768/1440px (registrar también la altura efectiva): desplazar el listado hasta el último jugador; navbar, encabezado, métricas, panel y paginación no cambian de posición y body no se desplaza. Redimensionar alto/ancho: main ocupa el espacio restante por flex/grid, sin altura de navbar codificada ni scroll horizontal. En móvil el panel es un details nativo inicialmente plegado; abrir/cerrar sin desplazar encabezado/listado/paginación ni implementar filtros. Verificar accesibilidad por teclado y que el panel expandido no quede recortado, especialmente con poca altura o zoom.
+## Compra P2P
 
-Navegar después a `/players` y `/portfolio`: el modificador de contención de mercado desaparece; las reglas previas de scroll de cada ruta siguen vigentes. Abrir/cerrar modal de compra con Cancelar/ESC, sin confirmar: conserva su scroll propio y la posición del listado. Estos pasos no están ejecutados mientras la herramienta de navegador no tenga conexión disponible.
+1. Abrir una publicación: cantidad fija, precio unitario, total y vencimiento; sin campo de cantidad ni identidad del vendedor.
+2. Confirmar que el payload contiene exclusivamente `{ listingId }` y que clics repetidos producen una sola solicitud.
+3. En éxito, comparar los datos mostrados con `OrderBuyResponseDTO`, comprobar invalidaciones de listings, usuario, resumen y holdings, y confirmar que el estado permanece hasta cierre explícito.
+4. Simular publicación vendida, vencida o retirada: mostrar indisponibilidad, refrescar catálogo y detalle y no afirmar compra.
+5. Simular error de red sin respuesta: no reintentar el POST automáticamente ni mostrar éxito o rechazo concluyente.
+6. Confirmar que ningún cambio P2P altera payload, modal, invalidaciones o navegación del Mercado Oficial.
+
+## Registro de evidencia
+
+Registrar manualmente viewport, URL, request/response saneados, resultado observable y desviaciones. No incluir tokens, cookies ni cuerpos sensibles. El build, si luego se ejecuta bajo las reglas del área, no sustituye estos escenarios ni la aprobación visual humana.

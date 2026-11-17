@@ -49,6 +49,9 @@ export default function CommunityListingsPanel({
 				className={styles.panel__list}
 				aria-label={`Publicaciones disponibles de ${player.name}`}
 			>
+				{player.listings.length === 0 && (
+					<li role="status">No quedan publicaciones disponibles.</li>
+				)}
 				{player.listings.map((listing) => {
 					const expired = Date.parse(listing.expiresAt) <= Date.now();
 					return (
@@ -76,6 +79,7 @@ export default function CommunityListingsPanel({
 								<Button
 									className={styles.listing__action}
 									disabled={expired}
+									aria-disabled={expired}
 									onClick={(event) => onBuy(listing, event.currentTarget)}
 								>
 									{expired ? "Oferta vencida" : "Comprar lote"}

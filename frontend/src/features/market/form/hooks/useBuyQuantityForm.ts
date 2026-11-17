@@ -27,6 +27,12 @@ export function useBuyQuantityForm() {
 	return {
 		...form,
 		validatedQuantity,
+		setQuantity: (quantity: number) =>
+			form.setValue("quantity", String(quantity), {
+				shouldDirty: true,
+				shouldTouch: true,
+				shouldValidate: true,
+			}),
 		resetQuantity: () => form.reset({ quantity: "1" }),
 	};
 }

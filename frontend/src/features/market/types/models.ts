@@ -120,3 +120,59 @@ export interface CommunityMarketFilters {
 	position: string;
 	sort: CommunityMarketSort;
 }
+
+export type OfficialMarketSortField = "price" | "variation" | "name" | "id";
+export type OfficialMarketSort = `${OfficialMarketSortField},${"asc" | "desc"}`;
+
+export interface OfficialMarketQuote {
+	price: number;
+	previousPrice: number | null;
+	variationPercentage: number | null;
+	effectiveDate: string;
+}
+
+export interface OfficialMarketPlayer {
+	id: number;
+	name: string;
+	position: string;
+	nationality: string | null;
+	teamId: number | null;
+	teamName: string | null;
+	teamBadgeUrl: string | null;
+	leagueId: number | null;
+	leagueName: string | null;
+	imageUrl: string | null;
+	fallbackImageUrl: string | null;
+	quote: OfficialMarketQuote | null;
+}
+
+export interface OfficialMarketPage {
+	players: OfficialMarketPlayer[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+}
+
+export interface OfficialMarketCriteria {
+	name: string;
+	leagueId: number | null;
+	teamId: number | null;
+	position: string | null;
+	nationality: string | null;
+	minPrice: number | null;
+	maxPrice: number | null;
+	sort: OfficialMarketSort;
+	page: number;
+}
+
+export interface OfficialMarketFilterDraft {
+	name: string;
+	minPrice: string;
+	maxPrice: string;
+}
+
+export interface CommunityMarketUrlState extends CommunityMarketFilters {
+	page: number;
+	player: number | null;
+}

@@ -158,3 +158,27 @@
 		}
 	}
 }
+
+@media (min-width: 1100px) {
+	.marketFilters_official {
+		// 4. 📦 Box Model
+		padding: 12px;
+
+		.marketFilters__desktop {
+			// 3. 🧩 Layout
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.marketFilters__heading {
+			// 4. 📦 Box Model
+			min-height: 22px;
+
+			h2 {
+				// 5. 🔤 Typography
+				font-size: .9rem;
+			}
+		}
+	}
+}

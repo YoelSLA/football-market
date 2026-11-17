@@ -7,6 +7,7 @@ interface Option {
 
 interface Props {
 	id?: string;
+	className?: string;
 	label: string;
 	value?: string;
 	defaultValue?: string;
@@ -17,6 +18,7 @@ interface Props {
 
 export default function MarketFilterSelect({
 	id,
+	className,
 	label,
 	value,
 	defaultValue,
@@ -25,7 +27,14 @@ export default function MarketFilterSelect({
 	onChange,
 }: Props) {
 	return (
-		<label className={styles.marketFilterSelect} htmlFor={id}>
+		<label
+			className={
+				className
+					? `${styles.marketFilterSelect} ${className}`
+					: styles.marketFilterSelect
+			}
+			htmlFor={id}
+		>
 			{label}
 			<select
 				id={id}

@@ -9,5 +9,6 @@ export {
 export {
 	type MarketPlayerQuoteState,
 	useMarketQuotesQuery,
+	useOfficialMarketQuery,
 } from "./queries";
 export { useMarketToast } from "./useMarketToast";
