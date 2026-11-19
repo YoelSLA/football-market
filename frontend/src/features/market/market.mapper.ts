@@ -1,6 +1,7 @@
 import type { Player } from "@/features/players";
 import type {
 	BuyResult,
+	CancelListingResult,
 	CommunityMarketPlayer,
 	MarketListing,
 	MarketPlayer,
@@ -13,6 +14,9 @@ import type {
 	P2PMarketPage,
 	QuoteResponseDTO,
 	SellResult,
+	UserOrderListing,
+	UserOrdersPage,
+	UserOrdersSummary,
 } from "./types";
 import { MarketQuoteReadError } from "./types";
 
@@ -388,5 +392,114 @@ export function toMarketPlayer(player: Player): MarketPlayer {
 		nationality: player.nationality,
 		imageUrl: player.imageUrl,
 		fallbackImageUrl: player.fallbackImageUrl,
+	};
+}
+
+export function toUserOrderListing(dto: unknown): UserOrderListing {
+	if (typeof dto !== "object" || dto === null) {
+		throw new Error("INVALID_USER_ORDER_LISTING");
+	}
+	const candidate = dto as Record<string, unknown>;
+	const status = candidate.status;
+	if (
+		status !== "ACTIVE" &&
+		status !== "SOLD" &&
+		status !== "CANCELLED" &&
+		status !== "EXPIRED"
+	) {
+		throw new Error("INVALID_LISTING_STATUS");
+	}
+	return {
+		listingId: Number(candidate.listingId),
+		sellerId: Number(candidate.sellerId),
+		playerId: Number(candidate.playerId),
+		quantity: Number(candidate.quantity),
+		unitPrice: Number(candidate.unitPrice) / 100,
+		totalAmount: Number(candidate.totalAmount) / 100,
+		status,
+		createdAt: String(candidate.createdAt),
+		expiresAt: String(candidate.expiresAt),
+	};
+}
+
+export function toUserOrdersSummary(dto: unknown): UserOrdersSummary {
+	if (typeof dto !== "object" || dto === null) {
+		return {
+			activeOrders: 0,
+			activeTokens: 0,
+			activeValue: 0,
+			soldOrders: 0,
+			soldTokens: 0,
+			soldValue: 0,
+			cancelledOrders: 0,
+			expiredOrders: 0,
+			totalOrders: 0,
+		};
+	}
+	const candidate = dto as Record<string, unknown>;
+	return {
+		activeOrders: Number(candidate.activeOrders) || 0,
+		activeTokens: Number(candidate.activeTokens) || 0,
+		activeValue: (Number(candidate.activeValue) || 0) / 100,
+		soldOrders: Number(candidate.soldOrders) || 0,
+		soldTokens: Number(candidate.soldTokens) || 0,
+		soldValue: (Number(candidate.soldValue) || 0) / 100,
+		cancelledOrders: Number(candidate.cancelledOrders) || 0,
+		expiredOrders: Number(candidate.expiredOrders) || 0,
+		totalOrders: Number(candidate.totalOrders) || 0,
+	};
+}
+
+export function toUserOrdersPage(data: unknown): UserOrdersPage {
+	if (typeof data !== "object" || data === null) {
+		throw new Error("INVALID_USER_ORDERS_PAGE_RESPONSE");
+	}
+	const candidate = data as Record<string, unknown>;
+	const rawListings = Array.isArray(candidate.listings)
+		? candidate.listings
+		: [];
+	const listings = rawListings.map(toUserOrderListing);
+	const summary = toUserOrdersSummary(candidate.summary);
+	const paginationRecord =
+		typeof candidate.pagination === "object" && candidate.pagination !== null
+			? (candidate.pagination as Record<string, unknown>)
+			: null;
+	const page = paginationRecord ? Number(paginationRecord.page) || 0 : 0;
+	const size = paginationRecord ? Number(paginationRecord.size) || 10 : 10;
+	const totalElements = paginationRecord
+		? Number(paginationRecord.totalElements) || listings.length
+		: listings.length;
+	const totalPages = paginationRecord
+		? Number(paginationRecord.totalPages) || (totalElements > 0 ? 1 : 0)
+		: totalElements > 0
+			? 1
+			: 0;
+
+	return {
+		summary,
+		listings,
+		page,
+		size,
+		totalElements,
+		totalPages,
+	};
+}
+
+export function toCancelListingResult(dto: unknown): CancelListingResult {
+	if (typeof dto !== "object" || dto === null) {
+		throw new Error("INVALID_CANCEL_LISTING_RESPONSE");
+	}
+	const candidate = dto as Record<string, unknown>;
+	return {
+		listingId: Number(candidate.listingId),
+		sellerId: Number(candidate.sellerId),
+		playerId: Number(candidate.playerId),
+		quantity: Number(candidate.quantity),
+		unitPrice: Number(candidate.unitPrice) / 100,
+		totalAmount: Number(candidate.totalAmount) / 100,
+		status: "CANCELLED",
+		createdAt: String(candidate.createdAt),
+		expiresAt: String(candidate.expiresAt),
+		closedAt: candidate.closedAt ? String(candidate.closedAt) : null,
 	};
 }

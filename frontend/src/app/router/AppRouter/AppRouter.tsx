@@ -3,6 +3,7 @@ import { AppLayout, AuthGuard } from "@/app/layouts";
 import { HomePage, LoginPage, RegisterPage } from "@/features/auth";
 import {
 	MarketBuyPage,
+	MarketOrdersPage,
 	MarketP2PPage,
 	MarketSellPage,
 } from "@/features/market";
@@ -48,6 +49,7 @@ export default function AppRouter() {
 					<Route path="/market/buy" element={<MarketBuyPage />} />
 					<Route path="/market/p2p" element={<MarketP2PPage />} />
 					<Route path="/market/sell" element={<MarketSellPage />} />
+					<Route path="/market/orders" element={<MarketOrdersPage />} />
 				</Route>
 			</Route>
 

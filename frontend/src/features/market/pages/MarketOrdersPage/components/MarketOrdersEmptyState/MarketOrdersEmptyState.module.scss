@@ -1,0 +1,51 @@
+.ordersEmptyState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 48px 16px;
+	text-align: center;
+	border-radius: 8px;
+	background-color: var(--surface-card, #1e222b);
+	border: 1px solid var(--border-subtle, #334155);
+	margin: 8px 0;
+	gap: 16px;
+
+	&__icon {
+		color: var(--text-muted, #64748b);
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--text-primary, #ffffff);
+	}
+
+	&__description {
+		margin: 0;
+		max-width: 480px;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #94a3b8);
+	}
+
+	&__actionBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 10px 20px;
+		border-radius: 6px;
+		background-color: var(--brand-primary, #00d66c);
+		color: #0b0e14;
+		font-weight: 700;
+		font-size: 0.875rem;
+		text-decoration: none;
+		border: none;
+		cursor: pointer;
+		transition: opacity 0.2s;
+
+		&:hover {
+			opacity: 0.9;
+		}
+	}
+}

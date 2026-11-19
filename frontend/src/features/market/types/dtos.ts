@@ -44,7 +44,59 @@ export interface TokenListingDTO {
 }
 
 export interface TokenListingsDTO {
+	summary?: UserOrdersSummaryDTO | null;
 	listings: TokenListingDTO[];
+	pagination?: MarketPaginationResponseDTO | null;
+}
+
+export interface UserOrdersSummaryDTO {
+	activeOrders: number;
+	activeTokens: number;
+	activeValue: number;
+	soldOrders: number;
+	soldTokens: number;
+	soldValue: number;
+	cancelledOrders: number;
+	expiredOrders: number;
+	totalOrders: number;
+}
+
+export interface MarketPaginationResponseDTO {
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+}
+
+export interface UserOrderListingDTO {
+	listingId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: "ACTIVE" | "SOLD" | "CANCELLED" | "EXPIRED";
+	createdAt: string;
+	expiresAt: string;
+}
+
+export interface UserOrdersPageResponseDTO {
+	summary: UserOrdersSummaryDTO | null;
+	listings: UserOrderListingDTO[];
+	pagination: MarketPaginationResponseDTO | null;
+}
+
+export interface CancelListingResponseDTO {
+	listingId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: "CANCELLED";
+	createdAt: string;
+	expiresAt: string;
+	closedAt: string | null;
 }
 
 export interface OfficialMarketQuoteResponseDTO {

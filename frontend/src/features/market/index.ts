@@ -1,6 +1,7 @@
 export {
 	MarketBuyPage,
 	MarketOfficialPage,
+	MarketOrdersPage,
 	MarketP2PPage,
 	MarketSellPage,
 } from "./pages";

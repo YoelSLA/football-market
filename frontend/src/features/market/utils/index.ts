@@ -7,6 +7,7 @@ export {
 	calculateEstimation,
 	formatCentimes,
 	formatCredits,
+	formatCreditsAmount,
 	formatQuoteCalculatedAt,
 	formatQuoteEffectiveDate,
 	formatVariationPercentage,

@@ -1,0 +1,53 @@
+.ordersHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 8px 0;
+
+	&__main {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	&__iconContainer {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 48px;
+		height: 48px;
+		border-radius: 8px;
+		background-color: var(--surface-card, #1e222b);
+		color: var(--brand-primary, #00d66c);
+	}
+
+	&__text {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--text-primary, #ffffff);
+	}
+
+	&__subtitle {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-secondary, #94a3b8);
+	}
+
+	&__badge {
+		padding: 6px 12px;
+		font-size: 0.875rem;
+		font-weight: 600;
+		border-radius: 6px;
+		background-color: var(--surface-card, #1e222b);
+		color: var(--text-primary, #ffffff);
+		border: 1px solid var(--border-subtle, #334155);
+	}
+}

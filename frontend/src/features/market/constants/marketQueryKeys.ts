@@ -21,4 +21,11 @@ export const marketQueryKeys = {
 		playerId
 			? (["market", "listings", playerId] as const)
 			: (["market", "listings"] as const),
+	myListingsAll: () => ["market", "listings", "mine"] as const,
+	myListings: (params: {
+		page: number;
+		size?: number;
+		status?: string;
+		sort?: string;
+	}) => ["market", "listings", "mine", params] as const,
 };

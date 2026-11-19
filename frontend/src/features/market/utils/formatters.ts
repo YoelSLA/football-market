@@ -32,6 +32,20 @@ export function formatCredits(
 }
 
 /**
+ * Formatea un valor que ya está en unidades de crédito con 2 decimales y coma (locale es-AR).
+ */
+export function formatCreditsAmount(
+	credits: number | null | undefined,
+	compact = false,
+): string {
+	if (credits === null || credits === undefined || Number.isNaN(credits)) {
+		return "—";
+	}
+	const formatted = creditsFormatter.format(credits);
+	return compact ? `${formatted} cr.` : `${formatted} créditos`;
+}
+
+/**
  * Formatea un valor en centésimas agrupando millares con punto (locale es-AR).
  */
 export function formatCentimes(centimes: number | null | undefined): string {
