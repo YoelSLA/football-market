@@ -20,8 +20,6 @@ import type {
 } from "@/features/market/types";
 import {
 	calculateEstimation,
-	centimesToCreditsInput,
-	creditsInputToCentimes,
 	parseOfficialMarketCriteria,
 	serializeOfficialMarketCriteria,
 } from "@/features/market/utils";
@@ -61,12 +59,6 @@ export function useMarketBuyPage() {
 		[searchParams],
 	);
 	const [searchDraft, setSearchDraft] = useState(criteria.name);
-	const [minPriceDraft, setMinPriceDraft] = useState(
-		centimesToCreditsInput(criteria.minPrice),
-	);
-	const [maxPriceDraft, setMaxPriceDraft] = useState(
-		centimesToCreditsInput(criteria.maxPrice),
-	);
 	const authenticated = useAuthStore(
 		(state) =>
 			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
@@ -74,15 +66,7 @@ export function useMarketBuyPage() {
 	const revision = useAuthStore((state) => state.revision);
 	const currentUser = useCurrentUserQuery(true, revision);
 	const filterOptions = usePlayerCatalogFiltersQuery();
-	const minPrice = creditsInputToCentimes(minPriceDraft);
-	const maxPrice = creditsInputToCentimes(maxPriceDraft);
-	const rangeError =
-		Number.isNaN(minPrice) || Number.isNaN(maxPrice)
-			? "Ingresá importes válidos con hasta dos decimales."
-			: minPrice !== null && maxPrice !== null && minPrice > maxPrice
-				? "El precio mínimo no puede superar al máximo."
-				: null;
-	const marketQuery = useOfficialMarketQuery(criteria, !rangeError);
+	const marketQuery = useOfficialMarketQuery(criteria);
 	const [selectedPlayer, setSelectedPlayer] =
 		useState<OfficialMarketPlayer | null>(null);
 	const [purchaseResult, setPurchaseResult] = useState<BuyResult | null>(null);
@@ -111,15 +95,6 @@ export function useMarketBuyPage() {
 	}, [searchParams, setSearchParams]);
 
 	useEffect(() => setSearchDraft(criteria.name), [criteria.name]);
-	useEffect(
-		() => setMinPriceDraft(centimesToCreditsInput(criteria.minPrice)),
-		[criteria.minPrice],
-	);
-	useEffect(
-		() => setMaxPriceDraft(centimesToCreditsInput(criteria.maxPrice)),
-		[criteria.maxPrice],
-	);
-
 	useEffect(() => {
 		if (searchDraft.trim() === criteria.name) return;
 		const timeout = window.setTimeout(() => {
@@ -129,11 +104,32 @@ export function useMarketBuyPage() {
 	}, [criteria, replaceCriteria, searchDraft]);
 
 	useEffect(() => {
-		if (rangeError) return;
-		if (minPrice === criteria.minPrice && maxPrice === criteria.maxPrice)
+		const range = marketQuery.data?.priceRange;
+		if (range?.min === null || range?.max === null) {
+			if (criteria.minPrice !== null || criteria.maxPrice !== null)
+				replaceCriteria({
+					...criteria,
+					minPrice: null,
+					maxPrice: null,
+					page: 0,
+				});
 			return;
-		replaceCriteria({ ...criteria, minPrice, maxPrice, page: 0 });
-	}, [criteria, maxPrice, minPrice, rangeError, replaceCriteria]);
+		}
+		if (!range) return;
+		const minPrice = Math.max(range.min, criteria.minPrice ?? range.min);
+		const maxPrice = Math.min(range.max, criteria.maxPrice ?? range.max);
+		const normalizedMin = Math.min(minPrice, maxPrice);
+		if (
+			(criteria.minPrice !== null && criteria.minPrice !== normalizedMin) ||
+			(criteria.maxPrice !== null && criteria.maxPrice !== maxPrice)
+		)
+			replaceCriteria({
+				...criteria,
+				minPrice: criteria.minPrice === null ? null : normalizedMin,
+				maxPrice: criteria.maxPrice === null ? null : maxPrice,
+				page: 0,
+			});
+	}, [criteria, marketQuery.data?.priceRange, replaceCriteria]);
 
 	useEffect(() => {
 		if (!filterOptions.data) return;
@@ -215,10 +211,21 @@ export function useMarketBuyPage() {
 
 	const clearFilters = useCallback(() => {
 		setSearchDraft("");
-		setMinPriceDraft("");
-		setMaxPriceDraft("");
 		setSearchParams(new URLSearchParams(), { replace: true });
 	}, [setSearchParams]);
+	const commitPriceRange = useCallback(
+		(value: readonly [number, number]) => {
+			const range = marketQuery.data?.priceRange;
+			if (range?.min === null || range?.max === null || !range) return;
+			replaceCriteria({
+				...criteria,
+				minPrice: value[0] === range.min ? null : value[0],
+				maxPrice: value[1] === range.max ? null : value[1],
+				page: 0,
+			});
+		},
+		[criteria, marketQuery.data?.priceRange, replaceCriteria],
+	);
 
 	const openBuyModal = useCallback(
 		(player: OfficialMarketPlayer, triggerEl: HTMLElement | null) => {
@@ -319,11 +326,8 @@ export function useMarketBuyPage() {
 		criteria,
 		searchDraft,
 		setSearchDraft,
-		minPriceDraft,
-		setMinPriceDraft,
-		maxPriceDraft,
-		setMaxPriceDraft,
-		rangeError,
+		priceRange: marketQuery.data?.priceRange ?? { min: null, max: null },
+		commitPriceRange,
 		changeFilter,
 		clearFilters,
 		filterOptions: filterOptions.data,

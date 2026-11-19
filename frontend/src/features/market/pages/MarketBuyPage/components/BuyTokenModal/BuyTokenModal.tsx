@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import type { UseFormRegister } from "react-hook-form";
 import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
+import TokenQuantityStepper from "@/features/market/components/TokenQuantityStepper";
 import type {
 	BuyEstimation,
 	BuyQuantityForm,
@@ -11,9 +12,10 @@ import type {
 import {
 	formatCredits,
 	formatQuoteEffectiveDate,
+	formatVariationPercentage,
 } from "@/features/market/utils";
-import { Button, Field, Modal } from "@/shared/components";
-import { LoaderCircle, Minus, Plus, ShoppingCart, X } from "@/shared/icons";
+import { Button, Modal } from "@/shared/components";
+import { LoaderCircle, ShoppingCart, X } from "@/shared/icons";
 import styles from "./BuyTokenModal.module.scss";
 
 interface Props {
@@ -108,9 +110,10 @@ export default function BuyTokenModal({
 						<div>
 							<dt>Variación</dt>
 							<dd>
-								{quote.variationPercentage === null
-									? "Sin referencia previa"
-									: `${quote.variationPercentage > 0 ? "+" : ""}${quote.variationPercentage.toLocaleString("es-AR")} %`}
+								{formatVariationPercentage(
+									quote.variationPercentage,
+									"Sin referencia previa",
+								)}
 							</dd>
 						</div>
 						<div>
@@ -148,51 +151,19 @@ export default function BuyTokenModal({
 							}}
 							className={styles.modal__form}
 						>
-							<div className={styles.modal__quantity}>
-								<button
-									type="button"
-									aria-label="Disminuir cantidad"
-									disabled={isBusy || safeQuantity <= 1}
-									onClick={() =>
-										onQuantityChange(Math.max(1, safeQuantity - 1))
-									}
-								>
-									<Minus aria-hidden="true" />
-								</button>
-								<Field
-									id="buy-token-quantity"
-									label="Cantidad de tokens (1 a 100)"
-									inputMode="numeric"
-									autoComplete="off"
-									disabled={isBusy}
-									error={formError}
-									ref={setInputRef}
-									{...quantityProps}
-								/>
-								<button
-									type="button"
-									aria-label="Aumentar cantidad"
-									disabled={isBusy || safeQuantity >= 100}
-									onClick={() =>
-										onQuantityChange(Math.min(100, safeQuantity + 1))
-									}
-								>
-									<Plus aria-hidden="true" />
-								</button>
-							</div>
-							<fieldset className={styles.modal__quickAmounts}>
-								<legend>Cantidades rápidas</legend>
-								{[1, 5, 10, 50, 100].map((amount) => (
-									<button
-										type="button"
-										disabled={isBusy}
-										key={amount}
-										onClick={() => onQuantityChange(amount)}
-									>
-										{amount}
-									</button>
-								))}
-							</fieldset>
+							<TokenQuantityStepper
+								id="buy-token-quantity"
+								label="Cantidad de tokens (1 a 100)"
+								quantity={safeQuantity}
+								min={1}
+								max={100}
+								disabled={isBusy}
+								error={formError}
+								inputRef={setInputRef}
+								inputProps={quantityProps}
+								presets={[1, 5, 10, 50, 100]}
+								onQuantityChange={onQuantityChange}
+							/>
 							{estimation && (
 								<div className={styles.modal__estimation}>
 									<p>

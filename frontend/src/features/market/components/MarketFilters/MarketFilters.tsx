@@ -1,7 +1,9 @@
+import type { CommunityMarketFilters as CommunityFilterModel } from "@/features/market/types";
 import type { PlayerCatalogFilters } from "@/features/players";
 import { Button } from "@/shared/components";
 import { SlidersHorizontal } from "@/shared/icons";
 import {
+	CommunityMarketFilterFields,
 	OfficialMarketFilterFields,
 	SellMarketFilterFields,
 } from "./MarketFilterFields";
@@ -10,6 +12,7 @@ import styles from "./MarketFilters.module.scss";
 interface BaseProps {
 	onClear: () => void;
 	isUpdating?: boolean;
+	summary?: string;
 }
 
 interface OfficialProps extends BaseProps {
@@ -21,17 +24,26 @@ interface OfficialProps extends BaseProps {
 	position: string;
 	nationality: string;
 	sort: string;
-	minPrice: string;
-	maxPrice: string;
-	rangeError: string | null;
+	priceRange: { min: number | null; max: number | null };
+	selectedPriceRange: readonly [number, number] | null;
 	onSearchChange: (value: string) => void;
 	onLeagueChange: (value: string) => void;
 	onTeamChange: (value: string) => void;
 	onPositionChange: (value: string) => void;
 	onNationalityChange: (value: string) => void;
 	onSortChange: (value: string) => void;
-	onMinPriceChange: (value: string) => void;
-	onMaxPriceChange: (value: string) => void;
+	onPriceRangeCommit: (value: readonly [number, number]) => void;
+}
+
+interface CommunityProps extends BaseProps {
+	variant: "community";
+	filters: CommunityFilterModel;
+	leagues: { id: number; name: string }[];
+	teams: { id: number; name: string; leagueId: number; leagueName: string }[];
+	positions: string[];
+	priceRange: { min: number | null; max: number | null };
+	onChange: (next: Partial<CommunityFilterModel>) => void;
+	onMaxPriceCommit: (value: number | null) => void;
 }
 
 interface SellProps extends BaseProps {
@@ -52,15 +64,17 @@ interface SellProps extends BaseProps {
 	onApply?: () => void;
 }
 
-type Props = OfficialProps | SellProps;
+type Props = OfficialProps | CommunityProps | SellProps;
 
 export default function MarketFilters(props: Props) {
-	const isOfficial = props.variant === "official";
-	const renderFilterFields = (scope: string) => {
-		if (props.variant === "official")
+	const isCatalog =
+		props.variant === "official" || props.variant === "community";
+
+	const renderFilterFields = () => {
+		if (props.variant === "official") {
 			return (
 				<OfficialMarketFilterFields
-					scope={scope}
+					scope="market-desktop"
 					options={props.officialOptions}
 					search={props.search}
 					league={props.league}
@@ -68,22 +82,37 @@ export default function MarketFilters(props: Props) {
 					position={props.position}
 					nationality={props.nationality}
 					sort={props.sort}
-					minPrice={props.minPrice}
-					maxPrice={props.maxPrice}
-					rangeError={props.rangeError}
+					priceRange={props.priceRange}
+					selectedPriceRange={props.selectedPriceRange}
 					onSearchChange={props.onSearchChange}
 					onLeagueChange={props.onLeagueChange}
 					onTeamChange={props.onTeamChange}
 					onPositionChange={props.onPositionChange}
 					onNationalityChange={props.onNationalityChange}
 					onSortChange={props.onSortChange}
-					onMinPriceChange={props.onMinPriceChange}
-					onMaxPriceChange={props.onMaxPriceChange}
+					onPriceRangeCommit={props.onPriceRangeCommit}
 				/>
 			);
+		}
+
+		if (props.variant === "community") {
+			return (
+				<CommunityMarketFilterFields
+					scope="community-market-desktop"
+					filters={props.filters}
+					leagues={props.leagues}
+					teams={props.teams}
+					positions={props.positions}
+					priceRange={props.priceRange}
+					onChange={props.onChange}
+					onMaxPriceCommit={props.onMaxPriceCommit}
+				/>
+			);
+		}
+
 		return (
 			<SellMarketFilterFields
-				scope={scope}
+				scope="market-desktop"
 				active={props.active}
 				leagues={props.leagues}
 				positions={props.positions}
@@ -104,48 +133,46 @@ export default function MarketFilters(props: Props) {
 
 	return (
 		<aside
-			className={`${styles.marketFilters} ${isOfficial ? styles.marketFilters_official : styles.marketFilters_sell}`}
+			className={`${styles.marketFilters} ${
+				props.variant === "official"
+					? styles.marketFilters_official
+					: props.variant === "community"
+						? styles.marketFilters_community
+						: styles.marketFilters_sell
+			}`}
 			aria-label={
-				isOfficial ? "Filtros del Mercado Oficial" : "Filtros del mercado"
+				props.variant === "official"
+					? "Filtros del Mercado Oficial"
+					: props.variant === "community"
+						? "Filtros del Mercado P2P"
+						: "Filtros del mercado"
 			}
 			aria-busy={props.isUpdating ? "true" : undefined}
 		>
 			<div className={styles.marketFilters__desktop}>
 				<div className={styles.marketFilters__heading}>
 					<h2>
-						<SlidersHorizontal aria-hidden="true" /> Filtros
+						<SlidersHorizontal aria-hidden="true" />
+						Filtros
 					</h2>
+					{props.summary && (
+						<span className={styles.marketFilters__summary}>
+							{props.summary}
+						</span>
+					)}
+
 					<Button
 						type="button"
 						className={styles.marketFilters__clear}
-						disabled={isOfficial ? false : !props.active}
+						disabled={isCatalog ? false : !props.active}
 						onClick={props.onClear}
 					>
 						Limpiar filtros
 					</Button>
 				</div>
-				{renderFilterFields("market-desktop")}
-			</div>
 
-			<details className={styles.marketFilters__mobile}>
-				<summary>
-					<SlidersHorizontal aria-hidden="true" /> Filtros
-				</summary>
-				<div className={styles.marketFilters__popover}>
-					<div className={styles.marketFilters__heading}>
-						<h2>Filtros</h2>
-						<Button
-							type="button"
-							className={styles.marketFilters__clear}
-							disabled={isOfficial ? false : !props.active}
-							onClick={props.onClear}
-						>
-							Limpiar filtros
-						</Button>
-					</div>
-					{renderFilterFields("market-mobile")}
-				</div>
-			</details>
+				{renderFilterFields()}
+			</div>
 		</aside>
 	);
 }

@@ -5,12 +5,13 @@
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	gap: 8px;
 
 	// 4. 📦 Box Model
 	min-height: 0;
 	min-width: 0;
 	width: 100%;
-	padding: 8px;
+	padding: ds.$space-2xs;
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-page;
@@ -24,25 +25,6 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		height: 76px;
-		padding-block: 10px;
-		margin-bottom: 8px;
-	}
-
-	@media (max-width: 639px) {
-		// 4. 📦 Box Model
-		height: auto;
-		min-height: 100%;
-		padding: .55rem;
-
-		// 7. ⚙️ Behavior
-		overflow: visible;
-
-		&__header {
-			// 4. 📦 Box Model
-			height: auto;
-			padding-block: .5rem;
-			margin-bottom: .5rem;
-		}
+		height: 70px;
 	}
 }

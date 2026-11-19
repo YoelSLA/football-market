@@ -6,11 +6,15 @@
 export interface MarketPlayer {
 	id: number;
 	name: string;
-	teamName: string;
-	leagueName: string;
 	position: string;
+	nationality: string | null;
+	teamId: number | null;
+	teamName: string | null;
+	teamBadgeUrl?: string | null;
+	leagueId: number | null;
+	leagueName: string | null;
 	imageUrl: string | null;
-	fallbackImageUrl: string | null;
+	fallbackImageUrl?: string | null;
 }
 
 export interface PlayerHolding extends MarketPlayer {
@@ -106,18 +110,43 @@ export interface MarketListing {
 }
 
 export interface CommunityMarketPlayer extends MarketPlayer {
-	listings: MarketListing[];
+	listings?: MarketListing[];
 	listingCount: number;
 	availableQuantity: number;
 	minimumUnitPrice: number;
+}
+
+export interface P2PMarketPage {
+	players: CommunityMarketPlayer[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	priceRange: {
+		min: number | null;
+		max: number | null;
+	};
+}
+
+export interface CommunityMarketCriteria {
+	page: number;
+	sort: string;
+	search?: string;
+	leagueId?: number | null;
+	teamId?: number | null;
+	position?: string | null;
+	minPrice?: number | null;
+	maxPrice?: number | null;
 }
 
 export type CommunityMarketSort = "price" | "quantity" | "name";
 
 export interface CommunityMarketFilters {
 	search: string;
-	league: string;
-	position: string;
+	leagueId: number | null;
+	teamId: number | null;
+	position: string | null;
+	maxPrice: number | null;
 	sort: CommunityMarketSort;
 }
 
@@ -131,17 +160,8 @@ export interface OfficialMarketQuote {
 	effectiveDate: string;
 }
 
-export interface OfficialMarketPlayer {
-	id: number;
-	name: string;
-	position: string;
-	nationality: string | null;
-	teamId: number | null;
-	teamName: string | null;
+export interface OfficialMarketPlayer extends MarketPlayer {
 	teamBadgeUrl: string | null;
-	leagueId: number | null;
-	leagueName: string | null;
-	imageUrl: string | null;
 	fallbackImageUrl: string | null;
 	quote: OfficialMarketQuote | null;
 }
@@ -152,6 +172,10 @@ export interface OfficialMarketPage {
 	size: number;
 	totalElements: number;
 	totalPages: number;
+	priceRange: {
+		min: number | null;
+		max: number | null;
+	};
 }
 
 export interface OfficialMarketCriteria {

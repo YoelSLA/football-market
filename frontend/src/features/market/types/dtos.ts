@@ -78,6 +78,10 @@ export interface OfficialMarketPageResponseDTO {
 	size: number;
 	totalElements: number;
 	totalPages: number;
+	priceRange: {
+		min: number | null;
+		max: number | null;
+	};
 }
 
 export interface OrderSellRequestDTO {
@@ -94,4 +98,32 @@ export interface OrderSellResponseDTO {
 	status: string;
 	createdAt: string;
 	expiresAt: string;
+}
+
+export interface P2PMarketPlayerResponseDTO {
+	id: number;
+	name: string;
+	position: string;
+	nationality: string | null;
+	teamId: number | null;
+	teamName: string | null;
+	teamBadgeUrl: string | null;
+	leagueId: number | null;
+	leagueName: string | null;
+	imageUrl: string | null;
+	listingCount: number;
+	availableQuantity: number;
+	minimumUnitPrice: number;
+}
+
+export interface P2PMarketPageResponseDTO {
+	content: P2PMarketPlayerResponseDTO[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	priceRange: {
+		min: number | null;
+		max: number | null;
+	};
 }

@@ -17,6 +17,7 @@ import type {
 	ScoreRankingResponseDTO,
 	TacticalPosition,
 } from "./types";
+import { sanitizePositions } from "./utils";
 
 export function toPlayerDetail(dto: PlayerResponseDTO): PlayerDetail {
 	return {
@@ -71,7 +72,7 @@ export function toPlayerCatalogFilters(
 	return {
 		leagues: dto.leagues.map((item) => ({ ...item })),
 		teams: dto.teams.map((item) => ({ ...item })),
-		positions: [...dto.positions],
+		positions: sanitizePositions(dto.positions),
 		nationalities: [...dto.nationalities],
 	};
 }
@@ -216,7 +217,7 @@ export function toRankingFilterOptions(
 ): import("./types").RankingFilterOptions {
 	return {
 		leagues: dto.leagues.map((league) => ({ ...league })),
-		positions: [...dto.positions],
+		positions: sanitizePositions(dto.positions),
 	};
 }
 

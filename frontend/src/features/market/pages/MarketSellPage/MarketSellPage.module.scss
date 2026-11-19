@@ -51,35 +51,3 @@
 		}
 	}
 }
-
-@media (max-width: 850px) {
-	.sellPage {
-		&__content {
-			// 3. 🧩 Layout
-			grid-template-columns: 12rem minmax(0, 1fr);
-		}
-	}
-}
-
-@media (max-width: 639px) {
-	.sellPage {
-		// 4. 📦 Box Model
-		height: auto;
-		min-height: 100%;
-		padding: .55rem;
-
-		// 7. ⚙️ Behavior
-		overflow: visible;
-		&__content {
-			// 3. 🧩 Layout
-			display: flex;
-			flex-direction: column;
-			gap: .5rem;
-		}
-
-		&__footer {
-			// 4. 📦 Box Model
-			padding-top: .45rem;
-		}
-	}
-}

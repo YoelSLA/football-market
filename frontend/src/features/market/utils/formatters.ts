@@ -72,76 +72,37 @@ export function calculateEstimation(
 	};
 }
 
-/**
- * Información de variación respecto a la cotización previa.
- */
-export interface MarketQuoteVariation {
-	direction: "positive" | "negative" | "neutral";
-	percentageText: string;
-	amountText: string;
-	arrow: "↗" | "↘" | "→";
-	hasPreviousPrice: boolean;
-}
+export type VariationDirection = "positive" | "negative" | "neutral";
 
-const variationFormatter = new Intl.NumberFormat("es-AR", {
+const variationPercentageFormatter = new Intl.NumberFormat("es-AR", {
 	minimumFractionDigits: 1,
-	maximumFractionDigits: 1,
+	maximumFractionDigits: 2,
 });
 
 /**
- * Calcula la variación porcentual y nominal respecto al precio anterior real del backend.
- * Sin asumir ventanas temporales fijas (e.g. 24h).
+ * Determina la dirección de una variación porcentual.
  */
-export function calculateQuoteVariation(
-	currentPriceCentimes: number,
-	previousPriceCentimes?: number | null,
-): MarketQuoteVariation {
-	if (
-		previousPriceCentimes === null ||
-		previousPriceCentimes === undefined ||
-		previousPriceCentimes <= 0
-	) {
-		return {
-			direction: "neutral",
-			percentageText: "0,0 %",
-			amountText: "(0,00 cr.)",
-			arrow: "→",
-			hasPreviousPrice: false,
-		};
+export function getVariationDirection(
+	variation: number | null | undefined,
+): VariationDirection {
+	if (variation == null || variation === 0) {
+		return "neutral";
 	}
+	return variation > 0 ? "positive" : "negative";
+}
 
-	const diffCentimes = currentPriceCentimes - previousPriceCentimes;
-	if (diffCentimes === 0) {
-		return {
-			direction: "neutral",
-			percentageText: "0,0 %",
-			amountText: "(0,00 cr.)",
-			arrow: "→",
-			hasPreviousPrice: true,
-		};
+/**
+ * Formatea una variación porcentual con prefijo de signo (+/-) y símbolo %.
+ */
+export function formatVariationPercentage(
+	variation: number | null | undefined,
+	fallback = "Sin referencia",
+): string {
+	if (variation == null) {
+		return fallback;
 	}
-
-	const percentage = (Math.abs(diffCentimes) / previousPriceCentimes) * 100;
-	const formattedPercentage = variationFormatter.format(percentage);
-	const formattedDiffCredits = formatCredits(Math.abs(diffCentimes), true);
-
-	if (diffCentimes > 0) {
-		return {
-			direction: "positive",
-			percentageText: `+${formattedPercentage} %`,
-			amountText: `(+${formattedDiffCredits})`,
-			arrow: "↗",
-			hasPreviousPrice: true,
-		};
-	}
-
-	return {
-		direction: "negative",
-		percentageText: `-${formattedPercentage} %`,
-		amountText: `(-${formattedDiffCredits})`,
-		arrow: "↘",
-		hasPreviousPrice: true,
-	};
+	const prefix = variation > 0 ? "+" : "";
+	return `${prefix}${variationPercentageFormatter.format(variation)} %`;
 }
 
 /**

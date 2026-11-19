@@ -47,23 +47,3 @@
 	}
 }
 
-@media (max-width: 850px) {
-	.sellCatalog {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
-	}
-}
-
-@media (max-width: 639px) {
-	.sellCatalog {
-		// 7. ⚙️ Behavior
-		overflow: visible;
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
-	}
-}
-

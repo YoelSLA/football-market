@@ -10,7 +10,7 @@ export const DEFAULT_CATALOG_CRITERIA: PlayerCatalogCriteria = {
 	page: 0,
 };
 
-const VALID_POSITIONS = new Set([
+export const VALID_POSITIONS = new Set([
 	"Goalkeeper",
 	"Defender",
 	"Defence",
@@ -19,6 +19,34 @@ const VALID_POSITIONS = new Set([
 	"Offence",
 	"Forward",
 ]);
+
+/**
+ * Determina si una posición dada es válida y reconocida en el sistema.
+ * Rechaza nulos, indefinidos, vacíos, espacios en blanco y el texto literal "null" (case-insensitive).
+ */
+export function isValidPosition(value: unknown): value is string {
+	if (typeof value !== "string") return false;
+	const trimmed = value.trim();
+	if (!trimmed || trimmed.toLowerCase() === "null") return false;
+	return VALID_POSITIONS.has(trimmed);
+}
+
+/**
+ * Sanitiza una colección de posiciones descartando valores nulos, en blanco, "null" o desconocidos,
+ * devolviendo una lista ordenada de posiciones únicas.
+ */
+export function sanitizePositions(
+	positions?: Iterable<string | null | undefined> | null,
+): string[] {
+	if (!positions) return [];
+	const valid = new Set<string>();
+	for (const pos of positions) {
+		if (isValidPosition(pos)) {
+			valid.add(pos.trim());
+		}
+	}
+	return Array.from(valid).sort((a, b) => a.localeCompare(b, "es"));
+}
 
 /**
  * Deserializa y valida los parámetros de búsqueda de la URL.

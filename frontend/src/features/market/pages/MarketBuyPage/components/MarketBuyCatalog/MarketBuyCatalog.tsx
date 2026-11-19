@@ -1,7 +1,10 @@
+import MarketCatalogState from "@/features/market/components/MarketCatalogState";
+import MarketPlayerCardSkeleton from "@/features/market/components/MarketPlayerCardSkeleton";
 import type { OfficialMarketPlayer } from "@/features/market/types";
 import MarketPlayerCard from "../MarketPlayerCard";
-import MarketCatalogState from "./components/MarketCatalogState";
 import styles from "./MarketBuyCatalog.module.scss";
+
+const SKELETON_ITEMS = Array.from({ length: 8 }, (_, index) => index);
 
 interface Props {
 	isLoading: boolean;
@@ -47,6 +50,16 @@ export default function MarketBuyCatalog({
 			);
 		}
 
+		if (isUpdating) {
+			return (
+				<div className={styles.buyCatalog__grid}>
+					{SKELETON_ITEMS.map((item) => (
+						<MarketPlayerCardSkeleton key={item} />
+					))}
+				</div>
+			);
+		}
+
 		if (players.length === 0) {
 			return (
 				<MarketCatalogState
@@ -76,7 +89,7 @@ export default function MarketBuyCatalog({
 	return (
 		<main className={styles.buyCatalog} aria-busy={isLoading || isUpdating}>
 			{isUpdating && !isLoading && !isError && (
-				<span className={styles.buyCatalog__updating} role="status">
+				<span className={styles.buyCatalog__status} role="status">
 					Actualizando resultados…
 				</span>
 			)}

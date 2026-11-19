@@ -1,67 +1,49 @@
 .buyCatalog {
-  // 3. 🧩 Layout
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+	// 2. 📍 Positioning
+	position: relative;
 
-  // 4. 📦 Box Model
-  min-height: 0;
-  min-width: 0;
-  padding-right: .2rem;
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
 
-  // 7. ⚙️ Behavior
-  overflow: hidden;
+	// 4. 📦 Box Model
+	min-width: 0;
+	min-height: 0;
 
-  &__grid {
-    // 3. 🧩 Layout
-    display: grid;
-    flex: 1;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    grid-template-rows: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+	// 7. ⚙️ Behavior
+	overflow: hidden;
 
-    // 4. 📦 Box Model
-    min-height: 0;
-    min-width: 0;
-    padding-right: .2rem;
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		flex: 1;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-rows: repeat(2, 230px);
+		gap: 8px;
 
-    // 7. ⚙️ Behavior
-    overflow: hidden;
-  }
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
 
-  &__updating {
-    // 4. 📦 Box Model
-    padding-block: .5rem;
-  }
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
 
-  @media (max-width: 1439px) {
-    &__grid {
-      // 3. 🧩 Layout
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      grid-template-rows: auto;
+	&__status {
+		// 2. 📍 Positioning
+		position: absolute;
+		clip: rect(0 0 0 0);
+		clip-path: inset(50%);
 
-      // 7. ⚙️ Behavior
-      overflow-y: auto;
-    }
-  }
+		// 4. 📦 Box Model
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
 
-  @media (max-width: 1099px) {
-    &__grid {
-      // 3. 🧩 Layout
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 639px) {
-    // 7. ⚙️ Behavior
-    overflow: visible;
-
-    &__grid {
-      // 3. 🧩 Layout
-      grid-template-columns: 1fr;
-
-      // 7. ⚙️ Behavior
-      overflow: visible;
-    }
-  }
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+		white-space: nowrap;
+	}
 }

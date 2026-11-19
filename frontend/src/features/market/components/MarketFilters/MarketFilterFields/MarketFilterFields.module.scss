@@ -13,12 +13,6 @@
 
 	// 6. 🎨 Visual
 	border: 0;
-	&__search {
-		@media (max-width: 639px) {
-			// 3. 🧩 Layout
-			grid-column: 1 / -1;
-		}
-	}
 
 	&__direction {
 		// 3. 🧩 Layout
@@ -101,7 +95,7 @@
 		}
 	}
 
-	@media (min-width: 640px) and (max-height: 900px) {
+	@media (max-height: 900px) {
 		// 3. 🧩 Layout
 		gap: .6rem;
 		&__apply {
@@ -115,69 +109,11 @@
 			gap: .4rem;
 		}
 	}
-
-	@media (max-width: 639px) {
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: .55rem;
-		&__direction {
-			// 3. 🧩 Layout
-			gap: .35rem;
-		}
-
-		&__apply {
-			// 3. 🧩 Layout
-			align-self: end;
-
-			// 4. 📦 Box Model
-			margin-top: 0;
-		}
-	}
-}
-
-.marketFilterFields_official {
-	.marketFilterFields__priceInput {
-		// 4. 📦 Box Model
-		box-sizing: border-box;
-		width: 100%;
-		min-width: 0;
-		height: var(--filter-control-height, 38px);
-		padding: 0 12px;
-
-		// 5. 🔤 Typography
-		font: inherit;
-		font-size: 0.8rem;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-panel;
-		border-radius: .45rem;
-		background-color: ds.$surface-page;
-		color: ds.$text-title-on-dark;
-
-		&:hover {
-			// 6. 🎨 Visual
-			border-color: ds.$accent-highlight;
-		}
-
-		&:focus-visible {
-			// 6. 🎨 Visual
-			outline: 2px solid ds.$focus-ring-dark;
-			outline-offset: 1px;
-		}
-	}
-
-	.marketFilterFields__rangeError {
-		// 5. 🔤 Typography
-		font-size: .75rem;
-
-		// 6. 🎨 Visual
-		color: ds.$state-caution;
-	}
 }
 
 @media (min-width: 1100px) {
-	.marketFilterFields_official {
+	.marketFilterFields_official,
+	.marketFilterFields_community {
 		// 1. 🏷️ Custom Properties
 		--filter-control-height: 38px;
 
@@ -199,4 +135,38 @@
 			grid-column: 1 / -1;
 		}
 	}
+
+	.marketFilterFields_official {
+		.marketFilterFields__priceRange {
+			// 3. 🧩 Layout
+			grid-column: 2 / span 2;
+		}
+	}
+
+	.marketFilterFields_community {
+		.marketFilterFields__search {
+			// 3. 🧩 Layout
+			grid-column: 1 / span 2;
+		}
+
+		.marketFilterFields__sort {
+			// 3. 🧩 Layout
+			grid-column: 3 / span 2;
+		}
+	}
+}
+
+.marketFilterFields__priceRange,
+.marketFilterFields__maxPrice {
+	// 3. 🧩 Layout
+	align-self: end;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	// 5. 🔤 Typography
+	font-size: 0.72rem;
+
+	// 6. 🎨 Visual
+	color: ds.$text-muted-on-dark;
 }

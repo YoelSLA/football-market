@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import type { UseFormRegister } from "react-hook-form";
 import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
 import MarketQuoteFeedback from "@/features/market/components/MarketQuoteFeedback";
+import TokenQuantityStepper from "@/features/market/components/TokenQuantityStepper";
 import type {
 	MarketPlayer,
 	MarketQuote,
@@ -15,8 +16,8 @@ import {
 	formatCredits,
 	formatQuoteCalculatedAt,
 } from "@/features/market/utils";
-import { Button, Field, Modal } from "@/shared/components";
-import { LoaderCircle, Minus, Plus, Tag } from "@/shared/icons";
+import { Button, Modal } from "@/shared/components";
+import { LoaderCircle, Tag } from "@/shared/icons";
 import styles from "./SellTokenModal.module.scss";
 
 interface Props {
@@ -45,6 +46,21 @@ interface Props {
 	onConfirm: () => void;
 	triggerRef: RefObject<HTMLElement | null>;
 	initialFocusRef: RefObject<HTMLInputElement | null>;
+}
+
+const expiryDateFormatter = new Intl.DateTimeFormat("es-AR", {
+	day: "2-digit",
+	month: "2-digit",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+});
+
+function formatExpiryDate(expiresAt: string): string {
+	const date = new Date(expiresAt);
+	return Number.isNaN(date.getTime())
+		? expiresAt
+		: expiryDateFormatter.format(date);
 }
 
 export default function SellTokenModal(props: Props) {
@@ -105,65 +121,27 @@ export default function SellTokenModal(props: Props) {
 						</p>
 						<p>Precio unitario: {formatCredits(props.result.unitPrice)}</p>
 						<p>Importe total: {formatCredits(props.result.totalAmount)}</p>
-						<p>Vence: {formatQuoteCalculatedAt(props.result.expiresAt)}</p>
+						<p>Vence: {formatExpiryDate(props.result.expiresAt)}</p>
 						<p>Publicación #{props.result.listingId}</p>
 					</div>
 				) : (
 					<>
-						<div className={styles.sellModal__quantity}>
-							<span>Cantidad (máximo {props.maximum})</span>
-							<span>
-								<button
-									type="button"
-									aria-label="Disminuir cantidad"
-									disabled={props.isBusy}
-									onClick={() =>
-										props.onQuantityChange(
-											Math.max(1, Number(props.quantity) - 1),
-										)
-									}
-								>
-									<Minus />
-								</button>
-								<Field
-									id="sell-token-quantity"
-									label="Cantidad entre 1 y 100"
-									type="text"
-									inputMode="numeric"
-									autoComplete="off"
-									disabled={props.isBusy}
-									error={props.formError}
-									ref={setRef}
-									{...quantityProps}
-								/>
-								<button
-									type="button"
-									aria-label="Aumentar cantidad"
-									disabled={
-										props.isBusy || Number(props.quantity) >= props.maximum
-									}
-									onClick={() =>
-										props.onQuantityChange(
-											Math.min(props.maximum, Number(props.quantity) + 1),
-										)
-									}
-								>
-									<Plus />
-								</button>
-							</span>
-						</div>
-						<div className={styles.sellModal__presets}>
-							{props.presets.map((value) => (
-								<button
-									type="button"
-									key={value}
-									disabled={props.isBusy}
-									onClick={() => props.onQuantityChange(value)}
-								>
-									{value === props.maximum ? "Máx." : value}
-								</button>
-							))}
-						</div>
+						<TokenQuantityStepper
+							id="sell-token-quantity"
+							label={`Cantidad (máximo ${props.maximum})`}
+							quantity={Number(props.quantity)}
+							min={1}
+							max={props.maximum}
+							disabled={props.isBusy}
+							error={props.formError}
+							inputRef={setRef}
+							inputProps={quantityProps}
+							presets={props.presets.map((val) => ({
+								label: val === props.maximum ? "Máx." : String(val),
+								value: val,
+							}))}
+							onQuantityChange={props.onQuantityChange}
+						/>
 						{props.estimation && (
 							<section className={styles.sellModal__estimate}>
 								<p>Jugador: {player.name}</p>
@@ -175,7 +153,7 @@ export default function SellTokenModal(props: Props) {
 								<strong>
 									Importe estimado:{" "}
 									{formatCredits(props.estimation.totalCentimes)} (
-									{formatCentimes(props.estimation.totalCentimes)} centésimas)
+									{formatCentimes(props.estimation.totalCentimes)})
 								</strong>
 								<small>
 									El precio definitivo lo determina el servidor al publicar.

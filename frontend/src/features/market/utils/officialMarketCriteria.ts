@@ -3,6 +3,7 @@ import type {
 	OfficialMarketCriteria,
 	OfficialMarketSort,
 } from "@/features/market/types";
+import { isValidPosition } from "@/features/players";
 
 const SORTS = new Set<OfficialMarketSort>([
 	"price,asc",
@@ -30,12 +31,13 @@ export function parseOfficialMarketCriteria(
 	params: URLSearchParams,
 ): OfficialMarketCriteria {
 	const sortValue = params.get("sort") as OfficialMarketSort | null;
+	const rawPosition = params.get("position")?.trim();
 
 	return {
 		name: params.get("name")?.trim() ?? "",
 		leagueId: parsePositiveInteger(params.get("leagueId")),
 		teamId: parsePositiveInteger(params.get("teamId")),
-		position: params.get("position")?.trim() || null,
+		position: rawPosition && isValidPosition(rawPosition) ? rawPosition : null,
 		nationality: params.get("nationality")?.trim() || null,
 		minPrice: parseNonNegativeInteger(params.get("minPrice")),
 		maxPrice: parseNonNegativeInteger(params.get("maxPrice")),

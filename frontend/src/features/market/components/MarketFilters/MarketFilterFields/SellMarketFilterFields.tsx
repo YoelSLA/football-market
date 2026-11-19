@@ -1,8 +1,7 @@
-import { Button } from "@/shared/components";
+import { sanitizePositions } from "@/features/players";
+import { Button, FilterSearch, FilterSelect } from "@/shared/components";
 import { ShoppingCart } from "@/shared/icons";
 import styles from "./MarketFilterFields.module.scss";
-import MarketFilterSearch from "./MarketFilterSearch";
-import MarketFilterSelect from "./MarketFilterSelect";
 
 interface Props {
 	scope: string;
@@ -56,7 +55,10 @@ export default function SellMarketFilterFields({
 	const positionOptions = active
 		? [
 				{ value: "all", label: "Todas las posiciones" },
-				...(positions?.map((value) => ({ value, label: value })) ?? []),
+				...sanitizePositions(positions).map((value) => ({
+					value,
+					label: value,
+				})),
 			]
 		: [{ value: "all", label: "Todas las posiciones" }];
 	const availabilityOptions = [
@@ -77,58 +79,53 @@ export default function SellMarketFilterFields({
 			disabled={!active}
 			aria-label={active ? undefined : "Filtros pendientes"}
 		>
-			<MarketFilterSearch
+			<FilterSearch
 				id={`${scope}-search`}
 				className={styles.marketFilterFields__search}
-				value={search}
+				value={search ?? ""}
 				disabled={!active}
-				active={active}
-				onChange={onSearchChange}
+				label="Buscar jugador o club"
+				placeholder="Buscar jugador o club..."
+				onChange={(value) => onSearchChange?.(value)}
 			/>
-			<MarketFilterSelect
+			<FilterSelect
 				id={`${scope}-league`}
 				label="Liga"
-				value={active ? (league ?? "all") : undefined}
-				defaultValue={active ? undefined : "all"}
+				value={league ?? "all"}
 				disabled={!active}
 				options={leagueOptions}
-				onChange={onLeagueChange}
+				onChange={(value) => onLeagueChange?.(value)}
 			/>
-			<MarketFilterSelect
+			<FilterSelect
 				id={`${scope}-position`}
 				label="Posición"
-				value={active ? (position ?? "all") : undefined}
-				defaultValue={active ? undefined : "all"}
+				value={position ?? "all"}
 				disabled={!active}
 				options={positionOptions}
-				onChange={onPositionChange}
+				onChange={(value) => onPositionChange?.(value)}
 			/>
-			<MarketFilterSelect
+			<FilterSelect
 				id={`${scope}-${active ? "availability" : "price"}`}
 				label={active ? "Disponibilidad" : "Precio actual"}
-				value={active ? (availability ?? "all") : undefined}
-				defaultValue={active ? undefined : "all"}
+				value={availability ?? "all"}
 				disabled={!active}
 				options={
 					active
 						? availabilityOptions
 						: [{ value: "all", label: "Todos los precios" }]
 				}
-				onChange={active ? onAvailabilityChange : undefined}
+				onChange={(value) => onAvailabilityChange?.(value)}
 			/>
-			<MarketFilterSelect
+			<FilterSelect
 				id={`${scope}-${active ? "sort" : "sort-pending"}`}
 				label="Ordenar por"
-				value={active ? activeField : undefined}
-				defaultValue={active ? undefined : "price"}
+				value={active ? activeField : "price"}
 				disabled={!active}
 				options={
 					active ? sortOptions : [{ value: "price", label: "Precio actual" }]
 				}
-				onChange={
-					active
-						? (newField) => onSortChange?.(`${newField},${activeDirection}`)
-						: undefined
+				onChange={(newField) =>
+					onSortChange?.(`${newField},${activeDirection}`)
 				}
 			/>
 			<div className={styles.marketFilterFields__direction}>

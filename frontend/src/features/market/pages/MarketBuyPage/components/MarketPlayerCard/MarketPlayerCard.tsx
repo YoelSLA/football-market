@@ -3,6 +3,8 @@ import type { OfficialMarketPlayer } from "@/features/market/types";
 import {
 	formatCredits,
 	formatQuoteEffectiveDate,
+	formatVariationPercentage,
+	getVariationDirection,
 } from "@/features/market/utils";
 import { Button } from "@/shared/components";
 import { CalendarDays, ShoppingCart } from "@/shared/icons";
@@ -16,74 +18,88 @@ interface Props {
 	) => void;
 }
 
-const percentageFormatter = new Intl.NumberFormat("es-AR", {
-	minimumFractionDigits: 1,
-	maximumFractionDigits: 2,
-});
+function MarketQuoteSummary({
+	quote,
+}: {
+	quote: NonNullable<OfficialMarketPlayer["quote"]>;
+}) {
+	const direction = getVariationDirection(quote.variationPercentage);
+	const symbol =
+		direction === "positive" ? "↑" : direction === "negative" ? "↓" : "→";
+
+	return (
+		<div className={styles.card__quote}>
+			<div className={styles.card__metrics}>
+				<span className={styles.card__label}>Cotización actual</span>
+				<span className={styles.card__label}>Variación</span>
+				<span className={styles.card__label}>Vigente desde</span>
+
+				<strong className={styles.card__price}>
+					{formatCredits(quote.price, true)}
+				</strong>
+				<span
+					className={`${styles.card__variation} ${
+						styles[`card__variation_${direction}`]
+					}`}
+				>
+					<span aria-hidden="true">{symbol}</span>
+					{formatVariationPercentage(quote.variationPercentage)}
+				</span>
+				<div className={styles.card__effectiveDate}>
+					<CalendarDays aria-hidden="true" />
+					<span>{formatQuoteEffectiveDate(quote.effectiveDate)}</span>
+				</div>
+
+				<span className={styles.card__previousPrice}>
+					Anterior: {formatCredits(quote.previousPrice, true)}
+				</span>
+				<span className={styles.card__variationCaption}>
+					Respecto al anterior
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function MarketQuoteUnavailable() {
+	return (
+		<div className={styles.card__missingAlert} role="status">
+			<strong>Sin cotización</strong>
+
+			<p className={styles.card__missingText}>
+				No existe una cotización vigente para este jugador.
+			</p>
+		</div>
+	);
+}
 
 export default function MarketPlayerCard({ player, onBuyClick }: Props) {
 	const quote = player.quote;
-	const variation = quote ? quote.variationPercentage : null;
-	const direction =
-		variation === null || variation === undefined || variation === 0
-			? "neutral"
-			: variation > 0
-				? "positive"
-				: "negative";
-	const variationSymbol =
-		direction === "positive" ? "↑" : direction === "negative" ? "↓" : "→";
+
 	return (
 		<article className={styles.card}>
-			<MarketPlayerSummary player={player} variant="officialCard" />
+			<div className={styles.card__identity}>
+				<MarketPlayerSummary player={player} variant="officialCard" />
+			</div>
+
 			<div className={styles.card__content}>
 				{quote ? (
-					<>
-						<div className={styles.card__metrics}>
-							<div className={styles.card__metric}>
-								<span className={styles.card__label}>Cotización actual</span>
-								<strong className={styles.card__price}>
-									{formatCredits(quote.price, true)}
-								</strong>
-							</div>
-							<div className={styles.card__metric}>
-								<span className={styles.card__label}>Variación</span>
-								<span
-									className={`${styles.card__variation} ${styles[`card__variation_${direction}`]}`}
-								>
-									<span aria-hidden="true">{variationSymbol}</span>
-									{variation === null
-										? "Sin referencia"
-										: `${variation > 0 ? "+" : ""}${percentageFormatter.format(variation)} %`}
-								</span>
-							</div>
-						</div>
-						<div className={styles.card__secondaryData}>
-							<span>Anterior: {formatCredits(quote.previousPrice, true)}</span>
-							<span>
-								<CalendarDays aria-hidden="true" /> Vigente:{" "}
-								{formatQuoteEffectiveDate(quote.effectiveDate)}
-							</span>
-						</div>
-					</>
+					<MarketQuoteSummary quote={quote} />
 				) : (
-					<div className={styles.card__missingAlert} role="status">
-						<strong>Sin cotización</strong>
-						<p className={styles.card__missingText}>
-							No existe una cotización vigente para este jugador.
-						</p>
-					</div>
+					<MarketQuoteUnavailable />
 				)}
 			</div>
+
 			<div className={styles.card__actions}>
 				<Button
-					className={
-						quote ? styles.card__buyButton : styles.card__buyButtonDisabled
-					}
+					type="button"
+					className={styles.card__buyButton}
 					disabled={!quote}
 					onClick={(event) => onBuyClick(player, event.currentTarget)}
 					aria-label={`Comprar tokens de ${player.name}`}
 				>
-					<ShoppingCart aria-hidden="true" /> Comprar
+					<ShoppingCart aria-hidden="true" />
+					Comprar tokens
 				</Button>
 			</div>
 		</article>

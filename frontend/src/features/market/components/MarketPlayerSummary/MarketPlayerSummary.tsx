@@ -1,7 +1,5 @@
-import type {
-	MarketPlayer,
-	OfficialMarketPlayer,
-} from "@/features/market/types";
+import type { MarketPlayer } from "@/features/market/types";
+import { PlayerPositionBadge } from "@/features/players";
 import {
 	CompetitionLogo,
 	NationalityFlag,
@@ -11,40 +9,53 @@ import {
 import styles from "./MarketPlayerSummary.module.scss";
 
 interface Props {
-	player: MarketPlayer | OfficialMarketPlayer;
-	variant?: "default" | "officialCard";
+	player: MarketPlayer;
+	variant?: "default" | "officialCard" | "communityCard";
 }
-
-const POSITION_BADGES: Record<string, string> = {
-	Goalkeeper: "ARQ",
-	GOALKEEPER: "ARQ",
-	Defender: "DEF",
-	DEFENCE: "DEF",
-	CentreBack: "DEF",
-	Midfielder: "MED",
-	MIDFIELD: "MED",
-	Forward: "DEL",
-	OFFENCE: "DEL",
-	Attacker: "DEL",
-};
 
 export default function MarketPlayerSummary({
 	player,
 	variant = "default",
 }: Props) {
-	const position = POSITION_BADGES[player.position] ?? player.position;
 	const teamName = player.teamName ?? "Sin equipo";
 	const leagueName = player.leagueName ?? "Sin liga";
-	const isOfficialCard = variant === "officialCard";
-	const officialPlayer = "quote" in player ? player : null;
-	const badgeClass =
-		position === "ARQ"
-			? styles.marketPlayerSummary__badge_goalkeeper
-			: styles.marketPlayerSummary__badge_outfield;
+	const isCatalogCard =
+		variant === "officialCard" || variant === "communityCard";
+	const teamId = player.teamId;
+	const leagueId = player.leagueId;
+	const nationality = player.nationality;
+
+	const team = (
+		<span className={styles.marketPlayerSummary__metaItem}>
+			<TeamBadge
+				teamId={teamId ?? undefined}
+				teamName={teamName}
+				leagueId={leagueId ?? undefined}
+				leagueName={leagueName}
+				src={player.teamBadgeUrl}
+				className={styles.marketPlayerSummary__metaIcon}
+			/>
+			<span className={styles.marketPlayerSummary__metaText}>{teamName}</span>
+		</span>
+	);
+
+	const league = (
+		<span className={styles.marketPlayerSummary__metaItem}>
+			<CompetitionLogo
+				competitionId={leagueId ?? undefined}
+				competitionName={leagueName}
+				className={styles.marketPlayerSummary__competitionLogo}
+				decorative
+			/>
+			<span className={styles.marketPlayerSummary__metaText}>{leagueName}</span>
+		</span>
+	);
 
 	return (
 		<div
-			className={`${styles.marketPlayerSummary} ${isOfficialCard ? styles.marketPlayerSummary_officialCard : ""}`}
+			className={`${styles.marketPlayerSummary} ${
+				isCatalogCard ? styles.marketPlayerSummary_officialCard : ""
+			}`}
 		>
 			<div className={styles.marketPlayerSummary__identity}>
 				<PlayerPortrait
@@ -53,43 +64,44 @@ export default function MarketPlayerSummary({
 					name={player.name}
 					className={styles.marketPlayerSummary__portrait}
 				/>
+
 				<div className={styles.marketPlayerSummary__details}>
 					<div className={styles.marketPlayerSummary__heading}>
-						<span
-							className={`${styles.marketPlayerSummary__badge} ${badgeClass}`}
-							title={player.position}
-						>
-							{position}
-						</span>
+						<PlayerPositionBadge
+							position={player.position}
+							className={styles.marketPlayerSummary__badge}
+						/>
+
 						<h3>{player.name}</h3>
 					</div>
-					<p>
-						<TeamBadge
-							teamId={officialPlayer?.teamId ?? undefined}
-							teamName={teamName}
-							leagueId={officialPlayer?.leagueId ?? undefined}
-							leagueName={leagueName}
-							src={officialPlayer?.teamBadgeUrl}
-							className={styles.marketPlayerSummary__metaIcon}
-						/>
-						<span>{teamName}</span>
-					</p>
-					<p>
-						<CompetitionLogo
-							competitionId={officialPlayer?.leagueId ?? undefined}
-							competitionName={leagueName}
-							className={styles.marketPlayerSummary__competitionLogo}
-							decorative
-						/>
-						<span>{leagueName}</span>
-					</p>
-					{isOfficialCard && (
+
+					{isCatalogCard ? (
+						<div className={styles.marketPlayerSummary__clubLeague}>
+							{team}
+
+							<span
+								className={styles.marketPlayerSummary__separator}
+								aria-hidden="true"
+							>
+								·
+							</span>
+
+							{league}
+						</div>
+					) : (
+						<>
+							<p>{team}</p>
+							<p>{league}</p>
+						</>
+					)}
+
+					{isCatalogCard && (
 						<p className={styles.marketPlayerSummary__nationality}>
 							<NationalityFlag
-								nationality={officialPlayer?.nationality}
+								nationality={nationality}
 								className={styles.marketPlayerSummary__nationalityFlag}
 							/>
-							<span>{officialPlayer?.nationality ?? "Sin información"}</span>
+							<span>{nationality ?? "Sin información"}</span>
 						</p>
 					)}
 				</div>

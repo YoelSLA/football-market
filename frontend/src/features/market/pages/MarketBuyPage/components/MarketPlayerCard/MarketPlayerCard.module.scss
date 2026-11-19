@@ -13,10 +13,12 @@
 	gap: 8px;
 
 	// 4. 📦 Box Model
-	height: 100%;
+	box-sizing: border-box;
+	width: 100%;
+	height: 230px;
 	min-width: 0;
 	min-height: 0;
-	padding: 12px;
+	padding: 10px 12px;
 
 	// 6. 🎨 Visual
 	border: 1px solid ds.$border-panel;
@@ -24,35 +26,63 @@
 	background-color: ds.$surface-panel-from;
 	color: ds.$text-title-on-dark;
 
+	&__identity {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-shrink: 0;
+		align-items: flex-start;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+	}
+
 	&__content {
 		// 3. 🧩 Layout
 		display: flex;
 		flex: 1;
 		flex-direction: column;
-		justify-content: center;
-		gap: .35rem;
 
 		// 4. 📦 Box Model
 		min-width: 0;
 		min-height: 0;
-		padding-top: 8px;
+		padding-top: 9px;
 
 		// 6. 🎨 Visual
 		border-top: 1px solid ds.$border-panel;
 	}
 
+	&__quote {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+	}
+
 	&__metrics {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: minmax(0, 3fr) minmax(7.5rem, 2fr);
-		align-items: end;
-		gap: 12px;
+		grid-template-columns:
+			minmax(0, 1.4fr)
+			minmax(0, 1fr)
+			minmax(0, 1fr);
+		align-items: start;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 	}
 
 	&__metric {
 		// 3. 🧩 Layout
-		display: grid;
-		gap: .2rem;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
 
 		// 4. 📦 Box Model
 		min-width: 0;
@@ -60,9 +90,9 @@
 
 	&__label {
 		// 5. 🔤 Typography
-		font-size: .66rem;
+		font-size: 11px;
 		font-weight: 650;
-		letter-spacing: .04em;
+		letter-spacing: .03em;
 		line-height: 1.2;
 		text-transform: uppercase;
 
@@ -72,25 +102,38 @@
 
 	&__price {
 		// 5. 🔤 Typography
-		font-size: 1.3rem;
+		font-size: 25px;
 		font-weight: 750;
-		letter-spacing: -.02em;
-		line-height: 1.05;
+		letter-spacing: -.03em;
+		line-height: 1.1;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
 		color: ds.$text-title-on-dark;
 	}
 
+	&__previousPrice {
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 400;
+		line-height: 1.25;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+
 	&__variation {
 		// 3. 🧩 Layout
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: .35rem;
+		gap: 5px;
 
 		// 5. 🔤 Typography
-		font-size: .95rem;
+		font-size: 18px;
 		font-weight: 750;
-		line-height: 1.05;
+		letter-spacing: -.02em;
+		line-height: 1.2;
 		white-space: nowrap;
 
 		&_positive {
@@ -109,47 +152,54 @@
 		}
 	}
 
-	&__secondaryData {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		flex-wrap: wrap;
-		gap: .2rem 1rem;
-
+	&__variationCaption {
 		// 5. 🔤 Typography
-		font-size: .68rem;
-		line-height: 1.25;
+		font-size: 10px;
+		font-weight: 400;
+		line-height: 1.2;
 
 		// 6. 🎨 Visual
 		color: ds.$text-label-on-dark;
+	}
 
-		span {
-			// 3. 🧩 Layout
-			display: inline-flex;
-			align-items: center;
-			gap: .3rem;
-		}
+	&__effectiveDate {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.25;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
 
 		svg {
 			// 3. 🧩 Layout
 			flex-shrink: 0;
 
 			// 4. 📦 Box Model
-			width: .85rem;
-			height: .85rem;
+			width: 14px;
+			height: 14px;
 		}
 	}
 
 	&__missingAlert {
 		// 3. 🧩 Layout
 		display: grid;
+		flex: 1;
 		align-content: center;
-		gap: .2rem;
+		gap: 5px;
 
 		// 4. 📦 Box Model
-		min-height: 58px;
-		padding: .5rem .65rem;
+		min-height: 0;
+		padding: 10px 12px;
 
 		// 6. 🎨 Visual
 		border: 1px solid ds.$border-caution-emphasis;
@@ -159,7 +209,9 @@
 
 		strong {
 			// 5. 🔤 Typography
-			font-size: .75rem;
+			font-size: 12px;
+			font-weight: 700;
+			line-height: 1.2;
 			text-transform: uppercase;
 		}
 	}
@@ -169,65 +221,78 @@
 		margin: 0;
 
 		// 5. 🔤 Typography
-		font-size: .72rem;
-		line-height: 1.3;
+		font-size: 11px;
+		line-height: 1.35;
 	}
 
 	&__actions {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
 		// 4. 📦 Box Model
 		margin-top: auto;
+		padding-top: 8px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
 	}
 
-	&__buyButton,
-	&__buyButtonDisabled {
+	&__buyButton {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: .5rem;
+		gap: 8px;
 
 		// 4. 📦 Box Model
+		box-sizing: border-box;
 		width: 100%;
-		height: 34px;
-		padding: .35rem .75rem;
+		height: 38px;
+		padding: 6px 12px;
 
 		// 5. 🔤 Typography
-		font-size: .88rem;
+		font-size: 13px;
 		font-weight: 700;
+		line-height: 1.2;
 
-		// 6. 🎨 Visual
-		border-radius: .45rem;
-
-		svg {
-			// 4. 📦 Box Model
-			width: 1.15rem;
-			height: 1.15rem;
-		}
-	}
-
-	&__buyButton {
 		// 6. 🎨 Visual
 		border: 1px solid ds.$accent-gain;
+		border-radius: .45rem;
 		background-color: ds.$surface-control-active;
 		color: ds.$accent-gain;
 
 		// 7. ⚙️ Behavior
 		cursor: pointer;
 
-		&:hover {
-			// 6. 🎨 Visual
-			background-color: ds.$surface-control-active;
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
+			width: 18px;
+			height: 18px;
 		}
-	}
 
-	&__buyButtonDisabled {
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-panel-mid;
-		background-color: ds.$surface-card-subtle;
-		color: ds.$text-label-on-dark;
-		opacity: .5;
+		&:hover:not(:disabled) {
+			// 6. 🎨 Visual
+			background-color: ds.$surface-card-subtle;
+		}
 
-		// 7. ⚙️ Behavior
-		cursor: not-allowed;
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$accent-gain;
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			// 6. 🎨 Visual
+			border-color: ds.$border-panel-mid;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-label-on-dark;
+			opacity: .5;
+
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+		}
 	}
 }

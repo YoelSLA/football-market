@@ -1,6 +1,5 @@
-import { PageHeading } from "@/shared/components";
-import { ShoppingCart, Wallet } from "@/shared/icons";
-import styles from "./MarketHeader.module.scss";
+import MarketPageHeader from "@/features/market/components/MarketPageHeader";
+import { ShoppingCart } from "@/shared/icons";
 
 interface Props {
 	availableCredits?: number;
@@ -8,27 +7,11 @@ interface Props {
 
 export default function MarketHeader({ availableCredits }: Props) {
 	return (
-		<header className={styles.marketHeader}>
-			<PageHeading
-				title="Mercado Oficial"
-				description="Comprá tokens directamente a la emisión oficial con la cotización vigente."
-				icon={ShoppingCart}
-			/>
-			<div className={styles.marketHeader__metrics}>
-				<div className={styles.marketHeader__metric}>
-					<span className={styles.marketHeader__tile}>
-						<Wallet aria-hidden="true" />
-					</span>
-					<div>
-						<p>Saldo disponible</p>
-						<strong>
-							{availableCredits != null
-								? `${availableCredits.toLocaleString("es-AR")} créditos`
-								: "No disponible"}
-						</strong>
-					</div>
-				</div>
-			</div>
-		</header>
+		<MarketPageHeader
+			title="Mercado Oficial"
+			description="Comprá tokens directamente a la emisión oficial con la cotización vigente."
+			icon={ShoppingCart}
+			availableCredits={availableCredits}
+		/>
 	);
 }

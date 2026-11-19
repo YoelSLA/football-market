@@ -17,6 +17,13 @@ export default function OfficialMarketPanel({ marketBuy }: Props) {
 		marketBuy.criteria.nationality !== null ||
 		marketBuy.criteria.minPrice !== null ||
 		marketBuy.criteria.maxPrice !== null;
+	const selectedPriceRange =
+		marketBuy.priceRange.min !== null && marketBuy.priceRange.max !== null
+			? ([
+					marketBuy.criteria.minPrice ?? marketBuy.priceRange.min,
+					marketBuy.criteria.maxPrice ?? marketBuy.priceRange.max,
+				] as const)
+			: null;
 	return (
 		<>
 			<div className={styles.officialPanel__content}>
@@ -28,9 +35,8 @@ export default function OfficialMarketPanel({ marketBuy }: Props) {
 					position={marketBuy.criteria.position ?? "all"}
 					nationality={marketBuy.criteria.nationality ?? "all"}
 					sort={marketBuy.criteria.sort}
-					minPrice={marketBuy.minPriceDraft}
-					maxPrice={marketBuy.maxPriceDraft}
-					rangeError={marketBuy.rangeError}
+					priceRange={marketBuy.priceRange}
+					selectedPriceRange={selectedPriceRange}
 					isUpdating={marketBuy.isUpdatingPlayers}
 					officialOptions={marketBuy.filterOptions}
 					onSearchChange={marketBuy.setSearchDraft}
@@ -43,8 +49,7 @@ export default function OfficialMarketPanel({ marketBuy }: Props) {
 						marketBuy.changeFilter("nationality", value)
 					}
 					onSortChange={(value) => marketBuy.changeFilter("sort", value)}
-					onMinPriceChange={marketBuy.setMinPriceDraft}
-					onMaxPriceChange={marketBuy.setMaxPriceDraft}
+					onPriceRangeCommit={marketBuy.commitPriceRange}
 					onClear={marketBuy.clearFilters}
 				/>
 				<MarketBuyCatalog
@@ -66,6 +71,7 @@ export default function OfficialMarketPanel({ marketBuy }: Props) {
 						visiblePlayers={marketBuy.players.length}
 						pageSize={marketBuy.pageSize}
 						showSummary={false}
+						variant="official"
 						onPageChange={marketBuy.setCurrentPage}
 					/>
 				</div>

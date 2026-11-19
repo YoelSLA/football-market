@@ -16,4 +16,5 @@ export type CurrentUser = {
 	email: string;
 	role: UserRole;
 	availableCredits: number;
+	availableCreditsCentimes: number;
 };

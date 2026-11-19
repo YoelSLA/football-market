@@ -26,8 +26,14 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		width: var(--market-player-portrait-width, clamp(4.4rem, 5.2vw, 5.4rem));
-		height: var(--market-player-portrait-height, clamp(4.8rem, 5.8vw, 5.8rem));
+		width: var(
+			--market-player-portrait-width,
+			clamp(4.4rem, 5.2vw, 5.4rem)
+		);
+		height: var(
+			--market-player-portrait-height,
+			clamp(4.8rem, 5.8vw, 5.8rem)
+		);
 		object-fit: cover;
 		object-position: top center;
 
@@ -95,6 +101,29 @@
 		}
 	}
 
+	&__metaItem {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		flex-shrink: 1;
+		align-items: center;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__metaText {
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		// 5. 🔤 Typography
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
+
 	&__metaIcon {
 		// 3. 🧩 Layout
 		flex-shrink: 0;
@@ -106,12 +135,18 @@
 	}
 
 	&__competitionLogo {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
 		// 4. 📦 Box Model
 		width: 1.25rem;
 		height: 1.25rem;
 	}
 
 	&__nationalityFlag {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
 		// 4. 📦 Box Model
 		width: 1.25rem;
 		height: .85rem;
@@ -119,63 +154,117 @@
 
 	&__badge {
 		// 3. 🧩 Layout
-		display: inline-block;
+		flex-shrink: 0;
+	}
+
+	&__clubLeague {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 4px;
 
 		// 4. 📦 Box Model
-		padding: .15rem .55rem;
+		min-width: 0;
 
 		// 5. 🔤 Typography
-		font-size: .7rem;
-		font-weight: 800;
-		line-height: 1.3;
+		font-size: .76rem;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
-		border-radius: .3rem;
+		color: ds.$text-label-on-dark;
+	}
 
-		&_goalkeeper {
-			// 6. 🎨 Visual
-			background-color: ds.$state-caution;
-			color: ds.$surface-page;
-		}
+	&__separator {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
 
-		&_outfield {
-			// 6. 🎨 Visual
-			background-color: ds.$action-selected;
-			color: ds.$text-title-on-dark;
-		}
+		// 6. 🎨 Visual
+		color: ds.$text-pagination;
 	}
 
 	&_officialCard {
+		// 4. 📦 Box Model
+		width: 100%;
+
 		.marketPlayerSummary__identity {
 			// 3. 🧩 Layout
 			align-items: stretch;
+			gap: 12px;
 
 			// 4. 📦 Box Model
+			width: 100%;
 			height: auto;
 			min-height: 72px;
+		}
+
+		.marketPlayerSummary__portrait {
+			// 4. 📦 Box Model
+			width: var(--market-player-portrait-width, 68px);
+			height: var(--market-player-portrait-height, 72px);
 		}
 
 		.marketPlayerSummary__details {
 			// 3. 🧩 Layout
 			display: grid;
+			grid-template-rows: auto auto auto;
 			align-content: start;
-			gap: .18rem;
+			gap: 4px;
 		}
 
 		.marketPlayerSummary__heading {
 			// 3. 🧩 Layout
-			display: flex;
-			align-items: flex-start;
-			justify-content: space-between;
-			gap: .5rem;
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: start;
+			gap: 4px;
+
+			// 4. 📦 Box Model
+			min-width: 0;
 
 			h3 {
 				// 3. 🧩 Layout
-				order: -1;
+				grid-column: 1;
+				grid-row: 1;
 
 				// 4. 📦 Box Model
+				min-width: 0;
 				margin: 0;
+
+				// 5. 🔤 Typography
+				font-size: 16px;
+				line-height: 1.25;
 			}
+		}
+
+		.marketPlayerSummary__badge {
+			// 3. 🧩 Layout
+			grid-column: 2;
+			grid-row: 1;
+			flex-shrink: 0;
+			justify-self: end;
+		}
+
+		.marketPlayerSummary__clubLeague {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 4px;
+
+			// 4. 📦 Box Model
+			min-width: 0;
+
+			// 5. 🔤 Typography
+			font-size: 12px;
+		}
+
+		.marketPlayerSummary__clubLeague
+			.marketPlayerSummary__metaItem {
+			// 3. 🧩 Layout
+			flex: 0 1 auto;
+			gap: 4px;
+
+			// 4. 📦 Box Model
+			min-width: 0;
 		}
 
 		.marketPlayerSummary__details p {
@@ -184,6 +273,14 @@
 		}
 
 		.marketPlayerSummary__nationality {
+			// 3. 🧩 Layout
+			display: flex;
+			align-items: center;
+			gap: 4px;
+
+			// 5. 🔤 Typography
+			font-size: 12px;
+
 			// 6. 🎨 Visual
 			color: ds.$text-pagination;
 		}
@@ -212,5 +309,6 @@
 				font-size: .7rem;
 			}
 		}
+
 	}
 }

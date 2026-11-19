@@ -29,8 +29,9 @@ export default function MarketP2PPage() {
 					listing={community.selectedListing}
 					isBusy={community.isBuying}
 					result={community.purchaseResult}
+					returnsToCatalog={community.purchaseReturnsToCatalog}
 					errorMessage={community.purchaseError}
-					availableCredits={community.availableCredits}
+					availableCreditsCentimes={community.availableCreditsCentimes}
 					canConfirm={community.canConfirmListing}
 					onClose={community.closeListing}
 					onConfirm={community.confirmListing}

@@ -7,6 +7,7 @@ import type {
 } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
 import { Button, Modal } from "@/shared/components";
+import { X } from "@/shared/icons";
 import styles from "./BuyListingModal.module.scss";
 
 interface Props {
@@ -14,8 +15,9 @@ interface Props {
 	listing: MarketListing | null;
 	isBusy: boolean;
 	result: BuyResult | null;
+	returnsToCatalog: boolean;
 	errorMessage: string | null;
-	availableCredits?: number;
+	availableCreditsCentimes?: number;
 	canConfirm: boolean;
 	onClose: () => void;
 	onConfirm: () => void;
@@ -27,8 +29,9 @@ export default function BuyListingModal({
 	listing,
 	isBusy,
 	result,
+	returnsToCatalog,
 	errorMessage,
-	availableCredits,
+	availableCreditsCentimes,
 	canConfirm,
 	onClose,
 	onConfirm,
@@ -37,13 +40,18 @@ export default function BuyListingModal({
 	if (!player || !listing) return null;
 	const isExpired = Date.parse(listing.expiresAt) <= Date.now();
 	const hasInsufficientCredits =
-		availableCredits !== undefined && availableCredits < listing.totalAmount;
+		availableCreditsCentimes !== undefined &&
+		availableCreditsCentimes < listing.totalAmount;
+	const estimatedRemaining =
+		availableCreditsCentimes === undefined
+			? null
+			: availableCreditsCentimes - listing.totalAmount;
 	return (
 		<Modal
 			className={styles.dialog}
 			isOpen
 			onClose={onClose}
-			title={`Comprar publicación #${listing.listingId}`}
+			title={`Confirmar compra P2P, publicación #${listing.listingId}`}
 			isBusy={isBusy}
 			closeOnEsc={!isBusy}
 			closeOnOverlayClick={!isBusy}
@@ -54,16 +62,23 @@ export default function BuyListingModal({
 				aria-label="Confirmación de compra de publicación"
 			>
 				<header className={styles.modal__header}>
-					<div>
-						<span>Oferta de usuario</span>
-						<h3>Publicación #{listing.listingId}</h3>
+					<div className={styles.modal__heading}>
+						<h3>Confirmar compra P2P</h3>
+						<span>Publicación #{listing.listingId}</span>
 					</div>
-					<Button type="button" onClick={onClose} disabled={isBusy}>
-						Cerrar
+					<Button
+						type="button"
+						className={styles.modal__close}
+						unstyled
+						aria-label="Cerrar confirmación de compra"
+						onClick={onClose}
+						disabled={isBusy}
+					>
+						<X aria-hidden="true" />
 					</Button>
 				</header>
 				<div className={styles.modal__player}>
-					<MarketPlayerSummary player={player} />
+					<MarketPlayerSummary player={player} variant="communityCard" />
 				</div>
 				{result ? (
 					<div className={styles.modal__success} role="status">
@@ -87,13 +102,14 @@ export default function BuyListingModal({
 								<dd>{new Date(result.executedAt).toLocaleString("es-AR")}</dd>
 							</div>
 						</dl>
-						<Button onClick={onClose}>Volver a ofertas</Button>
+						<Button onClick={onClose}>
+							{returnsToCatalog ? "Volver al catálogo" : "Volver a ofertas"}
+						</Button>
 					</div>
 				) : (
 					<>
-						<h3>Lote completo</h3>
 						<dl className={styles.modal__details}>
-							<div className={styles.modal__total}>
+							<div>
 								<dt>Cantidad</dt>
 								<dd>{listing.quantity} tokens</dd>
 							</div>
@@ -102,20 +118,30 @@ export default function BuyListingModal({
 								<dd>{formatCredits(listing.unitPrice)}</dd>
 							</div>
 							<div>
-								<dt>Total</dt>
-								<dd>{formatCredits(listing.totalAmount)}</dd>
-							</div>
-							<div>
 								<dt>Vencimiento</dt>
-								<dd>{new Date(listing.expiresAt).toLocaleString("es-AR")}</dd>
+								<dd>
+									<time dateTime={listing.expiresAt}>
+										{new Date(listing.expiresAt).toLocaleString("es-AR")}
+									</time>
+								</dd>
 							</div>
-							{availableCredits != null && (
+						</dl>
+						<div className={styles.modal__total}>
+							<span>Total de la compra</span>
+							<strong>{formatCredits(listing.totalAmount)}</strong>
+						</div>
+						{availableCreditsCentimes !== undefined && (
+							<dl className={styles.modal__balance}>
 								<div>
 									<dt>Saldo disponible</dt>
-									<dd>{availableCredits.toLocaleString("es-AR")} créditos</dd>
+									<dd>{formatCredits(availableCreditsCentimes)}</dd>
 								</div>
-							)}
-						</dl>
+								<div>
+									<dt>Saldo restante estimado</dt>
+									<dd>{formatCredits(estimatedRemaining)}</dd>
+								</div>
+							</dl>
+						)}
 						<p className={styles.modal__notice}>
 							La disponibilidad se confirma al realizar la compra.
 						</p>
@@ -134,7 +160,12 @@ export default function BuyListingModal({
 							</p>
 						)}
 						<footer className={styles.modal__actions}>
-							<Button type="button" onClick={onClose} disabled={isBusy}>
+							<Button
+								type="button"
+								variant="secondary"
+								onClick={onClose}
+								disabled={isBusy}
+							>
 								Cancelar
 							</Button>
 							<Button
@@ -143,9 +174,7 @@ export default function BuyListingModal({
 								disabled={isBusy || !canConfirm}
 								aria-busy={isBusy ? "true" : undefined}
 							>
-								{isBusy
-									? "Procesando…"
-									: `Comprar por ${formatCredits(listing.totalAmount)}`}
+								{isBusy ? "Procesando…" : "Confirmar compra"}
 							</Button>
 						</footer>
 					</>

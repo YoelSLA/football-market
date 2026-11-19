@@ -5,7 +5,7 @@ import { marketService } from "@/features/market/market.service";
 export function useCommunityMarketQuery(enabled = true) {
 	return useQuery({
 		queryKey: marketQueryKeys.listings(),
-		queryFn: ({ signal }) => marketService.getListings(signal),
+		queryFn: ({ signal }) => marketService.getListings(undefined, signal),
 		enabled,
 		retry: false,
 	});

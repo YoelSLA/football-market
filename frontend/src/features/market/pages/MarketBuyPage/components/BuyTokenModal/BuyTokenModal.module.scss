@@ -555,32 +555,6 @@
 		animation: marketSpin 1s linear infinite;
 	}
 
-	@media (max-width: 400px) {
-		&__content {
-			// 4. 📦 Box Model
-			padding-inline: .65rem;
-		}
-
-		&__quantity {
-			// 3. 🧩 Layout
-			grid-template-columns: minmax(0, 1fr) 2rem 3.3rem 2rem;
-		}
-
-		&__quantityLabel {
-			// 3. 🧩 Layout
-			gap: .3rem;
-
-			// 5. 🔤 Typography
-			font-size: .7rem;
-			svg {
-				// 4. 📦 Box Model
-				width: 1.7rem;
-				height: 1.7rem;
-				padding: .3rem;
-			}
-		}
-	}
-
 	@media (prefers-reduced-motion: reduce) {
 		&__spinner {
 			// 8. ✨ Animation

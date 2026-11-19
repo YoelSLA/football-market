@@ -1,11 +1,15 @@
-import type { PlayerCatalogFilters } from "@/features/players";
+import { formatCredits } from "@/features/market/utils";
+import {
+	type PlayerCatalogFilters,
+	sanitizePositions,
+} from "@/features/players";
 import {
 	CompetitionLogo,
-	FilterField,
 	FilterSearch,
 	FilterSelect,
 	type FilterSelectOption,
 	NationalityFlag,
+	Slider,
 	TeamBadge,
 } from "@/shared/components";
 import styles from "./MarketFilterFields.module.scss";
@@ -19,17 +23,15 @@ interface Props {
 	position: string;
 	nationality: string;
 	sort: string;
-	minPrice: string;
-	maxPrice: string;
-	rangeError: string | null;
+	priceRange: { min: number | null; max: number | null };
+	selectedPriceRange: readonly [number, number] | null;
 	onSearchChange: (value: string) => void;
 	onLeagueChange: (value: string) => void;
 	onTeamChange: (value: string) => void;
 	onPositionChange: (value: string) => void;
 	onNationalityChange: (value: string) => void;
 	onSortChange: (value: string) => void;
-	onMinPriceChange: (value: string) => void;
-	onMaxPriceChange: (value: string) => void;
+	onPriceRangeCommit: (value: readonly [number, number]) => void;
 }
 
 const SORT_OPTIONS = [
@@ -52,17 +54,15 @@ export default function OfficialMarketFilterFields({
 	position,
 	nationality,
 	sort,
-	minPrice,
-	maxPrice,
-	rangeError,
+	priceRange,
+	selectedPriceRange,
 	onSearchChange,
 	onLeagueChange,
 	onTeamChange,
 	onPositionChange,
 	onNationalityChange,
 	onSortChange,
-	onMinPriceChange,
-	onMaxPriceChange,
+	onPriceRangeCommit,
 }: Props) {
 	const teams = options?.teams.filter(
 		(option) => league === "all" || String(option.leagueId) === league,
@@ -111,7 +111,6 @@ export default function OfficialMarketFilterFields({
 	return (
 		<fieldset
 			className={`${styles.marketFilterFields} ${styles.marketFilterFields_official}`}
-			aria-describedby={rangeError ? `${scope}-range-error` : undefined}
 		>
 			<FilterSearch
 				id={`${scope}-search`}
@@ -149,8 +148,10 @@ export default function OfficialMarketFilterFields({
 				value={position}
 				options={[
 					{ value: "all", label: "Todas" },
-					...(options?.positions.map((value) => ({ value, label: value })) ??
-						[]),
+					...sanitizePositions(options?.positions).map((value) => ({
+						value,
+						label: value,
+					})),
 				]}
 				onChange={onPositionChange}
 			/>
@@ -164,34 +165,27 @@ export default function OfficialMarketFilterFields({
 				searchPlaceholder="Buscar nacionalidad…"
 				onChange={onNationalityChange}
 			/>
-			<FilterField
-				id={`${scope}-min-price`}
-				label="Precio mínimo"
-				className={styles.marketFilterFields__minPrice}
-			>
-				<input
-					id={`${scope}-min-price`}
-					className={styles.marketFilterFields__priceInput}
-					inputMode="decimal"
-					value={minPrice}
-					onChange={(event) => onMinPriceChange(event.target.value)}
-					aria-invalid={Boolean(rangeError)}
+			{priceRange.min !== null &&
+			priceRange.max !== null &&
+			selectedPriceRange ? (
+				<Slider
+					id={`${scope}-price-range`}
+					className={styles.marketFilterFields__priceRange}
+					variant="range"
+					label="Rango de precio"
+					min={priceRange.min}
+					max={priceRange.max}
+					step={1}
+					value={selectedPriceRange}
+					formatValue={formatCredits}
+					disabled={priceRange.min === priceRange.max}
+					onCommit={onPriceRangeCommit}
 				/>
-			</FilterField>
-			<FilterField
-				id={`${scope}-max-price`}
-				label="Precio máximo"
-				className={styles.marketFilterFields__maxPrice}
-			>
-				<input
-					id={`${scope}-max-price`}
-					className={styles.marketFilterFields__priceInput}
-					inputMode="decimal"
-					value={maxPrice}
-					onChange={(event) => onMaxPriceChange(event.target.value)}
-					aria-invalid={Boolean(rangeError)}
-				/>
-			</FilterField>
+			) : (
+				<div className={styles.marketFilterFields__priceRange} role="status">
+					Rango de precio: sin cotizaciones disponibles
+				</div>
+			)}
 			<FilterSelect
 				id={`${scope}-sort`}
 				className={styles.marketFilterFields__sort}
@@ -200,15 +194,6 @@ export default function OfficialMarketFilterFields({
 				options={SORT_OPTIONS}
 				onChange={onSortChange}
 			/>
-			{rangeError && (
-				<p
-					className={styles.marketFilterFields__rangeError}
-					id={`${scope}-range-error`}
-					role="alert"
-				>
-					{rangeError}
-				</p>
-			)}
 		</fieldset>
 	);
 }

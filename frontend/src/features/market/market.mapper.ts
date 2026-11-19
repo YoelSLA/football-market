@@ -1,6 +1,7 @@
 import type { Player } from "@/features/players";
 import type {
 	BuyResult,
+	CommunityMarketPlayer,
 	MarketListing,
 	MarketPlayer,
 	MarketQuote,
@@ -9,6 +10,7 @@ import type {
 	OrderBuyResponseDTO,
 	OrderSellRequestDTO,
 	OrderSellResponseDTO,
+	P2PMarketPage,
 	QuoteResponseDTO,
 	SellResult,
 } from "./types";
@@ -162,8 +164,20 @@ export function toOfficialMarketPage(value: unknown): OfficialMarketPage {
 		envelope.size > 100 ||
 		!isSafeNonNegativeInteger(envelope.totalElements) ||
 		!isSafeNonNegativeInteger(envelope.totalPages) ||
+		typeof envelope.priceRange !== "object" ||
+		envelope.priceRange === null ||
 		envelope.content.length > envelope.size ||
 		envelope.totalPages !== Math.ceil(envelope.totalElements / envelope.size)
+	)
+		throw new Error("INVALID_OFFICIAL_MARKET_RESPONSE");
+	const priceRange = envelope.priceRange as Record<string, unknown>;
+	if (
+		!(
+			(priceRange.min === null && priceRange.max === null) ||
+			(isSafePositiveInteger(priceRange.min) &&
+				isSafePositiveInteger(priceRange.max) &&
+				priceRange.min <= priceRange.max)
+		)
 	)
 		throw new Error("INVALID_OFFICIAL_MARKET_RESPONSE");
 
@@ -212,6 +226,81 @@ export function toOfficialMarketPage(value: unknown): OfficialMarketPage {
 		size: envelope.size,
 		totalElements: envelope.totalElements,
 		totalPages: envelope.totalPages,
+		priceRange: {
+			min: priceRange.min as number | null,
+			max: priceRange.max as number | null,
+		},
+	};
+}
+
+export function toP2PMarketPage(value: unknown): P2PMarketPage {
+	if (typeof value !== "object" || value === null)
+		throw new Error("INVALID_P2P_MARKET_RESPONSE");
+	const envelope = value as Record<string, unknown>;
+	if (
+		!Array.isArray(envelope.content) ||
+		!isSafeNonNegativeInteger(envelope.page) ||
+		!isSafePositiveInteger(envelope.size) ||
+		envelope.size > 100 ||
+		!isSafeNonNegativeInteger(envelope.totalElements) ||
+		!isSafeNonNegativeInteger(envelope.totalPages) ||
+		typeof envelope.priceRange !== "object" ||
+		envelope.priceRange === null ||
+		envelope.content.length > envelope.size ||
+		envelope.totalPages !== Math.ceil(envelope.totalElements / envelope.size)
+	)
+		throw new Error("INVALID_P2P_MARKET_RESPONSE");
+	const priceRange = envelope.priceRange as Record<string, unknown>;
+
+	const players: CommunityMarketPlayer[] = envelope.content.map((value) => {
+		if (typeof value !== "object" || value === null)
+			throw new Error("INVALID_P2P_MARKET_PLAYER");
+		const player = value as Record<string, unknown>;
+		if (
+			!isSafePositiveInteger(player.id) ||
+			typeof player.name !== "string" ||
+			player.name.trim().length === 0 ||
+			typeof player.position !== "string" ||
+			player.position.trim().length === 0 ||
+			!isNullableString(player.nationality) ||
+			!isNullablePositiveInteger(player.teamId) ||
+			!isNullableString(player.teamName) ||
+			!isNullableString(player.teamBadgeUrl) ||
+			!isNullablePositiveInteger(player.leagueId) ||
+			!isNullableString(player.leagueName) ||
+			!isNullableString(player.imageUrl) ||
+			!isSafeNonNegativeInteger(player.listingCount) ||
+			!isSafeNonNegativeInteger(player.availableQuantity) ||
+			!isSafeNonNegativeInteger(player.minimumUnitPrice)
+		)
+			throw new Error("INVALID_P2P_MARKET_PLAYER");
+		return {
+			id: player.id,
+			name: player.name,
+			position: player.position,
+			nationality: player.nationality,
+			teamId: player.teamId,
+			teamName: player.teamName,
+			teamBadgeUrl: player.teamBadgeUrl,
+			leagueId: player.leagueId,
+			leagueName: player.leagueName,
+			imageUrl: player.imageUrl,
+			listingCount: player.listingCount,
+			availableQuantity: player.availableQuantity,
+			minimumUnitPrice: player.minimumUnitPrice,
+		};
+	});
+
+	return {
+		players,
+		page: envelope.page,
+		size: envelope.size,
+		totalElements: envelope.totalElements,
+		totalPages: envelope.totalPages,
+		priceRange: {
+			min: (priceRange.min as number | null) ?? null,
+			max: (priceRange.max as number | null) ?? null,
+		},
 	};
 }
 
@@ -285,9 +374,12 @@ export function toMarketPlayer(player: Player): MarketPlayer {
 	return {
 		id: player.id,
 		name: player.name,
+		teamId: player.teamId,
 		teamName: player.teamName,
+		leagueId: player.leagueId,
 		leagueName: player.leagueName,
 		position: player.position,
+		nationality: player.nationality,
 		imageUrl: player.imageUrl,
 		fallbackImageUrl: player.fallbackImageUrl,
 	};
