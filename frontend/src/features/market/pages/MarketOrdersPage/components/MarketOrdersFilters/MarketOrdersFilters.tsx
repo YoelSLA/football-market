@@ -3,16 +3,20 @@ import styles from "./MarketOrdersFilters.module.scss";
 interface Props {
 	search: string;
 	status: string;
+	sort: string;
 	onSearchChange: (value: string) => void;
 	onStatusChange: (status: string) => void;
+	onSortChange: (sort: string) => void;
 	onClear: () => void;
 }
 
 export default function MarketOrdersFilters({
 	search,
 	status,
+	sort,
 	onSearchChange,
 	onStatusChange,
+	onSortChange,
 	onClear,
 }: Props) {
 	return (
@@ -41,12 +45,15 @@ export default function MarketOrdersFilters({
 				</select>
 
 				<select
-					defaultValue="NEWEST"
+					value={sort}
+					onChange={(e) => onSortChange(e.target.value)}
 					className={styles.ordersFilters__select}
 					aria-label="Ordenar publicaciones"
-					disabled
 				>
 					<option value="NEWEST">Más recientes</option>
+					<option value="OLDEST">Más antiguas</option>
+					<option value="PRICE_DESC">Mayor precio</option>
+					<option value="PRICE_ASC">Menor precio</option>
 				</select>
 			</div>
 

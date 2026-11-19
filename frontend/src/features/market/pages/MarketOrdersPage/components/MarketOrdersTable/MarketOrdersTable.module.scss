@@ -24,8 +24,8 @@
 
 	&__grid {
 		width: 100%;
+		table-layout: fixed;
 		border-collapse: collapse;
-		text-align: left;
 		font-size: 12px;
 
 		th {
@@ -33,7 +33,7 @@
 			top: 0;
 			z-index: 2;
 			height: 36px;
-			padding: 0 12px;
+			padding: 0 16px;
 			background-color: ds.$surface-data-header;
 			border-bottom: 1px solid ds.$border-glass-subtle;
 			color: ds.$text-header-table;
@@ -43,15 +43,17 @@
 			text-transform: uppercase;
 			white-space: nowrap;
 			text-align: inherit;
+			box-sizing: border-box;
 		}
 
 		td {
 			height: 48px;
-			padding: 4px 12px;
+			padding: 6px 16px;
 			border-bottom: 1px solid ds.$border-glass-faint;
 			color: ds.$text-body-on-dark;
 			vertical-align: middle;
 			box-sizing: border-box;
+			text-align: inherit;
 		}
 
 		tr:last-child td {
@@ -97,12 +99,12 @@
 	}
 
 	&__colStatus {
-		width: 12%;
+		width: 11%;
 		text-align: center;
 	}
 
 	&__colAction {
-		width: 10%;
+		width: 11%;
 		text-align: center;
 
 		span {

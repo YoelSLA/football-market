@@ -23,6 +23,10 @@ export function useMyOrdersPage() {
 	const validStatuses = ["ACTIVE", "SOLD", "CANCELLED", "EXPIRED"];
 	const status = validStatuses.includes(statusParam) ? statusParam : "";
 
+	const sortParam = searchParams.get("sort") ?? "";
+	const validSorts = ["NEWEST", "OLDEST", "PRICE_DESC", "PRICE_ASC"];
+	const sort = validSorts.includes(sortParam) ? sortParam : "NEWEST";
+
 	const [searchInput, setSearchInput] = useState(
 		searchParams.get("search") ?? "",
 	);
@@ -50,6 +54,13 @@ export function useMyOrdersPage() {
 		});
 	};
 
+	const setSort = (newSort: string) => {
+		updateParams({
+			sort: newSort && newSort !== "NEWEST" ? newSort : null,
+			page: null,
+		});
+	};
+
 	const handleSearchChange = (value: string) => {
 		setSearchInput(value);
 		updateParams({
@@ -72,7 +83,7 @@ export function useMyOrdersPage() {
 		page,
 		size: 10,
 		status: status || undefined,
-		sort: "NEWEST",
+		sort,
 	});
 
 	const { data: playersPage, isPending: isLoadingPlayers } =
@@ -168,12 +179,14 @@ export function useMyOrdersPage() {
 		},
 		orders: filteredOrders,
 		status,
+		sort,
 		searchInput,
 		isLoading: isLoadingOrders || isLoadingPlayers,
 		isError: isOrdersError,
 		refetch: refetchOrders,
 		setPage,
 		setStatus,
+		setSort,
 		setSearchInput: handleSearchChange,
 		clearFilters,
 		// Cancel modal

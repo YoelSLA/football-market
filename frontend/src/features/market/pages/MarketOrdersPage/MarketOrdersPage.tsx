@@ -16,12 +16,14 @@ export default function MarketOrdersPage() {
 		summary,
 		orders,
 		status,
+		sort,
 		searchInput,
 		isLoading,
 		isError,
 		refetch,
 		setPage,
 		setStatus,
+		setSort,
 		setSearchInput,
 		clearFilters,
 		selectedOrderToCancel,
@@ -32,7 +34,9 @@ export default function MarketOrdersPage() {
 		confirmCancel,
 	} = useMyOrdersPage();
 
-	const isFiltering = Boolean(status || searchInput.trim());
+	const isFiltering = Boolean(
+		status || searchInput.trim() || (sort && sort !== "NEWEST"),
+	);
 	const hasNoOrders = !isLoading && !isError && orders.length === 0;
 
 	return (
@@ -45,8 +49,10 @@ export default function MarketOrdersPage() {
 				<MarketOrdersFilters
 					search={searchInput}
 					status={status}
+					sort={sort}
 					onSearchChange={setSearchInput}
 					onStatusChange={setStatus}
+					onSortChange={setSort}
 					onClear={clearFilters}
 				/>
 
