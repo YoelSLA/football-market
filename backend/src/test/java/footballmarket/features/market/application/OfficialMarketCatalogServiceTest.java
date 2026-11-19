@@ -10,9 +10,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import footballmarket.features.market.application.impl.OfficialMarketCatalogServiceImpl;
+import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
 import footballmarket.features.market.infraestructure.OfficialMarketRepository;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
+import footballmarket.features.market.infraestructure.projections.OfficialMarketPriceRangeProjection;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,7 +23,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.Page;
 
 @Tag("unit")
 class OfficialMarketCatalogServiceTest {
@@ -58,10 +59,10 @@ class OfficialMarketCatalogServiceTest {
           .thenReturn(List.of(projection));
 
       // Act
-      Page<OfficialMarketPlayer> result = service.getOfficialCatalog(query);
+      OfficialMarketCatalog result = service.getOfficialCatalog(query);
 
       // Assert
-      assertThat(result.getTotalElements()).isEqualTo(1L);
+      assertThat(result.page().getTotalElements()).isEqualTo(1L);
       verify(repository)
           .countOfficialMarketPlayersWithoutFinancialFilters("Messi", 12L, 45L, "DEL", "Argentina");
       verify(repository, never())
@@ -81,11 +82,11 @@ class OfficialMarketCatalogServiceTest {
           .thenReturn(0L);
 
       // Act
-      Page<OfficialMarketPlayer> result = service.getOfficialCatalog(query);
+      OfficialMarketCatalog result = service.getOfficialCatalog(query);
 
       // Assert
-      assertThat(result.getTotalElements()).isZero();
-      assertThat(result.getContent()).isEmpty();
+      assertThat(result.page().getTotalElements()).isZero();
+      assertThat(result.page().getContent()).isEmpty();
       verify(repository)
           .countOfficialMarketPlayersWithFinancialFilters(
               null, null, null, null, null, true, 1000L, 50000L);
@@ -120,11 +121,11 @@ class OfficialMarketCatalogServiceTest {
           .thenReturn(15L);
 
       // Act
-      Page<OfficialMarketPlayer> result = service.getOfficialCatalog(query);
+      OfficialMarketCatalog result = service.getOfficialCatalog(query);
 
       // Assert
-      assertThat(result.getTotalElements()).isEqualTo(15L);
-      assertThat(result.getContent()).isEmpty();
+      assertThat(result.page().getTotalElements()).isEqualTo(15L);
+      assertThat(result.page().getContent()).isEmpty();
       verify(repository, never())
           .findOfficialMarketPlayers(
               any(),
@@ -183,11 +184,11 @@ class OfficialMarketCatalogServiceTest {
           .thenReturn(List.of(projection));
 
       // Act
-      Page<OfficialMarketPlayer> result = service.getOfficialCatalog(query);
+      OfficialMarketCatalog result = service.getOfficialCatalog(query);
 
       // Assert
-      assertThat(result.getContent()).hasSize(1);
-      OfficialMarketPlayer player = result.getContent().get(0);
+      assertThat(result.page().getContent()).hasSize(1);
+      OfficialMarketPlayer player = result.page().getContent().get(0);
       assertThat(player.id()).isEqualTo(100L);
       assertThat(player.name()).isEqualTo("Kylian Mbappé");
       assertThat(player.quote()).isNotNull();
@@ -197,6 +198,27 @@ class OfficialMarketCatalogServiceTest {
       assertThat(player.quote().performanceScore()).isEqualTo(9.10);
       assertThat(player.quote().multiplier()).isEqualTo(1.30);
       assertThat(player.quote().calculationOrigin()).isEqualTo("RECOMPUTED");
+    }
+
+    @Test
+    @DisplayName("Obtiene y mapea los extremos globales de cotizaciones vigentes")
+    void mapsGlobalPriceRange() {
+      // Arrange
+      OfficialMarketQuery query =
+          new OfficialMarketQuery(
+              0, 20, "id", "asc", null, null, null, null, null, null, null, null);
+      OfficialMarketPriceRangeProjection priceRangeProjection =
+          mock(OfficialMarketPriceRangeProjection.class);
+      when(priceRangeProjection.getMin()).thenReturn(500L);
+      when(priceRangeProjection.getMax()).thenReturn(15000L);
+      when(repository.findGlobalOfficialMarketPriceRange()).thenReturn(priceRangeProjection);
+
+      // Act
+      OfficialMarketCatalog result = service.getOfficialCatalog(query);
+
+      // Assert
+      assertThat(result.priceRange().min()).isEqualTo(500L);
+      assertThat(result.priceRange().max()).isEqualTo(15000L);
     }
   }
 }

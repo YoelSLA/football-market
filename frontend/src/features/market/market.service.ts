@@ -134,6 +134,7 @@ async function getOfficialMarket(
 			page: criteria.page,
 			size: OFFICIAL_MARKET_DEFAULT_PAGE_SIZE,
 			sort: criteria.sort,
+			hasQuote: true,
 			name: criteria.name || undefined,
 			leagueId: criteria.leagueId ?? undefined,
 			teamId: criteria.teamId ?? undefined,

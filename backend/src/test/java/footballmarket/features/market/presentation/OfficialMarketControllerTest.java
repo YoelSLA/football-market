@@ -9,7 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.features.market.application.OfficialMarketCatalogService;
+import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
+import footballmarket.features.market.domain.records.OfficialMarketPriceRange;
 import footballmarket.features.market.domain.records.OfficialMarketQuote;
 import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
@@ -97,7 +99,10 @@ class OfficialMarketControllerTest {
               quote);
 
       when(catalogService.getOfficialCatalog(any()))
-          .thenReturn(new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1));
+          .thenReturn(
+              new OfficialMarketCatalog(
+                  new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1),
+                  new OfficialMarketPriceRange(100L, 25000L)));
 
       // Act & Assert
       mvc.perform(
@@ -110,6 +115,8 @@ class OfficialMarketControllerTest {
           .andExpect(jsonPath("$.size").value(20))
           .andExpect(jsonPath("$.totalElements").value(1))
           .andExpect(jsonPath("$.totalPages").value(1))
+          .andExpect(jsonPath("$.priceRange.min").value(100))
+          .andExpect(jsonPath("$.priceRange.max").value(25000))
           .andExpect(jsonPath("$.content", hasSize(1)))
           .andExpect(jsonPath("$.content[0].id").value(7821))
           .andExpect(jsonPath("$.content[0].name").value("Lionel Messi"))
@@ -143,7 +150,10 @@ class OfficialMarketControllerTest {
               null);
 
       when(catalogService.getOfficialCatalog(any()))
-          .thenReturn(new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1));
+          .thenReturn(
+              new OfficialMarketCatalog(
+                  new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1),
+                  new OfficialMarketPriceRange(null, null)));
 
       // Act & Assert
       mvc.perform(get("/api/market/official").header("Authorization", authorization))
@@ -171,7 +181,10 @@ class OfficialMarketControllerTest {
               1L, "Jugador Inicial", "MED", "España", 10L, "Club", "url", 2L, "Liga", "url", quote);
 
       when(catalogService.getOfficialCatalog(any()))
-          .thenReturn(new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1));
+          .thenReturn(
+              new OfficialMarketCatalog(
+                  new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1),
+                  new OfficialMarketPriceRange(10000L, 10000L)));
 
       // Act & Assert
       mvc.perform(get("/api/market/official").header("Authorization", authorization))
@@ -200,7 +213,10 @@ class OfficialMarketControllerTest {
               2L, "Jugador Estable", "DEF", "Brasil", 10L, "Club", "url", 2L, "Liga", "url", quote);
 
       when(catalogService.getOfficialCatalog(any()))
-          .thenReturn(new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1));
+          .thenReturn(
+              new OfficialMarketCatalog(
+                  new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1),
+                  new OfficialMarketPriceRange(15000L, 15000L)));
 
       // Act & Assert
       mvc.perform(get("/api/market/official").header("Authorization", authorization))

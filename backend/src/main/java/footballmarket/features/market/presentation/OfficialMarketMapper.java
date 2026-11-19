@@ -6,12 +6,15 @@ import footballmarket.features.market.application.exceptions.InvalidPaginationEx
 import footballmarket.features.market.application.exceptions.InvalidPriceRangeException;
 import footballmarket.features.market.application.exceptions.InvalidSortParameterException;
 import footballmarket.features.market.application.internal.OfficialMarketAssembler;
+import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
+import footballmarket.features.market.domain.records.OfficialMarketPriceRange;
 import footballmarket.features.market.domain.records.OfficialMarketQuote;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
 import footballmarket.features.market.presentation.dtos.request.OfficialMarketQueryRequestDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketPageResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketPlayerResponseDTO;
+import footballmarket.features.market.presentation.dtos.response.OfficialMarketPriceRangeResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketQuoteResponseDTO;
 import java.util.List;
 import java.util.Locale;
@@ -125,17 +128,38 @@ public final class OfficialMarketMapper {
   }
 
   /**
+   * Transforma el catálogo de mercado oficial de dominio en el contenedor paginado de respuesta
+   * HTTP {@link OfficialMarketPageResponseDTO} con extremos globales de precios.
+   *
+   * @param catalog catálogo de dominio con página y rango de precios
+   * @return respuesta HTTP paginada con priceRange
+   */
+  public static OfficialMarketPageResponseDTO toResponse(OfficialMarketCatalog catalog) {
+    Page<OfficialMarketPlayer> page = catalog.page();
+    List<OfficialMarketPlayerResponseDTO> content =
+        page.getContent().stream().map(OfficialMarketMapper::toResponse).toList();
+    OfficialMarketPriceRangeResponseDTO priceRange =
+        new OfficialMarketPriceRangeResponseDTO(
+            catalog.priceRange() != null ? catalog.priceRange().min() : null,
+            catalog.priceRange() != null ? catalog.priceRange().max() : null);
+    return new OfficialMarketPageResponseDTO(
+        content,
+        page.getNumber(),
+        page.getSize(),
+        page.getTotalElements(),
+        page.getTotalPages(),
+        priceRange);
+  }
+
+  /**
    * Transforma una página de dominio en el contenedor paginado de respuesta HTTP {@link
-   * OfficialMarketPageResponseDTO}.
+   * OfficialMarketPageResponseDTO} con priceRange nulo por defecto.
    *
    * @param page página de dominio
    * @return respuesta HTTP paginada
    */
   public static OfficialMarketPageResponseDTO toResponse(Page<OfficialMarketPlayer> page) {
-    List<OfficialMarketPlayerResponseDTO> content =
-        page.getContent().stream().map(OfficialMarketMapper::toResponse).toList();
-    return new OfficialMarketPageResponseDTO(
-        content, page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
+    return toResponse(new OfficialMarketCatalog(page, new OfficialMarketPriceRange(null, null)));
   }
 
   /**

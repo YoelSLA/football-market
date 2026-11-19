@@ -1,17 +1,16 @@
 package footballmarket.features.market.application;
 
-import footballmarket.features.market.domain.records.OfficialMarketPlayer;
-import org.springframework.data.domain.Page;
+import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 
 /** Servicio de aplicación para la consulta consolidada del catálogo del Mercado Oficial. */
 public interface OfficialMarketCatalogService {
 
   /**
-   * Obtiene la página de jugadores activos con su cotización vigente integrada conforme a los
-   * criterios.
+   * Obtiene el catálogo de jugadores activos con su cotización vigente integrada conforme a los
+   * criterios y los extremos globales de cotizaciones vigentes.
    *
    * @param query criterios normalizados de búsqueda, filtrado, ordenamiento y paginación
-   * @return página con los jugadores elegibles y sus cotizaciones consolidadas
+   * @return catálogo con jugadores elegibles, cotizaciones consolidadas y rango global de precios
    */
-  Page<OfficialMarketPlayer> getOfficialCatalog(OfficialMarketQuery query);
+  OfficialMarketCatalog getOfficialCatalog(OfficialMarketQuery query);
 }

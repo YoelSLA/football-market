@@ -10,7 +10,9 @@ import footballmarket.features.market.application.exceptions.InvalidPageSizeExce
 import footballmarket.features.market.application.exceptions.InvalidPaginationException;
 import footballmarket.features.market.application.exceptions.InvalidPriceRangeException;
 import footballmarket.features.market.application.exceptions.InvalidSortParameterException;
+import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
+import footballmarket.features.market.domain.records.OfficialMarketPriceRange;
 import footballmarket.features.market.domain.records.OfficialMarketQuote;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
 import footballmarket.features.market.presentation.dtos.request.OfficialMarketQueryRequestDTO;
@@ -232,6 +234,23 @@ class OfficialMarketMapperTest {
     assertThat(item.quote().performanceScore()).isEqualTo(8.5);
     assertThat(item.quote().multiplier()).isEqualTo(1.2);
     assertThat(item.quote().calculationOrigin()).isEqualTo("POSITIONAL_PERFORMANCE");
+  }
+
+  @Test
+  @DisplayName("toResponse transforma catálogo oficial de dominio con priceRange a DTO paginado")
+  void toResponseCatalog() {
+    OfficialMarketPlayer player =
+        new OfficialMarketPlayer(
+            1L, "Player", "DEL", "ARG", 10L, "Club", null, 5L, "Liga", null, null);
+    Page<OfficialMarketPlayer> page = new PageImpl<>(List.of(player), PageRequest.of(0, 20), 1);
+    OfficialMarketCatalog catalog =
+        new OfficialMarketCatalog(page, new OfficialMarketPriceRange(100L, 5000L));
+
+    OfficialMarketPageResponseDTO response = OfficialMarketMapper.toResponse(catalog);
+
+    assertThat(response.priceRange()).isNotNull();
+    assertThat(response.priceRange().min()).isEqualTo(100L);
+    assertThat(response.priceRange().max()).isEqualTo(5000L);
   }
 
   @Test

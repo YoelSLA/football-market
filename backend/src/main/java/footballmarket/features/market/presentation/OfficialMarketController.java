@@ -3,7 +3,7 @@ package footballmarket.features.market.presentation;
 import footballmarket.common.presentation.dtos.ErrorResponseDTO;
 import footballmarket.features.market.application.OfficialMarketCatalogService;
 import footballmarket.features.market.application.OfficialMarketQuery;
-import footballmarket.features.market.domain.records.OfficialMarketPlayer;
+import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.presentation.dtos.request.OfficialMarketQueryRequestDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketPageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -76,8 +75,7 @@ public class OfficialMarketController {
       @Valid @ModelAttribute OfficialMarketQueryRequestDTO requestDTO, HttpServletRequest request) {
     String[] rawSort = request.getParameterValues("sort");
     OfficialMarketQuery query = OfficialMarketMapper.toQuery(requestDTO, rawSort);
-    Page<OfficialMarketPlayer> pagedPlayers =
-        this.officialMarketCatalogService.getOfficialCatalog(query);
-    return ResponseEntity.ok(OfficialMarketMapper.toResponse(pagedPlayers));
+    OfficialMarketCatalog catalog = this.officialMarketCatalogService.getOfficialCatalog(query);
+    return ResponseEntity.ok(OfficialMarketMapper.toResponse(catalog));
   }
 }

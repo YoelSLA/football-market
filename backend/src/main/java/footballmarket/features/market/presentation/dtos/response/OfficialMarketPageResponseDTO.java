@@ -11,6 +11,7 @@ import java.util.List;
  * @param size tamaño de página efectivo
  * @param totalElements cantidad total de jugadores coincidentes con los filtros
  * @param totalPages cantidad total de páginas disponibles
+ * @param priceRange extremos globales de precios en el mercado oficial
  */
 @Schema(
     name = "OfficialMarketPageResponse",
@@ -22,4 +23,6 @@ public record OfficialMarketPageResponseDTO(
     @Schema(description = "Tamaño de página solicitado o efectivo", example = "20") int size,
     @Schema(description = "Total de jugadores que coinciden con todos los filtros", example = "42")
         long totalElements,
-    @Schema(description = "Total de páginas disponibles", example = "3") int totalPages) {}
+    @Schema(description = "Total de páginas disponibles", example = "3") int totalPages,
+    @Schema(description = "Extremos globales de precios en el mercado oficial")
+        OfficialMarketPriceRangeResponseDTO priceRange) {}

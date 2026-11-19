@@ -2,6 +2,7 @@ package footballmarket.features.market.infraestructure;
 
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
+import footballmarket.features.market.infraestructure.projections.OfficialMarketPriceRangeProjection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -107,6 +108,32 @@ public interface OfficialMarketRepository extends JpaRepository<Player, Long> {
       @Param("sortDirection") String sortDirection,
       @Param("limit") int limit,
       @Param("offset") int offset);
+
+  /** Obtiene los extremos globales de cotizaciones vigentes elegibles en el mercado oficial. */
+  @Query(
+      value =
+          """
+          SELECT
+              MIN(q.price) AS min,
+              MAX(q.price) AS max
+          FROM players p
+          JOIN teams t ON t.id = p.team_id
+          JOIN leagues l ON l.id = t.league_id
+          JOIN LATERAL (
+              SELECT pq.price
+              FROM player_quotes pq
+              WHERE pq.player_id = p.id
+              ORDER BY
+                  pq.effective_date DESC,
+                  (CASE WHEN pq.origin = 'RECOMPUTED' THEN 0 ELSE 1 END),
+                  pq.calculated_at DESC,
+                  pq.id DESC
+              LIMIT 1
+          ) q ON true
+          WHERE p.active = true AND t.current = true
+          """,
+      nativeQuery = true)
+  OfficialMarketPriceRangeProjection findGlobalOfficialMarketPriceRange();
 
   /**
    * Consulta desacoplada de conteo optimizada para búsquedas sin filtros financieros (evita el join

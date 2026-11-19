@@ -9,6 +9,7 @@ import footballmarket.features.catalog.infraestructure.LeagueRepository;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.catalog.infraestructure.TeamRepository;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
+import footballmarket.features.market.infraestructure.projections.OfficialMarketPriceRangeProjection;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
@@ -259,6 +260,20 @@ class OfficialMarketRepositoryTest {
       // Assert
       assertThat(count).isZero();
       assertThat(results).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Obtiene los extremos globales de cotizaciones vigentes elegibles")
+    void findsGlobalPriceRange() {
+      // Act
+      OfficialMarketPriceRangeProjection projection =
+          officialMarketRepository.findGlobalOfficialMarketPriceRange();
+
+      // Assert
+      assertThat(projection).isNotNull();
+      assertThat(projection.getMin()).isNotNull();
+      assertThat(projection.getMax()).isNotNull();
+      assertThat(projection.getMin()).isLessThanOrEqualTo(projection.getMax());
     }
   }
 

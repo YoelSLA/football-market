@@ -164,22 +164,28 @@ export function toOfficialMarketPage(value: unknown): OfficialMarketPage {
 		envelope.size > 100 ||
 		!isSafeNonNegativeInteger(envelope.totalElements) ||
 		!isSafeNonNegativeInteger(envelope.totalPages) ||
-		typeof envelope.priceRange !== "object" ||
-		envelope.priceRange === null ||
 		envelope.content.length > envelope.size ||
 		envelope.totalPages !== Math.ceil(envelope.totalElements / envelope.size)
 	)
 		throw new Error("INVALID_OFFICIAL_MARKET_RESPONSE");
-	const priceRange = envelope.priceRange as Record<string, unknown>;
+	const rawPriceRange =
+		typeof envelope.priceRange === "object" && envelope.priceRange !== null
+			? (envelope.priceRange as Record<string, unknown>)
+			: { min: null, max: null };
 	if (
 		!(
-			(priceRange.min === null && priceRange.max === null) ||
-			(isSafePositiveInteger(priceRange.min) &&
-				isSafePositiveInteger(priceRange.max) &&
-				priceRange.min <= priceRange.max)
+			(rawPriceRange.min === null && rawPriceRange.max === null) ||
+			(isSafePositiveInteger(rawPriceRange.min) &&
+				isSafePositiveInteger(rawPriceRange.max) &&
+				rawPriceRange.min <= rawPriceRange.max)
 		)
 	)
 		throw new Error("INVALID_OFFICIAL_MARKET_RESPONSE");
+
+	const priceRange = {
+		min: (rawPriceRange.min as number | null) ?? null,
+		max: (rawPriceRange.max as number | null) ?? null,
+	};
 
 	const players = envelope.content.map((value) => {
 		if (typeof value !== "object" || value === null)
