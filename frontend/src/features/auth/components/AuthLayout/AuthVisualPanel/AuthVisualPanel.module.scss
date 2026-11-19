@@ -147,21 +147,6 @@
 		box-shadow: 0 0 .5rem ds.$shadow-visual-dot;
 	}
 
-	@media (max-width: 760px) {
-		// 4. 📦 Box Model
-		min-height: 28rem;
-		&__content {
-			// 4. 📦 Box Model
-			min-height: 28rem;
-			padding: 1.75rem;
-		}
-
-		&__title {
-			// 5. 🔤 Typography
-			font-size: clamp(1.75rem, 8vw, 2.3rem);
-		}
-	}
-
 	@media (prefers-reduced-motion: reduce) {
 		&__background {
 			// 8. ✨ Animation

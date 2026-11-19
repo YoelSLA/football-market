@@ -144,15 +144,4 @@
 		// 6. 🎨 Visual
 		color: ds.$accent-gain;
 	}
-
-	@include ds.down(ds.$bp-xs) {
-		&_prominent {
-			// 3. 🧩 Layout
-			flex-wrap: wrap;
-			.portfolioValueRow__value {
-				// 4. 📦 Box Model
-				margin-left: auto;
-			}
-		}
-	}
 }

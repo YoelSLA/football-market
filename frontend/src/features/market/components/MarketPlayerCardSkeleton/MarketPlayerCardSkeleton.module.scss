@@ -1,0 +1,183 @@
+@use "@/styles/abstracts" as ds;
+
+.skeletonCard {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	height: 230px;
+	min-width: 0;
+	min-height: 0;
+	padding: 10px 12px;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: .65rem;
+	background-color: ds.$surface-panel-from;
+
+	&__identity {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-shrink: 0;
+		align-items: flex-start;
+		gap: 12px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 72px;
+	}
+
+	&__portrait {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 68px;
+		height: 72px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel-mid;
+		border-radius: .5rem;
+		background-color: ds.$surface-card-subtle;
+
+		// 8. ✨ Animation
+		animation: skeletonPulse 1.4s ease-in-out infinite;
+	}
+
+	&__identityDetails {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		padding-top: 2px;
+	}
+
+	&__name,
+	&__club,
+	&__nationality,
+	&__label,
+	&__primaryValue,
+	&__secondaryValue,
+	&__button {
+		// 6. 🎨 Visual
+		border-radius: 4px;
+		background-color: ds.$surface-card-subtle;
+
+		// 8. ✨ Animation
+		animation: skeletonPulse 1.4s ease-in-out infinite;
+	}
+
+	&__name {
+		// 4. 📦 Box Model
+		width: min(72%, 150px);
+		height: 18px;
+	}
+
+	&__club {
+		// 4. 📦 Box Model
+		width: min(90%, 190px);
+		height: 13px;
+	}
+
+	&__nationality {
+		// 4. 📦 Box Model
+		width: min(48%, 100px);
+		height: 13px;
+	}
+
+	&__financial {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		justify-content: flex-start;
+		gap: 5px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+		padding-top: 9px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__financialRow {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1.4fr)
+			minmax(0, 1fr)
+			minmax(0, 1fr);
+		align-items: center;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__label {
+		// 4. 📦 Box Model
+		width: 72%;
+		height: 8px;
+	}
+
+	&__primaryValue {
+		// 4. 📦 Box Model
+		width: 78%;
+		height: 17px;
+	}
+
+	&__secondaryValue {
+		// 4. 📦 Box Model
+		width: 66%;
+		height: 8px;
+	}
+
+	&__action {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		padding-top: 8px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__button {
+		// 3. 🧩 Layout
+		display: block;
+
+		// 4. 📦 Box Model
+		width: 100%;
+		height: 38px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-gain-subtle;
+		border-radius: .45rem;
+		background-color: ds.$surface-control-active;
+	}
+}
+
+@keyframes skeletonPulse {
+	0%,
+	100% {
+		// 6. 🎨 Visual
+		opacity: .55;
+	}
+
+	50% {
+		// 6. 🎨 Visual
+		opacity: 1;
+	}
+}

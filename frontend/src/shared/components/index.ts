@@ -5,6 +5,12 @@ export { default as CompetitionLogo } from "./CompetitionLogo";
 export type { DrawerProps } from "./Drawer";
 export { default as Drawer } from "./Drawer";
 export { default as Field } from "./Field";
+export {
+	FilterField,
+	FilterSearch,
+	FilterSelect,
+	type FilterSelectOption,
+} from "./filters";
 export type { ModalProps } from "./Modal";
 export { default as Modal } from "./Modal";
 export type { NationalityFlagProps } from "./NationalityFlag";
@@ -22,5 +28,6 @@ export { default as PageHeading } from "./PageHeading";
 export { default as Pagination } from "./Pagination";
 export type { PlayerPortraitProps } from "./PlayerPortrait";
 export { default as PlayerPortrait } from "./PlayerPortrait";
+export { default as Slider } from "./Slider";
 export type { TeamBadgeProps } from "./TeamBadge";
 export { default as TeamBadge } from "./TeamBadge";

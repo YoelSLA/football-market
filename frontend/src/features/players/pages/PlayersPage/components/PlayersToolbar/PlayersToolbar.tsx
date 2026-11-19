@@ -2,8 +2,7 @@ import type {
 	PlayerCatalogCriteria,
 	PlayerCatalogFilters,
 } from "@/features/players/types";
-import { Button } from "@/shared/components";
-import { Search } from "@/shared/icons";
+import { Button, FilterSearch } from "@/shared/components";
 import PlayerCatalogControls from "../PlayerCatalogControls";
 import styles from "./PlayersToolbar.module.scss";
 
@@ -42,17 +41,16 @@ export default function PlayersToolbar({
 				{totalElements !== undefined && (
 					<span>{totalElements} jugadores activos</span>
 				)}
-				<label className={styles.playersToolbar__search}>
-					<Search size={18} aria-hidden="true" />
-					<input
-						type="search"
-						aria-label="Buscar jugador por nombre"
-						placeholder="Buscar jugador…"
-						value={searchText}
-						onChange={(event) => onSearchChange(event.target.value)}
-						maxLength={255}
-					/>
-				</label>
+				<FilterSearch
+					id="player-catalog-search"
+					className={styles.playersToolbar__search}
+					label="Buscar jugador"
+					accessibleLabel="Buscar jugador por nombre"
+					placeholder="Buscar jugador…"
+					value={searchText}
+					onChange={onSearchChange}
+					maxLength={255}
+				/>
 			</div>
 
 			<PlayerCatalogControls

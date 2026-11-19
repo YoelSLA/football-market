@@ -1,71 +1,49 @@
-@use "@/styles/abstracts" as ds;
-
 .buyCatalog {
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+
 	// 4. 📦 Box Model
-	min-height: 0;
 	min-width: 0;
-	padding-right: .2rem;
+	min-height: 0;
 
 	// 7. ⚙️ Behavior
-	overflow-y: auto;
-	overflow-x: hidden;
-	overscroll-behavior-y: contain;
-	scrollbar-gutter: stable;
+	overflow: hidden;
 
 	&__grid {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: .85rem;
+		flex: 1;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-rows: repeat(2, 230px);
+		gap: 8px;
 
 		// 4. 📦 Box Model
 		min-width: 0;
+		min-height: 0;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
 	}
 
-	&__status,
-	&__errorState {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
+	&__status {
+		// 2. 📍 Positioning
+		position: absolute;
+		clip: rect(0 0 0 0);
+		clip-path: inset(50%);
 
 		// 4. 📦 Box Model
-		min-height: 16rem;
-		padding: 1rem;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
 
-		// 5. 🔤 Typography
-		text-align: center;
-
-		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
-	}
-
-	&__retryBtn {
-		// 6. 🎨 Visual
-		background-color: ds.$surface-control-active;
-		color: ds.$accent-gain;
-		border: 1px solid ds.$accent-gain;
-	}
-
-	@media (max-width: 1099px) {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 850px) {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
-	}
-
-	@media (max-width: 639px) {
 		// 7. ⚙️ Behavior
-		overflow: visible;
+		overflow: hidden;
+		white-space: nowrap;
 	}
 }
-

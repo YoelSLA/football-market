@@ -1,8 +1,11 @@
 @use "@/styles/abstracts" as ds;
 
 .dialog {
+	// 1. 🏷️ Custom Properties
+	--modal-custom-max-width: 560px;
+
 	// 4. 📦 Box Model
-	width: min(38rem, calc(100vw - 2rem));
+	width: min(560px, calc(100vw - 2rem));
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-panel-to;
@@ -10,69 +13,163 @@
 }
 
 .modal {
+	// 1. 🏷️ Custom Properties
+	--market-player-summary-gap: 12px;
+	--market-player-summary-height: auto;
+	--market-player-portrait-width: 68px;
+	--market-player-portrait-height: 72px;
+
 	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
-	gap: 0.9rem;
+	gap: 12px;
 
 	// 4. 📦 Box Model
-	padding: 1rem;
+	padding: 0;
+
 	&__header {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: 16px;
 
 		// 4. 📦 Box Model
-		padding-bottom: 0.8rem;
+		min-height: 62px;
+		padding: 12px 16px;
 
 		// 6. 🎨 Visual
 		border-bottom: 1px solid ds.$border-panel;
+	}
+
+	&__heading {
+		// 3. 🧩 Layout
+		display: grid;
+		gap: 3px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		h3 {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 1.05rem;
+			font-weight: 750;
+			line-height: 1.2;
+
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
+		}
+
 		span {
 			// 5. 🔤 Typography
 			font-size: 0.7rem;
 			font-weight: 700;
+			letter-spacing: 0.04em;
+			line-height: 1.2;
 			text-transform: uppercase;
 
 			// 6. 🎨 Visual
-			color: ds.$accent-highlight;
+			color: ds.$text-label-on-dark;
+		}
+	}
+
+	&__close {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 32px;
+		height: 32px;
+		padding: 0;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.45rem;
+		background-color: ds.$surface-data-control-soft;
+		color: ds.$text-label-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		svg {
+			// 4. 📦 Box Model
+			width: 16px;
+			height: 16px;
 		}
 
-		h3 {
-			// 4. 📦 Box Model
-			margin: 0.15rem 0 0;
+		&:hover:not(:disabled) {
+			// 6. 🎨 Visual
+			border-color: ds.$border-strong-hover;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-title-on-dark;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			// 6. 🎨 Visual
+			opacity: 0.5;
+
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
 		}
 	}
 
 	&__player {
 		// 4. 📦 Box Model
-		padding: 0.65rem;
+		min-width: 0;
+		min-height: 94px;
+		margin-inline: 16px;
+		padding: 10px 12px;
 
 		// 6. 🎨 Visual
 		border: 1px solid ds.$border-panel;
 		border-radius: 0.55rem;
+		background-color: ds.$surface-panel-from;
 	}
 
 	&__details {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.6rem;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 
 		// 4. 📦 Box Model
-		margin: 0;
-		div {
+		margin: 0 16px;
+
+		> div {
+			// 3. 🧩 Layout
+			display: grid;
+			align-content: center;
+			gap: 4px;
+
 			// 4. 📦 Box Model
-			padding: 0.65rem;
+			min-width: 0;
+			min-height: 58px;
+			padding: 8px 12px;
 
 			// 6. 🎨 Visual
-			border-radius: 0.45rem;
-			background-color: ds.$surface-card-subtle;
+			border-left: 1px solid ds.$border-panel;
+
+			&:first-child {
+				// 6. 🎨 Visual
+				border-left: 0;
+			}
 		}
 
 		dt {
 			// 5. 🔤 Typography
-			font-size: 0.7rem;
+			font-size: 0.65rem;
+			font-weight: 700;
+			letter-spacing: 0.03em;
+			line-height: 1.2;
+			text-transform: uppercase;
 
 			// 6. 🎨 Visual
 			color: ds.$text-label-on-dark;
@@ -80,55 +177,195 @@
 
 		dd {
 			// 4. 📦 Box Model
-			margin: 0.18rem 0 0;
+			min-width: 0;
+			margin: 0;
 
 			// 5. 🔤 Typography
+			font-size: 0.84rem;
 			font-weight: 700;
+			line-height: 1.25;
+
+			// 6. 🎨 Visual
+			color: ds.$text-value-on-dark;
+		}
+
+		time {
+			// 5. 🔤 Typography
+			font-variant-numeric: tabular-nums;
 		}
 	}
 
 	&__total {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+
+		// 4. 📦 Box Model
+		min-height: 64px;
+		margin: 0 16px;
+		padding: 10px 14px;
+
 		// 6. 🎨 Visual
 		border: 1px solid ds.$accent-gain;
+		border-radius: 0.55rem;
+		background-color: ds.$surface-accent-deep;
+
+		span {
+			// 5. 🔤 Typography
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.03em;
+			line-height: 1.2;
+			text-transform: uppercase;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		strong {
+			// 5. 🔤 Typography
+			font-size: 1.45rem;
+			font-variant-numeric: tabular-nums;
+			font-weight: 800;
+			letter-spacing: -0.02em;
+			line-height: 1;
+			white-space: nowrap;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
+		}
+	}
+
+	&__balance {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+
+		// 4. 📦 Box Model
+		margin: 0 16px;
+		padding: 9px 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.5rem;
+		background-color: ds.$surface-card-subtle;
+
+		> div {
+			// 3. 🧩 Layout
+			display: grid;
+			gap: 3px;
+
+			// 4. 📦 Box Model
+			min-width: 0;
+			padding-inline: 10px;
+
+			// 6. 🎨 Visual
+			border-left: 1px solid ds.$border-panel;
+
+			&:first-child {
+				// 4. 📦 Box Model
+				padding-left: 0;
+
+				// 6. 🎨 Visual
+				border-left: 0;
+			}
+		}
+
+		dt {
+			// 5. 🔤 Typography
+			font-size: 0.67rem;
+			line-height: 1.2;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 0.88rem;
+			font-variant-numeric: tabular-nums;
+			font-weight: 750;
+			line-height: 1.25;
+
+			// 6. 🎨 Visual
+			color: ds.$text-value-on-dark;
+		}
 	}
 
 	&__notice {
 		// 4. 📦 Box Model
-		margin: 0;
+		margin: 0 16px;
+		padding: 8px 10px;
 
 		// 5. 🔤 Typography
-		font-size: 0.75rem;
+		font-size: 0.72rem;
+		line-height: 1.35;
 
 		// 6. 🎨 Visual
+		border-left: 3px solid ds.$accent-highlight;
+		background-color: ds.$surface-card-subtle;
 		color: ds.$text-label-on-dark;
 	}
 
 	&__error {
 		// 4. 📦 Box Model
-		padding: 0.65rem;
+		margin: 0 16px;
+		padding: 9px 10px;
+
+		// 5. 🔤 Typography
+		font-size: 0.76rem;
+		line-height: 1.35;
 
 		// 6. 🎨 Visual
 		border: 1px solid ds.$border-loss-emphasis;
 		border-radius: 0.45rem;
+		background-color: ds.$surface-card-subtle;
 		color: ds.$state-error-on-dark;
 	}
 
 	&__actions {
 		// 3. 🧩 Layout
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.65rem;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+		gap: 8px;
 
 		// 4. 📦 Box Model
-		padding-top: 0.8rem;
+		padding: 12px 16px 16px;
 
 		// 6. 🎨 Visual
 		border-top: 1px solid ds.$border-panel;
+
+		button {
+			// 4. 📦 Box Model
+			width: 100%;
+			height: 40px;
+			padding: 0 14px;
+
+			// 5. 🔤 Typography
+			font-size: 0.8rem;
+			font-weight: 700;
+		}
+
+		button:last-child {
+			@include ds.market-action;
+		}
 	}
 
 	&__success {
+		// 3. 🧩 Layout
+		display: grid;
+		justify-items: center;
+		gap: 12px;
+
 		// 4. 📦 Box Model
-		padding: 1rem;
+		min-height: 270px;
+		margin: 0 16px 16px;
+		padding: 20px;
 
 		// 5. 🔤 Typography
 		text-align: center;
@@ -136,27 +373,82 @@
 		// 6. 🎨 Visual
 		border: 1px solid ds.$accent-gain;
 		border-radius: 0.6rem;
-		background-color: ds.$surface-control-active;
-	}
-}
+		background-color: ds.$surface-accent-deep;
 
-@media (max-width: 500px) {
-	.dialog {
-		// 4. 📦 Box Model
-		width: calc(100vw - 1rem);
-	}
-
-	.modal {
-		// 4. 📦 Box Model
-		padding: 0.75rem;
-		&__details {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
+		h3,
+		p {
+			// 4. 📦 Box Model
+			margin: 0;
 		}
 
-		&__actions {
+		h3 {
+			// 5. 🔤 Typography
+			font-size: 1.15rem;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-gain;
+		}
+
+		p {
+			// 5. 🔤 Typography
+			font-size: 0.75rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		dl {
 			// 3. 🧩 Layout
-			flex-direction: column-reverse;
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 8px;
+
+			// 4. 📦 Box Model
+			width: 100%;
+			margin: 0;
+		}
+
+		dl > div {
+			// 3. 🧩 Layout
+			display: grid;
+			gap: 3px;
+
+			// 4. 📦 Box Model
+			padding: 8px;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-panel;
+			border-radius: 0.4rem;
+			background-color: ds.$surface-card-subtle;
+		}
+
+		dt {
+			// 5. 🔤 Typography
+			font-size: 0.65rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 0.85rem;
+			font-weight: 700;
+
+			// 6. 🎨 Visual
+			color: ds.$text-value-on-dark;
+		}
+
+		button {
+			@include ds.market-action;
+
+			// 4. 📦 Box Model
+			min-width: 180px;
+			height: 40px;
+			padding: 0 16px;
 		}
 	}
 }

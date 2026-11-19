@@ -3,11 +3,15 @@ import type {
 	PlayerCatalogCriteria,
 	PlayerCatalogFilters,
 } from "@/features/players/types";
-import { getNationalityFlag } from "@/features/players/utils";
-import { Button } from "@/shared/components";
-import { Globe, List, Shield, UsersRound, X } from "@/shared/icons";
-import { getTeamShield } from "@/shared/utils/teamShield";
-import ImageSelect, { type ImageSelectOption } from "./ImageSelect";
+import { sanitizePositions } from "@/features/players/utils";
+import {
+	Button,
+	CompetitionLogo,
+	FilterSelect,
+	type FilterSelectOption,
+	NationalityFlag,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./PlayerCatalogControls.module.scss";
 
 interface Props {
@@ -44,48 +48,60 @@ export default function PlayerCatalogControls({
 		if (!stillValid) onChange("teamId", "");
 	}, [criteria.teamId, options, availableTeams, onChange]);
 
-	const leagueOptions: ImageSelectOption[] = [
-		{ value: "", label: "Todas las ligas", image: null },
+	const leagueOptions: FilterSelectOption[] = [
+		{ value: "", label: "Todas las ligas" },
 		...(options?.leagues.map((league) => ({
 			value: String(league.id),
 			label: league.name,
-			imageType: "competition" as const,
+			visual: (
+				<CompetitionLogo
+					competitionId={league.id}
+					competitionName={league.name}
+					decorative
+				/>
+			),
 		})) ?? []),
 	];
 
 	const leagueNameById = new Map(
 		options?.leagues.map((league) => [league.id, league.name]) ?? [],
 	);
-	const teamOptions: ImageSelectOption[] = [
-		{ value: "", label: "Todos los equipos", image: null },
+	const teamOptions: FilterSelectOption[] = [
+		{ value: "", label: "Todos los equipos" },
 		...availableTeams.map((team) => ({
 			value: String(team.id),
 			label: team.name,
-			image: getTeamShield(leagueNameById.get(team.leagueId) ?? "", team.name),
+			visual: (
+				<TeamBadge
+					teamId={team.id}
+					teamName={team.name}
+					leagueId={team.leagueId}
+					leagueName={leagueNameById.get(team.leagueId)}
+				/>
+			),
 		})),
 	];
 
-	const positionOptions: ImageSelectOption[] = [
-		{ value: "", label: "Todas las posiciones", image: null },
-		...(options?.positions.map((position) => ({
+	const positionOptions: FilterSelectOption[] = [
+		{ value: "", label: "Todas las posiciones" },
+		...sanitizePositions(options?.positions).map((position) => ({
 			value: position,
 			label: position,
-			image: null,
-		})) ?? []),
+		})),
 	];
 
-	const nationalityOptions: ImageSelectOption[] = [
-		{ value: "", label: "Todas las nacionalidades", image: null },
+	const nationalityOptions: FilterSelectOption[] = [
+		{ value: "", label: "Todas las nacionalidades" },
 		...(options?.nationalities.map((nationality) => ({
 			value: nationality,
 			label: nationality,
-			image: getNationalityFlag(nationality),
+			visual: <NationalityFlag nationality={nationality} />,
 		})) ?? []),
 	];
 
-	const sortOptions: ImageSelectOption[] = [
-		{ value: "name,asc", label: "Nombre A–Z", image: null },
-		{ value: "name,desc", label: "Nombre Z–A", image: null },
+	const sortOptions: FilterSelectOption[] = [
+		{ value: "name,asc", label: "Nombre A–Z" },
+		{ value: "name,desc", label: "Nombre Z–A" },
 	];
 
 	return (
@@ -93,48 +109,58 @@ export default function PlayerCatalogControls({
 			className={styles.playerCatalogControls}
 			aria-label="Filtros del catálogo"
 		>
-			<ImageSelect
+			<FilterSelect
+				id="player-catalog-league"
 				label="Liga"
-				icon={<Globe size={18} aria-hidden="true" />}
 				value={criteria.leagueId}
 				options={leagueOptions}
 				disabled={disabled}
+				searchable
+				searchPlaceholder="Buscar liga…"
 				onChange={(value) => onChange("leagueId", value)}
 			/>
-			<ImageSelect
+			<FilterSelect
+				id="player-catalog-team"
 				label="Equipo"
-				icon={<Shield size={18} aria-hidden="true" />}
 				value={criteria.teamId}
 				options={teamOptions}
 				disabled={disabled}
+				searchable
+				searchPlaceholder="Buscar equipo…"
 				onChange={(value) => onChange("teamId", value)}
 			/>
-			<ImageSelect
+			<FilterSelect
+				id="player-catalog-position"
 				label="Posición"
-				icon={<UsersRound size={18} aria-hidden="true" />}
 				value={criteria.position}
 				options={positionOptions}
 				disabled={disabled}
 				onChange={(value) => onChange("position", value)}
 			/>
-			<ImageSelect
+			<FilterSelect
+				id="player-catalog-nationality"
 				label="Nacionalidad"
-				icon={<Globe size={18} aria-hidden="true" />}
 				value={criteria.nationality}
 				options={nationalityOptions}
 				disabled={disabled}
+				searchable
+				searchPlaceholder="Buscar nacionalidad…"
 				onChange={(value) => onChange("nationality", value)}
 			/>
-			<ImageSelect
+			<FilterSelect
+				id="player-catalog-sort"
 				label="Ordenar por"
-				icon={<List size={18} aria-hidden="true" />}
 				value={criteria.sort}
 				options={sortOptions}
 				disabled={false}
 				onChange={(value) => onChange("sort", value)}
 			/>
-			<Button unstyled type="button" onClick={onClear}>
-				<X size={14} aria-hidden="true" />
+			<Button
+				unstyled
+				type="button"
+				className={styles.playerCatalogControls__clear}
+				onClick={onClear}
+			>
 				Limpiar filtros
 			</Button>
 		</section>

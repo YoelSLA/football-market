@@ -9,30 +9,73 @@ interface Props {
 }
 
 export default function OfficialMarketPanel({ marketBuy }: Props) {
+	const hasFilters =
+		marketBuy.criteria.name !== "" ||
+		marketBuy.criteria.leagueId !== null ||
+		marketBuy.criteria.teamId !== null ||
+		marketBuy.criteria.position !== null ||
+		marketBuy.criteria.nationality !== null ||
+		marketBuy.criteria.minPrice !== null ||
+		marketBuy.criteria.maxPrice !== null;
+	const selectedPriceRange =
+		marketBuy.priceRange.min !== null && marketBuy.priceRange.max !== null
+			? ([
+					marketBuy.criteria.minPrice ?? marketBuy.priceRange.min,
+					marketBuy.criteria.maxPrice ?? marketBuy.priceRange.max,
+				] as const)
+			: null;
 	return (
 		<>
 			<div className={styles.officialPanel__content}>
-				<MarketFilters />
+				<MarketFilters
+					variant="official"
+					search={marketBuy.searchDraft}
+					league={marketBuy.criteria.leagueId?.toString() ?? "all"}
+					team={marketBuy.criteria.teamId?.toString() ?? "all"}
+					position={marketBuy.criteria.position ?? "all"}
+					nationality={marketBuy.criteria.nationality ?? "all"}
+					sort={marketBuy.criteria.sort}
+					priceRange={marketBuy.priceRange}
+					selectedPriceRange={selectedPriceRange}
+					isUpdating={marketBuy.isUpdatingPlayers}
+					officialOptions={marketBuy.filterOptions}
+					onSearchChange={marketBuy.setSearchDraft}
+					onLeagueChange={(value) => marketBuy.changeFilter("leagueId", value)}
+					onTeamChange={(value) => marketBuy.changeFilter("teamId", value)}
+					onPositionChange={(value) =>
+						marketBuy.changeFilter("position", value)
+					}
+					onNationalityChange={(value) =>
+						marketBuy.changeFilter("nationality", value)
+					}
+					onSortChange={(value) => marketBuy.changeFilter("sort", value)}
+					onPriceRangeCommit={marketBuy.commitPriceRange}
+					onClear={marketBuy.clearFilters}
+				/>
 				<MarketBuyCatalog
 					isLoading={marketBuy.isLoadingPlayers}
-					isError={marketBuy.isPlayersError}
+					isUpdating={marketBuy.isUpdatingPlayers}
+					isError={marketBuy.isPlayersError || marketBuy.filterOptionsError}
 					errorMessage={marketBuy.playersErrorMessage}
 					onRetry={marketBuy.retryPlayers}
 					players={marketBuy.players}
-					getQuoteState={marketBuy.quotesQuery.getQuoteState}
+					hasFilters={hasFilters}
 					onBuyClick={marketBuy.openBuyModal}
 				/>
 			</div>
-			<div className={styles.officialPanel__footer}>
-				<MarketPagination
-					page={marketBuy.currentPage}
-					totalPages={marketBuy.totalPages}
-					totalPlayers={marketBuy.totalPlayers}
-					visiblePlayers={marketBuy.players.length}
-					pageSize={marketBuy.pageSize}
-					onPageChange={marketBuy.setCurrentPage}
-				/>
-			</div>
+			{!marketBuy.isLoadingPlayers && !marketBuy.isPlayersError && (
+				<div className={styles.officialPanel__footer}>
+					<MarketPagination
+						page={marketBuy.criteria.page}
+						totalPages={marketBuy.totalPages}
+						visiblePlayers={marketBuy.players.length}
+						pageSize={marketBuy.pageSize}
+						showSummary={false}
+						variant="official"
+						onPageChange={marketBuy.setCurrentPage}
+					/>
+				</div>
+			)}
 		</>
 	);
 }

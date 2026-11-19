@@ -86,9 +86,15 @@ Authorization: Bearer <JWT>
   "page": 0,
   "size": 20,
   "totalElements": 2,
-  "totalPages": 1
+  "totalPages": 1,
+  "priceRange": {
+    "min": 100,
+    "max": 25000
+  }
 }
 ```
+
+`priceRange` informa los extremos globales de todas las cotizaciones vigentes elegibles, en centésimas de crédito. Se calcula independientemente de búsqueda, filtros deportivos, `hasQuote`, rango solicitado, orden y paginación. Cuando no existe ninguna cotización elegible, devuelve `{ "min": null, "max": null }`.
 
 #### Estructura del Item de Jugador
 
@@ -127,6 +133,8 @@ Authorization: Bearer <JWT>
 | `size` | integer | Tamaño de página solicitado o efectivo. |
 | `totalElements` | integer (Long) | Total de jugadores que coinciden con todos los filtros sobre la base de datos completa. |
 | `totalPages` | integer | Total de páginas disponibles según `totalElements` y `size`. |
+| `priceRange.min` | integer (Long) o `null` | Menor precio global de una cotización vigente elegible, en centésimas. |
+| `priceRange.max` | integer (Long) o `null` | Mayor precio global de una cotización vigente elegible, en centésimas. |
 
 ---
 
@@ -138,6 +146,7 @@ Authorization: Bearer <JWT>
 4. **Desempate Determinista**: Si múltiples registros tienen el mismo valor en el criterio de ordenamiento principal, el desempate determinista se realiza siempre de forma automática por `id ASC`.
 5. **Criterio de Ordenamiento Único**: No se permite componer múltiples parámetros de ordenación en la query (`sort=price,desc&sort=name,asc`). Toda solicitud que contenga más de un criterio responde `400 Bad Request` (`INVALID_SORT_PARAMETER`).
 6. **Normalización de Texto**: El filtro `name` se procesa aplicando recorte de espacios en blanco en los extremos. Si tras recortar el valor queda vacío, se omite el filtrado de nombre sin emitir error.
+7. **Rango Global Estable**: `priceRange` se obtiene mediante una agregación independiente sobre cotizaciones vigentes elegibles y no cambia al aplicar filtros o navegar páginas. Sus dos extremos son simultáneamente valores positivos o `null`.
 
 ---
 

@@ -50,12 +50,3 @@
 		}
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.summaryTab {
-		flex: none;
-		height: auto;
-		overflow: visible;
-		padding: 10px 0;
-	}
-}

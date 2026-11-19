@@ -54,25 +54,3 @@
 		}
 	}
 }
-
-@media (max-width: 600px) {
-	.playerOverview {
-		// 3. 🧩 Layout
-		grid-template-columns: minmax(0, 1fr);
-		gap: 7px;
-
-		// 4. 📦 Box Model
-		min-height: 195px;
-		padding: 9px 8px;
-		&__headlineMetrics {
-			// 3. 🧩 Layout
-			grid-column: 1;
-			grid-row: 3;
-		}
-
-		&__quoteContext {
-			grid-column: 1;
-			grid-row: 2;
-		}
-	}
-}

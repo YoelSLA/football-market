@@ -57,27 +57,6 @@
 	}
 }
 
-@media (max-width: 1000px) {
-	.playersCatalog__grid {
-		// 3. 🧩 Layout
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-	}
-}
-
-@include ds.down(ds.$bp-tablet) {
-	.playersCatalog__grid {
-		// 3. 🧩 Layout
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-}
-
-@media (max-width: 480px) {
-	.playersCatalog__grid {
-		// 3. 🧩 Layout
-		grid-template-columns: minmax(0, 1fr);
-	}
-}
-
 @include ds.compact() {
 	.playersCatalog__grid {
 		// 3. 🧩 Layout

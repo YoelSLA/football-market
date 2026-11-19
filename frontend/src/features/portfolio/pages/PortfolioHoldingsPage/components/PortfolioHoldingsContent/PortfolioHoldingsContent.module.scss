@@ -81,18 +81,4 @@
 			min-width: 0;
 		}
 	}
-
-	@include ds.down(ds.$bp-grid-md) {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@include ds.down(ds.$bp-grid-sm) {
-		&__grid {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
-	}
 }

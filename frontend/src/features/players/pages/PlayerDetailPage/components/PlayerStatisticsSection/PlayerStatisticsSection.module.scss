@@ -13,13 +13,4 @@
 
 	// 7. ⚙️ Behavior
 	overflow: hidden;
-
-}
-
-@include ds.down(ds.$bp-tablet) {
-	.statisticsSection {
-		flex: none;
-		height: auto;
-		overflow: visible;
-	}
 }

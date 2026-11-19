@@ -21,4 +21,5 @@ export type CurrentUserDTO = {
 	email: string;
 	role: UserRole;
 	availableCredits: number;
+	availableCreditsCentimes: number;
 };

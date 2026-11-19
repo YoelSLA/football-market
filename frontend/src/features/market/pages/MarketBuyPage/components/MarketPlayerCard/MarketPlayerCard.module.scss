@@ -1,97 +1,141 @@
 @use "@/styles/abstracts" as ds;
 
-@keyframes spin {
-	from {
-		// 8. ✨ Animation
-		transform: rotate(0deg);
-	}
-	to {
-		// 8. ✨ Animation
-		transform: rotate(360deg);
-	}
-}
-
-@keyframes pulse {
-	0%,
-	100% {
-		// 7. ⚙️ Behavior
-		opacity: .4;
-	}
-	50% {
-		// 7. ⚙️ Behavior
-		opacity: .85;
-	}
-}
-
 .card {
+	// 1. 🏷️ Custom Properties
+	--market-player-summary-gap: 12px;
+	--market-player-summary-height: auto;
+	--market-player-portrait-width: 68px;
+	--market-player-portrait-height: 72px;
+
 	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
-	gap: .65rem;
+	gap: 8px;
 
 	// 4. 📦 Box Model
-	height: 100%;
-	padding: .85rem;
+	box-sizing: border-box;
+	width: 100%;
+	height: 230px;
 	min-width: 0;
+	min-height: 0;
+	padding: 10px 12px;
 
 	// 6. 🎨 Visual
-	border-radius: .65rem;
 	border: 1px solid ds.$border-panel;
+	border-radius: .65rem;
 	background-color: ds.$surface-panel-from;
 	color: ds.$text-title-on-dark;
+
+	&__identity {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-shrink: 0;
+		align-items: flex-start;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+	}
+
 	&__content {
 		// 3. 🧩 Layout
 		display: flex;
+		flex: 1;
 		flex-direction: column;
-		justify-content: center;
 
 		// 4. 📦 Box Model
-		min-height: 4.85rem;
-		margin-top: .1rem;
+		min-width: 0;
+		min-height: 0;
+		padding-top: 9px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__quote {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+	}
+
+	&__metrics {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns:
+			minmax(0, 1.4fr)
+			minmax(0, 1fr)
+			minmax(0, 1fr);
+		align-items: start;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__metric {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
 	}
 
 	&__label {
-		// 4. 📦 Box Model
-		margin: 0 0 .25rem;
-
 		// 5. 🔤 Typography
-		font-size: .75rem;
+		font-size: 11px;
+		font-weight: 650;
+		letter-spacing: .03em;
+		line-height: 1.2;
+		text-transform: uppercase;
 
 		// 6. 🎨 Visual
 		color: ds.$text-label-on-dark;
 	}
 
-	&__quoteRow {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		justify-content: flex-start;
-		gap: 1.25rem;
-
-		// 4. 📦 Box Model
-		margin-bottom: .35rem;
-	}
-
 	&__price {
 		// 5. 🔤 Typography
-		font-size: 1.35rem;
+		font-size: 25px;
 		font-weight: 750;
-		letter-spacing: -.02em;
-		line-height: 1;
+		letter-spacing: -.03em;
+		line-height: 1.1;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
 		color: ds.$text-title-on-dark;
 	}
 
+	&__previousPrice {
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 400;
+		line-height: 1.25;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+
 	&__variation {
 		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: .08rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
 
 		// 5. 🔤 Typography
-		line-height: 1.15;
+		font-size: 18px;
+		font-weight: 750;
+		letter-spacing: -.02em;
+		line-height: 1.2;
+		white-space: nowrap;
+
 		&_positive {
 			// 6. 🎨 Visual
 			color: ds.$accent-gain;
@@ -108,138 +152,68 @@
 		}
 	}
 
-	&__variationPercentage {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: .25rem;
-
+	&__variationCaption {
 		// 5. 🔤 Typography
-		font-size: .95rem;
-		font-weight: 750;
-	}
+		font-size: 10px;
+		font-weight: 400;
+		line-height: 1.2;
 
-	&__variationArrow {
-		// 5. 🔤 Typography
-		font-size: 1rem;
-		line-height: 1;
-	}
-
-	&__variationAmount {
-		// 5. 🔤 Typography
-		font-size: .72rem;
-		font-weight: 600;
-
-		// 7. ⚙️ Behavior
-		opacity: .95;
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
 	}
 
 	&__effectiveDate {
 		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
-		gap: .35rem;
+		gap: 4px;
 
 		// 4. 📦 Box Model
-		margin: 0;
+		min-width: 0;
 
 		// 5. 🔤 Typography
-		font-size: .75rem;
+		font-size: 12px;
+		font-weight: 600;
+		line-height: 1.25;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
-	}
+		color: ds.$text-title-on-dark;
 
-	&__dateIcon {
-		// 3. 🧩 Layout
-		flex-shrink: 0;
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
 
-		// 4. 📦 Box Model
-		width: .9rem;
-		height: .9rem;
-
-		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
-	}
-
-	&__spinnerWrapper {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		justify-content: center;
-
-		// 4. 📦 Box Model
-		margin-left: auto;
-	}
-
-	&__spinner {
-		// 4. 📦 Box Model
-		width: 1.55rem;
-		height: 1.55rem;
-
-		// 6. 🎨 Visual
-		color: ds.$border-panel;
-
-		// 8. ✨ Animation
-		animation: spin 1s linear infinite;
-	}
-
-	&__skeletonPrice {
-		// 4. 📦 Box Model
-		width: 7.5rem;
-		height: 1.55rem;
-
-		// 6. 🎨 Visual
-		border-radius: .8rem;
-		background-color: ds.$border-panel-tint;
-
-		// 8. ✨ Animation
-		animation: pulse 1.5s ease-in-out infinite;
-	}
-
-	&__skeletonDate {
-		// 3. 🧩 Layout
-		display: inline-block;
-
-		// 4. 📦 Box Model
-		width: 4.8rem;
-		height: .75rem;
-
-		// 6. 🎨 Visual
-		border-radius: .35rem;
-		background-color: ds.$border-panel-soft;
-
-		// 8. ✨ Animation
-		animation: pulse 1.5s ease-in-out infinite;
+			// 4. 📦 Box Model
+			width: 14px;
+			height: 14px;
+		}
 	}
 
 	&__missingAlert {
 		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: .65rem;
+		display: grid;
+		flex: 1;
+		align-content: center;
+		gap: 5px;
 
 		// 4. 📦 Box Model
-		padding: .55rem .75rem;
-		margin-bottom: .45rem;
+		min-height: 0;
+		padding: 10px 12px;
 
 		// 6. 🎨 Visual
-		border-radius: .45rem;
 		border: 1px solid ds.$border-caution-emphasis;
+		border-radius: .45rem;
 		background-color: ds.$surface-caution-subtle;
-	}
+		color: ds.$state-caution;
 
-	&__missingIcon {
-		// 3. 🧩 Layout
-		flex-shrink: 0;
-
-		// 4. 📦 Box Model
-		width: 1.45rem;
-		height: 1.45rem;
-
-		// 6. 🎨 Visual
-		color: ds.$surface-page;
-		fill: ds.$state-caution;
+		strong {
+			// 5. 🔤 Typography
+			font-size: 12px;
+			font-weight: 700;
+			line-height: 1.2;
+			text-transform: uppercase;
+		}
 	}
 
 	&__missingText {
@@ -247,60 +221,20 @@
 		margin: 0;
 
 		// 5. 🔤 Typography
-		font-size: .78rem;
-		line-height: 1.3;
-
-		// 6. 🎨 Visual
-		color: ds.$state-caution;
+		font-size: 11px;
+		line-height: 1.35;
 	}
 
-	&__errorAlert {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		gap: .65rem;
-
-		// 4. 📦 Box Model
-		padding: .55rem .75rem;
-
-		// 6. 🎨 Visual
-		border-radius: .45rem;
-		border: 1px solid ds.$border-loss-emphasis;
-		background-color: ds.$surface-loss-subtle;
-	}
-
-	&__errorIcon {
+	&__actions {
 		// 3. 🧩 Layout
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		width: 1.45rem;
-		height: 1.45rem;
-
-		// 6. 🎨 Visual
-		color: ds.$text-primary-on-dark;
-		fill: ds.$state-negative;
-	}
-
-	&__errorText {
-		// 4. 📦 Box Model
-		margin: 0;
-
-		// 5. 🔤 Typography
-		font-size: .78rem;
-		line-height: 1.35;
-
-		// 6. 🎨 Visual
-		color: ds.$state-error-on-dark;
-		p {
-			// 4. 📦 Box Model
-			margin: 0;
-		}
-	}
-
-	&__actions {
-		// 4. 📦 Box Model
 		margin-top: auto;
+		padding-top: 8px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
 	}
 
 	&__buyButton {
@@ -308,101 +242,57 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: .5rem;
+		gap: 8px;
 
 		// 4. 📦 Box Model
+		box-sizing: border-box;
 		width: 100%;
-		padding: .48rem .75rem;
+		height: 38px;
+		padding: 6px 12px;
 
 		// 5. 🔤 Typography
-		font-size: .92rem;
+		font-size: 13px;
 		font-weight: 700;
+		line-height: 1.2;
 
 		// 6. 🎨 Visual
-		border-radius: .45rem;
 		border: 1px solid ds.$accent-gain;
-		color: ds.$accent-gain;
+		border-radius: .45rem;
 		background-color: ds.$surface-control-active;
+		color: ds.$accent-gain;
 
 		// 7. ⚙️ Behavior
 		cursor: pointer;
+
 		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
 			// 4. 📦 Box Model
-			width: 1.25rem;
-			height: 1.25rem;
+			width: 18px;
+			height: 18px;
 		}
 
-		&:hover {
+		&:hover:not(:disabled) {
 			// 6. 🎨 Visual
-			background-color: ds.$surface-control-active;
-		}
-	}
-
-	&__buyButtonDisabled {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: .5rem;
-
-		// 4. 📦 Box Model
-		width: 100%;
-		padding: .48rem .75rem;
-
-		// 5. 🔤 Typography
-		font-size: .92rem;
-		font-weight: 700;
-
-		// 6. 🎨 Visual
-		border-radius: .45rem;
-		border: 1px solid ds.$border-panel-mid;
-		color: ds.$text-label-on-dark;
-		background-color: ds.$surface-card-subtle;
-
-		// 7. ⚙️ Behavior
-		cursor: not-allowed;
-		opacity: .5;
-		svg {
-			// 4. 📦 Box Model
-			width: 1.25rem;
-			height: 1.25rem;
-		}
-	}
-
-	&__retryButton {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: .5rem;
-
-		// 4. 📦 Box Model
-		width: 100%;
-		padding: .48rem .75rem;
-
-		// 5. 🔤 Typography
-		font-size: .88rem;
-		font-weight: 600;
-
-		// 6. 🎨 Visual
-		border-radius: .45rem;
-		border: 1px solid ds.$border-panel;
-		color: ds.$text-title-on-dark;
-		background-color: ds.$surface-panel-to;
-
-		// 7. ⚙️ Behavior
-		cursor: pointer;
-		svg {
-			// 4. 📦 Box Model
-			width: 1.15rem;
-			height: 1.15rem;
+			background-color: ds.$surface-card-subtle;
 		}
 
-		&:hover {
+		&:focus-visible {
 			// 6. 🎨 Visual
-			border-color: ds.$accent-highlight;
-			color: ds.$accent-highlight;
-			background-color: ds.$surface-panel-from;
+			outline: 2px solid ds.$accent-gain;
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			// 6. 🎨 Visual
+			border-color: ds.$border-panel-mid;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-label-on-dark;
+			opacity: .5;
+
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
 		}
 	}
 }

@@ -36,23 +36,3 @@
 		scrollbar-gutter: stable;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.playerRankings {
-		// 3. 🧩 Layout
-		gap: 16px;
-
-		// 4. 📦 Box Model
-		padding: 12px 14px 24px;
-
-		// 7. ⚙️ Behavior
-		overflow: visible;
-		&__scrollRegion {
-			// 3. 🧩 Layout
-			gap: 16px;
-
-			// 7. ⚙️ Behavior
-			overflow: visible;
-		}
-	}
-}

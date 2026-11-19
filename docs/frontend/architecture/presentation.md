@@ -134,9 +134,9 @@ Ejemplos ilustrativos de wrappers: véase el [Anexo A](examples.md#anexo-a).
 <a id="articulo-33"></a>
 ### Artículo 33.º — Scroll y responsive
 
-a) **MUST:** En desktop (≥ tablet), el documento no scrollea. Cada Page que lo necesite define una única región vertical principal dentro de `PageLayout`; overlays y controles con desplazamiento independiente justificado no alteran esa autoridad.
+a) **MUST:** Desktop (ancho mínimo: 1024px) es el único viewport soportado en Football Market. El documento no scrollea; `AppLayout` fija la altura al viewport y oculta el overflow del documento. Cada Page que lo necesite define una única región vertical principal dentro de `PageLayout`; overlays y controles con desplazamiento independiente justificado no alteran esa autoridad.
 
-b) **MUST:** En móvil (< tablet), `PageLayout` y la región vertical principal de la Page liberan el overflow para que el scroll vuelva al documento natural.
+b) **MUST:** Queda prohibido implementar variantes, layouts o adaptaciones específicas para dispositivos móviles (mobile) o tablets (< 1024px). Se permiten adaptaciones entre resoluciones dentro del rango desktop (≥ 1024px) y adaptaciones por altura de viewport (modo compacto vertical). Toda nueva feature, componente o página debe respetar este criterio.
 
 c) **MUST:** Las Pages que posicionan una paginación en modo compacto son responsables de anclarla y reservar su banda sin superponer el contenido.
 
@@ -149,7 +149,7 @@ b) **MUST NOT:** Se usan alturas fijas (`height: Xpx`) en contenedores de Page.
 
 c) **MUST:** Se utiliza la cadena de flex con `min-height: 0`. Al crear una nueva Page privada, `PageLayout` envuelve su wrapper completo y este sigue la cadena de altura (`flex: 1`, `flex-direction: column`, `min-height: 0`).
 
-d) **MUST:** Se verifica visualmente en desktop, tablet, móvil y modo compacto tras cualquier cambio en layouts compartidos.
+d) **MUST:** Se verifica visualmente en resoluciones desktop soportadas (≥ 1024px) y en modo compacto por altura tras cualquier cambio en layouts compartidos.
 
 ## CAPÍTULO TERCERO — Estilos y recursos gráficos
 

@@ -1,5 +1,3 @@
-@use "@/styles/abstracts" as ds;
-
 .nav {
 	// 3. 🧩 Layout
 	display: flex;
@@ -32,20 +30,22 @@
 		color 0.15s ease;
 	&:hover:not(:disabled) {
 		// 6. 🎨 Visual
-		background-color: ds.$surface-glass-interactive;
-		border-color: ds.$action-selected-accent;
-		color: ds.$text-inverse;
+		background-color: var(--pagination-control-hover-background-color);
+		border-color: var(--pagination-control-hover-border);
+		color: var(--pagination-control-hover-color);
 	}
 
 	&:disabled {
+		// 6. 🎨 Visual
+		opacity: var(--pagination-disabled-opacity);
+
 		// 7. ⚙️ Behavior
-		opacity: 0.3;
 		cursor: not-allowed;
 	}
 
 	&:focus-visible {
 		// 6. 🎨 Visual
-		outline: 2px solid ds.$focus-ring-dark;
+		outline: 2px solid var(--pagination-focus-ring);
 		outline-offset: 1px;
 	}
 }

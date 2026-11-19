@@ -112,34 +112,4 @@
 			padding: ds.$space-xs 0;
 		}
 	}
-
-	@include ds.down(ds.$bp-sm) {
-		&_dashboard {
-			// 4. 📦 Box Model
-			padding: ds.$space-sm;
-			.portfolioValueSection__body_withAside {
-				// 3. 🧩 Layout
-				grid-template-columns: minmax(0, 1fr);
-				gap: ds.$space-md;
-			}
-
-			.portfolioValueSection__aside_divided {
-				// 4. 📦 Box Model
-				padding: ds.$space-md 0 0;
-
-				// 6. 🎨 Visual
-				border-left: 0;
-				border-top: 1px solid ds.$border-panel;
-			}
-		}
-
-		&_action {
-			// 3. 🧩 Layout
-			grid-template-columns: minmax(0, 1fr);
-			.portfolioValueSection__footer {
-				// 3. 🧩 Layout
-				grid-column: 1;
-			}
-		}
-	}
 }

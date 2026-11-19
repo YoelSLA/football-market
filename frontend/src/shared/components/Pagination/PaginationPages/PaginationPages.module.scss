@@ -9,5 +9,5 @@
 	// 4. 📦 Box Model
 	width: 100%;
 	min-width: 0;
-	height: 36px;
+	height: var(--pagination-content-height);
 }

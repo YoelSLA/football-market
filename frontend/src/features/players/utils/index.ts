@@ -1,7 +1,10 @@
 export {
 	DEFAULT_CATALOG_CRITERIA,
+	isValidPosition,
 	parseCatalogSearchParams,
+	sanitizePositions,
 	serializeCatalogCriteria,
+	VALID_POSITIONS,
 	validateReturnRoute,
 } from "./catalogSearchParams";
 export { demoHash } from "./demoHash";

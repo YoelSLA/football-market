@@ -48,30 +48,3 @@
 		padding: 24px;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.playerDetail {
-		// 3. 🧩 Layout
-		flex: none;
-
-		// 4. 📦 Box Model
-		height: auto;
-		min-height: 0;
-		padding: 10px;
-
-		// 7. ⚙️ Behavior
-		overflow: visible;
-
-		&__container {
-			flex: none;
-			height: auto;
-			overflow: visible;
-		}
-
-		&__status {
-			flex: none;
-			height: auto;
-			padding: 12px;
-		}
-	}
-}

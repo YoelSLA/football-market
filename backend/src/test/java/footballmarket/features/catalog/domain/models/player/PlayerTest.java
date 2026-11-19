@@ -118,8 +118,8 @@ class PlayerTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "\t"})
-    @DisplayName("Rechaza una posición vacía o en blanco")
+    @ValueSource(strings = {" ", "\t", "null", "NULL", "Null", " null "})
+    @DisplayName("Rechaza una posición vacía o en blanco o el texto literal null")
     void rechazaPosicionInvalida(String invalid) {
       assertThatThrownBy(() -> new Player("N", team(), invalid))
           .isInstanceOf(InvalidPlayerException.class);
@@ -127,7 +127,7 @@ class PlayerTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "\t"})
+    @ValueSource(strings = {" ", "\t", "null", "NULL", "Null", " null "})
     @DisplayName("Una actualización inválida no modifica parcialmente al jugador")
     void conservaDatosTrasActualizacionInvalida(String invalid) {
       // Arrange

@@ -73,36 +73,3 @@
 		}
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.playerStatisticsTabs {
-		height: 40px;
-		margin-top: 10px;
-		overflow-x: auto;
-		scrollbar-width: none;
-		-webkit-overflow-scrolling: touch;
-
-		&::-webkit-scrollbar {
-			display: none;
-		}
-
-		button {
-			flex: 1 0 auto;
-			min-width: 140px;
-			padding: 0 14px;
-			font-size: 12px;
-			gap: 6px;
-			white-space: nowrap;
-		}
-	}
-}
-
-@include ds.down(ds.$bp-2xs) {
-	.playerStatisticsTabs {
-		button {
-			min-width: 120px;
-			padding: 0 10px;
-			font-size: 11px;
-		}
-	}
-}

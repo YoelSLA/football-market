@@ -84,23 +84,3 @@
 		color: ds.$text-muted-on-dark;
 	}
 }
-
-@media (max-width: 600px) {
-	.headlineMetrics {
-		height: 68px;
-
-		&__icon {
-			width: 13px;
-			height: 13px;
-		}
-
-		&__label,
-		&__unit {
-			font-size: 8px;
-		}
-
-		&__value {
-			font-size: 16px;
-		}
-	}
-}

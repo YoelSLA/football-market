@@ -1,4 +1,5 @@
 import type { RankingFilterCriteria } from "@/features/players/types";
+import { sanitizePositions } from "@/features/players/utils";
 import { Button } from "@/shared/components";
 import { X } from "@/shared/icons";
 import styles from "./RankingsFilters.module.scss";
@@ -71,7 +72,7 @@ export default function RankingsFilters({
 						className={styles.select}
 					>
 						<option value="">Todas las posiciones</option>
-						{availablePositions.map((position) => (
+						{sanitizePositions(availablePositions).map((position) => (
 							<option key={position} value={position}>
 								{position}
 							</option>

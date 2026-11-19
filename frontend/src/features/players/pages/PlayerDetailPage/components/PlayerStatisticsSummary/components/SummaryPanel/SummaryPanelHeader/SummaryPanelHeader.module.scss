@@ -58,27 +58,3 @@
 		color: ds.$text-muted-on-dark;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.summaryPanelHeader {
-		gap: 12px;
-		padding-bottom: 12px;
-
-		&__titleGroup {
-			gap: 10px;
-		}
-
-		&__icon {
-			width: 24px;
-			height: 24px;
-		}
-
-		&__title {
-			font-size: 18px;
-		}
-
-		&__subtitle {
-			font-size: 12px;
-		}
-	}
-}

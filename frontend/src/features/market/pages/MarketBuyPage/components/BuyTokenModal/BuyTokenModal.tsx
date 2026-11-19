@@ -1,44 +1,33 @@
 import type { RefObject } from "react";
 import type { UseFormRegister } from "react-hook-form";
 import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
-import MarketQuoteFeedback from "@/features/market/components/MarketQuoteFeedback";
+import TokenQuantityStepper from "@/features/market/components/TokenQuantityStepper";
 import type {
 	BuyEstimation,
 	BuyQuantityForm,
 	BuyResult,
-	MarketPlayer,
-	MarketQuote,
-	MarketQuoteStatus,
+	OfficialMarketPlayer,
+	OfficialMarketQuote,
 } from "@/features/market/types";
 import {
-	formatCentimes,
 	formatCredits,
-	formatQuoteCalculatedAt,
+	formatQuoteEffectiveDate,
+	formatVariationPercentage,
 } from "@/features/market/utils";
-import { Button, Field, Modal } from "@/shared/components";
-import {
-	Coins,
-	Layers3,
-	LoaderCircle,
-	Minus,
-	Plus,
-	ShoppingCart,
-	X,
-} from "@/shared/icons";
+import { Button, Modal } from "@/shared/components";
+import { LoaderCircle, ShoppingCart, X } from "@/shared/icons";
 import styles from "./BuyTokenModal.module.scss";
 
 interface Props {
 	isOpen: boolean;
-	player: MarketPlayer | null;
-	quote: MarketQuote | null;
-	quoteStatus: MarketQuoteStatus;
-	quoteHttpStatus?: number;
-	canRetryQuote: boolean;
-	onRetryQuote: () => void;
+	player: OfficialMarketPlayer | null;
+	quote: OfficialMarketQuote | null;
 	confirmationBlockReason: string | null;
 	estimation: BuyEstimation | null;
 	formRegister: UseFormRegister<BuyQuantityForm>;
 	formError?: string;
+	quantity: string;
+	onQuantityChange: (quantity: number) => void;
 	isBusy: boolean;
 	canConfirm: boolean;
 	isSuccess: boolean;
@@ -51,29 +40,20 @@ interface Props {
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
-	day: "2-digit",
-	month: "2-digit",
-	year: "numeric",
-	hour: "2-digit",
-	minute: "2-digit",
+	dateStyle: "short",
+	timeStyle: "short",
 });
 
-/**
- * Modal de confirmación de compra de tokens (SPEC-019).
- * Component local sin Hooks propios: recibe todo su estado y handlers por props.
- */
 export default function BuyTokenModal({
 	isOpen,
 	player,
 	quote,
-	quoteStatus,
-	quoteHttpStatus,
-	canRetryQuote,
-	onRetryQuote,
 	confirmationBlockReason,
 	estimation,
 	formRegister,
 	formError,
+	quantity,
+	onQuantityChange,
 	isBusy,
 	canConfirm,
 	isSuccess,
@@ -84,31 +64,16 @@ export default function BuyTokenModal({
 	triggerRef,
 	initialFocusRef,
 }: Props) {
-	if (!player) {
-		return null;
-	}
-
+	if (!player || !quote) return null;
 	const { ref: registerRef, ...quantityProps } = formRegister("quantity");
-
-	const setInputRef = (el: HTMLInputElement | null) => {
-		registerRef(el);
-		if (initialFocusRef) {
-			(initialFocusRef as { current: HTMLInputElement | null }).current = el;
-		}
+	const setInputRef = (element: HTMLInputElement | null) => {
+		registerRef(element);
+		if (initialFocusRef)
+			(initialFocusRef as { current: HTMLInputElement | null }).current =
+				element;
 	};
-
-	let formattedExecutedAt = purchaseResult?.executedAt ?? "";
-	if (purchaseResult?.executedAt) {
-		try {
-			const date = new Date(purchaseResult.executedAt);
-			if (!Number.isNaN(date.getTime())) {
-				formattedExecutedAt = dateTimeFormatter.format(date);
-			}
-		} catch {
-			// Conserva string
-		}
-	}
-
+	const numericQuantity = Number(quantity);
+	const safeQuantity = Number.isInteger(numericQuantity) ? numericQuantity : 1;
 	return (
 		<Modal
 			isOpen={isOpen}
@@ -122,243 +87,120 @@ export default function BuyTokenModal({
 		>
 			<div className={styles.modal}>
 				<header className={styles.modal__header}>
-					<ShoppingCart aria-hidden="true" className={styles.modal__symbol} />
-					<div className={styles.modal__heading}>
-						<h3 className={styles.modal__title}>Comprar tokens</h3>
-						<p>Adquirí tokens del jugador seleccionado.</p>
-					</div>
+					<h3 className={styles.modal__title}>Comprar tokens</h3>
 					<Button
 						unstyled
 						type="button"
-						aria-label="Cerrar ventana de compra"
+						aria-label="Cerrar compra"
 						onClick={onClose}
 						disabled={isBusy}
-						className={styles.modal__closeButton}
 					>
 						<X aria-hidden="true" />
 					</Button>
 				</header>
-
 				<div className={styles.modal__content}>
-					<section
-						className={styles.modal__player}
-						aria-label="Jugador seleccionado"
-					>
+					<section aria-label="Jugador seleccionado">
 						<MarketPlayerSummary player={player} />
 					</section>
-					<div className={styles.modal__prices}>
-						{/* Cotización actual */}
-						<div className={styles.modal__quoteCard}>
-							<Coins aria-hidden="true" className={styles.modal__quoteIcon} />
-							<span className={styles.modal__quoteLabel}>Precio actual</span>
-							<MarketQuoteFeedback
-								status={quoteStatus}
-								httpStatus={quoteHttpStatus}
-								canRetry={canRetryQuote}
-								onRetry={onRetryQuote}
-							/>
-							{quoteStatus === "available" && quote && (
-								<>
-									<div className={styles.modal__quotePriceRow}>
-										<span className={styles.modal__quoteCredits}>
-											{formatCredits(quote.price)}
-										</span>
-										<span className={styles.modal__quoteCentimes}>
-											({formatCentimes(quote.price)})
-										</span>
-									</div>
-									<p className={styles.modal__quoteCalculated}>
-										{formatQuoteCalculatedAt(quote.calculatedAt)}
-									</p>
-								</>
-							)}
+					<dl className={styles.modal__prices}>
+						<div>
+							<dt>Precio actual</dt>
+							<dd>{formatCredits(quote.price)}</dd>
 						</div>
-						<div className={styles.modal__variation}>
-							<p>Variación (24h)</p>
-							<strong>Sin datos</strong>
+						<div>
+							<dt>Variación</dt>
+							<dd>
+								{formatVariationPercentage(
+									quote.variationPercentage,
+									"Sin referencia previa",
+								)}
+							</dd>
 						</div>
-					</div>
-
-					{/* Alerta de error */}
+						<div>
+							<dt>Precio anterior</dt>
+							<dd>{formatCredits(quote.previousPrice)}</dd>
+						</div>
+						<div>
+							<dt>Vigencia</dt>
+							<dd>{formatQuoteEffectiveDate(quote.effectiveDate)}</dd>
+						</div>
+					</dl>
 					{errorMessage && !isSuccess && (
-						<div role="alert" className={styles.modal__errorAlert}>
+						<p role="alert" className={styles.modal__errorAlert}>
 							{errorMessage}
-						</div>
+						</p>
 					)}
-
-					{/* Estado de éxito */}
 					{isSuccess && purchaseResult ? (
 						<div role="status" className={styles.modal__successCard}>
-							<h4 className={styles.modal__successTitle}>
-								¡Compra confirmada!
-							</h4>
-							<p className={styles.modal__successSub}>
-								Transacción #{purchaseResult.transactionId}
+							<h4>Compra confirmada</h4>
+							<p>Transacción #{purchaseResult.transactionId}</p>
+							<p>
+								{purchaseResult.quantity} tokens ·{" "}
+								{formatCredits(purchaseResult.unitPrice)} por token
 							</p>
-							<div className={styles.modal__successDetails}>
-								<div className={styles.modal__detailRow}>
-									<span>Tokens adquiridos:</span>
-									<strong>{purchaseResult.quantity}</strong>
-								</div>
-								<div className={styles.modal__detailRow}>
-									<span>Precio unitario:</span>
-									<strong>{formatCredits(purchaseResult.unitPrice)}</strong>
-								</div>
-								<div className={styles.modal__detailRow}>
-									<span>Total abonado:</span>
-									<strong>{formatCredits(purchaseResult.totalAmount)}</strong>
-								</div>
-								<div className={styles.modal__detailRow}>
-									<span>Ejecutado el:</span>
-									<span>{formattedExecutedAt}</span>
-								</div>
-							</div>
+							<p>Total: {formatCredits(purchaseResult.totalAmount)}</p>
+							<p>
+								{dateTimeFormatter.format(new Date(purchaseResult.executedAt))}
+							</p>
 						</div>
 					) : (
-						/* Formulario de cantidad y estimación */
 						<form
-							onSubmit={(e) => {
-								e.preventDefault();
+							onSubmit={(event) => {
+								event.preventDefault();
 								onConfirm();
 							}}
 							className={styles.modal__form}
 						>
-							<div className={styles.modal__quantity}>
-								<span className={styles.modal__quantityLabel}>
-									<Layers3 aria-hidden="true" /> Cantidad de tokens
-								</span>
-								<button
-									type="button"
-									disabled
-									aria-label="Disminuir cantidad: pendiente"
-								>
-									<Minus aria-hidden="true" />
-								</button>
-								<Field
-									id="buy-token-quantity"
-									label="Cantidad de tokens (1 a 100)"
-									type="text"
-									inputMode="numeric"
-									autoComplete="off"
-									disabled={isBusy}
-									error={formError}
-									ref={setInputRef}
-									className={styles.modal__quantityInput}
-									{...quantityProps}
-								/>
-								<button
-									type="button"
-									disabled
-									aria-label="Aumentar cantidad: pendiente"
-								>
-									<Plus aria-hidden="true" />
-								</button>
-							</div>
-							<fieldset className={styles.modal__quickAmounts}>
-								<legend className={styles.modal__quickAmountsLegend}>
-									Cantidades rápidas pendientes
-								</legend>
-								{[1, 5, 10, 50, 100].map((amount) => (
-									<button
-										type="button"
-										disabled
-										key={amount}
-										aria-label={`${amount} tokens: pendiente`}
-									>
-										{amount}
-									</button>
-								))}
-							</fieldset>
-							<p className={styles.modal__pending}>
-								−/+ y cantidades rápidas: pendientes. Podés editar la cantidad.
-							</p>
-
-							{/* Resumen de estimación */}
-							{quote && quote.price > 0 && estimation && (
+							<TokenQuantityStepper
+								id="buy-token-quantity"
+								label="Cantidad de tokens (1 a 100)"
+								quantity={safeQuantity}
+								min={1}
+								max={100}
+								disabled={isBusy}
+								error={formError}
+								inputRef={setInputRef}
+								inputProps={quantityProps}
+								presets={[1, 5, 10, 50, 100]}
+								onQuantityChange={onQuantityChange}
+							/>
+							{estimation && (
 								<div className={styles.modal__estimation}>
-									<div className={styles.modal__detailRow}>
-										<span>Precio por token</span>
-										<strong>{formatCredits(quote.price)}</strong>
-									</div>
-									<div className={styles.modal__detailRow}>
-										<span>Cantidad de tokens</span>
-										<strong>{estimation.quantity}</strong>
-									</div>
-									<div className={styles.modal__estimationRow}>
-										<span className={styles.modal__estimationLabel}>
-											Importe estimado:
-										</span>
-										<div className={styles.modal__estimationValues}>
-											<span className={styles.modal__estimationCredits}>
-												{formatCredits(estimation.totalCentimes)}
-											</span>
-											<span className={styles.modal__estimationCentimes}>
-												({formatCentimes(estimation.totalCentimes)})
-											</span>
-										</div>
-									</div>
-									<p className={styles.modal__estimationDisclaimer}>
-										Estimación orientativa. El precio definitivo y la
-										disponibilidad de stock son confirmados por el servidor al
-										procesar la compra.
+									<p>
+										Importe estimado:{" "}
+										<strong>{formatCredits(estimation.totalCentimes)}</strong>
+									</p>
+									<p>
+										El servidor confirma precio y disponibilidad al comprar.
 									</p>
 								</div>
 							)}
 						</form>
 					)}
 				</div>
-
 				{confirmationBlockReason && !isSuccess && (
-					<p
-						id="market-buy-block-reason"
-						role="status"
-						className={styles.modal__blockReason}
-					>
+					<p id="market-buy-block-reason" role="status">
 						{confirmationBlockReason}
 					</p>
 				)}
 				<footer className={styles.modal__footer}>
-					{isSuccess ? (
+					<Button type="button" onClick={onClose} disabled={isBusy}>
+						{isSuccess ? "Cerrar" : "Cancelar"}
+					</Button>
+					{!isSuccess && (
 						<Button
 							type="button"
-							onClick={onClose}
-							className={styles.modal__btnPrimary}
+							onClick={onConfirm}
+							disabled={!canConfirm || isBusy}
+							aria-busy={isBusy}
 						>
-							Cerrar
+							{isBusy ? (
+								<LoaderCircle aria-hidden="true" />
+							) : (
+								<ShoppingCart aria-hidden="true" />
+							)}
+							{isBusy ? "Procesando…" : "Confirmar compra"}
 						</Button>
-					) : (
-						<>
-							<Button
-								type="button"
-								onClick={onClose}
-								disabled={isBusy}
-								className={styles.modal__btnSecondary}
-							>
-								Cancelar
-							</Button>
-							<Button
-								type="button"
-								onClick={onConfirm}
-								disabled={!canConfirm || isBusy}
-								className={styles.modal__btnPrimary}
-								aria-busy={isBusy ? "true" : undefined}
-								aria-describedby={
-									confirmationBlockReason
-										? "market-buy-block-reason"
-										: undefined
-								}
-							>
-								{isBusy ? (
-									<LoaderCircle
-										aria-hidden="true"
-										className={styles.modal__spinner}
-									/>
-								) : (
-									<ShoppingCart aria-hidden="true" />
-								)}
-								{isBusy ? "Procesando…" : "Confirmar compra"}
-							</Button>
-						</>
 					)}
 				</footer>
 			</div>

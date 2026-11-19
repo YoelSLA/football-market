@@ -47,6 +47,43 @@ export interface TokenListingsDTO {
 	listings: TokenListingDTO[];
 }
 
+export interface OfficialMarketQuoteResponseDTO {
+	price: number;
+	previousPrice: number | null;
+	variationPercentage: number | null;
+	performanceScore: number;
+	multiplier: number;
+	calculationOrigin: string;
+	effectiveDate: string;
+	calculatedAt: string;
+}
+
+export interface OfficialMarketPlayerResponseDTO {
+	id: number;
+	name: string;
+	position: string;
+	nationality: string | null;
+	teamId: number | null;
+	teamName: string | null;
+	teamBadgeUrl: string | null;
+	leagueId: number | null;
+	leagueName: string | null;
+	imageUrl: string | null;
+	quote: OfficialMarketQuoteResponseDTO | null;
+}
+
+export interface OfficialMarketPageResponseDTO {
+	content: OfficialMarketPlayerResponseDTO[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	priceRange: {
+		min: number | null;
+		max: number | null;
+	};
+}
+
 export interface OrderSellRequestDTO {
 	playerId: number;
 	quantity: number;
@@ -61,4 +98,32 @@ export interface OrderSellResponseDTO {
 	status: string;
 	createdAt: string;
 	expiresAt: string;
+}
+
+export interface P2PMarketPlayerResponseDTO {
+	id: number;
+	name: string;
+	position: string;
+	nationality: string | null;
+	teamId: number | null;
+	teamName: string | null;
+	teamBadgeUrl: string | null;
+	leagueId: number | null;
+	leagueName: string | null;
+	imageUrl: string | null;
+	listingCount: number;
+	availableQuantity: number;
+	minimumUnitPrice: number;
+}
+
+export interface P2PMarketPageResponseDTO {
+	content: P2PMarketPlayerResponseDTO[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+	priceRange: {
+		min: number | null;
+		max: number | null;
+	};
 }

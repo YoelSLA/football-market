@@ -1,168 +1,236 @@
-# Tasks: Comprar tokens desde el frontend (SPEC-019)
+---
+description: "Tareas vigentes para integrar y rediseñar los mercados Oficial y P2P"
+---
 
-**Branch**: `feat/019-buy-tokens-from-frontend` | **Fecha**: 2026-10-23 | **Status**: Pending
+# Tasks: Comprar tokens en el mercado (SPEC-019)
 
-Revisión de entrega del 2026-10-25: se preservan IDs y evidencias históricas. `[X]` en tareas técnicas significa código implementado y revisado estáticamente, con build observado; **no acredita integración real, compra E2E, aceptación visual ni cierre**. `app` compone features; `market` no importa otras features; players/portfolio solo ampliaron sus exports autorizados. El usuario ejecuta validaciones manuales; el agente no ejecuta tests, lint ni Biome. El build frontend solo se ejecuta tras cambios de código, no por esta actualización documental.
+**Input**: Documentación vigente de `/specs/019-buy-tokens-from-frontend/`
 
-**T-00–T-19: 18/20 completadas técnicamente (T-00–T-16 y T-19); T-17/T-18 pendientes.** La integración autenticada de cotizaciones reales está pendiente de validación; sin una cotización válida y una consulta exitosa resuelta, la compra permanece deshabilitada. El flujo no está verificado de extremo a extremo. Evidencia y límites: [informe de implementación](implementation-report.md). Trabajo requerido/futuro, sin duplicar marcadores de tareas: [registro](future-work.md).
+**Prerequisites**: `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/`, checklists evaluados y wireframes aprobados.
 
-## Fase 0 — preparación y composición pública
+**Tests**: No crear tests ni infraestructura frontend. No hay cambios backend planificados, por lo que no corresponden tests backend. La validación manual está en `quickstart.md` y pertenece al usuario. Tras modificar código frontend se permiten `npm run build` y `npm run biome:fix`, sin considerarlos tests.
 
-- [X] **T-00** Instalar React-Toastify en `frontend/package.json`/lockfile y registrar versión/propósito efectivo en `docs/frontend/technologies.md`. Sin tests. Dependencias: ninguna.
-- [X] **T-01** Configurar `ToastContainer` y CSS en `frontend/src/app/providers/AppProviders/AppProviders.tsx`, preservando los providers actuales. Dependencias: T-00.
-- [X] **T-02** Crear `frontend/src/app/market/MarketBuyRoute/` (módulo con barrel) para componer `usePlayersQuery(page)` y `PLAYERS_PAGE_SIZE`, convertir `Player` a `MarketPlayer` sin filtrar por stock, manejar página/listado/error y coordinar invalidación de Portfolio; habilitar `/market/buy` bajo `AuthGuard` + `AppLayout` en `frontend/src/app/router/AppRouter/AppRouter.tsx` y `market-buy` en `frontend/src/app/navigation/sections.ts`. Dependencias: T-08, T-11, T-16; integrar al final, sin ruta vacía permanente.
+**Workflow local**: Este archivo contiene únicamente trabajo técnico pendiente. El historial anterior permanece en Git y en la evidencia protegida. TASKS no autoriza implementación; el siguiente paso es repetir ANALYZE.
 
-## Fase 1 — UI genérica y contratos de composición
+**Organization**: Tareas agrupadas por historia y por fase obligatoria del frontend. La lógica, el estado, el JSX semántico y la accesibilidad estructural deben quedar validados antes del gate humano; la maquetación fina se ejecuta solo después de su autorización.
 
-- [X] **T-03** Crear `frontend/src/shared/components/Modal/` con `Modal.tsx`, módulo SCSS y barrel: portal en body, overlay, ref **genérica** de foco inicial (sin conocer cantidad ni market), trap Tab/Shift+Tab, ARIA, ESC/overlay configurables, bloqueo de cierre durante submit, restitución de foco al botón iniciador al desmontar, responsive sin cambiar layout/scroll del mercado. Sin lógica de negocio. Dependencias: ninguna.
-- [X] **T-04** Exponer Modal desde `frontend/src/shared/components/index.ts`. Dependencias: T-03.
-- [X] **T-05** Crear DTOs de lectura de cotización real y compra en `frontend/src/features/market/types/dtos.ts` según [contrato](contracts/buy-tokens-frontend.md): campos del GET `price/effectiveDate/calculatedAt`, body POST sin listingId, respuesta ejecutada. DTO solo para Service/Mapper. Dependencias: ninguna.
-- [X] **T-06** Definir Models propios de market en `frontend/src/features/market/types/models.ts`: `MarketPlayer`, `MarketQuote`, `BuyResult` (sin `playerName`), `BuyEstimation`, `BuyQuantityForm` (campo textual inicial `"1"`); `types/index.ts` expone selectivamente para market. Sin imports de `players` ni Portfolio. Dependencias: T-05.
-- [X] **T-07** Añadir utilidades puras de formato en `frontend/src/features/market/utils/` y barrel: créditos/centésimas, estimación y `calculatedAt` real con locale español. Sin fabricar fechas ni usar `date` demo. Dependencias: T-06.
-- [X] **T-08** Ampliar **solo** `frontend/src/features/players/index.ts` para exponer `usePlayersQuery`, `PLAYERS_PAGE_SIZE`, `type Player` y `frontend/src/features/portfolio/index.ts` para exponer `portfolioQueryKeys`; reexportar mediante barrels internos existentes, sin modificar ninguna otra parte de esas features. La compra no usa ni exporta `usePlayerTokenQuoteQuery` demo. Dependencias: ninguna. Esta tarea sustituye la antigua verificación de timestamp demo.
+## Format: `[ID] [P?] [Story] Description`
 
-## Fase 2 — acceso real y lógica de compra market
+- **[P]**: Ejecutable en paralelo por modificar archivos distintos sin dependencia incompleta.
+- **[Story]**: Historia de usuario de `spec.md`.
+- Cada tarea incluye rutas exactas.
 
-- [X] **T-09** Crear `frontend/src/features/market/market.service.ts` con GET current autenticado (signal del Query Hook) y POST buy autenticado; crear `market.mapper.ts` para DTO→Model (y Form Model→DTO) dentro de la frontera del Service. `buyTokens(request)` devuelve `BuyResult` con campos exclusivamente del POST, **sin recibir ni incorporar el nombre**; GET 404 `QUOTE_NOT_FOUND` se trata como indisponible sin simular precio. Dependencias: T-05, T-06. Cliente implementado; no acredita GET autenticado real ni POST ejecutado. Integración pendiente en T-17/Q-04.
-- [X] **T-10** Crear `frontend/src/features/market/constants/marketQueryKeys.ts` y barrel; `hooks/queries/useMarketQuotesQuery.ts` coordina con `useQueries` las lecturas GET reales por id visible (key individual por id, sin `demo-quotes`) y estados de carga/error/ausencia, sin hooks dentro de `MarketPlayerCard` ni otro GET al abrir modal. Dependencias: T-09. Implementación y estados revisados en código; respuesta autenticada y comportamiento de caché pendientes de validación en T-17/Q-04.
-- [X] **T-11** Exportar desde `frontend/src/features/market/index.ts` solo `MarketBuyPage` y `type MarketPlayer` para app; sin publicar Service, DTO, Mapper o claves internas. Dependencias: T-06, T-16.
-- [X] **T-12** Crear `form/schemas/` y `form/hooks/` de market con valor inicial `"1"`: aceptar texto numérico de dígitos cuyo valor sea entero 1–100; exponer el valor validado para convertirlo a number **sin invocar** el Mutation Hook; rechazar vacío, no numérico, decimales y fuera de rango con error inline. Crear `hooks/mutations/useBuyTokensMutation.ts` para POST y `hooks/pages/useMarketBuyPage.ts` que compone Form Hook, Query Hook T-10 y Mutation Hook: coordina apertura, estimación, errores (diez códigos FR-10, fallback seguro, 401 por sesión), toast con `selectedPlayer.name` + `BuyResult` del Service, guarda doble envío, invalidación propia y callback `onPurchaseSuccess(id)` a app. El Page Hook no conoce Portfolio ni DTO. Dependencias: T-01, T-06, T-07, T-09, T-10, T-15.
+## Phase 1: Setup (Shared Configuration)
 
-## Fase 3 — UI market y app
+**Purpose**: Centralizar configuración, tipos y APIs públicas nuevas sin alterar contratos existentes.
 
-- [X] **T-13** Crear `pages/MarketBuyPage/MarketPlayerCard/` (TSX, módulo SCSS, barrel), ficha local con `MarketPlayer`, `MarketQuote | null`, estado de carga/error y callbacks **solo por props** de la Page; muestra precio real + `calculatedAt` y botón Comprar con referencia para restauración de foco. Sin Hooks ni imports de players; ref visual 04. Dependencias: T-06, T-07.
-- [X] **T-14** Crear `pages/MarketBuyPage/BuyTokenModal/` (TSX, módulo SCSS, barrel), Component local sin Hooks: compone Modal genérico, Field/Button y recibe por props del Page Hook estado de formulario, valor validado, estimación, quote de la Page, handlers, busy y cierre tras éxito (2 s o por usuario). Cantidad inicial 1, error inline, foco inicial desde ref genérica proporcionada por Page; ref visual 05. Sin GET demo ni HTTP directo. Dependencias: T-03, T-04, T-06, T-07, T-13.
-- [X] **T-15** Usar React-Toastify (`toast.success/error`) desde hook de coordinación de market o encapsularlo en un hook de market si aporta responsabilidad; no crear `shared/useToast` por duplicación o anticipación. Dependencias: T-00, T-01. Debe resolverse antes de T-12.
-- [X] **T-16** Crear `pages/MarketBuyPage/MarketBuyPage.tsx`, módulo SCSS y barrel: conecta `useMarketBuyPage` (T-12), recibe listado paginado por props de app y entrega a `MarketPlayerCard`/`BuyTokenModal` locales sus cotizaciones y acciones exclusivamente por props. Estados de carga/error/vacío; abrir/cerrar sin navegar ni remontar listado conserva scroll, página, filtros existentes y pestaña activa. No crear filtros nuevos ni simular stock. Prop `onPurchaseSuccess` hacia app sin conocer Portfolio. Dependencias: T-12, T-13, T-14. Después completar T-11 y T-02.
+- [X] T001 [P] Definir página oficial de 8, página P2P de 12 y debounce P2P de 300 ms en `frontend/src/features/market/constants/marketConfig.ts` y `frontend/src/features/market/constants/index.ts`
+- [X] T002 [P] Extender DTOs y Models con catálogo oficial, criterios oficiales y estado URL P2P en `frontend/src/features/market/types/dtos.ts`, `frontend/src/features/market/types/models.ts` y `frontend/src/features/market/types/index.ts`
+- [X] T003 [P] Publicar `usePlayerCatalogFiltersQuery` y `PlayerCatalogFilters` mediante los barrels vigentes `frontend/src/features/players/hooks/index.ts`, `frontend/src/features/players/types/index.ts` y `frontend/src/features/players/index.ts`, sin exponer Service, Mapper ni DTOs
 
-## Fase 4 — verificaciones y entrega técnica
+---
 
-- [ ] **T-17** Usuario: escenarios manuales [quickstart.md](quickstart.md) US1–US4 y errores, incluidos listado sin stock, cantidad `"1"`/`"10"` enviada como number, mapeo de diez códigos FR-10 + fallback + 401 + `QUOTE_NOT_FOUND`, respuesta real, doble envío y cache. No marcar hasta recibir evidencia del usuario. Dependencias: T-02.
-- [ ] **T-18** Usuario: foco, ARIA, lector de pantalla, 375/768/1440px y referencias visuales 04/05 sin reflow. No marcar hasta recibir evidencia. Dependencias: T-02.
-- [X] **T-19** Agente: solo `npm run build` desde `frontend` tras modificar código, revisar diff, `git diff --check` y status; `biome:check` queda a cargo del usuario porque no está autorizado como control ejecutable del agente. Último build de código observado: satisfactorio (2483 módulos, advertencia de chunk ~649 kB). Diff-check conserva tres avisos preexistentes; no se presenta como limpio. Sin nuevo build por cambios documentales. Dependencias: T-02; no requiere marcar T-17/T-18 como completadas para ejecutar el build, pero su aprobación humana sigue pendiente.
+## Phase 2: Foundational (Blocking Prerequisites)
 
-## Rediseño visual vigente (solicitud posterior)
+**Purpose**: Completar fronteras de datos y navegación comunes.
 
-Este alcance sustituye la propuesta funcional de filtros/catálogo completo antes de implementarla. No modificar lógica de players, portfolio, backend ni compra. Conservar T-00–T-19 como evidencia histórica.
+- [X] T004 Incorporar validación y mapeo estricto del catálogo oficial preservando listings y compra en `frontend/src/features/market/market.mapper.ts`
+- [X] T005 Extender el Service con `getOfficialMarket(criteria, signal)` y preservar `getListings`, `buyTokens` y `buyListing` en `frontend/src/features/market/market.service.ts`
+- [X] T006 Crear parseo y serialización URL oficial, incluidos créditos↔centésimas y rango inválido, en `frontend/src/features/market/utils/officialMarketCriteria.ts` y exportarlo desde `frontend/src/features/market/utils/index.ts`
+- [X] T007 Crear parseo y serialización de `search`, `league`, `position`, `sort`, `page` y `player` P2P en `frontend/src/features/market/utils/communityMarketCriteria.ts` y exportarlo desde `frontend/src/features/market/utils/index.ts` después de T006
 
-- [X] **V-01** VR-01/VR-02: recomponer MarketBuyPage con encabezado/métricas/panel lateral locales por props, fondo oscuro, tres columnas compactas y footer con total real/paginación existente; controles visuales de filtros y tamaño deshabilitados y pendientes, sin lógica ni endpoints nuevos. Implementado y compilado; aceptación visual pendiente en V-04.
-- [X] **V-02** VR-01/VR-04: rehacer MarketPlayerCard con retrato compacto, badge, iconos, celdas deportivas y variación «Sin datos», botón verde y fallback local. No inventar precio, escudos, banderas ni estadísticas. Implementado y compilado; aceptación visual pendiente en V-04.
-- [X] **V-03** VR-03/VR-04: recomponer BuyTokenModal según ref. 05 conservando contratos y lógica de compra; liga y resumen existentes, controles rápidos visuales pendientes, overlay sin blur, fallback local, foco y scroll propio sin reflow. Implementado y compilado; comportamiento visual/foco pendiente de inspección en V-04.
-- [ ] **V-04** VR-04: build permitido tras cambios, diff/status y comparación visual autenticada en 375/768/1440px sin compras ni tests; informar limitaciones y no declarar fidelidad terminada si no hay evidencia. Dependencias: V-01–V-03.
+**Checkpoint**: DTO → Mapper → Service, APIs públicas deportivas y URL → Criteria disponibles.
 
-Orden: V-01/V-02 → V-03 → V-04. Preparación: ANALYZE de este alcance antes de código. No se aprueban checklists ni revisión visual en nombre del usuario.
+---
 
-## Dependencias críticas y alcance
+## Phase 3: User Story 1 - Explorar el Mercado Oficial (Priority: P1) 🎯 MVP
 
-### Remediación manual de Biome autorizada
+**Goal**: Catálogo consolidado con filtros automáticos, URL reconstruible y paginación oficial de 8.
 
-- [X] **B-01** Revisar los 23 archivos frontend reformateados por el usuario y corregir manualmente los seis diagnósticos aportados: grupos ARIA con nombre, backdrop nativo sin handlers en contenedor estático, optional chaining, case redundante y fragmento de un hijo. Sin `--unsafe`, cambios de reglas, contratos ni lógica financiera. Implementado, revisión estática y build satisfactorios; reporte en [biome-remediation-report.md](biome-remediation-report.md).
-- [ ] **B-02** Usuario: volver a ejecutar `npm run biome:check` y comprobar overlay/Escape/Tab/foco sin compras reales. No se infiere PASS de Biome ni comportamiento visual a partir del build. T-17/T-18 e integración de cotizaciones permanecen pendientes.
+**Independent Test**: Combinar los ocho controles, orden y página en `/market/buy`, recargar y usar Back/Forward con una única lectura consolidada de ocho jugadores y sin GET individual de cotizaciones; `/market/sell` conserva sus filtros y comportamiento vigentes.
 
-### Correcciones de cotización y detalles visuales autorizadas
+- [X] T008 [US1] Extender query keys y crear `useOfficialMarketQuery` con AbortSignal en `frontend/src/features/market/constants/marketQueryKeys.ts`, `frontend/src/features/market/hooks/queries/useOfficialMarketQuery.ts` y `frontend/src/features/market/hooks/queries/index.ts`
+- [X] T009 [US1] Refactorizar URL, borradores, debounce, filtros en cascada mediante la API pública de players, query consolidada y selección vigente en `frontend/src/features/market/hooks/pages/useMarketBuyPage.ts`
+- [X] T010 [P] [US1] Separar `OfficialMarketFilterFields` y `SellMarketFilterFields` bajo props discriminadas en `frontend/src/features/market/components/MarketFilters/`, reutilizando búsqueda y select y manteniendo sin cambios el comportamiento consumido por `frontend/src/features/market/pages/MarketSellPage/MarketSellPage.tsx`
+- [X] T011 [P] [US1] Adaptar header, card y catálogo a identidad deportiva y cotización nullable en `frontend/src/features/market/pages/MarketBuyPage/components/MarketHeader/MarketHeader.tsx`, `frontend/src/features/market/pages/MarketBuyPage/components/MarketPlayerCard/MarketPlayerCard.tsx` y `frontend/src/features/market/pages/MarketBuyPage/components/MarketBuyCatalog/MarketBuyCatalog.tsx`
+- [X] T012 [US1] Componer carga, actualización, error, vacíos, grilla y paginación externa al scroll en `frontend/src/features/market/pages/MarketBuyPage/components/OfficialMarketPanel/OfficialMarketPanel.tsx`
+- [X] T013 [US1] Integrar el Page Hook consolidado y retirar catálogo+quotes N+1 de `frontend/src/features/market/pages/MarketBuyPage/MarketBuyPage.tsx`
 
-- [X] **Q-01** Pestañas/iconos Lucide según referencia 04 sin habilitar funciones futuras, margen inferior de filtros y scrollbar oscura local, preservando scroll exclusivo. Implementado y compilado; cotejo visual en Q-04 pendiente.
-- [X] **Q-02** Service/Mapper de market validan quote real y distinguen ausencia 404 QUOTE_NOT_FOUND de auth/permisos/HTTP/red/respuesta inválida. Query Hook expone estado carga/pausa/error y reintento GET por id; sin retry automático de fallos no transitorios ni contratos/endpoints nuevos. Implementado, revisado estáticamente y compilado; sin evidencia autenticada ni pruebas ejecutadas.
-- [X] **Q-03** Page Hook y handler requieren lectura exitosa resuelta, sesión presente y precio válido; evitar confirmación por caché stale tras fallo. Feedback local por props en ficha/modal, motivo accesible del botón bloqueado y reintento sin POST. Dependencias: Q-02. Implementado y compilado; comportamiento en sesión real pendiente en Q-04.
-- [ ] **Q-04** Build permitido y revisión de diff; inspección real de GET autenticado/estado UI si el entorno lo permite, sin compras/tests/commits/push/merges. Si falta evidencia, reportar limitación y no atribuir causa backend no comprobada. Dependencias: Q-01–Q-03.
+**Checkpoint**: US1 estructuralmente verificable sin comprar y sin regresión contractual en Mercado de Venta.
 
-### Ajuste de scroll autorizado (posterior al rediseño)
+---
 
-- [X] **S-01** Contener AppLayout/body por opt-in exclusivo de `/market/buy`, con altura dinámica de viewport y flex; no alterar otras rutas. Implementado y compilado; regresión visual entre rutas pendiente en S-03.
-- [X] **S-02** MarketBuyPage con encabezado/filtros/footer estáticos y min-height:0 hasta main; scroll únicamente en jugadores; métricas compactas y filtros plegables móviles autorizados. Implementado y compilado; comprobación visual de alturas y desplegable pendiente en S-03.
-- [ ] **S-03** Build sin tests, revisión de diff y verificación visual 375/768/1440, sin compras; registrar limitaciones y no acreditar inspecciones no realizadas. Dependencias: S-01/S-02.
+## Phase 4: User Story 2 - Comprar emisión oficial (Priority: P1)
+
+**Goal**: Comprar desde la cotización embebida con cantidad 1–100 y resultado real.
+
+**Independent Test**: Abrir una card cotizada, modificar cantidad, confirmar una sola solicitud y observar resultado e invalidaciones sin GET adicional.
+
+- [X] T014 [P] [US2] Adaptar `BuyTokenModal` a los datos aprobados, controles ± y accesos absolutos en `frontend/src/features/market/pages/MarketBuyPage/components/BuyTokenModal/BuyTokenModal.tsx`
+- [X] T015 [US2] Reutilizar formulario/mutación con cotización embebida, guardas e invalidaciones de oficial/usuario/portfolio en `frontend/src/features/market/hooks/pages/useMarketBuyPage.ts`
+- [X] T016 [US2] Retirar consumidores N+1 y eliminar query/key individual solo si quedan sin uso en `frontend/src/features/market/hooks/queries/useMarketQuotesQuery.ts`, `frontend/src/features/market/hooks/queries/index.ts` y `frontend/src/features/market/constants/marketQueryKeys.ts`
+
+---
+
+## Phase 5: User Story 3 - Explorar ofertas del Mercado P2P (Priority: P1)
+
+**Goal**: Catálogo agrupado, filtros/orden local, página de 12 y navegación URL completa.
+
+**Independent Test**: `search` se publica a 300 ms, liga/posición/orden inmediatamente, y recarga/Back/Forward reconstruyen catálogo y página sin otro GET de listings.
+
+- [X] T017 [P] [US3] Endurecer agrupación, sumas seguras, orden determinista y filtrado previo a paginación en `frontend/src/features/market/utils/communityMarket.ts`
+- [X] T018 [US3] Derivar filtros/página/player desde URL, aplicar debounce 300 ms y normalizar página en `frontend/src/features/market/hooks/pages/useCommunityMarketPage.ts`
+- [X] T019 [P] [US3] Conectar filtros horizontales automáticos a URL sin parámetros backend en `frontend/src/features/market/pages/MarketP2PPage/components/CommunityMarketFilters.tsx`
+- [X] T020 [P] [US3] Adaptar catálogo, cards, total único y paginación local en `frontend/src/features/market/pages/MarketP2PPage/components/CommunityMarket.tsx` y `frontend/src/features/market/pages/MarketP2PPage/components/CommunityMarketPanel.tsx`
+- [X] T021 [US3] Integrar header, saldo y catálogo navegable en `frontend/src/features/market/pages/MarketP2PPage/MarketP2PPage.tsx` y `frontend/src/features/market/pages/MarketP2PPage/components/MarketP2PHeader/MarketP2PHeader.tsx`
+
+---
+
+## Phase 6: User Story 4 - Elegir y comprar una oferta P2P (Priority: P1)
+
+**Goal**: Detalle completo y compra exclusiva de lote completo.
+
+**Independent Test**: Abrir `?player=<id>`, confirmar `{ listingId }`, conservar éxito hasta cierre y refrescar conflictos sin editar cantidad ni reintentar POST.
+
+- [X] T022 [P] [US4] Adaptar detalle a listings ya cargados y estado sin ofertas en `frontend/src/features/market/pages/MarketP2PPage/components/CommunityListingsPanel.tsx`
+- [X] T023 [P] [US4] Adaptar `BuyListingModal` a lote de solo lectura y éxito persistente en `frontend/src/features/market/pages/MarketP2PPage/components/BuyListingModal.tsx`
+- [X] T024 [US4] Preservar compra por `listingId`, doble guarda, incertidumbre sin retry e invalidaciones en `frontend/src/features/market/hooks/pages/useCommunityMarketPage.ts`
+
+---
+
+## Phase 7: User Story 5 - Accesibilidad estructural y estados (Priority: P2)
+
+**Goal**: Dejar ambos mercados y diálogos semánticamente operables antes de la maquetación fina.
+
+**Independent Test**: Inspeccionar estructura, orden de foco, nombres accesibles, anuncios y guardas de cierre sin depender del SCSS definitivo.
+
+- [X] T025 [P] [US5] Añadir semántica de estados, `aria-busy`, alertas, foco y operación por teclado a los componentes TSX oficiales modificados en `frontend/src/features/market/pages/MarketBuyPage/` y a la variante oficial de `frontend/src/features/market/components/MarketFilters/`, preservando la semántica de Mercado de Venta
+- [X] T026 [P] [US5] Añadir semántica de catálogo/detalle, `aria-busy`, alertas, foco y operación por teclado a los componentes TSX P2P modificados en `frontend/src/features/market/pages/MarketP2PPage/`
+- [X] T027 [US5] Auditar el contrato vigente de foco, Escape, overlay y bloqueo durante submit en `frontend/src/shared/components/Modal/Modal.tsx`, modificándolo solo ante una regresión concreta reproducible por inspección estática y sin alterar consumidores ajenos a SPEC-019
+
+---
+
+## Phase 8: Frontend Phase 1 Exit & Mandatory Human Gate
+
+**Purpose**: Cerrar lógica, estado, estructura y accesibilidad antes de cualquier maquetación fina.
+
+- [X] T028 Retirar únicamente código muerto confirmado de la Fase 1 y ajustar exports en `frontend/src/features/market/index.ts`, `frontend/src/features/market/hooks/index.ts`, `frontend/src/features/market/pages/index.ts` y barrels explícitamente afectados
+- [X] T029 Ejecutar `npm run build` y `npm run biome:fix` desde `frontend/` sobre la Fase 1, revisar salidas generadas y corregir solo hallazgos del alcance antes de detenerse en el gate humano obligatorio de `frontend/AGENTS.md`
+
+**🛑 Mandatory Gate**: Detener la implementación y esperar autorización humana explícita. T030–T035 no pueden comenzar aunque T029 resulte satisfactorio.
+
+---
+
+## Phase 9: Frontend Phase 2 - Fine Layout and Visual Accessibility
+
+**Purpose**: Aplicar exclusivamente maquetación, wrappers visuales permitidos y SCSS conforme a los wireframes aprobados, sin modificar contratos, datos, eventos ni atributos accesibles validados en Fase 1.
+
+- [X] T030 [US1] Aplicar en desktop un grid oficial de cuatro columnas y dos filas, controles de 38 px y altura automática mediante clases semánticas en `frontend/src/features/market/components/MarketFilters/`, preservando los estilos vigentes de `MarketSellPage`
+- [X] T031 [US2] Ajustar modal oficial y estados al wireframe en `frontend/src/features/market/pages/MarketBuyPage/components/BuyTokenModal/BuyTokenModal.module.scss`
+- [X] T032 [US3] Aplicar filtros 94 px, cuatro columnas y paginación externa al scroll en los módulos SCSS de `frontend/src/features/market/pages/MarketP2PPage/`
+- [X] T033 [US4] Aplicar dimensiones de detalle, publicaciones, modal y éxito en `frontend/src/features/market/pages/MarketP2PPage/components/CommunityListingsPanel.module.scss` y `frontend/src/features/market/pages/MarketP2PPage/components/BuyListingModal.module.scss`
+- [X] T034 [US5] Ajustar mediante wrappers puramente visuales y SCSS la altura y el scroll de ambas rutas sin afectar otras páginas en `frontend/src/app/layouts/AppLayout/AppLayout.tsx`, `frontend/src/app/layouts/AppLayout/AppLayout.module.scss`, `frontend/src/features/market/pages/MarketBuyPage/MarketBuyPage.module.scss` y `frontend/src/features/market/pages/MarketP2PPage/MarketP2PPage.module.scss`
+- [X] T035 [US5] Corregir únicamente regresiones visuales comprobadas de overlay y scroll interno en `frontend/src/shared/components/Modal/Modal.module.scss`, sin modificar la lógica ni los atributos accesibles de `Modal.tsx`
+
+---
+
+## Phase 10: Polish & Cross-Cutting Concerns
+
+- [X] T036 Ejecutar `npm run build` y `npm run biome:fix` desde `frontend/` tras la Fase 2, revisar salidas generadas y corregir solo hallazgos del alcance en `frontend/src/`
+- [X] T037 Contrastar estáticamente ambos flujos con `specs/019-buy-tokens-from-frontend/quickstart.md`, revisar compatibilidad de `/market/sell`, ejecutar `git diff --check` y `git status --short`, y registrar desviaciones sin afirmar tests no ejecutados
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- Setup T001–T003 → Foundation T004–T007.
+- T007 depende de T006 porque ambos actualizan `frontend/src/features/market/utils/index.ts`; no son paralelizables.
+- US1 depende de T003–T006; US3 depende de T001–T005 y T007.
+- US2 depende de US1; US4 depende de US3.
+- US1 y US3 pueden avanzar en paralelo una vez satisfechas sus dependencias fundacionales.
+- US5 estructural depende del JSX final de US1–US4.
+- T028–T029 dependen de toda la Fase 1 y deben completarse antes del gate humano.
+- T030–T035 dependen de T029 y de autorización humana explícita.
+- T036–T037 dependen de toda la Fase 2 incluida en el alcance.
+
+### MarketFilters Compatibility
+
+- T010 mantiene controles compartidos y separa las composiciones oficial y de venta mediante props discriminadas; no cambia defaults ni callbacks usados por `MarketSellPage`.
+- T025 preserva la semántica vigente de venta al incorporar accesibilidad específica de la variante oficial.
+- T030 limita selectores y estilos nuevos a la variante oficial y T037 revisa explícitamente la ausencia de regresiones en `/market/sell`.
+- Si la implementación exigiera romper props, defaults o estructura consumida por venta, debe detenerse y solicitar una decisión arquitectónica antes de continuar.
+
+### Frontend Phase Gate
+
+- **Fase 1**: T001–T029 cubren contratos, APIs públicas, estado, Hooks, props, JSX semántico, accesibilidad estructural, limpieza y controles técnicos.
+- **Gate**: después de T029 la ejecución se detiene aunque build y Biome finalicen sin errores.
+- **Fase 2**: solo con autorización explícita se ejecutan T030–T035; estas tareas no pueden alterar lógica, eventos, contratos ni ARIA de Fase 1.
+- **Cierre**: T036–T037 verifican el resultado técnico y la regresión cruzada, sin sustituir validación manual ni tests.
+
+### Parallel Opportunities
+
+- T001/T002/T003 pueden avanzar en paralelo.
+- US1 y US3 pueden avanzar en paralelo tras Foundation.
+- T010/T011, T014 junto a T015, T019/T020, T022/T023 y T025/T026 modifican archivos distintos.
+- Tras el gate, T030–T033 pueden avanzar en paralelo; T034–T035 deben coordinarse por afectar layout o componentes compartidos.
+
+## Parallel Examples
 
 ```text
-T-00 → T-01 → T-15 → T-12
-T-03 → T-04 → T-14
-T-05 → T-06 → T-07 → T-13/T-14
-T-05/T-06 → T-09 → T-10 → T-12
-T-03/T-04 + T-13 → T-14
-T-12 + T-13 + T-14 → T-16 → T-11
-T-08 + T-11 → T-02
-T-02 → T-17/T-18 (usuario), T-19 (agente: build permitido)
+Oficial: T008 → T009 → T010/T011 → T012 → T013
+P2P:     T017 → T018 → T019/T020 → T021
+Compra:  T014/T015 → T016 || T022/T023 → T024
+Gate:    T025/T026 → T027 → T028 → T029 → PAUSA HUMANA
+Visual:  autorización → T030/T031/T032/T033 → T034/T035 → T036 → T037
 ```
 
-La dependencia T-16 → T-11 → T-02 corresponde a la primera implementación. La propuesta posterior de filtros funcionales/catálogo completo fue sustituida por el rediseño visual: los controles nuevos permanecen deshabilitados y pendientes, sin lógica de filtro/stock. Los límites de players/portfolio/backend se mantienen. No crear tests frontend. Esta preparación documental no implementa nuevas capacidades, no renueva autorizaciones y no acredita CONVERGE ni cierre; primero deben resolverse las verificaciones e integración pendientes.
+## Implementation Strategy
 
-## Ampliación P2P aprobada (2026-11-04)
+1. Setup + Foundation.
+2. Estructura Oficial: US1 → US2.
+3. Estructura P2P en paralelo o después: US3 → US4.
+4. Accesibilidad estructural transversal: US5.
+5. Limpieza y controles de Fase 1; detenerse en el gate.
+6. Con autorización, ejecutar maquetación fina y cierre técnico.
 
-Estas tareas agregan la compra secundaria sin reabrir ni borrar las tareas históricas de compra oficial.
-La autorización de preparación documental no acredita implementación ni reemplaza el gate frontend.
+## Notes
 
-### Fase P1 — lógica, datos y estructura
+- Solo trabajo pendiente; los flujos y componentes existentes se reutilizan donde satisfacen el diseño.
+- No crear tests frontend ni modificar backend mientras los contratos vigentes alcancen.
+- No convertir CODE REVIEW, TESTING, validación manual o autorización visual en tareas técnicas.
+- TASKS no autoriza implementación ni realiza commits, push o merges.
 
-- [x] **P-01** Extender DTOs, Models y Mapper de market para `/listings` y `{listingId}`, con validación
-  estricta del sobre, enteros/fechas/estado y respuesta de compra; sin exponer DTO fuera de Service/Mapper.
-- [x] **P-02** Ampliar `market.service.ts` con lectura autenticada cancelable de publicaciones y compra por
-  listing; mantener compra directa compatible y sin endpoints duplicados.
-- [x] **P-03** Añadir query keys, `useCommunityMarketQuery` y `useBuyListingMutation`; sin retry automático
-  del POST y con invalidación de listings solo por coordinación del Page Hook.
-- [x] **P-04** Reutilizar desde la API pública de players `useAllPlayersQuery` y `Player`, ya expuestos, para
-  resolver detalles por ids únicos; no exportar Service ni DTO. Reutilizar caché existente.
-- [x] **P-05** Implementar utilidades puras de agrupación, filtros, orden y paginación local de 12, con
-  desempates deterministas y aritmética segura.
-- [x] **P-06** Ampliar `useMarketBuyPage` para `mode`/`player` en URL, estado P2P, selección, traducción de
-  errores, doble envío e invalidaciones de auth/portfolio/holdings/listings.
-- [x] **P-07** Crear estructura JSX accesible de catálogo agrupado, detalle completo, cards/filas de listing,
-  estados y `BuyListingModal`, reutilizando componentes existentes y sin CSS fino.
-- [x] **P-08** Revisar estáticamente consumidores, diff y contratos; ejecutar build y Biome acotado a los
-  archivos P2P permitidos por `frontend/AGENTS.md`, sin tests. Build y Biome satisfactorios el 2026-11-04;
-  Vite conserva la advertencia no bloqueante preexistente por chunk superior a 500 kB.
+## Evolución vigente: sliders de precio
 
-### Gate obligatorio P2P
+- [X] T038 Extender DTO, Model y mapper oficial con `priceRange` global nullable en centésimas.
+- [X] T039 Crear el componente compartido y accesible `Slider` con modos simple/rango y confirmación al finalizar la interacción.
+- [X] T040 Integrar el slider doble oficial con URL, normalización de extremos y reinicio de página.
+- [X] T041 Integrar el slider máximo P2P, «Sin límite» y filtrado previo a agrupación sin llamadas adicionales.
+- [X] T042 Actualizar contratos, requisitos y guía de comprobación de ambos mercados.
+- [X] T043 Aplicar el acabado SCSS con tokens y numeración de propiedades después del gate humano obligatorio.
+- [X] T044 Completar validación visual humana de desbordamientos, estados extremos y panel de 180 px.
 
-- [x] **P-09 — USUARIO** Revisar Fase P1 y autorizar explícitamente la maquetación fina. Autorización recibida
-  el 2026-11-04: «Apruebo la Fase P1 de SPEC-019 P2P y autorizo P-10 y P-11.» El agente se detiene
-  aquí aunque el build sea satisfactorio. No se infiere aprobación de silencio, `ok` genérico ni tareas.
+## Evolución vigente: detalle de ofertas P2P
 
-### Fase P2 — maquetación fina
+- [X] T045 Reorganizar el JSX semántico del detalle con identidad compartida, métricas, aviso y cards de publicaciones sin alterar la compra.
+- [X] T046 Conservar el orden precio/vencimiento/ID y el límite económico del catálogo sin añadir estado ni peticiones.
+- [X] T047 Aplicar la grilla desktop, jerarquía visual y estados interactivos mediante SCSS después del gate humano.
+- [X] T048 Verificar visualmente cantidades variables, desbordamientos y estados del detalle con sesión autenticada.
 
-- [x] **P-10** Implementar exclusivamente SCSS y wrappers de layout permitidos para catálogo, detalle y modal
-  conforme a wireframes, tokens y patrones visuales vigentes. Build y Biome acotado satisfactorios el
-  2026-11-04; sin cambios de contratos, datos, eventos ni ARIA.
-- [ ] **P-11** Auditar visualmente 375/768/1440 cuando el entorno lo permita, sin ejecutar compras ni tests;
-  registrar limitaciones y solicitar confirmación visual humana. Intento del 2026-11-04 bloqueado por
-  redirección legítima de `AuthGuard` a `/login`; no se inventaron credenciales ni evidencia autenticada.
+## Evolución vigente: confirmación de compra P2P y saldo preciso
 
-### Verificación humana
+- [X] T049 Trazar las unidades monetarias desde persistencia, sesión, publicación y compra; identificar la comparación incompatible entre créditos y centésimas.
+- [X] T050 Extender el contrato de sesión con `availableCreditsCentimes` y migrar las guardas P2P a una comparación homogénea, preservando la autoridad del backend.
+- [X] T051 Incorporar cobertura backend para saldo suficiente, exacto, insuficiente y conversión monetaria, sin ejecutar tests conforme a las reglas del repositorio.
+- [X] T052 Reorganizar el JSX accesible del modal con identidad compartida, métricas del lote, total, saldo disponible y saldo restante.
+- [X] T053 Aplicar el acabado SCSS desktop con tokens y numeración de propiedades después del gate humano obligatorio.
+- [X] T054 Completar la validación visual humana del modal y ejecutar los controles permitidos finales.
 
-- [ ] **P-12 — USUARIO** Validar catálogo agrupado, filtros/página, URL/Back/Forward, todas las publicaciones,
-  payload exclusivo `listingId`, errores concurrentes, resultado e interacción por teclado.
+## Evolución vigente: retorno tras compra P2P
 
-```text
-P-01 → P-02 → P-03
-P-01 + P-04 → P-05
-P-03 + P-05 → P-06 → P-07 → P-08 → P-09
-P-09 → P-10 → P-11 → P-12
-```
-
-## Refactorización: Separación en dos páginas de mercado (Oficial vs P2P)
-
-- [X] **RF-01** Actualizar navegación principal (`sections.ts`): dos pestañas bajo Mercado («Mercado Oficial» en `/market/buy` y «Mercado P2P» en `/market/p2p`), retirando el selector interno `MarketSelector`.
-- [X] **RF-02** Actualizar `AppRouter.tsx` y `AppLayout.tsx` para alojar `/market/buy` y `/market/p2p` con layouts contenidos.
-- [X] **RF-03** Desacoplar `MarketBuyPage`: eliminar `MarketSelector`, `useCommunityMarketPage`, `CommunityMarketPanel` y `BuyListingModal`; especializar encabezado para «Mercado Oficial».
-- [X] **RF-04** Simplificar `useMarketBuyPage`: retirar estado de pestañas `marketTab` y parámetro URL `mode`.
-- [X] **RF-05** Crear `MarketP2PPage` en `features/market/pages/MarketP2PPage/` con su propio `MarketP2PHeader`, migrando componentes comunitarios y modal P2P.
-- [X] **RF-06** Simplificar `useCommunityMarketPage`: habilitar por defecto, retirar `mode=community` de URL preservando `player=<id>`, y exponer `availableCredits`.
-- [X] **RF-07** Limpieza: eliminar componente obsoleto `MarketSelector` y tipo `MarketTab`.
-- [X] **RF-08** Verificación: `npm run biome:fix` y `npm run build` en 0 errores.
-
-## Evolución: Catálogo del Mercado Oficial con cotizaciones integradas (SPEC-010 / Issue #90)
-
-- [ ] **OF-01** Definir DTOs y modelos de dominio en `features/market/types/` (`OfficialMarketPlayerDTO`, `OfficialMarketQuoteDTO`, `OfficialMarketPageDTO`, `OfficialMarketQueryParams` y `OfficialMarketPlayer`) según el contrato `contracts/market-official.md`.
-- [ ] **OF-02** Implementar mapper seguro `toOfficialMarketPage(dto)` y `toOfficialMarketQueryParams(params)` en `market.mapper.ts`.
-- [ ] **OF-03** Implementar servicio HTTP `marketService.getOfficialCatalog()` en `market.service.ts` y hook TanStack Query `useOfficialMarketQuery(params)` en `features/market/hooks/queries/`.
-- [ ] **OF-04** Integrar selector en cascada en `MarketFilters`: consumir `usePlayersFiltersQuery()` para obtener ligas y equipos dinámicos, restringiendo los equipos a la liga activa.
-- [ ] **OF-05** Refactorizar y activar `MarketFilters`: reemplazar opciones obsoletas de tenencias por `hasQuote` (*"Todas"*, *"Con cotización"*, *"Sin cotización"*), inputs de rango `minPrice`/`maxPrice` en créditos con validación `minPrice <= maxPrice`, y opciones de ordenamiento (`price`, `variation`, `name`, `id`).
-- [ ] **OF-06** Adaptar `MarketPlayerCard` y `MarketBuyCatalog`: presentar cotización integrada y `variationPercentage` provistos por el backend con indicadores visuales de tendencia; gestionar estado "Sin cotización" con botón de compra deshabilitado.
-- [ ] **OF-07** Coordinar en `useMarketBuyPage`: sincronizar reactivamente filtros, orden y paginación con query params de la URL (`/market/buy`), incorporar debounce para la búsqueda por texto y conectar `openBuyModal` con datos consolidados.
-- [ ] **OF-08** Limpieza de consultas fragmentadas: retirar `useMarketQuotesQuery` y llamadas N+1 de cotización del flujo del Mercado Oficial.
-- [ ] **OF-09** Verificación técnica estática: ejecutar `npm run biome:check`, `npm run build`, `npm run scss:check-imports` y `git diff --check`.
-- [ ] **OF-10 — GATE BACKEND** Integración y verificación E2E: validar la consulta, filtros, ordenamiento `NULLS LAST` y compra contra el endpoint real `GET /api/market/official` una vez disponible en backend.
-
-```text
-OF-01 → OF-02 → OF-03
-OF-04 + OF-05 → OF-06
-OF-03 + OF-06 → OF-07 → OF-08 → OF-09 → OF-10
-```
+- [X] T055 Corregir el cierre exitoso para volver al catálogo solo cuando la compra consume la última oferta elegible, preservando filtros y parámetros restantes.
+- [X] T056 Reorganizar los estados vacíos del detalle con estructura accesible y componentes compartidos.
+- [X] T057 Aplicar el acabado visual desktop de los estados vacíos después del gate humano obligatorio.
+- [X] T058 Completar la validación visual humana del retorno y de los estados vacíos.

@@ -1,416 +1,218 @@
-# Feature Specification: Comprar tokens desde el frontend
+# Feature Specification: Comprar tokens en el mercado
 
-<!-- MUST seguir Constitution y docs/development/sdd-workflow.md.
+<!-- MUST seguir Constitution (§V) y docs/development/sdd-workflow.md.
+Documentación viva: este documento describe exclusivamente el comportamiento funcional
+vigente y aprobado del sistema. El historial de cambios, decisiones superadas y requisitos
+derogados se delega íntegramente a Git; queda prohibido acumular secciones de antecedentes
+históricos o revisiones pasadas en este archivo. Forma parte de la tríada permanente
+obligatoria junto a plan.md y tasks.md.
 Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
 manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,
 no de épicas REQ. La existencia de este archivo no completa Specify ni habilita Ready. -->
 
-**Feature Branch**: `feat/019-buy-tokens-from-frontend` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `019-buy-tokens-from-frontend`, sin el prefijo de tipo. La convención de ramas es normativa; ver la constitución §7. El `<scope>` va en inglés, con independencia del idioma de la descripción de origen.
+**Feature Branch**: `feat/019-buy-tokens-from-frontend` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `019-buy-tokens-from-frontend`, sin el prefijo de tipo.
 
 **Created**: 2026-10-23
 
-**Status**: Draft
-
-**Entrega técnica parcial (2026-10-25):** frontend implementado y compilado; **integración de cotizaciones reales pendiente de validación autenticada**. Sin una cotización válida, Confirmar compra y el handler permanecen bloqueados. **Compra no verificada de extremo a extremo.** Preparación de cierre en [implementation-report.md](implementation-report.md), con trabajo requerido/futuro en [future-work.md](future-work.md). No equivale a cierre, revisión humana ni promoción de Status.
+**Status**: Approved
 
 <!-- Estados y criterios de transición: ../../specs/README.md. -->
 
-**Input**: Issue #42 — REQ-S2-14-A | Comprar tokens desde el frontend
+**Input**: User description: "Consolidar la compra de tokens desde el Mercado Oficial y el Mercado P2P, integrar el catálogo oficial de SPEC-010 y aplicar el diseño aprobado del Mercado Oficial y su modal de compra."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 — Iniciar compra desde el mercado (Priority: P1)
+### User Story 1 - Explorar el Mercado Oficial (Priority: P1)
 
-Un usuario autenticado navega a la pestaña **Comprar** del **Mercado**, visualiza los jugadores del listado, selecciona uno y pulsa "Comprar" para abrir el modal de compra con la información del jugador y su cotización. La disponibilidad de stock se verifica al comprar, no determina qué jugadores aparecen en la lista.
+Un usuario autenticado accede al Mercado Oficial, consulta jugadores con sus datos deportivos y cotizaciones vigentes, y reduce el catálogo mediante filtros, ordenamiento y paginación sin abandonar la página.
 
-**Why this priority**: Punto de entrada principal del flujo de compra; sin esto no hay feature. La navegación ya define la sección "Mercado > Comprar tokens" como punto de acceso.
+**Why this priority**: Es el punto de entrada a la emisión primaria y permite encontrar un jugador comprable antes de iniciar una transacción.
 
-**Independent Test**: Navegar a `/market/buy`, localizar un jugador, pulsar "Comprar" y verificar que el modal se abre con datos correctos (jugador, cotización persistida y cantidad inicial 1).
-
-**Acceptance Scenarios**:
-
-1. **Given** usuario autenticado en `/market/buy`, **When** pulsa "Comprar" en una ficha de jugador, **Then** se abre modal con nombre, equipo, liga, posición y cotización vigente obtenida del backend.
-2. **Given** modal abierto, **When** el usuario pulsa "Cancelar" o clica fuera (overlay) o ESC, **Then** el modal se cierra y el mercado sigue visible sin cambios de layout ni pérdida de filtros o estado de navegación.
-3. **Given** usuario no autenticado, **When** intenta acceder a `/market/buy`, **Then** se redirige a login (comportamiento existente de rutas protegidas).
-
----
-
-### User Story 2 — Definir cantidad y revisar resumen (Priority: P1)
-
-El modal inicia con 1 token. El usuario puede modificar la cantidad (1–100) y ve el importe estimado principalmente en créditos, con precisión de centésimas, antes de confirmar.
-
-**Why this priority**: Decisión informada antes de comprometer créditos; evita compras involuntarias.
-
-**Independent Test**: En modal abierto, ingresar cantidades válidas/inválidas y verificar cálculo y validación en tiempo real.
+**Independent Test**: Abrir `/market/buy`, combinar los ocho controles disponibles, cambiar el orden, recargar la URL y comprobar que el catálogo, los controles y la página se reconstruyen con el mismo estado y ocho jugadores por página.
 
 **Acceptance Scenarios**:
 
-1. **Given** modal abierto con cotización (p.ej., 125 centésimas = 1,25 créditos), **When** ingresa `10`, **Then** muestra "Importe estimado: 12,50 créditos (1.250 centésimas)".
-2. **Given** modal recién abierto con cotización disponible, **When** todavía no editó la cantidad, **Then** muestra `1` y la estimación de un token; "Confirmar" está habilitado si no hay una solicitud en curso.
-3. **Given** modal abierto, **When** borra la cantidad o ingresa `0`, `101`, `-5`, `3.5`, **Then** muestra error inline "Cantidad entre 1 y 100" y deshabilita "Confirmar".
-4. **Given** el usuario ingresa el texto `"10"` en el campo, **When** confirma, **Then** el frontend valida que representa un entero positivo entre 1 y 100 y envía `quantity: 10` como número, no como string.
-5. **Given** modal abierto sin cotización disponible, **When** intenta comprar, **Then** muestra "Cotización no disponible" y deshabilita "Confirmar".
+1. **Given** un usuario autenticado, **When** abre `/market/buy`, **Then** visualiza el catálogo paginado consolidado con identidad deportiva, precio actual, variación, precio anterior y vigencia de cada jugador cotizado.
+2. **Given** un jugador sin cotización vigente, **When** aparece en el catálogo, **Then** conserva sus datos deportivos, muestra «Sin cotización» y no permite iniciar la compra.
+3. **Given** filtros u ordenamiento válidos, **When** el usuario modifica un control, **Then** los resultados se actualizan automáticamente sobre el catálogo completo, la página vuelve a la primera y la URL representa el estado vigente.
+4. **Given** una búsqueda por nombre, **When** el usuario escribe, **Then** la actualización se difiere mediante debounce para evitar solicitudes por cada pulsación sin exigir un botón «Aplicar».
+5. **Given** una liga seleccionada, **When** el usuario abre el filtro de equipo, **Then** solo encuentra equipos de esa liga; al cambiar o limpiar la liga se limpia cualquier equipo incompatible.
+6. **Given** una URL válida del Mercado Oficial, **When** se recarga o se navega con Back/Forward, **Then** filtros, orden y página se reconstruyen de forma determinista.
+7. **Given** resultados disponibles, **When** se renderiza la página, **Then** el total aparece una sola vez sobre la grilla y el catálogo muestra ocho jugadores por página en dos filas de cuatro sin scroll vertical en el viewport desktop aprobado.
+8. **Given** una cotización sin precio anterior o sin variación calculable, **When** aparece en el catálogo o el modal, **Then** se indica de forma neutra que no existe una referencia previa sin confundirla con una variación de cero.
 
 ---
 
-### User Story 3 — Confirmar compra y ver resultado (Priority: P1)
+### User Story 2 - Comprar emisión oficial (Priority: P1)
 
-El usuario confirma la compra; el frontend invoca `POST /api/orders/buy` y muestra éxito o error comprensible mediante notificación visual no intrusiva.
+Un usuario selecciona un jugador cotizado, define una cantidad entre 1 y 100, revisa el precio estimado y confirma una compra directa al emisor oficial.
 
-**Why this priority**: Núcleo transaccional; debe comunicar resultado sin revelar información sensible.
+**Why this priority**: Completa la operación principal de adquisición de tokens en el mercado primario.
 
-**Independent Test**: Con cantidad válida y saldo/stock suficientes, confirmar y verificar notificación de éxito con detalles; con saldo insuficiente, verificar mensaje de error.
+**Independent Test**: Abrir el modal desde una ficha cotizada, cambiar la cantidad por campo, controles incrementales y accesos rápidos, confirmar y comprobar que se envía una sola compra y se informa el resultado real.
 
 **Acceptance Scenarios**:
 
-1. **Given** cantidad válida, saldo y stock suficientes, **When** pulsa "Confirmar", **Then** muestra estado "Procesando…", invoca API, en éxito muestra notificación "Compra confirmada: 10 tokens de [Jugador] por 12,50 créditos" y actualiza UI afectada.
-2. **Given** saldo insuficiente, **When** confirma, **Then** muestra notificación "Créditos insuficientes para completar la compra" (código `INSUFFICIENT_CREDITS`).
-3. **Given** stock insuficiente (superusuario sin tokens), **When** confirma, **Then** muestra notificación "No hay tokens disponibles para este jugador" (código `INSUFFICIENT_STOCK`).
-4. **Given** cotización no vigente, **When** confirma, **Then** muestra notificación "Cotización no disponible, intente más tarde" (código `QUOTE_UNAVAILABLE`).
-5. **Given** error de red/500, **When** confirma, **Then** muestra notificación "Error del servidor, intente más tarde" sin detalles técnicos.
-6. **Given** compra exitosa, **When** modal se cierra, **Then** la página de mercado refleja datos actualizados (p.ej., tenencia en portfolio si navega allí).
+1. **Given** una ficha con cotización vigente, **When** el usuario pulsa «Comprar», **Then** se abre el modal sin alterar URL, filtros, página ni posición del mercado y con cantidad inicial 1.
+2. **Given** el modal abierto, **When** el usuario ingresa un entero entre 1 y 100 o usa los controles −/+, **Then** se actualizan cantidad e importe estimado en créditos con precisión de centésimas.
+3. **Given** el modal abierto, **When** el usuario pulsa 1, 5, 10, 50 o 100, **Then** el control establece esa cantidad absoluta en lugar de sumarla al valor actual.
+4. **Given** una cantidad vacía, no numérica, decimal o fuera de 1–100, **When** se valida el formulario, **Then** se muestra un error junto al campo y no se permite confirmar.
+5. **Given** cantidad válida y ausencia de una solicitud en curso, **When** el usuario confirma, **Then** se envía una única compra directa con jugador y cantidad, se muestra el estado de procesamiento y se previene el doble envío.
+6. **Given** una compra exitosa, **When** llega la respuesta, **Then** se informa identificador de transacción, jugador, cantidad, precio unitario, total y fecha de ejecución reales, y se actualizan mercado, saldo y cartera relacionados.
+7. **Given** que el usuario cancela, pulsa Escape o el overlay antes de confirmar, **When** se cierra el modal, **Then** no se genera una compra y el foco vuelve al control que abrió el diálogo.
 
 ---
 
-### User Story 4 — Prevención de doble envío y accesibilidad (Priority: P2)
+### User Story 3 - Explorar ofertas del Mercado P2P (Priority: P1)
 
-Durante el procesamiento, el botón "Confirmar" se deshabilita y muestra spinner; el modal es accesible (foco, ARIA, ESC, responsive).
+Un usuario autenticado accede al Mercado P2P y explora una ficha por jugador con publicaciones comprables de otros usuarios, agregadas y filtradas sobre el conjunto completo disponible.
 
-**Why this priority**: Evita compras duplicadas involuntarias (RF-08, CA-08) y cumple usabilidad.
+**Why this priority**: Permite descubrir la oferta secundaria y elegir el activo antes de revisar publicaciones individuales.
 
-**Independent Test**: Click rápido múltiple en "Confirmar" → solo una request; navegar modal solo con teclado; probar en móvil (375px) y desktop (1440px).
+**Independent Test**: Proveer varias publicaciones para jugadores repetidos, abrir `/market/p2p` y comprobar agrupación, agregados, filtros, orden y paginación local sin duplicar jugadores.
 
 **Acceptance Scenarios**:
 
-1. **When** request en curso, **Then** botón deshabilitado con `aria-busy="true"`, spinner visible, overlay no clickeable.
-2. **When** modal abierto, **Then** foco inicial en primer campo (cantidad), Tab recorre orden lógico, ESC cierra, overlay click cierra.
-3. **When** viewport < 640px, **Then** modal ocupa ancho completo con márgenes seguros, sin scroll horizontal.
+1. **Given** varias publicaciones comprables del mismo jugador, **When** carga el catálogo P2P, **Then** aparece una sola ficha con cantidad de publicaciones, tokens totales ofrecidos y mejor precio unitario.
+2. **Given** búsqueda por jugador o club, **When** el usuario escribe, **Then** `search` se actualiza automáticamente después de 300 ms de debounce, se filtra el conjunto agrupado completo y se vuelve a la primera página.
+3. **Given** liga, posición u orden, **When** cambia el control, **Then** su parámetro se actualiza inmediatamente, se filtra u ordena el conjunto agrupado completo antes de paginar y se vuelve a la primera página.
+4. **Given** `search`, `league`, `position`, `sort` o `page` representados en una URL válida de `/market/p2p`, **When** el usuario comparte, recarga o recorre Back/Forward, **Then** el catálogo reconstruye el mismo estado visible sin perder esos parámetros.
+5. **Given** un mercado sin publicaciones comprables, **When** abre `/market/p2p`, **Then** se muestra un estado vacío con una acción para volver al Mercado Oficial.
+6. **Given** un fallo que impide formar un catálogo íntegro, **When** termina la lectura, **Then** no se presentan resultados parciales como completos y se ofrece reintentar.
 
 ---
+
+### User Story 4 - Elegir y comprar una oferta P2P (Priority: P1)
+
+Un usuario abre un jugador del Mercado P2P, compara todas sus publicaciones comprables y confirma la compra completa de una publicación elegida.
+
+**Why this priority**: Completa la adquisición secundaria sin modificar la cantidad ni revelar la identidad del vendedor.
+
+**Independent Test**: Abrir un jugador con varias publicaciones, elegir una, verificar cantidad fija y confirmar que la compra identifica exclusivamente la publicación seleccionada.
+
+**Acceptance Scenarios**:
+
+1. **Given** un jugador del catálogo P2P, **When** el usuario abre sus ofertas, **Then** la URL identifica al jugador y muestra todas sus publicaciones comprables con cantidad, precio unitario, total y vencimiento.
+2. **Given** varias publicaciones, **When** se muestra el detalle, **Then** se ordenan inicialmente por precio unitario ascendente, vencimiento ascendente e identificador ascendente.
+3. **Given** una publicación seleccionada, **When** se abre la confirmación, **Then** se muestran lote completo, precio unitario, total, vencimiento y saldo sin permitir editar la cantidad ni mostrar la identidad del vendedor.
+4. **Given** una publicación disponible y saldo suficiente, **When** el usuario confirma, **Then** se envía una sola compra identificada exclusivamente por la publicación y se informa el resultado real.
+5. **Given** una publicación vendida, vencida, cancelada o retirada concurrentemente, **When** el usuario intenta comprarla, **Then** se informa que dejó de estar disponible y se refrescan catálogo y detalle sin afirmar una compra.
+6. **Given** una interrupción sin respuesta concluyente, **When** falla la solicitud, **Then** no se reintenta automáticamente ni se afirma éxito o fracaso transaccional.
+7. **Given** una compra P2P exitosa, **When** llega la respuesta, **Then** se actualizan publicaciones, saldo, resumen y tenencias, y el resultado permanece disponible hasta que el usuario lo cierre.
+8. **Given** una cantidad variable de publicaciones, **When** se abre el detalle, **Then** se muestra la identidad deportiva completa y un resumen de mejor precio, tokens disponibles y publicaciones activas, seguido por cards compactas de altura propia que no se estiran para llenar el viewport.
+9. **Given** que el saldo persistido cubre el total del lote, incluso con centésimas, **When** se abre la confirmación, **Then** el cliente no bloquea la compra y muestra saldo disponible y saldo restante estimado con precisión monetaria.
+10. **Given** una compra exitosa consume la última oferta elegible del jugador, **When** el usuario cierra la confirmación, **Then** se elimina `player` de la URL y se vuelve al catálogo; si quedan ofertas elegibles, el detalle permanece abierto.
+
+---
+
+### User Story 5 - Operar mercados y diálogos de forma accesible (Priority: P2)
+
+Un usuario puede recorrer ambos mercados y completar sus diálogos con teclado, distinguir estados de carga y error, y usar la interfaz sin desbordamientos en los tamaños aprobados.
+
+**Why this priority**: Protege la comprensión y el control de acciones transaccionales sin alterar los flujos principales.
+
+**Independent Test**: Recorrer cards, filtros, paginación y modales solo con teclado; comprobar foco, anuncios de estado, cierre y adaptación visual en 375, 768, 1440 y 1920 × 913 px.
+
+**Acceptance Scenarios**:
+
+1. **Given** un modal abierto, **When** el usuario navega con teclado, **Then** el foco queda contenido, sigue un orden lógico y vuelve al disparador al cerrar.
+2. **Given** una lectura en curso, un error o un estado vacío, **When** cambia el estado, **Then** se anuncia de forma accesible y las acciones disponibles son inequívocas.
+3. **Given** un viewport aprobado, **When** se usa cualquiera de los mercados o modales, **Then** no aparece desplazamiento horizontal y el contenido transaccional sigue siendo operable.
 
 ### Edge Cases
 
-- **Cotización nula/0**: Backend rechaza con `INVALID_QUOTE_PRICE` o `QUOTE_UNAVAILABLE`; frontend muestra mensaje genérico.
-- **Superusuario intenta comprar**: Backend devuelve 403 `SUPERUSER_CANNOT_BUY`; frontend muestra "Los administradores no pueden comprar tokens".
-- **Jugador no visible (PLAYER_NOT_VISIBLE)**: Backend 404; frontend "Jugador no disponible para compra".
-- **Cantidad textual**: El campo HTML contiene texto editable; `"10"` representa una cantidad válida y se transforma en el número `10` antes del POST. Texto vacío, no numérico, decimal o fuera de rango se rechaza en cliente. Si se envía un payload string al backend por fuera de la UI, corresponde `INVALID_REQUEST`.
-- **Sesión expirada durante modal abierto**: 401 → redirige a login **sin restaurar el modal** (la intención de compra no se persiste).
-- **Compra exitosa pero portfolio no actualizado inmediatamente**: Eventual consistency; no bloquea cierre de modal; notificación indica "Información actualizándose".
-
----
+- Una combinación válida de filtros sin coincidencias muestra un estado «Sin resultados» distinto del mercado vacío y permite limpiar filtros.
+- Un rango con valores negativos o mínimo mayor que máximo se rechaza junto a los campos y no genera una consulta inválida.
+- Los ordenamientos oficiales por precio o variación ubican siempre al final los jugadores sin el valor ordenado; los empates conservan un orden determinista.
+- Una cotización puede cambiar entre la visualización y la confirmación: el importe del modal es estimado y el resultado debe usar los importes ejecutados por el servidor.
+- La presencia de un jugador oficial no garantiza stock; la disponibilidad se valida al confirmar la compra.
+- Una sesión que expira durante un diálogo activa el flujo global de autenticación y no restaura la intención de compra.
+- Una respuesta inválida o un error de lectura no se interpreta como ausencia de cotización, jugador u oferta.
+- Una publicación que alcanza su vencimiento se deshabilita como orientación y provoca actualización; el servidor continúa siendo la autoridad de disponibilidad.
+- Si todas las publicaciones de un jugador desaparecen, el detalle muestra un estado vacío y permite volver al catálogo P2P.
+- Un saldo insuficiente conocido bloquea la confirmación como ayuda preventiva, pero la validación definitiva corresponde al servidor.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-| ID | Requisito | Trazabilidad Issue |
-|----|-----------|-------------------|
-| FR-01 | El sistema DEBE mostrar la pestaña **"Comprar tokens"** en la sección **Mercado** de la navegación principal, accesible en `/market/buy` para usuarios autenticados. | RF-01, CA-01 |
-| FR-02 | La página `/market/buy` DEBE listar los jugadores visibles del catálogo (con su paginación) en fichas **`MarketPlayerCard`** propias de `features/market` y locales a la página, con botón "Comprar". No se filtra el listado por stock: el backend verifica la disponibilidad al confirmar y puede devolver `INSUFFICIENT_STOCK`. | RF-01, CA-01 |
-| FR-03 | Al pulsar "Comprar" en `/market/buy`, el sistema DEBE abrir un modal superpuesto con overlay oscuro semitransparente **sin blur**, manteniendo el mercado visible sin cambiar layout, URL, scroll, página, filtros ni pestaña activa. Cerrarlo no reinicia ese estado. Los filtros nuevos se definen en FR-16–FR-18. | RF-02, CA-02, Ref visual 04/05 |
-| FR-04 | El modal DEBE presentar: nombre del jugador, equipo, liga, posición, **cotización vigente persistida** (`GET /api/players/{id}/quotes/current`), precio unitario en créditos con 2 decimales e instante real `calculatedAt` de esa cotización, campo numérico "Cantidad (1–100)" **inicializado en 1** y resumen "Importe estimado: X,XX créditos (Y centésimas)". Si no hay cotización, no debe mostrar una cotización simulada. | RF-02, RF-03, RF-04, CA-02, CA-03, Ref visual 05 |
-| FR-05 | El campo cantidad DEBE aceptar texto que represente un entero positivo entre 1 y 100, convertirlo a `number` antes de enviar, y rechazar vacío, no numérico, decimal y fuera de rango; mostrar error inline y deshabilitar "Confirmar" si es inválido. El payload nunca contiene un string para `quantity`. | RF-03, CA-03 |
-| FR-06 | El botón "Confirmar" DEBE estar deshabilitado mientras: cantidad inválida, cotización no disponible, request en curso. | RF-04, RF-05, CA-04, CA-08 |
-| FR-07 | El botón "Cancelar" y clic en overlay/ESC DEBEN cerrar el modal sin invocar API ni generar compra. | RF-05, CA-05 |
-| FR-08 | Al confirmar, el frontend DEBE invocar `POST /api/orders/buy` con `{ playerId, quantity }` (compra directa al superusuario, sin `listingId`). | RF-01, RF-06, backend contract |
-| FR-09 | En respuesta 200, el sistema DEBE mostrar notificación visual de éxito con: transactionId, jugador, cantidad, precio unitario e importe total realmente ejecutados y `executedAt` de la respuesta; y cerrar modal tras 2s o acción usuario. `executedAt` no sustituye el `calculatedAt` de la cotización. | RF-06, CA-06, OrderBuyResponseDTO |
-| FR-10 | En respuesta 400 `INVALID_REQUEST` → notificación "La solicitud no es válida. Verificá los datos e intentá nuevamente."; 400 `INVALID_QUANTITY` → "Cantidad inválida"; 409 `INSUFFICIENT_CREDITS` → "Créditos insuficientes para completar la compra"; `INSUFFICIENT_STOCK` → "No hay tokens disponibles para este jugador"; `QUOTE_UNAVAILABLE`/`INVALID_QUOTE_PRICE` → "Cotización no disponible, intente más tarde"; 403 `SUPERUSER_CANNOT_BUY` → "Los administradores no pueden comprar tokens"; 404 → "Jugador no disponible"; 500/red → "Error del servidor, intente más tarde". | RF-06, CA-07, ErrorResponseDTO |
-| FR-11 | Tras compra exitosa, el sistema DEBE invalidar la cotización real del jugador comprado (key propia de `market`), `portfolioQueryKeys.summary` y todas las keys de `portfolioQueryKeys.holdings(status, page, pageSize)`; la coordinación de Portfolio pertenece a `app`. No se invalida la key de cotizaciones demo de `players`. | RF-07, CA-06, CA-07 |
-| FR-12 | Durante request, el modal DEBE mostrar estado de carga (spinner, `aria-busy`, botones deshabilitados) y prevenir doble envío. | RF-08, CA-08 |
-| FR-13 | El modal DEBE ser accesible: foco inicial en campo cantidad, orden Tab lógico, ARIA roles/labels (`role="dialog" aria-modal="true"`), ESC/overlay para cerrar, **restaurar foco al botón "Comprar" de la ficha al cerrar**, responsive (<640px full-width con `max-w-[calc(100%-2rem)]`). | RF-08, CA-08, CA-09 |
-| FR-14 | El sistema DEBE proveer notificaciones visuales (toast/alert) para éxito y errores; la spec no menciona librería concreta (implementación futura: React-Toastify). | RF-06, CA-07 |
-| FR-15 | El sistema NO DEBE implementar compra de publicaciones de otros usuarios (`listingId`); solo compra directa al superusuario. | Fuera de alcance, OrderController docs |
-| FR-16 | El panel lateral DEBE combinar búsqueda por nombre de jugador o club, liga, posición y rango de precio real sobre **todo el catálogo disponible**, nunca solo la página visible. Los valores de liga/posición provienen del catálogo. El rango admite límites mínimo/máximo en créditos, inclusivos; vacío significa sin límite, cero es válido y mínimo mayor que máximo muestra error sin aplicar. Cada filtro se limpia individualmente y todos mediante «Limpiar filtros». «Aplicar filtros» confirma los valores editados y vuelve a la primera página. | Ampliación humana de alcance, ref. 04 |
-| FR-17 | Filtrar y ordenar DEBE preceder a paginar. El orden por precio admite ascendente/descendente, utiliza exclusivamente cotizaciones reales positivas y coloca jugadores sin cotización al final en ambas direcciones. Sin rango de precio esos jugadores permanecen visibles; con cualquier límite de precio quedan excluidos. Un error de consulta no se presenta como ausencia confirmada: se informa y permite reintentar GET; mientras falten lecturas necesarias no se presentan resultados de precio como completos. Empates se resuelven por nombre e id. | Decisiones humanas de filtros 1–8 |
-| FR-18 | La carga completa DEBE reutilizar contratos y caché existentes, limitar concurrencia, permitir cancelación y reintento, evitar descargar el catálogo de nuevo al editar filtros o abrir el modal y distinguir carga parcial de catálogo completo. No inventar endpoints masivos, stock, precios ni timestamps. | Alcance y rendimiento aprobados |
-| FR-19 | La presentación DEBE seguir las referencias 04/05 en fondo oscuro, encabezado, panel lateral, tarjetas compactas (tres columnas en escritorio), retrato junto a identidad, badges de posición y resumen del modal. Cantidad editable, controles −/+ y accesos 1/5/10/50/100 comparten validación 1–100. Incluir fallback de imagen local. No representar variación 24 h, estadísticas deportivas ni órdenes pendientes sin fuente real; tampoco inventar saldo. A 375/768/1440px no habrá recortes ni scroll horizontal; la página conserva acceso a su contenido bajo el navbar. | Corrección visual autorizada, ref. 04/05 |
+- **FR-001**: El sistema DEBE ofrecer dos páginas protegidas e independientes dentro de Mercado: «Mercado Oficial» en `/market/buy` y «Mercado P2P» en `/market/p2p`, sin selector interno de modalidad.
+- **FR-002**: El Mercado Oficial DEBE consumir el catálogo consolidado definido por SPEC-010, incluyendo en una sola lectura paginada los datos deportivos, la cotización vigente nullable y la variación calculada.
+- **FR-003**: El Mercado Oficial DEBE presentar ocho controles: búsqueda por jugador, liga, equipo, posición, nacionalidad, precio mínimo, precio máximo y orden. La interfaz NO DEBE presentar filtros por disponibilidad de cotización ni tamaño de página.
+- **FR-004**: La búsqueda oficial DEBE filtrar únicamente por nombre o apellido del jugador, normalizar espacios, mayúsculas y acentos, y aplicarse automáticamente con debounce.
+- **FR-005**: Los filtros de liga y equipo DEBEN obtener opciones de los filtros deportivos vigentes; el equipo DEBE depender de la liga y limpiarse cuando deje de ser compatible.
+- **FR-006**: El precio oficial DEBE seleccionarse mediante un slider de rango doble cuyos extremos provienen de `priceRange`; debe operar en incrementos de una centésima de crédito, reflejar sus valores y aplicar la consulta únicamente al confirmar el arrastre. Una URL fuera del rango disponible DEBE normalizarse al extremo válido y un catálogo sin cotizaciones DEBE deshabilitar el control.
+- **FR-007**: El Mercado Oficial DEBE permitir ordenar por precio, variación, nombre e identificador en las direcciones admitidas por SPEC-010, con un único criterio principal; precio o variación nulos DEBEN ubicarse al final y los empates resolverse de forma determinista.
+- **FR-008**: El estado oficial DEBE sincronizar bidireccionalmente `name`, `leagueId`, `teamId`, `position`, `nationality`, `minPrice`, `maxPrice`, `sort` y `page` con la URL; filtros u orden modificados DEBEN volver a la primera página. Los parámetros heredados `hasQuote` y `size` DEBEN ignorarse, retirarse mediante navegación `replace` y no enviarse como criterios variables al backend.
+- **FR-009**: La paginación oficial DEBE ejecutarse sobre el conjunto completo filtrado y mostrar ocho jugadores por página; el total de resultados DEBE mostrarse únicamente sobre la grilla.
+- **FR-010**: El encabezado oficial DEBE ser compacto y mostrar identidad de la página, explicación transaccional y saldo disponible; en desktop los ocho controles DEBEN distribuirse en cuatro columnas y dos filas, con búsqueda, liga, equipo y posición en la primera, y nacionalidad, precio mínimo, precio máximo y orden en la segunda. La grilla DEBE adaptarse a cuatro columnas desde 1440 px y tres entre 1100 y 1439 px.
+- **FR-011**: Cada ficha oficial DEBE mostrar únicamente retrato, posición, nombre, equipo, liga, nacionalidad, precio actual, variación, precio anterior, vigencia y acción de compra. Una variación igual a cero DEBE mostrarse como neutra; cuando el precio anterior o la variación no sean calculables, DEBE indicarse de forma neutra la ausencia de referencia previa.
+- **FR-012**: Las fichas y el modal oficial NO DEBEN mostrar performance score, multiplicador, origen de cálculo ni fecha de cálculo; tampoco DEBEN exponer stock, inventario, tenencias o saldo del emisor oficial.
+- **FR-013**: Una ficha oficial sin cotización DEBE conservar el mismo espacio visual, mostrar «Sin cotización» y deshabilitar la compra sin fabricar precios, variaciones ni fechas.
+- **FR-014**: El Mercado Oficial DEBE contemplar carga, error con reintento, mercado vacío, filtros sin resultados y cotización ausente, sin presentar datos parciales o inválidos como completos.
+- **FR-015**: Seleccionar un jugador oficial cotizado DEBE abrir un diálogo superpuesto sin cambiar URL, filtros, página ni scroll del mercado; cerrarlo DEBE preservar ese estado.
+- **FR-016**: El diálogo oficial DEBE mostrar identidad deportiva, precio vigente, variación, precio anterior, vigencia, cantidad editable y resumen del importe; la cantidad inicial DEBE ser 1.
+- **FR-017**: La cantidad oficial DEBE aceptar solo enteros de 1 a 100, convertirse a número antes de comprar y poder modificarse mediante campo, controles de una unidad y accesos rápidos absolutos 1, 5, 10, 50 y 100.
+- **FR-018**: La confirmación oficial DEBE enviar únicamente el jugador y la cantidad; DEBE permanecer bloqueada ante cantidad inválida, cotización ausente o inválida, lectura pendiente o fallida, sesión no autenticada, solicitud en curso o éxito ya recibido.
+- **FR-019**: La guarda de confirmación oficial DEBE aplicarse tanto al estado del botón como al manejador de la acción y prevenir solicitudes duplicadas.
+- **FR-020**: La estimación oficial DEBE usar el precio visible, mientras que el éxito DEBE mostrar identificador de transacción, cantidad, precio unitario, total y fecha de ejecución devueltos por la compra.
+- **FR-021**: Ante éxito oficial, el sistema DEBE actualizar el catálogo oficial, el saldo actual, el resumen de cartera y todas las tenencias, mostrar una notificación comprensible y permitir cierre por acción del usuario o automáticamente después de dos segundos.
+- **FR-022**: Los errores de compra oficial DEBEN distinguir solicitud o cantidad inválida, créditos o stock insuficientes, cotización no disponible o inválida, administrador no autorizado, jugador inexistente o no visible, sesión expirada y fallo interno o de red, mediante mensajes seguros sin detalles técnicos.
+- **FR-023**: El Mercado P2P DEBE leer el conjunto completo de publicaciones comprables disponible para la sesión, validar sus datos y usarlo como única fuente remota para catálogo y detalle.
+- **FR-024**: El catálogo P2P DEBE agrupar las publicaciones válidas por jugador y calcular cantidad de publicaciones, suma segura de tokens ofrecidos y precio unitario mínimo sin mostrar una publicación inválida como válida.
+- **FR-025**: Los datos deportivos del P2P DEBEN reutilizar el catálogo de jugadores vigente; un jugador cuyos metadatos indispensables no puedan resolverse NO DEBE presentarse con datos inventados.
+- **FR-026**: El catálogo P2P DEBE permitir búsqueda normalizada por jugador o club, filtros por liga, equipo dependiente, posición y precio máximo por token, orden por mejor precio, cantidad ofrecida o nombre, y paginación local de 8 jugadores; el precio máximo DEBE filtrar publicaciones elegibles antes de agrupar y recalcular métricas, y todo filtro y orden DEBE preceder a paginar.
+- **FR-027**: El catálogo P2P DEBE sincronizar bidireccionalmente `search`, `leagueId`, `teamId`, `position`, `maxPrice`, `sort` y `page` con los query parameters de `/market/p2p`; debe migrar enlaces heredados con `league`, restablecer `page=0` ante cambios y reconstruir el mismo estado mediante recarga o Back/Forward. `maxPrice` se controla con un slider de una sola posición, paso de una centésima y acción «Sin límite», y solo se confirma al finalizar el arrastre.
+- **FR-037**: Los extremos del slider P2P DEBEN derivarse de la colección completa ya obtenida por `GET /api/listings`, nunca solo de la página agrupada visible ni mediante una llamada adicional.
+- **FR-028**: Seleccionar un jugador P2P DEBE representar `player=<id>` en `/market/p2p?player=<id>` y mostrar allí su detalle completo; cerrar o volver DEBE retirar únicamente `player`, conservar los demás query parameters y restaurar el catálogo en el estado representado por la URL.
+- **FR-029**: El detalle P2P DEBE mostrar todas las publicaciones comprables vigentes del jugador presentes en la lectura actual, ordenadas inicialmente por precio unitario, vencimiento e identificador ascendentes.
+- **FR-030**: Cada publicación P2P DEBE mostrar cantidad fija, precio unitario, total y vencimiento; NO DEBE admitir compra parcial, campo de cantidad ni identidad pública del vendedor.
+- **FR-038**: El detalle P2P desktop DEBE reutilizar la identidad compartida del jugador, presentar tres métricas agregadas y distribuir las publicaciones en una grilla de cards compactas. Cada card DEBE destacar el total del lote, conservar la acción «Comprar lote» y comunicar identificador, precio unitario, cantidad y tiempo restante.
+- **FR-039**: La confirmación P2P desktop DEBE reutilizar la identidad compartida, presentar una cabecera compacta con el identificador de publicación, distribuir cantidad, precio unitario y vencimiento con claridad, destacar el total y mostrar saldo disponible y saldo restante estimado. Toda comparación monetaria DEBE usar centésimas de crédito; el backend conserva la autoridad sobre saldo, disponibilidad y vigencia.
+- **FR-040**: Al cerrar una compra P2P exitosa, el sistema DEBE conservar el detalle si el jugador mantiene ofertas elegibles y volver al catálogo, retirando únicamente `player` de la URL, si la compra consumió la última. Los estados de detalle sin ofertas DEBEN conservar una salida accesible y visualmente integrada para accesos directos y cambios concurrentes.
+- **FR-031**: La confirmación P2P DEBE mostrar el lote completo y enviar exclusivamente el identificador de publicación; el manejador DEBE repetir las guardas del botón y prevenir doble envío.
+- **FR-032**: El sistema DEBE tratar publicación no disponible o inexistente, compra propia defensiva, créditos o stock insuficientes, administrador no autorizado, solicitud inválida, sesión expirada y fallos internos o inciertos con mensajes seguros y la actualización del mercado que corresponda.
+- **FR-033**: Ante éxito P2P, el sistema DEBE actualizar publicaciones, usuario actual, resumen de cartera y todas las tenencias, y mostrar identificador de transacción, cantidad, precio unitario, total y fecha de ejecución reales sin autocierre obligatorio.
+- **FR-034**: El P2P DEBE contemplar carga, error con reintento, mercado vacío, filtros sin resultados, jugador sin ofertas, expiración orientativa, saldo insuficiente, conflicto concurrente, éxito e incertidumbre de red.
+- **FR-035**: Ambos diálogos DEBEN permitir cierre por botón, Escape y overlay cuando no exista una operación bloqueante; DEBEN contener el foco, restaurarlo al disparador, anunciar procesamiento y errores, y conservar scroll interno cuando sea necesario.
+- **FR-036**: Las páginas y diálogos DEBEN evitar desplazamiento horizontal a 375, 768 y 1440 px; el Mercado Oficial DEBE respetar además la distribución aprobada para 1920 × 913 px, con navegación fija, grilla desplazable y paginación fuera de ese scroll.
 
-### Key Entities
+### Key Entities *(include if feature involves data)*
 
-- **Player (jugador)**: `id`, `name`, `teamName`, `leagueName`, `position`, `imageUrl` — datos de catálogo y ficha de mercado.
-- **MarketQuote**: `price` (centésimas), `effectiveDate` (fecha de vigencia), `calculatedAt` (instante real de cálculo ISO) — cotización vigente persistida para cálculo y presentación. No equivale a `TokenQuoteSnapshot` de demostración.
-- **BuyOrderRequest**: `playerId: number`, `quantity: number (1–100)` — payload a `POST /api/orders/buy`.
-- **OrderBuyResponse / BuyResult**: `transactionId`, `playerId`, `quantity`, `unitPrice`, `totalAmount`, `executedAt` — respuesta de éxito y Model transformado dentro del Service, sin nombre del jugador; la UI compone el nombre desde la ficha seleccionada para la notificación.
-- **ApiError**: `code` (`INSUFFICIENT_CREDITS`, `INSUFFICIENT_STOCK`, `QUOTE_UNAVAILABLE`, `INVALID_QUOTE_PRICE`, `PLAYER_NOT_FOUND`, `PLAYER_NOT_VISIBLE`, `SUPERUSER_CANNOT_BUY`, `INVALID_REQUEST`, `INVALID_QUANTITY`, `INTERNAL_ERROR`), `message` — mapeo a mensajes de usuario.
-
----
+- **Jugador de Mercado Oficial**: jugador visible y elegible con identidad deportiva y una cotización vigente opcional.
+- **Cotización oficial**: precio actual en centésimas, precio anterior opcional, variación opcional y fecha de vigencia; sus datos técnicos de cálculo no forman parte de la presentación.
+- **Consulta del Mercado Oficial**: filtros, ordenamiento y página representables en la URL y aplicados al catálogo completo con tamaño fijo de ocho.
+- **Solicitud de compra oficial**: jugador y cantidad entera entre 1 y 100.
+- **Publicación P2P**: oferta comprable con identificador, vendedor interno no visible, jugador, cantidad fija, precio unitario, total, estado y vencimiento.
+- **Jugador de Mercado P2P**: identidad deportiva enriquecida con cantidad de publicaciones, tokens totales y mejor precio.
+- **Solicitud de compra P2P**: identificador de una publicación; no contiene cantidad ni datos del jugador.
+- **Resultado de compra**: identificador de transacción, jugador, cantidad, precio unitario, total, fecha de ejecución e identificador de publicación cuando corresponde.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-01**: Usuario autenticado completa compra en ≤ 4 interacciones (abrir modal → cantidad → confirmar → ver éxito).
-- **SC-02**: 0 compras duplicadas por doble click (request idempotente por UI, no por backend).
-- **SC-03**: Cobertura documentada **10/10**: cada uno de los diez códigos POST de FR-10/`contracts/buy-tokens-frontend.md` (`INVALID_REQUEST`, `INVALID_QUANTITY`, `INSUFFICIENT_CREDITS`, `INSUFFICIENT_STOCK`, `QUOTE_UNAVAILABLE`, `INVALID_QUOTE_PRICE`, `SUPERUSER_CANNOT_BUY`, `PLAYER_NOT_FOUND`, `PLAYER_NOT_VISIBLE`, `INTERNAL_ERROR`) tiene un mensaje de usuario definido sin detalles técnicos o sensibles. Un código POST desconocido, 500 o error de red recibe fallback genérico; 401 activa el flujo de sesión sin conservar la compra. Para el GET, `QUOTE_NOT_FOUND` muestra ausencia de cotización y no error de jugador. La cobertura documental se mide comparando los diez códigos con la tabla del contrato; el comportamiento observable queda pendiente de los escenarios manuales del quickstart ejecutados por el usuario. No se afirma cubrir códigos futuros desconocidos por su nombre.
-- **SC-04**: Modal abre en < 200ms con los datos de ficha y cotización real ya disponibles en la query de `market`; si el GET aún está pendiente, el modal muestra carga o indisponibilidad sin inventar precio.
-- **SC-05**: Layout del mercado no se desplaza ni reflow al abrir/cerrar modal (verificado visualmente en 375px, 768px, 1440px).
-- **SC-06**: Notificaciones visuales aparecen ≤ 500ms tras respuesta API y no bloquean interacción.
-
----
+- **SC-001**: El 100 % de cada página del Mercado Oficial se presenta a partir de una única lectura consolidada, sin lecturas individuales de cotización por jugador.
+- **SC-002**: El 100 % de los filtros, orden y página oficiales se reconstruye de forma idéntica al compartir, recargar o recorrer el historial de una URL válida.
+- **SC-003**: El 100 % de los jugadores oficiales sin cotización permanece identificable y tiene la compra deshabilitada sin valores simulados.
+- **SC-004**: Una compra oficial válida puede completarse en cuatro interacciones principales: abrir, definir cantidad, confirmar y reconocer el resultado.
+- **SC-005**: Ninguna interacción múltiple durante el procesamiento origina más de una solicitud de compra.
+- **SC-006**: El 100 % de las publicaciones válidas recibidas para un jugador P2P aparece en su detalle antes de aplicar exclusivamente el orden visual.
+- **SC-007**: Ninguna compra P2P permite modificar la cantidad ni envía datos distintos del identificador de publicación.
+- **SC-008**: El 100 % de los filtros, el ordenamiento, la página y el jugador seleccionado del Mercado P2P se reconstruye de forma idéntica al compartir, recargar o recorrer Back/Forward sobre una URL válida.
+- **SC-009**: Una publicación retirada concurrentemente desaparece del catálogo y del detalle después de la actualización provocada por el conflicto.
+- **SC-010**: Todos los errores controlados de compra definidos para ambos mercados tienen un mensaje de usuario seguro y ningún error desconocido expone detalles técnicos.
+- **SC-011**: Catálogos, controles y diálogos son operables con teclado y no producen desplazamiento horizontal en 375, 768 y 1440 px; el Mercado Oficial tampoco desborda el viewport de referencia de 1920 × 913 px.
 
 ## Assumptions
 
-- **Auth**: Usuario ya autenticado (JWT en storage); `/market/buy` protegida por `AuthGuard` y compuesta dentro de `AppLayout` existentes.
-- **Cotización**: `GET /api/players/{id}/quotes/current` de SPEC-016 devuelve el precio operativo y `calculatedAt` reales; la serie demo de `players` nunca se usa en la compra. El servidor confirma el precio aplicado en `POST /api/orders/buy`, que puede diferir de la estimación.
-- **Backend**: `POST /api/orders/buy` operativo (SPEC-010 cerrado); errores según `ErrorResponseDTO` y códigos documentados en `OrderController`.
-- **Superusuario**: Vendedor único en compra directa; no hay marketplace entre usuarios en esta feature.
-- **Tokens/credits**: Centésimas de crédito (100 = 1 crédito). **Display principal en créditos con 2 decimales**: "12,50 créditos (1.250 centésimas)". Backend opera en centésimas; frontend convierte para display.
-- **Componentes UI**: Reutilizar `Button`, `Field`; crear `Modal` (shared) y `BuyTokenModal` (feature market).
-- **Composición**: `app` consulta el listado con la API pública de `players`, lo entrega a `market` mediante datos/props y coordina la invalidación de Portfolio con su API pública; `market` conserva sus queries de cotización real y su operación de compra. No hay store global de compras ni imports entre features.
-- **Notificaciones**: Sistema de toast visual requerido; librería no especificada en spec (futura: React-Toastify).
-- **Responsive**: Breakpoint móvil ≤ 639px (Tailwind `sm:`); modal full-width con `max-w-[calc(100%-2rem)]`.
-- **Estado navegación**: Modal no altera URL ni history; al cerrar, `/market/buy` conserva scroll, paginación, filtros y pestaña activa. El panel nuevo está comprendido en FR-16–FR-19.
-
----
-
-## Clarificaciones resueltas *(CLARIFY)*
-
-| Tema | Decisión | Impacto en spec |
-|------|----------|-----------------|
-| **Ubicación botón Comprar** | En ficha de jugador dentro de `/market/buy` (pestaña "Comprar tokens" del Mercado), **no** en `/players` ni PlayerDetailPage. | FR-01, FR-02, US1 actualizados a `/market/buy`. |
-| **Notificaciones visuales** | Requeridas (toast/alert) para éxito y errores; **sin mencionar librería** en spec. Implementación futura: React-Toastify. | FR-14 añadido; FR-09/FR-10 referencian "notificación visual". |
-| **Invalidación queries** | Invalidar la key de cotización real definida por `market`, `portfolioQueryKeys.summary` y `portfolioQueryKeys.holdings(...)` (todas las combinaciones). La invalidación de Portfolio se coordina en `app`; nunca invalidar la cotización demo de `players`. | FR-11 actualizado; reemplaza la decisión anterior sobre H2. |
-| **Formato precio display** | **Principal: créditos con 2 decimales** ("12,50 créditos"); secundario: centésimas entre paréntesis ("1.250 centésimas"). Backend usa centésimas; frontend convierte. | FR-04, US2 Acceptance Scenarios, Assumptions actualizados. |
-| **Sesión expirada en modal** | 401 → redirige a login **sin restaurar modal** ni persistir intención de compra. | Edge Case actualizado; fuera de alcance v2. |
-| **Componentes del mercado** | `MarketPlayerCard` y `BuyTokenModal` locales a `MarketBuyPage`, sin conectar Hooks directamente; la Page coordina sus datos y acciones. No modificar `features/players`. | FR-02, FR-04, FR-09 y diseño derivados. |
-| **Resultado de compra** | El Service devuelve `BuyResult` sin nombre; la Page utiliza el nombre del jugador seleccionado solo para la notificación de éxito. | FR-09 y contrato HTTP. |
-| **Foco al cerrar modal** | Restaurar foco al botón "Comprar" de la ficha que lo abrió. | FR-13, H3 aplicado. |
-| **Origen y fecha de cotización** | Precio e instante `calculatedAt` reales de `GET /api/players/{id}/quotes/current`. Mostrar ese instante; nunca sustituirlo por fecha demo, fecha de lectura ni `Date.now()`. | FR-04, Key Entities; reemplaza el fallback anterior. |
-| **Aislamiento de features** | `market` no importa de `players` ni `portfolio`; `app` compone datos y coordina invalidaciones mediante exports mínimos de sus `index.ts` raíz. Solo se autorizan esos exports nuevos, sin alterar lógica existente. | FR-02, FR-11 y plan afectados. |
-| **Listado y stock** | Se listan jugadores visibles sin consultar stock; la compra puede rechazarse por `INSUFFICIENT_STOCK`. | FR-02 y US1 precisados. |
-| **Estado del modal y cantidad** | Se preservan estado y filtros; cantidad inicial 1 según ref. 05. Texto numérico entero válido se envía como número; −/+ y cantidades rápidas comparten la validación. | FR-03–FR-05, FR-19 y US1/US2. |
-| **Ampliación de filtros (2026-10-24)** | El usuario confirma búsqueda/liga/posición/precio combinables sobre catálogo completo, orden previo a paginación, limpieza individual/global y política de cotización ausente. Sustituye la exclusión anterior de filtros nuevos. | FR-16–FR-18; plan, research, modelo, contrato y tareas deben revalidarse. |
-
-### Escenarios de aceptación de filtros y corrección visual
-
-1. Buscar un jugador ubicado fuera de la primera página original: debe aparecer tras completar el catálogo y aplicar búsqueda, sin depender de la página original.
-2. Combinar búsqueda, liga y posición; añadir rango de precio y ordenar descendente: todos los resultados cumplen los filtros, se ordenan antes de dividirlos en páginas y los límites son inclusivos.
-3. Quitar solamente liga conserva los demás filtros; limpiar todo restaura el conjunto completo y la primera página. Opciones de liga/posición proceden de todo el catálogo, no de la página visible.
-4. Sin rango, los jugadores con ausencia confirmada de cotización siguen visibles al final del orden por precio. Con mínimo o máximo, se excluyen. Fallos GET se diferencian de ausencia y pueden reintentarse sin POST.
-5. Abrir/cerrar modal conserva filtros aplicados, borrador del panel, página y scroll. Cambiar cantidad con −/+, accesos rápidos o teclado no ejecuta compras.
-6. A 375/768/1440px se accede a panel, fichas, paginación y modal sin recortes ni scroll horizontal; overlay sin blur y fallback local si ambas URLs externas fallan.
-
----
-
-## Riesgos detectados
-
-1. **Race condition cotización**: Usuario abre modal, cotización cambia antes de confirmar. Backend revalida bajo bloqueo; el frontend presenta estimación con `calculatedAt` de la cotización persistida consultada y comunica el precio realmente ejecutado devuelto por la compra.
-2. **Doble envío por latencia**: Usuario impaciente clica 2x. *Mitigación*: `aria-busy`, deshabilitar botón, flag `isSubmitting` en hook.
-3. **Stock superusuario**: Si superusuario agota tokens, `INSUFFICIENT_STOCK`. No hay mecanismo de reposición en esta feature. *Documentar* en CA-07.
-4. **Accesibilidad overlay**: `role="dialog" aria-modal="true"` + foco trap y restauración; PLAN adopta un `Modal` genérico de `shared` sin biblioteca modal adicional. Su comportamiento requiere comprobación humana.
-5. **Testabilidad**: Frontend exento de tests (Constitución §199); validación manual con casos de Acceptance Scenarios.
-6. **Invalidación de holdings**: Invalidar todas las páginas/filtros puede disparar refetch de consultas activas; limitarse al prefijo público `portfolioQueryKeys.holdings(...)` desde `app`.
-7. **Nueva feature `market`**: Requiere composición en `app` con `usePlayersQuery` y las keys públicas de Portfolio; `market` solo recibe datos de catálogo y callback de éxito, sin dependencia entre features.
-8. **Cotización operativa**: La serie demo de `players` no representa precio de compra; consultar exclusivamente el endpoint de cotización vigente persistida y mostrar su `calculatedAt`.
-
----
-
-## Alcance vigente del rediseño visual (solicitud posterior del usuario)
-
-Esta decisión **sustituye FR-16–FR-18 y la ampliación funcional de filtros del 2026-10-24**, antes de su implementación. La tarea vigente es exclusivamente visual: no cargar catálogo completo ni implementar búsqueda, filtros o ordenamiento. Se conserva la lógica de compra y los contratos HTTP actuales. Los escenarios de filtros anteriores no son criterios de aceptación de este rediseño.
-
-- **VR-01:** reproducir la composición 04: fondo azul oscuro/degradados, encabezado con icono, tres tarjetas de métricas, panel lateral completo y fichas compactas en tres columnas desktop. Métricas sin fuente muestran «No disponible», estadísticas/variación «Sin datos», nunca valores simulados. Contador usa total real entregado por app.
-- **VR-02:** panel de búsqueda/liga/posición/precio/orden/dirección/aplicar/limpiar y favoritos meramente visuales, deshabilitados y rotulados «Pendiente». No simular filtros aplicados ni acciones exitosas. Selector de tamaño pendiente; paginación existente funcional y sin cambiar su contrato.
-- **VR-03:** modal según 05, con identidad, posición/liga, precio real, resumen, controles −/+ y cantidades rápidas visuales pendientes (sin nueva lógica), campo editable y confirmación existentes. Overlay oscuro sin blur y sin reflow.
-- **VR-04:** fallback local de imágenes, scroll vertical accesible y sin overflow horizontal a 375/768/1440px, sin modificar lógica de players/portfolio/backend ni realizar compras durante inspección.
-
-La fidelidad estructural no exige inventar métricas, favoritos, escudos, banderas ni valores. Las discrepancias por datos ausentes y controles pendientes se informan explícitamente. No se aprueban gates humanos por este documento.
-
-## Próximo paso SDD
-
-### Ajuste de scroll autorizado
-
-### Corrección de navegación y diagnóstico de cotización
-
-El usuario autoriza iconos Lucide para las cuatro pestañas de referencia 04 (Comprar tokens, Vender tokens, Mis órdenes, Historial de operaciones); las tres últimas permanecen deshabilitadas y pendientes, sin rutas nuevas. Aumentar separación inferior del botón Aplicar y tematizar únicamente scrollbar del listado.
-
-Confirmar compra requiere cantidad válida, cotización real válida (precio entero positivo y seguro en centésimas, effectiveDate/calculatedAt válidos), consulta exitosa sin carga/pausa/error, y ausencia de envío o éxito previo. Mismo guard en handler, no solo disabled. Solo `404 QUOTE_NOT_FOUND` es ausencia; 401/autenticación, 403/permisos, otros HTTP, red y respuesta inválida se distinguen sin revelar cuerpos técnicos. GET se puede reintentar sin POST; 401 conserva gestión global de sesión. No habilitar por datos stale de una consulta fallida ni usar demo.
-
-Verificar respuesta real autenticada solo si hay acceso; no fabricar evidencia. El usuario autorizó continuar sin aportar respuesta de Network después de comprobar indisponibilidad del navegador. Si no se confirma la causa backend, describir condiciones documentadas y evidencia pendiente, sin inicializar/recalcular mercado ni ejecutar compras.
-
-En `/market/buy`, únicamente el listado de jugadores tiene scroll vertical; navbar, encabezado, métricas, filtros y paginación permanecen estáticos. El listado ocupa el espacio restante del viewport descontado por flex/grid, sin alturas de navbar codificadas. Ni body, AppLayout ni MarketBuyPage se desplazan en esta ruta; las demás rutas conservan su comportamiento. El modal conserva su scroll propio cuando está abierto.
-
-El usuario autorizó **filtros plegables en móvil**, con métricas compactas, para no consumir todo el viewport. El desplegable nativo no implementa lógica de filtros; su panel se superpone al listado sin desplazar encabezado ni paginación. Se conservan tres columnas desktop y adaptación de columnas existente. Verificación requerida: 375/768/1440px, sin compras ni tests.
-
-> Revalidar plan, tareas y checklists contra esta aclaración arquitectónica y ejecutar `/speckit.analyze` antes de solicitar autorización para implementar.
-
----
-
-## Ampliación normativa — compra de publicaciones entre usuarios (2026-11-04)
-
-Esta ampliación incorpora a SPEC-019 la segunda modalidad de compra disponible en el backend. Sustituye
-únicamente las declaraciones anteriores que excluían la compra mediante `listingId`, el placeholder de
-«Oferta de Usuarios» y cualquier limitación visual que impida implementar este flujo. La compra directa,
-sus requisitos, tareas y evidencias históricas se conservan. La estrategia aprobada es la **Alternativa A**:
-consumir el contrato vigente sin modificar el backend, agrupar y paginar localmente.
-
-### User Story 5 — Explorar jugadores con publicaciones comprables (Priority: P1)
-
-Un usuario autenticado selecciona «Ofertas de usuarios» en `/market/buy` y visualiza una sola ficha por
-jugador con publicaciones activas que puede comprar. Cada ficha informa cantidad de publicaciones, tokens
-totales ofrecidos y mejor precio unitario.
-
-**Independent Test**: entregar publicaciones de varios vendedores para dos jugadores, abrir la modalidad
-P2P y comprobar que cada jugador aparece una sola vez con agregados calculados exclusivamente desde esas
-publicaciones.
-
-**Acceptance Scenarios**:
-
-1. **Given** publicaciones comprables repetidas para un jugador, **When** carga el catálogo P2P, **Then**
-   aparece una sola ficha para ese `playerId`, con conteo, suma de cantidades y precio unitario mínimo.
-2. **Given** el mercado no contiene publicaciones comprables, **When** selecciona la modalidad P2P,
-   **Then** se muestra un estado vacío con acción para volver a Emisión oficial.
-3. **Given** búsqueda, liga o posición aplicadas, **When** cambia un filtro, **Then** se filtra el conjunto
-   agrupado completo antes de paginar y se vuelve a la primera página.
-4. **Given** un fallo al leer publicaciones o metadatos indispensables, **When** la pantalla no puede formar
-   un catálogo íntegro, **Then** no presenta resultados parciales como completos y ofrece reintentar.
-
-### User Story 6 — Elegir una publicación de un jugador (Priority: P1)
-
-Al seleccionar un jugador, el usuario visualiza **todas** sus publicaciones comprables recibidas por el
-frontend, ordenadas inicialmente por precio unitario ascendente, y elige un lote completo.
-
-**Independent Test**: abrir un jugador con cinco publicaciones y comprobar que las cinco aparecen con
-identificador, cantidad, precio unitario, total y vencimiento, sin permitir editar la cantidad.
-
-**Acceptance Scenarios**:
-
-1. **Given** un jugador del catálogo P2P, **When** pulsa «Ver ofertas», **Then** la URL conserva
-   `/market/buy`, identifica `mode=community` y `player=<id>`, y muestra todas sus publicaciones comprables.
-2. **Given** varias publicaciones, **When** abre el detalle, **Then** se ordenan por precio unitario
-   ascendente, con desempate por vencimiento y `listingId`.
-3. **Given** una publicación vencida localmente, **When** alcanza `expiresAt`, **Then** se deshabilita como
-   orientación visual y se refresca el mercado; el backend continúa siendo autoridad de disponibilidad.
-4. **Given** que todas las publicaciones desaparecieron entre catálogo y detalle, **When** se actualiza la
-   consulta, **Then** se muestra estado vacío y regreso al catálogo P2P.
-
-### User Story 7 — Confirmar la compra de un lote P2P (Priority: P1)
-
-El usuario abre la confirmación de una publicación, revisa cantidad fija, precio unitario, total,
-vencimiento y saldo, y compra el lote completo mediante `listingId`.
-
-**Independent Test**: seleccionar una publicación y verificar que el único payload enviado es
-`{ "listingId": <id> }`, que no existe campo de cantidad y que el resultado informa la transacción real.
-
-**Acceptance Scenarios**:
-
-1. **Given** publicación disponible y saldo suficiente, **When** confirma, **Then** se ejecuta una sola
-   mutación, se informa éxito y se invalidan publicaciones, usuario actual, resumen y tenencias.
-2. **Given** saldo insuficiente conocido por la UI, **When** abre la confirmación, **Then** se advierte y se
-   bloquea la acción; el backend revalida siempre el saldo.
-3. **Given** publicación vendida, vencida o cancelada concurrentemente, **When** confirma, **Then** se
-   informa que dejó de estar disponible y se refrescan catálogo y detalle sin afirmar una compra.
-4. **Given** una interrupción sin respuesta concluyente, **When** falla la solicitud, **Then** la UI no
-   afirma éxito ni fracaso transaccional y no reintenta automáticamente.
-
-### Requisitos funcionales P2P
-
-| ID | Requisito |
-|---|---|
-| FR-20 | La sección Mercado DEBE separar las modalidades en dos pestañas y páginas protegidas independientes: «Mercado Oficial» en `/market/buy` (emisión oficial del superusuario) y «Mercado P2P» en `/market/p2p` (ofertas de usuarios), retirando el selector interno `MarketSelector`. |
-| FR-21 | La modalidad P2P DEBE consultar una vez `GET /api/listings`, sin parámetros inventados, y tratar `listings` como el conjunto completo de publicaciones comprables para esa sesión. |
-| FR-22 | El frontend DEBE validar y mapear cada publicación a un Model propio con `listingId`, `sellerId`, `playerId`, `quantity`, `unitPrice`, `totalAmount`, `status`, `createdAt` y `expiresAt`. Importes y precios permanecen en centésimas en Models y DTOs. |
-| FR-23 | El catálogo P2P DEBE agrupar por `playerId`, calcular conteo de publicaciones, suma segura de `quantity` y mínimo `unitPrice`, y presentar cada jugador una sola vez. No DEBE sumar ni mostrar una publicación inválida como válida. |
-| FR-24 | Los metadatos del jugador DEBEN resolverse mediante la API pública de `features/players` y su caché de TanStack Query. No se duplicarán DTOs, mappers ni requests HTTP de players dentro de market. Un jugador imposible de resolver no se mostrará como dato completo inventado. |
-| FR-25 | El catálogo agrupado DEBE permitir búsqueda normalizada por jugador o club, filtro por liga y posición, y orden por mejor precio, cantidad ofrecida o nombre. Filtrar y ordenar preceden a la paginación local de 12 jugadores. |
-| FR-26 | En `/market/p2p`, seleccionar un jugador DEBE establecer `player=<id>` en la URL; cerrar o volver DEBE retirar `player` y conservar filtros. Back/Forward y recarga DEBEN reconstruir la vista desde la URL y datos remotos. |
-| FR-27 | El detalle DEBE mostrar todas las publicaciones comprables del jugador presentes en la respuesta vigente de `/api/listings`, con cantidad fija, precio unitario, total y vencimiento. No DEBE ofrecer compra parcial ni campo de cantidad. |
-| FR-28 | El orden inicial del detalle DEBE ser `unitPrice` ascendente, luego `expiresAt` ascendente y finalmente `listingId` ascendente. La UI PUEDE ofrecer orden alternativo por total o vencimiento sin modificar el conjunto. |
-| FR-29 | La identidad del vendedor NO DEBE mostrarse. `sellerId` se conserva solo como dato contractual y no se resuelve mediante APIs adicionales ni se presenta como nombre público. |
-| FR-30 | La confirmación P2P DEBE reutilizar `shared/Modal` y `MarketPlayerSummary`, mostrar el lote completo y enviar exclusivamente `{ listingId }` a `POST /api/orders/buy`. El handler DEBE aplicar la misma guarda que el botón y prevenir doble envío. |
-| FR-31 | `LISTING_NOT_AVAILABLE` DEBE informar que la oferta dejó de estar disponible y refrescar publicaciones; `LISTING_NOT_FOUND` DEBE retirar el recurso no accesible; `CANNOT_BUY_OWN_LISTING` DEBE mostrar un rechazo defensivo; `INSUFFICIENT_CREDITS` DEBE informar saldo insuficiente. Ningún mensaje revelará datos del vendedor. |
-| FR-32 | Tras éxito P2P, el frontend DEBE invalidar la query de publicaciones, el usuario actual, el resumen de cartera y todas las tenencias, y mostrar `transactionId`, cantidad, precio unitario, total y `executedAt` reales. No habrá autocierre obligatorio del resultado P2P. |
-| FR-33 | La UI DEBE contemplar carga, error con reintento, mercado vacío, filtros sin resultados, jugador sin ofertas, expiración orientativa, saldo insuficiente, conflicto concurrente, éxito e incertidumbre de red. El backend sigue siendo autoridad para vigencia, saldo y liquidación. |
-| FR-34 | La primera implementación DEBE usar el contrato backend actual y paginación local. Paginación o agregación server-side, enriquecimiento del DTO y nombre público del vendedor quedan fuera de alcance. |
-
-FR-20–FR-34 sustituyen **FR-15**. Para la modalidad P2P también sustituyen las restricciones de
-FR-16–FR-19 que describían controles únicamente visuales; la modalidad oficial conserva su comportamiento
-vigente y sus controles pendientes salvo modificación explícita posterior.
-
-### Entidades adicionales
-
-- **TokenListingDTO**: representación HTTP de una publicación comprable; no se usa fuera de Service/Mapper.
-- **MarketListing**: publicación validada para UI, con importes en centésimas y vencimiento absoluto.
-- **CommunityMarketPlayer**: `MarketPlayer` más `listingCount`, `availableQuantity` y `minimumUnitPrice`.
-- **CommunityMarketFilters**: búsqueda, liga, posición, orden y página local.
-- **BuyListingRequest**: `{ listingId: number }`; no admite cantidad ni datos del jugador.
-
-### Criterios de éxito adicionales
-
-- **SC-07**: el 100 % de las publicaciones válidas recibidas para el jugador seleccionado aparece en su
-  detalle antes de aplicar exclusivamente un orden visual.
-- **SC-08**: ninguna compra P2P permite modificar la cantidad o envía campos distintos de `listingId`.
-- **SC-09**: una publicación retirada concurrentemente desaparece tras el refetch provocado por el error.
-- **SC-10**: catálogo, detalle y modal son operables por teclado y no producen scroll horizontal a
-  375, 768 y 1440 px; la validación visual sigue siendo humana.
-
-### Decisiones aprobadas y límites
-
-- Estrategia: Alternativa A, sin cambios backend.
-- Navegación: query parameters dentro de `/market/buy`.
-- Vendedor: no mostrar identidad.
-- Filtros iniciales: nombre/club, liga, posición y orden; página local de 12 jugadores.
-- «Todas las publicaciones» significa todas las activas y vigentes que `GET /api/listings` expone al
-  comprador; las propias quedan excluidas por contrato.
-- El saldo posterior se muestra solo si el contrato de usuario disponible conserva precisión suficiente;
-  de lo contrario se muestra saldo disponible y el backend decide la suficiencia.
-
----
-
-## Evolución normativa — Catálogo del Mercado Oficial con cotizaciones integradas (SPEC-010 / Issue #90)
-
-Esta evolución actualiza la modalidad **Mercado Oficial** (`/market/buy`) para consumir el endpoint consolidado
-`GET /api/market/official`, sustituyendo la consulta fragmentada anterior (`usePlayersQuery` + consultas N+1
-de cotización) y activando funcionalmente los filtros, ordenamiento y paginación en el servidor con
-sincronización bidireccional en la URL.
-
-Se preservan íntegros el endpoint y flujo transaccional de compra `POST /api/orders/buy` y la totalidad
-de la modalidad Mercado P2P (`/market/p2p`, FR-20 a FR-34).
-
-### User Story 8 — Explorar el catálogo oficial con cotizaciones integradas y filtros (Priority: P1)
-
-Como usuario autenticado en el Mercado Oficial (`/market/buy`), quiero consultar el catálogo de emisión
-oficial con cotizaciones vigentes integradas, variaciones porcentuales y filtros deportivos y financieros,
-para explorar el mercado primario de forma ágil y preparar compras informadas.
-
-**Independent Test**: Navegar a `/market/buy`, aplicar filtros combinados (nombre, liga, equipo dependiente,
-cotización y rango de precio), verificar la respuesta unificada con cotizaciones y ordenar por precio o variación.
-
-**Acceptance Scenarios**:
-
-1. **Given** usuario autenticado en `/market/buy`, **When** carga la página, **Then** se invoca `GET /api/market/official` y se presenta la lista paginada de jugadores con sus cotizaciones vigentes consolidadas y variación porcentual provista por el backend.
-2. **Given** jugador sin cotización vigente en el sistema, **When** aparece en el catálogo, **Then** muestra el bloque de cotización como «Sin cotización» y mantiene deshabilitado el botón "Comprar", sin inventar precios ni valores demo.
-3. **Given** usuario selecciona una liga en `MarketFilters`, **When** se despliega el selector de equipos, **Then** las opciones de equipos se restringen dinámicamente a los pertenecientes a esa liga, obtenidos de `GET /api/players/filters`.
-4. **Given** filtros aplicados en la interfaz (búsqueda, liga, equipo, cotización, rango de precios o criterio de orden), **When** se modifican, **Then** la URL se actualiza reactivamente con los query params correspondientes (`name`, `leagueId`, `teamId`, `position`, `hasQuote`, `minPrice`, `maxPrice`, `sort`, `page`), permitiendo recarga y navegación Back/Forward determinista.
-5. **Given** usuario ingresa un rango de precios con `minPrice > maxPrice`, **When** intenta aplicar el filtro, **Then** el frontend muestra un error inline de validación y bloquea la solicitud, previniendo el error `400 INVALID_PRICE_RANGE`.
-6. **Given** usuario ordena por cotización o variación porcentual (ascendente o descendente), **When** se reciben los resultados, **Then** los activos sin cotización o sin variación previa calculable se ubican obligatoriamente al final (`NULLS LAST`).
-7. **Given** usuario pulsa "Comprar" en una ficha con cotización válida, **When** abre el diálogo, **Then** se reutiliza `BuyTokenModal` con los datos ya consolidados y se ejecuta la compra existente mediante `POST /api/orders/buy`.
-
-### Requisitos funcionales — Catálogo del Mercado Oficial
-
-| ID | Requisito |
-|---|---|
-| FR-35 | La página `/market/buy` DEBE consultar el catálogo consolidado mediante `GET /api/market/official`, enviando los parámetros de paginación (`page`, `size`), filtros deportivos (`name`, `leagueId`, `teamId`, `position`, `nationality`), filtro de disponibilidad de cotización (`hasQuote`), filtros financieros (`minPrice`, `maxPrice` en centésimas) y ordenamiento (`sort`). |
-| FR-36 | El frontend DEBE sincronizar bidireccionalmente los filtros, orden y página con los query params de la URL en `/market/buy`, utilizando exactamente las claves del contrato HTTP (`name`, `leagueId`, `teamId`, `position`, `nationality`, `hasQuote`, `minPrice`, `maxPrice`, `sort`, `page`). La carga inicial, recarga y navegación en el historial DEBEN reconstruir la vista fielmente desde la URL. |
-| FR-37 | Las opciones de los selectores de liga y equipo en `MarketFilters` DEBEN poblarse dinámicamente consumiendo `GET /api/players/filters`. La selección de una liga DEBE restringir en cascada las opciones del selector de equipos a los clubes pertenecientes a dicha liga; limpiar o alterar la liga seleccionada DEBE limpiar la selección del equipo. |
-| FR-38 | Cada activo del catálogo oficial DEBE mostrar sus datos deportivos, cotización unitaria vigente en créditos y centésimas, y variación porcentual calculada por el backend. Si el activo no registra cotización (`quote === null`), DEBE exhibir «Sin cotización» y deshabilitar la acción de compra. |
-| FR-39 | La variación porcentual calculada por el backend (`variationPercentage`) DEBE presentarse en la tarjeta del jugador con indicador direccional visual (↗ verde para subas, ↘ rojo para bajas, → neutro si no hay cambio). Si `variationPercentage` es nulo (sin precio anterior válido), se mostrará indicación neutra de ausencia de variación previa. |
-| FR-40 | Los campos de rango de precios en la interfaz DEBEN ingresarse en créditos y convertirse a centésimas enteras no negativas para la consulta HTTP. El frontend DEBE validar que `minPrice <= maxPrice` antes de emitir la consulta; ante valores invertidos DEBE advertir con error inline y bloquear el envío. |
-| FR-41 | El ordenamiento DEBE permitir ordenar sobre la totalidad de la base de datos por cotización (`price,asc`, `price,desc`), variación porcentual (`variation,asc`, `variation,desc`), nombre (`name,asc`, `name,desc`) e id natural (`id,asc`). Los valores nulos (sin cotización o sin variación calculable) DEBEN situarse al final (`NULLS LAST`) en ambos sentidos. |
-| FR-42 | La respuesta y la interfaz del Mercado Oficial NO DEBEN exponer stock disponible, saldo del superusuario ni tenencias remanentes, preservando el principio de sigilo de inventario. |
-| FR-43 | Seleccionar "Comprar" en un jugador con cotización válida DEBE abrir `BuyTokenModal` manteniendo inalterado el contrato de compra `POST /api/orders/buy` con `{ playerId, quantity }`. |
-| FR-44 | Tras una compra confirmada, el frontend DEBE invalidar la caché de `GET /api/market/official`, el saldo de créditos del usuario y el portfolio, y presentar la notificación de éxito existente. |
-| FR-45 | La evolución del Mercado Oficial NO DEBE modificar, interrumpir ni introducir regresiones en las rutas, contratos, hooks y componentes del Mercado P2P (`/market/p2p`, FR-20 a FR-34). |
-
-### Entidades adicionales del Mercado Oficial
-
-- **OfficialMarketPlayerDTO**: DTO de lectura del catálogo consolidado con datos deportivos y bloque `quote` nullable.
-- **OfficialMarketQuoteDTO**: bloque embebido con `unitPrice`, `previousPrice`, `variationPercentage`, `performanceScore`, `multiplier`, `calculationOrigin`, `effectiveDate` y `calculatedAt`.
-- **OfficialMarketPageDTO**: sobre paginado con `content`, `page`, `size`, `totalElements` y `totalPages`.
-- **OfficialMarketQueryParams**: objeto tipado de parámetros de búsqueda, filtros en cascada, cotización y orden.
-
-### Criterios de éxito adicionales
-
-- **SC-11**: La carga del Mercado Oficial en `/market/buy` resuelve el catálogo completo de la página en un único request HTTP consolidado (`GET /api/market/official`), eliminando las consultas individuales N+1 de cotización.
-- **SC-12**: Al compartir o recargar una URL con filtros (ej. `/market/buy?leagueId=1&teamId=10&hasQuote=true&sort=price,desc`), el estado completo de filtros y resultados se reconstruye idénticamente.
-- **SC-13**: Cambiar la liga seleccionada actualiza inmediatamente la lista de equipos dependientes sin inconsistencias.
+- Los usuarios de ambos mercados ya están autenticados mediante el mecanismo vigente y las rutas conservan la protección existente.
+- SPEC-010 es la fuente autoritativa del catálogo oficial consolidado y de la compra; SPEC-011 es la fuente autoritativa de las publicaciones P2P.
+- El catálogo oficial admite páginas de 1 a 100 elementos; la interfaz usa el tamaño aprobado de 8 para evitar scroll vertical en el viewport desktop de referencia.
+- Los importes se transportan en centésimas y se presentan principalmente como créditos con dos decimales.
+- La presencia de un jugador oficial no acredita stock y la presencia local de una publicación no acredita disponibilidad final; la compra valida precio, saldo, stock y vigencia.
+- El Mercado P2P usa el conjunto completo provisto por el contrato vigente, agrupa y pagina localmente y no requiere cambios en el backend.
+- La identidad del vendedor P2P no es pública y no se resuelve mediante consultas adicionales.
+- El saldo posterior solo se presenta cuando la información vigente conserva precisión suficiente; el servidor siempre decide la suficiencia.
+- Se reutilizan la navegación, las notificaciones, los controles, la paginación, los recursos deportivos y el diálogo accesible existentes sin cambiar el comportamiento ajeno a SPEC-019.
+- Los diseños funcionales y dimensionales aprobados se encuentran en `docs/wireframes/official-market.md` y `docs/wireframes/community-market.md`; cualquier decisión funcional no definida allí requiere CLARIFY antes de planificación o implementación.

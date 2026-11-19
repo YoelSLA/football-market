@@ -36,10 +36,3 @@
 	display: flex;
 	flex-shrink: 0;
 }
-
-@include ds.down(ds.$bp-grid-sm) {
-	.navbarTabs {
-		// 4. 📦 Box Model
-		padding-inline: ds.$space-2xs;
-	}
-}

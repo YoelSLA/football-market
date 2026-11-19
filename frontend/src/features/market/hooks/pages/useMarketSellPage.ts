@@ -8,7 +8,7 @@ import { useMarketQuotesQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
 import { toMarketPlayer } from "@/features/market/market.mapper";
 import type { PlayerHolding, SellResult } from "@/features/market/types";
-import { useAllPlayersQuery } from "@/features/players";
+import { sanitizePositions, useAllPlayersQuery } from "@/features/players";
 import {
 	portfolioQueryKeys,
 	usePortfolioAllOpenHoldingsQuery,
@@ -172,11 +172,20 @@ export function useMarketSellPage({
 	const quantity = form.validatedQuantity;
 
 	const leagues = useMemo(
-		() => [...new Set(allHoldings.map((player) => player.leagueName))].sort(),
+		() =>
+			[
+				...new Set(
+					allHoldings
+						.map((player) => player.leagueName)
+						.filter(
+							(name): name is string => name !== null && name !== undefined,
+						),
+				),
+			].sort(),
 		[allHoldings],
 	);
 	const positions = useMemo(
-		() => [...new Set(allHoldings.map((player) => player.position))].sort(),
+		() => sanitizePositions(allHoldings.map((player) => player.position)),
 		[allHoldings],
 	);
 	const filteredPlayers = useMemo(() => {

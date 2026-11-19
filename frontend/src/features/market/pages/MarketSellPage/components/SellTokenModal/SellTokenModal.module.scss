@@ -97,10 +97,3 @@
 		transform: rotate(360deg);
 	}
 }
-
-@media (max-width: 639px) {
-	.sellModal {
-		// 4. 📦 Box Model
-		max-width: calc(100vw - 2rem);
-	}
-}

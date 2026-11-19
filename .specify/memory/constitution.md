@@ -239,6 +239,20 @@ ejecuta por iniciativa propia del agente.
 Esta restricción se revisa cuando el proyecto avance hacia producción y deje de ser aplicable
 sin una enmienda posterior.
 
+### Viewport y arquitectura de interfaz
+
+El frontend de Football Market soporta exclusivamente **Desktop como único viewport soportado**,
+con un ancho mínimo de **1024px**.
+
+Queda prohibido implementar variantes, layouts o adaptaciones específicas para dispositivos
+móviles (mobile) o tablets (< 1024px).
+
+Se permiten adaptaciones entre resoluciones dentro del rango desktop (≥ 1024px) y adaptaciones
+por altura de viewport (modo compacto vertical).
+
+Toda nueva feature, componente, página o refactorización debe respetar este criterio de forma
+estricta y consistente.
+
 ## Flujo de desarrollo
 
 ### Metodología
@@ -378,4 +392,4 @@ impacto que se conserva **íntegro** en
 a la Constitución y no dentro de ella.
 
 
-**Version**: 9.2.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-11-12
+**Version**: 9.3.0 | **Ratified**: 2026-08-31 | **Last Amended**: 2026-11-18

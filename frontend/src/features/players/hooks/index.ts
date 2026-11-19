@@ -9,6 +9,7 @@ export {
 export {
 	PLAYERS_PAGE_SIZE,
 	useAllPlayersQuery,
+	usePlayerCatalogFiltersQuery,
 	usePlayerCurrentQuoteQuery,
 	usePlayerDetailQuery,
 	usePlayerQuoteRankingPodiumQuery,

@@ -157,13 +157,6 @@
 	stop-color: ds.$chart-area-gradient-end;
 }
 
-@media (max-width: 600px) {
-	.playerQuoteChart__tick_alternate {
-		// 3. 🧩 Layout
-		display: none;
-	}
-}
-
 /* ==========================================================
    MODO COMPACTO — el grafico se adapta a la altura de su fila.
 
@@ -223,11 +216,4 @@
 
 	// 7. ⚙️ Behavior
 	opacity: 0.75;
-}
-
-@media (max-width: 600px) {
-	.playerQuoteChart table {
-		// 4. 📦 Box Model
-		max-height: 10rem;
-	}
 }

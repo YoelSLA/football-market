@@ -58,6 +58,9 @@
 	}
 
 	&__dialog {
+		// 1. 🏷️ Custom Properties
+		--modal-max-width: var(--modal-custom-max-width, 29rem);
+
 		// 2. 📍 Positioning
 		position: relative;
 		z-index: 1;
@@ -68,7 +71,7 @@
 
 		// 4. 📦 Box Model
 		width: 100%;
-		max-width: 29rem;
+		max-width: min(var(--modal-max-width), calc(100vw - 2rem));
 		max-height: calc(100dvh - 2rem);
 		margin: auto;
 

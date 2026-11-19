@@ -14,13 +14,3 @@
 	// 7. ⚙️ Behavior
 	overflow: hidden;
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.pageLayout {
-		// 3. 🧩 Layout
-		flex: 0 0 auto;
-
-		// 7. ⚙️ Behavior
-		overflow: visible;
-	}
-}

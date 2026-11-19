@@ -37,15 +37,22 @@ public record PlayerCandidate(
         || team.isBlank()
         || league == null
         || league.isBlank()
-        || position == null
-        || position.isBlank()) {
+        || isInvalidPosition(position)) {
       throw new InvalidPlayerException(
           "Los datos obligatorios del candidato deben estar presentes");
     }
+    position = position.strip();
     nationality =
         nationality == null || nationality.isBlank() || nationality.length() > 255
             ? null
             : nationality.strip();
+  }
+
+  private static boolean isInvalidPosition(String position) {
+    return position == null
+        || position.isBlank()
+        || position.strip().equalsIgnoreCase("null")
+        || position.length() > 255;
   }
 
   /** Conserva prioridad semántica de la referencia y reúne presentaciones equivalentes. */

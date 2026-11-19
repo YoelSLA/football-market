@@ -36,5 +36,5 @@ final class ScoreRankingSql {
   static final String LEAGUES =
       "select distinct \"leagueId\" as id, \"leagueName\" as name from ranked where \"leagueId\" is not null order by name, id";
   static final String POSITIONS =
-      "select distinct \"playerPosition\" from ranked where \"playerPosition\" is not null order by \"playerPosition\"";
+      "select distinct \"playerPosition\" from ranked where \"playerPosition\" is not null and trim(\"playerPosition\") <> '' and lower(trim(\"playerPosition\")) <> 'null' order by \"playerPosition\"";
 }
