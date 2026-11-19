@@ -459,7 +459,51 @@ export function toUserOrdersPage(data: unknown): UserOrdersPage {
 		? candidate.listings
 		: [];
 	const listings = rawListings.map(toUserOrderListing);
-	const summary = toUserOrdersSummary(candidate.summary);
+	let summary = toUserOrdersSummary(candidate.summary);
+
+	if (!candidate.summary && listings.length > 0) {
+		let activeOrders = 0;
+		let activeTokens = 0;
+		let activeValue = 0;
+		let soldOrders = 0;
+		let soldTokens = 0;
+		let soldValue = 0;
+		let cancelledOrders = 0;
+		let expiredOrders = 0;
+
+		for (const item of listings) {
+			switch (item.status) {
+				case "ACTIVE":
+					activeOrders++;
+					activeTokens += item.quantity;
+					activeValue += item.totalAmount;
+					break;
+				case "SOLD":
+					soldOrders++;
+					soldTokens += item.quantity;
+					soldValue += item.totalAmount;
+					break;
+				case "CANCELLED":
+					cancelledOrders++;
+					break;
+				case "EXPIRED":
+					expiredOrders++;
+					break;
+			}
+		}
+
+		summary = {
+			activeOrders,
+			activeTokens,
+			activeValue,
+			soldOrders,
+			soldTokens,
+			soldValue,
+			cancelledOrders,
+			expiredOrders,
+			totalOrders: listings.length,
+		};
+	}
 	const paginationRecord =
 		typeof candidate.pagination === "object" && candidate.pagination !== null
 			? (candidate.pagination as Record<string, unknown>)

@@ -52,7 +52,8 @@ export default function MarketOrdersTable({
 
 			<div className={styles.ordersTable__footer}>
 				<span className={styles.ordersTable__footerText}>
-					Mostrando {fromIndex}–{toIndex} de {totalElements} órdenes
+					Mostrando {fromIndex}–{toIndex} de {totalElements}{" "}
+					{totalElements === 1 ? "orden" : "órdenes"}
 				</span>
 
 				{totalPages > 1 && (
