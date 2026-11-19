@@ -78,7 +78,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
   @Query(
       value =
           RANKED_QUOTES
-              + "select distinct \"playerPosition\" from ranked where \"playerPosition\" is not null order by \"playerPosition\"",
+              + "select distinct \"playerPosition\" from ranked where \"playerPosition\" is not null and trim(\"playerPosition\") <> '' and lower(trim(\"playerPosition\")) <> 'null' order by \"playerPosition\"",
       nativeQuery = true)
   List<String> findRankingPositions();
 

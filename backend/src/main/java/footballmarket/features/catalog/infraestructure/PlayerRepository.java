@@ -61,7 +61,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
   @Query(
       "select distinct p.position from Player p join p.team t join t.league l where p.active=true and t.current=true"
           + HAS_LATEST_METRICS
-          + " and trim(p.position) <> '' order by p.position")
+          + " and trim(p.position) <> '' and lower(trim(p.position)) <> 'null' order by p.position")
   List<String> findCatalogPositions();
 
   @Query(

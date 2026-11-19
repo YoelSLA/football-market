@@ -143,7 +143,7 @@ public class FootballDataIntegration {
                   member.name(),
                   team.name(),
                   competition.name(),
-                  member.position(),
+                  normalizePosition(member.position()),
                   optionalDate(member.dateOfBirth()),
                   optionalText(member.nationality()),
                   reference.id().toString());
@@ -420,11 +420,31 @@ public class FootballDataIntegration {
       return "league";
     }
 
-    if (blank(member.position())) {
+    if (normalizePosition(member.position()) == null) {
       return "position";
     }
 
     return null;
+  }
+
+  /**
+   * Normaliza la posición deportiva informada por el proveedor.
+   *
+   * <p>Considera inválidos los valores nulos, vacíos, en blanco o el texto literal {@code "null"}
+   * (independientemente de mayúsculas/minúsculas).
+   *
+   * @param position valor de posición recibido
+   * @return posición normalizada sin espacios superfluos, o {@code null} si es inválida
+   */
+  static String normalizePosition(String position) {
+    if (position == null) {
+      return null;
+    }
+    String stripped = position.strip();
+    if (stripped.isEmpty() || stripped.equalsIgnoreCase("null") || stripped.length() > 255) {
+      return null;
+    }
+    return stripped;
   }
 
   /**

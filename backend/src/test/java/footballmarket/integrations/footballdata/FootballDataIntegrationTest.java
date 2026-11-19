@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -430,6 +431,41 @@ class FootballDataIntegrationTest {
       assertThatThrownBy(() -> integration.fetchCompetition("PL"))
           .isInstanceOf(FootballDataUnavailableException.class)
           .hasMessageNotContaining("private-url");
+      server.verify();
+    }
+  }
+
+  @Nested
+  @DisplayName("Normalización de posición")
+  class NormalizacionDePosicion {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t", "null", "NULL", "Null", " null "})
+    @DisplayName("Rechaza valores nulos, en blanco o literales null")
+    void rechazaValoresInvalidos(String input) {
+      assertThat(FootballDataIntegration.normalizePosition(input)).isNull();
+    }
+
+    @Test
+    @DisplayName("Conserva y limpia posiciones válidas")
+    void conservaPosicionesValidas() {
+      assertThat(FootballDataIntegration.normalizePosition("Forward")).isEqualTo("Forward");
+      assertThat(FootballDataIntegration.normalizePosition("  Defence  ")).isEqualTo("Defence");
+      assertThat(FootballDataIntegration.normalizePosition("Midfield")).isEqualTo("Midfield");
+      assertThat(FootballDataIntegration.normalizePosition("Goalkeeper")).isEqualTo("Goalkeeper");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "\"null\"", "\"NULL\"", "\"Null\"", "\"\"", "\" \"", "\"   \""})
+    @DisplayName("Descarta jugadores recibidos con posición inválida o literal null")
+    void descartaJugadoresConPosicionInvalida(String jsonValue) {
+      competition("\"League\"");
+      respond(
+          "/teams/10",
+          "{\"name\":\"T\",\"squad\":[{\"id\":44,\"name\":\"N\",\"position\":" + jsonValue + "}]}");
+      CompetitionSnapshot result = integration.fetchCompetition("PL");
+      assertThat(result.discardedInvalid()).isEqualTo(1);
+      assertThat(result.players()).isEmpty();
       server.verify();
     }
   }

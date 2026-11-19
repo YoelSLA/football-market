@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.List;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
@@ -23,9 +24,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers
 @Tag("integration")
 class FlywaySchemaTest {
-  private static final String LAST_VERSION = "20261111163841";
+  private static final String LAST_VERSION = "20261118193500";
 
-  @Container static final PostgreSQLContainer DATABASE = new PostgreSQLContainer("postgres:18");
+  @Container
+  static final PostgreSQLContainer DATABASE =
+      new PostgreSQLContainer("postgres:18").withStartupTimeout(Duration.ofMinutes(3));
 
   private String createDatabase(String name) throws Exception {
     return ValuationDatabaseSupport.createDatabase(DATABASE, name);
@@ -47,7 +50,7 @@ class FlywaySchemaTest {
   @DisplayName("Reconstrucción completa")
   class CompleteReconstruction {
     @Test
-    @DisplayName("Migra PostgreSQL vacío y valida las treinta versiones")
+    @DisplayName("Migra PostgreSQL vacío y valida las treinta y una versiones")
     void migratesEmptyPostgres() throws Exception {
       // Arrange
       String url = createDatabase("flyway_full_reconstruction");
@@ -58,7 +61,7 @@ class FlywaySchemaTest {
       ValidateResult validation = flyway.validateWithResult();
 
       // Assert
-      assertThat(result.migrationsExecuted).isEqualTo(30);
+      assertThat(result.migrationsExecuted).isEqualTo(31);
       assertThat(result.targetSchemaVersion).hasToString(LAST_VERSION);
       assertThat(validation.validationSuccessful).isTrue();
       try (Connection connection =
@@ -68,7 +71,7 @@ class FlywaySchemaTest {
               statement.executeQuery(
                   "SELECT count(*) FROM flyway_schema_history WHERE success AND type = 'SQL'")) {
         rows.next();
-        assertThat(rows.getInt(1)).isEqualTo(30);
+        assertThat(rows.getInt(1)).isEqualTo(31);
       }
     }
   }
