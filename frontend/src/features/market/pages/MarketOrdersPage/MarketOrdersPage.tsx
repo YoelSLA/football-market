@@ -4,7 +4,6 @@ import { useMyOrdersPage } from "@/features/market/hooks";
 import CancelListingModal from "./components/CancelListingModal";
 import MarketOrdersEmptyState from "./components/MarketOrdersEmptyState";
 import MarketOrdersHeader from "./components/MarketOrdersHeader";
-import MarketOrdersMetrics from "./components/MarketOrdersMetrics";
 import MarketOrdersTable from "./components/MarketOrdersTable";
 import styles from "./MarketOrdersPage.module.scss";
 
@@ -13,7 +12,6 @@ export default function MarketOrdersPage() {
 		page,
 		totalPages,
 		totalElements,
-		availableCredits,
 		summary,
 		orders,
 		status,
@@ -44,10 +42,8 @@ export default function MarketOrdersPage() {
 		<PageLayout>
 			<div className={styles.ordersPage}>
 				<div className={styles.ordersPage__header}>
-					<MarketOrdersHeader availableCredits={availableCredits} />
+					<MarketOrdersHeader summary={summary} isLoading={isLoading} />
 				</div>
-
-				<MarketOrdersMetrics summary={summary} isLoading={isLoading} />
 
 				<MarketFilters
 					variant="orders"

@@ -19,14 +19,9 @@ La pantalla permite al usuario autenticado visualizar, filtrar y gestionar sus p
 │ MERCADO             Mercado Oficial     Mercado P2P     Vender tokens     [Mis órdenes]                                │
 ├────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                                        │
-│ ┌────┐  MIS ÓRDENES DE VENTA                                                            24 órdenes registradas         │
-│ │ 🧩 │  Gestioná tus publicaciones en el mercado secundario y cancelá ofertas activas.                                 │
-│ └────┘                                                                                                                 │
-│ ┌──────────────────────┬──────────────────────┬──────────────────────┬─────────────────────────────────────────────┐   │
-│ │ ÓRDENES ACTIVAS      │ VALOR EN VENTA       │ ÓRDENES VENDIDAS     │ CERRADAS / EXPIRADAS                        │   │
-│ │ 5 activas            │ 4.850,00 créditos    │ 14 vendidas          │ 5 cerradas                                  │   │
-│ │ 32 tokens en venta   │ Importe en oferta    │ 84 tokens liquidados │ 3 canceladas · 2 expiradas                  │   │
-│ └──────────────────────┴──────────────────────┴──────────────────────┴─────────────────────────────────────────────┘   │
+│ ┌────┐  MIS ÓRDENES DE VENTA             ┌─────── Órdenes activas ┐ ┌─────── Valor en venta ┐ ┌── Vendidas ┐ ┌── Cerradas ───┐ │
+│ │ 🧩 │  Gestioná tus publicaciones en el │ [🏷️] 5 activas         │ │ [🪙] 4.850 créditos   │ │ [✅] 14     │ │ [✕] 5 cerradas │ │
+│ └────┘  mercado secundario y cancelá…    └────────────────────────┘ └───────────────────────┘ └── 14 vendidas ┘ └── 5 cerradas ──┘ │
 │                                                                                                                        │
 │ ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐   │
 │ │ [ Buscar por jugador o club…     ]  [ Estado: Todas ▾ ]  [ Ordenar por: Más recientes ▾ ]  [ Limpiar filtros ]   │   │
@@ -84,7 +79,7 @@ La pantalla permite al usuario autenticado visualizar, filtrar y gestionar sus p
 - **Navbar principal + Subnavegación**: `60 px + 48 px = 108 px`.
 - **Área útil de pantalla**: `1920 px × 805 px`.
 - **Contenedor de página (`PageLayout`)**: `padding: 8px`, espaciado vertical de `8 px` entre secciones.
-- **Tarjetas de métricas**: Altura fija de `76 px`, 4 columnas distribuidas proporcionalmente con borde `1px solid var(--border-subtle)` y fondo semántico.
+- **Header unificado con métricas integradas**: Altura fija de `70 px`. Alberga a la izquierda el `PageHeading` y a la derecha las 4 métricas agregadas del usuario en pastillas estándar (56 px de altura, icono en mosaico de 32×32 px, etiqueta y valor resaltado). Elimina la fila independiente de tarjetas para maximizar el área útil de la tabla.
 - **Barra de filtros**: Altura fija de `56 px`, con inputs alineados en línea (búsqueda de texto, selector de estado, selector de orden y botón limpiar).
 - **Tabla de órdenes**: Ocupa el espacio vertical restante (`flex: 1`, `min-height: 0`), con encabezado sticky y scroll vertical interno cuando la lista de filas excede el alto del contenedor.
 - **Paginación inferior**: `36 px` fija al pie del contenedor de la tabla.

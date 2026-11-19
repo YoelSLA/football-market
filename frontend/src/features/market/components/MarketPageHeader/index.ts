@@ -1,1 +1,5 @@
-export { default } from "./MarketPageHeader";
+export {
+	default,
+	MarketHeaderMetric,
+	type MarketHeaderMetricProps,
+} from "./MarketPageHeader";
