@@ -2,10 +2,10 @@ package footballmarket.features.market.application.impl;
 
 import footballmarket.features.market.application.OfficialMarketCatalogService;
 import footballmarket.features.market.application.OfficialMarketQuery;
+import footballmarket.features.market.application.internal.OfficialMarketAssembler;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
 import footballmarket.features.market.infraestructure.OfficialMarketRepository;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
-import footballmarket.features.market.presentation.OfficialMarketMapper;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -57,7 +57,7 @@ public class OfficialMarketCatalogServiceImpl implements OfficialMarketCatalogSe
             offset);
 
     List<OfficialMarketPlayer> players =
-        projections.stream().map(OfficialMarketMapper::toDomain).toList();
+        projections.stream().map(OfficialMarketAssembler::toDomain).toList();
 
     return new PageImpl<>(players, PageRequest.of(query.page(), query.size()), totalElements);
   }
