@@ -90,6 +90,11 @@ interface BuyListingRequestDTO {
 
 No se envían jugador, cantidad ni precio. La respuesta reutiliza `OrderBuyResponseDTO` y debe devolver el mismo `listingId`.
 
+La guarda preventiva del cliente consume `availableCreditsCentimes` de `GET /api/auth/me` y lo
+compara directamente con `totalAmount`, ambos en centésimas. `availableCredits` permanece en el
+contrato de sesión únicamente por compatibilidad y no se usa para habilitar o bloquear la compra.
+La validación definitiva de saldo, disponibilidad y vigencia corresponde a este `POST`.
+
 | Código | Comportamiento consumidor vigente |
 | --- | --- |
 | `LISTING_NOT_AVAILABLE`, `LISTING_NOT_FOUND` | Informar indisponibilidad y refrescar publicaciones. |

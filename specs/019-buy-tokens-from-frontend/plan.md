@@ -201,7 +201,7 @@ URLSearchParams ──parse/normalize──> filtros, orden, page, player
 - El orden de transformación es obligatorio: validar listings y jugadores, agrupar por jugador, filtrar el conjunto agrupado, ordenar con desempates deterministas y paginar localmente de a 12.
 - `player=<id>` selecciona el detalle dentro de la misma Page. El detalle usa las publicaciones ya presentes en `marketQueryKeys.listings()`, sin `GET /api/listings/{id}`; cerrar elimina solo `player` y conserva el resto de la URL.
 - Una URL inválida no dispara endpoints diferentes: valores desconocidos usan defaults seguros, una página fuera de rango se normaliza al rango disponible y un jugador ausente produce el estado de detalle sin ofertas con regreso al catálogo.
-- La selección de una publicación abre `BuyListingModal`; cantidad, precio, total y vencimiento son solo lectura. La confirmación repite la guarda del botón y nunca envía cantidad, jugador, vendedor ni precio.
+- La selección de una publicación abre `BuyListingModal`; cantidad, precio, total y vencimiento son solo lectura. La confirmación repite la guarda del botón, compara saldo y total exclusivamente en centésimas y nunca envía cantidad, jugador, vendedor ni precio.
 - Ante conflicto de disponibilidad se invalida `listings()` y se actualizan catálogo y detalle. Ante red sin respuesta concluyente no hay retry automático ni éxito inferido. El éxito permanece hasta cierre explícito.
 
 ### Responsabilidades P2P
@@ -213,7 +213,7 @@ URLSearchParams ──parse/normalize──> filtros, orden, page, player
 | `CommunityMarketFilters` | Controles horizontales automáticos y limpiar; recibe estado y callbacks por props. |
 | `CommunityMarket` | Barra de resultados, estados del catálogo, grilla de cuatro columnas y paginación local. |
 | `CommunityListingsPanel` | Detalle completo del jugador y sus publicaciones ya cargadas. |
-| `BuyListingModal` | Confirmación de lote fijo, procesamiento, error y éxito persistente. |
+| `BuyListingModal` | Confirmación accesible de lote fijo con identidad compartida, total destacado, saldo preciso, procesamiento, error y éxito persistente. |
 | `useCommunityMarketPage` | URL, debounce, agrupación derivada, filtros, orden, página, selección, compra, guardas e invalidaciones. |
 | `useCommunityMarketQuery` | Estado remoto de la colección completa bajo `marketQueryKeys.listings()`. |
 | `marketService` | `GET /listings` y `POST /orders/buy` autenticados. |
@@ -230,3 +230,19 @@ URLSearchParams ──parse/normalize──> filtros, orden, page, player
 ## Complexity Tracking
 
 No aplica: el diseño no introduce violaciones constitucionales ni excepciones arquitectónicas.
+
+## Evolución vigente: filtros de precio deslizantes
+
+- `Slider` reside en componentes compartidos y soporta modo simple o rango, paso entero en centésimas, teclado, etiquetas accesibles y confirmación diferida hasta finalizar la interacción.
+- Oficial consume `priceRange` del catálogo y representa `minPrice`/`maxPrice` en un único control doble; los extremos completos se omiten de la URL.
+- P2P deriva extremos de todas las publicaciones ya cargadas, aplica `maxPrice` antes de agrupar y conserva «Sin límite» como estado explícito sin otra petición.
+- Ambos Page Hooks normalizan enlaces fuera del rango disponible, vuelven a `page=0` al confirmar y conservan query keys y skeletons actuales.
+- El gate visual en dos fases se mantiene: estructura y lógica se validan antes de autorizar el SCSS definitivo.
+
+## Evolución vigente: detalle de ofertas P2P
+
+- `CommunityListingsPanel` reutiliza `MarketPlayerSummary` para la identidad y mantiene como única entrada remota la colección de listings ya cargada.
+- La cabecera combina identidad y tres métricas agregadas; el aviso de lote completo incorpora el estado del límite económico y su acción de limpieza.
+- Las publicaciones conservan el orden vigente por precio, vencimiento e ID. No se incorpora otro control porque duplicaría estado sin mejorar el recorrido principal.
+- La presentación desktop usa una grilla autoajustable de cards con altura intrínseca y scroll interno solo cuando el contenido supera el espacio disponible; pocas ofertas no se estiran.
+- Compra, modal, guardas, payload, invalidaciones y navegación permanecen sin cambios.

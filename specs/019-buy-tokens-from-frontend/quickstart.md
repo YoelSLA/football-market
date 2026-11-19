@@ -27,7 +27,7 @@
 
 ## Filtros, URL y paginación
 
-1. Modificar búsqueda, liga, equipo, posición, nacionalidad, rango y orden: cada control actualiza automáticamente URL y consulta; no existen filtro de cotización, selector de tamaño ni botón Aplicar.
+1. Modificar búsqueda, liga, equipo, posición, nacionalidad, slider de rango y orden: el rango consulta solo al confirmar el arrastre; no existen filtro de cotización, selector de tamaño ni botón Aplicar.
 2. Seleccionar una liga: solo aparecen sus equipos. Cambiarla o limpiarla elimina un equipo incompatible.
 3. Escribir rápidamente en búsqueda: observar una única consulta después del debounce, no una por pulsación.
 4. Introducir mínimo mayor que máximo o valor negativo: aparece error junto a los campos y no se emite una solicitud inválida.
@@ -62,7 +62,7 @@
 1. Abrir `/market/p2p`: comprobar una única lectura `GET /api/listings` sin query parameters y la lectura vigente de metadatos deportivos.
 2. Verificar agrupación por jugador, conteo de publicaciones, suma de tokens y precio mínimo sobre la colección completa antes de filtrar o paginar.
 3. Escribir en búsqueda: `search` se refleja en la URL después de 300 ms de debounce. Cambiar liga, posición u orden: `league`, `position` y `sort` se reflejan inmediatamente.
-4. Desde una página posterior, cambiar filtro u orden: `page` vuelve a `0`. Navegar páginas conserva tamaño local fijo de 12 y actualiza `page` sin emitir otro GET de listings.
+4. Desde una página posterior, cambiar filtro u orden: `page` vuelve a `0`. Navegar páginas conserva tamaño local fijo de 8 y actualiza `page` sin emitir otro GET de listings.
 5. Recargar, compartir la URL y recorrer Back/Forward: filtros, orden y página reconstruyen el mismo catálogo.
 6. Abrir un jugador: la URL agrega `player=<id>` conservando los demás parámetros; el detalle reemplaza catálogo/filtros/paginación y muestra todas las publicaciones ya recibidas, ordenadas por precio, vencimiento e ID.
 7. Cerrar el detalle: se elimina solo `player` y se restaura el catálogo previo. Un jugador inexistente o sin ofertas muestra estado vacío con regreso, sin consulta adicional `/listings/{id}`.
@@ -75,6 +75,15 @@
 4. Simular publicación vendida, vencida o retirada: mostrar indisponibilidad, refrescar catálogo y detalle y no afirmar compra.
 5. Simular error de red sin respuesta: no reintentar el POST automáticamente ni mostrar éxito o rechazo concluyente.
 6. Confirmar que ningún cambio P2P altera payload, modal, invalidaciones o navegación del Mercado Oficial.
+7. Con saldos superior, exacto e inferior al total, comprobar que la guarda compara `availableCreditsCentimes` con `totalAmount`, muestra saldo restante con centésimas y solo bloquea el caso insuficiente; el backend vuelve a validar al confirmar.
+8. En desktop, comprobar que el modal conserva cabecera y cierre accesibles, identidad completa, tres datos del lote alineados, total destacado, aviso integrado y acciones sin desbordamientos.
+
+### Detalle de ofertas P2P desktop
+
+1. Abrir jugadores con una, cuatro y más publicaciones: la identidad conserva retrato, posición, equipo, liga y nacionalidad, y las tres métricas coinciden con las ofertas visibles.
+2. Confirmar que las cards mantienen ancho compacto y altura propia, se ordenan por precio/vencimiento/ID y solo el listado incorpora scroll cuando no entra en el espacio disponible.
+3. Verificar ID, precio unitario, cantidad, total destacado y tiempo restante, incluidos lote vencido, foco visible y compra en curso.
+4. Con `maxPrice` activo, comprobar que métricas y cards usan únicamente publicaciones elegibles; «Ver todas las publicaciones» elimina el límite y reconstruye el detalle completo.
 
 ## Registro de evidencia
 

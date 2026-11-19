@@ -136,8 +136,8 @@ description: "Tareas vigentes para integrar y rediseñar los mercados Oficial y 
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T036 Ejecutar `npm run build` y `npm run biome:fix` desde `frontend/` tras la Fase 2, revisar salidas generadas y corregir solo hallazgos del alcance en `frontend/src/`
-- [ ] T037 Contrastar estáticamente ambos flujos con `specs/019-buy-tokens-from-frontend/quickstart.md`, revisar compatibilidad de `/market/sell`, ejecutar `git diff --check` y `git status --short`, y registrar desviaciones sin afirmar tests no ejecutados
+- [X] T036 Ejecutar `npm run build` y `npm run biome:fix` desde `frontend/` tras la Fase 2, revisar salidas generadas y corregir solo hallazgos del alcance en `frontend/src/`
+- [X] T037 Contrastar estáticamente ambos flujos con `specs/019-buy-tokens-from-frontend/quickstart.md`, revisar compatibilidad de `/market/sell`, ejecutar `git diff --check` y `git status --short`, y registrar desviaciones sin afirmar tests no ejecutados
 
 ---
 
@@ -201,3 +201,36 @@ Visual:  autorización → T030/T031/T032/T033 → T034/T035 → T036 → T037
 - No crear tests frontend ni modificar backend mientras los contratos vigentes alcancen.
 - No convertir CODE REVIEW, TESTING, validación manual o autorización visual en tareas técnicas.
 - TASKS no autoriza implementación ni realiza commits, push o merges.
+
+## Evolución vigente: sliders de precio
+
+- [X] T038 Extender DTO, Model y mapper oficial con `priceRange` global nullable en centésimas.
+- [X] T039 Crear el componente compartido y accesible `Slider` con modos simple/rango y confirmación al finalizar la interacción.
+- [X] T040 Integrar el slider doble oficial con URL, normalización de extremos y reinicio de página.
+- [X] T041 Integrar el slider máximo P2P, «Sin límite» y filtrado previo a agrupación sin llamadas adicionales.
+- [X] T042 Actualizar contratos, requisitos y guía de comprobación de ambos mercados.
+- [X] T043 Aplicar el acabado SCSS con tokens y numeración de propiedades después del gate humano obligatorio.
+- [X] T044 Completar validación visual humana de desbordamientos, estados extremos y panel de 180 px.
+
+## Evolución vigente: detalle de ofertas P2P
+
+- [X] T045 Reorganizar el JSX semántico del detalle con identidad compartida, métricas, aviso y cards de publicaciones sin alterar la compra.
+- [X] T046 Conservar el orden precio/vencimiento/ID y el límite económico del catálogo sin añadir estado ni peticiones.
+- [X] T047 Aplicar la grilla desktop, jerarquía visual y estados interactivos mediante SCSS después del gate humano.
+- [X] T048 Verificar visualmente cantidades variables, desbordamientos y estados del detalle con sesión autenticada.
+
+## Evolución vigente: confirmación de compra P2P y saldo preciso
+
+- [X] T049 Trazar las unidades monetarias desde persistencia, sesión, publicación y compra; identificar la comparación incompatible entre créditos y centésimas.
+- [X] T050 Extender el contrato de sesión con `availableCreditsCentimes` y migrar las guardas P2P a una comparación homogénea, preservando la autoridad del backend.
+- [X] T051 Incorporar cobertura backend para saldo suficiente, exacto, insuficiente y conversión monetaria, sin ejecutar tests conforme a las reglas del repositorio.
+- [X] T052 Reorganizar el JSX accesible del modal con identidad compartida, métricas del lote, total, saldo disponible y saldo restante.
+- [X] T053 Aplicar el acabado SCSS desktop con tokens y numeración de propiedades después del gate humano obligatorio.
+- [X] T054 Completar la validación visual humana del modal y ejecutar los controles permitidos finales.
+
+## Evolución vigente: retorno tras compra P2P
+
+- [X] T055 Corregir el cierre exitoso para volver al catálogo solo cuando la compra consume la última oferta elegible, preservando filtros y parámetros restantes.
+- [X] T056 Reorganizar los estados vacíos del detalle con estructura accesible y componentes compartidos.
+- [X] T057 Aplicar el acabado visual desktop de los estados vacíos después del gate humano obligatorio.
+- [X] T058 Completar la validación visual humana del retorno y de los estados vacíos.

@@ -33,6 +33,10 @@ interface OfficialMarketPageResponseDTO {
   size: number;
   totalElements: number;
   totalPages: number;
+  priceRange: {
+    min: number | null;
+    max: number | null;
+  };
 }
 
 interface OfficialMarketPlayerResponseDTO {
@@ -61,7 +65,7 @@ interface OfficialMarketQuoteResponseDTO {
 }
 ```
 
-El Mapper valida la respuesta completa. El Model de UI conserva únicamente identidad deportiva, `price`, `previousPrice`, `variationPercentage` y `effectiveDate`; no conserva para presentación `performanceScore`, `multiplier`, `calculationOrigin` ni `calculatedAt`.
+El Mapper valida la respuesta completa. `priceRange` contiene extremos globales en centésimas, independientes de filtros y página; ambos son positivos o ambos `null`. El Model de UI conserva únicamente identidad deportiva, `price`, `previousPrice`, `variationPercentage`, `effectiveDate` y esos metadatos; no conserva para presentación `performanceScore`, `multiplier`, `calculationOrigin` ni `calculatedAt`.
 
 `quote: null` es éxito contractual: el jugador se muestra como «Sin cotización» y no se compra. `previousPrice: null` o `variationPercentage: null` muestran ausencia neutral de referencia; `variationPercentage: 0` muestra variación neutra real.
 

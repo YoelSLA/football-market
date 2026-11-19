@@ -38,25 +38,20 @@ Prohibido el loop autónomo `analyze → fix → analyze → fix`; ese ciclo lo 
 
 Una idea o requisito sin SPEC puede pre-clarificarse mínimamente antes de SPECIFY. Dividir el alcance de una funcionalidad requiere **aprobación humana**: proponer la división y esperar confirmación de los límites. Una épica o un agrupamiento solo se crean cuando exista una necesidad real de coordinación.
 
-## Matriz normativa de asignación de modelos (Arquitectura de 3 niveles)
+## Referencia orientativa de capacidades de modelos (Arquitectura de 3 niveles)
 
-El flujo SDD asigna modelos de IA según la arquitectura de tres niveles de especialización:
+La clasificación de modelos de lenguaje en una **arquitectura de 3 niveles** se mantiene exclusivamente como una referencia orientativa de capacidades y propósitos, sin carácter normativo ni asignaciones obligatorias:
 
-- **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5`, `GPT Astra`. Alta complejidad: análisis profundo, detección de huecos, arquitectura de datos y APIs, escalamiento por bloqueos críticos.
-- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol`, `Gemini 4 Argon`. Especificación, contratos iniciales, pulido y consistencia, checklists sin ambigüedades, desglose atómico en contexto largo, auditoría estática integral e implementación React/hooks/servicios.
-- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash`, `GPT Luna`. Velocidad y diagnóstico append-only en Converge: Biome, linter, builds y commits semánticos; escalamiento a Nivel 1 solo ante bloqueos críticos.
+- **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5`, `GPT Astra`. Modelos de máxima capacidad cognitiva para análisis profundo, detección de huecos, arquitectura estructural, contratos/APIs complejos y resolución de bloqueos críticos.
+- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol`, `Gemini 4 Argon`. Modelos orientados a redacción de especificaciones, contratos iniciales, pulido terminológico, checklists sin ambigüedades, descomposición atómica de tareas en ventanas largas de contexto, auditoría estática integral e implementación de componentes React, hooks y servicios.
+- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash`, `GPT Luna`. Modelos de alta velocidad para tareas operativas, ejecución append-only en Converge, Biome, linter, builds y generación de commits semánticos.
 
-| Etapa / Fase | Operación / Contexto | Nivel | Principal | Respaldo | Alcance |
-| --- | --- | --- | --- | --- | --- |
-| Specify | `/speckit.specify` | Nivel 2 | `GPT Sol` | `Gemini 4 Argon` | Contratos y borrador inicial |
-| Clarify | `/speckit.clarify` | Nivel 1 | `GPT Astra` | `Claude Opus 5.5` | Análisis profundo y detección de huecos |
-| Revisión/Corrección spec | Revisión documental | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Pulido y consistencia terminológica |
-| Plan | `/speckit.plan` | Nivel 1 | `Claude Opus 5.5` | `GPT Astra` | Arquitectura estructural y APIs |
-| Checklist | `/speckit.checklist` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Verificación sin ambigüedades |
-| Tasks | `/speckit.tasks` | Nivel 2 | `Gemini 4 Argon` | `GPT Sol` | Desglose atómico de tareas y contexto largo |
-| Analyze | `/speckit.analyze` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Astra` | Auditoría estática integral |
-| Implement | `/speckit.implement` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Código React, hooks y servicios |
-| Converge | `/speckit.converge` | Nivel 3 | `Gemini 3.8 Flash` | `GPT Luna` | Biome, linter, builds y commits; escalamiento a Opus/Astra solo por bloqueos críticos |
+### Libre elección de modelos y agentes
+
+No existen restricciones documentales ni condicionamientos sobre qué modelos o agentes deben utilizarse en las distintas etapas de SDD:
+- Se permite elegir libremente cualquier agente o modelo para cualquier etapa u operación del flujo SDD.
+- Es posible cambiar de agente o modelo entre etapas y operaciones según resulte conveniente o necesario para la tarea.
+- La selección de modelos principales, alternativos o de respaldo queda a libre criterio operativo, sin restricciones documentales de escalamiento ni exclusividad.
 
 ## Identidad de la Feature
 

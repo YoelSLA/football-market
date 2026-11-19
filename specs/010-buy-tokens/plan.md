@@ -243,3 +243,7 @@ sequenceDiagram
    - *Mitigación*: La consulta excluye `player_token_holdings`. Pruebas de contrato validan la ausencia estricta de campos de stock en la respuesta JSON.
 4. **Verificación de Rendimiento y Plan de Ejecución (Diagnóstico)**:
    - *Mitigación*: Se inspeccionará de forma diagnóstica el plan de ejecución (`EXPLAIN`) durante las pruebas para comprobar la estructura de la consulta y el aprovechamiento del índice `ix_player_quotes_player_date`, evitando aserciones rígidas de texto sobre `Index Scan` que dependan de la baja cardinalidad en bases de datos de prueba efímeras.
+
+## Evolución vigente: metadatos globales de precio
+
+`GET /api/market/official` incorpora `priceRange` como metadato aditivo. El repositorio ejecuta una única agregación `MIN/MAX` sobre la misma definición de jugador y cotización vigente elegibles, sin aplicar criterios de UI. El servicio compone esa proyección con la página existente y el mapper publica ambos extremos en centésimas; la ausencia global de cotizaciones se representa con dos nulos. No se incorpora endpoint, carga completa ni cambio en los parámetros existentes.

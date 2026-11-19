@@ -13,8 +13,6 @@ handoffs:
 
 MUST leer Constitution, AGENTS y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo Clarify autorizado; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. Una omisión de Clarify no completa la fase ni habilita Plan en el lifecycle normativo.
 
-**Modelo normativo (Arquitectura de 3 niveles - Nivel 1)**: Principal `GPT Astra` (`opencode/gpt-6-astra`) | Respaldo `Claude Opus 5.5` (`opencode/claude-opus-5-5`) para análisis profundo y detección de huecos.
-
 ```text
 $ARGUMENTS
 ```

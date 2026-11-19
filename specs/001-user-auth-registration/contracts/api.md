@@ -102,7 +102,8 @@ Devuelve la identidad persistida del usuario asociado al JWT de la solicitud.
   "username": "juan.perez",
   "email": "user@example.com",
   "role": "USER",
-  "availableCredits": 100
+  "availableCredits": 100,
+  "availableCreditsCentimes": 10000
 }
 ```
 
@@ -113,6 +114,7 @@ Devuelve la identidad persistida del usuario asociado al JWT de la solicitud.
 | `email` | String | Correo electrónico del usuario. Sin cambios. |
 | `role` | String | `USER` o `SUPERUSER`. Campo informativo para el cliente. |
 | `availableCredits` | Long | Saldo disponible del usuario en créditos. Campo aditivo. |
+| `availableCreditsCentimes` | Long | Saldo preciso en centésimas de crédito. Campo aditivo utilizado para operaciones monetarias del cliente. |
 
 **Responses**:
 

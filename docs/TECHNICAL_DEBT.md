@@ -102,16 +102,17 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
   (T071–T090), antes del commit.
 - **Evidencia:** `PlayerRepository.HAS_LATEST_METRICS` define la regla de elegibilidad
   (última `extractionDate` con `presentMetrics > 0`); `TokenListingRepository.findMarket`,
-  `AttributeValuationRepository.findScoreRanking` y
-  `PositionalValuationRepository.findScoreRanking` replican el mismo fragmento JPQL de
+  `AttributeValuationRepository.findScoreRanking`,
+  `PositionalValuationRepository.findScoreRanking` y las consultas nativas de
+  `OfficialMarketRepository` replican la misma regla (en JPQL y SQL nativo) de
   forma literal en lugar de reutilizarlo.
-- **Impacto:** cualquier cambio futuro de la regla exige editar cuatro consultas; omitir
-  una produce divergencia entre catálogo, mercado y rankings sin que ningún test lo
-  garantice por sí solo.
+- **Impacto:** cualquier cambio futuro de la regla exige editar cinco consultas; omitir
+  una produce divergencia entre catálogo, mercado oficial, mercado P2P y rankings sin
+  que ningún test lo garantice por sí solo.
 - **Resolución propuesta:** extraer el fragmento a un punto compartido y neutral entre
   features cuando exista, sin trasladar dominio de catálogo a mercado o valuación sin
   autorización.
-- **Cierre:** implementación acordada y evidencia verificable de que las cuatro consultas
+- **Cierre:** implementación acordada y evidencia verificable de que las cinco consultas
   aplican la misma regla; los tests aplicables siguen a cargo del usuario.
 
 ### TD-039 — Selector de estrategia del ranking pendiente de adopción multicorrida
@@ -2455,3 +2456,4 @@ Identificador anterior en `dev`: TD-032; renumerado por colisión durante la int
 | 2026-10-21 22:20:53 | Incorporación de TD-022 a TD-029 tras el code review de SPEC-016: una deuda de prioridad Alta (TD-022, ranking sin desempate determinista) y siete de prioridad Media (TD-023 a TD-029). TD-011 se actualizó con `InvalidQuoteException` entre las excepciones propias sin manejador global. El code review completo, con los hallazgos, el orden de revisión y el checklist humano, quedó registrado en `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md`. No se modificó código, migraciones ni contratos. |
 | 2026-10-21 23:05:00 | Remediación del code review de SPEC-016 por decisión del responsable del proyecto: se cierra el desempate no determinista de la lectura de cotizaciones (CR-01, TD-022, T051 y T052) y se registran las decisiones sobre CR-02 (TD-023 se conserva como deuda), CR-05 (TD-026 descartada) y CR-07 (TD-028 descartada). TD-022 pasa a `En curso` porque la ejecución de los tests corresponde al usuario. Se modificó el repositorio de cotizaciones y la suite de pruebas de consultas; no se modificaron migraciones, contratos HTTP ni el esquema. |
 | 2026-11-12 00:35:59 | Incorporación de TD-040 tras la revisión del diff del IMPLEMENT conjunto de SPEC-002/SPEC-005: el predicado de elegibilidad por métricas se repite literalmente en cuatro consultas de catálogo, mercado y rankings. No se modificó código como parte del registro. |
+| 2026-11-17 12:15:00 | Actualización de TD-040 tras alinear el catálogo de emisión oficial del mercado primario (OfficialMarketRepository) con el predicado de elegibilidad por métricas vigentes del catálogo de jugadores, incorporando su consulta nativa a las cinco fuentes afectadas. |

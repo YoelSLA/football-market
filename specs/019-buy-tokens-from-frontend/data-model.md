@@ -194,6 +194,12 @@ modal: closed -> confirming -> submitting -> success -> closed
                                 └───────> error -> confirming
 ```
 
+La guarda preventiva de saldo compara `CurrentUser.availableCreditsCentimes` con
+`MarketListing.totalAmount`; ambos valores están expresados en centésimas. El campo compatible
+`availableCredits` no participa en decisiones monetarias porque pierde la fracción al representar
+créditos enteros. El saldo restante es una estimación visual derivada de esos dos valores y nunca
+sustituye la validación transaccional del backend.
+
 - Éxito: permanece visible hasta cierre explícito.
 - Conflicto de disponibilidad: invalida listings y actualiza catálogo/detalle.
 - Fallo de red incierto: no reintenta automáticamente ni afirma resultado.

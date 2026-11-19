@@ -14,7 +14,7 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 
 **Created**: 2026-10-23
 
-**Status**: Draft
+**Status**: Approved
 
 <!-- Estados y criterios de transición: ../../specs/README.md. -->
 
@@ -99,6 +99,9 @@ Un usuario abre un jugador del Mercado P2P, compara todas sus publicaciones comp
 5. **Given** una publicación vendida, vencida, cancelada o retirada concurrentemente, **When** el usuario intenta comprarla, **Then** se informa que dejó de estar disponible y se refrescan catálogo y detalle sin afirmar una compra.
 6. **Given** una interrupción sin respuesta concluyente, **When** falla la solicitud, **Then** no se reintenta automáticamente ni se afirma éxito o fracaso transaccional.
 7. **Given** una compra P2P exitosa, **When** llega la respuesta, **Then** se actualizan publicaciones, saldo, resumen y tenencias, y el resultado permanece disponible hasta que el usuario lo cierre.
+8. **Given** una cantidad variable de publicaciones, **When** se abre el detalle, **Then** se muestra la identidad deportiva completa y un resumen de mejor precio, tokens disponibles y publicaciones activas, seguido por cards compactas de altura propia que no se estiran para llenar el viewport.
+9. **Given** que el saldo persistido cubre el total del lote, incluso con centésimas, **When** se abre la confirmación, **Then** el cliente no bloquea la compra y muestra saldo disponible y saldo restante estimado con precisión monetaria.
+10. **Given** una compra exitosa consume la última oferta elegible del jugador, **When** el usuario cierra la confirmación, **Then** se elimina `player` de la URL y se vuelve al catálogo; si quedan ofertas elegibles, el detalle permanece abierto.
 
 ---
 
@@ -138,7 +141,7 @@ Un usuario puede recorrer ambos mercados y completar sus diálogos con teclado, 
 - **FR-003**: El Mercado Oficial DEBE presentar ocho controles: búsqueda por jugador, liga, equipo, posición, nacionalidad, precio mínimo, precio máximo y orden. La interfaz NO DEBE presentar filtros por disponibilidad de cotización ni tamaño de página.
 - **FR-004**: La búsqueda oficial DEBE filtrar únicamente por nombre o apellido del jugador, normalizar espacios, mayúsculas y acentos, y aplicarse automáticamente con debounce.
 - **FR-005**: Los filtros de liga y equipo DEBEN obtener opciones de los filtros deportivos vigentes; el equipo DEBE depender de la liga y limpiarse cuando deje de ser compatible.
-- **FR-006**: Los precios de filtro DEBEN ingresarse en créditos, convertirse a centésimas enteras no negativas y validarse antes de consultar; mínimo mayor que máximo DEBE mostrar un error junto a los campos.
+- **FR-006**: El precio oficial DEBE seleccionarse mediante un slider de rango doble cuyos extremos provienen de `priceRange`; debe operar en incrementos de una centésima de crédito, reflejar sus valores y aplicar la consulta únicamente al confirmar el arrastre. Una URL fuera del rango disponible DEBE normalizarse al extremo válido y un catálogo sin cotizaciones DEBE deshabilitar el control.
 - **FR-007**: El Mercado Oficial DEBE permitir ordenar por precio, variación, nombre e identificador en las direcciones admitidas por SPEC-010, con un único criterio principal; precio o variación nulos DEBEN ubicarse al final y los empates resolverse de forma determinista.
 - **FR-008**: El estado oficial DEBE sincronizar bidireccionalmente `name`, `leagueId`, `teamId`, `position`, `nationality`, `minPrice`, `maxPrice`, `sort` y `page` con la URL; filtros u orden modificados DEBEN volver a la primera página. Los parámetros heredados `hasQuote` y `size` DEBEN ignorarse, retirarse mediante navegación `replace` y no enviarse como criterios variables al backend.
 - **FR-009**: La paginación oficial DEBE ejecutarse sobre el conjunto completo filtrado y mostrar ocho jugadores por página; el total de resultados DEBE mostrarse únicamente sobre la grilla.
@@ -158,11 +161,15 @@ Un usuario puede recorrer ambos mercados y completar sus diálogos con teclado, 
 - **FR-023**: El Mercado P2P DEBE leer el conjunto completo de publicaciones comprables disponible para la sesión, validar sus datos y usarlo como única fuente remota para catálogo y detalle.
 - **FR-024**: El catálogo P2P DEBE agrupar las publicaciones válidas por jugador y calcular cantidad de publicaciones, suma segura de tokens ofrecidos y precio unitario mínimo sin mostrar una publicación inválida como válida.
 - **FR-025**: Los datos deportivos del P2P DEBEN reutilizar el catálogo de jugadores vigente; un jugador cuyos metadatos indispensables no puedan resolverse NO DEBE presentarse con datos inventados.
-- **FR-026**: El catálogo P2P DEBE permitir búsqueda normalizada por jugador o club, filtro por liga y posición, orden por mejor precio, cantidad ofrecida o nombre, y paginación local de 12 jugadores; filtrar y ordenar DEBEN preceder a paginar. La búsqueda DEBE publicarse después de 300 ms de debounce; liga, posición y orden DEBEN actualizarse inmediatamente.
-- **FR-027**: El catálogo P2P DEBE sincronizar bidireccionalmente `search`, `league`, `position`, `sort` y `page` con los query parameters de `/market/p2p`; cambiar cualquier filtro u orden DEBE volver a `page=0`, y compartir, recargar o recorrer Back/Forward DEBE reconstruir el mismo estado visible.
+- **FR-026**: El catálogo P2P DEBE permitir búsqueda normalizada por jugador o club, filtros por liga, equipo dependiente, posición y precio máximo por token, orden por mejor precio, cantidad ofrecida o nombre, y paginación local de 8 jugadores; el precio máximo DEBE filtrar publicaciones elegibles antes de agrupar y recalcular métricas, y todo filtro y orden DEBE preceder a paginar.
+- **FR-027**: El catálogo P2P DEBE sincronizar bidireccionalmente `search`, `leagueId`, `teamId`, `position`, `maxPrice`, `sort` y `page` con los query parameters de `/market/p2p`; debe migrar enlaces heredados con `league`, restablecer `page=0` ante cambios y reconstruir el mismo estado mediante recarga o Back/Forward. `maxPrice` se controla con un slider de una sola posición, paso de una centésima y acción «Sin límite», y solo se confirma al finalizar el arrastre.
+- **FR-037**: Los extremos del slider P2P DEBEN derivarse de la colección completa ya obtenida por `GET /api/listings`, nunca solo de la página agrupada visible ni mediante una llamada adicional.
 - **FR-028**: Seleccionar un jugador P2P DEBE representar `player=<id>` en `/market/p2p?player=<id>` y mostrar allí su detalle completo; cerrar o volver DEBE retirar únicamente `player`, conservar los demás query parameters y restaurar el catálogo en el estado representado por la URL.
 - **FR-029**: El detalle P2P DEBE mostrar todas las publicaciones comprables vigentes del jugador presentes en la lectura actual, ordenadas inicialmente por precio unitario, vencimiento e identificador ascendentes.
 - **FR-030**: Cada publicación P2P DEBE mostrar cantidad fija, precio unitario, total y vencimiento; NO DEBE admitir compra parcial, campo de cantidad ni identidad pública del vendedor.
+- **FR-038**: El detalle P2P desktop DEBE reutilizar la identidad compartida del jugador, presentar tres métricas agregadas y distribuir las publicaciones en una grilla de cards compactas. Cada card DEBE destacar el total del lote, conservar la acción «Comprar lote» y comunicar identificador, precio unitario, cantidad y tiempo restante.
+- **FR-039**: La confirmación P2P desktop DEBE reutilizar la identidad compartida, presentar una cabecera compacta con el identificador de publicación, distribuir cantidad, precio unitario y vencimiento con claridad, destacar el total y mostrar saldo disponible y saldo restante estimado. Toda comparación monetaria DEBE usar centésimas de crédito; el backend conserva la autoridad sobre saldo, disponibilidad y vigencia.
+- **FR-040**: Al cerrar una compra P2P exitosa, el sistema DEBE conservar el detalle si el jugador mantiene ofertas elegibles y volver al catálogo, retirando únicamente `player` de la URL, si la compra consumió la última. Los estados de detalle sin ofertas DEBEN conservar una salida accesible y visualmente integrada para accesos directos y cambios concurrentes.
 - **FR-031**: La confirmación P2P DEBE mostrar el lote completo y enviar exclusivamente el identificador de publicación; el manejador DEBE repetir las guardas del botón y prevenir doble envío.
 - **FR-032**: El sistema DEBE tratar publicación no disponible o inexistente, compra propia defensiva, créditos o stock insuficientes, administrador no autorizado, solicitud inválida, sesión expirada y fallos internos o inciertos con mensajes seguros y la actualización del mercado que corresponda.
 - **FR-033**: Ante éxito P2P, el sistema DEBE actualizar publicaciones, usuario actual, resumen de cartera y todas las tenencias, y mostrar identificador de transacción, cantidad, precio unitario, total y fecha de ejecución reales sin autocierre obligatorio.
