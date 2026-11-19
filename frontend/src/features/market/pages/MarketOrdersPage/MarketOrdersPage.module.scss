@@ -15,6 +15,11 @@
 	background-color: ds.$surface-page;
 	color: ds.$text-strong-on-dark;
 
+	&__header {
+		flex-shrink: 0;
+		height: 70px;
+	}
+
 	&__error {
 		display: flex;
 		flex-direction: column;

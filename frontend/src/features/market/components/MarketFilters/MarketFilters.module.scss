@@ -128,3 +128,23 @@
 		min-height: 0;
 	}
 }
+
+.marketFilters_orders {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	padding: 12px;
+
+	.marketFilters__desktop {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-height: 0;
+	}
+}

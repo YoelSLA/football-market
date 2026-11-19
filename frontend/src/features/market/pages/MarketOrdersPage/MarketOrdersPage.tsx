@@ -1,8 +1,8 @@
 import { PageLayout } from "@/app/layouts";
+import MarketFilters from "@/features/market/components/MarketFilters";
 import { useMyOrdersPage } from "@/features/market/hooks";
 import CancelListingModal from "./components/CancelListingModal";
 import MarketOrdersEmptyState from "./components/MarketOrdersEmptyState";
-import MarketOrdersFilters from "./components/MarketOrdersFilters";
 import MarketOrdersHeader from "./components/MarketOrdersHeader";
 import MarketOrdersMetrics from "./components/MarketOrdersMetrics";
 import MarketOrdersTable from "./components/MarketOrdersTable";
@@ -13,6 +13,7 @@ export default function MarketOrdersPage() {
 		page,
 		totalPages,
 		totalElements,
+		availableCredits,
 		summary,
 		orders,
 		status,
@@ -42,11 +43,14 @@ export default function MarketOrdersPage() {
 	return (
 		<PageLayout>
 			<div className={styles.ordersPage}>
-				<MarketOrdersHeader totalOrders={summary.totalOrders} />
+				<div className={styles.ordersPage__header}>
+					<MarketOrdersHeader availableCredits={availableCredits} />
+				</div>
 
 				<MarketOrdersMetrics summary={summary} isLoading={isLoading} />
 
-				<MarketOrdersFilters
+				<MarketFilters
+					variant="orders"
 					search={searchInput}
 					status={status}
 					sort={sort}
@@ -54,6 +58,11 @@ export default function MarketOrdersPage() {
 					onStatusChange={setStatus}
 					onSortChange={setSort}
 					onClear={clearFilters}
+					summary={`${summary.totalOrders} ${
+						summary.totalOrders === 1
+							? "orden registrada"
+							: "órdenes registradas"
+					}`}
 				/>
 
 				{isError ? (

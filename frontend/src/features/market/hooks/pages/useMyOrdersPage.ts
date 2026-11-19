@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useCurrentUserQuery } from "@/features/auth";
 import { useCancelListingMutation } from "@/features/market/hooks/mutations";
 import { useMyListingsQuery } from "@/features/market/hooks/queries";
 import type { UserOrderListing } from "@/features/market/types";
 import { useAllPlayersQuery } from "@/features/players";
 import { getErrorCode } from "@/infrastructure/http";
+import { useAuthStore } from "@/infrastructure/storage";
 
 export interface EnrichedUserOrder extends UserOrderListing {
 	playerName: string;
@@ -16,6 +18,10 @@ export interface EnrichedUserOrder extends UserOrderListing {
 }
 
 export function useMyOrdersPage() {
+	const revision = useAuthStore((state) => state.revision);
+	const currentUser = useCurrentUserQuery(true, revision);
+	const availableCredits = currentUser.data?.availableCredits;
+
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	const page = Number(searchParams.get("page") ?? "0") || 0;
@@ -166,6 +172,7 @@ export function useMyOrdersPage() {
 		page,
 		totalPages: ordersPage?.totalPages ?? 0,
 		totalElements: ordersPage?.totalElements ?? 0,
+		availableCredits,
 		summary: ordersPage?.summary ?? {
 			activeOrders: 0,
 			activeTokens: 0,
