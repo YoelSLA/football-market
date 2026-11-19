@@ -1,51 +1,52 @@
+@use "@/styles/abstracts" as ds;
+
 .ordersEmptyState {
 	display: flex;
+	flex: 1;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 48px 16px;
+	min-height: 280px;
+	box-sizing: border-box;
+	padding: ds.$space-lg ds.$space-sm;
 	text-align: center;
 	border-radius: 8px;
-	background-color: var(--surface-card, #1e222b);
-	border: 1px solid var(--border-subtle, #334155);
-	margin: 8px 0;
-	gap: 16px;
+	border: 1px solid ds.$border-panel-tint;
+	background-color: ds.$surface-data-table;
+	gap: ds.$space-xs;
 
 	&__icon {
-		color: var(--text-muted, #64748b);
+		display: grid;
+		place-items: center;
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$accent-gain;
+		margin-bottom: 4px;
 	}
 
 	&__title {
 		margin: 0;
-		font-size: 1.25rem;
+		font-size: 16px;
 		font-weight: 700;
-		color: var(--text-primary, #ffffff);
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
 	}
 
 	&__description {
 		margin: 0;
-		max-width: 480px;
-		font-size: 0.875rem;
-		color: var(--text-secondary, #94a3b8);
+		max-width: 440px;
+		font-size: 13px;
+		line-height: 1.4;
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__actionBtn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 10px 20px;
-		border-radius: 6px;
-		background-color: var(--brand-primary, #00d66c);
-		color: #0b0e14;
-		font-weight: 700;
-		font-size: 0.875rem;
+		@include ds.market-action;
+		height: 36px;
+		padding: 0 18px;
 		text-decoration: none;
-		border: none;
-		cursor: pointer;
-		transition: opacity 0.2s;
-
-		&:hover {
-			opacity: 0.9;
-		}
+		border-radius: 6px;
 	}
 }

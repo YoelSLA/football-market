@@ -1,53 +1,67 @@
+@use "@/styles/abstracts" as ds;
+
 .ordersHeader {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 16px;
-	padding: 8px 0;
+	gap: ds.$space-2xs;
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: 100%;
+	padding: ds.$space-2xs;
 
 	&__main {
 		display: flex;
 		align-items: center;
-		gap: 16px;
+		gap: ds.$space-2xs;
+		min-width: 0;
 	}
 
 	&__iconContainer {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 48px;
-		height: 48px;
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 40px;
+		height: 40px;
 		border-radius: 8px;
-		background-color: var(--surface-card, #1e222b);
-		color: var(--brand-primary, #00d66c);
+		background-color: ds.$surface-card-subtle;
+		color: ds.$accent-gain;
 	}
 
 	&__text {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: 2px;
+		min-width: 0;
 	}
 
 	&__title {
 		margin: 0;
-		font-size: 1.5rem;
+		font-size: 18px;
 		font-weight: 700;
-		color: var(--text-primary, #ffffff);
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+		letter-spacing: -0.01em;
 	}
 
 	&__subtitle {
 		margin: 0;
-		font-size: 0.875rem;
-		color: var(--text-secondary, #94a3b8);
+		font-size: 12px;
+		line-height: 1.3;
+		color: ds.$text-subtle-on-dark;
 	}
 
 	&__badge {
-		padding: 6px 12px;
-		font-size: 0.875rem;
-		font-weight: 600;
+		display: inline-flex;
+		align-items: center;
+		padding: 4px 10px;
+		border: 1px solid ds.$border-panel-mid;
 		border-radius: 6px;
-		background-color: var(--surface-card, #1e222b);
-		color: var(--text-primary, #ffffff);
-		border: 1px solid var(--border-subtle, #334155);
+		background-color: ds.$surface-panel-from;
+		color: ds.$text-label-on-dark;
+		font-size: 12px;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 }
