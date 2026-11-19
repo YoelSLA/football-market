@@ -18,6 +18,34 @@ cronología, conservados en el mismo orden inverso al de las fechas.
 
 ---
 <!--
+Sync Impact Report — Enmienda 2026-11-18
+Versión: 9.2.0 → 9.3.0 (MINOR: ampliación material compatible de las Restricciones adicionales para
+formalizar la arquitectura de interfaz exclusivamente desktop. No se elimina ni se debilita ningún
+principio ni ninguna garantía previa).
+Principios modificados: ninguno.
+Secciones añadidas:
+- Restricciones adicionales / Viewport y arquitectura de interfaz: se establece Desktop como único
+  viewport soportado (ancho mínimo: 1024px), prohibiendo variantes específicas para mobile o tablet
+  (< 1024px), permitiendo adaptaciones entre resoluciones desktop (≥ 1024px) y por altura de viewport
+  (modo compacto vertical), y fijando su cumplimiento para toda nueva feature, componente, página
+  o refactorización.
+Secciones eliminadas: ninguna. Ninguna sección renumerada.
+Línea de versión: Last Amended 2026-11-12 → 2026-11-18. Ratificación conservada: 2026-08-31.
+Reglas adoptadas:
+- Desktop como único viewport soportado en Football Market (ancho mínimo: 1024px).
+- Prohibición estricta de implementar variantes específicas para dispositivos móviles (mobile) o tablets.
+- Se permiten adaptaciones entre resoluciones dentro del rango desktop (≥ 1024px) y adaptaciones por altura
+  de viewport (modo compacto vertical).
+- Toda nueva feature, componente, página o refactorización debe respetar este criterio de forma estricta.
+Garantías preservadas sin cambio: principios I a VI; clasificación de casos límite; seguridad e integridad;
+coherencia de contratos; trazabilidad y fuente de verdad; cuatro autorizaciones humanas; condiciones de entrega
+y definición de cierre; y gobernanza.
+Plan de migración: refactorización global de estilos en el frontend eliminando consultas de medios y
+reglas correspondientes a mobile y tablet (< 1024px).
+-->
+
+---
+<!--
 Sync Impact Report — Enmienda 2026-11-12
 Versión: 9.1.0 → 9.2.0 (MINOR: ampliación material compatible del Principio I, Simplicidad y calidad,
 y del Principio V, Trazabilidad y fuente de verdad, para formalizar el enfoque de Documentación Viva

@@ -44,7 +44,7 @@ $$\begin{aligned}
 > 2. **596 px elástico**: Corresponde al remanente en desktop $1920 \times 913\text{ px}$. Se implementa con `flex: 1; min-height: 0; overflow-y: auto;` sin alturas fijas que provoquen desbordamiento.
 > 3. **Zona Superior Fija en Desktop (209 px)**: Navegación ($32\text{ px}$) + Cabecera ($125\text{ px}$) + Separación ($12\text{ px}$) + Pestañas ($40\text{ px}$) permanecen estáticas. El usuario no pierde la identidad ni el valor de mercado mientras navega.
 > 4. **Scroll Exclusivo en Desktop**: Si el contenido de la pestaña activa excede la altura disponible, el desplazamiento vertical pertenece exclusivamente a la región de contenido activa. Nunca existe scroll global en la ventana del navegador.
-> 5. **Tablet y Móvil**: Conmutan a scroll documental natural de página (`overflow: visible; height: auto;`), adaptando los bloques verticalmente sin overflow horizontal.
+> 5. **Arquitectura Exclusivamente Desktop**: Desktop (≥ 1024px) es el único viewport soportado. Queda prohibido implementar variantes o comportamientos específicos para mobile o tablet (< 1024px). Se permiten adaptaciones entre resoluciones desktop (≥ 1024px) y por altura de viewport (modo compacto vertical).
 
 ---
 
@@ -292,114 +292,10 @@ Conserva el catálogo completo de 60 métricas organizadas en cards horizontales
 - **Pestaña Resumen**: 4 tarjetas principales en fila, 2 paneles de barras lado a lado y estadísticas destacadas.
 - **Pestaña Catálogo**: Grid responsive de 6 a 8 tarjetas por fila en 1920 px.
 
-### B. Tablet (alrededor de 768 px a 1024 px)
-- **Comportamiento vertical**: Conmuta a scroll documental natural de página (`overflow: visible; height: auto;`).
-- **Cabecera (~155 px)**:
-  - Fila superior: Foto ($70\text{ px}$) + Identidad a la izquierda; cotización oficial y variación en píldora compacta a la derecha.
-  - Fila inferior: 3 micro-tarjetas deportivas a todo el ancho.
-- **Pestaña Cotizaciones**:
-  - Gráfico a todo el ancho en la parte superior.
-  - Panel financiero en bloque apilado debajo.
-  - Historial cronológico en tabla con scroll horizontal defensivo (`overflow-x: auto`).
-- **Pestaña Resumen**: 4 tarjetas en cuadrícula $2 \times 2$; paneles de barras apilados verticalmente.
-- **Pestaña Catálogo**: Grid responsive de 3 a 4 tarjetas por fila.
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ FOOTBALL MARKET                                         [=] │
-├─────────────────────────────────────────────────────────────┤
-│ Catálogo      Ranking                                       │
-├─────────────────────────────────────────────────────────────┤
-│ ← Volver a jugadores                                        │
-├─────────────────────────────────────────────────────────────┤
-│ ┌──────────┐ AARON ANSELMINO             ┌────────────────┐ │
-│ │   FOTO   │ Chelsea FC · Premier League │ 1,05 FM +5,0%  │ │
-│ │  (70px)  │ Defensor · Argentina        │ Cotización of. │ │
-│ └──────────┘                             └────────────────┘ │
-│ ┌─────────────┬───────────────────────────┬───────────────┐ │
-│ │ ENTRADAS    │ INTERCEPCIONES            │ DESPEJES      │ │
-│ │ 2,4 /p      │ 1,7 /p                    │ 4,1 /p        │ │
-│ └─────────────┴───────────────────────────┴───────────────┘ │
-├─────────────────────────────────────────────────────────────┤
-│ [ COTIZACIONES ]   [ RESUMEN DEPORTIVO ]   [ TODAS ]        │
-├─────────────────────────────────────────────────────────────┤
-│ GRÁFICO DE EVOLUCIÓN HISTÓRICA                              │
-│  1,20 ┤          ╭───╮                                      │
-│  1,05 ┤      ────╯   ╰──                                    │
-│  1,00 ┤  ────╯                                              │
-│       └──────┬─────┬─────┬─────┬─────┬                      │
-│            13/10 20/10 27/10 03/11 10/11                    │
-│                                                             │
-│ RESUMEN FINANCIERO                                          │
-│ • Cotización vigente: 1,05 FM    • Variación: +5,00 %       │
-│ • Rendimiento: 0,60 pts          • Actualización: 20/10/26  │
-│                                                             │
-│ HISTORIAL DE COTIZACIONES                                   │
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │ 20/10/2026 │ 1,05 FM │ +5,00 % │ 0,60 pts │ Ajuste rend │ │
-│ │ 13/10/2026 │ 1,00 FM │  0,00 % │ —        │ Sin cambios │ │
-│ └─────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### C. Móvil (desde 360 px a 480 px)
-- **Comportamiento vertical**: Desplazamiento vertical natural sin restricciones de altura fija.
-- **Cabecera (~210 px)**:
-  - Fila 1: Retrato ($60\text{ px}$) + Nombre y equipo.
-  - Fila 2: Tarjeta destacada a todo el ancho con cotización oficial y variación porcentual.
-  - Fila 3: Fila de 3 micro-tarjetas deportivas simétricas en una sola línea.
-- **Pestañas**: Desplazamiento horizontal por deslizamiento (`overflow-x: auto; white-space: nowrap;`).
-- **Pestaña Cotizaciones**:
-  - Gráfico con `viewBox` responsive adaptado para pantallas estrechas.
-  - Panel financiero en lista vertical compacta.
-  - Historial en lista de tarjetas de fecha (cards) en lugar de tabla horizontal desbordante.
-- **Pestaña Resumen**: Columna vertical única (tarjetas y barras a 1 columna).
-- **Pestaña Catálogo**: Grid responsive de 1 a 2 columnas.
-
-```text
-┌──────────────────────────────────────┐
-│ FOOTBALL MARKET                  [=] │
-├──────────────────────────────────────┤
-│ ← Volver a jugadores                 │
-├──────────────────────────────────────┤
-│ ┌──────┐ AARON ANSELMINO             │
-│ │ FOTO │ Chelsea FC · Premier League │
-│ └──────┘ Defensor · Argentina        │
-│                                      │
-│ ┌──────────────────────────────────┐ │
-│ │ COTIZACIÓN OFICIAL: 1,05 FM      │ │
-│ │ ▲ +5,00 % vs. anterior           │ │
-│ └──────────────────────────────────┘ │
-│ ┌───────────┬───────────┬──────────┐ │
-│ │ ENTRADAS  │ INTERCEP. │ DESPEJES │ │
-│ │ 2,4 /p    │ 1,7 /p    │ 4,1 /p   │ │
-│ └───────────┴───────────┴──────────┘ │
-├──────────────────────────────────────┤
-│ [ COTIZACIONES ] [ RESUMEN ] [ TODAS]│ (Scroll horizontal)
-├──────────────────────────────────────┤
-│ EVOLUCIÓN HISTÓRICA                  │
-│  1,20 ┤    ╭──╮                      │
-│  1,05 ┤ ───╯  ╰──                    │
-│       └────┬───┬──                   │
-│          20/10 10/11                 │
-│                                      │
-│ RESUMEN DE COTIZACIÓN                │
-│ • Cotización vigente: 1,05 FM        │
-│ • Cotización anterior: 1,00 FM       │
-│ • Variación: +0,05 FM (+5,00 %)      │
-│ • Rendimiento base: 0,60 pts         │
-│ • Fecha: 20/10/2026                  │
-│                                      │
-│ HISTORIAL DE COTIZACIONES            │
-│ ┌──────────────────────────────────┐ │
-│ │ 20/10/2026 · 1,05 FM             │ │
-│ │ ▲ +5,00 % · Ajuste rendimiento   │ │
-│ ├──────────────────────────────────┤ │
-│ │ 13/10/2026 · 1,00 FM             │ │
-│ │ = 0,00 % · Cotización inicial    │ │
-│ └──────────────────────────────────┘ │
-└──────────────────────────────────────┘
-```
+### B. Resoluciones Desktop y Modo Compacto por Altura
+- **Desktop (≥ 1024px)**: Único rango de viewport soportado. El layout superior permanece fijo y el contenido activo gestiona su desplazamiento vertical de forma interna.
+- **Modo compacto vertical (`@include ds.compact-detail()`)**: Con `min-height: 860px`, el gráfico de cotización absorbe flexiblemente la altura remanente dentro de la fila sin desbordar el viewport útil.
+- **Variantes Tablet y Móvil**: Derogadas y no soportadas conforme a la Constitución y la arquitectura frontend. No se implementan layouts ni scroll documental para pantallas < 1024px.
 
 ---
 
