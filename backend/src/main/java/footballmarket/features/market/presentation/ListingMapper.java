@@ -3,11 +3,15 @@ package footballmarket.features.market.presentation;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.market.domain.records.TokenListingView;
+import footballmarket.features.market.domain.records.UserOrdersPage;
+import footballmarket.features.market.domain.records.UserOrdersSummary;
 import footballmarket.features.market.presentation.dtos.request.OrderSellRequestDTO;
+import footballmarket.features.market.presentation.dtos.response.MarketPaginationResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.OrderSellResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.TokenListingResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.TokenListingSummaryResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.TokenListingsResponseDTO;
+import footballmarket.features.market.presentation.dtos.response.UserOrdersSummaryResponseDTO;
 import java.util.List;
 
 /** Conversiones estructurales entre DTO HTTP y publicaciones del dominio, sin reglas de negocio. */
@@ -44,6 +48,28 @@ public final class ListingMapper {
                         listing.createdAt(),
                         listing.expiresAt()))
             .toList());
+  }
+
+  public static TokenListingsResponseDTO toPageResponse(UserOrdersPage page) {
+    UserOrdersSummary summary = page.summary();
+    UserOrdersSummaryResponseDTO summaryDTO =
+        summary != null
+            ? new UserOrdersSummaryResponseDTO(
+                summary.activeOrders(),
+                summary.activeTokens(),
+                summary.activeValue(),
+                summary.soldOrders(),
+                summary.soldTokens(),
+                summary.soldValue(),
+                summary.cancelledOrders(),
+                summary.expiredOrders(),
+                summary.totalOrders())
+            : null;
+    MarketPaginationResponseDTO paginationDTO =
+        new MarketPaginationResponseDTO(
+            page.page(), page.size(), page.totalElements(), page.totalPages());
+    return new TokenListingsResponseDTO(
+        summaryDTO, toResponses(page.content()).listings(), paginationDTO);
   }
 
   public static SellOrderRequest toSellRequest(OrderSellRequestDTO request) {

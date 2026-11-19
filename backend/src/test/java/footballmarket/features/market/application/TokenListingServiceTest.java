@@ -152,6 +152,26 @@ class TokenListingServiceTest {
     }
 
     @Test
+    @DisplayName("La consulta paginada de publicaciones propias devuelve métricas, orden y página")
+    void consultaPaginadaPropias() {
+      // Arrange
+      TokenListing listing1 =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 2));
+      TokenListing listing2 =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 3));
+      // Act
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          listingService.mine(seller.getEmail(), null, 0, 10, "NEWEST");
+      // Assert
+      assertThat(page.summary().activeOrders()).isGreaterThanOrEqualTo(2);
+      assertThat(page.summary().activeTokens()).isGreaterThanOrEqualTo(5);
+      assertThat(page.content())
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
+          .contains(listing2.getId(), listing1.getId());
+      assertThat(page.totalElements()).isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
     @DisplayName("Un tercero no obtiene detalle de una publicación ya vendida")
     void ocultaPublicacionCerrada() {
       // Arrange

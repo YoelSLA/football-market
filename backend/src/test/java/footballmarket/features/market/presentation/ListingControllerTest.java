@@ -136,8 +136,15 @@ class ListingControllerTest {
     void listaPropiasSinFiltro() throws Exception {
       // Arrange
       footballmarket.features.market.domain.records.TokenListingView view = listing().snapshot(NOW);
-      when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.isNull()))
-          .thenReturn(java.util.List.of(view));
+      footballmarket.features.market.domain.records.UserOrdersSummary summary =
+          new footballmarket.features.market.domain.records.UserOrdersSummary(
+              1, 5, 500, 0, 0, 0, 0, 0, 1);
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          new footballmarket.features.market.domain.records.UserOrdersPage(
+              summary, java.util.List.of(view), 0, 10, 1, 1);
+      when(listingService.mine(
+              anyString(), org.mockito.ArgumentMatchers.isNull(), anyInt(), anyInt(), anyString()))
+          .thenReturn(page);
       // Act / Assert
       mvc.perform(
               org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
@@ -145,9 +152,11 @@ class ListingControllerTest {
                   .header("Authorization", authorization))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.listings.length()").value(1))
-          .andExpect(jsonPath("$.listings[0].listingId").value(25));
+          .andExpect(jsonPath("$.listings[0].listingId").value(25))
+          .andExpect(jsonPath("$.summary.activeOrders").value(1))
+          .andExpect(jsonPath("$.pagination.totalElements").value(1));
       // Verify
-      org.mockito.Mockito.verify(listingService).mine("seller@example.com", null);
+      org.mockito.Mockito.verify(listingService).mine("seller@example.com", null, 0, 10, "NEWEST");
     }
 
     @Test
@@ -207,8 +216,19 @@ class ListingControllerTest {
     @DisplayName("Las propias transportan al Service el filtro exacto recibido")
     void filtraPropias(String filter) throws Exception {
       // Arrange
-      when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.eq(filter)))
-          .thenReturn(java.util.List.of());
+      footballmarket.features.market.domain.records.UserOrdersSummary summary =
+          new footballmarket.features.market.domain.records.UserOrdersSummary(
+              0, 0, 0, 0, 0, 0, 0, 0, 0);
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          new footballmarket.features.market.domain.records.UserOrdersPage(
+              summary, java.util.List.of(), 0, 10, 0, 0);
+      when(listingService.mine(
+              anyString(),
+              org.mockito.ArgumentMatchers.eq(filter),
+              anyInt(),
+              anyInt(),
+              anyString()))
+          .thenReturn(page);
       // Act / Assert
       mvc.perform(
               org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
@@ -218,7 +238,8 @@ class ListingControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.listings.length()").value(0));
       // Verify
-      org.mockito.Mockito.verify(listingService).mine("seller@example.com", filter);
+      org.mockito.Mockito.verify(listingService)
+          .mine("seller@example.com", filter, 0, 10, "NEWEST");
     }
 
     @ParameterizedTest
@@ -226,7 +247,12 @@ class ListingControllerTest {
     @DisplayName("Un estado no reconocido devuelve INVALID_PARAMETER_TYPE sin resultados")
     void rechazaFiltro(String filter) throws Exception {
       // Arrange
-      when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.eq(filter)))
+      when(listingService.mine(
+              anyString(),
+              org.mockito.ArgumentMatchers.eq(filter),
+              anyInt(),
+              anyInt(),
+              anyString()))
           .thenThrow(new InvalidListingStatusException());
       // Act / Assert
       mvc.perform(
