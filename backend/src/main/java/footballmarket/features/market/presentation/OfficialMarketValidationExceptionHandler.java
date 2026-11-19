@@ -17,9 +17,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-/** Manejador especializado de validación y errores HTTP para el controlador del Mercado Oficial. */
+/**
+ * Manejador especializado de validación y errores HTTP para los controladores de consulta de
+ * mercado (Mercado Oficial y Mercado P2P).
+ */
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RestControllerAdvice(assignableTypes = OfficialMarketController.class)
+@RestControllerAdvice(assignableTypes = {OfficialMarketController.class, P2PMarketController.class})
 public class OfficialMarketValidationExceptionHandler {
 
   /** Traduce errores de validación Jakarta (@Valid) a los códigos específicos del contrato. */

@@ -23,4 +23,28 @@ public record OfficialMarketQuote(
     double multiplier,
     String calculationOrigin,
     LocalDate effectiveDate,
-    Instant calculatedAt) {}
+    Instant calculatedAt) {
+
+  public static OfficialMarketQuote fromRawValues(
+      Long price,
+      Long previousPrice,
+      Double variationPercentage,
+      Double performanceScore,
+      Double multiplier,
+      String calculationOrigin,
+      LocalDate effectiveDate,
+      Instant calculatedAt) {
+    long safePrice = price == null ? 0L : price;
+    double safeScore = performanceScore == null ? 0.0 : performanceScore;
+    double safeMultiplier = multiplier == null ? 0.0 : multiplier;
+    return new OfficialMarketQuote(
+        safePrice,
+        previousPrice,
+        variationPercentage,
+        safeScore,
+        safeMultiplier,
+        calculationOrigin,
+        effectiveDate,
+        calculatedAt);
+  }
+}
