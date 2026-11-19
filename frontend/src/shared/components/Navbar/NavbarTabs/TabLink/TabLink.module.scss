@@ -66,13 +66,4 @@
 		width: 22px;
 		height: 22px;
 	}
-
-	@include ds.down(ds.$bp-grid-sm) {
-		// 4. 📦 Box Model
-		min-height: 44px;
-		padding: ds.$space-2xs ds.$space-sm;
-
-		// 5. 🔤 Typography
-		font-size: 13px;
-	}
 }

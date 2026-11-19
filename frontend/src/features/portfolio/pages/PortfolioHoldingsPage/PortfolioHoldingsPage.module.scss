@@ -55,15 +55,6 @@
 			padding-block: ds.$space-2xs;
 		}
 	}
-
-	@include ds.down(ds.$bp-tablet) {
-		// 7. ⚙️ Behavior
-		overflow: visible;
-		&__scrollRegion {
-			// 7. ⚙️ Behavior
-			overflow: visible;
-		}
-	}
 }
 
 :focus-visible {

@@ -100,19 +100,6 @@
 	}
 }
 
-@include ds.down(ds.$bp-grid-sm) {
-	.navbarSectionList {
-		// 3. 🧩 Layout
-		flex-wrap: wrap;
-		justify-content: center;
-	}
-
-	.navbarSection {
-		// 4. 📦 Box Model
-		min-height: 44px;
-	}
-}
-
 @include ds.down(ds.$bp-grid-xl) {
 	.navbarSections {
 		// 3. 🧩 Layout

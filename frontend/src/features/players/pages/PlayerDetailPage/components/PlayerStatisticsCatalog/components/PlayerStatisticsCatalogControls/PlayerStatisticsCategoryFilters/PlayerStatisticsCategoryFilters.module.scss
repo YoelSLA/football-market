@@ -107,36 +107,6 @@
 	}
 }
 
-@include ds.down(ds.$bp-tablet) {
-	.playerStatisticsCategoryFilters {
-		gap: 6px;
-
-		&__button {
-			min-height: 38px;
-			padding: 0 10px;
-			font-size: 12px;
-
-			svg {
-				width: 16px;
-				height: 16px;
-			}
-
-			small {
-				font-size: 10px;
-			}
-		}
-	}
-}
-
-@include ds.down(ds.$bp-2xs) {
-	.playerStatisticsCategoryFilters {
-		&__button {
-			min-height: 36px;
-			padding: 0 8px;
-		}
-	}
-}
-
 @media (prefers-reduced-motion: reduce) {
 	.playerStatisticsCategoryFilters__button {
 		transition: none;

@@ -56,16 +56,4 @@
 		outline: 3px solid ds.$focus-ring-dark;
 		outline-offset: 2px;
 	}
-
-	@include ds.down(ds.$bp-sm) {
-		&__panel {
-			// 4. 📦 Box Model
-			padding: ds.$space-xs 0;
-		}
-	}
-
-	@include ds.down(ds.$bp-tablet) {
-		// 7. ⚙️ Behavior
-		overflow: visible;
-	}
 }

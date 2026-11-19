@@ -103,24 +103,4 @@
 		// 6. 🎨 Visual
 		color: ds.$text-secondary-on-light;
 	}
-
-	@media (max-width: 760px) {
-		&__shell {
-			// 3. 🧩 Layout
-			grid-template-columns: minmax(0, 1fr);
-
-			// 4. 📦 Box Model
-			max-width: 34rem;
-		}
-
-		&__content {
-			// 4. 📦 Box Model
-			padding: 1.25rem;
-		}
-
-		&__formArea {
-			// 4. 📦 Box Model
-			padding-top: 2rem;
-		}
-	}
 }

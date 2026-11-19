@@ -216,11 +216,4 @@
 		// 3. 🧩 Layout
 		grid-template-columns: minmax(0, 1fr);
 	}
-
-	@include ds.down(ds.$bp-sm) {
-		&__action {
-			// 4. 📦 Box Model
-			width: 100%;
-		}
-	}
 }

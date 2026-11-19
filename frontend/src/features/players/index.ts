@@ -1,3 +1,4 @@
+export { PlayerPositionBadge } from "./components";
 export {
 	PLAYERS_PAGE_SIZE,
 	useAllPlayersQuery,
@@ -23,3 +24,8 @@ export type {
 	RankingMetadata,
 	RankingMode,
 } from "./types";
+export {
+	isValidPosition,
+	sanitizePositions,
+	VALID_POSITIONS,
+} from "./utils";

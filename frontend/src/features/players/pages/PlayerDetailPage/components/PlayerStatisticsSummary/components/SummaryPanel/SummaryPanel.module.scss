@@ -30,14 +30,3 @@
 		list-style: none;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.summaryPanel {
-		height: auto;
-		padding: 16px;
-
-		&__list {
-			flex: none;
-		}
-	}
-}

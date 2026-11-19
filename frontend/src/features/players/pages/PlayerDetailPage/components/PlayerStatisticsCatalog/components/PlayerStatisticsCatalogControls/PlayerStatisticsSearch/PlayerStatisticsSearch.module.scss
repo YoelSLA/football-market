@@ -89,36 +89,3 @@
 		white-space: nowrap;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.playerStatisticsSearch {
-		flex-basis: 200px;
-		min-width: 140px;
-
-		&__field {
-			height: 40px;
-			padding: 0 10px;
-		}
-	}
-}
-
-@include ds.down(ds.$bp-2xs) {
-	.playerStatisticsSearch {
-		flex-basis: 160px;
-		min-width: 120px;
-
-		&__field {
-			gap: 6px;
-			padding: 0 8px;
-
-			input {
-				font-size: 12px;
-			}
-		}
-
-		&__icon {
-			width: 16px;
-			height: 16px;
-		}
-	}
-}

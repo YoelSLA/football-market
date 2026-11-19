@@ -100,14 +100,4 @@
 			color: ds.$accent-highlight;
 		}
 	}
-
-	@include ds.down(ds.$bp-detail) {
-		// 3. 🧩 Layout
-		flex-wrap: wrap;
-		gap: ds.$space-sm;
-		&__notice {
-			// 4. 📦 Box Model
-			width: 100%;
-		}
-	}
 }

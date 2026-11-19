@@ -47,28 +47,3 @@
 		scrollbar-gutter: stable;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.playerStatisticsCatalog {
-		// 3. 🧩 Layout
-		flex: none;
-
-		// 4. 📦 Box Model
-		height: auto;
-
-		// 7. ⚙️ Behavior
-		overflow: visible;
-
-		&__results {
-			// 3. 🧩 Layout
-			flex: none;
-
-			// 4. 📦 Box Model
-			height: auto;
-			padding-right: 0;
-
-			// 7. ⚙️ Behavior
-			overflow: visible;
-		}
-	}
-}

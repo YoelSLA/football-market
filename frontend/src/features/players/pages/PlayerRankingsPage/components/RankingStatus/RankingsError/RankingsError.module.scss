@@ -85,18 +85,3 @@
 		}
 	}
 }
-
-@media (max-width: 768px) {
-	.errorAlert {
-		// 3. 🧩 Layout
-		flex-direction: column;
-		align-items: flex-start;
-		&__retryButton {
-			// 3. 🧩 Layout
-			justify-content: center;
-
-			// 4. 📦 Box Model
-			width: 100%;
-		}
-	}
-}

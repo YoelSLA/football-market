@@ -528,28 +528,4 @@
 		outline: 3px solid ds.$focus-ring-dark;
 		outline-offset: 2px;
 	}
-
-	/* ==================== RESPONSIVE ==================== */
-
-	@include ds.down(ds.$bp-grid-md) {
-		&__tokenMetrics,
-		&__financialMetrics {
-			// 3. 🧩 Layout
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-
-	@include ds.down(ds.$bp-grid-sm) {
-		&__tokenMetrics,
-		&__financialMetrics {
-			// 3. 🧩 Layout
-			grid-template-columns: 1fr;
-		}
-
-		&__tokenMetric,
-		&__financialMetric {
-			// 3. 🧩 Layout
-			justify-content: flex-start;
-		}
-	}
 }

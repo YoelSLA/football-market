@@ -95,37 +95,3 @@
 		max-width: 100%;
 	}
 }
-
-@include ds.down(ds.$bp-grid-sm) {
-	.navbarAvatar {
-		// 4. 📦 Box Model
-		width: 32px;
-		height: 32px;
-
-		// 5. 🔤 Typography
-		font-size: 14px;
-	}
-
-	.navbarUserName {
-		// 4. 📦 Box Model
-		max-width: 5rem;
-
-		// 5. 🔤 Typography
-		font-size: 13px;
-	}
-
-	.navbarLogout {
-		// 4. 📦 Box Model
-		margin-left: 0;
-		padding-inline: ds.$space-xs;
-		min-height: 44px;
-	}
-}
-
-@include ds.down(ds.$bp-2xs) {
-	.navbarAccount {
-		// 3. 🧩 Layout
-		grid-column: 1;
-		justify-content: flex-end;
-	}
-}

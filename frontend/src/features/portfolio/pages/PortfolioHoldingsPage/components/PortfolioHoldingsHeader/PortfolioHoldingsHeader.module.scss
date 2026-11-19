@@ -110,18 +110,4 @@
 		box-shadow: inset 0 0 0 1px ds.$surface-highlight-faint;
 		color: ds.$accent-highlight;
 	}
-
-	@include ds.down(ds.$bp-detail) {
-		// 3. 🧩 Layout
-		flex-wrap: wrap;
-		gap: ds.$space-md;
-		&__right {
-			// 3. 🧩 Layout
-			justify-content: space-between;
-
-			// 4. 📦 Box Model
-			width: 100%;
-			margin-left: 0;
-		}
-	}
 }

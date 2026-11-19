@@ -38,27 +38,6 @@
 		// 3. 🧩 Layout
 		flex-shrink: 0;
 	}
-
-	@media (max-width: 1000px) {
-		// 4. 📦 Box Model
-		padding: 15px;
-	}
-
-	@media (max-width: 480px) {
-		// 4. 📦 Box Model
-		padding: 10px;
-	}
-}
-
-@include ds.down(ds.$bp-tablet) {
-	.playersPage {
-		// 7. ⚙️ Behavior
-		overflow: visible;
-		&__scrollRegion {
-			// 7. ⚙️ Behavior
-			overflow: visible;
-		}
-	}
 }
 
 @include ds.compact() {

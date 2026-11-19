@@ -17,6 +17,7 @@ export {
 	HEADLINE_METRIC_KEYS,
 	HEADLINE_METRIC_LABELS,
 } from "./playerOverview";
+export { POSITION_BADGES } from "./playerPositions";
 export {
 	getPlayerSampleStatistics,
 	PLAYER_SAMPLE_STATISTIC_ITEMS,

@@ -3,6 +3,7 @@ import type {
 	PlayerCatalogCriteria,
 	PlayerCatalogFilters,
 } from "@/features/players/types";
+import { sanitizePositions } from "@/features/players/utils";
 import {
 	Button,
 	CompetitionLogo,
@@ -83,10 +84,10 @@ export default function PlayerCatalogControls({
 
 	const positionOptions: FilterSelectOption[] = [
 		{ value: "", label: "Todas las posiciones" },
-		...(options?.positions.map((position) => ({
+		...sanitizePositions(options?.positions).map((position) => ({
 			value: position,
 			label: position,
-		})) ?? []),
+		})),
 	];
 
 	const nationalityOptions: FilterSelectOption[] = [

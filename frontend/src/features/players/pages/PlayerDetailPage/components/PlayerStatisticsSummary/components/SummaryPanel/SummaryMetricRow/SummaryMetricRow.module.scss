@@ -86,39 +86,3 @@
 		color: ds.$text-muted-on-dark;
 	}
 }
-
-@include ds.down(ds.$bp-tablet) {
-	.summaryMetricRow {
-		// 3. 🧩 Layout
-		flex: none;
-
-		// 4. 📦 Box Model
-		min-height: 56px;
-		padding: 12px 0;
-
-		&__labelGroup {
-			gap: 12px;
-		}
-
-		&__icon {
-			width: 22px;
-			height: 22px;
-		}
-
-		&__label {
-			font-size: 15px;
-		}
-
-		&__value {
-			font-size: 18px;
-
-			&_null {
-				font-size: 14px;
-			}
-		}
-
-		&__unit {
-			font-size: 12px;
-		}
-	}
-}
