@@ -5,6 +5,7 @@ import { SlidersHorizontal } from "@/shared/icons";
 import {
 	CommunityMarketFilterFields,
 	OfficialMarketFilterFields,
+	OrdersMarketFilterFields,
 	SellMarketFilterFields,
 } from "./MarketFilterFields";
 import styles from "./MarketFilters.module.scss";
@@ -64,11 +65,23 @@ interface SellProps extends BaseProps {
 	onApply?: () => void;
 }
 
-type Props = OfficialProps | CommunityProps | SellProps;
+interface OrdersProps extends BaseProps {
+	variant: "orders";
+	search: string;
+	status: string;
+	sort: string;
+	onSearchChange: (value: string) => void;
+	onStatusChange: (value: string) => void;
+	onSortChange: (value: string) => void;
+}
+
+type Props = OfficialProps | CommunityProps | SellProps | OrdersProps;
 
 export default function MarketFilters(props: Props) {
 	const isCatalog =
-		props.variant === "official" || props.variant === "community";
+		props.variant === "official" ||
+		props.variant === "community" ||
+		props.variant === "orders";
 
 	const renderFilterFields = () => {
 		if (props.variant === "official") {
@@ -110,6 +123,20 @@ export default function MarketFilters(props: Props) {
 			);
 		}
 
+		if (props.variant === "orders") {
+			return (
+				<OrdersMarketFilterFields
+					scope="orders-desktop"
+					search={props.search}
+					status={props.status}
+					sort={props.sort}
+					onSearchChange={props.onSearchChange}
+					onStatusChange={props.onStatusChange}
+					onSortChange={props.onSortChange}
+				/>
+			);
+		}
+
 		return (
 			<SellMarketFilterFields
 				scope="market-desktop"
@@ -138,14 +165,18 @@ export default function MarketFilters(props: Props) {
 					? styles.marketFilters_official
 					: props.variant === "community"
 						? styles.marketFilters_community
-						: styles.marketFilters_sell
+						: props.variant === "orders"
+							? styles.marketFilters_orders
+							: styles.marketFilters_sell
 			}`}
 			aria-label={
 				props.variant === "official"
 					? "Filtros del Mercado Oficial"
 					: props.variant === "community"
 						? "Filtros del Mercado P2P"
-						: "Filtros del mercado"
+						: props.variant === "orders"
+							? "Filtros de Mis Órdenes"
+							: "Filtros del mercado"
 			}
 			aria-busy={props.isUpdating ? "true" : undefined}
 		>

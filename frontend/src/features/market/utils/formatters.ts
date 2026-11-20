@@ -32,6 +32,20 @@ export function formatCredits(
 }
 
 /**
+ * Formatea un valor que ya está en unidades de crédito con 2 decimales y coma (locale es-AR).
+ */
+export function formatCreditsAmount(
+	credits: number | null | undefined,
+	compact = false,
+): string {
+	if (credits === null || credits === undefined || Number.isNaN(credits)) {
+		return "—";
+	}
+	const formatted = creditsFormatter.format(credits);
+	return compact ? `${formatted} cr.` : `${formatted} créditos`;
+}
+
+/**
  * Formatea un valor en centésimas agrupando millares con punto (locale es-AR).
  */
 export function formatCentimes(centimes: number | null | undefined): string {
@@ -129,4 +143,36 @@ export function formatQuoteEffectiveDate(
 		year: "numeric",
 		timeZone: "UTC",
 	});
+}
+
+/**
+ * Formatea el tiempo restante relativo de vencimiento de una orden de forma estática.
+ * No genera suscripciones continuas ni timers en segundo plano.
+ */
+export function formatOrderRelativeExpiration(
+	expiresAt: string | null | undefined,
+	status: string,
+): string {
+	if (status === "SOLD") return "Liquidada";
+	if (status === "CANCELLED") return "Cancelada";
+	if (status === "EXPIRED") return "Expirada";
+	if (!expiresAt) return "Sin vencimiento";
+
+	const target = new Date(expiresAt).getTime();
+	if (Number.isNaN(target)) return "Fecha inválida";
+
+	const diffMs = target - Date.now();
+	if (diffMs <= 0) return "Vencida";
+
+	const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+	if (diffHours < 1) {
+		const diffMins = Math.max(1, Math.round(diffMs / (1000 * 60)));
+		return `Vence en ${diffMins} min`;
+	}
+	if (diffHours < 24) {
+		return `Vence en ${diffHours}h`;
+	}
+	const diffDays = Math.round(diffHours / 24);
+	if (diffDays === 1) return "Vence en 1 día";
+	return `Vence en ${diffDays} días`;
 }

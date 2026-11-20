@@ -200,3 +200,58 @@ export interface CommunityMarketUrlState extends CommunityMarketFilters {
 	page: number;
 	player: number | null;
 }
+
+export type UserOrderStatus = "ACTIVE" | "SOLD" | "CANCELLED" | "EXPIRED";
+
+export interface UserOrderListing {
+	listingId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: UserOrderStatus;
+	createdAt: string;
+	expiresAt: string;
+}
+
+export interface UserOrdersSummary {
+	activeOrders: number;
+	activeTokens: number;
+	activeValue: number;
+	soldOrders: number;
+	soldTokens: number;
+	soldValue: number;
+	cancelledOrders: number;
+	expiredOrders: number;
+	totalOrders: number;
+}
+
+export interface UserOrdersPage {
+	summary: UserOrdersSummary;
+	listings: UserOrderListing[];
+	page: number;
+	size: number;
+	totalElements: number;
+	totalPages: number;
+}
+
+export interface MyOrdersQueryParams {
+	page: number;
+	size?: number;
+	status?: string;
+	sort?: string;
+}
+
+export interface CancelListingResult {
+	listingId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	status: "CANCELLED";
+	createdAt: string;
+	expiresAt: string;
+	closedAt: string | null;
+}

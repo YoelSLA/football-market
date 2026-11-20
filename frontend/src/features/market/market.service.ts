@@ -3,6 +3,7 @@ import { OFFICIAL_MARKET_DEFAULT_PAGE_SIZE } from "@/features/market/constants";
 import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toBuyResult,
+	toCancelListingResult,
 	toMarketListings,
 	toMarketQuote,
 	toOfficialMarketPage,
@@ -10,18 +11,22 @@ import {
 	toOrderSellRequestDTO,
 	toP2PMarketPage,
 	toSellResult,
+	toUserOrdersPage,
 } from "./market.mapper";
 import type {
 	BuyResult,
+	CancelListingResult,
 	CommunityMarketCriteria,
 	MarketListing,
 	MarketQuote,
+	MyOrdersQueryParams,
 	OfficialMarketCriteria,
 	OfficialMarketPage,
 	OrderBuyResponseDTO,
 	OrderSellResponseDTO,
 	P2PMarketPage,
 	SellResult,
+	UserOrdersPage,
 } from "./types";
 import { MarketQuoteReadError } from "./types";
 
@@ -159,6 +164,32 @@ async function buyListing(listingId: number): Promise<BuyResult> {
 	return result;
 }
 
+async function getMyListings(
+	params: MyOrdersQueryParams,
+	signal?: AbortSignal,
+): Promise<UserOrdersPage> {
+	const { data } = await http.get<unknown>("/listings/mine", {
+		authenticated: true,
+		signal,
+		params: {
+			page: params.page,
+			size: params.size ?? 10,
+			status: params.status || undefined,
+			sort: params.sort || "NEWEST",
+		},
+	});
+	return toUserOrdersPage(data);
+}
+
+async function cancelListing(listingId: number): Promise<CancelListingResult> {
+	const { data } = await http.post<unknown>(
+		`/listings/${listingId}/cancel`,
+		{},
+		{ authenticated: true },
+	);
+	return toCancelListingResult(data);
+}
+
 export const marketService = {
 	getCurrentQuote,
 	buyTokens,
@@ -167,4 +198,6 @@ export const marketService = {
 	getP2PMarket,
 	getOfficialMarket,
 	buyListing,
+	getMyListings,
+	cancelListing,
 };

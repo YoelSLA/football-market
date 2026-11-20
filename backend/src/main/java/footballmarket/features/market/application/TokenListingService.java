@@ -3,6 +3,7 @@ package footballmarket.features.market.application;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.market.domain.records.TokenListingView;
+import footballmarket.features.market.domain.records.UserOrdersPage;
 import java.util.List;
 
 /** Publicación transaccional de tokens con precio congelado y reservas derivadas. */
@@ -15,6 +16,9 @@ public interface TokenListingService {
 
   /** Todas las propias; filtro exacto de estado efectivo, independiente de la visibilidad. */
   List<TokenListingView> mine(String viewerEmail, String status);
+
+  /** Consulta paginada y ordenada de publicaciones propias con métricas consolidadas. */
+  UserOrdersPage mine(String viewerEmail, String status, int page, int size, String sort);
 
   /** Detalle en cualquier estado para el dueño; solo vigente y visible para terceros. */
   TokenListingView detail(String viewerEmail, Long listingId);

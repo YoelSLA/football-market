@@ -84,7 +84,7 @@ export const NAV_SECTIONS: NavSection[] = [
 				key: "market-orders",
 				label: "Mis órdenes",
 				icon: Puzzle,
-				path: null,
+				path: "/market/orders",
 			},
 		],
 	},

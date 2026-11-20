@@ -1,0 +1,52 @@
+@use "@/styles/abstracts" as ds;
+
+.ordersEmptyState {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 280px;
+	box-sizing: border-box;
+	padding: ds.$space-lg ds.$space-sm;
+	text-align: center;
+	border-radius: 8px;
+	border: 1px solid ds.$border-panel-tint;
+	background-color: ds.$surface-data-table;
+	gap: ds.$space-xs;
+
+	&__icon {
+		display: grid;
+		place-items: center;
+		width: 56px;
+		height: 56px;
+		border-radius: 12px;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$accent-gain;
+		margin-bottom: 4px;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__description {
+		margin: 0;
+		max-width: 440px;
+		font-size: 13px;
+		line-height: 1.4;
+		color: ds.$text-subtle-on-dark;
+	}
+
+	&__actionBtn {
+		@include ds.market-action;
+		height: 36px;
+		padding: 0 18px;
+		text-decoration: none;
+		border-radius: 6px;
+	}
+}

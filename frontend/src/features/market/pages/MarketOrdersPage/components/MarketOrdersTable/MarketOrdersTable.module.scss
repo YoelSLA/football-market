@@ -1,0 +1,404 @@
+@use "@/styles/abstracts" as ds;
+
+.ordersTable {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	box-sizing: border-box;
+	width: 100%;
+	border: 1px solid ds.$border-panel;
+	border-radius: 8px;
+	overflow: hidden;
+	background-color: ds.$surface-data-table;
+
+	&__container {
+		flex: 1;
+		min-height: 0;
+		width: 100%;
+		overflow-x: auto;
+		overflow-y: auto;
+		scrollbar-color: ds.$border-glass ds.$surface-transparent;
+		scrollbar-width: thin;
+	}
+
+	&__grid {
+		width: 100%;
+		table-layout: fixed;
+		border-collapse: collapse;
+		font-size: 12px;
+
+		th {
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			height: 40px;
+			padding: 0 16px;
+			background-color: ds.$surface-data-header;
+			border-bottom: 1px solid ds.$border-glass-subtle;
+			color: ds.$text-header-table;
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.06em;
+			text-transform: uppercase;
+			white-space: nowrap;
+			text-align: inherit;
+			box-sizing: border-box;
+		}
+
+		td {
+			height: 64px;
+			padding: 8px 16px;
+			border-bottom: 1px solid ds.$border-glass-faint;
+			color: ds.$text-body-on-dark;
+			vertical-align: middle;
+			box-sizing: border-box;
+			text-align: inherit;
+		}
+
+		tr:last-child td {
+			border-bottom: none;
+		}
+
+		tr {
+			transition: background-color 0.15s ease;
+
+			&:hover td {
+				background-color: ds.$surface-glass-subtle;
+			}
+		}
+	}
+
+	&__colOrder {
+		width: 14%;
+		text-align: left;
+	}
+
+	&__colPlayer {
+		width: 30%;
+		text-align: left;
+	}
+
+	&__colQuantity {
+		width: 10%;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__colPrice {
+		width: 11%;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__colTotal {
+		width: 13%;
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__colStatus {
+		width: 12%;
+		text-align: center;
+	}
+
+	&__colAction {
+		width: 10%;
+		text-align: center;
+	}
+
+	&__orderTicket {
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 6px;
+		border-radius: 4px;
+		border: 1px solid ds.$border-panel-soft;
+		background-color: ds.$surface-panel-to;
+		color: ds.$text-soft-on-dark;
+		font-size: 12px;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		line-height: 1.2;
+	}
+
+	&__orderDate {
+		margin-top: 3px;
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		color: ds.$text-auxiliary-on-dark;
+		line-height: 1.2;
+	}
+
+	&__playerCell {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-2xs;
+		min-width: 0;
+	}
+
+	&__playerInfo {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	&__playerNameRow {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		min-width: 0;
+	}
+
+	&__playerName {
+		font-size: 14px;
+		font-weight: 700;
+		color: ds.$text-title-on-dark;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		line-height: 1.2;
+		letter-spacing: 0.01em;
+	}
+
+	&__positionBadge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1px 4px;
+		border-radius: 3px;
+		border: 1px solid ds.$border-glass-faint;
+		background-color: ds.$surface-data-control;
+		color: ds.$text-dimmed-on-dark;
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		line-height: 1.2;
+		flex-shrink: 0;
+	}
+
+	&__playerMeta {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		font-size: 12px;
+		color: ds.$text-dimmed-on-dark;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		line-height: 1.2;
+	}
+
+	&__playerAffiliation {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+
+		span {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
+	&__teamBadge {
+		width: 14px;
+		height: 14px;
+		flex-shrink: 0;
+		object-fit: contain;
+	}
+
+	&__metaSep {
+		color: ds.$text-auxiliary-on-dark;
+		flex-shrink: 0;
+	}
+
+	&__quantityValue {
+		font-size: 14px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: ds.$text-value-on-dark;
+		line-height: 1.2;
+	}
+
+	&__quantityUnit {
+		font-size: 11px;
+		font-weight: 500;
+		color: ds.$text-auxiliary-on-dark;
+		line-height: 1.2;
+	}
+
+	&__priceValue {
+		font-size: 13px;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: ds.$text-value-on-dark;
+		line-height: 1.2;
+	}
+
+	&__priceUnit {
+		font-size: 11px;
+		color: ds.$text-auxiliary-on-dark;
+		line-height: 1.2;
+	}
+
+	&__totalValue {
+		font-size: 15px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		line-height: 1.2;
+
+		&_active {
+			color: ds.$accent-highlight;
+		}
+
+		&_inactive {
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__totalUnit {
+		font-size: 11px;
+		color: ds.$text-auxiliary-on-dark;
+		line-height: 1.2;
+	}
+
+	&__statusCell {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 3px;
+	}
+
+	&__badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 2px 8px;
+		border-radius: 4px;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		line-height: 1.3;
+
+		&_ACTIVE {
+			background-color: ds.$chip-recomputed-bg;
+			border: 1px solid ds.$chip-recomputed-border;
+			color: ds.$chip-recomputed-text;
+
+			.ordersTable__badgeDot {
+				background-color: ds.$chip-recomputed-text;
+			}
+		}
+
+		&_SOLD {
+			background-color: ds.$chip-carried-bg;
+			border: 1px solid ds.$chip-carried-border;
+			color: ds.$chip-carried-text;
+
+			.ordersTable__badgeDot {
+				background-color: ds.$chip-carried-text;
+			}
+		}
+
+		&_CANCELLED {
+			background-color: ds.$surface-loss-subtle;
+			border: 1px solid ds.$border-loss-emphasis;
+			color: ds.$state-closed;
+
+			.ordersTable__badgeDot {
+				background-color: ds.$state-closed;
+			}
+		}
+
+		&_EXPIRED {
+			background-color: ds.$surface-caution-tint;
+			border: 1px solid ds.$border-caution-subtle;
+			color: ds.$state-caution;
+
+			.ordersTable__badgeDot {
+				background-color: ds.$state-caution;
+			}
+		}
+	}
+
+	&__badgeDot {
+		width: 5px;
+		height: 5px;
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
+	&__statusMeta {
+		font-size: 11px;
+		font-variant-numeric: tabular-nums;
+		color: ds.$text-auxiliary-on-dark;
+		line-height: 1.2;
+		white-space: nowrap;
+	}
+
+	&__cancelBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		height: 30px;
+		padding: 0 12px;
+		border-radius: 6px;
+		background-color: ds.$surface-loss-subtle;
+		border: 1px solid ds.$border-loss-emphasis;
+		color: ds.$state-closed;
+		font-size: 11px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+
+		&:hover {
+			background-color: ds.$state-error;
+			border-color: ds.$state-negative;
+			color: ds.$text-primary-on-dark;
+			box-shadow: 0 0 8px rgba(248, 113, 113, 0.3);
+		}
+
+		&:focus-visible {
+			outline: 2px solid ds.$state-negative;
+			outline-offset: 2px;
+		}
+
+		&:active {
+			transform: scale(0.97);
+		}
+
+		svg {
+			flex-shrink: 0;
+		}
+	}
+
+	&__actionEmpty {
+		color: ds.$text-header-table;
+		font-size: 14px;
+	}
+
+	&__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-shrink: 0;
+		min-height: 36px;
+		padding: 0 16px;
+		border-top: 1px solid ds.$border-glass-subtle;
+		background-color: ds.$surface-data-header;
+	}
+
+	&__footerText {
+		font-size: 12px;
+		font-variant-numeric: tabular-nums;
+		color: ds.$text-dimmed-on-dark;
+	}
+}

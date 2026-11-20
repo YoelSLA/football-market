@@ -1,5 +1,7 @@
 export type {
 	BuyListingRequestDTO,
+	CancelListingResponseDTO,
+	MarketPaginationResponseDTO,
 	OfficialMarketPageResponseDTO,
 	OfficialMarketPlayerResponseDTO,
 	OfficialMarketQuoteResponseDTO,
@@ -12,12 +14,16 @@ export type {
 	QuoteResponseDTO,
 	TokenListingDTO,
 	TokenListingsDTO,
+	UserOrderListingDTO,
+	UserOrdersPageResponseDTO,
+	UserOrdersSummaryDTO,
 } from "./dtos";
 
 export type {
 	BuyEstimation,
 	BuyQuantityForm,
 	BuyResult,
+	CancelListingResult,
 	CommunityMarketCriteria,
 	CommunityMarketFilters,
 	CommunityMarketPlayer,
@@ -28,6 +34,7 @@ export type {
 	MarketQuote,
 	MarketQuoteFailure,
 	MarketQuoteStatus,
+	MyOrdersQueryParams,
 	OfficialMarketCriteria,
 	OfficialMarketFilterDraft,
 	OfficialMarketPage,
@@ -40,6 +47,10 @@ export type {
 	SellEstimation,
 	SellQuantityForm,
 	SellResult,
+	UserOrderListing,
+	UserOrderStatus,
+	UserOrdersPage,
+	UserOrdersSummary,
 } from "./models";
 
 export { MarketQuoteReadError } from "./models";

@@ -113,7 +113,8 @@
 
 @media (min-width: 1100px) {
 	.marketFilterFields_official,
-	.marketFilterFields_community {
+	.marketFilterFields_community,
+	.marketFilterFields_orders {
 		// 1. 🏷️ Custom Properties
 		--filter-control-height: 38px;
 
@@ -152,6 +153,23 @@
 		.marketFilterFields__sort {
 			// 3. 🧩 Layout
 			grid-column: 3 / span 2;
+		}
+	}
+
+	.marketFilterFields_orders {
+		.marketFilterFields__search {
+			// 3. 🧩 Layout
+			grid-column: 1 / span 2;
+		}
+
+		.marketFilterFields__status {
+			// 3. 🧩 Layout
+			grid-column: 3 / span 1;
+		}
+
+		.marketFilterFields__sort {
+			// 3. 🧩 Layout
+			grid-column: 4 / span 1;
 		}
 	}
 }
