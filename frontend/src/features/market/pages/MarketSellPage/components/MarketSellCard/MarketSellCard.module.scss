@@ -1,104 +1,202 @@
 @use "@/styles/abstracts" as ds;
 
 .sellCard {
+	// 1. 🏷️ Custom Properties
+	--market-player-summary-gap: 12px;
+	--market-player-summary-height: auto;
+	--market-player-portrait-width: 68px;
+	--market-player-portrait-height: 72px;
+
 	// 3. 🧩 Layout
-	display: grid;
-	align-content: start;
-	gap: .75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 
 	// 4. 📦 Box Model
+	box-sizing: border-box;
+	width: 100%;
+	height: 230px;
 	min-width: 0;
-	padding: .85rem;
+	min-height: 0;
+	padding: 10px 12px;
 
 	// 6. 🎨 Visual
 	border: 1px solid ds.$border-panel;
 	border-radius: .65rem;
 	background-color: ds.$surface-panel-from;
-	&__amounts {
+	color: ds.$text-title-on-dark;
+
+	&__identity {
 		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: .45rem;
-		span {
-			// 4. 📦 Box Model
-			min-width: 0;
-			padding: .45rem .35rem;
+		display: flex;
+		flex-shrink: 0;
+		align-items: flex-start;
 
-			// 5. 🔤 Typography
-			font-size: .67rem;
-
-			// 6. 🎨 Visual
-			border-radius: .45rem;
-			background-color: ds.$surface-card-subtle;
-			color: ds.$text-label-on-dark;
-		}
-
-		strong {
-			// 3. 🧩 Layout
-			display: block;
-
-			// 4. 📦 Box Model
-			margin-top: .2rem;
-
-			// 5. 🔤 Typography
-			font-size: .8rem;
-
-			// 6. 🎨 Visual
-			color: ds.$text-title-on-dark;
-		}
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
 	}
 
-	&__offer {
+	&__content {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+		padding-top: 9px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__metrics {
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		align-items: end;
-		gap: .55rem;
-		p {
-			// 4. 📦 Box Model
-			min-width: 0;
-			margin: 0;
+		grid-template-columns:
+			minmax(0, 1.4fr)
+			minmax(0, 1fr)
+			minmax(0, 1fr);
+		align-items: start;
+		gap: 4px;
 
-			// 5. 🔤 Typography
-			font-size: .67rem;
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
 
+	&__metric {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 4px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+
+	&__label {
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 650;
+		letter-spacing: .03em;
+		line-height: 1.2;
+		text-transform: uppercase;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+
+	&__price {
+		// 5. 🔤 Typography
+		font-size: 20px;
+		font-weight: 750;
+		letter-spacing: -.03em;
+		line-height: 1.1;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
+	}
+
+	&__quantity {
+		// 5. 🔤 Typography
+		font-size: 20px;
+		font-weight: 750;
+		letter-spacing: -.03em;
+		line-height: 1.1;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
+
+		&_available {
 			// 6. 🎨 Visual
-			color: ds.$text-label-on-dark;
-		}
-
-		p strong {
-			// 3. 🧩 Layout
-			display: block;
-
-			// 4. 📦 Box Model
-			margin-top: .3rem;
-
-			// 5. 🔤 Typography
-			font-size: 1rem;
-
-			// 6. 🎨 Visual
-			color: ds.$text-title-on-dark;
-		}
-
-		button {
-			// 4. 📦 Box Model
-			min-height: 2.5rem;
-			padding: .55rem .75rem;
-
-			// 5. 🔤 Typography
-			font-size: .78rem;
-			white-space: nowrap;
-
-			// 6. 🎨 Visual
-			border: 1px solid ds.$accent-gain;
-			background-color: ds.$surface-control-active;
 			color: ds.$accent-gain;
 		}
 	}
 
-	&__quoteStatus {
+	&__subtext {
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 400;
+		line-height: 1.25;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+
+	&__actions {
 		// 3. 🧩 Layout
-		grid-column: 1 / -1;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		margin-top: auto;
+		padding-top: 8px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__sellButton {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		width: 100%;
+		height: 38px;
+		padding: 6px 12px;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		font-weight: 700;
+		line-height: 1.2;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$accent-gain;
+		border-radius: .45rem;
+		background-color: ds.$surface-control-active;
+		color: ds.$accent-gain;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
+			width: 18px;
+			height: 18px;
+		}
+
+		&:hover:not(:disabled) {
+			// 6. 🎨 Visual
+			background-color: ds.$surface-card-subtle;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$accent-gain;
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			// 6. 🎨 Visual
+			border-color: ds.$border-panel-mid;
+			background-color: ds.$surface-card-subtle;
+			color: ds.$text-label-on-dark;
+			opacity: .5;
+
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+		}
 	}
 }
-

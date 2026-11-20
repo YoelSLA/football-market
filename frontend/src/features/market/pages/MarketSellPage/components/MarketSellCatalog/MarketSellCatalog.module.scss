@@ -25,20 +25,4 @@
 		// 4. 📦 Box Model
 		min-width: 0;
 	}
-
-	&__status {
-		// 3. 🧩 Layout
-		display: grid;
-		place-items: center;
-
-		// 4. 📦 Box Model
-		min-height: 16rem;
-		padding: 1.5rem;
-
-		// 5. 🔤 Typography
-		text-align: center;
-
-		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
-	}
 }

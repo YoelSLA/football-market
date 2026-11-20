@@ -13,39 +13,70 @@ interface Props {
 }
 
 export default function MarketSellCard({ player, quoteState, onSell }: Props) {
+	const quote = quoteState.quote;
+	const isQuoteAvailable = quoteState.status === "available" && quote !== null;
+	const hasAvailableTokens = player.availableQuantity > 0;
+
 	return (
 		<article className={styles.sellCard}>
-			<MarketPlayerSummary player={player} />
-			<div className={styles.sellCard__amounts}>
-				<span>
-					Total<strong>{player.totalQuantity}</strong>
-				</span>
-				<span>
-					Disponibles<strong>{player.availableQuantity}</strong>
-				</span>
-				<span>
-					Reservados<strong>{player.reservedQuantity}</strong>
-				</span>
+			<div className={styles.sellCard__identity}>
+				<MarketPlayerSummary player={player} variant="officialCard" />
 			</div>
-			<div className={styles.sellCard__offer}>
-				{quoteState.status === "available" && quoteState.quote ? (
-					<p>
-						<span>Precio actual de referencia</span>
-						<strong>{formatCredits(quoteState.quote.price)}</strong>
-					</p>
-				) : (
-					<p className={styles.sellCard__quoteStatus}>
-						{quoteState.status === "missing"
-							? "Cotización no disponible"
-							: "Cotización pendiente"}
-					</p>
-				)}
+
+			<div className={styles.sellCard__content}>
+				<div className={styles.sellCard__metrics}>
+					<div className={styles.sellCard__metric}>
+						<span className={styles.sellCard__label}>Cotización ref.</span>
+						<strong className={styles.sellCard__price}>
+							{isQuoteAvailable ? formatCredits(quote.price, true) : "—"}
+						</strong>
+						<span className={styles.sellCard__subtext}>
+							{isQuoteAvailable
+								? quote.previousPrice != null
+									? `Ant: ${formatCredits(quote.previousPrice, true)}`
+									: "Precio vigente"
+								: quoteState.status === "loading"
+									? "Consultando…"
+									: "Sin cotización"}
+						</span>
+					</div>
+
+					<div className={styles.sellCard__metric}>
+						<span className={styles.sellCard__label}>Disponibles</span>
+						<strong
+							className={`${styles.sellCard__quantity} ${
+								hasAvailableTokens ? styles.sellCard__quantity_available : ""
+							}`}
+						>
+							{player.availableQuantity}
+						</strong>
+						<span className={styles.sellCard__subtext}>
+							{player.availableQuantity === 1 ? "token libre" : "tokens libres"}
+						</span>
+					</div>
+
+					<div className={styles.sellCard__metric}>
+						<span className={styles.sellCard__label}>En cartera</span>
+						<strong className={styles.sellCard__quantity}>
+							{player.totalQuantity}
+						</strong>
+						<span className={styles.sellCard__subtext}>
+							{player.reservedQuantity} en reserva
+						</span>
+					</div>
+				</div>
+			</div>
+
+			<div className={styles.sellCard__actions}>
 				<Button
-					disabled={player.availableQuantity <= 0}
+					type="button"
+					className={styles.sellCard__sellButton}
+					disabled={!hasAvailableTokens}
 					aria-label={`Publicar venta de ${player.name}`}
 					onClick={(event) => onSell(player, event.currentTarget)}
 				>
-					<Tag aria-hidden="true" /> Publicar venta
+					<Tag aria-hidden="true" />
+					Publicar venta
 				</Button>
 			</div>
 		</article>

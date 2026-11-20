@@ -64,9 +64,10 @@ export default function MarketSellPage() {
 							<MarketPagination
 								page={sell.page}
 								totalPages={sell.totalPages}
-								totalPlayers={sell.totalPlayers}
 								visiblePlayers={sell.players.length}
 								pageSize={sell.pageSize}
+								showSummary={false}
+								variant="official"
 								onPageChange={sell.setPage}
 							/>
 						</div>
