@@ -11,9 +11,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.portfolio.application.PortfolioService;
 import footballmarket.features.portfolio.domain.records.PortfolioView;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.math.BigDecimal;
@@ -50,13 +50,14 @@ class PortfolioControllerTest {
   @Autowired private SecretKey key;
 
   @MockitoBean private PortfolioService portfolioService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void arrange() {
+    when(identityValidator.exists("buyer@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "
@@ -70,6 +71,22 @@ class PortfolioControllerTest {
   @Nested
   @DisplayName("Consulta HTTP del portfolio")
   class Consulta {
+
+    @Test
+    @DisplayName("Entrega una posición histórica sin depender del detalle público del jugador")
+    void entregaPosicionHistorica() throws Exception {
+      // Arrange: el Controller transporta la posición del Service sin consultar el catálogo.
+      when(portfolioService.portfolio(anyString(), anyInt(), anyInt(), isNull()))
+          .thenReturn(view());
+
+      // Act / Assert
+      mvc.perform(get("/api/portfolio/me").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.positions[0].playerId").value(41))
+          .andExpect(jsonPath("$.positions[0].quantity").value(10))
+          .andExpect(jsonPath("$.positions[0].acquisitionCost").value(1000));
+      org.mockito.Mockito.verify(portfolioService).portfolio("buyer@example.com", 0, 20, null);
+    }
 
     @Test
     @DisplayName("Devuelve resumen, posiciones y paginación con los valores del portfolio")

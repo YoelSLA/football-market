@@ -89,6 +89,12 @@ No se requieren cambios de inicialización: JWT, PostgreSQL, Testcontainers, RES
 - [X] T018 Ejecutar la validación focalizada indicada en `specs/003-current-user/quickstart.md` y corregir únicamente fallos introducidos por la feature
 - [X] T019 Ejecutar `./gradlew test spotlessJavaCheck asciidoctor` desde `backend/`; confirmar explícitamente los casos existentes de register exitoso, duplicado e inválido y login exitoso, con credenciales inválidas y entrada inválida, manteniendo coherencia con `specs/003-current-user/contracts/api.md`
 
+## Evolución vigente: precisión monetaria del saldo
+
+- [X] T020 Ampliar `CurrentUserResponseDTO` y `UserMapper` con `availableCreditsCentimes`, preservando `availableCredits` por compatibilidad.
+- [X] T021 Actualizar los tests de contrato y journey para comprobar la representación compatible y la precisa sin ejecutar la suite en el entorno del agente.
+- [X] T022 Sincronizar especificación y contrato público del usuario actual.
+
 ---
 
 ## Dependencies & Execution Order

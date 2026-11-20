@@ -4,13 +4,11 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
 import footballmarket.features.statistics.presentation.exceptions.InvalidStatisticsRequestException;
 import footballmarket.integrations.whoscored.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.*;
@@ -42,14 +40,13 @@ class PlayerStatisticsContractFoundationTest {
   @Autowired private WebApplicationContext context;
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
-  @MockitoBean private AuthenticationService authentication;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    User user = new User(1L, "stats.user", "stats@test.com", "password123", UserRole.USER);
-    when(authentication.getCurrentUser("stats@test.com")).thenReturn(user);
+    when(identityValidator.exists("stats@test.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

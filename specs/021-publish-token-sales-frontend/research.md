@@ -57,5 +57,5 @@ No se agregan tareas, historias, dependencias tecnológicas ni requisitos. El nu
 
 - **useMarketToast extendido:** se extiende `useMarketToast` con `notifySellSuccess` para el toast transitorio de éxito de esta operación, incluido en alcance por FR-F09; no se crean notificaciones persistentes/externas, hook separado ni nuevas dependencias.
 - **Export público:** `features/market/index.ts` exporta `MarketSellPage` y únicamente los tipos públicos necesarios (conforme al Artículo 6.º de arquitectura).
-- **Rutas independientes:** `/market/buy` y `/market/sell` son rutas independientes bajo `AuthGuard` + `AppLayout`, compartiendo la navegación visual existente (pestaña "Vender tokens" en `navigation/sections.ts`).
+- **Rutas independientes:** `/market/buy` y `/market/sell` son rutas independientes bajo `AuthGuard` + `AppLayout`, compartiendo la navegación visual existente (pestaña "Publicar venta" en `navigation/sections.ts`).
 - **Validación manual:** se valida exclusivamente mediante los escenarios manuales de `quickstart.md`; no se incorporan pruebas automatizadas ni nuevas dependencias de testing (frontend exento, Constitution §19.199).

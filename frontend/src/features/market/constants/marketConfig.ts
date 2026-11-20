@@ -1,0 +1,4 @@
+export const OFFICIAL_MARKET_DEFAULT_PAGE_SIZE = 8;
+export const OFFICIAL_MARKET_DEFAULT_SORT = "id,asc" as const;
+export const COMMUNITY_MARKET_PAGE_SIZE = 8;
+export const MARKET_SEARCH_DEBOUNCE_MS = 300;

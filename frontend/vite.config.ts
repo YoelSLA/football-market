@@ -19,6 +19,27 @@ export default defineConfig({
 	plugins: [react()],
 
 	/**
+	 * Configuración del servidor de desarrollo.
+	 *
+	 * Establece un puerto fijo y evita que Vite inicie servidores
+	 * adicionales en otros puertos cuando el configurado está ocupado.
+	 */
+	server: {
+		/**
+		 * Puerto utilizado por el servidor de desarrollo.
+		 */
+		port: 5173,
+
+		/**
+		 * Impide que Vite busque automáticamente otro puerto disponible.
+		 *
+		 * Si el puerto 5173 está ocupado, el servidor no se inicia
+		 * y muestra un error en lugar de utilizar 5174, 5175, etc.
+		 */
+		strictPort: true,
+	},
+
+	/**
 	 * Configuración utilizada por Vite para resolver imports.
 	 */
 	resolve: {

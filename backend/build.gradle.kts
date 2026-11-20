@@ -42,7 +42,7 @@ tasks.register("createMigration") {
         Files.createDirectories(lockPath.parent)
         FileChannel.open(lockPath, StandardOpenOption.CREATE, StandardOpenOption.WRITE).use { channel ->
             channel.lock().use {
-                val pattern = Regex("V([0-9]+)__[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*\\.sql")
+                val pattern = Regex("V([0-9]{14})__[a-z][a-z0-9]*(?:_[a-z0-9]+)*\\.sql")
                 val formatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss")
                     .withResolverStyle(ResolverStyle.STRICT)
                 val versions = mutableSetOf<java.math.BigInteger>()
@@ -53,12 +53,10 @@ tasks.register("createMigration") {
                             val match = pattern.matchEntire(filename)
                                 ?: throw GradleException("Nombre de migración inválido: $filename")
                             val rawVersion = match.groupValues[1]
-                            if (rawVersion.length == 14) {
-                                try {
-                                    LocalDateTime.parse(rawVersion, formatter)
-                                } catch (exception: java.time.DateTimeException) {
-                                    throw GradleException("Timestamp inválido: $filename", exception)
-                                }
+                            try {
+                                LocalDateTime.parse(rawVersion, formatter)
+                            } catch (exception: java.time.DateTimeException) {
+                                throw GradleException("Timestamp UTC inválido: $filename", exception)
                             }
                             if (!versions.add(rawVersion.toBigInteger())) {
                                 throw GradleException("Versión de migración duplicada: $rawVersion")
@@ -79,6 +77,61 @@ tasks.register("createMigration") {
                 logger.lifecycle("Migración creada: $target")
             }
         }
+    }
+}
+
+val validateMigrationLayout = tasks.register("validateMigrationLayout") {
+    val migrationDirectory = layout.projectDirectory.dir("src/main/resources/db/migration")
+    group = "verification"
+    description = "Valida nombres, timestamps, unicidad y contenido de las migraciones Flyway."
+    inputs.dir(migrationDirectory).withPathSensitivity(PathSensitivity.RELATIVE)
+
+    doLast {
+        val directory = migrationDirectory.asFile.toPath()
+        val pattern = Regex("V([0-9]{14})__[a-z][a-z0-9]*(?:_[a-z0-9]+)*\\.sql")
+        val formatter = DateTimeFormatter.ofPattern("uuuuMMddHHmmss")
+            .withResolverStyle(ResolverStyle.STRICT)
+        val now = LocalDateTime.now(ZoneOffset.UTC)
+        val versions = mutableSetOf<String>()
+        val errors = mutableListOf<String>()
+        var migrations = 0
+
+        Files.walk(directory).use { paths ->
+            paths.filter { Files.isRegularFile(it) }.sorted().forEach { path ->
+                val filename = path.fileName.toString()
+                val match = pattern.matchEntire(filename)
+                if (match == null) {
+                    errors.add("Nombre de migración inválido: $filename")
+                    return@forEach
+                }
+                migrations++
+                val version = match.groupValues[1]
+                val timestamp = try {
+                    LocalDateTime.parse(version, formatter)
+                } catch (exception: java.time.DateTimeException) {
+                    errors.add("Timestamp UTC inválido: $filename")
+                    null
+                }
+                if (timestamp != null && timestamp.isAfter(now)) {
+                    errors.add("La migración no puede usar un timestamp UTC futuro: $filename")
+                }
+                if (!versions.add(version)) {
+                    errors.add("Versión de migración duplicada: $version")
+                }
+                val sql = Files.readString(path)
+                val executable = sql
+                    .replace(Regex("(?s)/\\*.*?\\*/"), "")
+                    .lineSequence()
+                    .map { it.substringBefore("--").trim() }
+                    .joinToString("")
+                if (executable.isBlank()) {
+                    errors.add("Migración vacía o compuesta solo por comentarios: $filename")
+                }
+            }
+        }
+        if (migrations == 0) errors.add("No se encontraron migraciones Flyway.")
+        if (errors.isNotEmpty()) throw GradleException(errors.joinToString("\n"))
+        logger.lifecycle("Migraciones Flyway válidas: $migrations archivos timestamp UTC.")
     }
 }
 
@@ -236,7 +289,10 @@ tasks.register("fastTest") {
     dependsOn("unitTest", "lightweightTest")
 }
 
-tasks.named("check") { dependsOn(validateTestClassification) }
+tasks.named("check") {
+    dependsOn(validateTestClassification)
+    dependsOn(validateMigrationLayout)
+}
 
 // ============================================================
 // JACOCO
@@ -311,5 +367,6 @@ sonar {
 // el reporte XML de cobertura.
 tasks.named("sonar") {
     dependsOn(validateTestClassification)
+    dependsOn(validateMigrationLayout)
     dependsOn(tasks.jacocoTestReport)
 }

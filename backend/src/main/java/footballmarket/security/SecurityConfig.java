@@ -1,6 +1,5 @@
 package footballmarket.security;
 
-import footballmarket.features.auth.application.AuthenticationService;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -68,13 +67,12 @@ public class SecurityConfig {
    * registrada como deuda técnica en docs/backend/technologies.md.
    *
    * @param http configurador de seguridad HTTP
-   * @param authenticationService servicio de identidad persistida
+   * @param identityValidator validador de identidad persistida
    * @return cadena de filtros configurada
-   * @throws Exception si Spring Security no puede construir la cadena
    */
   @Bean
   public SecurityFilterChain securityFilterChain(
-      HttpSecurity http, AuthenticationService authenticationService) throws Exception {
+      HttpSecurity http, PersistedIdentityValidator identityValidator) {
     http
         // API stateless: authentication is handled through JWT Bearer tokens,
         // not browser-managed cookies, so CSRF protection is not required here.
@@ -114,7 +112,7 @@ public class SecurityConfig {
                 oauth2.jwt(
                     jwt ->
                         jwt.jwtAuthenticationConverter(
-                            new PersistedUserJwtAuthenticationConverter(authenticationService))));
+                            new PersistedUserJwtAuthenticationConverter(identityValidator))));
 
     return http.build();
   }

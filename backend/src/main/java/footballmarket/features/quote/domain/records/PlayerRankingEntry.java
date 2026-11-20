@@ -16,6 +16,14 @@ import java.time.LocalDate;
  * @param origin origen de la fila vigente: {@code INITIAL}, {@code RECOMPUTED} o {@code
  *     CARRIED_FORWARD}
  * @param calculatedAt instante de cálculo de la cotización vigente, en UTC
+ * @param position posición calculada por la consulta, anterior a los filtros
+ * @param player identificación local; nula en la lectura histórica pendiente de retiro
  */
 public record PlayerRankingEntry(
-    Long playerId, long price, LocalDate effectiveDate, QuoteOrigin origin, Instant calculatedAt) {}
+    Long playerId,
+    long price,
+    LocalDate effectiveDate,
+    QuoteOrigin origin,
+    Instant calculatedAt,
+    long position,
+    QuoteRankingPage.PlayerIdentity player) {}

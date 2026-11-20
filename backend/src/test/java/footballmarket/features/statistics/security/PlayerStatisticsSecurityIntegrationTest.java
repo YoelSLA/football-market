@@ -7,14 +7,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncCounters;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -46,15 +44,13 @@ class PlayerStatisticsSecurityIntegrationTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private PlayerStatisticsSynchronizationService synchronization;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("security@example.com"))
-        .thenReturn(
-            new User(1L, "security.user", "security@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("security@example.com")).thenReturn(true);
     when(synchronization.synchronizeScraping(any()))
         .thenReturn(
             new PlayerStatisticsSyncSummary(

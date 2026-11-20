@@ -1,134 +1,248 @@
-# Implementation Plan: Comprar tokens desde el frontend
+# Implementation Plan: Comprar tokens en el mercado
 
-**Branch**: `feat/019-buy-tokens-from-frontend` | **Date**: 2026-10-23 | **Spec**: [spec.md](spec.md)
+**Branch**: `feat/019-buy-tokens-from-frontend` | **Date**: 2026-11-13 | **Spec**: [spec.md](spec.md)
 
-## Resumen y límites
+<!-- MUST usar rama real según Constitution §7 y seguir docs/development/sdd-workflow.md.
+Documentación viva: este documento describe exclusivamente la arquitectura, diseño y decisiones
+técnicas vigentes y aplicables al sistema (Constitución §V). El historial de decisiones técnicas
+superadas se delega a Git. Forma parte de la tríada permanente obligatoria junto a spec.md y tasks.md.
+Plan no genera Tasks ni habilita Implement: siguen Checklists, Tasks y Analyze.
+Complexity Tracking registra decisiones, no autoriza violaciones de Constitution. -->
 
-**Estado de entrega observado (2026-10-25):** código frontend presente y último build satisfactorio; la integración autenticada de cotizaciones reales y la compra E2E siguen pendientes. Sin quote válida no se habilita la compra. Este plan contiene antecedentes de alcance sustituidos explícitamente por decisiones posteriores; la preparación de cierre no los reactiva. Consultar [informe de implementación](implementation-report.md) y [trabajo requerido/futuro](future-work.md). No se ejecuta CONVERGE ni se declara cierre mientras falte esa evidencia.
+**Input**: Feature specification from `/specs/019-buy-tokens-from-frontend/spec.md`
 
-La ruta protegida `/market/buy` permite listar los jugadores visibles del catálogo sin consultar stock, consultar la cotización vigente persistida por jugador y comprar tokens directamente al superusuario mediante `POST /api/orders/buy`; el backend verifica stock al confirmar. `market` es independiente de cualquier otra feature. No se cambian comportamientos de `players`, `portfolio` ni backend; sus `index.ts` raíz podrán ampliar **solo** los exports necesarios en la futura implementación. `app` es el único punto de composición entre features.
+**Note**: Este plan finaliza en diseño técnico. La implementación frontend debe respetar las dos fases y el gate humano definidos en `frontend/AGENTS.md`.
 
-## Contexto técnico
+## Summary
 
-- React 19, TypeScript 7, TanStack Query 5, Axios, React Router 7, Sass; versiones efectivas en `frontend/package-lock.json`.
-- React-Toastify: nueva dependencia planificada para avisos de éxito/error; registrar la versión instalada y su propósito en `docs/frontend/technologies.md` durante la implementación.
-- Frontend exento de tests automatizados. El control ejecutable autorizado para cambios de código es `npm run build` desde `frontend`; escenarios manuales en [quickstart.md](quickstart.md) a cargo del usuario.
-- No introducir servicios transversales de negocio en `infrastructure`. El cliente `infrastructure/http` ya satisface la necesidad técnica de autenticación y HTTP.
+Evolucionar las dos páginas protegidas de Mercado dentro de `features/market`. `/market/buy` reemplazará la composición `usePlayersQuery` + consultas N+1 por una query paginada sobre `GET /api/market/official`, con ocho jugadores por página y filtros, orden y página sincronizados con la URL. `/market/p2p` conservará `GET /api/listings` como lectura completa sin parámetros, agrupará y paginará localmente, y sincronizará búsqueda, liga, posición, orden, página y jugador seleccionado con la URL. Ambos flujos reutilizarán `POST /api/orders/buy`, sus guardas e invalidaciones, manteniendo separados los payloads `{ playerId, quantity }` y `{ listingId }` y aplicando los wireframes aprobados.
 
-## Constitution Check (antes y después del diseño)
+## Technical Context
 
-| Principio | Evaluación |
-| --- | --- |
-| Alcance y simplicidad | API pública mínima en cada feature; sin duplicar el listado, validación ni keys existentes; modal genérico solo si su responsabilidad UI justifica shared. |
-| Seguridad | Solicitudes autenticadas; validación de cantidad en frontend sin sustituir backend; errores genéricos sin filtrar detalles sensibles. |
-| Contratos | `GET /api/players/{id}/quotes/current` y `POST /api/orders/buy` son contratos backend existentes; mapper DTO → Model dentro de Service. |
-| Arquitectura | `app → players + market + portfolio` mediante `index.ts` raíz. Ninguna feature importa de otra. `shared` no depende de features. |
-| Trazabilidad | Spec, contratos, modelo y tareas deben concordar; nuevo ANALYZE requerido después de estos cambios. |
-| Verificación | Sin ejecución de tests, ni directa ni indirecta. El build solo corresponderá después de modificar código. |
+**Language/Version**: TypeScript 7.0.2 y React 19.3.0
 
-**Resultado actual:** Diseño documental coherente con las decisiones del usuario; aún no constituye ANALYZE vigente ni autorización de IMPLEMENT.
+**Primary Dependencies**: React Router DOM 7.18.4, TanStack Query 5.103.1, Axios 1.20.0, React Hook Form 7.88.0, Sass 1.104.1 y React-Toastify 11.1.0; sin dependencias nuevas
 
-## Fronteras y composición
+**Storage**: Estado remoto en TanStack Query; criterios navegables de ambos mercados en query parameters; edición debounced y estado efímero de modales en React
+
+**Testing**: Frontend exento de tests automatizados. Validación manual a cargo del usuario mediante [quickstart.md](quickstart.md). Los controles futuros permitidos para cambios de código son `npm run build` y `npm run biome:fix`; no equivalen a tests
+
+**Target Platform**: Navegador web responsive; referencia desktop 1920 × 913 px y validación adicional en 375, 768 y 1440 px
+
+**Project Type**: Aplicación web frontend integrada con API HTTP existente
+
+**Performance Goals**: Una sola solicitud consolidada por estado oficial estable; una lectura completa compartida para catálogo y detalle P2P; búsquedas con debounce; cancelación de solicitudes oficiales reemplazadas; sin consultas N+1 ni lectura adicional al abrir detalles o modales
+
+**Constraints**: Sin cambios backend; inventario oficial oculto; importes en centésimas; página oficial fija en 8 y P2P fija en 12; filtros automáticos; P2P filtrado/ordenado/paginado localmente; compra P2P solo de lote completo; no mostrar score, multiplicador, origen ni `calculatedAt`
+
+**Scale/Scope**: Dos Pages existentes, sus Page Hooks y componentes locales; un Query Hook oficial nuevo y el Query Hook P2P vigente; Service/Mapper/DTOs/Models de `market`; reutilización acotada de jugadores, compra, sesión, cartera y componentes shared
+
+## Constitution Check
+
+*GATE: evaluado antes de Phase 0 y nuevamente después de Phase 1.*
+
+| Principio | Evaluación pre-diseño | Evidencia post-diseño |
+| --- | --- | --- |
+| I. Simplicidad y calidad | PASS | Se elimina el flujo N+1 y se reutilizan Service, Mapper, Query, Modal, Pagination y recursos existentes sin capas nuevas. |
+| II. Proporcionalidad | PASS | El alcance se limita a los dos catálogos y compras aprobados; no modifica backend, no agrega endpoints ni introduce filtros sin respaldo. |
+| III. Seguridad e integridad | PASS | HTTP autenticado existente, validación de DTOs externos, guardas duplicadas en UI/handler y mensajes seguros. |
+| IV. Coherencia de contratos | PASS | [contracts/market-official.md](contracts/market-official.md) refleja SPEC-010 real; compra permanece alineada con [contracts/buy-tokens-frontend.md](contracts/buy-tokens-frontend.md). |
+| V. Trazabilidad y fuente de verdad | PASS | Spec, plan, research, data model, contratos y quickstart describen solo el diseño vigente; Git conserva el historial. |
+| VI. Mínimo alcance necesario | PASS | No se crean dependencias, stores, endpoints ni abstracciones hipotéticas. |
+
+No existen violaciones que requieran Complexity Tracking.
+
+## Project Structure
+
+### Documentation (this feature)
 
 ```text
-app/router: AuthGuard + ruta /market/buy
-  └─ app/market/MarketBuyRoute (adaptador de composición, sin reglas de compra)
-       ├─ players: playersService.getPage, playersQueryKeys, PLAYERS_PAGE_SIZE
-       │          y tipos Player/PlayersPage (API raíz; sin cambios de lógica)
-       ├─ market: MarketBuyPage con datos de catálogo mapeados por app a MarketPlayer,
-       │          estado de carga completa y callback onPurchaseSuccess (API raíz)
-       └─ portfolio: portfolioQueryKeys.summary y holdings (API raíz, solo en app)
-
-market/MarketBuyPage → useMarketBuyPage (Page Hook de coordinación)
-  ├─ useMarketQuotesQuery(playerIds) → marketService.getCurrentQuote
-  │    → GET /api/players/{id}/quotes/current (una query por id, caché propia)
-  ├─ useBuyQuantityForm (Form Hook: solo estado y validación 1–100)
-  └─ useBuyTokensMutation → marketService.buyTokens → POST /api/orders/buy
-       → DTO → Mapper → BuyResult (sin playerName)
-  └─ éxito: invalidar marketQueryKeys.currentQuote(id), componer aviso con
-     selectedPlayer.name + BuyResult y llamar onPurchaseSuccess(id)
-market/MarketBuyPage → MarketPlayerCard y BuyTokenModal (Components locales
-  solo UI y callbacks, sin Hooks ni HTTP propios)
-app/MarketBuyRoute: onPurchaseSuccess → invalidación summary + holdings(*)
+specs/019-buy-tokens-from-frontend/
+├── spec.md
+├── plan.md
+├── research.md
+├── data-model.md
+├── quickstart.md
+├── contracts/
+│   ├── market-official.md
+│   └── buy-tokens-frontend.md
+└── tasks.md                 # No se modifica en PLAN
 ```
 
-`MarketBuyPage` conecta su Page Hook, que coordina Form/Query/Mutation Hooks, filtros, orden, paginación y estado del modal. **El Form Hook solo valida/configura el formulario; no invoca el Mutation Hook.** `app` provee todo el catálogo mediante el Service/Mapper existente de players; no contiene reglas de filtrado ni compra. Los Components locales reciben exclusivamente props. Abrir/cerrar el portal no remonta listado ni reinicia scroll, borrador/aplicación de filtros, página, pestaña o URL. El Query Hook de market conserva una key por id real; ficha y modal comparten ese resultado. Solo `404 QUOTE_NOT_FOUND` significa ausencia: otros errores se muestran con reintento GET y no se reemplazan con demos. Se preservan `calculatedAt` y `effectiveDate`. El Service devuelve `BuyResult` sin nombre; el Page Hook compone la notificación con `selectedPlayer.name`. Market invalida su quote y notifica éxito a app, que invalida Portfolio sin retrasar la notificación.
+### Source Code (repository root)
 
-**Exports mínimos futuros, no implementados aquí:**
+```text
+frontend/src/
+├── app/
+│   ├── layouts/            # AppLayout y PageLayout existentes
+│   └── router/             # Rutas protegidas existentes
+├── features/
+│   ├── auth/               # Usuario actual y saldo; API pública
+│   ├── market/
+│   │   ├── components/     # Componentes reutilizados dentro de market
+│   │   ├── constants/      # marketQueryKeys
+│   │   ├── form/           # Cantidad de compra existente
+│   │   ├── hooks/
+│   │   │   ├── mutations/  # Compra oficial/P2P existente
+│   │   │   ├── pages/      # Coordinación oficial y P2P
+│   │   │   └── queries/    # Query oficial consolidada y listings P2P
+│   │   ├── pages/
+│   │   │   ├── MarketBuyPage/
+│   │   │   └── MarketP2PPage/
+│   │   ├── types/          # DTOs y Models de market
+│   │   ├── market.mapper.ts
+│   │   └── market.service.ts
+│   ├── players/            # API pública de opciones deportivas
+│   └── portfolio/          # Query keys públicas para invalidación
+├── infrastructure/http/    # Cliente autenticado existente
+└── shared/components/      # Button, Field, Modal, Pagination y recursos deportivos
+```
 
-- `features/players/index.ts`: conservar exports y añadir `playersService`, `playersQueryKeys`, `type PlayersPage` para el consumidor autorizado app. `PLAYERS_PAGE_SIZE` y `type Player` ya están expuestos. No cambiar Service/Mapper/Hooks existentes ni publicar DTOs o cotizaciones demo. El Service devuelve Models y es una dependencia permitida de app mediante API pública; no se convierte en dependencia de market.
-- `features/portfolio/index.ts`: `portfolioQueryKeys`, reexportadas de `./constants` para uso exclusivo de `app`.
-- `features/market/index.ts`: `MarketBuyPage` y `type MarketPlayer` (contrato estructural propio de `market`, sin importar `Player` de `players`). La app convierte los campos requeridos por la UI desde `Player`, sin copiar la lógica de mapeo HTTP.
+**Structure Decision**: La integración permanece dentro de `features/market`. Cada Page conserva sus componentes exclusivos y su Page Hook; `market` consume `auth`, `players` y `portfolio` solo por sus APIs públicas. No se mueve lógica de mercado a `app`, `shared` ni `players`, y no se unifican Hooks o Models con contratos distintos.
 
-La key de cotización persistida de `market` es propia, por ejemplo `['market', 'current-quote', playerId]`; no reutilizar `playersQueryKeys.tokenQuote` (`['players', 'demo-quotes', id]`). `app` invalida `portfolioQueryKeys.summary` y todas las keys `holdings` mediante el prefijo derivado de `portfolioQueryKeys.holdings('ALL', 0, 1).slice(0, 2)` (sin repetir los literales de key ni invalidar todas las consultas Portfolio). La Page de market puede seguir mostrando la cotización reconsultada al invalidarse su key; el modal preserva los datos mostrados durante la operación y no refluye el listado.
+## Diseño técnico
 
-## Responsabilidades y ubicaciones previstas
+### Flujo de datos oficial
 
-| Área | Archivos previstos | Responsabilidad |
-| --- | --- | --- |
-| `app` | `router/AppRouter/AppRouter.tsx`, `navigation/sections.ts`, `providers/AppProviders/AppProviders.tsx`, `market/MarketBuyRoute/` | Ruta/tab, ToastContainer global y composición de datos e invalidación Portfolio. |
-| `features/players` | Solo `index.ts` | Exportar contratos de lectura y tipo existentes, sin alterar lógica. |
-| `features/portfolio` | Solo `index.ts` | Exportar query keys existentes, sin alterar lógica. |
-| `features/market` | `pages/MarketBuyPage/` (Page, `MarketPlayerCard/`, `BuyTokenModal/` locales), `form/hooks/`, `form/schemas/`, `hooks/pages/useMarketBuyPage.ts`, `hooks/queries/useMarketQuotesQuery.ts`, `hooks/mutations/`, `market.service.ts`, `market.mapper.ts`, `constants/marketQueryKeys.ts`, `types/`, `utils/`, `index.ts` | Page/Hook coordinan operación y cotización; Components locales son solo UI, estilos y props. Crear solo carpetas realmente necesarias. |
-| `shared` | `components/Modal/` y barrel | Portal, foco, ARIA, ESC, overlay; ninguna lógica de compra. Reusar `Button` y `Field`. |
-| Configuración | `frontend/package.json`, `package-lock.json`, `docs/frontend/technologies.md` | Instalación y registro de React-Toastify. |
+```text
+URLSearchParams ──parse/normalize──> OfficialMarketCriteria
+        │                                  │
+        │                                  ▼
+        │                      useOfficialMarketQuery
+        │                                  │
+        │                                  ▼
+        │                         marketService.getOfficialMarket
+        │                                  │
+        │                                  ▼
+        │                         GET /api/market/official
+        │                                  │
+        │                                  ▼
+        └──serialize<── Page Hook <── Mapper <── DTO paginado
+                              │
+                              ├── Components por props
+                              └── BuyTokenModal ──> POST /api/orders/buy
+```
 
-El Modal compartido no conoce el campo de cantidad: recibe una referencia genérica de foco inicial, además del trigger al que devolver foco. No cambia la URL ni inserta contenido en el flujo de la página; portal/overlay sin bloquear scroll mediante cambios al layout o al `body`. El campo cantidad empieza en `1` cada vez que se inicia una compra y muestra estimación si hay cotización; el Form Hook acepta texto de dígitos que representa un entero 1–100 y transforma el valor válido en `number` antes del POST. Si se borra o introduce texto inválido, deshabilita Confirmar. La Page proporciona al Modal la referencia al campo de cantidad para foco inicial; el trap mantiene el foco dentro del diálogo y lo devuelve al botón que abrió la compra salvo que la sesión expire y la ruta se desmonte. Durante submit se deshabilitan cierre, cancelación y confirmación, con `aria-busy`, spinner y protección síncrona contra doble envío. La respuesta exitosa muestra identificador, cantidad, precio realmente aplicado, importe y `executedAt`, y permite cerrar manualmente o a los 2 s. React-Toastify se configura en `app/providers`.
+- `useMarketBuyPage` será la única coordinación de URL, búsqueda editable/debounced, filtros, query, modal, formulario, compra, mensajes e invalidaciones.
+- `useOfficialMarketQuery(criteria)` declarará una query por criterios normalizados y usará `AbortSignal`; no conservará DTOs ni lógica de UI.
+- `marketService.getOfficialMarket(criteria, signal)` serializará solo parámetros definidos y devolverá `OfficialMarketPage` ya mapeado.
+- `market.mapper.ts` validará la envoltura, nulabilidad y campos reales de SPEC-010. Los campos técnicos del bloque `quote` se validan como contrato de entrada pero se descartan del Model de presentación.
+- `marketQueryKeys.official(criteria)` representará cada consulta; `marketQueryKeys.officialAll()` permitirá invalidar todas las variantes tras una compra oficial.
+- El antiguo `getCurrentQuote`, `useMarketQuotesQuery` y `currentQuote(id)` dejan de participar en `/market/buy`; su eliminación física se decidirá por consumidores reales durante implementación, sin afectar APIs de `players`.
 
-## Contratos, decisiones y riesgo
+### URL, filtros y consulta
 
-- [Contrato de consumo](contracts/buy-tokens-frontend.md), [modelo](data-model.md), [decisiones](research.md) y [escenarios](quickstart.md).
-- Backend ya expone el GET real con `price`, `effectiveDate`, `calculatedAt` y `404 QUOTE_NOT_FOUND`; el POST aplica el precio vigente de forma autoritativa. Una estimación puede diferir del importe confirmado: no presentarla como precio congelado.
-- `usePlayersQuery(page)` consulta solo 12 jugadores. La revisión de filtros sustituye la composición de una sola página por la carga completa descrita abajo. No consultar stock ni modificar el hook existente.
-- Las referencias 04/05 guían composición visual de cards/modal/overlay; cifras de saldo, órdenes pendientes, estadísticas deportivas y variaciones de 24 h no tienen fuente prevista en esta feature. No inventarlas ni presentar demos como reales; mantener la estructura visual aplicable al alcance definido por la spec.
-- La existencia de React-Toastify o un build no acredita testing ni revisión humana.
+- Claves oficiales: `name`, `leagueId`, `teamId`, `position`, `nationality`, `minPrice`, `maxPrice`, `sort` y `page`. `hasQuote` y `size` heredados se eliminan con `replace`; el servicio fija `size=8` y no envía `hasQuote`.
+- La URL usa `page` base 0, igual que el contrato; valores ausentes producen los defaults UI `page=0`, `size=8`, `sort=id,asc` sin necesidad de escribirlos hasta que cambien.
+- Selects, rango y orden actualizan URL y consulta automáticamente. La búsqueda mantiene un valor editable local y publica `name` mediante debounce; limpiar búsqueda cancela el valor pendiente.
+- Todo cambio de filtro u orden fija `page=0`. Cambiar página solo modifica `page`.
+- La capa de parseo normaliza tipos y enumera valores permitidos antes de consultar. Un rango invertido queda en estado inválido local, muestra error inline y no habilita la query.
+- `usePlayerCatalogFiltersQuery` se reutiliza desde la API pública de `players`; esa API debe exponer el Hook y `PlayerCatalogFilters`. Los equipos visibles se derivan por `leagueId`; limpiar/cambiar liga limpia `teamId` incompatible.
+- La query distingue `pending`, `fetching` con datos previos, `success`, `error`, vacío global y sin resultados. El cambio de criterios puede conservar visualmente la página previa mientras anuncia actualización, pero nunca habilita compra con un jugador que ya no pertenece al resultado vigente.
+- Los errores contractuales del catálogo se traducen a mensajes seguros; parámetros inválidos producidos por edición manual de URL se normalizan antes de la consulta y no se propagan como estado válido.
 
-## Revisión de filtros y fidelidad visual (2026-10-24)
+### DTOs, Models y Mapper
 
-La solicitud humana amplía explícitamente el alcance y autoriza correcciones después de ANALYZE sin blockers. Sustituye la exclusión anterior de filtros nuevos; no aprueba automáticamente los criterios del revisor afectados por el cambio.
+- `OfficialMarketPageResponseDTO`: `content`, `page`, `size`, `totalElements`, `totalPages`.
+- `OfficialMarketPlayerResponseDTO`: `id`, `name`, `position`, `nationality?`, `teamId?`, `teamName?`, `teamBadgeUrl?`, `leagueId?`, `leagueName?`, `imageUrl?`, `quote` nullable.
+- `OfficialMarketQuoteResponseDTO`: `price`, `previousPrice?`, `variationPercentage?`, `performanceScore`, `multiplier`, `calculationOrigin`, `effectiveDate`, `calculatedAt`.
+- `OfficialMarketPlayer` conserva identidad deportiva nullable y solo los datos de cotización presentables: `price`, `previousPrice`, `variationPercentage`, `effectiveDate`. No contiene `performanceScore`, `multiplier`, `calculationOrigin` ni `calculatedAt`.
+- `OfficialMarketPage` conserva metadatos paginados y Models mapeados. Ningún Component recibe DTOs.
+- Validaciones: IDs e importes enteros seguros según nulabilidad; `price > 0`; `previousPrice` nulo o entero no negativo; porcentajes finitos; fechas ISO válidas; metadatos paginados coherentes y contenido no mayor que `size`.
 
-### Carga completa sin duplicar players
+### Responsabilidades UI
 
-`app/market/MarketBuyRoute/useMarketCatalog.ts` compone TanStack Query y el Service público existente. Lee página 0 con `size=PLAYERS_PAGE_SIZE` (12), descubre `totalPages` y recorre las restantes con **cuatro workers como máximo**, usando `queryClient.fetchQuery` y `playersQueryKeys.page(page, size)`. Reutiliza cada página fresca durante cinco minutos; no refetch automático al enfocar/reconectar y no reintenta automáticamente 401/403. La query agregada de composición tiene key bajo `app/market`, cancela al desmontar y no entrega un subconjunto como catálogo completo. El reintento reutiliza las páginas correctas y solo recupera las faltantes/obsoletas. Si los metadatos cambian durante el recorrido, informa inconsistencia y solicita reintento; no entra en bucle de recarga. Deduplicar ids no permite ocultar una carga incompleta.
+| Unidad | Responsabilidad |
+| --- | --- |
+| `MarketBuyPage` | Componer estructura semántica de la página, Page Hook y modal; sin reglas de negocio. |
+| `MarketHeader` | Identidad de página y saldo disponible; no muestra total. |
+| `MarketFilters` | Dos filas horizontales, controles automáticos, error de rango, actualización y limpiar; sin botón Aplicar. |
+| `OfficialMarketPanel` | Barra única de resultados, estados de consulta, grilla desplazable y paginación externa al scroll. |
+| `MarketBuyCatalog` | Renderizar la grilla adaptable y estados de lista por props. |
+| `MarketPlayerCard` | Identidad deportiva, precio/variación/anterior/vigencia y compra; estado `quote: null` estable. |
+| `BuyTokenModal` | Resumen aprobado, cantidad, accesos rápidos absolutos, estimación, procesamiento, éxito/error y accesibilidad. |
+| `useMarketBuyPage` | URL, debounce, consulta, selección, formulario, guardas, compra, invalidaciones y foco. |
+| `useOfficialMarketQuery` | Estado remoto del catálogo por criterios normalizados. |
+| `marketService` | Transporte autenticado y serialización HTTP. |
+| `market.mapper` | Validación de respuestas y transformación DTO ↔ Model. |
 
-No usar `size=100`: aunque el contrato backend lo admite, `players.mapper.ts` exige `content.length <= 12`; cambiarlo está fuera del permiso actual. No copiar DTO, validación o GET de players a market ni a app. Esta solución minimiza solicitudes dentro del contrato consumidor existente; una mejora de tamaño de página requiere otro alcance. La cantidad mínima de lecturas del catálogo es `ceil(totalElements / 12)` con esa restricción.
+Los componentes exclusivos siguen locales a `MarketBuyPage`. Se reutilizan `Button`, `Field`, `Modal`, `Pagination`, `PlayerPortrait`, `TeamBadge`, `CompetitionLogo` y `NationalityFlag`; no se crean duplicados.
 
-### Filtros y cotizaciones
+### Compra e invalidaciones
 
-`useMarketBuyPage` mantiene borrador/aplicación de filtros y página local (inicial seis elementos). El panel local `MarketFilters` no conecta Hooks. Una utilidad pura de market normaliza búsqueda y combina nombre/club, liga y posición sobre todo el catálogo; después aplica rango inclusivo de precio y orden ascendente/descendente y finalmente pagina. Limpiar un filtro o todos se aplica sin perder los demás y vuelve a página 0. Mostrar contador real y selector 6/12/24; precios en créditos con precisión de centésimas, sin rangos prefijados basados en valores inventados.
+- `useBuyQuantityForm`, `useBuyTokensMutation`, `toOrderBuyRequestDTO`, `toBuyResult`, mensajes seguros, guarda síncrona y autocierre oficial se reutilizan.
+- El modal usa la cotización ya embebida en `OfficialMarketPlayer`; abrirlo no genera GET adicional.
+- Tras éxito oficial se invalidan `marketQueryKeys.officialAll()`, `authQueryKeys.all`, `portfolioQueryKeys.summary` y el prefijo público de holdings. El resultado efectivo del POST alimenta toast y estado de éxito.
+- P2P conserva `marketQueryKeys.listings()`, `useCommunityMarketQuery`, compra por `{ listingId }`, invalidaciones y ausencia de autocierre obligatorio.
 
-Para ordenar/filtrar por precio se necesitan todas las cotizaciones de los candidatos tras filtros de identidad: sin endpoint bulk no puede evitarse una lectura por id no cacheado. Se conserva `marketQueryKeys.currentQuote(id)`, con caché fresca de 30 segundos, **hasta seis lecturas simultáneas**, cancelación y sin ráfagas por cada pulsación (solo al aplicar). La ordenación inicial por precio coincide con la referencia; requiere completar esas lecturas. No crear miles de requests concurrentes ni reconsultar todas al abrir el modal, cambiar página o modificar cantidad. Errores se reintentan explícitamente; no ocultarlos como ausencia ni presentar totales definitivos mientras falten lecturas. `QUOTE_NOT_FOUND` y precios no operativos quedan al final sin rango y se excluyen con rango. Empates: nombre e id, independientemente de la dirección de precio. Si posteriormente se admite orden por nombre sin rango, solo se consultan quotes de la página visible y selección; no se añade como requisito del mockup.
+### Flujo de datos P2P
 
-### Presentación
+```text
+GET /api/listings ──> Service ──> Mapper ──> MarketListing[]
+                                              │
+GET catálogo players ──> Models deportivos ───┤
+                                              ▼
+                                  buildCommunityPlayers
+                                              │
+URLSearchParams ──parse/normalize──> filtros, orden, page, player
+                                              │
+                                              ▼
+                              filtrar ──> ordenar ──> paginar 12
+                                              │
+                         catálogo <───────────┴───────────> detalle
+                                                                  │
+                                                                  ▼
+                                                        POST { listingId }
+```
 
-Fondo en wrapper de Page; cadena flex/min-height/min-width de `PageLayout` existente, scroll de contenido desktop y natural móvil, sin modificar AppLayout/Navbar compartidos. Header y panel lateral reproducen la composición aplicable de ref. 04; tres columnas desktop, dos cuando el espacio de tarjeta lo permita y una a 375px. Las métricas sin fuente se omiten explícitamente según FR-19, no se rellenan con demos. La diferencia frente a la imagen es deliberada y debe constar en entrega.
+- `useCommunityMarketPage` seguirá siendo el único propietario de `useSearchParams`, derivación de catálogo, selección de jugador, modal, compra e invalidaciones.
+- La URL P2P usa `search`, `league`, `position`, `sort`, `page` y `player`. Los defaults son búsqueda vacía, `league=all`, `position=all`, `sort=price` y `page=0`; pueden omitirse hasta cambiar.
+- La búsqueda mantiene un borrador local y publica `search` después de 300 ms de debounce. Liga, posición y orden escriben inmediatamente; cualquier cambio de filtro u orden fija `page=0`.
+- El orden de transformación es obligatorio: validar listings y jugadores, agrupar por jugador, filtrar el conjunto agrupado, ordenar con desempates deterministas y paginar localmente de a 12.
+- `player=<id>` selecciona el detalle dentro de la misma Page. El detalle usa las publicaciones ya presentes en `marketQueryKeys.listings()`, sin `GET /api/listings/{id}`; cerrar elimina solo `player` y conserva el resto de la URL.
+- Una URL inválida no dispara endpoints diferentes: valores desconocidos usan defaults seguros, una página fuera de rango se normaliza al rango disponible y un jugador ausente produce el estado de detalle sin ofertas con regreso al catálogo.
+- La selección de una publicación abre `BuyListingModal`; cantidad, precio, total y vencimiento son solo lectura. La confirmación repite la guarda del botón, compara saldo y total exclusivamente en centésimas y nunca envía cantidad, jugador, vendedor ni precio.
+- Ante conflicto de disponibilidad se invalida `listings()` y se actualizan catálogo y detalle. Ante red sin respuesta concluyente no hay retry automático ni éxito inferido. El éxito permanece hasta cierre explícito.
 
-Tarjetas compactas y modal reutilizan datos reales mediante props; fallback importado de `shared/assets/Player Generic-Icon.png`, último recurso tras URLs externas (Vite empaqueta el local). Modal con liga y posición, cantidad −/+ y 1/5/10/50/100, resumen de precio/cantidad/estimación y spinner real durante submit. `shared/Modal` conserva portal/foco/ARIA: overlay sin blur, scroll propio y overscroll contenido; impedir propagación hacia mercado sin alterar ancho/body, URL ni estado. Verificar teclado y restauración de foco sin scroll inesperado.
+### Responsabilidades P2P
 
-## Diseño vigente: rediseño exclusivamente visual
+| Unidad | Responsabilidad |
+| --- | --- |
+| `MarketP2PPage` | Componer encabezado, panel y Page Hook sin reglas de negocio. |
+| `MarketP2PHeader` | Identidad de página y saldo; no posee filtros ni total. |
+| `CommunityMarketFilters` | Controles horizontales automáticos y limpiar; recibe estado y callbacks por props. |
+| `CommunityMarket` | Barra de resultados, estados del catálogo, grilla de cuatro columnas y paginación local. |
+| `CommunityListingsPanel` | Detalle completo del jugador y sus publicaciones ya cargadas. |
+| `BuyListingModal` | Confirmación accesible de lote fijo con identidad compartida, total destacado, saldo preciso, procesamiento, error y éxito persistente. |
+| `useCommunityMarketPage` | URL, debounce, agrupación derivada, filtros, orden, página, selección, compra, guardas e invalidaciones. |
+| `useCommunityMarketQuery` | Estado remoto de la colección completa bajo `marketQueryKeys.listings()`. |
+| `marketService` | `GET /listings` y `POST /orders/buy` autenticados. |
+| `market.mapper` | Validación estricta de envoltura/listings y respuesta de compra. |
 
-La última solicitud del usuario sustituye la sección «Revisión de filtros y fidelidad visual»: no se implementan catálogo completo, nuevos exports, workers ni filtros funcionales. Conservar `usePlayersQuery(page)`, lógica de compra y contratos HTTP. No modificar lógica de players/portfolio/backend. Los exports de Service/keys propuestos arriba **no se implementan**. Research conserva la investigación, no una obligación funcional vigente.
+### Layout y secuencia de implementación futura
 
-`MarketBuyPage` compone Components locales `MarketHeader`, `MarketFilters`, fichas y footer con datos/callbacks por props. El wrapper posee fondo y scroll vertical en el espacio flex disponible sin modificar layouts globales. Panel lateral completo deshabilitado con indicación «Pendiente»; métricas sin fuente «No disponible», contador real. Mantener tamaño efectivo 12 y paginación real; selector de tamaño visual deshabilitado. Tres columnas desktop junto al panel, dos tablet y una móvil; layout fluido y sin alturas fijas de Page. Los datos deportivos/variación sin fuente se representan con «Sin datos», no ceros ni porcentajes ficticios.
+1. **Fase frontend 1 — lógica, estado y estructura**: DTOs, Models, Mapper, Service, query keys/Hooks, parseo URL de ambos mercados, Page Hooks, props y JSX semántico según ambos wireframes. Sin maquetado fino.
+2. Ejecutar únicamente los controles frontend permitidos cuando exista código modificado y entregar el informe de integridad.
+3. **Gate humano obligatorio**: detenerse hasta autorización explícita.
+4. **Fase frontend 2 — maquetado**: SCSS Modules y contenedores visuales, padding de página de 8 px por lado, filtros, grillas, detalle y modales conforme a `docs/wireframes/official-market.md` y `docs/wireframes/community-market.md`.
+5. Validación visual humana de ambos mercados en 1920 × 913, 1440, 768 y 375 px, sin alterar lógica validada en Fase 1.
 
-Cards y modal: retrato pequeño con fallback final local importado desde shared/assets; posición con badge por valor real, iconos genéricos para equipo/liga (sin asignar escudos/banderas no disponibles). Cantidades rápidas y −/+ se muestran deshabilitados y pendientes para no ampliar la lógica; la cantidad editable existente funciona. La modal muestra liga, mantiene resumen/precio/centésimas y resultado efectivo, foco/ARIA y controles existentes. Overlay sin blur; scroll propio y overscroll contenido, sin modificar ancho del body o flujo del mercado. Precio/cotización/errores siguen contratos existentes.
+## Complexity Tracking
 
-Esta revisión visual no cambia la composición entre features ni el origen real de cotizaciones. Los checklists históricos se conservan sin nuevas aprobaciones; no se considera satisfecho lo que no se verificó visualmente. Tareas V-01–V-04 en tasks.md delimitan este trabajo.
+No aplica: el diseño no introduce violaciones constitucionales ni excepciones arquitectónicas.
 
-## Próxima fase
+## Evolución vigente: filtros de precio deslizantes
 
-### Ajuste localizado de scroll
+- `Slider` reside en componentes compartidos y soporta modo simple o rango, paso entero en centésimas, teclado, etiquetas accesibles y confirmación diferida hasta finalizar la interacción.
+- Oficial consume `priceRange` del catálogo y representa `minPrice`/`maxPrice` en un único control doble; los extremos completos se omiten de la URL.
+- P2P deriva extremos de todas las publicaciones ya cargadas, aplica `maxPrice` antes de agrupar y conserva «Sin límite» como estado explícito sin otra petición.
+- Ambos Page Hooks normalizan enlaces fuera del rango disponible, vuelven a `page=0` al confirmar y conservan query keys y skeletons actuales.
+- El gate visual en dos fases se mantiene: estructura y lógica se validan antes de autorizar el SCSS definitivo.
 
-### Lectura segura de cotización y ajustes visuales
+## Evolución vigente: detalle de ofertas P2P
 
-Mantener composición actual, scroll contenido y APIs de otras features. Metadata de tabs en app y nuevos iconos solo por shared/icons. Margen de filtros y scrollbar local por SCSS.
-
-Service captura solo 404 + QUOTE_NOT_FOUND como null; otros fallos se convierten en Model de error de lectura tipado de market, preservando cancelación. Mapper valida respuesta desconocida antes de entregar MarketQuote (precio entero positivo seguro y fechas válidas), sin cambiar contrato HTTP. Query Hook produce estado de lectura, carga/pausa/error y reintento GET por id usando error Model, sin conocer DTO ni importar otras features. No reintentar automáticamente 401/403/404 inesperado/respuesta inválida; evitar redirecciones/reintentos en bucle. Page Hook selecciona únicamente quote de consulta exitosa y resuelta para estimación/confirmación y protege también handler. Component local MarketQuoteFeedback recibe estado/mensaje/acción por props y se reutiliza en ficha y modal, sin Hooks. Explicación accesible del bloqueo junto al botón, sin filtrar datos técnicos del servidor.
-
-La falta de sesión del cliente HTTP se identifica en el Page Hook mediante la presencia de sesión pública de infrastructure/storage, no con acceso directo al almacenamiento ni cadenas de error de Axios. El interceptor global sigue siendo autoridad para limpiar sesión/redirigir ante 401; no modificar infraestructura.
-
-AppLayout aplica un modificador de contención exclusivamente cuando pathname corresponde a `/market/buy`; CSS de body/html usa `:has` de ese modificador, por lo que desaparece al navegar fuera. No se mutan estilos globales con efectos ni se codifica la altura del navbar. AppLayout y su contenido continúan la cadena flex con altura `100dvh`, min-height:0 y overflow:hidden incluso bajo breakpoints móviles solo en esta ruta.
-
-MarketBuyPage distribuye encabezado, contenido y footer mediante flex, sin usar PageLayout como scroller. Contenido grid con min-height:0, filtros estáticos y main de jugadores con overflow-y:auto; footer no encoge. En móvil, filtros nativos details/summary y métricas compactas; panel de filtros expandido superpuesto, sin consumir altura del listado. Cambios exclusivamente de presentación; queries, compra, formulario, paginación y HTTP no se modifican. No cambiar PageLayout compartido ni el scroll de rutas ajenas.
-
-Revalidar los criterios del revisor afectados por catálogo completo/filtros, ejecutar `/speckit.analyze` y solo después implementar el alcance autorizado si no quedan blockers. Sin compras reales, tests, commits, push ni merges.
+- `CommunityListingsPanel` reutiliza `MarketPlayerSummary` para la identidad y mantiene como única entrada remota la colección de listings ya cargada.
+- La cabecera combina identidad y tres métricas agregadas; el aviso de lote completo incorpora el estado del límite económico y su acción de limpieza.
+- Las publicaciones conservan el orden vigente por precio, vencimiento e ID. No se incorpora otro control porque duplicaría estado sin mejorar el recorrido principal.
+- La presentación desktop usa una grilla autoajustable de cards con altura intrínseca y scroll interno solo cuando el contenido supera el espacio disponible; pocas ofertas no se estiran.
+- Compra, modal, guardas, payload, invalidaciones y navegación permanecen sin cambios.

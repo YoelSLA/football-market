@@ -73,8 +73,8 @@ public class ListingController {
   @Operation(
       summary = "Listar publicaciones propias",
       description =
-          "Incluye cualquier estado efectivo y jugadores no visibles. El filtro considera solo el estado efectivo.")
-  @ApiResponse(responseCode = "200", description = "Publicaciones propias.")
+          "Incluye cualquier estado efectivo y jugadores no visibles. Admite paginación server-side, ordenamiento por defecto más recientes y resumen métrico.")
+  @ApiResponse(responseCode = "200", description = "Publicaciones propias paginadas con métricas.")
   @ApiResponse(
       responseCode = "400",
       description = "INVALID_PARAMETER_TYPE: estado desconocido, vacío o capitalización distinta.",
@@ -90,8 +90,20 @@ public class ListingController {
               description = "Forma exacta y sensible a mayúsculas.",
               schema = @Schema(allowableValues = {"ACTIVE", "SOLD", "CANCELLED", "EXPIRED"}))
           @RequestParam(required = false)
-          String status) {
-    return ListingMapper.toResponses(this.listings.mine(jwt.getSubject(), status));
+          String status,
+      @Parameter(description = "Número de página solicitada (base cero).")
+          @RequestParam(required = false, defaultValue = "0")
+          int page,
+      @Parameter(description = "Tamaño de página solicitado (1-100).")
+          @RequestParam(required = false, defaultValue = "10")
+          int size,
+      @Parameter(
+              description = "Criterio de ordenamiento.",
+              schema = @Schema(allowableValues = {"NEWEST", "OLDEST", "PRICE_DESC", "PRICE_ASC"}))
+          @RequestParam(required = false, defaultValue = "NEWEST")
+          String sort) {
+    return ListingMapper.toPageResponse(
+        this.listings.mine(jwt.getSubject(), status, page, size, sort));
   }
 
   @Operation(

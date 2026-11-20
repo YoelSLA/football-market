@@ -1,0 +1,31 @@
+meta {
+  name: Consultar cotización a una fecha
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/players/2/quotes?date=2026-10-20
+  body: none
+  auth: bearer
+}
+
+params:query {
+  date: 2026-10-20
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

@@ -1,0 +1,60 @@
+@use "@/styles/abstracts" as ds;
+
+.playerDetailNav {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	height: 32px;
+	padding: 2px 0;
+
+	&__backLink {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		height: 28px;
+		padding: 0 14px 0 10px;
+		border-radius: 9999px;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		font-weight: 600;
+		text-decoration: none;
+
+		// 6. 🎨 Visual
+		color: ds.$text-body-on-dark;
+		background-color: ds.$surface-panel-to;
+		border: 1px solid ds.$border-panel;
+
+		// 7. ⚙️ Behavior
+		transition: all 160ms ease;
+
+		svg {
+			flex-shrink: 0;
+			color: ds.$accent-sports-green;
+			transition: transform 140ms ease;
+		}
+
+		&:hover {
+			border-color: ds.$accent-sports-green;
+			background-color: ds.$surface-accent-dark;
+			color: ds.$text-primary-on-dark;
+
+			svg {
+				transform: translateX(-2px);
+			}
+		}
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 2px;
+		}
+	}
+}

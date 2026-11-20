@@ -18,6 +18,7 @@ import footballmarket.features.market.infraestructure.config.SuperuserProperties
 import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.support.MarketTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.sql.SQLException;
@@ -58,6 +59,7 @@ class SuperuserMarketRecoveryPersistenceTest {
   @Autowired private SuperuserProvisioningService provisioning;
   @Autowired private BuyOrderService orders;
   @Autowired private MarketTestData market;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @Autowired private DataSource dataSource;
   @MockitoBean private SuperuserProperties properties;
   @MockitoBean private QuoteSource quotes;
@@ -212,6 +214,8 @@ class SuperuserMarketRecoveryPersistenceTest {
     void conservaInventarioYFinanzasTrasComprar(int bought) {
       // Arrange
       long playerId = createPendingPlayers();
+      // La compra exige elegibilidad: el catálogo por sí solo todavía no aporta métricas.
+      statistics.makeSynchronizedPlayerEligible("h06-active");
       User owner = provisioning.provisionSuperuser();
       User buyer = market.registerBuyer();
       CurrentQuote quote =

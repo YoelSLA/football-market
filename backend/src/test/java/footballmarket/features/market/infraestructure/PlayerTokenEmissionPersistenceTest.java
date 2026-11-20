@@ -15,6 +15,7 @@ import footballmarket.features.market.domain.records.BuyOrderRequest;
 import footballmarket.features.quote.application.QuoteSource;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.support.MarketTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.time.OffsetDateTime;
@@ -58,6 +59,7 @@ class PlayerTokenEmissionPersistenceTest {
   @Autowired private PlayerCatalogService catalog;
   @Autowired private BuyOrderService orders;
   @Autowired private MarketTestData market;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @Autowired private DataSource dataSource;
   @MockitoBean private QuoteSource quotes;
 
@@ -161,6 +163,8 @@ class PlayerTokenEmissionPersistenceTest {
       User buyer = market.registerBuyer();
       PlayerSnapshot initial = snapshot("Argentina");
       catalog.applySynchronization(initial);
+      // La compra exige elegibilidad: el catálogo por sí solo todavía no aporta métricas.
+      statistics.makeSynchronizedPlayerEligible(EXTERNAL_ID);
       List<Map<String, Object>> referencesBefore = identities();
       assertThat(referencesBefore).hasSize(1);
       long playerId = ((Number) referencesBefore.get(0).get("player_id")).longValue();

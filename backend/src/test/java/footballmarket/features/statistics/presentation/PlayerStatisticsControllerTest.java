@@ -9,9 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.statistics.application.PlayerStatisticsSynchronizationService;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSynchronizationException;
@@ -20,6 +17,7 @@ import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncCounters;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSyncSummary;
 import footballmarket.integrations.whoscored.exceptions.HeadedBrowserUnavailableException;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -53,16 +51,13 @@ class PlayerStatisticsControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private PlayerStatisticsSynchronizationService synchronization;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("statistics@example.com"))
-        .thenReturn(
-            new User(
-                1L, "statistics.user", "statistics@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("statistics@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

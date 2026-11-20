@@ -9,6 +9,7 @@ import footballmarket.features.auth.application.exceptions.InvalidCredentialsExc
 import footballmarket.features.auth.application.exceptions.UsernameAlreadyRegisteredException;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.auth.domain.records.CurrentUserView;
 import footballmarket.support.TestcontainersConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -49,10 +50,11 @@ class AuthenticationServiceTest {
       User registered = new User("current.user", "current@test.com", "password123");
       authenticationService.register(registered);
 
-      User current = authenticationService.getCurrentUser("CURRENT@TEST.COM");
+      CurrentUserView current = authenticationService.getCurrentUser("CURRENT@TEST.COM");
 
-      assertThat(current.getId()).isNotNull().isEqualTo(registered.getId());
-      assertThat(current.getEmail()).isEqualTo("current@test.com");
+      assertThat(current.id()).isNotNull().isEqualTo(registered.getId());
+      assertThat(current.email()).isEqualTo("current@test.com");
+      assertThat(current.availableCredits()).isEqualTo(10_000L);
     }
 
     @Test
@@ -61,10 +63,11 @@ class AuthenticationServiceTest {
       User registered = new User("identity.user", "identity@test.com", "password123");
       authenticationService.register(registered);
 
-      User current = authenticationService.getCurrentUser("identity@test.com");
+      CurrentUserView current = authenticationService.getCurrentUser("identity@test.com");
 
-      assertThat(current.getUsername()).isEqualTo("identity.user");
-      assertThat(current.getRole()).isEqualTo(UserRole.USER);
+      assertThat(current.username()).isEqualTo("identity.user");
+      assertThat(current.role()).isEqualTo(UserRole.USER);
+      assertThat(current.availableCredits()).isEqualTo(10_000L);
     }
   }
 
@@ -110,9 +113,10 @@ class AuthenticationServiceTest {
 
       authenticationService.register(user);
 
-      User registered = authenticationService.getCurrentUser("public@test.com");
+      CurrentUserView registered = authenticationService.getCurrentUser("public@test.com");
 
-      assertThat(registered.getRole()).isEqualTo(UserRole.USER);
+      assertThat(registered.role()).isEqualTo(UserRole.USER);
+      assertThat(registered.availableCredits()).isEqualTo(10_000L);
     }
 
     @Test

@@ -1,30 +1,19 @@
+import styles from "./TableMedal.module.scss";
+
 interface Props {
 	rank: 1 | 2 | 3;
 }
 
+const RANK_MODIFIERS = {
+	1: styles.tableMedal_rank1,
+	2: styles.tableMedal_rank2,
+	3: styles.tableMedal_rank3,
+} as const;
+
 export default function TableMedal({ rank }: Props) {
-	const colors = {
-		1: {
-			circle: "#F59E0B",
-			ribbon: "#D97706",
-			text: "#FFFFFF",
-		},
-		2: {
-			circle: "#94A3B8",
-			ribbon: "#64748B",
-			text: "#FFFFFF",
-		},
-		3: {
-			circle: "#D97706",
-			ribbon: "#B45309",
-			text: "#FFFFFF",
-		},
-	};
-
-	const { circle, ribbon, text } = colors[rank];
-
 	return (
 		<svg
+			className={`${styles.tableMedal} ${RANK_MODIFIERS[rank]}`}
 			width="22"
 			height="26"
 			viewBox="0 0 24 28"
@@ -33,32 +22,35 @@ export default function TableMedal({ rank }: Props) {
 			aria-hidden="true"
 		>
 			{/* Cintas de la medalla */}
-			<path d="M8 15L5 25L9 22L12 25L10 16" fill={ribbon} />
-			<path d="M16 15L19 25L15 22L12 25L14 16" fill={ribbon} />
+			<path
+				className={styles.tableMedal__ribbon}
+				d="M8 15L5 25L9 22L12 25L10 16"
+			/>
+			<path
+				className={styles.tableMedal__ribbon}
+				d="M16 15L19 25L15 22L12 25L14 16"
+			/>
 
 			{/* Círculo de la medalla */}
-			<circle cx="12" cy="11" r="9" fill={circle} />
+			<circle className={styles.tableMedal__circle} cx="12" cy="11" r="9" />
 
 			{/* Anillo interior brillante */}
 			<circle
+				className={styles.tableMedal__ring}
 				cx="12"
 				cy="11"
 				r="7.5"
-				stroke="rgba(255, 255, 255, 0.3)"
 				strokeWidth="1"
 				fill="none"
 			/>
 
 			{/* Número del puesto */}
 			<text
+				className={styles.tableMedal__text}
 				x="12"
 				y="12"
 				textAnchor="middle"
 				dominantBaseline="central"
-				fill={text}
-				fontSize="10"
-				fontWeight="900"
-				fontFamily="system-ui, -apple-system, sans-serif"
 			>
 				{rank}
 			</text>

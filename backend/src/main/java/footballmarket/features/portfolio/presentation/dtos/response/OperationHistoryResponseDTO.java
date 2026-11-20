@@ -3,46 +3,46 @@ package footballmarket.features.portfolio.presentation.dtos.response;
 import footballmarket.features.portfolio.domain.records.OperationHistoryEntry.OperationType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
+import java.util.List;
 
-/** Operación financiera confirmada del historial personal. */
+/** Historial personal paginado, con agregados del conjunto filtrado. */
 public record OperationHistoryResponseDTO(
-    @Schema(
-            description = "Identificador persistido de la transacción.",
-            example = "92",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        Long transactionId,
-    @Schema(
-            description = "Tipo de operación desde la perspectiva del usuario: BUY o SELL.",
-            example = "SELL",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        OperationType type,
-    @Schema(
-            description = "Identificador interno del jugador negociado.",
-            example = "41",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        Long playerId,
-    @Schema(
-            description = "Nombre persistido e inmutable del jugador negociado.",
-            example = "Joel Robles",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        String playerName,
-    @Schema(
-            description = "Cantidad de tokens transferidos.",
-            example = "5",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        int quantity,
-    @Schema(
-            description = "Precio histórico por token, en centésimas de crédito.",
-            example = "125",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        long unitPrice,
-    @Schema(
-            description = "Importe histórico total, en centésimas de crédito.",
-            example = "625",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        long totalAmount,
-    @Schema(
-            description = "Instante de confirmación en formato ISO-8601 con offset.",
-            example = "2026-10-24T14:30:00Z",
-            requiredMode = Schema.RequiredMode.REQUIRED)
-        OffsetDateTime executedAt) {}
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) SummaryDTO summary,
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<TransactionDTO> transactions,
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) PaginationDTO pagination) {
+
+  /** Indicadores del conjunto filtrado completo. */
+  public record SummaryDTO(
+      long totalTransactions,
+      long buyTransactions,
+      long sellTransactions,
+      long boughtTokens,
+      long soldTokens,
+      @Schema(description = "Volumen comprado en centésimas de crédito.") long purchasedVolume,
+      @Schema(description = "Volumen vendido en centésimas de crédito.") long soldVolume) {}
+
+  /** Transacción confirmada desde la perspectiva del usuario autenticado. */
+  public record TransactionDTO(
+      Long transactionId,
+      @Schema(description = "BUY o SELL desde la perspectiva de la sesión.") OperationType type,
+      @Schema(description = "Perfil actual; no es una fotografía histórica.") PlayerDTO player,
+      int quantity,
+      @Schema(description = "Precio histórico en centésimas de crédito.") long unitPrice,
+      @Schema(description = "Importe histórico en centésimas de crédito.") long totalAmount,
+      OffsetDateTime executedAt) {}
+
+  /** Perfil actual del jugador asociado. */
+  public record PlayerDTO(
+      Long id,
+      String name,
+      @Schema(nullable = true) String imageUrl,
+      @Schema(nullable = true) String fallbackImageUrl,
+      RelatedDTO team,
+      RelatedDTO league) {}
+
+  /** Identidad actual de equipo o liga. */
+  public record RelatedDTO(Long id, String name) {}
+
+  /** Metadatos de paginación. */
+  public record PaginationDTO(int page, int size, long totalElements, int totalPages) {}
+}

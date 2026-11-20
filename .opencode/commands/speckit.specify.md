@@ -14,8 +14,6 @@ handoffs:
 
 MUST leer Constitution, AGENTS aplicables y `docs/development/sdd-workflow.md` antes de hooks o escrituras. MUST ejecutar solo la fase autorizada; handoffs no autorizan continuar. MUST NOT ejecutar tests ni hooks incompatibles. MUST registrar evidencia de fase sin inferir aceptación por existencia de archivos. El seguimiento operativo solo se modifica con autorización operativa.
 
-**Modelo normativo (Arquitectura de 3 niveles - Nivel 2)**: Principal `GPT Sol` (`opencode/gpt-6.1-sol`) | Respaldo `Gemini 4 Argon` (`opencode/gemini-4-argon`) para contratos y borrador inicial.
-
 ```text
 $ARGUMENTS
 ```
@@ -96,7 +94,7 @@ Given that feature description, do this:
 
    Leer `SPEC_NAME`, `SPEC_FILE`, `FEATURE_NUM`, `BRANCH_NAME`, `SPEC_ACTION` y `BRANCH_STATUS`. Si falta un campo, consultar salida efectiva y reportar, no inferir éxito. Si el script ajusta el número explícito, reportarlo antes de continuar la redacción: no acredita la asignación acordada. `SPEC_ACTION=created/reused` distingue acciones; un fallo/omisión de rama puede coexistir con SPEC materializada, pero bloquea operaciones que necesiten esa rama. La asignación explícita no acredita existencia de la SPEC, fases, gates, aprobación, implementación o integración.
    Derivar `SPECIFY_FEATURE_DIRECTORY` del directorio de `SPEC_FILE`; comprobar selección efectiva en `.specify/feature.json` y overrides de entorno antes de editar. La rama con prefijo de tipo no es el nombre de directorio. MUST NOT generar identidad por cuenta propia ni aceptar un override que apunte a otra SPEC.
-   En una SPEC nueva, completar la plantilla creada por el script y, si hubo asignación explícita, referenciar su registro y mantener trazabilidad con requisito, rama y seguimiento. En una reutilizada, leer y modificar solo secciones autorizadas, preservando IDs, decisiones y artefactos. Asociar épica REQ a la SPEC real y sincronizar únicamente US nacidas de `spec.md` cuando la operación esté autorizada; no reservar números fuera de la excepción de Constitution §8 ni inventar historias.
+   En una SPEC nueva, completar la plantilla creada por el script y, si hubo asignación explícita, referenciar su registro y mantener trazabilidad con requisito, rama y seguimiento. En una reutilizada o en evolución, actualizar `spec.md` para reflejar exclusivamente el comportamiento funcional vigente y aprobado (documentación viva, Constitución §V), podando requisitos o antecedentes superados previa verificación de su persistencia en Git (`git log`), y preservando la tríada obligatoria permanente (`spec.md`, `plan.md`, `tasks.md`). Asociar épica REQ a la SPEC real y sincronizar únicamente US nacidas de `spec.md` cuando la operación esté autorizada; no reservar números fuera de la excepción de Constitution §8 ni inventar historias.
 
 4. Load the resolved active `spec-template` file to understand required sections.
 

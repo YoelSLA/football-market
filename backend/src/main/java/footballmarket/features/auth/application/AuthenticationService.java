@@ -5,6 +5,7 @@ import footballmarket.features.auth.application.exceptions.EmailAlreadyRegistere
 import footballmarket.features.auth.application.exceptions.InvalidCredentialsException;
 import footballmarket.features.auth.application.exceptions.UsernameAlreadyRegisteredException;
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.records.CurrentUserView;
 
 /** Contrato de registro y autenticación de usuarios. */
 public interface AuthenticationService {
@@ -32,12 +33,12 @@ public interface AuthenticationService {
   String login(String email, String password);
 
   /**
-   * Recupera la identidad persistida actual a partir del sujeto de la sesión.
+   * Recupera la identidad persistida actual y sus créditos a partir del sujeto de la sesión.
    *
    * @param subjectEmail email sujeto, normalizado con las reglas de autenticación
-   * @return usuario persistido actual
+   * @return vista con los datos del usuario actual y su saldo disponible
    * @throws CurrentUserNotFoundException si el sujeto es nulo, vacío o no identifica a un usuario
    *     existente
    */
-  User getCurrentUser(String subjectEmail);
+  CurrentUserView getCurrentUser(String subjectEmail);
 }

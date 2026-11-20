@@ -1,0 +1,93 @@
+@use "@/styles/abstracts" as ds;
+
+// BEM: panel es el bloque; título, filas y tonos pertenecen al panel.
+.panel {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: ds.$space-sm;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+	background-color: ds.$surface-panel-from;
+	&__title {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: ds.$space-xs;
+
+		// 4. 📦 Box Model
+		margin: 0 0 ds.$space-3xs;
+		padding-bottom: ds.$space-3xs;
+
+		// 5. 🔤 Typography
+		font-size: 14px;
+		line-height: 1.5;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-panel;
+		svg {
+			// 3. 🧩 Layout
+			flex-shrink: 0;
+
+			// 4. 📦 Box Model
+			width: 23px;
+			height: 23px;
+
+			// 6. 🎨 Visual
+			color: ds.$icon-panel;
+		}
+	}
+
+	&__rows {
+		// 3. 🧩 Layout
+		display: grid;
+		flex: 1;
+
+		// 4. 📦 Box Model
+		margin: 0;
+	}
+
+	&__row {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: ds.$space-2xs;
+		align-items: center;
+
+		// 4. 📦 Box Model
+		padding-block: 0;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		line-height: 1.5;
+		dt {
+			// 6. 🎨 Visual
+			color: ds.$text-subtle-on-dark;
+		}
+
+		dd {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			text-align: right;
+			font-weight: 600;
+			overflow-wrap: anywhere;
+		}
+	}
+
+	&__positive {
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
+	}
+
+	&__negative {
+		// 6. 🎨 Visual
+		color: ds.$state-loss;
+	}
+}

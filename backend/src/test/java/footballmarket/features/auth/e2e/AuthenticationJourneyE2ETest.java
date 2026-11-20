@@ -87,6 +87,7 @@ class AuthenticationJourneyE2ETest {
       assertThat(current.getBody().username()).isEqualTo(registerRequest.username());
       assertThat(current.getBody().email()).isEqualTo(registerRequest.email());
       assertThat(current.getBody().role()).isEqualTo(UserRole.USER);
+      assertThat(current.getBody().availableCredits()).isEqualTo(100L);
 
       ResponseEntity<PlayersPageResponseDTO> catalog =
           restClient

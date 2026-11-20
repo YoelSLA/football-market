@@ -122,7 +122,8 @@ class JwtAuthenticationIntegrationTest {
           .andExpect(jsonPath("$.id").value(user.getId()))
           .andExpect(jsonPath("$.username").value("persisted.jwt"))
           .andExpect(jsonPath("$.email").value(user.getEmail()))
-          .andExpect(jsonPath("$.role").value("USER"));
+          .andExpect(jsonPath("$.role").value("USER"))
+          .andExpect(jsonPath("$.availableCredits").value(100));
 
       userRepository.delete(user);
       userRepository.flush();

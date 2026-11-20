@@ -55,3 +55,36 @@ export interface PortfolioResponseDTO {
 	positions: PortfolioPositionResponseDTO[];
 	pagination: PortfolioPaginationResponseDTO;
 }
+
+export interface OperationHistoryPlayerResponseDTO {
+	id: number;
+	name: string;
+	imageUrl: string | null;
+	fallbackImageUrl: string | null;
+	team: { id: number; name: string };
+	league: { id: number; name: string };
+}
+
+export interface OperationHistoryEntryResponseDTO {
+	transactionId: number;
+	type: "BUY" | "SELL";
+	player: OperationHistoryPlayerResponseDTO;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	executedAt: string;
+}
+
+export interface OperationHistoryResponseDTO {
+	summary: {
+		totalTransactions: number;
+		buyTransactions: number;
+		sellTransactions: number;
+		boughtTokens: number;
+		soldTokens: number;
+		purchasedVolume: number;
+		soldVolume: number;
+	};
+	transactions: OperationHistoryEntryResponseDTO[];
+	pagination: PortfolioPaginationResponseDTO;
+}

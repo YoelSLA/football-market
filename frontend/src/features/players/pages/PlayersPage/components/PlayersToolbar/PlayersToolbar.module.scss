@@ -1,0 +1,64 @@
+@use "@/styles/abstracts" as ds;
+
+.playersToolbar {
+	// 3. 🧩 Layout
+	display: grid;
+	gap: 10px;
+
+	// 4. 📦 Box Model
+	padding-bottom: 10px;
+	&__heading {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 8px;
+		h1 {
+			// 4. 📦 Box Model
+			margin: 0;
+
+			// 5. 🔤 Typography
+			font-size: 22px;
+		}
+
+		> span {
+			// 4. 📦 Box Model
+			padding: 4px 10px;
+
+			// 5. 🔤 Typography
+			font-size: 11px;
+
+			// 6. 🎨 Visual
+			border-radius: 16px;
+			background-color: ds.$surface-nav-active;
+		}
+	}
+
+	&__search {
+		// 4. 📦 Box Model
+		min-width: 200px;
+		width: 50%;
+		margin-left: auto;
+	}
+
+	&__optionsError {
+		button {
+			// 4. 📦 Box Model
+			padding: 7px 12px;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-nav-active;
+			color: ds.$accent-nav;
+			border: 1px solid ds.$accent-nav;
+			border-radius: 5px;
+
+			// 7. ⚙️ Behavior
+			cursor: pointer;
+			&:focus-visible {
+				// 6. 🎨 Visual
+				outline: 2px solid ds.$focus-ring-dark;
+				outline-offset: 3px;
+			}
+		}
+	}
+}

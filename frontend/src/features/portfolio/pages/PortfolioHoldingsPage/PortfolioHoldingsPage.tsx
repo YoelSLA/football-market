@@ -1,10 +1,10 @@
 import { PageLayout } from "@/app/layouts";
 import { usePortfolioHoldingsPage } from "@/features/portfolio/hooks";
-import PortfolioHoldingsContent from "./PortfolioHoldingsContent";
-import PortfolioHoldingsHeader from "./PortfolioHoldingsHeader";
+import PortfolioHoldingsContent from "./components/PortfolioHoldingsContent";
+import PortfolioHoldingsHeader from "./components/PortfolioHoldingsHeader";
+import PortfolioHoldingsPagination from "./components/PortfolioHoldingsPagination";
+import PortfolioPositionDetail from "./components/PortfolioPositionDetail";
 import styles from "./PortfolioHoldingsPage.module.scss";
-import PortfolioHoldingsPagination from "./PortfolioHoldingsPagination";
-import PortfolioPositionDetail from "./PortfolioPositionDetail";
 
 export default function PortfolioHoldingsPage() {
 	const page = usePortfolioHoldingsPage();
@@ -13,7 +13,7 @@ export default function PortfolioHoldingsPage() {
 	const totalPages = data?.pagination.totalPages ?? 0;
 	const showPagination = totalPages > 0;
 
-	const footer = showPagination ? (
+	const pagination = showPagination ? (
 		<PortfolioHoldingsPagination
 			page={page.selectedPage}
 			totalPages={totalPages}
@@ -24,35 +24,43 @@ export default function PortfolioHoldingsPage() {
 	) : undefined;
 
 	return (
-		<div className={styles.portfolioHoldings} aria-busy={page.isLoading}>
-			<PageLayout
-				header={
-					data && (
+		<PageLayout>
+			<div className={styles.portfolioHoldings} aria-busy={page.isLoading}>
+				{data && (
+					<div className={styles.portfolioHoldings__header}>
 						<PortfolioHoldingsHeader
 							filter={page.filter}
 							onFilterChange={page.selectFilter}
 							totalElements={data.pagination.totalElements}
 						/>
-					)
-				}
-				footer={footer}
-			>
-				<PortfolioHoldingsContent
-					isLoading={page.isLoading}
-					errorMessage={page.errorMessage}
-					positions={data?.positions ?? []}
-					filter={page.filter}
-					onRetry={page.retry}
-					onOpenDetail={page.openDetail}
-				/>
-			</PageLayout>
-			{page.selectedPosition && (
-				<PortfolioPositionDetail
-					key={page.selectedPosition.playerId}
-					position={page.selectedPosition}
-					onClose={page.closeDetail}
-				/>
-			)}
-		</div>
+					</div>
+				)}
+
+				<div className={styles.portfolioHoldings__scrollRegion}>
+					<PortfolioHoldingsContent
+						isLoading={page.isLoading}
+						errorMessage={page.errorMessage}
+						positions={data?.positions ?? []}
+						filter={page.filter}
+						onRetry={page.retry}
+						onOpenDetail={page.openDetail}
+					/>
+				</div>
+
+				{pagination && (
+					<div className={styles.portfolioHoldings__pagination}>
+						{pagination}
+					</div>
+				)}
+
+				{page.selectedPosition && (
+					<PortfolioPositionDetail
+						key={page.selectedPosition.playerId}
+						position={page.selectedPosition}
+						onClose={page.closeDetail}
+					/>
+				)}
+			</div>
+		</PageLayout>
 	);
 }

@@ -3,38 +3,54 @@
 .homePage {
 	/* Ocupa el alto disponible dentro de AppLayout en vez del viewport
 	   completo, para no quedar recortado por el Navbar. */
-	min-height: 100%;
+	// 3. 🧩 Layout
 	display: grid;
 	place-items: center;
-	background: ds.$surface-home;
+
+	// 4. 📦 Box Model
+	min-height: 100%;
 	padding: ds.$space-sm;
 
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page-home;
 	&__card {
-		width: min(100%, 36rem);
+		// 3. 🧩 Layout
 		display: grid;
 		justify-items: start;
 		gap: 1.5rem;
+
+		// 4. 📦 Box Model
+		width: min(100%, 36rem);
 		padding: clamp(1.5rem, 6vw, 4rem);
+
+		// 6. 🎨 Visual
 		border-radius: 1.5rem;
-		background: ds.$surface-card;
-		color: ds.$text-on-auth;
+		background-color: ds.$surface-card;
+		color: ds.$text-auth;
 	}
 
 	&__brand {
+		// 5. 🔤 Typography
 		font-size: .8rem;
 		letter-spacing: .12em;
 		font-weight: 800;
 	}
 
 	&__badge {
-		background: ds.$surface-success;
+		// 4. 📦 Box Model
+		padding: .4rem .8rem;
+
+		// 5. 🔤 Typography
+		font-size: .85rem;
+
+		// 6. 🎨 Visual
+		background-color: ds.$surface-success;
 		color: ds.$state-success-strong;
 		border-radius: 2rem;
-		padding: .4rem .8rem;
-		font-size: .85rem;
 	}
 
 	&__actions {
+		// 3. 🧩 Layout
 		display: flex;
 		flex-wrap: wrap;
 		gap: .75rem;
@@ -42,22 +58,31 @@
 
 	&__playersLink,
 	&__logout {
+		// 4. 📦 Box Model
 		padding: .85rem 1.5rem;
-		border: 0;
-		border-radius: .6rem;
+
+		// 5. 🔤 Typography
 		font: inherit;
 		font-weight: 700;
 		text-decoration: none;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: .6rem;
+
+		// 7. ⚙️ Behavior
 		cursor: pointer;
 	}
 
 	&__playersLink {
-		background: ds.$action-primary;
+		// 6. 🎨 Visual
+		background-color: ds.$action-primary;
 		color: ds.$text-inverse;
 	}
 
 	&__logout {
-		background: ds.$surface-secondary-action;
-		color: ds.$text-secondary-action;
+		// 6. 🎨 Visual
+		background-color: ds.$surface-secondary-action;
+		color: ds.$text-action-secondary;
 	}
 }

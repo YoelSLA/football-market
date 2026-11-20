@@ -1,0 +1,137 @@
+@use "@/styles/abstracts" as ds;
+
+.cancelModal {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-xs;
+	padding: ds.$space-sm;
+	width: 100%;
+	box-sizing: border-box;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: ds.$space-xs;
+		font-size: 13px;
+		line-height: 1.4;
+		color: ds.$text-body-on-dark;
+
+		p {
+			margin: 0;
+		}
+	}
+
+	&__details {
+		list-style: none;
+		margin: 0;
+		padding: 10px 14px;
+		border-radius: 6px;
+		border: 1px solid ds.$border-panel;
+		background-color: ds.$surface-card-subtle;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+
+		li {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			font-size: 12px;
+
+			span {
+				color: ds.$text-label-on-dark;
+				font-weight: 500;
+			}
+
+			strong {
+				color: ds.$text-value-on-dark;
+				font-weight: 600;
+				font-variant-numeric: tabular-nums;
+			}
+		}
+	}
+
+	&__warning {
+		padding: 8px 12px;
+		border-radius: 6px;
+		border-left: 3px solid ds.$state-caution;
+		background-color: ds.$surface-caution-subtle;
+		color: ds.$state-caution;
+		font-size: 11px;
+		line-height: 1.4;
+	}
+
+	&__footer {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: ds.$space-2xs;
+		padding-top: ds.$space-xs;
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__cancelBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 36px;
+		padding: 0 14px;
+		border-radius: 6px;
+		border: 1px solid ds.$border-panel-mid;
+		background-color: ds.$surface-transparent;
+		color: ds.$text-body-on-dark;
+		font-size: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.15s ease, border-color 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background-color: ds.$surface-glass-interactive;
+			border-color: ds.$border-strong;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+
+	&__confirmBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 36px;
+		padding: 0 16px;
+		border-radius: 6px;
+		border: 1px solid ds.$state-error-border;
+		background-color: ds.$state-error;
+		color: ds.$text-primary-on-dark;
+		font-size: 12px;
+		font-weight: 700;
+		cursor: pointer;
+		transition: opacity 0.15s ease;
+
+		&:hover:not(:disabled) {
+			opacity: 0.9;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+}

@@ -25,9 +25,14 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.MarketTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.TestcontainersConfiguration;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -147,6 +152,26 @@ class TokenListingServiceTest {
     }
 
     @Test
+    @DisplayName("La consulta paginada de publicaciones propias devuelve métricas, orden y página")
+    void consultaPaginadaPropias() {
+      // Arrange
+      TokenListing listing1 =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 2));
+      TokenListing listing2 =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 3));
+      // Act
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          listingService.mine(seller.getEmail(), null, 0, 10, "NEWEST");
+      // Assert
+      assertThat(page.summary().activeOrders()).isGreaterThanOrEqualTo(2);
+      assertThat(page.summary().activeTokens()).isGreaterThanOrEqualTo(5);
+      assertThat(page.content())
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
+          .contains(listing2.getId(), listing1.getId());
+      assertThat(page.totalElements()).isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
     @DisplayName("Un tercero no obtiene detalle de una publicación ya vendida")
     void ocultaPublicacionCerrada() {
       // Arrange
@@ -167,11 +192,31 @@ class TokenListingServiceTest {
   @Autowired private TokenListingService listingService;
   @Autowired private BuyOrderService buyService;
   @Autowired private MarketTestData market;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @MockitoBean private QuoteSource quotes;
   @MockitoBean private java.time.Clock marketClock;
   private User seller;
   private User superuser;
   private Player player;
+
+  @Test
+  @DisplayName("Rechaza publicar una venta si la última extracción no tiene métricas")
+  void rejectsSaleWhenLatestMetricsAreEmpty() {
+    // Arrange
+    statistics.row(
+        player.getId(),
+        LocalDate.of(2026, 10, 18),
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of());
+    // Act / Assert
+    assertThatThrownBy(
+            () ->
+                listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 1)))
+        .isInstanceOf(PlayerNotVisibleException.class);
+  }
 
   @BeforeEach
   void arrange() {

@@ -1,0 +1,111 @@
+@use "@/styles/abstracts" as ds;
+
+.toast {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	&__header {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	&__title {
+		// 5. 🔤 Typography
+		font-size: 13px;
+		font-weight: 700;
+		line-height: 1.2;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-gain;
+
+		&_error {
+			font-size: 13px;
+			font-weight: 700;
+			line-height: 1.2;
+			color: ds.$state-error;
+		}
+	}
+
+	&__badge {
+		// 4. 📦 Box Model
+		padding: 1px 7px;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-gain-subtle;
+		border-radius: 4px;
+		background-color: ds.$surface-control-active;
+		color: ds.$accent-gain;
+	}
+
+	&__primary {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 13px;
+		line-height: 1.35;
+		color: ds.$text-title-on-dark;
+
+		strong {
+			font-weight: 700;
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__subtext {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 11.5px;
+		line-height: 1.3;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__meta {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		margin-top: 2px;
+
+		// 5. 🔤 Typography
+		font-size: 11.5px;
+		line-height: 1.3;
+		color: ds.$text-label-on-dark;
+
+		strong {
+			font-weight: 700;
+			color: ds.$accent-highlight;
+		}
+	}
+
+	&__dot {
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__message {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 12.5px;
+		line-height: 1.4;
+		color: ds.$text-title-on-dark;
+	}
+}

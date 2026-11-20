@@ -1,24 +1,32 @@
 @use "@/styles/abstracts" as ds;
 
 .navbarBrand {
+	// 3. 🧩 Layout
 	justify-self: start;
 	display: inline-flex;
 	align-items: center;
 	flex-shrink: 0;
 	gap: ds.$space-xs;
-	color: ds.$text-inverse;
+
+	// 5. 🔤 Typography
 	font-size: 18px;
 	font-weight: 700;
 	white-space: nowrap;
 	text-decoration: none;
-	transition: color 0.18s ease;
 
+	// 6. 🎨 Visual
+	color: ds.$text-inverse;
+
+	// 8. ✨ Animation
+	transition: color 0.18s ease;
 	&:hover {
-		color: ds.$accent-finance-cyan;
+		// 6. 🎨 Visual
+		color: ds.$accent-highlight;
 	}
 
 	&:focus-visible {
-		outline: 2px solid ds.$focus-ring-on-dark;
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
 		outline-offset: 3px;
 	}
 }

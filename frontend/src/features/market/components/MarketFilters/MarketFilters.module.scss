@@ -1,112 +1,151 @@
 @use "@/styles/abstracts" as ds;
 
 .marketFilters {
+	// 2. 📍 Positioning
 	position: relative;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
 	min-width: 0;
 	min-height: 0;
 	padding: 1rem;
-	padding-bottom: 1.5rem;
-	border: 1px solid ds.$border-finance;
-	border-radius: .65rem;
-	background: linear-gradient(125deg, rgba(ds.$surface-finance-panel-from, .7), rgba(ds.$surface-finance-panel-to, .6));
-	color: ds.$text-portfolio-label;
 
-	&__mobile {
-		display: none;
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: .65rem;
+	background-color: ds.$surface-panel-from;
+	color: ds.$text-label-on-dark;
+
+	&__desktop {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
 	}
 
 	&__heading {
+		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: .4rem;
 
+		// 4. 📦 Box Model
+		min-height: 22px;
+
 		h2 {
+			// 3. 🧩 Layout
 			display: flex;
 			align-items: center;
 			gap: .65rem;
-			font-size: 1.05rem;
-			color: ds.$text-portfolio-title;
+
+			// 5. 🔤 Typography
+			font-size: .9rem;
+
+			// 6. 🎨 Visual
+			color: ds.$text-title-on-dark;
 		}
 
 		svg {
-			color: ds.$accent-finance-cyan;
+			// 6. 🎨 Visual
+			color: ds.$accent-highlight;
 		}
 	}
 
 	&__clear {
-		border: 0;
-		border-radius: 0;
+		// 4. 📦 Box Model
 		padding: 0;
-		background: transparent;
-		color: ds.$accent-finance-cyan;
+
+		// 5. 🔤 Typography
 		font-size: .75rem;
 		line-height: inherit;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: 0;
+		background-color: ds.$surface-transparent;
+		color: ds.$accent-highlight;
+
+		// 7. ⚙️ Behavior
 		cursor: pointer;
 
 		&:disabled {
+			// 7. ⚙️ Behavior
 			cursor: not-allowed;
 			opacity: 0.5;
 		}
 	}
 
+	&__summary {
+		// 4. 📦 Box Model
+		margin-left: auto;
+
+		// 5. 🔤 Typography
+		font-size: .75rem;
+		line-height: 1.2;
+
+		// 6. 🎨 Visual
+		color: ds.$text-muted-on-dark;
+	}
+
 	&__pending {
-		font-size: .7rem;
-		color: ds.$state-caution;
+		// 4. 📦 Box Model
 		margin: .55rem 0 .8rem;
+
+		// 5. 🔤 Typography
+		font-size: .7rem;
+
+		// 6. 🎨 Visual
+		color: ds.$state-caution;
 	}
+}
 
-	@media (min-width: 640px) and (max-height: 900px) {
-		padding: .75rem;
-		padding-bottom: 1.25rem;
+.marketFilters_official,
+.marketFilters_community {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	height: 180px;
+	min-height: 180px;
+	padding: 12px;
+
+	.marketFilters__desktop {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-height: 0;
 	}
+}
 
-	@media (max-width: 639px) {
-		padding: 0;
-		z-index: 2;
+.marketFilters_orders,
+.marketFilters_sell {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
 
-		&__desktop {
-			display: none;
-		}
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	padding: 12px;
 
-		&__mobile {
-			display: block;
+	.marketFilters__desktop {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 
-			summary {
-				display: flex;
-				align-items: center;
-				gap: .5rem;
-				padding: .5rem .7rem;
-				font-size: .85rem;
-				font-weight: 650;
-				color: ds.$text-portfolio-title;
-				cursor: pointer;
-
-				svg {
-					width: 1.1rem;
-					height: 1.1rem;
-					color: ds.$accent-finance-cyan;
-				}
-
-				span {
-					margin-left: auto;
-					font-size: .65rem;
-					font-weight: 400;
-					color: ds.$state-caution;
-				}
-			}
-		}
-
-		&__popover {
-			position: absolute;
-			top: calc(100% + .25rem);
-			inset-inline: 0;
-			padding: .75rem;
-			padding-bottom: 1.25rem;
-			border: 1px solid ds.$border-finance;
-			border-radius: .5rem;
-			background: ds.$surface-finance-panel-to;
-			box-shadow: 0 .5rem 1rem rgba(ds.$surface-finance-base, .5);
-		}
+		// 4. 📦 Box Model
+		min-height: 0;
 	}
 }

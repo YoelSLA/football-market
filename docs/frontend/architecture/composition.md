@@ -56,6 +56,8 @@ Descripción de la implementación: véase [Sesión y autenticación](implementa
 
 **MAY:** Una feature navega cuando lo necesita.
 
+**MAY:** Las Pages y sus Page Hooks coordinan directamente las consultas, estados e invalidaciones que correspondan a su propio caso de uso, consumiendo APIs públicas de otras features si es necesario, sin requerir adaptadores o envoltorios intermediarios en `app`.
+
 **MUST NOT:** Una feature ensambla o posee el router global.
 
 <a id="articulo-27"></a>
@@ -81,8 +83,7 @@ El catálogo de layouts y sus responsabilidades es el siguiente; su ubicación a
 | --- | --- |
 | `AuthLayout` | Composición visual de las páginas públicas de autenticación. |
 | `AuthGuard` | Guarda de rutas públicas y privadas según el estado de sesión, con `SessionChecking` mientras la sesión se resuelve. |
-| `PageLayout` | Contenedor de página con cabecera opcional, área de contenido y `aria-busy` durante la carga. |
-| `PaginatedPageLayout` | Especialización de `PageLayout` que compone `shared/components/Pagination` cuando existe paginación, reutilizando el componente compartido. |
+| `PageLayout` | Contenedor estructural común que envuelve la totalidad de cada Page privada, ocupa el espacio disponible y recibe únicamente `children`; la Page conserva su composición, scroll, paginación y semántica. |
 | `AppLayout` | Layout de las rutas privadas: navbar global y `Outlet`. |
 
 `shared/components` contiene los componentes reutilizables entre layouts y features: `Button`, `Field`, `Navbar` y `Pagination`. `Pagination` expone una ventana configurable mediante su propiedad `variant` y recibe `page`, `totalPages` y `onChange`; no conoce ninguna feature ni consulta datos.

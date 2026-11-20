@@ -85,15 +85,17 @@ public class Player {
   /** Actualiza datos válidos y asociación actual sin una liga independiente. */
   public void update(String name, Team team, String position) {
     requireText(name);
-    requireText(position);
+    requirePosition(position);
     if (team == null) {
       throw new InvalidPlayerException("El jugador requiere un equipo resuelto");
     }
     if (this.name == null || !PlayerPresentation.equivalent(this.name, name)) {
       this.name = name;
     }
-    if (this.position == null || !PlayerPresentation.equivalent(this.position, position)) {
-      this.position = position;
+    String normalizedPosition = position.strip();
+    if (this.position == null
+        || !PlayerPresentation.equivalent(this.position, normalizedPosition)) {
+      this.position = normalizedPosition;
     }
     this.associateTeam(team);
   }
@@ -186,6 +188,12 @@ public class Player {
 
   private static void requireText(String value) {
     if (value == null || value.isBlank()) {
+      throw new InvalidPlayerException("Los datos del jugador son obligatorios");
+    }
+  }
+
+  private static void requirePosition(String value) {
+    if (value == null || value.isBlank() || value.strip().equalsIgnoreCase("null")) {
       throw new InvalidPlayerException("Los datos del jugador son obligatorios");
     }
   }

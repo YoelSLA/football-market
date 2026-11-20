@@ -1,5 +1,8 @@
 package footballmarket.features.quote.domain.models;
 
+import footballmarket.features.quote.domain.enums.QuoteExecutionFailureReason;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
+import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
 import footballmarket.features.quote.domain.exceptions.InvalidQuoteException;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import jakarta.persistence.Column;
@@ -19,9 +22,9 @@ import lombok.Getter;
 /**
  * Corrida persistida del recálculo de cotizaciones.
  *
- * <p>Es un registro append-only: cada fecha de cotización admite como máximo una ejecución, de modo
- * que el resumen de una fecha es único e inequívoco y los parámetros aplicados quedan en un único
- * lugar, sin duplicarse en cada fila del historial.
+ * <p>Cada corrida conserva su propio resumen y parámetros. Una fecha UTC admite corridas manuales
+ * ilimitadas y como máximo una automática, sin duplicar parámetros en cada cotización. Un contexto
+ * sin cierre no constituye un resultado finalizado.
  */
 @Entity
 @Table(name = "quote_executions")
@@ -37,6 +40,10 @@ public class QuoteExecution {
 
   @Column(name = "quote_date", nullable = false, updatable = false)
   private LocalDate quoteDate;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "origin", nullable = false, updatable = false, length = 16)
+  private QuoteExecutionOrigin origin;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "strategy_name", nullable = false, updatable = false)
@@ -72,15 +79,16 @@ public class QuoteExecution {
   @Column(name = "started_at", nullable = false, updatable = false)
   private Instant startedAt;
 
-  @Column(name = "finished_at", nullable = false)
+  @Column(name = "finished_at")
   private Instant finishedAt;
 
   protected QuoteExecution() {}
 
   /**
-   * Crea el resumen persistido de una corrida de cotización.
+   * Crea un contexto abierto con contadores en cero o un resumen ya finalizado y consistente.
    *
    * @param quoteDate fecha de cotización de la corrida
+   * @param origin origen manual o automático de la corrida
    * @param strategyName estrategia aplicada por la corrida
    * @param strategyVersion versión de la estrategia aplicada
    * @param adjustmentFactor factor de ajuste aplicado
@@ -89,14 +97,15 @@ public class QuoteExecution {
    * @param pricedPlayers población cotizable evaluada
    * @param recomputedRows filas recalculadas escritas
    * @param carriedForwardRows filas arrastradas escritas
-   * @param notRepricedPlayers jugadores no repreciados
+   * @param notRepricedPlayers omitidos por cotización vigente de fecha posterior
    * @param failedPlayers jugadores con fallo individual
    * @param startedAt inicio de la corrida
-   * @param finishedAt fin de la corrida
+   * @param finishedAt fin de la corrida, nulo mientras el contexto está abierto
    * @throws InvalidQuoteException si algún valor persistido es inválido
    */
   public QuoteExecution(
       LocalDate quoteDate,
+      QuoteExecutionOrigin origin,
       ValuationStrategy strategyName,
       String strategyVersion,
       BigDecimal adjustmentFactor,
@@ -110,12 +119,12 @@ public class QuoteExecution {
       Instant startedAt,
       Instant finishedAt) {
     if (quoteDate == null
+        || origin == null
         || strategyName == null
         || strategyVersion == null
         || adjustmentFactor == null
         || variationCap == null
-        || startedAt == null
-        || finishedAt == null) {
+        || startedAt == null) {
       throw new InvalidQuoteException("La ejecución de cotización requiere contexto completo");
     }
     if (adjustmentFactor.compareTo(new BigDecimal("0.10")) < 0
@@ -136,7 +145,24 @@ public class QuoteExecution {
         || failedPlayers < 0) {
       throw new InvalidQuoteException("Los contadores de la ejecución no pueden ser negativos");
     }
+    if ((finishedAt != null
+            && (finishedAt.isBefore(startedAt)
+                || pricedPlayers
+                    != (long) recomputedRows
+                        + carriedForwardRows
+                        + notRepricedPlayers
+                        + failedPlayers))
+        || (finishedAt == null
+            && (pricedPlayers != 0
+                || recomputedRows != 0
+                || carriedForwardRows != 0
+                || notRepricedPlayers != 0
+                || failedPlayers != 0))) {
+      throw new InvalidQuoteException(
+          "Los contadores y el cierre de la ejecución son inconsistentes");
+    }
     this.quoteDate = quoteDate;
+    this.origin = origin;
     this.strategyName = strategyName;
     this.strategyVersion = strategyVersion;
     this.adjustmentFactor = adjustmentFactor;
@@ -151,7 +177,19 @@ public class QuoteExecution {
     this.finishedAt = finishedAt;
   }
 
-  /** Completa los resultados de una corrida previamente reservada para su fecha. */
+  /** Deriva el resultado exclusivamente de los contadores persistidos. */
+  public QuoteExecutionResult result() {
+    this.requireFinished();
+    return this.failedPlayers == 0 ? QuoteExecutionResult.SUCCESS : QuoteExecutionResult.FAILED;
+  }
+
+  /** Devuelve un motivo cerrado solo cuando hubo fallos individuales. */
+  public QuoteExecutionFailureReason failureReason() {
+    this.requireFinished();
+    return this.failedPlayers == 0 ? null : QuoteExecutionFailureReason.INDIVIDUAL_PLAYER_FAILURES;
+  }
+
+  /** Completa una sola vez los resultados disjuntos de una corrida en curso. */
   public void complete(
       int pricedPlayers,
       int recomputedRows,
@@ -159,7 +197,10 @@ public class QuoteExecution {
       int notRepricedPlayers,
       int failedPlayers,
       Instant finishedAt) {
-    if (pricedPlayers < 0
+    if (this.finishedAt != null
+        || pricedPlayers
+            != (long) recomputedRows + carriedForwardRows + notRepricedPlayers + failedPlayers
+        || pricedPlayers < 0
         || recomputedRows < 0
         || carriedForwardRows < 0
         || notRepricedPlayers < 0
@@ -174,5 +215,11 @@ public class QuoteExecution {
     this.notRepricedPlayers = notRepricedPlayers;
     this.failedPlayers = failedPlayers;
     this.finishedAt = finishedAt;
+  }
+
+  private void requireFinished() {
+    if (this.finishedAt == null) {
+      throw new InvalidQuoteException("La ejecución todavía no tiene un resumen finalizado");
+    }
   }
 }

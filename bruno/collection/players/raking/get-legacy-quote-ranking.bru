@@ -1,0 +1,19 @@
+meta {
+  name: Consultar ranking clásico por cotización
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/players/ranking
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+headers {
+  accept: application/json
+}

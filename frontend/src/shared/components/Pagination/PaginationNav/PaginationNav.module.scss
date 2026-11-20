@@ -1,0 +1,51 @@
+.nav {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	width: var(--pagination-control-size);
+	height: var(--pagination-control-size);
+	min-height: var(--pagination-control-size);
+	padding: 0;
+
+	// 5. 🔤 Typography
+	line-height: 1;
+
+	// 6. 🎨 Visual
+	border: 1px solid var(--pagination-control-border);
+	border-radius: var(--pagination-control-radius);
+	background-color: var(--pagination-control-background);
+	color: var(--pagination-control-color);
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+
+	// 8. ✨ Animation
+	transition:
+		background-color 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease;
+	&:hover:not(:disabled) {
+		// 6. 🎨 Visual
+		background-color: var(--pagination-control-hover-background-color);
+		border-color: var(--pagination-control-hover-border);
+		color: var(--pagination-control-hover-color);
+	}
+
+	&:disabled {
+		// 6. 🎨 Visual
+		opacity: var(--pagination-disabled-opacity);
+
+		// 7. ⚙️ Behavior
+		cursor: not-allowed;
+	}
+
+	&:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid var(--pagination-focus-ring);
+		outline-offset: 1px;
+	}
+}

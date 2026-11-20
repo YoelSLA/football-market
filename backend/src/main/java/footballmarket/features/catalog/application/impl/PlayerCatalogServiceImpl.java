@@ -207,7 +207,10 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
                             option.name().toLowerCase(Locale.ROOT))
                     .thenComparingLong(PlayerCatalogFilters.TeamOption::id))
             .toList(),
-        this.players.findCatalogPositions().stream().sorted(textOrder).toList(),
+        this.players.findCatalogPositions().stream()
+            .filter(pos -> pos != null && !pos.isBlank() && !pos.strip().equalsIgnoreCase("null"))
+            .sorted(textOrder)
+            .toList(),
         this.players.findCatalogNationalities().stream().sorted(textOrder).toList());
   }
 

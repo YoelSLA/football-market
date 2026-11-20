@@ -34,7 +34,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [X] T003 [P] Add "Vender tokens" tab in navigation in frontend/src/app/navigation/sections.ts (path /market/sell)
+- [X] T003 [P] Add "Publicar venta" tab in navigation in frontend/src/app/navigation/sections.ts (path /market/sell)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -138,6 +138,23 @@
 - [X] T029 [P] Extend useMarketToast with the in-scope transient notifySellSuccess toast (cantidad, listingId, precio unitario, importe total, expiresAt efectivos) in frontend/src/features/market/hooks/useMarketToast.ts per spec.md FR-F09 and research.md decision 10 (no persistent/external notifications, separate hook, or new dependencies)
 - [ ] T030 [P] Validate against quickstart.md manual scenarios (US1-US4): backend cotizaciones reales, JWT de usuario no superusuario, tenencia de jugador visible; resultados y tiempos registrados con evidencia observada (no pruebas automatizadas, frontend exento) in specs/021-publish-token-sales-frontend/quickstart.md
 - [ ] T031 [P] Confirm fidelity to mockups 07 (`referencias-imagenes/07-mercado-vender.png`) and 08 (`referencias-imagenes/08-mercado-vender-modal-abierto.png`) as layout/component/interaction reference per spec.md Assumptions (imágenes guías de disposición, no saldos reales)
+
+---
+
+## Phase 9: Evolution / Refactor (Issue #107) - Estandarización de Navegación, Header, Layout y Componentización
+
+**Goal**: Unificar la pantalla con los estándares visuales de Mercado (SPEC-019/030), renombrando «Vender tokens» a «Publicar venta», integrando `MarketPageHeader` (70px) con métricas estándar, barra horizontal de filtros `MarketFilters`, rediseño de cards, componentización de `SellTokenModal` bajo SRP, unificación de filtros (liga, equipo con escudos y posición) con Mercado Oficial, toast financiero dark-theme en `bottom-right`, diferenciación de tokens libres vs reservados en card y cumplimiento del viewport desktop de 1920 × 913 px.
+
+- [X] T032 [Issue #107] Actualizar etiqueta de navegación a «Publicar venta» en `frontend/src/app/navigation/sections.ts` y referencias asociadas en la UI
+- [X] T033 [Issue #107] Unificar cabecera con `MarketPageHeader` y `MarketHeaderMetric` (70px) para total, disponibles y reservados en `frontend/src/features/market/pages/MarketSellPage/components/MarketSellHeader/`
+- [X] T034 [Issue #107] Reemplazar filtro vertical lateral por barra horizontal `MarketFilters` con `SellMarketFilterFields` modernizado (búsqueda, liga, posición, disponibilidad, ordenamiento unificado)
+- [X] T035 [Issue #107] Refactorizar layout de `MarketSellPage` y `MarketSellCatalog` a estructura vertical sin scroll global y eliminar media queries mobile
+- [X] T036 [Issue #107] Validación de higiene y compilación (`npm run biome:check` y `npm run build`)
+- [X] T037 [Issue #107] Rediseñar card de tenencia para venta con badges de posición/país, cotización anterior, y paginación unificada idéntica a Mercado Oficial
+- [X] T038 [Issue #107] Componentizar `SellTokenModal` bajo SRP (subcomponentes `SellModalHeader`, `SellModalHoldingInfo`, `SellModalEstimation`, `SellModalSuccess`, `SellModalFooter`) y rediseñar `TokenQuantityStepper` eliminando fondos blancos y bordes nativos
+- [X] T039 [Issue #107] Unificar filtros con Mercado Oficial: selector de ligas con logos y searchable, posiciones con `Todas`, y selector de equipos con escudos en cascada por liga
+- [X] T040 [Issue #107] Reposicionar toasts a `bottom-right` con dark mode estilizado y componente estructurado `MarketToastContent` para compras, ventas y cancelaciones
+- [X] T041 [Issue #107] Diferenciar tokens libres de tokens en venta (reservados) en la card de venta y proveer navegación directa a «Mis órdenes» (`/market/orders?search=<player>&status=ACTIVE`)
 
 ---
 

@@ -5,7 +5,8 @@ Endpoints de publicación, consulta y cancelación de offerings de tokens.
 | Método | Ruta | Propósito |
 |---|---|---|
 | POST | `/api/orders/sell` | Publicar tokens que el usuario posee |
-| GET | `/api/listings` | Listar publicaciones disponibles en el mercado |
+| GET | `/api/listings` | Listar publicaciones disponibles en el mercado (opcionalmente por jugador) |
+| GET | `/api/market/p2p` | Catálogo P2P paginado con publicaciones activas agrupadas por jugador |
 | GET | `/api/listings/mine` | Listar las publicaciones del usuario autenticado |
 | GET | `/api/listings/{id}` | Consultar el detalle de una publicación |
 | POST | `/api/listings/{id}/cancel` | Cancelar una publicación propia y vigente |
@@ -119,17 +120,18 @@ completa está en [buy-listing.md](buy-listing.md#vencimiento-y-nuevas-reservas-
 ## GET /api/listings
 
 Mercado público: publicaciones **efectivamente activas y vigentes de otros usuarios** sobre jugadores
-visibles.
+visibles. Admite filtrar por un jugador específico mediante el query parameter opcional `playerId`.
 
 ### Request
 
 ```http
-GET /api/listings
+GET /api/listings?playerId=7821
 Authorization: Bearer <JWT>
 ```
 
-Sin parámetros ni cuerpo. Admite paginación en una fase posterior si el volumen lo justificaría; no
-es parte de esta feature.
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `playerId` | integer (Long) | No | Identificador opcional del jugador. Si se omite, retorna todas las ofertas del mercado. Si se especifica, retorna solo las ofertas de ese jugador ordenadas por menor precio unitario y antigüedad. |
 
 ### Response 200 OK
 
@@ -138,6 +140,75 @@ es parte de esta feature.
   "listings": [
     {
       "listingId": 25,
+      "sellerId": 12,
+      "playerId": 7821,
+      "quantity": 5,
+      "unitPrice": 100,
+      "totalAmount": 500,
+      "status": "ACTIVE",
+      "createdAt": "2026-10-17T15:30:00.123Z",
+      "expiresAt": "2026-10-18T15:30:00.123Z"
+    }
+  ]
+}
+```
+
+---
+
+## GET /api/market/p2p
+
+Catálogo del Mercado P2P: consulta paginada de jugadores con ofertas activas en la comunidad con agregación en servidor (`listingCount`, `availableQuantity`, `minimumUnitPrice`), filtros deportivos y financieros, ordenamiento determinista y rango global de precios.
+
+### Request
+
+```http
+GET /api/market/p2p?page=0&size=8&sort=price,asc&search=Julian&leagueId=1&position=DEL
+Authorization: Bearer <JWT>
+```
+
+| Parámetro | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `page` | integer | No | Índice de página (base 0, defecto 0) |
+| `size` | integer | No | Elementos por página (1 a 100, defecto 8) |
+| `sort` | string | No | Criterio y dirección: `price,asc`, `price,desc`, `quantity,desc`, `name,asc` |
+| `search` | string | No | Búsqueda por coincidencia en nombre de jugador o club |
+| `leagueId` | integer | No | Identificador de liga deportiva |
+| `teamId` | integer | No | Identificador de equipo o club |
+| `position` | string | No | Posición deportiva |
+| `minPrice` | integer | No | Precio unitario mínimo en centésimas |
+| `maxPrice` | integer | No | Precio unitario máximo en centésimas |
+
+### Response 200 OK
+
+```json
+{
+  "content": [
+    {
+      "id": 7821,
+      "name": "Julian Alvarez",
+      "position": "DEL",
+      "nationality": "Argentina",
+      "teamId": 10,
+      "teamName": "Club Atlético de Madrid",
+      "teamBadgeUrl": null,
+      "leagueId": 1,
+      "leagueName": "LaLiga",
+      "imageUrl": "https://images.footballmarket.com/players/7821.png",
+      "listingCount": 3,
+      "availableQuantity": 25,
+      "minimumUnitPrice": 1500
+    }
+  ],
+  "page": 0,
+  "size": 8,
+  "totalElements": 1,
+  "totalPages": 1,
+  "priceRange": {
+    "min": 1500,
+    "max": 5000
+  }
+}
+```
       "sellerId": 12,
       "playerId": 7821,
       "quantity": 5,

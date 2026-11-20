@@ -3,9 +3,12 @@ package footballmarket.support;
 import footballmarket.features.catalog.domain.enums.ExternalProvider;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteOrigin;
 import footballmarket.features.quote.domain.models.PlayerQuote;
+import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
+import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
@@ -38,18 +41,21 @@ public class QuoteTestData {
   private final PlayerStatisticsExtractionRunRepository runs;
   private final PlayerStatisticsRunItemRepository items;
   private final PlayerRepository players;
+  private final QuoteExecutionRepository executions;
 
   public QuoteTestData(
       PlayerQuoteRepository quotes,
       PlayerStatisticsRepository statistics,
       PlayerStatisticsExtractionRunRepository runs,
       PlayerStatisticsRunItemRepository items,
-      PlayerRepository players) {
+      PlayerRepository players,
+      QuoteExecutionRepository executions) {
     this.quotes = quotes;
     this.statistics = statistics;
     this.runs = runs;
     this.items = items;
     this.players = players;
+    this.executions = executions;
   }
 
   /**
@@ -157,7 +163,8 @@ public class QuoteTestData {
             "v1",
             effectiveDate,
             QuoteOrigin.RECOMPUTED,
-            calculatedAt));
+            calculatedAt,
+            execution(effectiveDate, calculatedAt)));
   }
 
   /** Persiste la fila arrastrada del jugador, que repite su precio vigente. */
@@ -176,7 +183,27 @@ public class QuoteTestData {
             "v1",
             null,
             QuoteOrigin.CARRIED_FORWARD,
-            calculatedAt));
+            calculatedAt,
+            execution(effectiveDate, calculatedAt)));
+  }
+
+  private QuoteExecution execution(LocalDate date, Instant instant) {
+    return executions.save(
+        new QuoteExecution(
+            date,
+            QuoteExecutionOrigin.MANUAL,
+            ValuationStrategy.POSITIONAL_PERFORMANCE,
+            "v1",
+            new BigDecimal("0.10"),
+            new BigDecimal("0.10"),
+            1L,
+            0,
+            0,
+            0,
+            0,
+            0,
+            instant,
+            instant));
   }
 
   /**

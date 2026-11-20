@@ -1,0 +1,28 @@
+@use "@/styles/abstracts" as ds;
+
+.sellCatalog {
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-height: 0;
+	min-width: 0;
+	padding-right: .2rem;
+
+	// 7. ⚙️ Behavior
+	overflow: auto;
+	overscroll-behavior: contain;
+	scrollbar-gutter: stable;
+
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: .85rem;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+	}
+}

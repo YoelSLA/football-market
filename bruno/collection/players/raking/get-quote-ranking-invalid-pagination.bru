@@ -1,0 +1,24 @@
+meta {
+  name: Rechazar paginación inválida de ranking por cotización
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/rankings/quote
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: -1
+  size: 101
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+headers {
+  accept: application/json
+}

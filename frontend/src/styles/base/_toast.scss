@@ -1,0 +1,110 @@
+@use "@/styles/abstracts" as ds;
+
+:root {
+	--toastify-color-dark: #{ds.$surface-panel-to};
+	--toastify-text-color-dark: #{ds.$text-title-on-dark};
+	--toastify-color-progress-dark: #{ds.$accent-gain};
+	--toastify-color-progress-error: #{ds.$state-error};
+}
+
+.Toastify__toast-container--bottom-right {
+	// 2. 📍 Positioning
+	bottom: 1.5rem;
+	right: 1.5rem;
+	z-index: 9999;
+
+	// 4. 📦 Box Model
+	width: min(420px, calc(100vw - 2rem));
+	padding: 0;
+}
+
+.Toastify__toast {
+	// 4. 📦 Box Model
+	min-height: 60px;
+	padding: 12px 14px;
+	border-radius: 10px;
+
+	// 5. 🔤 Typography
+	font-family: inherit;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	background-color: ds.$surface-panel-to;
+	color: ds.$text-title-on-dark;
+	box-shadow: 0 10px 25px -5px ds.$shadow-black-modal, 0 8px 10px -6px ds.$shadow-black-deep;
+
+	&--success {
+		border-color: ds.$border-gain-subtle;
+	}
+
+	&--error {
+		border-color: ds.$state-error-border;
+	}
+}
+
+.Toastify__toast-body {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: flex-start;
+
+	// 4. 📦 Box Model
+	padding: 0;
+	margin: 0;
+	min-width: 0;
+}
+
+.Toastify__toast-icon {
+	// 3. 🧩 Layout
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	width: 22px;
+	height: 22px;
+	margin-top: 2px;
+	margin-inline-end: 12px;
+
+	svg {
+		fill: ds.$accent-gain;
+	}
+}
+
+.Toastify__toast--error .Toastify__toast-icon svg {
+	fill: ds.$state-error;
+}
+
+.Toastify__close-button {
+	// 4. 📦 Box Model
+	padding: 2px;
+	align-self: flex-start;
+
+	// 6. 🎨 Visual
+	color: ds.$text-label-on-dark;
+	opacity: 0.7;
+
+	// 7. ⚙️ Behavior
+	transition: opacity 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		color: ds.$text-title-on-dark;
+		opacity: 1;
+	}
+
+	svg {
+		width: 16px;
+		height: 16px;
+	}
+}
+
+.Toastify__progress-bar {
+	// 4. 📦 Box Model
+	height: 3px;
+
+	// 6. 🎨 Visual
+	background: ds.$accent-gain;
+
+	&--error {
+		background: ds.$state-error;
+	}
+}

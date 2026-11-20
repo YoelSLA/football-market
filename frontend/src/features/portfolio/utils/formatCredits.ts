@@ -12,5 +12,6 @@ const credits = new Intl.NumberFormat("es-AR", {
 export function formatCredits(value: number | null, compact = false): string {
 	if (value === null) return "—";
 	const amount = credits.format(value / 100);
-	return compact ? `${amount} cr.` : `${amount} créditos`;
+	if (compact) return `${amount} cr.`;
+	return `${amount} ${value === 100 ? "crédito" : "créditos"}`;
 }

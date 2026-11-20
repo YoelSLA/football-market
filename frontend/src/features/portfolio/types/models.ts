@@ -1,6 +1,17 @@
 export type PositionStatus = "OPEN" | "CLOSED";
 export type ValuationStatus = "VALUED" | "UNVALUED" | "NOT_APPLICABLE";
 export type PositionFilter = "ALL" | PositionStatus;
+export enum TransactionType {
+	BUY = "BUY",
+	SELL = "SELL",
+}
+
+export enum TransactionHistorySort {
+	NEWEST = "NEWEST",
+	OLDEST = "OLDEST",
+	AMOUNT_DESC = "AMOUNT_DESC",
+	AMOUNT_ASC = "AMOUNT_ASC",
+}
 
 /** Importes en centésimas; porcentajes en puntos porcentuales. */
 export interface PortfolioSummary {
@@ -65,4 +76,50 @@ export interface PortfolioQueryParams {
 	page: number;
 	size: number;
 	status?: PositionStatus;
+}
+
+/** Importes históricos en centésimas de crédito. */
+export interface TransactionHistoryEntry {
+	transactionId: number;
+	type: TransactionType;
+	player: TransactionPlayer;
+	quantity: number;
+	unitPrice: number;
+	totalAmount: number;
+	executedAt: string;
+}
+
+export interface TransactionPlayer {
+	id: number;
+	name: string;
+	imageUrl: string | null;
+	fallbackImageUrl: string | null;
+	team: { id: number; name: string };
+	league: { id: number; name: string };
+}
+
+export interface TransactionHistorySummary {
+	totalTransactions: number;
+	buyTransactions: number;
+	sellTransactions: number;
+	boughtTokens: number;
+	soldTokens: number;
+	purchasedVolume: number;
+	soldVolume: number;
+}
+
+export interface TransactionHistory {
+	summary: TransactionHistorySummary;
+	transactions: TransactionHistoryEntry[];
+	pagination: PortfolioPagination;
+}
+
+export interface TransactionHistoryQueryParams {
+	page: number;
+	size: number;
+	search?: string;
+	type?: TransactionType;
+	executedFrom?: string;
+	executedBefore?: string;
+	sort: TransactionHistorySort;
 }

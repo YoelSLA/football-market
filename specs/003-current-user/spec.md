@@ -22,13 +22,13 @@ Como cliente con una sesión válida, quiero consultar la identidad del usuario 
 
 **Why this priority**: Es el objetivo principal de la funcionalidad y permite que clientes como el frontend reconstruyan el contexto del usuario a partir de una sesión existente.
 
-**Independent Test**: Se puede probar con un usuario persistido y un JWT válido cuyo identificador de sujeto sea el email de ese usuario; al consultar `GET /api/auth/me` con `Authorization: Bearer <token>`, la respuesta debe contener exclusivamente el `id`, el `username`, el `email` y el `role` almacenados actualmente para ese usuario.
+**Independent Test**: Se puede probar con un usuario persistido y un JWT válido cuyo identificador de sujeto sea el email de ese usuario; al consultar `GET /api/auth/me` con `Authorization: Bearer <token>`, la respuesta debe contener exclusivamente la identidad persistida y el saldo vigente en sus representaciones compatible y precisa.
 
 **Acceptance Scenarios**:
 
-1. **Given** existe un usuario persistido y se dispone de un JWT válido y no expirado cuyo `sub` contiene su email, **When** el cliente solicita `GET /api/auth/me` con ese token, **Then** el sistema responde `200 OK` con el `id`, el `username`, el `email` y el `role` actuales del usuario persistido.
+1. **Given** existe un usuario persistido y se dispone de un JWT válido y no expirado cuyo `sub` contiene su email, **When** el cliente solicita `GET /api/auth/me` con ese token, **Then** el sistema responde `200 OK` con el `id`, el `username`, el `email`, el `role`, `availableCredits` y `availableCreditsCentimes` actuales del usuario persistido.
 2. **Given** un JWT válido identifica a un usuario persistido, **When** los datos persistidos de ese usuario difieren de cualquier dato adicional que pudiera estar contenido en el token, **Then** la respuesta utiliza exclusivamente el `id`, el `username`, el `email` y el `role` obtenidos del estado persistido actual.
-3. **Given** la consulta autenticada es exitosa, **When** el sistema construye la respuesta, **Then** el cuerpo contiene únicamente los campos `id`, `username`, `email` y `role`, sin contraseña ni otros datos del usuario.
+3. **Given** la consulta autenticada es exitosa, **When** el sistema construye la respuesta, **Then** el cuerpo contiene únicamente `id`, `username`, `email`, `role`, `availableCredits` y `availableCreditsCentimes`, sin contraseña ni otros datos del usuario.
 4. **Given** un usuario cuyo nombre de usuario se registró escrito en mayúsculas, **When** el cliente solicita `GET /api/auth/me`, **Then** la respuesta expone el nombre de usuario ya normalizado a minúsculas, tal como fue persistido.
 
 ---
@@ -64,8 +64,8 @@ Como responsable de la seguridad del sistema, quiero que solo una sesión válid
 - **FR-003**: El sistema MUST utilizar el email incluido en el `sub` del JWT válido como identidad para buscar al usuario en el estado persistido actual.
 - **FR-004**: El sistema MUST obtener la información de la respuesta desde el usuario persistido encontrado y MUST NOT limitarse a devolver datos extraídos directamente del JWT.
 - **FR-005**: Cuando el JWT sea válido, esté vigente y su identidad corresponda a un usuario persistido, el sistema MUST responder `200 OK`.
-- **FR-006**: La respuesta exitosa MUST contener exclusivamente el identificador del usuario en `id`, su nombre de usuario normalizado en `username`, su correo electrónico en `email` y su rol en `role`.
-- **FR-007**: El `id`, el `username`, el `email` y el `role` de la respuesta MUST corresponder al estado actual del mismo usuario persistido identificado por el `sub` del JWT.
+- **FR-006**: La respuesta exitosa MUST contener exclusivamente el identificador en `id`, el nombre normalizado en `username`, el correo en `email`, el rol en `role`, el saldo entero compatible en `availableCredits` y el saldo monetario preciso en centésimas en `availableCreditsCentimes`.
+- **FR-007**: Todos los campos de la respuesta MUST corresponder al estado actual del mismo usuario persistido identificado por el `sub` del JWT; `availableCreditsCentimes` MUST conservar la precisión persistida y `availableCredits` MUST mantenerse por compatibilidad.
 - **FR-008**: Si no se proporciona autenticación, el sistema MUST responder `401 Unauthorized`.
 - **FR-009**: Si el JWT es inválido o está expirado, el sistema MUST responder `401 Unauthorized`.
 - **FR-010**: Si el JWT es criptográficamente válido y vigente, pero su identidad no corresponde a un usuario existente, el sistema MUST considerar la solicitud no autenticada y responder `401 Unauthorized`.
@@ -75,15 +75,15 @@ Como responsable de la seguridad del sistema, quiero que solo una sesión válid
 
 ### Key Entities *(include if feature involves data)*
 
-- **Usuario**: Persona registrada y persistida en el sistema. Para esta funcionalidad son relevantes su identificador único, su nombre de usuario, su correo electrónico actual y su rol.
+- **Usuario**: Persona registrada y persistida en el sistema. Para esta funcionalidad son relevantes su identificador único, nombre de usuario, correo electrónico, rol y saldo disponible expresado canónicamente en centésimas.
 - **Sesión autenticada**: Contexto de una solicitud cuya identidad procede de un JWT válido y vigente. El sujeto del token referencia al usuario mediante su email, pero no sustituye la consulta del estado persistido.
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: El 100% de las consultas realizadas con un JWT válido, vigente y asociado a un usuario existente responden `200 OK` con el `id`, `username`, `email` y `role` actuales de ese usuario.
-- **SC-002**: El 100% de las respuestas exitosas contienen exactamente los cuatro campos permitidos, `id`, `username`, `email` y `role`, y cero datos adicionales o sensibles.
+- **SC-001**: El 100% de las consultas realizadas con un JWT válido, vigente y asociado a un usuario existente responden `200 OK` con su identidad y saldo actuales.
+- **SC-002**: El 100% de las respuestas exitosas contienen exactamente los seis campos permitidos y cero datos adicionales o sensibles; la representación en centésimas coincide exactamente con la persistencia.
 - **SC-003**: El 100% de las consultas sin autenticación, con JWT inválido, con JWT expirado o con identidad sin usuario persistido responden `401 Unauthorized` y no exponen información de usuario.
 - **SC-004**: Un cliente autenticado puede comprobar su sesión y recuperar su identidad básica mediante una única solicitud.
 - **SC-005**: Las pruebas de regresión confirman que el 100% de los comportamientos previamente aceptados de registro e inicio de sesión permanecen sin cambios.

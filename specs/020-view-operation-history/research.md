@@ -1,79 +1,19 @@
-# Investigación: Historial personal de operaciones (SPEC-020)
+# Research: Historial personal de operaciones (Backend)
 
-## Decisión 1 — Recurso HTTP personal
+**Estado**: Registro consolidado de decisiones técnicas vigentes.
+**Referencias normativas**: [spec.md](spec.md), [plan.md](plan.md) y [contracts/operation-history-api.md](contracts/operation-history-api.md).
 
-**Decision**: Exponer `GET /api/users/me/transactions`, sin path variable, query parameter ni body.
+---
 
-**Rationale**: Conserva la intención académica de `/users/:id/transactions`, reemplaza el selector
-inseguro por `me`, respeta el prefijo `/api/` y hace imposible consultar otra identidad desde el
-contrato. El JWT entrega el correo y el Service resuelve el usuario persistido.
+## 1. Decisiones arquitectónicas y de diseño
 
-**Alternatives considered**: `/api/users/{id}/transactions` se rechaza por FR-002; reutilizar
-`/api/portfolio/me` mezcla recursos distintos; `/api/transactions/me` es válido pero menos alineado
-con el recurso obligatorio de usuario.
-
-## Decisión 2 — Fuente e interpretación
-
-**Decision**: Leer una sola vez `MarketTransaction` por `buyer.id = :userId OR seller.id = :userId` y
-derivar `BUY` si el usuario es comprador o `SELL` si es vendedor.
-
-**Rationale**: La tabla ya representa cada operación confirmada una vez y conserva cantidad, precio,
-importe e instante históricos. SPEC-010 y SPEC-011 garantizan que comprador y vendedor sean
-distintos; esta consulta consume esa garantía para derivar un tipo inequívoco sin duplicar registros
-ni introducir otra fuente financiera.
-
-**Alternatives considered**: unir dos consultas puede duplicar o exigir mezcla posterior; persistir
-un tipo por usuario duplica información; reutilizar posiciones financieras agrega cálculos ajenos al
-historial y pierde la transacción como unidad.
-
-## Decisión 3 — Consulta, relaciones y orden
-
-**Decision**: Añadir al repositorio una consulta dedicada que cargue comprador, vendedor y jugador y
-ordene por `executedAt DESC, id DESC` en PostgreSQL.
-
-**Rationale**: Evita N+1, devuelve directamente el orden contractual y aprovecha los índices
-existentes por comprador y vendedor con fecha e identificador descendentes. La consulta vigente
-`findFinancialHistory` se mantiene porque su orden ascendente sirve a la reconstrucción contable.
-
-**Alternatives considered**: cambiar `findFinancialHistory` rompería a SPEC-015; ordenar en memoria
-consume recursos innecesarios; cargar el grafo completo del catálogo no aporta datos al contrato.
-
-## Decisión 4 — Límite transaccional
-
-**Decision**: Ejecutar el Service con `@Transactional(readOnly = true)`.
-
-**Rationale**: Cumple FR-015 y expresa que el caso de uso no escribe. Una única consulta obtiene una
-instantánea suficiente; no se requiere elevar el aislamiento ni coordinar varias fuentes.
-
-**Alternatives considered**: `REPEATABLE_READ` no aporta una garantía observable adicional para una
-sola lectura; operar sin límite explícito no documenta la garantía requerida.
-
-## Decisión 5 — Forma y unidades del contrato
-
-**Decision**: Responder un array JSON directo. Cada elemento contiene `transactionId`, `type`,
-`playerId`, `playerName`, `quantity`, `unitPrice`, `totalAmount` y `executedAt`; importes en centésimas
-enteras y fecha ISO-8601 con offset.
-
-**Rationale**: Son exactamente los ocho datos de FR-006, sin metadatos de paginación prohibidos. Los
-tipos preservan la representación persistida (`long`, `int`, `OffsetDateTime`) sin recalcular.
-
-**Alternatives considered**: un wrapper agrega estructura sin necesidad; decimales de créditos
-cambiarían la convención del mercado; incluir contrapartes expone datos no solicitados.
-
-## Decisión 6 — Cobertura de verificación
-
-**Decision**: Planificar pruebas de Repository para query y orden, Service para identidad/rol/vacío y
-Controller para contrato, JWT y serialización. No crear un E2E nuevo salvo que TASKS demuestre un
-journey crítico no cubierto.
-
-**Rationale**: Son los niveles más específicos definidos por `docs/backend/testing.md`; cubren query
-compleja, caso de uso y frontera HTTP sin duplicación.
-
-**Alternatives considered**: solo Controller no prueba persistencia; solo E2E dificulta localizar
-fallos y repite infraestructura; tests directos de Mapper están prohibidos por la norma vigente.
-
-## Clarificaciones técnicas resueltas
-
-No quedan marcadores `NEEDS CLARIFICATION`. La definición y validación de SLA de rendimiento queda
-fuera de SPEC-020 y se abordará como requisito transversal en el próximo sprint. El objetivo técnico
-de este diseño es una consulta de conjunto indexada, sin N+1.
+| Decisión | Justificación técnica | Alternativas descartadas |
+| --- | --- | --- |
+| **Recurso personal `/api/users/me/transactions`** | Obtener la identidad directamente del subject del JWT impide cualquier vector de suplantación o fuga de datos privados entre usuarios. | `/api/users/{id}/transactions` (inseguro); `/api/portfolio/me` (acoplamiento indebido de recursos). |
+| **Fuente de verdad única en `MarketTransaction`** | La tabla `market_transactions` ya registra cada operación confirmada de forma inmutable. La consulta deriva `BUY` o `SELL` según si el usuario es comprador o vendedor, sin crear registros redundantes. | Crear tabla paralela para historial; duplicar filas por transacción. |
+| **Consulta optimizada con fetch joins sin N+1** | La consulta de contenido precarga las asociaciones to-one (`buyer`, `seller`, `player`, `team`, `league`) en una sola sentencia SQL, paginando a nivel de base de datos. | Consultar el repositorio de jugadores por cada fila; paginar en memoria de la JVM. |
+| **Agregados calculados directamente en SQL** | La consulta de agregados (`OperationHistoryAggregate`) calcula sumas y conteos condicionales en el motor de base de datos sobre el conjunto filtrado, sin traer colecciones masivas a memoria. | Calcular agregados iterando en memoria; mantener tablas de agregados precalculadas. |
+| **Orden cerrado con desempates estables** | Se restringe el orden a cuatro opciones controladas (`NEWEST`, `OLDEST`, `AMOUNT_DESC`, `AMOUNT_ASC`), incorporando siempre desempates por fecha de ejecución e ID de transacción para asegurar paginación reproducible. | Permitir nombres de columna arbitrarios en la URL; omitir desempates deterministas. |
+| **Perfil actual del jugador en la lectura** | Nombre, imágenes, equipo y liga se resuelven desde el estado actual del catálogo. Los valores financieros (`quantity`, `unitPrice`, `totalAmount`, `executedAt`) se conservan estrictamente históricos. | Crear snapshots históricos redundantes de datos del jugador; congelar imágenes en la transacción. |
+| **Límite transaccional `@Transactional(readOnly = true)`** | Garantiza formalmente que el caso de uso es de solo lectura y permite al driver de PostgreSQL y a Hibernate optimizar las consultas sin sobrecarga de dirty checking. | Ejecutar sin transacción explícita; elevar innecesariamente el aislamiento. |
+| **Importes enteros en centésimas de crédito** | Preserva la convención de tipos enteros del sistema financiero del mercado (`long`), evitando errores de precisión asociados a coma flotante. | Usar `double` o `float`; convertir a decimales en el transporte backend. |

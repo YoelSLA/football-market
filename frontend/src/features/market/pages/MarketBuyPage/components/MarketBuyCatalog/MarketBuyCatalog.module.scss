@@ -1,0 +1,49 @@
+.buyCatalog {
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	min-height: 0;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+
+	&__grid {
+		// 3. 🧩 Layout
+		display: grid;
+		flex: 1;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-rows: repeat(2, 230px);
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+		min-height: 0;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
+
+	&__status {
+		// 2. 📍 Positioning
+		position: absolute;
+		clip: rect(0 0 0 0);
+		clip-path: inset(50%);
+
+		// 4. 📦 Box Model
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+		white-space: nowrap;
+	}
+}

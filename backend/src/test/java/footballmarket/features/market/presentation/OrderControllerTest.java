@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.market.application.BuyOrderService;
@@ -33,6 +32,7 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import footballmarket.support.TestFixtures;
 import io.jsonwebtoken.Jwts;
@@ -86,13 +86,14 @@ class OrderControllerTest {
   @MockitoBean
   private footballmarket.features.market.application.TokenListingService tokenListingService;
 
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
+    when(identityValidator.exists(BUYER_EMAIL)).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "
