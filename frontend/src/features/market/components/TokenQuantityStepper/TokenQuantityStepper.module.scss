@@ -66,8 +66,16 @@
 		justify-content: flex-end;
 		gap: .4rem;
 
+		// 4. 📦 Box Model
+		border: 0;
+		padding: 0;
+		margin: 0;
+
 		legend,
 		&Label {
+			// 4. 📦 Box Model
+			padding: 0 .4rem 0 0;
+
 			// 5. 🔤 Typography
 			font-size: .75rem;
 

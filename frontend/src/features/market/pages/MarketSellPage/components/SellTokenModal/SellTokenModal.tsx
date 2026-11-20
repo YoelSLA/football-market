@@ -17,7 +17,7 @@ import {
 	formatQuoteCalculatedAt,
 } from "@/features/market/utils";
 import { Button, Modal } from "@/shared/components";
-import { LoaderCircle, Tag } from "@/shared/icons";
+import { CheckCircle2, LoaderCircle, Tag, X } from "@/shared/icons";
 import styles from "./SellTokenModal.module.scss";
 
 interface Props {
@@ -71,6 +71,10 @@ export default function SellTokenModal(props: Props) {
 		ref(element);
 		props.initialFocusRef.current = element;
 	};
+
+	const quote = props.quote;
+	const isQuoteAvailable = props.quoteStatus === "available" && quote !== null;
+
 	return (
 		<Modal
 			isOpen={props.isOpen}
@@ -84,96 +88,199 @@ export default function SellTokenModal(props: Props) {
 		>
 			<section className={styles.sellModal}>
 				<header className={styles.sellModal__header}>
-					<Tag aria-hidden="true" />
-					<div>
-						<h2>Publicar venta</h2>
-						<p>Prepará la publicación para el mercado.</p>
+					<div className={styles.sellModal__symbol}>
+						<Tag aria-hidden="true" />
 					</div>
+					<div className={styles.sellModal__heading}>
+						<h3>Publicar venta</h3>
+						<p>Prepará la oferta para el mercado secundario.</p>
+					</div>
+					<Button
+						unstyled
+						type="button"
+						className={styles.sellModal__closeButton}
+						aria-label="Cerrar modal"
+						onClick={props.onClose}
+						disabled={props.isBusy}
+					>
+						<X aria-hidden="true" />
+					</Button>
 				</header>
-				<MarketPlayerSummary player={player} />
-				<p className={styles.sellModal__holding}>
-					Disponibles: {props.availableQuantity} · Reservados:{" "}
-					{props.reservedQuantity}
-				</p>
-				<MarketQuoteFeedback
-					status={props.quoteStatus}
-					httpStatus={props.quoteHttpStatus}
-					canRetry={props.canRetryQuote}
-					onRetry={props.onRetryQuote}
-				/>
-				{props.quote && (
-					<p>
-						Precio vigente: {formatCredits(props.quote.price)} (
-						{formatCentimes(props.quote.price)}) ·{" "}
-						{formatQuoteCalculatedAt(props.quote.calculatedAt)}
-					</p>
-				)}
-				{props.errorMessage && (
-					<p role="alert" className={styles.sellModal__error}>
-						{props.errorMessage}
-					</p>
-				)}
-				{props.result ? (
-					<div role="status" className={styles.sellModal__success}>
-						<h3>Publicación confirmada</h3>
-						<p>
-							{props.result.quantity} tokens de {player.name}
-						</p>
-						<p>Precio unitario: {formatCredits(props.result.unitPrice)}</p>
-						<p>Importe total: {formatCredits(props.result.totalAmount)}</p>
-						<p>Vence: {formatExpiryDate(props.result.expiresAt)}</p>
-						<p>Publicación #{props.result.listingId}</p>
+
+				<div className={styles.sellModal__content}>
+					<div className={styles.sellModal__player}>
+						<MarketPlayerSummary player={player} />
 					</div>
-				) : (
-					<>
-						<TokenQuantityStepper
-							id="sell-token-quantity"
-							label={`Cantidad (máximo ${props.maximum})`}
-							quantity={Number(props.quantity)}
-							min={1}
-							max={props.maximum}
-							disabled={props.isBusy}
-							error={props.formError}
-							inputRef={setRef}
-							inputProps={quantityProps}
-							presets={props.presets.map((val) => ({
-								label: val === props.maximum ? "Máx." : String(val),
-								value: val,
-							}))}
-							onQuantityChange={props.onQuantityChange}
-						/>
-						{props.estimation && (
-							<section className={styles.sellModal__estimate}>
-								<p>Jugador: {player.name}</p>
-								<p>Cantidad: {props.estimation.quantity}</p>
-								<p>
-									Precio unitario estimado:{" "}
-									{formatCredits(props.estimation.unitPriceCentimes)}
-								</p>
-								<strong>
-									Importe estimado:{" "}
-									{formatCredits(props.estimation.totalCentimes)} (
-									{formatCentimes(props.estimation.totalCentimes)})
-								</strong>
-								<small>
-									El precio definitivo lo determina el servidor al publicar.
-								</small>
-							</section>
-						)}
-					</>
-				)}
-				{props.confirmationBlockReason && !props.result && (
-					<p role="status">{props.confirmationBlockReason}</p>
-				)}
+
+					<div className={styles.sellModal__metrics}>
+						<div className={styles.sellModal__metricTile}>
+							<span className={styles.sellModal__metricLabel}>
+								Cotización vigente
+							</span>
+							<strong className={styles.sellModal__metricValue}>
+								{isQuoteAvailable ? formatCredits(quote.price) : "—"}
+							</strong>
+							<span className={styles.sellModal__metricSubtext}>
+								{isQuoteAvailable
+									? `${formatCentimes(quote.price)} · ${formatQuoteCalculatedAt(
+											quote.calculatedAt,
+										)}`
+									: props.quoteStatus === "loading"
+										? "Consultando cotización…"
+										: "Sin cotización"}
+							</span>
+						</div>
+
+						<div className={styles.sellModal__metricTile}>
+							<span className={styles.sellModal__metricLabel}>
+								Tokens disponibles
+							</span>
+							<strong
+								className={`${styles.sellModal__metricValue} ${
+									props.availableQuantity > 0
+										? styles.sellModal__metricValue_available
+										: ""
+								}`}
+							>
+								{props.availableQuantity}
+							</strong>
+							<span className={styles.sellModal__metricSubtext}>
+								{props.reservedQuantity} en reserva · Total:{" "}
+								{props.availableQuantity + props.reservedQuantity}
+							</span>
+						</div>
+					</div>
+
+					<MarketQuoteFeedback
+						status={props.quoteStatus}
+						httpStatus={props.quoteHttpStatus}
+						canRetry={props.canRetryQuote}
+						onRetry={props.onRetryQuote}
+					/>
+
+					{props.errorMessage && (
+						<div role="alert" className={styles.sellModal__errorAlert}>
+							<p>{props.errorMessage}</p>
+						</div>
+					)}
+
+					{props.result ? (
+						<div role="status" className={styles.sellModal__successCard}>
+							<div className={styles.sellModal__successHeader}>
+								<CheckCircle2 aria-hidden="true" />
+								<div>
+									<h4>Publicación confirmada</h4>
+									<p>Orden registrada #{props.result.listingId}</p>
+								</div>
+							</div>
+							<div className={styles.sellModal__successDetails}>
+								<div className={styles.sellModal__successRow}>
+									<span>Jugador</span>
+									<strong>{player.name}</strong>
+								</div>
+								<div className={styles.sellModal__successRow}>
+									<span>Cantidad publicada</span>
+									<strong>
+										{props.result.quantity}{" "}
+										{props.result.quantity === 1 ? "token" : "tokens"}
+									</strong>
+								</div>
+								<div className={styles.sellModal__successRow}>
+									<span>Precio unitario</span>
+									<strong>{formatCredits(props.result.unitPrice)}</strong>
+								</div>
+								<div className={styles.sellModal__successRow}>
+									<span>Importe total</span>
+									<strong className={styles.sellModal__successTotal}>
+										{formatCredits(props.result.totalAmount)}
+									</strong>
+								</div>
+								<div className={styles.sellModal__successRow}>
+									<span>Vencimiento</span>
+									<span>{formatExpiryDate(props.result.expiresAt)}</span>
+								</div>
+							</div>
+						</div>
+					) : (
+						<div className={styles.sellModal__form}>
+							<TokenQuantityStepper
+								id="sell-token-quantity"
+								label={`Cantidad a publicar (máx. ${props.maximum})`}
+								quantity={Number(props.quantity)}
+								min={1}
+								max={props.maximum}
+								disabled={props.isBusy}
+								error={props.formError}
+								inputRef={setRef}
+								inputProps={quantityProps}
+								presets={props.presets.map((val) => ({
+									label: val === props.maximum ? "Máx." : String(val),
+									value: val,
+								}))}
+								onQuantityChange={props.onQuantityChange}
+							/>
+
+							{props.estimation && (
+								<div className={styles.sellModal__estimateCard}>
+									<div className={styles.sellModal__estimateRow}>
+										<span>Cantidad</span>
+										<strong>
+											{props.estimation.quantity}{" "}
+											{props.estimation.quantity === 1 ? "token" : "tokens"}
+										</strong>
+									</div>
+									<div className={styles.sellModal__estimateRow}>
+										<span>Precio unitario estimado</span>
+										<span>
+											{formatCredits(props.estimation.unitPriceCentimes)}
+										</span>
+									</div>
+									<div className={styles.sellModal__estimateDivider} />
+									<div className={styles.sellModal__estimateTotalRow}>
+										<div className={styles.sellModal__estimateTotalHeader}>
+											<span className={styles.sellModal__estimateTotalLabel}>
+												Importe estimado
+											</span>
+											<span className={styles.sellModal__estimateNotice}>
+												El precio definitivo lo determina el servidor al
+												publicar.
+											</span>
+										</div>
+										<div className={styles.sellModal__estimateTotalAmount}>
+											<strong>
+												{formatCredits(props.estimation.totalCentimes)}
+											</strong>
+											<small>
+												({formatCentimes(props.estimation.totalCentimes)})
+											</small>
+										</div>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
+
+					{props.confirmationBlockReason && !props.result && (
+						<div role="status" className={styles.sellModal__blockReason}>
+							<p>{props.confirmationBlockReason}</p>
+						</div>
+					)}
+				</div>
+
 				<footer className={styles.sellModal__footer}>
 					{props.result ? (
-						<Button type="button" onClick={props.onClose}>
+						<Button
+							type="button"
+							className={styles.sellModal__closeAction}
+							onClick={props.onClose}
+						>
 							Cerrar
 						</Button>
 					) : (
 						<>
 							<Button
 								type="button"
+								className={styles.sellModal__cancelBtn}
 								disabled={props.isBusy}
 								onClick={props.onClose}
 							>
@@ -181,6 +288,7 @@ export default function SellTokenModal(props: Props) {
 							</Button>
 							<Button
 								type="button"
+								className={styles.sellModal__confirmBtn}
 								disabled={!props.canConfirm || props.isBusy}
 								aria-busy={props.isBusy}
 								onClick={props.onConfirm}
@@ -188,9 +296,11 @@ export default function SellTokenModal(props: Props) {
 								{props.isBusy ? (
 									<LoaderCircle className={styles.sellModal__spinner} />
 								) : (
-									<Tag />
-								)}{" "}
-								{props.isBusy ? "Publicando…" : "Confirmar publicación"}
+									<Tag aria-hidden="true" />
+								)}
+								<span>
+									{props.isBusy ? "Publicando…" : "Confirmar publicación"}
+								</span>
 							</Button>
 						</>
 					)}
