@@ -1,0 +1,85 @@
+@use "@/styles/abstracts" as ds;
+
+.success {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px 16px;
+	border: 1px solid ds.$border-gain-subtle;
+	border-radius: 8px;
+	background-color: ds.$surface-control-active;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	&__icon {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 32px;
+		height: 32px;
+		border-radius: 50%;
+		background-color: ds.$surface-accent-dark;
+		color: ds.$accent-gain;
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	&__titleBlock {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+
+		h4 {
+			margin: 0;
+			font-size: 14px;
+			font-weight: 700;
+			color: ds.$accent-gain;
+		}
+
+		span {
+			font-size: 11px;
+			color: ds.$text-label-on-dark;
+		}
+	}
+
+	&__details {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		padding-top: 8px;
+		border-top: 1px solid ds.$border-gain-subtle;
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 12px;
+
+		span {
+			color: ds.$text-label-on-dark;
+		}
+
+		strong {
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__divider {
+		height: 1px;
+		background-color: ds.$border-gain-subtle;
+	}
+
+	&__total {
+		color: ds.$accent-gain !important;
+		font-size: 14px;
+		font-weight: 750;
+	}
+}

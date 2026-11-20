@@ -1,4 +1,3 @@
-import { Field } from "@/shared/components";
 import { Minus, Plus } from "@/shared/icons";
 import styles from "./TokenQuantityStepper.module.scss";
 
@@ -52,6 +51,12 @@ export default function TokenQuantityStepper({
 
 	return (
 		<div className={`${styles.stepper} ${className ?? ""}`.trim()}>
+			{label && (
+				<label htmlFor={id} className={styles.stepper__label}>
+					{label}
+				</label>
+			)}
+
 			<div className={styles.stepper__controls}>
 				<button
 					type="button"
@@ -63,18 +68,17 @@ export default function TokenQuantityStepper({
 					<Minus aria-hidden="true" />
 				</button>
 
-				<div className={styles.stepper__field}>
-					<Field
-						id={id}
-						label={label}
-						inputMode="numeric"
-						autoComplete="off"
-						disabled={disabled}
-						error={error}
-						ref={inputRef}
-						{...inputProps}
-					/>
-				</div>
+				<input
+					id={id}
+					inputMode="numeric"
+					autoComplete="off"
+					disabled={disabled}
+					ref={inputRef}
+					aria-invalid={Boolean(error)}
+					aria-describedby={error ? `${id}-error` : undefined}
+					className={styles.stepper__input}
+					{...inputProps}
+				/>
 
 				<button
 					type="button"
@@ -87,29 +91,37 @@ export default function TokenQuantityStepper({
 				</button>
 			</div>
 
+			{error && (
+				<span id={`${id}-error`} className={styles.stepper__error}>
+					{error}
+				</span>
+			)}
+
 			{presets && presets.length > 0 && (
 				<fieldset className={styles.stepper__presets}>
 					<legend className={styles.stepper__presetsLabel}>
 						{presetsLabel}
 					</legend>
-					{presets.map((preset) => {
-						const isObject = typeof preset === "object";
-						const label = isObject ? preset.label : String(preset);
-						const value = isObject ? preset.value : preset;
-						return (
-							<button
-								key={label}
-								type="button"
-								className={styles.stepper__presetButton}
-								disabled={disabled}
-								onClick={() =>
-									onQuantityChange(Math.min(max, Math.max(min, value)))
-								}
-							>
-								{label}
-							</button>
-						);
-					})}
+					<div className={styles.stepper__presetsGroup}>
+						{presets.map((preset) => {
+							const isObject = typeof preset === "object";
+							const presetLabel = isObject ? preset.label : String(preset);
+							const value = isObject ? preset.value : preset;
+							return (
+								<button
+									key={presetLabel}
+									type="button"
+									className={styles.stepper__presetButton}
+									disabled={disabled || value > max || value < min}
+									onClick={() =>
+										onQuantityChange(Math.min(max, Math.max(min, value)))
+									}
+								>
+									{presetLabel}
+								</button>
+							);
+						})}
+					</div>
 				</fieldset>
 			)}
 		</div>
