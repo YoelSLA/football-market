@@ -22,15 +22,18 @@ export default function MarketSellPage() {
 				<MarketFilters
 					variant="sell"
 					active
+					options={sell.filterOptions}
 					leagues={sell.leagues}
 					positions={sell.positions}
 					search={sell.searchInput}
 					league={sell.filters.league}
+					team={sell.filters.team}
 					position={sell.filters.position}
 					availability={sell.filters.availability}
 					sort={sell.filters.sort}
 					onSearchChange={sell.setSearchInput}
 					onLeagueChange={(value) => sell.updateFilter("league", value)}
+					onTeamChange={(value) => sell.updateFilter("team", value)}
 					onPositionChange={(value) => sell.updateFilter("position", value)}
 					onAvailabilityChange={(value) =>
 						sell.updateFilter("availability", value)

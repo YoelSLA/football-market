@@ -1,19 +1,31 @@
-import { sanitizePositions } from "@/features/players";
-import { FilterSearch, FilterSelect } from "@/shared/components";
+import {
+	type PlayerCatalogFilters,
+	sanitizePositions,
+} from "@/features/players";
+import {
+	CompetitionLogo,
+	FilterSearch,
+	FilterSelect,
+	type FilterSelectOption,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./MarketFilterFields.module.scss";
 
 interface Props {
 	scope: string;
 	active: boolean;
+	options?: PlayerCatalogFilters;
 	leagues?: string[];
 	positions?: string[];
 	search?: string;
 	league?: string;
+	team?: string;
 	position?: string;
 	availability?: string;
 	sort?: string;
 	onSearchChange?: (value: string) => void;
 	onLeagueChange?: (value: string) => void;
+	onTeamChange?: (value: string) => void;
 	onPositionChange?: (value: string) => void;
 	onAvailabilityChange?: (value: string) => void;
 	onSortChange?: (value: string) => void;
@@ -40,35 +52,65 @@ const SORT_OPTIONS = [
 export default function SellMarketFilterFields({
 	scope,
 	active,
-	leagues,
-	positions,
+	options,
 	search,
-	league,
-	position,
-	availability,
+	league = "all",
+	team = "all",
+	position = "all",
+	availability = "all",
 	sort,
 	onSearchChange,
 	onLeagueChange,
+	onTeamChange,
 	onPositionChange,
 	onAvailabilityChange,
 	onSortChange,
 }: Props) {
-	const leagueOptions = active
-		? [
-				{ value: "all", label: "Todas las ligas" },
-				...(leagues?.map((value) => ({ value, label: value })) ?? []),
-			]
-		: [{ value: "all", label: "Todas las ligas" }];
+	const teams = options?.teams.filter(
+		(option) => league === "all" || String(option.leagueId) === league,
+	);
+	const leagueNameById = new Map(
+		options?.leagues.map((option) => [option.id, option.name]) ?? [],
+	);
 
-	const positionOptions = active
-		? [
-				{ value: "all", label: "Todas las posiciones" },
-				...sanitizePositions(positions).map((value) => ({
-					value,
-					label: value,
-				})),
-			]
-		: [{ value: "all", label: "Todas las posiciones" }];
+	const leagueOptions: FilterSelectOption[] = [
+		{ value: "all", label: "Todas" },
+		...(options?.leagues.map((option) => ({
+			value: String(option.id),
+			label: option.name,
+			visual: (
+				<CompetitionLogo
+					competitionId={option.id}
+					competitionName={option.name}
+					decorative
+				/>
+			),
+		})) ?? []),
+	];
+
+	const teamOptions: FilterSelectOption[] = [
+		{ value: "all", label: "Todos" },
+		...(teams?.map((option) => ({
+			value: String(option.id),
+			label: option.name,
+			visual: (
+				<TeamBadge
+					teamId={option.id}
+					teamName={option.name}
+					leagueId={option.leagueId}
+					leagueName={leagueNameById.get(option.leagueId)}
+				/>
+			),
+		})) ?? []),
+	];
+
+	const positionOptions: FilterSelectOption[] = [
+		{ value: "all", label: "Todas" },
+		...sanitizePositions(options?.positions).map((value) => ({
+			value,
+			label: value,
+		})),
+	];
 
 	return (
 		<fieldset
@@ -82,21 +124,34 @@ export default function SellMarketFilterFields({
 				value={search ?? ""}
 				disabled={!active}
 				label="Buscar jugador o club"
+				accessibleLabel="Buscar jugador por nombre o club"
 				placeholder="Buscar jugador o club..."
 				onChange={(value) => onSearchChange?.(value)}
 			/>
 			<FilterSelect
 				id={`${scope}-league`}
 				label="Liga"
-				value={league ?? "all"}
+				value={league}
 				disabled={!active}
 				options={leagueOptions}
+				searchable
+				searchPlaceholder="Buscar liga…"
 				onChange={(value) => onLeagueChange?.(value)}
+			/>
+			<FilterSelect
+				id={`${scope}-team`}
+				label="Equipo"
+				value={team}
+				disabled={!active}
+				options={teamOptions}
+				searchable
+				searchPlaceholder="Buscar equipo…"
+				onChange={(value) => onTeamChange?.(value)}
 			/>
 			<FilterSelect
 				id={`${scope}-position`}
 				label="Posición"
-				value={position ?? "all"}
+				value={position}
 				disabled={!active}
 				options={positionOptions}
 				onChange={(value) => onPositionChange?.(value)}
@@ -104,7 +159,7 @@ export default function SellMarketFilterFields({
 			<FilterSelect
 				id={`${scope}-availability`}
 				label="Disponibilidad"
-				value={availability ?? "all"}
+				value={availability}
 				disabled={!active}
 				options={AVAILABILITY_OPTIONS}
 				onChange={(value) => onAvailabilityChange?.(value)}
