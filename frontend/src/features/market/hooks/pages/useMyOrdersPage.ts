@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { toast } from "react-toastify";
 import { useCurrentUserQuery } from "@/features/auth";
 import { useCancelListingMutation } from "@/features/market/hooks/mutations";
 import { useMyListingsQuery } from "@/features/market/hooks/queries";
+import { useMarketToast } from "@/features/market/hooks/useMarketToast";
 import type { UserOrderListing } from "@/features/market/types";
 import { useAllPlayersQuery } from "@/features/players";
 import { getErrorCode } from "@/infrastructure/http";
@@ -136,6 +136,7 @@ export function useMyOrdersPage() {
 	const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
 	const cancelMutation = useCancelListingMutation();
+	const { notifyCancelSuccess, notifyError } = useMarketToast();
 
 	const openCancelModal = (order: EnrichedUserOrder) => {
 		setSelectedOrderToCancel(order);
@@ -151,18 +152,20 @@ export function useMyOrdersPage() {
 		if (!selectedOrderToCancel) return;
 		try {
 			await cancelMutation.mutateAsync(selectedOrderToCancel.listingId);
-			toast.success(
-				`Publicación #${selectedOrderToCancel.listingId} cancelada. Los ${selectedOrderToCancel.quantity} tokens de ${selectedOrderToCancel.playerName} volvieron a estar disponibles en tu cartera.`,
+			notifyCancelSuccess(
+				selectedOrderToCancel.listingId,
+				selectedOrderToCancel.playerName,
+				selectedOrderToCancel.quantity,
 			);
 			closeCancelModal();
 		} catch (error: unknown) {
 			const code = getErrorCode(error);
 			if (code === "LISTING_NOT_AVAILABLE") {
-				toast.error(
+				notifyError(
 					"La orden ya no se encuentra disponible para ser cancelada (puede haber sido vendida o expirado).",
 				);
 			} else {
-				toast.error("Ocurrió un error al intentar cancelar la publicación.");
+				notifyError("Ocurrió un error al intentar cancelar la publicación.");
 			}
 			closeCancelModal();
 		}

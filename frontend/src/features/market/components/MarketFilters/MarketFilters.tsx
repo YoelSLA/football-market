@@ -50,15 +50,18 @@ interface CommunityProps extends BaseProps {
 interface SellProps extends BaseProps {
 	variant?: "sell";
 	active: boolean;
+	options?: PlayerCatalogFilters;
 	leagues?: string[];
 	positions?: string[];
 	search?: string;
 	league?: string;
+	team?: string;
 	position?: string;
 	availability?: string;
 	sort?: string;
 	onSearchChange?: (value: string) => void;
 	onLeagueChange?: (value: string) => void;
+	onTeamChange?: (value: string) => void;
 	onPositionChange?: (value: string) => void;
 	onAvailabilityChange?: (value: string) => void;
 	onSortChange?: (value: string) => void;
@@ -81,7 +84,8 @@ export default function MarketFilters(props: Props) {
 	const isCatalog =
 		props.variant === "official" ||
 		props.variant === "community" ||
-		props.variant === "orders";
+		props.variant === "orders" ||
+		props.variant === "sell";
 
 	const renderFilterFields = () => {
 		if (props.variant === "official") {
@@ -141,15 +145,18 @@ export default function MarketFilters(props: Props) {
 			<SellMarketFilterFields
 				scope="market-desktop"
 				active={props.active}
+				options={props.options}
 				leagues={props.leagues}
 				positions={props.positions}
 				search={props.search}
 				league={props.league}
+				team={props.team}
 				position={props.position}
 				availability={props.availability}
 				sort={props.sort}
 				onSearchChange={props.onSearchChange}
 				onLeagueChange={props.onLeagueChange}
+				onTeamChange={props.onTeamChange}
 				onPositionChange={props.onPositionChange}
 				onAvailabilityChange={props.onAvailabilityChange}
 				onSortChange={props.onSortChange}
@@ -176,7 +183,7 @@ export default function MarketFilters(props: Props) {
 						? "Filtros del Mercado P2P"
 						: props.variant === "orders"
 							? "Filtros de Mis Órdenes"
-							: "Filtros del mercado"
+							: "Filtros de Publicar venta"
 			}
 			aria-busy={props.isUpdating ? "true" : undefined}
 		>

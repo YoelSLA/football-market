@@ -8,7 +8,11 @@ import { useMarketQuotesQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
 import { toMarketPlayer } from "@/features/market/market.mapper";
 import type { PlayerHolding, SellResult } from "@/features/market/types";
-import { sanitizePositions, useAllPlayersQuery } from "@/features/players";
+import {
+	sanitizePositions,
+	useAllPlayersQuery,
+	usePlayerCatalogFiltersQuery,
+} from "@/features/players";
 import {
 	portfolioQueryKeys,
 	usePortfolioAllOpenHoldingsQuery,
@@ -155,9 +159,12 @@ export function useMarketSellPage({
 	const [result, setResult] = useState<SellResult | null>(null);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [searchInput, setSearchInput] = useState("");
+	const filterOptionsQuery = usePlayerCatalogFiltersQuery();
+	const filterOptions = filterOptionsQuery.data;
 	const [filters, setFilters] = useState({
 		search: "",
 		league: "all",
+		team: "all",
 		position: "all",
 		availability: "all",
 		sort: "name,asc",
@@ -196,7 +203,12 @@ export function useMarketSellPage({
 					`${player.name} ${player.teamName}`
 						.toLocaleLowerCase("es-AR")
 						.includes(search)) &&
-				(filters.league === "all" || player.leagueName === filters.league) &&
+				(filters.league === "all" ||
+					String(player.leagueId) === filters.league ||
+					player.leagueName === filters.league) &&
+				(filters.team === "all" ||
+					String(player.teamId) === filters.team ||
+					player.teamName === filters.team) &&
 				(filters.position === "all" || player.position === filters.position) &&
 				(filters.availability === "all" ||
 					(filters.availability === "available"
@@ -369,17 +381,27 @@ export function useMarketSellPage({
 		leagues,
 		positions,
 		searchInput,
-		setSearchInput,
+		setSearchInput: (value: string) => {
+			setSearchInput(value);
+			setFilters((current) => ({ ...current, search: value }));
+			setPage(0);
+		},
 		filters,
 		applyFilters: () => {
 			setFilters((current) => ({ ...current, search: searchInput }));
 			setPage(0);
 		},
 		updateFilter: (
-			key: "league" | "position" | "availability" | "sort",
+			key: "league" | "team" | "position" | "availability" | "sort",
 			value: string,
 		) => {
-			setFilters((current) => ({ ...current, [key]: value }));
+			setFilters((current) => {
+				const next = { ...current, [key]: value };
+				if (key === "league") {
+					next.team = "all";
+				}
+				return next;
+			});
 			setPage(0);
 		},
 		clearFilters: () => {
@@ -387,12 +409,14 @@ export function useMarketSellPage({
 			setFilters({
 				search: "",
 				league: "all",
+				team: "all",
 				position: "all",
 				availability: "all",
 				sort: "name,asc",
 			});
 			setPage(0);
 		},
+		filterOptions,
 		quoteQuery,
 		selectedPlayer,
 		selectedQuote,

@@ -54,7 +54,7 @@ export default function MarketOrdersEmptyState({
 				fijando el precio al momento de publicar.
 			</p>
 			<Link to="/market/sell" className={styles.ordersEmptyState__actionBtn}>
-				Vender tokens
+				Publicar venta
 			</Link>
 		</section>
 	);

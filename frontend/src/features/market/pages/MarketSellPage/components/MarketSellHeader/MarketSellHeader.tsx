@@ -1,7 +1,8 @@
-import { PageHeading } from "@/shared/components";
-import { Tag } from "@/shared/icons";
+import MarketPageHeader, {
+	MarketHeaderMetric,
+} from "@/features/market/components/MarketPageHeader";
+import { CheckCircle2, Lock, Package, Tag } from "@/shared/icons";
 import type { PlayerHolding } from "../../MarketSellPage";
-import styles from "./MarketSellHeader.module.scss";
 
 interface Props {
 	players: PlayerHolding[];
@@ -18,23 +19,29 @@ export default function MarketSellHeader({ players }: Props) {
 	);
 
 	return (
-		<header className={styles.sellHeader}>
-			<PageHeading
-				title="Vender tokens"
-				description="Publicá tus tokens en el mercado secundario."
-				icon={Tag}
+		<MarketPageHeader
+			title="Publicar venta"
+			description="Publicá tus tokens en el mercado secundario."
+			icon={Tag}
+		>
+			<MarketHeaderMetric
+				icon={Package}
+				label="Total tenencias"
+				value={`${totals.total.toLocaleString("es-AR")} tokens`}
+				title="Total de tokens en cartera"
 			/>
-			<div className={styles.sellHeader__totals}>
-				<p>
-					Total<strong>{totals.total}</strong>
-				</p>
-				<p>
-					Disponibles<strong>{totals.available}</strong>
-				</p>
-				<p>
-					Reservados<strong>{totals.reserved}</strong>
-				</p>
-			</div>
-		</header>
+			<MarketHeaderMetric
+				icon={CheckCircle2}
+				label="Disponibles"
+				value={`${totals.available.toLocaleString("es-AR")} tokens`}
+				title="Tokens disponibles para publicar"
+			/>
+			<MarketHeaderMetric
+				icon={Lock}
+				label="Reservados"
+				value={`${totals.reserved.toLocaleString("es-AR")} tokens`}
+				title="Tokens en órdenes de venta activas"
+			/>
+		</MarketPageHeader>
 	);
 }

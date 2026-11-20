@@ -129,7 +129,8 @@
 	}
 }
 
-.marketFilters_orders {
+.marketFilters_orders,
+.marketFilters_sell {
 	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;

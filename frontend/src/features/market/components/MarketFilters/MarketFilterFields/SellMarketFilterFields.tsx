@@ -1,76 +1,115 @@
-import { sanitizePositions } from "@/features/players";
-import { Button, FilterSearch, FilterSelect } from "@/shared/components";
-import { ShoppingCart } from "@/shared/icons";
+import {
+	type PlayerCatalogFilters,
+	sanitizePositions,
+} from "@/features/players";
+import {
+	CompetitionLogo,
+	FilterSearch,
+	FilterSelect,
+	type FilterSelectOption,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./MarketFilterFields.module.scss";
 
 interface Props {
 	scope: string;
 	active: boolean;
+	options?: PlayerCatalogFilters;
 	leagues?: string[];
 	positions?: string[];
 	search?: string;
 	league?: string;
+	team?: string;
 	position?: string;
 	availability?: string;
 	sort?: string;
 	onSearchChange?: (value: string) => void;
 	onLeagueChange?: (value: string) => void;
+	onTeamChange?: (value: string) => void;
 	onPositionChange?: (value: string) => void;
 	onAvailabilityChange?: (value: string) => void;
 	onSortChange?: (value: string) => void;
 	onApply?: () => void;
 }
 
-const DIRECTION_OPTIONS = [
-	{ value: "asc", label: "Menor a mayor" },
-	{ value: "desc", label: "Mayor a menor" },
-] as const;
+const AVAILABILITY_OPTIONS = [
+	{ value: "all", label: "Todas las tenencias" },
+	{ value: "available", label: "Con disponibles" },
+	{ value: "reserved", label: "Con reservados" },
+];
+
+const SORT_OPTIONS = [
+	{ value: "name,asc", label: "Nombre (A–Z)" },
+	{ value: "name,desc", label: "Nombre (Z–A)" },
+	{ value: "total,desc", label: "Mayor tenencia total" },
+	{ value: "total,asc", label: "Menor tenencia total" },
+	{ value: "available,desc", label: "Más tokens disponibles" },
+	{ value: "available,asc", label: "Menos tokens disponibles" },
+	{ value: "reserved,desc", label: "Más tokens reservados" },
+	{ value: "reserved,asc", label: "Menos tokens reservados" },
+];
 
 export default function SellMarketFilterFields({
 	scope,
 	active,
-	leagues,
-	positions,
+	options,
 	search,
-	league,
-	position,
-	availability,
+	league = "all",
+	team = "all",
+	position = "all",
+	availability = "all",
 	sort,
 	onSearchChange,
 	onLeagueChange,
+	onTeamChange,
 	onPositionChange,
 	onAvailabilityChange,
 	onSortChange,
-	onApply,
 }: Props) {
-	const [sortField = "name", sortDirection = "asc"] = (sort ?? "").split(",");
-	const activeField = sortField || "name";
-	const activeDirection = sortDirection === "desc" ? "desc" : "asc";
-	const leagueOptions = active
-		? [
-				{ value: "all", label: "Todas las ligas" },
-				...(leagues?.map((value) => ({ value, label: value })) ?? []),
-			]
-		: [{ value: "all", label: "Todas las ligas" }];
-	const positionOptions = active
-		? [
-				{ value: "all", label: "Todas las posiciones" },
-				...sanitizePositions(positions).map((value) => ({
-					value,
-					label: value,
-				})),
-			]
-		: [{ value: "all", label: "Todas las posiciones" }];
-	const availabilityOptions = [
+	const teams = options?.teams.filter(
+		(option) => league === "all" || String(option.leagueId) === league,
+	);
+	const leagueNameById = new Map(
+		options?.leagues.map((option) => [option.id, option.name]) ?? [],
+	);
+
+	const leagueOptions: FilterSelectOption[] = [
 		{ value: "all", label: "Todas" },
-		{ value: "available", label: "Con disponibles" },
-		{ value: "reserved", label: "Con reservados" },
+		...(options?.leagues.map((option) => ({
+			value: String(option.id),
+			label: option.name,
+			visual: (
+				<CompetitionLogo
+					competitionId={option.id}
+					competitionName={option.name}
+					decorative
+				/>
+			),
+		})) ?? []),
 	];
-	const sortOptions = [
-		{ value: "name", label: "Nombre" },
-		{ value: "total", label: "Tenencia total" },
-		{ value: "available", label: "Tokens disponibles" },
-		{ value: "reserved", label: "Tokens reservados" },
+
+	const teamOptions: FilterSelectOption[] = [
+		{ value: "all", label: "Todos" },
+		...(teams?.map((option) => ({
+			value: String(option.id),
+			label: option.name,
+			visual: (
+				<TeamBadge
+					teamId={option.id}
+					teamName={option.name}
+					leagueId={option.leagueId}
+					leagueName={leagueNameById.get(option.leagueId)}
+				/>
+			),
+		})) ?? []),
+	];
+
+	const positionOptions: FilterSelectOption[] = [
+		{ value: "all", label: "Todas" },
+		...sanitizePositions(options?.positions).map((value) => ({
+			value,
+			label: value,
+		})),
 	];
 
 	return (
@@ -85,81 +124,54 @@ export default function SellMarketFilterFields({
 				value={search ?? ""}
 				disabled={!active}
 				label="Buscar jugador o club"
+				accessibleLabel="Buscar jugador por nombre o club"
 				placeholder="Buscar jugador o club..."
 				onChange={(value) => onSearchChange?.(value)}
 			/>
 			<FilterSelect
 				id={`${scope}-league`}
 				label="Liga"
-				value={league ?? "all"}
+				value={league}
 				disabled={!active}
 				options={leagueOptions}
+				searchable
+				searchPlaceholder="Buscar liga…"
 				onChange={(value) => onLeagueChange?.(value)}
+			/>
+			<FilterSelect
+				id={`${scope}-team`}
+				label="Equipo"
+				value={team}
+				disabled={!active}
+				options={teamOptions}
+				searchable
+				searchPlaceholder="Buscar equipo…"
+				onChange={(value) => onTeamChange?.(value)}
 			/>
 			<FilterSelect
 				id={`${scope}-position`}
 				label="Posición"
-				value={position ?? "all"}
+				value={position}
 				disabled={!active}
 				options={positionOptions}
 				onChange={(value) => onPositionChange?.(value)}
 			/>
 			<FilterSelect
-				id={`${scope}-${active ? "availability" : "price"}`}
-				label={active ? "Disponibilidad" : "Precio actual"}
-				value={availability ?? "all"}
+				id={`${scope}-availability`}
+				label="Disponibilidad"
+				value={availability}
 				disabled={!active}
-				options={
-					active
-						? availabilityOptions
-						: [{ value: "all", label: "Todos los precios" }]
-				}
+				options={AVAILABILITY_OPTIONS}
 				onChange={(value) => onAvailabilityChange?.(value)}
 			/>
 			<FilterSelect
-				id={`${scope}-${active ? "sort" : "sort-pending"}`}
+				id={`${scope}-sort`}
 				label="Ordenar por"
-				value={active ? activeField : "price"}
+				value={sort || "name,asc"}
 				disabled={!active}
-				options={
-					active ? sortOptions : [{ value: "price", label: "Precio actual" }]
-				}
-				onChange={(newField) =>
-					onSortChange?.(`${newField},${activeDirection}`)
-				}
+				options={SORT_OPTIONS}
+				onChange={(value) => onSortChange?.(value)}
 			/>
-			<div className={styles.marketFilterFields__direction}>
-				<span>Dirección</span>
-				{DIRECTION_OPTIONS.map((direction) => (
-					<label key={direction.value}>
-						<input
-							type="radio"
-							name={`${scope}-${active ? "direction" : "price-direction"}`}
-							value={direction.value}
-							checked={
-								active
-									? activeDirection === direction.value
-									: direction.value === "asc"
-							}
-							disabled={!active}
-							onChange={
-								active
-									? () => onSortChange?.(`${activeField},${direction.value}`)
-									: undefined
-							}
-						/>{" "}
-						{direction.label}
-					</label>
-				))}
-			</div>
-			<Button
-				type="button"
-				className={styles.marketFilterFields__apply}
-				disabled={!active}
-				onClick={active ? onApply : undefined}
-			>
-				<ShoppingCart aria-hidden="true" /> Aplicar filtros
-			</Button>
 		</fieldset>
 	);
 }

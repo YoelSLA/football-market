@@ -15,29 +15,40 @@ export default function MarketSellPage() {
 	return (
 		<PageLayout>
 			<div className={styles.sellPage}>
-				<MarketSellHeader players={sell.allHoldings} />
+				<div className={styles.sellPage__header}>
+					<MarketSellHeader players={sell.allHoldings} />
+				</div>
+
+				<MarketFilters
+					variant="sell"
+					active
+					options={sell.filterOptions}
+					leagues={sell.leagues}
+					positions={sell.positions}
+					search={sell.searchInput}
+					league={sell.filters.league}
+					team={sell.filters.team}
+					position={sell.filters.position}
+					availability={sell.filters.availability}
+					sort={sell.filters.sort}
+					onSearchChange={sell.setSearchInput}
+					onLeagueChange={(value) => sell.updateFilter("league", value)}
+					onTeamChange={(value) => sell.updateFilter("team", value)}
+					onPositionChange={(value) => sell.updateFilter("position", value)}
+					onAvailabilityChange={(value) =>
+						sell.updateFilter("availability", value)
+					}
+					onSortChange={(value) => sell.updateFilter("sort", value)}
+					onApply={sell.applyFilters}
+					onClear={sell.clearFilters}
+					summary={`${sell.totalPlayers} ${
+						sell.totalPlayers === 1
+							? "jugador disponible"
+							: "jugadores disponibles"
+					}`}
+				/>
 
 				<div className={styles.sellPage__content}>
-					<MarketFilters
-						active
-						leagues={sell.leagues}
-						positions={sell.positions}
-						search={sell.searchInput}
-						league={sell.filters.league}
-						position={sell.filters.position}
-						availability={sell.filters.availability}
-						sort={sell.filters.sort}
-						onSearchChange={sell.setSearchInput}
-						onLeagueChange={(value) => sell.updateFilter("league", value)}
-						onPositionChange={(value) => sell.updateFilter("position", value)}
-						onAvailabilityChange={(value) =>
-							sell.updateFilter("availability", value)
-						}
-						onSortChange={(value) => sell.updateFilter("sort", value)}
-						onApply={sell.applyFilters}
-						onClear={sell.clearFilters}
-					/>
-
 					<MarketSellCatalog
 						isLoading={sell.isLoadingPlayers}
 						isError={sell.isPlayersError}
@@ -56,9 +67,10 @@ export default function MarketSellPage() {
 							<MarketPagination
 								page={sell.page}
 								totalPages={sell.totalPages}
-								totalPlayers={sell.totalPlayers}
 								visiblePlayers={sell.players.length}
 								pageSize={sell.pageSize}
+								showSummary={false}
+								variant="official"
 								onPageChange={sell.setPage}
 							/>
 						</div>
