@@ -65,3 +65,4 @@
 - [ ] CHK026 ¿Se exige el cumplimiento estricto del sistema cromático centralizado de `_colors.scss` sin declarar colores hexadecimales literales en componentes? [Non-Functional, Spec §FR-009]
 - [ ] CHK027 ¿Está delimitado el viewport a entornos desktop adaptativos ($\ge 1024$ px, optimizado para 1920 × 913 px) sin scroll global indeseado? [Non-Functional, Spec §CA-06, plan.md]
 - [ ] CHK028 ¿Se exige que todo el código pase el linter Biome y la compilación de Gradle sin advertencias? [Non-Functional/Build, Spec §CA-13]
+
