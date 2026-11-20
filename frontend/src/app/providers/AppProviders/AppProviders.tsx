@@ -21,7 +21,17 @@ export default function AppProviders({ children }: Props) {
 				<HttpCredentials>
 					<SessionLifecycle>
 						{children}
-						<ToastContainer position="top-right" />
+						<ToastContainer
+							position="bottom-right"
+							theme="dark"
+							autoClose={4500}
+							hideProgressBar={false}
+							newestOnTop
+							closeOnClick
+							pauseOnFocusLoss
+							draggable
+							pauseOnHover
+						/>
 					</SessionLifecycle>
 				</HttpCredentials>
 			</BrowserRouter>
