@@ -144,3 +144,35 @@ export function formatQuoteEffectiveDate(
 		timeZone: "UTC",
 	});
 }
+
+/**
+ * Formatea el tiempo restante relativo de vencimiento de una orden de forma estática.
+ * No genera suscripciones continuas ni timers en segundo plano.
+ */
+export function formatOrderRelativeExpiration(
+	expiresAt: string | null | undefined,
+	status: string,
+): string {
+	if (status === "SOLD") return "Liquidada";
+	if (status === "CANCELLED") return "Cancelada";
+	if (status === "EXPIRED") return "Expirada";
+	if (!expiresAt) return "Sin vencimiento";
+
+	const target = new Date(expiresAt).getTime();
+	if (Number.isNaN(target)) return "Fecha inválida";
+
+	const diffMs = target - Date.now();
+	if (diffMs <= 0) return "Vencida";
+
+	const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+	if (diffHours < 1) {
+		const diffMins = Math.max(1, Math.round(diffMs / (1000 * 60)));
+		return `Vence en ${diffMins} min`;
+	}
+	if (diffHours < 24) {
+		return `Vence en ${diffHours}h`;
+	}
+	const diffDays = Math.round(diffHours / 24);
+	if (diffDays === 1) return "Vence en 1 día";
+	return `Vence en ${diffDays} días`;
+}

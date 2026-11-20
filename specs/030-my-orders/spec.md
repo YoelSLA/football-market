@@ -100,7 +100,7 @@ Como usuario, quiero contar con respuestas visuales claras cuando el sistema est
 ### Frontend
 - **FR-006**: La ruta protegida de la vista MUST ser `/market/orders` y la pestaña activa en el Navbar MUST ser `"Mis órdenes"`.
 - **FR-007**: La confirmación de cancelación MUST requerir interacción deliberada del usuario a través del modal accesible `CancelListingModal`.
-- **FR-008**: El listado MUST enriquecer la información de cada futbolista (`name`, `imageUrl`, `team`, `league`) mediante la información provista por el catálogo general de jugadores.
+- **FR-008**: El listado MUST enriquecer la información de cada futbolista (`name`, `imageUrl`, `team`, `league`, `position`) mediante la información provista por el catálogo general de jugadores.
 - **FR-009**: La pantalla MUST ajustarse al diseño desktop fijado en `docs/wireframes/my-orders.md` (1920 × 913 px), respetando la retícula de 8 px y los tokens SCSS, sin scroll global.
 - **FR-010**: No se deben admitir modificaciones ni ediciones de precio o cantidad de órdenes existentes (solo cancelación).
 

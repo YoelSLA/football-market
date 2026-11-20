@@ -29,7 +29,7 @@ export default function MarketOrdersTable({
 				<table className={styles.ordersTable__grid}>
 					<thead>
 						<tr>
-							<th className={styles.ordersTable__colOrder}>Orden / Fecha</th>
+							<th className={styles.ordersTable__colOrder}>Orden / Registro</th>
 							<th className={styles.ordersTable__colPlayer}>Jugador</th>
 							<th className={styles.ordersTable__colQuantity}>Cantidad</th>
 							<th className={styles.ordersTable__colPrice}>Precio Unit.</th>

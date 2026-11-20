@@ -8,6 +8,7 @@ export {
 	formatCentimes,
 	formatCredits,
 	formatCreditsAmount,
+	formatOrderRelativeExpiration,
 	formatQuoteCalculatedAt,
 	formatQuoteEffectiveDate,
 	formatVariationPercentage,
