@@ -55,11 +55,10 @@ ListingController.mine(jwt, page, size, sort, status)
 ### Jerarquía de Componentes
 ```text
 MarketOrdersPage
-  ├── MarketOrdersHeader (título, descripción contextual e icono de sección)
-  ├── MarketOrdersMetrics (4 tarjetas de KPI calculadas por el backend)
-  ├── MarketOrdersFilters (buscador de texto, selector de estado, selector de orden y botón limpiar)
-  ├── MarketOrdersTable (tabla principal con scroll interno y cabecera sticky)
-  │     ├── MarketOrdersRow (renderiza cada publicación, badge de estado y botón Cancelar)
+  ├── MarketOrdersHeader (utiliza MarketPageHeader con métricas integradas MarketHeaderMetric)
+  ├── MarketFilters (variante "orders", con FilterSearch y FilterSelect)
+  ├── MarketOrdersTable (tabla principal estilo trading desk con scroll interno y cabecera sticky)
+  │     ├── MarketOrdersRow (renderiza cada publicación, badge de estado, TeamBadge y botón Cancelar)
   │     └── Pagination (componente compartido conectado a la paginación del backend)
   ├── MarketOrdersEmptyState (pantalla centrada cuando no hay órdenes registradas o sin coincidencias)
   └── CancelListingModal (modal accesible de confirmación para cancelar una publicación activa)

@@ -24,9 +24,9 @@
 ### Fase 3 — Componentes visuales y maquetación desktop (UI)
 
 - [x] **T09** Implementar el hook de coordinación `useMyOrdersPage.ts` en `frontend/src/features/market/hooks/pages/` (sincronización con search params de URL `page` y `status`, orden predeterminado y gestión de modal).
-- [x] **T10** Crear el encabezado `MarketOrdersHeader` y las tarjetas de métricas `MarketOrdersMetrics` conectadas a los datos de `summary`.
-- [x] **T11** Implementar la barra de filtros `MarketOrdersFilters` (filtro por estado, buscador de texto, orden predeterminado y botón limpiar).
-- [x] **T12** Construir la tabla `MarketOrdersTable` y la fila `MarketOrdersRow` con badges semánticos por estado (`ACTIVE`, `SOLD`, `CANCELLED`, `EXPIRED`), retrato del futbolista y paginación compartida `Pagination`.
+- [x] **T10** Implementar el encabezado `MarketOrdersHeader` unificado con `MarketPageHeader` y las 4 métricas integradas en pastillas estándar (`MarketHeaderMetric`).
+- [x] **T11** Implementar la barra de filtros unificada `MarketFilters` con la variante `orders` (`OrdersMarketFilterFields`, `FilterSearch`, `FilterSelect`).
+- [x] **T12** Construir la tabla `MarketOrdersTable` y la fila `MarketOrdersRow` estilo trading desk con badges semánticos por estado (`ACTIVE`, `SOLD`, `CANCELLED`, `EXPIRED`), micro-badge de posición discreto, `TeamBadge`, retrato del futbolista y paginación compartida `Pagination`.
 - [x] **T13** Crear el estado vacío `MarketOrdersEmptyState` con botón directo hacia `/market/sell`.
 
 ### Fase 4 — Flujo interactivo de cancelación con modal accesible

@@ -108,16 +108,16 @@ Como usuario, quiero contar con respuestas visuales claras cuando el sistema est
 
 ## 3. Criterios de aceptación (Checklist)
 
-- [ ] **CA-01**: `GET /api/listings/mine` responde de forma paginada con metadatos de paginación (`page`, `size`, `totalElements`, `totalPages`) y bloque `summary`.
-- [ ] **CA-02**: Orden predeterminado en backend y frontend: *Más recientes* (`createdAt DESC, id DESC`).
-- [ ] **CA-03**: Pestaña activa y ruta `/market/orders` operativa bajo la sección de Mercado.
-- [ ] **CA-04**: La tabla presenta la paginación conectada al servidor (página solicitada, total de páginas y navegación fluida).
-- [ ] **CA-05**: Tarjetas métricas calculadas con precisión a partir del bloque `summary` del backend.
-- [ ] **CA-06**: Botón de cancelación disponible únicamente en publicaciones `ACTIVE`.
-- [ ] **CA-07**: Modal de confirmación `CancelListingModal` con detalle de la orden y advertencia de liberación de tokens.
-- [ ] **CA-08**: Ejecución exitosa de `POST /api/listings/{id}/cancel` con actualización reactiva inmediata e invalidación de caché TanStack Query.
-- [ ] **CA-09**: Estado vacío con enlace a `/market/sell` cuando no existen órdenes.
-- [ ] **CA-10**: Cumplimiento del viewport exclusivo desktop (>=1024 px) sin media queries móviles ni scroll horizontal.
+- [x] **CA-01**: `GET /api/listings/mine` responde de forma paginada con metadatos de paginación (`page`, `size`, `totalElements`, `totalPages`) y bloque `summary`.
+- [x] **CA-02**: Orden predeterminado en backend y frontend: *Más recientes* (`createdAt DESC, id DESC`).
+- [x] **CA-03**: Pestaña activa y ruta `/market/orders` operativa bajo la sección de Mercado.
+- [x] **CA-04**: La tabla presenta la paginación conectada al servidor (página solicitada, total de páginas y navegación fluida).
+- [x] **CA-05**: Tarjetas métricas calculadas con precisión a partir del bloque `summary` del backend.
+- [x] **CA-06**: Botón de cancelación disponible únicamente en publicaciones `ACTIVE`.
+- [x] **CA-07**: Modal de confirmación `CancelListingModal` con detalle de la orden y advertencia de liberación de tokens.
+- [x] **CA-08**: Ejecución exitosa de `POST /api/listings/{id}/cancel` con actualización reactiva inmediata e invalidación de caché TanStack Query.
+- [x] **CA-09**: Estado vacío con enlace a `/market/sell` cuando no existen órdenes.
+- [x] **CA-10**: Cumplimiento del viewport exclusivo desktop (>=1024 px) sin media queries móviles ni scroll horizontal.
 
 ---
 
