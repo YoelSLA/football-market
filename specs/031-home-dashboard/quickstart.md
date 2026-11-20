@@ -1,8 +1,8 @@
 # Quickstart: Guía de Verificación y Escenarios de Prueba (SPEC-031)
 
-**Feature Branch**: `feat/031-home-dashboard`  
-**Fecha**: 2026-11-20  
-**Spec de referencia**: [`spec.md`](spec.md)  
+**Feature Branch**: `feat/031-home-dashboard`
+**Fecha**: 2026-11-20
+**Spec de referencia**: [`spec.md`](spec.md)
 **Contrato API**: [`contracts/dashboard-api.md`](contracts/dashboard-api.md)
 
 ---
@@ -101,3 +101,4 @@
    - P&L = 0 créditos.
    - En lugar de gráficos rotos, se visualiza el **Empty State ilustrado** invitando a explorar el catálogo de jugadores.
    - El Market Ticker, los Top Movers y el Radar de Oportunidades se muestran completos con la información general del mercado.
+

@@ -1,7 +1,7 @@
 # Contrato de API: Dashboard interactivo y resumen ejecutivo (Backend + Frontend)
 
-**Funcionalidad**: SPEC-031 — Dashboard interactivo  
-**Controlador backend**: `footballmarket.features.dashboard.presentation.DashboardController`  
+**Funcionalidad**: SPEC-031 — Dashboard interactivo
+**Controlador backend**: `footballmarket.features.dashboard.presentation.DashboardController`
 **Seguridad**: `@SecurityRequirement(name = "bearerAuth")` (requiere JWT en header `Authorization: Bearer <token>`)
 
 ---
@@ -230,3 +230,4 @@ Retorna las series históricas temporales para el gráfico de rendimiento y benc
   ]
 }
 ```
+

@@ -1,7 +1,7 @@
 # Research: Dashboard interactivo y resumen ejecutivo de mercado (SPEC-031)
 
-**Feature Branch**: `feat/031-home-dashboard`  
-**Fecha**: 2026-11-20  
+**Feature Branch**: `feat/031-home-dashboard`
+**Fecha**: 2026-11-20
 **Spec de referencia**: [`spec.md`](spec.md)
 
 ---
@@ -59,3 +59,4 @@
   - Protege al servidor de ráfagas de consultas innecesarias mientras el usuario navega entre pestañas.
   - Asegura que si el usuario regresa de operar en el mercado oficial o P2P, los datos se sincronicen de inmediato al recuperar el foco de la ventana.
   - Elimina la necesidad de loops de polling continuo en segundo plano.
+
