@@ -76,7 +76,7 @@ export const NAV_SECTIONS: NavSection[] = [
 			},
 			{
 				key: "market-sell",
-				label: "Vender tokens",
+				label: "Publicar venta",
 				icon: Tag,
 				path: "/market/sell",
 			},

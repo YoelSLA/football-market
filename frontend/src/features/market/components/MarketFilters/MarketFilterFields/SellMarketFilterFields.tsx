@@ -1,6 +1,5 @@
 import { sanitizePositions } from "@/features/players";
-import { Button, FilterSearch, FilterSelect } from "@/shared/components";
-import { ShoppingCart } from "@/shared/icons";
+import { FilterSearch, FilterSelect } from "@/shared/components";
 import styles from "./MarketFilterFields.module.scss";
 
 interface Props {
@@ -21,10 +20,22 @@ interface Props {
 	onApply?: () => void;
 }
 
-const DIRECTION_OPTIONS = [
-	{ value: "asc", label: "Menor a mayor" },
-	{ value: "desc", label: "Mayor a menor" },
-] as const;
+const AVAILABILITY_OPTIONS = [
+	{ value: "all", label: "Todas las tenencias" },
+	{ value: "available", label: "Con disponibles" },
+	{ value: "reserved", label: "Con reservados" },
+];
+
+const SORT_OPTIONS = [
+	{ value: "name,asc", label: "Nombre (A–Z)" },
+	{ value: "name,desc", label: "Nombre (Z–A)" },
+	{ value: "total,desc", label: "Mayor tenencia total" },
+	{ value: "total,asc", label: "Menor tenencia total" },
+	{ value: "available,desc", label: "Más tokens disponibles" },
+	{ value: "available,asc", label: "Menos tokens disponibles" },
+	{ value: "reserved,desc", label: "Más tokens reservados" },
+	{ value: "reserved,asc", label: "Menos tokens reservados" },
+];
 
 export default function SellMarketFilterFields({
 	scope,
@@ -41,17 +52,14 @@ export default function SellMarketFilterFields({
 	onPositionChange,
 	onAvailabilityChange,
 	onSortChange,
-	onApply,
 }: Props) {
-	const [sortField = "name", sortDirection = "asc"] = (sort ?? "").split(",");
-	const activeField = sortField || "name";
-	const activeDirection = sortDirection === "desc" ? "desc" : "asc";
 	const leagueOptions = active
 		? [
 				{ value: "all", label: "Todas las ligas" },
 				...(leagues?.map((value) => ({ value, label: value })) ?? []),
 			]
 		: [{ value: "all", label: "Todas las ligas" }];
+
 	const positionOptions = active
 		? [
 				{ value: "all", label: "Todas las posiciones" },
@@ -61,17 +69,6 @@ export default function SellMarketFilterFields({
 				})),
 			]
 		: [{ value: "all", label: "Todas las posiciones" }];
-	const availabilityOptions = [
-		{ value: "all", label: "Todas" },
-		{ value: "available", label: "Con disponibles" },
-		{ value: "reserved", label: "Con reservados" },
-	];
-	const sortOptions = [
-		{ value: "name", label: "Nombre" },
-		{ value: "total", label: "Tenencia total" },
-		{ value: "available", label: "Tokens disponibles" },
-		{ value: "reserved", label: "Tokens reservados" },
-	];
 
 	return (
 		<fieldset
@@ -105,61 +102,21 @@ export default function SellMarketFilterFields({
 				onChange={(value) => onPositionChange?.(value)}
 			/>
 			<FilterSelect
-				id={`${scope}-${active ? "availability" : "price"}`}
-				label={active ? "Disponibilidad" : "Precio actual"}
+				id={`${scope}-availability`}
+				label="Disponibilidad"
 				value={availability ?? "all"}
 				disabled={!active}
-				options={
-					active
-						? availabilityOptions
-						: [{ value: "all", label: "Todos los precios" }]
-				}
+				options={AVAILABILITY_OPTIONS}
 				onChange={(value) => onAvailabilityChange?.(value)}
 			/>
 			<FilterSelect
-				id={`${scope}-${active ? "sort" : "sort-pending"}`}
+				id={`${scope}-sort`}
 				label="Ordenar por"
-				value={active ? activeField : "price"}
+				value={sort || "name,asc"}
 				disabled={!active}
-				options={
-					active ? sortOptions : [{ value: "price", label: "Precio actual" }]
-				}
-				onChange={(newField) =>
-					onSortChange?.(`${newField},${activeDirection}`)
-				}
+				options={SORT_OPTIONS}
+				onChange={(value) => onSortChange?.(value)}
 			/>
-			<div className={styles.marketFilterFields__direction}>
-				<span>Dirección</span>
-				{DIRECTION_OPTIONS.map((direction) => (
-					<label key={direction.value}>
-						<input
-							type="radio"
-							name={`${scope}-${active ? "direction" : "price-direction"}`}
-							value={direction.value}
-							checked={
-								active
-									? activeDirection === direction.value
-									: direction.value === "asc"
-							}
-							disabled={!active}
-							onChange={
-								active
-									? () => onSortChange?.(`${activeField},${direction.value}`)
-									: undefined
-							}
-						/>{" "}
-						{direction.label}
-					</label>
-				))}
-			</div>
-			<Button
-				type="button"
-				className={styles.marketFilterFields__apply}
-				disabled={!active}
-				onClick={active ? onApply : undefined}
-			>
-				<ShoppingCart aria-hidden="true" /> Aplicar filtros
-			</Button>
 		</fieldset>
 	);
 }

@@ -81,7 +81,8 @@ export default function MarketFilters(props: Props) {
 	const isCatalog =
 		props.variant === "official" ||
 		props.variant === "community" ||
-		props.variant === "orders";
+		props.variant === "orders" ||
+		props.variant === "sell";
 
 	const renderFilterFields = () => {
 		if (props.variant === "official") {
@@ -176,7 +177,7 @@ export default function MarketFilters(props: Props) {
 						? "Filtros del Mercado P2P"
 						: props.variant === "orders"
 							? "Filtros de Mis Órdenes"
-							: "Filtros del mercado"
+							: "Filtros de Publicar venta"
 			}
 			aria-busy={props.isUpdating ? "true" : undefined}
 		>

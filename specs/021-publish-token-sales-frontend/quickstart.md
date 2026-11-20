@@ -10,7 +10,7 @@
 
 ## US1: mercado y apertura del modal de venta
 
-1. Sin sesión, visitar `/market/sell`: `AuthGuard` redirige al login. Con sesión, visitar Mercado > Vender tokens: listado paginado de jugadores visibles, estado vacío/error con reintento. Un jugador visible con tenencia totalmente reservada sigue en el listado mostrando cero tokens disponibles (FR-F02).
+1. Sin sesión, visitar `/market/sell`: `AuthGuard` redirige al login. Con sesión, visitar Mercado > Publicar venta: listado paginado de jugadores visibles, estado vacío/error con reintento. Un jugador visible con tenencia totalmente reservada sigue en el listado mostrando cero tokens disponibles (FR-F02).
 2. Abrir el modal de venta de un jugador con cotización vigente: se muestra nombre, equipo, liga, posición, precio real de GET current, `calculatedAt` del backend; comparar precio e instante con respuesta HTTP. Nunca mostrar dato o `date` de la serie demo de players.
 3. Cancelar, pulsar ESC y hacer click fuera: en los tres casos no hay POST, se mantiene URL, página, scroll, pestaña activa y valores de cualquier filtro existente del mercado; el mercado permanece visible bajo el overlay y sin reflow.
 4. Al abrir cada nueva publicación el campo cantidad muestra `1`; con cotización disponible, el resumen muestra precio e importe estimados, claramente no definitivos. Confirmar inicia una relectura explícita de `GET /api/players/{id}/quotes/current` antes del POST. Borrar el campo o introducir `0`, `101`, `-5`, `3.5`, letras o exponentes: error inline, Confirmar deshabilitado y sin POST. `"10"`, `"1"` y `"100"` son entradas textuales válidas que deben enviarse como números 10, 1 y 100.

@@ -42,7 +42,7 @@ export default function MarketSellCard({ player, quoteState, onSell }: Props) {
 				)}
 				<Button
 					disabled={player.availableQuantity <= 0}
-					aria-label={`Vender tokens de ${player.name}`}
+					aria-label={`Publicar venta de ${player.name}`}
 					onClick={(event) => onSell(player, event.currentTarget)}
 				>
 					<Tag aria-hidden="true" /> Publicar venta

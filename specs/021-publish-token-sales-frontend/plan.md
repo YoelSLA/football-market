@@ -58,7 +58,7 @@ frontend/
 ├── src/
 │   ├── app/
 │   │   ├── router/AppRouter/AppRouter.tsx        # Rutas independientes /market/buy y /market/sell bajo AuthGuard + AppLayout
-│   │   ├── navigation/sections.ts                 # Pestaña "Vender tokens" en la navegación visual existente (path /market/sell)
+│   │   ├── navigation/sections.ts                 # Pestaña "Publicar venta" en la navegación visual existente (path /market/sell)
 │   │   └── providers/AppProviders/AppProviders.tsx  # ToastContainer (ya existe de SPEC-019)
 │   ├── features/
 │   │   ├── market/                                # Feature existente (SPEC-019), se extiende

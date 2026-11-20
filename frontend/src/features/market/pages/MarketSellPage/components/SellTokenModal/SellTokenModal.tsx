@@ -86,7 +86,7 @@ export default function SellTokenModal(props: Props) {
 				<header className={styles.sellModal__header}>
 					<Tag aria-hidden="true" />
 					<div>
-						<h2>Vender tokens</h2>
+						<h2>Publicar venta</h2>
 						<p>Prepará la publicación para el mercado.</p>
 					</div>
 				</header>

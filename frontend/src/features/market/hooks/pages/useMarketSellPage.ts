@@ -369,7 +369,11 @@ export function useMarketSellPage({
 		leagues,
 		positions,
 		searchInput,
-		setSearchInput,
+		setSearchInput: (value: string) => {
+			setSearchInput(value);
+			setFilters((current) => ({ ...current, search: value }));
+			setPage(0);
+		},
 		filters,
 		applyFilters: () => {
 			setFilters((current) => ({ ...current, search: searchInput }));

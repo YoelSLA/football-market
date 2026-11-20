@@ -5,12 +5,15 @@
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	gap: ds.$space-2xs;
 
 	// 4. 📦 Box Model
+	box-sizing: border-box;
 	min-height: 0;
 	min-width: 0;
 	width: 100%;
-	padding: 1.3rem 1.75rem 1rem;
+	height: 100%;
+	padding: ds.$space-2xs;
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-page;
@@ -18,36 +21,31 @@
 
 	// 7. ⚙️ Behavior
 	overflow: hidden;
-	&__content {
+
+	&__header {
 		// 3. 🧩 Layout
-		display: grid;
-		flex: 1;
-		grid-template-columns: minmax(15rem, .86fr) minmax(0, 3.14fr);
-		grid-template-rows: minmax(0, 1fr);
-		align-items: stretch;
-		gap: 1rem;
+		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		min-height: 0;
+		height: 70px;
+	}
+
+	&__content {
+		// 3. 🧩 Layout
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
 		min-width: 0;
+		min-height: 0;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
 	}
 
 	&__footer {
 		// 3. 🧩 Layout
 		flex-shrink: 0;
-
-		// 4. 📦 Box Model
-		padding-top: 1rem;
-	}
-}
-
-@media (max-width: 1099px) {
-	.sellPage {
-		// 4. 📦 Box Model
-		padding: 1rem;
-		&__content {
-			// 3. 🧩 Layout
-			grid-template-columns: 13.5rem minmax(0, 1fr);
-		}
 	}
 }

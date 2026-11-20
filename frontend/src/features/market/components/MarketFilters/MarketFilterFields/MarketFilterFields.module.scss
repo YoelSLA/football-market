@@ -114,13 +114,13 @@
 @media (min-width: 1100px) {
 	.marketFilterFields_official,
 	.marketFilterFields_community,
-	.marketFilterFields_orders {
+	.marketFilterFields_orders,
+	.marketFilterFields_sell {
 		// 1. 🏷️ Custom Properties
 		--filter-control-height: 38px;
 
 		// 3. 🧩 Layout
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 12px 16px;
 
 		// 4. 📦 Box Model
@@ -135,6 +135,16 @@
 			// 3. 🧩 Layout
 			grid-column: 1 / -1;
 		}
+	}
+
+	.marketFilterFields_official,
+	.marketFilterFields_community,
+	.marketFilterFields_orders {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.marketFilterFields_sell {
+		grid-template-columns: minmax(0, 1.35fr) repeat(4, minmax(0, 1fr));
 	}
 
 	.marketFilterFields_official {
