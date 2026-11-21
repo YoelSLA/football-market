@@ -47,3 +47,4 @@ se corrige con una fila nueva que la referencie.
 | SPEC-028 | Métricas de tendencias de mercado y factor de demanda en cotizaciones | Vaqui26 | https://github.com/YoelSLA/football-market/issues/96 | REQ-S2-FEAT-ADD | feat/028-market-trends-and-demand-pricing | 2026-11-18 |
 | SPEC-029 | Tablero de tendencias de mercado y visualización de demanda comunitaria | YoelSLA | https://github.com/YoelSLA/football-market/issues/97 | REQ-S2-FEAT-ADD | feat/029-frontend-market-trends-and-sentiment | 2026-11-18 |
 | SPEC-030 | Visualizar y gestionar órdenes de venta personales (Mis órdenes) | YoelSLA | https://github.com/YoelSLA/football-market/issues/105 | REQ-S2-FEAT-ADD | feat/030-my-orders | 2026-11-19 |
+| SPEC-031 | Dashboard interactivo y resumen ejecutivo de mercado (Bloomberg & Sorare) | YoelSLA | https://github.com/YoelSLA/football-market/issues/109 | REQ-S2-FEAT-ADD | feat/031-home-dashboard | 2026-11-20 |

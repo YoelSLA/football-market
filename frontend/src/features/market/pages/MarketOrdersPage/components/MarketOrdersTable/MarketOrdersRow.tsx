@@ -120,7 +120,7 @@ export default function MarketOrdersRow({ order, onCancel }: Props) {
 				>
 					{formatCreditsAmount(order.totalAmount, true)}
 				</div>
-				<div className={styles.ordersTable__totalUnit}>créditos</div>
+				<div className={styles.ordersTable__totalUnit}>₵</div>
 			</td>
 
 			<td className={styles.ordersTable__colStatus}>

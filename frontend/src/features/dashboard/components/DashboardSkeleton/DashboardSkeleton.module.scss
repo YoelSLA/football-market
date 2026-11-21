@@ -1,0 +1,227 @@
+@use "@/styles/abstracts" as ds;
+
+.skeletonContainer {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+	width: 100%;
+	background-color: ds.$surface-page;
+	overflow: hidden;
+}
+
+.scrollRegion {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 16px;
+	min-width: 0;
+	min-height: 0;
+	padding: 14px 20px 32px;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.shimmer {
+	background: linear-gradient(
+		90deg,
+		ds.$surface-panel-from 25%,
+		ds.$surface-card-subtle 50%,
+		ds.$surface-panel-from 75%
+	);
+	background-size: 200% 100%;
+	animation: shimmer 1.8s infinite;
+	border-radius: 10px;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+		background: ds.$surface-panel-from;
+	}
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+.headerSkeleton {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-md;
+	margin-bottom: 2px;
+	flex-wrap: wrap;
+}
+
+.headerTitleGroup {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+}
+
+.headerIconSkeleton {
+	@extend .shimmer;
+	width: 50px;
+	height: 50px;
+	border-radius: 12px;
+	flex-shrink: 0;
+}
+
+.headerTextSkeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.headerTitleSkeleton {
+	@extend .shimmer;
+	width: 260px;
+	height: 28px;
+}
+
+.headerDescSkeleton {
+	@extend .shimmer;
+	width: 380px;
+	height: 16px;
+}
+
+.headerMetricsSkeleton {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.metricItemSkeleton {
+	@extend .shimmer;
+	width: 170px;
+	height: 52px;
+	border-radius: 10px;
+}
+
+.tickerSkeleton {
+	@extend .shimmer;
+	height: 38px;
+	width: 100%;
+	border-radius: 0;
+	border-bottom: 1px solid ds.$border-panel;
+	flex-shrink: 0;
+}
+
+.cockpitGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cardSkeleton {
+	@extend .shimmer;
+	height: 120px;
+	border-radius: 12px;
+}
+
+.quickActionsGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 540px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.quickActionSkeleton {
+	@extend .shimmer;
+	height: 46px;
+	border-radius: 8px;
+}
+
+.chartsGrid {
+	display: grid;
+	grid-template-columns: 1fr 1.6fr;
+	gap: 16px;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.donutSkeleton {
+	@extend .shimmer;
+	height: 340px;
+	border-radius: 12px;
+}
+
+.benchmarkSkeleton {
+	@extend .shimmer;
+	height: 340px;
+	border-radius: 12px;
+}
+
+.showcaseSkeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+	background: ds.$surface-panel-from;
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+}
+
+.showcaseHeaderSkeleton {
+	@extend .shimmer;
+	height: 36px;
+	width: 320px;
+}
+
+.showcaseCardsGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.showcaseCardSkeleton {
+	@extend .shimmer;
+	height: 260px;
+	border-radius: 10px;
+}
+
+.marketRowSkeleton {
+	display: grid;
+	grid-template-columns: 1.1fr 1fr;
+	gap: 16px;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.bottomCardSkeleton {
+	@extend .shimmer;
+	height: 280px;
+	border-radius: 12px;
+}

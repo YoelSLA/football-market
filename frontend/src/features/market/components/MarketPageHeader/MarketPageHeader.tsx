@@ -54,7 +54,7 @@ export default function MarketPageHeader({
 						label="Saldo disponible"
 						value={
 							availableCredits != null
-								? `${availableCredits.toLocaleString("es-AR")} créditos`
+								? `${availableCredits.toLocaleString("es-AR")} ₵`
 								: "No disponible"
 						}
 					/>

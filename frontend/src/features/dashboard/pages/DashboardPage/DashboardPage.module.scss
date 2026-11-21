@@ -1,0 +1,236 @@
+@use "@/styles/abstracts" as ds;
+
+.dashboardPage {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+	width: 100%;
+	background-color: ds.$surface-page;
+	color: ds.$text-body-on-dark;
+	overflow: hidden;
+
+	&__scrollRegion {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 16px;
+		min-width: 0;
+		min-height: 0;
+		padding: 14px 20px 32px;
+		overflow-y: auto;
+		overflow-x: hidden;
+		scrollbar-gutter: stable;
+	}
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-md;
+	margin-bottom: 2px;
+	flex-wrap: wrap;
+}
+
+.headerTitleGroup {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	min-width: 0;
+}
+
+.headerIcon {
+	display: grid;
+	place-items: center;
+	width: 50px;
+	height: 50px;
+	border-radius: 12px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$accent-gain;
+	flex-shrink: 0;
+
+	svg {
+		width: 30px;
+		height: 30px;
+		stroke-width: 2.2;
+		filter: drop-shadow(0 0 10px ds.$surface-gain-glow);
+	}
+}
+
+.headerText {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.title {
+	font-size: clamp(22px, 1.8vw, 30px);
+	line-height: 1.2;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+	margin: 0;
+}
+
+.description {
+	font-size: 0.875rem;
+	color: ds.$text-subtle-on-dark;
+	margin: 4px 0 0;
+}
+
+.headerMetrics {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.headerMetricItem {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 52px;
+	min-width: 170px;
+	padding: 6px 14px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
+	background-color: ds.$surface-panel-from;
+	color: ds.$accent-highlight;
+}
+
+.metricTile {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$accent-highlight;
+	flex-shrink: 0;
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+}
+
+.metricContent {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.metricLabel {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: ds.$text-label-on-dark;
+	margin: 0;
+	white-space: nowrap;
+}
+
+.metricValue {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
+}
+
+.analyticsRow {
+	display: grid;
+	grid-template-columns: 1fr 1.6fr;
+	gap: 16px;
+	align-items: stretch;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.donutCol,
+.benchmarkCol {
+	min-width: 0;
+	height: 100%;
+}
+
+.marketRow {
+	display: grid;
+	grid-template-columns: 1.1fr 1fr;
+	gap: 16px;
+	align-items: stretch;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.p2pCol,
+.moversCol {
+	min-width: 0;
+	height: 100%;
+}
+
+.errorContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: ds.$space-xl 0;
+	width: 100%;
+}
+
+.errorCard {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	max-width: 480px;
+	padding: ds.$space-xl ds.$space-lg;
+	background: ds.$surface-card-dark;
+	border: 1px solid ds.$state-error-border;
+	border-radius: 12px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.errorIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: ds.$state-loss;
+	margin-bottom: ds.$space-sm;
+}
+
+.errorTitle {
+	font-size: 1.25rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0 0 ds.$space-xs;
+}
+
+.errorMessage {
+	font-size: 0.875rem;
+	color: ds.$text-muted-on-dark;
+	line-height: 1.5;
+	margin: 0 0 ds.$space-lg;
+}
+
+.retryButton {
+	display: inline-flex;
+	align-items: center;
+	gap: ds.$space-xs;
+	padding: ds.$space-xs ds.$space-md;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	border-radius: 8px;
+	color: ds.$text-body-on-dark;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: ds.$surface-data-control-active;
+		border-color: ds.$border-subtle;
+		color: ds.$text-primary-on-dark;
+	}
+}

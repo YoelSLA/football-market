@@ -32,8 +32,8 @@ export default function RankingsTable({ items, mode }: Props) {
 				: "0,000000";
 		}
 		return player.price !== undefined
-			? `${player.price.toFixed(2).replace(".", ",")} cr.`
-			: "0,00 cr.";
+			? `${player.price.toFixed(2).replace(".", ",")} ₵`
+			: "0,00 ₵";
 	};
 
 	return (

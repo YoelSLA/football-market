@@ -1,0 +1,72 @@
+@use "@/styles/abstracts" as ds;
+
+.container {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.svg {
+	display: block;
+	overflow: visible;
+}
+
+.flatLine {
+	stroke: ds.$border-subtle;
+	stroke-width: 1.5;
+}
+
+.area {
+	opacity: 0.35;
+}
+
+.trendUp {
+	.line {
+		stroke: ds.$state-gain;
+	}
+	.areaStopTop {
+		stop-color: ds.$accent-gain;
+		stop-opacity: 0.4;
+	}
+	.areaStopBottom {
+		stop-color: ds.$accent-gain;
+		stop-opacity: 0;
+	}
+	.latestDot {
+		fill: ds.$state-gain;
+	}
+}
+
+.trendDown {
+	.line {
+		stroke: ds.$state-loss;
+	}
+	.areaStopTop {
+		stop-color: ds.$state-loss;
+		stop-opacity: 0.4;
+	}
+	.areaStopBottom {
+		stop-color: ds.$state-loss;
+		stop-opacity: 0;
+	}
+	.latestDot {
+		fill: ds.$state-loss;
+	}
+}
+
+.trendNeutral {
+	.line {
+		stroke: ds.$text-muted-on-dark;
+	}
+	.areaStopTop {
+		stop-color: ds.$text-muted-on-dark;
+		stop-opacity: 0.3;
+	}
+	.areaStopBottom {
+		stop-color: ds.$text-muted-on-dark;
+		stop-opacity: 0;
+	}
+	.latestDot {
+		fill: ds.$text-muted-on-dark;
+	}
+}

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout, AuthGuard } from "@/app/layouts";
-import { HomePage, LoginPage, RegisterPage } from "@/features/auth";
+import { LoginPage, RegisterPage } from "@/features/auth";
+import { DashboardPage } from "@/features/dashboard";
 import {
 	MarketBuyPage,
 	MarketOrdersPage,
@@ -33,7 +34,7 @@ export default function AppRouter() {
 			{/* RUTAS PROTEGIDAS */}
 			<Route element={<AuthGuard privateRoute />}>
 				<Route element={<AppLayout />}>
-					<Route path="/home" element={<HomePage />} />
+					<Route path="/home" element={<DashboardPage />} />
 					<Route path="/portfolio" element={<PortfolioSummaryPage />} />
 					<Route
 						path="/portfolio/holdings"
