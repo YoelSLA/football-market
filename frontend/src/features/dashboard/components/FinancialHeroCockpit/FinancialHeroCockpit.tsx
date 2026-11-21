@@ -1,0 +1,109 @@
+import { Link } from "react-router-dom";
+import type { FinancialSummary } from "../../types/models";
+import { FinancialHeroCard } from "./FinancialHeroCard/FinancialHeroCard";
+import styles from "./FinancialHeroCockpit.module.scss";
+import { PatrimonySparkline } from "./PatrimonySparkline/PatrimonySparkline";
+
+export interface FinancialHeroCockpitProps {
+	summary: FinancialSummary;
+	sparklineData?: number[];
+	className?: string;
+}
+
+function formatCredits(amount: number | null): string {
+	if (amount === null) return "—";
+	return `${amount.toLocaleString("es-ES", {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	})} ₢`;
+}
+
+export function FinancialHeroCockpit({
+	summary,
+	sparklineData,
+	className,
+}: FinancialHeroCockpitProps) {
+	const pnl = summary.totalProfitLoss ?? 0;
+	const pnlPercentage = summary.totalProfitLossPercentage ?? 0;
+	const pnlTrend = pnl > 0 ? "up" : pnl < 0 ? "down" : "neutral";
+
+	const unrealizedText =
+		summary.totalUnrealizedProfitLoss !== null
+			? formatCredits(summary.totalUnrealizedProfitLoss)
+			: "—";
+	const realizedText = formatCredits(summary.totalRealizedProfitLoss);
+
+	return (
+		<section
+			className={`${styles.cockpitGrid} ${className ?? ""}`.trim()}
+			aria-label="Resumen ejecutivo patrimonial"
+		>
+			{/* 1. Patrimonio Neto */}
+			<FinancialHeroCard
+				title="Patrimonio Neto"
+				value={
+					summary.valuationComplete
+						? formatCredits(summary.netWorth)
+						: "Calculando..."
+				}
+				subtitle="Valoración integral de cartera y saldo"
+				delta={
+					summary.totalProfitLossPercentage !== null
+						? {
+								value: summary.totalProfitLossPercentage,
+								isPercentage: true,
+							}
+						: undefined
+				}
+				trend={pnlTrend}
+				sparkline={
+					<PatrimonySparkline
+						data={sparklineData}
+						trend={pnlTrend}
+						width={90}
+						height={36}
+					/>
+				}
+			/>
+
+			{/* 2. P&L Total */}
+			<FinancialHeroCard
+				title="P&L Consolidado"
+				value={formatCredits(summary.totalProfitLoss)}
+				subtitle={`No realizado: ${unrealizedText} · Realizado: ${realizedText}`}
+				delta={{
+					value: pnlPercentage,
+					isPercentage: true,
+					label: "total",
+				}}
+				trend={pnlTrend}
+			/>
+
+			{/* 3. Liquidez Disponible */}
+			<FinancialHeroCard
+				title="Liquidez Disponible"
+				value={formatCredits(summary.availableCredits)}
+				subtitle="Efectivo disponible para adquisiciones"
+				trend="neutral"
+				extraAction={
+					<Link to="/market/buy" className={styles.actionLink}>
+						Operar →
+					</Link>
+				}
+			/>
+
+			{/* 4. Custodia de Tokens */}
+			<FinancialHeroCard
+				title="Custodia de Tokens"
+				value={`${summary.totalTokens} Tokens`}
+				subtitle={`${summary.availableTokens} libres · ${summary.reservedTokens} en venta P2P`}
+				trend="neutral"
+				extraAction={
+					<Link to="/portfolio" className={styles.actionLink}>
+						Cartera →
+					</Link>
+				}
+			/>
+		</section>
+	);
+}

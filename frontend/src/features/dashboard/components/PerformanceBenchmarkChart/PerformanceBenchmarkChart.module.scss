@@ -1,0 +1,235 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: ds.$space-xs;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-md;
+	flex-wrap: wrap;
+	gap: ds.$space-sm;
+}
+
+.titleGroup {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+}
+
+.subtitle {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-md;
+	flex-wrap: wrap;
+}
+
+.legend {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+	font-size: 0.75rem;
+}
+
+.legendUser {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: ds.$state-gain;
+	font-weight: 600;
+}
+
+.legendDotUser {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: ds.$state-gain;
+}
+
+.legendBenchmark {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	color: ds.$text-muted-on-dark;
+	font-weight: 500;
+}
+
+.legendDotBenchmark {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: ds.$text-muted-on-dark;
+}
+
+.rangeButtons {
+	display: inline-flex;
+	padding: 2px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-subtle;
+	border-radius: ds.$space-xs;
+}
+
+.rangeBtn {
+	padding: 3px 10px;
+	border: none;
+	background: transparent;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 3px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+
+	&:hover:not(:disabled) {
+		color: ds.$text-body-on-dark;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.rangeBtnActive {
+	background: ds.$surface-control-active;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.chartContainer {
+	position: relative;
+	width: 100%;
+	height: auto;
+}
+
+.svg {
+	width: 100%;
+	height: auto;
+	display: block;
+	overflow: visible;
+}
+
+.gridLine {
+	stroke: ds.$border-subtle;
+	stroke-opacity: 0.25;
+	stroke-dasharray: 2, 4;
+}
+
+.axisLabel {
+	fill: ds.$text-auxiliary-on-dark;
+	font-size: 9px;
+	font-variant-numeric: tabular-nums;
+}
+
+.stopUserTop {
+	stop-color: ds.$accent-gain;
+	stop-opacity: 0.35;
+}
+
+.stopUserBottom {
+	stop-color: ds.$accent-gain;
+	stop-opacity: 0;
+}
+
+.stopBenchmarkTop {
+	stop-color: ds.$border-panel-alt;
+	stop-opacity: 0.2;
+}
+
+.stopBenchmarkBottom {
+	stop-color: ds.$border-panel-alt;
+	stop-opacity: 0;
+}
+
+.userLine {
+	stroke: ds.$state-gain;
+}
+
+.benchmarkLine {
+	stroke: ds.$text-muted-on-dark;
+	opacity: 0.8;
+}
+
+.hoverTarget {
+	cursor: crosshair;
+}
+
+.crosshairLine {
+	stroke: ds.$text-primary-on-dark;
+	stroke-width: 1;
+	stroke-dasharray: 2, 2;
+	opacity: 0.6;
+}
+
+.userPointActive {
+	fill: ds.$state-gain;
+	stroke: ds.$surface-page;
+	stroke-width: 2;
+}
+
+.benchmarkPointActive {
+	fill: ds.$text-muted-on-dark;
+	stroke: ds.$surface-page;
+	stroke-width: 2;
+}
+
+.tooltipCard {
+	position: absolute;
+	top: 10px;
+	transform: translateX(-50%);
+	pointer-events: none;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 6px 10px;
+	background: ds.$surface-card-dark;
+	border: 1px solid ds.$border-panel;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+	white-space: nowrap;
+	z-index: 5;
+}
+
+.tooltipDate {
+	font-size: 0.7rem;
+	color: ds.$text-muted-on-dark;
+	font-weight: 600;
+}
+
+.tooltipUser {
+	color: ds.$state-gain;
+	font-weight: 700;
+}
+
+.tooltipBenchmark {
+	color: ds.$text-body-on-dark;
+	font-weight: 500;
+}
+
+.emptyContainer {
+	padding: ds.$space-xl 0;
+	text-align: center;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.875rem;
+}

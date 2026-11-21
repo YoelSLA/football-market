@@ -1,0 +1,140 @@
+@use "@/styles/abstracts" as ds;
+
+.skeletonContainer {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-lg;
+	padding: ds.$space-md;
+	max-width: 1400px;
+	margin: 0 auto;
+	width: 100%;
+}
+
+.shimmer {
+	background: linear-gradient(
+		90deg,
+		ds.$surface-data-control 25%,
+		ds.$surface-data-control-soft 50%,
+		ds.$surface-data-control 75%
+	);
+	background-size: 200% 100%;
+	animation: shimmer 1.8s infinite;
+	border-radius: ds.$space-xs;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+		background: ds.$surface-data-control;
+	}
+}
+
+@keyframes shimmer {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+.tickerSkeleton {
+	@extend .shimmer;
+	height: 36px;
+	width: 100%;
+	border-radius: 0;
+	margin-bottom: ds.$space-md;
+}
+
+.cockpitGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: ds.$space-md;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.cardSkeleton {
+	@extend .shimmer;
+	height: 140px;
+}
+
+.quickActionsGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: ds.$space-md;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 540px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.quickActionSkeleton {
+	@extend .shimmer;
+	height: 64px;
+}
+
+.chartsGrid {
+	display: grid;
+	grid-template-columns: 1fr 2fr;
+	gap: ds.$space-md;
+
+	@media (max-width: 1024px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.donutSkeleton {
+	@extend .shimmer;
+	height: 300px;
+}
+
+.benchmarkSkeleton {
+	@extend .shimmer;
+	height: 300px;
+}
+
+.showcaseSkeleton {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-md;
+}
+
+.showcaseHeaderSkeleton {
+	@extend .shimmer;
+	height: 40px;
+	width: 280px;
+}
+
+.showcaseCardsGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: ds.$space-md;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.showcaseCardSkeleton {
+	@extend .shimmer;
+	height: 280px;
+}

@@ -1,0 +1,126 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: ds.$space-xs;
+	min-height: 140px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+	transition: border-color 0.2s ease, transform 0.2s ease;
+
+	&:hover {
+		border-color: ds.$border-subtle;
+	}
+}
+
+.cardWarning {
+	border-color: ds.$state-loss;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-xs;
+}
+
+.title {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: ds.$text-label-on-dark;
+}
+
+.iconContainer {
+	color: ds.$text-muted-on-dark;
+	display: flex;
+	align-items: center;
+}
+
+.mainContent {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	margin: ds.$space-xs 0;
+	flex-wrap: wrap;
+}
+
+.valueRow {
+	display: flex;
+	align-items: baseline;
+	gap: ds.$space-xs;
+	flex-wrap: wrap;
+}
+
+.value {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+.deltaBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.trendUp {
+	background-color: ds.$surface-gain-soft;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.trendDown {
+	background-color: ds.$surface-loss-subtle;
+	color: ds.$state-loss;
+	border: 1px solid ds.$border-loss-emphasis;
+}
+
+.trendNeutral {
+	background-color: ds.$surface-data-control;
+	color: ds.$text-muted-on-dark;
+	border: 1px solid ds.$border-subtle;
+}
+
+.deltaLabel {
+	margin-left: 2px;
+	font-size: 0.7rem;
+	font-weight: 400;
+	opacity: 0.8;
+}
+
+.sparklineContainer {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: ds.$space-xs;
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+}
+
+.subtitle {
+	color: ds.$text-subtle-on-dark;
+	font-size: 0.75rem;
+}
+
+.extraAction {
+	margin-left: auto;
+}

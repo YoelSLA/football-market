@@ -1,0 +1,129 @@
+@use "@/styles/abstracts" as ds;
+
+.emptyCard {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	padding: ds.$space-xl ds.$space-lg;
+	background: linear-gradient(160deg, ds.$surface-panel-from 0%, ds.$surface-page-deep 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: ds.$space-xs;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+	margin-bottom: ds.$space-lg;
+}
+
+.iconGlow {
+	font-size: 3rem;
+	margin-bottom: ds.$space-md;
+	filter: drop-shadow(0 0 16px ds.$surface-gain-soft);
+}
+
+.title {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0 0 ds.$space-sm;
+	letter-spacing: -0.01em;
+}
+
+.description {
+	max-width: 640px;
+	font-size: 0.9375rem;
+	line-height: 1.6;
+	color: ds.$text-body-on-dark;
+	margin: 0 0 ds.$space-xl;
+}
+
+.creditsHighlight {
+	color: ds.$accent-gain;
+	font-weight: 700;
+}
+
+.featuresGrid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: ds.$space-md;
+	max-width: 800px;
+	width: 100%;
+	margin-bottom: ds.$space-xl;
+
+	@media (max-width: 768px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.featureItem {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: ds.$space-md;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	border-radius: ds.$space-xs;
+}
+
+.featureIcon {
+	font-size: 1.5rem;
+	margin-bottom: ds.$space-xs;
+}
+
+.featureTitle {
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin-bottom: 4px;
+}
+
+.featureDesc {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	line-height: 1.4;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-md;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.primaryBtn {
+	display: inline-flex;
+	align-items: center;
+	padding: ds.$space-sm ds.$space-lg;
+	background: ds.$accent-gain;
+	color: ds.$surface-page;
+	font-size: 0.875rem;
+	font-weight: 700;
+	border-radius: ds.$space-xs;
+	text-decoration: none;
+	transition: all 0.2s ease;
+	box-shadow: 0 4px 14px ds.$surface-gain-soft;
+
+	&:hover {
+		background: ds.$state-gain;
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px ds.$surface-gain-soft;
+	}
+}
+
+.secondaryBtn {
+	display: inline-flex;
+	align-items: center;
+	padding: ds.$space-sm ds.$space-lg;
+	background: ds.$surface-data-control-soft;
+	color: ds.$text-body-on-dark;
+	border: 1px solid ds.$border-panel;
+	font-size: 0.875rem;
+	font-weight: 600;
+	border-radius: ds.$space-xs;
+	text-decoration: none;
+	transition: all 0.2s ease;
+
+	&:hover {
+		background: ds.$surface-data-control;
+		border-color: ds.$border-subtle;
+	}
+}

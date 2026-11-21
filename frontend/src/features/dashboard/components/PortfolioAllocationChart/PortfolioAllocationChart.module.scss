@@ -1,0 +1,216 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: ds.$space-xs;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-md;
+	flex-wrap: wrap;
+	gap: ds.$space-sm;
+}
+
+.titleGroup {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+}
+
+.subtitle {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+}
+
+.toggleGroup {
+	display: inline-flex;
+	padding: 2px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-subtle;
+	border-radius: ds.$space-xs;
+}
+
+.toggleButton {
+	padding: 4px 12px;
+	border: none;
+	background: transparent;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		color: ds.$text-body-on-dark;
+	}
+}
+
+.toggleButtonActive {
+	background: ds.$surface-control-active;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.concentrationAlert {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-xs;
+	padding: ds.$space-xs ds.$space-sm;
+	background: ds.$surface-loss-subtle;
+	border: 1px solid ds.$border-loss-emphasis;
+	border-radius: ds.$space-xs;
+	margin-bottom: ds.$space-md;
+	font-size: 0.75rem;
+	color: ds.$state-loss;
+}
+
+.alertIcon {
+	font-size: 0.85rem;
+}
+
+.body {
+	display: grid;
+	grid-template-columns: 200px 1fr;
+	gap: ds.$space-lg;
+	align-items: center;
+
+	@media (max-width: 768px) {
+		grid-template-columns: 1fr;
+		justify-items: center;
+	}
+}
+
+.chartWrapper {
+	width: 100%;
+	max-width: 200px;
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.donutSvg {
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.segment {
+	transition: opacity 0.2s ease, transform 0.2s ease;
+	cursor: pointer;
+	stroke: ds.$surface-panel-to;
+	stroke-width: 1.5;
+
+	&:hover,
+	&.segmentHovered {
+		opacity: 1;
+		filter: brightness(1.2);
+	}
+}
+
+.centerText {
+	user-select: none;
+}
+
+.centerLabel {
+	fill: ds.$text-muted-on-dark;
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.centerValue {
+	fill: ds.$text-primary-on-dark;
+	font-size: 15px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.centerSub {
+	fill: ds.$text-label-on-dark;
+	font-size: 9px;
+}
+
+.legendList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-xs;
+	width: 100%;
+}
+
+.legendItem {
+	display: grid;
+	grid-template-columns: 12px 1fr auto auto;
+	align-items: center;
+	gap: ds.$space-sm;
+	padding: 4px ds.$space-xs;
+	border-radius: 4px;
+	font-size: 0.8rem;
+	color: ds.$text-body-on-dark;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+
+	&:hover,
+	&.legendItemHovered {
+		background-color: ds.$surface-data-control;
+	}
+}
+
+.legendColor {
+	width: 10px;
+	height: 10px;
+	border-radius: 2px;
+}
+
+.legendLabel {
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.legendPct {
+	font-weight: 600;
+	color: ds.$text-muted-on-dark;
+	font-variant-numeric: tabular-nums;
+}
+
+.legendValue {
+	font-weight: 600;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.emptyState {
+	grid-column: 1 / -1;
+	text-align: center;
+	padding: ds.$space-lg 0;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.875rem;
+}

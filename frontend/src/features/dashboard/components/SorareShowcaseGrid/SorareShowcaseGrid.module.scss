@@ -1,0 +1,89 @@
+@use "@/styles/abstracts" as ds;
+
+.container {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: ds.$space-lg;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-md;
+	flex-wrap: wrap;
+	gap: ds.$space-sm;
+}
+
+.titleGroup {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	font-size: 1.125rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+}
+
+.subtitle {
+	font-size: 0.8rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+}
+
+.tabGroup {
+	display: inline-flex;
+	padding: 2px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-subtle;
+	border-radius: ds.$space-xs;
+}
+
+.tabBtn {
+	padding: 6px 14px;
+	border: none;
+	background: transparent;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.8rem;
+	font-weight: 600;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		color: ds.$text-body-on-dark;
+	}
+}
+
+.tabBtnActive {
+	background: ds.$surface-control-active;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: ds.$space-md;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.emptyNotice {
+	grid-column: 1 / -1;
+	text-align: center;
+	padding: ds.$space-xl 0;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.875rem;
+	background: ds.$surface-data-control-soft;
+	border: 1px dashed ds.$border-panel;
+	border-radius: ds.$space-xs;
+}

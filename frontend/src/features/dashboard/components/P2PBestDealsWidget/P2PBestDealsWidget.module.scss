@@ -1,0 +1,199 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: ds.$space-xs;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-md;
+	flex-wrap: wrap;
+	gap: ds.$space-sm;
+}
+
+.titleGroup {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+}
+
+.subtitle {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+}
+
+.viewAllLink {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: ds.$accent-gain;
+	text-decoration: none;
+	transition: color 0.15s ease;
+
+	&:hover {
+		color: ds.$state-gain;
+		text-decoration: underline;
+	}
+}
+
+.dealsList {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-xs;
+}
+
+.dealItem {
+	display: grid;
+	grid-template-columns: 1fr auto auto auto;
+	align-items: center;
+	gap: ds.$space-sm;
+	padding: ds.$space-xs ds.$space-sm;
+	background: ds.$surface-data-control-soft;
+	border: 1px solid ds.$surface-data-control;
+	border-radius: ds.$space-xs;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+
+	&:hover {
+		border-color: ds.$border-panel;
+		background: ds.$surface-data-control;
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr auto;
+		gap: ds.$space-xs;
+	}
+}
+
+.playerCol {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+	min-width: 0;
+}
+
+.portrait {
+	width: 32px;
+	height: 32px;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+
+.playerInfo {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.playerName {
+	font-weight: 600;
+	font-size: 0.8125rem;
+	color: ds.$text-primary-on-dark;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.playerTeam {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.7rem;
+	color: ds.$text-muted-on-dark;
+}
+
+.teamShield {
+	width: 12px;
+	height: 12px;
+	object-fit: contain;
+}
+
+.priceCol {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+.priceRow {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+}
+
+.p2pPrice {
+	font-size: 0.8125rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+}
+
+.officialPrice {
+	font-size: 0.7rem;
+	color: ds.$text-auxiliary-on-dark;
+	text-decoration: line-through;
+	font-variant-numeric: tabular-nums;
+}
+
+.tokensAvailable {
+	font-size: 0.65rem;
+	color: ds.$text-muted-on-dark;
+}
+
+.discountCol {
+	display: flex;
+	align-items: center;
+}
+
+.discountBadge {
+	font-size: 0.75rem;
+	font-weight: 700;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: ds.$surface-gain-soft;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+	font-variant-numeric: tabular-nums;
+}
+
+.actionCol {
+	display: flex;
+	align-items: center;
+}
+
+.buyBtn {
+	padding: 4px 10px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	border-radius: 4px;
+	color: ds.$text-body-on-dark;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition: all 0.15s ease;
+
+	&:hover {
+		background: ds.$surface-control-active;
+		color: ds.$state-gain;
+		border-color: ds.$border-gain-subtle;
+	}
+}
+
+.emptyState {
+	text-align: center;
+	padding: ds.$space-xl 0;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.875rem;
+}
