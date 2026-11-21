@@ -218,7 +218,7 @@ export function PerformanceBenchmarkChart({
 										textAnchor="end"
 										className={styles.axisLabel}
 									>
-										{val} ₢
+										{val} ₵
 									</text>
 								</g>
 							);
@@ -306,10 +306,10 @@ export function PerformanceBenchmarkChart({
 							{formatDayMonth(dates[hoverIndex])}
 						</span>
 						<span className={styles.tooltipUser}>
-							Mi Cartera: {userSeries[hoverIndex]?.toFixed(2)} ₢
+							Mi Cartera: {userSeries[hoverIndex]?.toFixed(2)} ₵
 						</span>
 						<span className={styles.tooltipBenchmark}>
-							FMI: {benchmarkSeries[hoverIndex]?.toFixed(2)} ₢
+							FMI: {benchmarkSeries[hoverIndex]?.toFixed(2)} ₵
 						</span>
 					</div>
 				)}

@@ -17,7 +17,7 @@ export function P2PBestDealsWidget({
 		return `${val.toLocaleString("es-ES", {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2,
-		})} ₢`;
+		})} ₵`;
 	};
 
 	return (

@@ -28,7 +28,7 @@ export function MarketTicker({
 		return `${price.toLocaleString("es-ES", {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2,
-		})} ₢`;
+		})} ₵`;
 	};
 
 	const formatDelta = (pct: number | null) => {
@@ -54,7 +54,7 @@ export function MarketTicker({
 							{marketPulse.totalMarketCap.toLocaleString("es-ES", {
 								maximumFractionDigits: 0,
 							})}{" "}
-							₢
+							₵
 						</span>
 						<span className={styles.pulseDivider}>|</span>
 						<span className={styles.pulseItem}>
@@ -62,7 +62,7 @@ export function MarketTicker({
 							{marketPulse.volume24h.toLocaleString("es-ES", {
 								maximumFractionDigits: 0,
 							})}{" "}
-							₢
+							₵
 						</span>
 					</>
 				)}

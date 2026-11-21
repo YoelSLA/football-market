@@ -47,7 +47,7 @@ export default function PortfolioMetricCard({
 	const Indicator =
 		icon === "positions" ? UsersRound : negative ? TrendingDown : TrendingUp;
 	// Conservar el texto formateado; solo separar visualmente su unidad.
-	const creditUnit = " créditos";
+	const creditUnit = " ₵";
 	const accentedUnit = tone === "current" && value.endsWith(creditUnit);
 
 	return (

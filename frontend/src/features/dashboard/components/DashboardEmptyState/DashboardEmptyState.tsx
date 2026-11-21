@@ -32,7 +32,7 @@ export function DashboardEmptyState({
 						minimumFractionDigits: 2,
 						maximumFractionDigits: 2,
 					})}{" "}
-					₢
+					₵
 				</strong>{" "}
 				de saldo disponible para armar tu plantilla de activos deportivos y
 				comenzar a rentabilizar tus decisiones financieras.

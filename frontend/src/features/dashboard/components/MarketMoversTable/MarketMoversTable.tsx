@@ -24,7 +24,7 @@ export function MarketMoversTable({
 		return `${price.toLocaleString("es-ES", {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2,
-		})} ₢`;
+		})} ₵`;
 	};
 
 	const formatDeltaPct = (pct: number | null) => {
@@ -36,7 +36,7 @@ export function MarketMoversTable({
 	const formatDeltaCredits = (delta: number | null) => {
 		if (delta === null) return "—";
 		const sign = delta > 0 ? "+" : "";
-		return `${sign}${delta.toFixed(2)} ₢`;
+		return `${sign}${delta.toFixed(2)} ₵`;
 	};
 
 	return (

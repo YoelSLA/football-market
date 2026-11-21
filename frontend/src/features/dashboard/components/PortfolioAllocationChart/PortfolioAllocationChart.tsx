@@ -162,7 +162,7 @@ export function PortfolioAllocationChart({
 												{totalValue.toLocaleString("es-ES", {
 													maximumFractionDigits: 0,
 												})}{" "}
-												₢
+												₵
 											</text>
 											<text
 												x="100"
@@ -205,7 +205,7 @@ export function PortfolioAllocationChart({
 												minimumFractionDigits: 2,
 												maximumFractionDigits: 2,
 											})}{" "}
-											₢
+											₵
 										</span>
 									</li>
 								);

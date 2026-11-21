@@ -47,7 +47,7 @@ export default function DashboardPage() {
 		return `${amount.toLocaleString("es-ES", {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2,
-		})} ₢`;
+		})} ₵`;
 	};
 
 	if (isOverviewLoading) {

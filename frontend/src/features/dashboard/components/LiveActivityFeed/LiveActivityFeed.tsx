@@ -16,7 +16,7 @@ export function LiveActivityFeed({
 		return `${amount.toLocaleString("es-ES", {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2,
-		})} ₢`;
+		})} ₵`;
 	};
 
 	const formatDate = (isoString: string) => {

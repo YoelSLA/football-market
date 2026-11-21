@@ -16,7 +16,7 @@ function formatCredits(amount: number | null): string {
 	return `${amount.toLocaleString("es-ES", {
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
-	})} ₢`;
+	})} ₵`;
 }
 
 export function FinancialHeroCockpit({

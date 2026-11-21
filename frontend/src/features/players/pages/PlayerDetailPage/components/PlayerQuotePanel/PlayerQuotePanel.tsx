@@ -44,7 +44,7 @@ export default function PlayerQuotePanel({
 				<dl>
 					<div>
 						<dt>Precio</dt>
-						<dd>{snapshot?.price} cr.</dd>
+						<dd>{snapshot?.price} ₵</dd>
 					</div>
 					<div>
 						<dt>Fecha</dt>
@@ -54,7 +54,7 @@ export default function PlayerQuotePanel({
 						<dt>Variación</dt>
 						<dd>
 							{variationKnown
-								? `${snapshot?.absoluteChange} cr. (${DIRECTION_LABEL[(snapshot?.direction as keyof typeof DIRECTION_LABEL) ?? "unknown"]})`
+								? `${snapshot?.absoluteChange} ₵ (${DIRECTION_LABEL[(snapshot?.direction as keyof typeof DIRECTION_LABEL) ?? "unknown"]})`
 								: "Variación no disponible"}
 						</dd>
 					</div>

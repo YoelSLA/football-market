@@ -36,7 +36,7 @@ export function SorarePlayerCard({
 		return `${amount.toLocaleString("es-ES", {
 			minimumFractionDigits: 2,
 			maximumFractionDigits: 2,
-		})} ₢`;
+		})} ₵`;
 	};
 
 	const formatDelta = (pct: number | null) => {
@@ -115,7 +115,7 @@ export function SorarePlayerCard({
 
 					{valueRatio !== undefined && (
 						<span className={styles.ratioBadge} title="Score por crédito">
-							{valueRatio.toFixed(1)} pts/k₢
+							{valueRatio.toFixed(1)} pts/k₵
 						</span>
 					)}
 				</div>

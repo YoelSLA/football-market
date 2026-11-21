@@ -120,7 +120,7 @@ export function formatQuoteAbsoluteChange(
 		maximumFractionDigits: 2,
 	});
 
-	return `${sign}${formatted} ${Math.abs(change) === 1 ? "crédito" : "créditos"}`;
+	return `${sign}${formatted} ₵`;
 }
 
 /**
@@ -144,5 +144,5 @@ export function formatQuotePrice(
 		maximumFractionDigits: 2,
 	});
 
-	return `${formatted} ${price === 1 ? "crédito" : "créditos"}`;
+	return `${formatted} ₵`;
 }
