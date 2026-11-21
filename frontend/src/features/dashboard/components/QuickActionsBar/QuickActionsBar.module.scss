@@ -1,69 +1,68 @@
 @use "@/styles/abstracts" as ds;
 
 .bar {
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	display: flex;
+	align-items: center;
 	gap: ds.$space-md;
-	margin-bottom: ds.$space-lg;
-
-	@media (max-width: 1024px) {
-		grid-template-columns: repeat(2, 1fr);
-	}
-
-	@media (max-width: 540px) {
-		grid-template-columns: 1fr;
-	}
+	padding: 10px 16px;
+	background-color: ds.$surface-panel-from;
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+	margin-bottom: 4px;
+	flex-wrap: wrap;
 }
 
-.actionBtn {
+.barLabel {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: ds.$text-subtle-on-dark;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.actionsList {
 	display: flex;
 	align-items: center;
 	gap: ds.$space-sm;
-	padding: ds.$space-sm ds.$space-md;
-	background: ds.$surface-data-control;
+	flex-wrap: wrap;
+	flex: 1;
+}
+
+.actionBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 14px;
+	background-color: ds.$surface-data-control;
 	border: 1px solid ds.$border-panel;
-	border-radius: ds.$space-xs;
+	border-radius: 8px;
+	color: ds.$text-strong-on-dark;
+	font-size: 0.8125rem;
+	font-weight: 600;
 	text-decoration: none;
-	color: ds.$text-primary-on-dark;
 	transition: all 0.2s ease;
 
 	&:hover {
-		background: ds.$surface-data-control-active;
+		background-color: ds.$surface-card-subtle;
 		border-color: ds.$border-subtle;
-		transform: translateY(-2px);
+		transform: translateY(-1px);
 	}
 }
 
 .btnPrimary {
-	background: linear-gradient(135deg, ds.$surface-action-subtle 0%, ds.$surface-control-active 100%);
+	background-color: ds.$surface-action-subtle;
 	border-color: ds.$border-gain-subtle;
+	color: ds.$accent-gain;
 
 	&:hover {
+		background-color: ds.$surface-control-active;
 		border-color: ds.$accent-gain;
-		box-shadow: 0 4px 12px ds.$surface-gain-soft;
-	}
-
-	.title {
 		color: ds.$state-gain;
 	}
 }
 
 .icon {
-	font-size: 1.25rem;
-}
-
-.labelGroup {
-	display: flex;
-	flex-direction: column;
-}
-
-.title {
-	font-size: 0.875rem;
-	font-weight: 700;
-	letter-spacing: 0.02em;
-}
-
-.desc {
-	font-size: 0.7rem;
-	color: ds.$text-muted-on-dark;
+	width: 15px;
+	height: 15px;
+	flex-shrink: 0;
 }

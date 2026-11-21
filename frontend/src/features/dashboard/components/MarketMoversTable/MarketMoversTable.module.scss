@@ -6,7 +6,7 @@
 	padding: ds.$space-md;
 	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
 	border: 1px solid ds.$border-panel;
-	border-radius: ds.$space-xs;
+	border-radius: 12px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
@@ -20,6 +20,29 @@
 }
 
 .titleGroup {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.headerIconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$state-gain;
+	flex-shrink: 0;
+}
+
+.headerIcon {
+	width: 18px;
+	height: 18px;
+}
+
+.headerTitles {
 	display: flex;
 	flex-direction: column;
 }
@@ -46,7 +69,10 @@
 }
 
 .tabButton {
-	padding: 4px 12px;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 12px;
 	border: none;
 	background: transparent;
 	color: ds.$text-muted-on-dark;
@@ -59,6 +85,10 @@
 	&:hover {
 		color: ds.$text-body-on-dark;
 	}
+}
+
+.tabIcon {
+	flex-shrink: 0;
 }
 
 .tabGainersActive {

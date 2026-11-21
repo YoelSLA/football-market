@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { ChartPie, TriangleAlert } from "@/shared/icons";
 import type { PortfolioAllocation } from "../../types/models";
 import styles from "./PortfolioAllocationChart.module.scss";
 import { calculateDonutSegments } from "./utils/donutMath";
@@ -28,7 +29,7 @@ export function PortfolioAllocationChart({
 	}, [activeItems]);
 
 	const segments = useMemo(() => {
-		return calculateDonutSegments(activeItems, 100, 100, 62, 90);
+		return calculateDonutSegments(activeItems, 100, 100, 65, 88);
 	}, [activeItems]);
 
 	const activeSegment = useMemo(() => {
@@ -42,11 +43,16 @@ export function PortfolioAllocationChart({
 	return (
 		<div className={`${styles.card} ${className ?? ""}`.trim()}>
 			<header className={styles.header}>
-				<div className={styles.titleGroup}>
-					<h2 className={styles.title}>Distribución de Cartera</h2>
-					<span className={styles.subtitle}>
-						Asignación de capital por activo deportivo
+				<div className={styles.headerLeft}>
+					<span className={styles.headerIcon} aria-hidden="true">
+						<ChartPie />
 					</span>
+					<div className={styles.titleGroup}>
+						<h2 className={styles.title}>Distribución de Cartera</h2>
+						<span className={styles.subtitle}>
+							Asignación de capital por activo deportivo
+						</span>
+					</div>
 				</div>
 
 				<div className={styles.controls}>
@@ -77,9 +83,7 @@ export function PortfolioAllocationChart({
 
 			{hasConcentrationRisk && (
 				<div className={styles.concentrationAlert} role="alert">
-					<span className={styles.alertIcon} aria-hidden="true">
-						⚠️
-					</span>
+					<TriangleAlert className={styles.alertIcon} aria-hidden="true" />
 					<span className={styles.alertText}>
 						<strong>Alerta de concentración:</strong>{" "}
 						{allocation.topHoldingPlayerName} representa el{" "}

@@ -3,19 +3,20 @@
 .tickerBar {
 	display: flex;
 	align-items: center;
-	height: 36px;
-	background: ds.$surface-data-header;
-	border-top: 1px solid ds.$border-panel;
-	border-bottom: 1px solid ds.$border-panel;
+	height: 40px;
+	background: ds.$surface-panel-from;
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
 	overflow: hidden;
 	user-select: none;
 	width: 100%;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .pulseSummary {
 	display: flex;
 	align-items: center;
-	gap: ds.$space-md;
+	gap: ds.$space-xs;
 	padding: 0 ds.$space-md;
 	height: 100%;
 	background: ds.$surface-data-control;
@@ -23,13 +24,40 @@
 	flex-shrink: 0;
 	z-index: 2;
 
-	@media (max-width: 768px) {
+	@media (max-width: 860px) {
 		display: none;
 	}
 }
 
+.pulseLiveDot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background-color: ds.$accent-gain;
+	box-shadow: 0 0 8px ds.$surface-gain-glow;
+	animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.4;
+		transform: scale(0.85);
+	}
+}
+
+.pulseIcon {
+	width: 14px;
+	height: 14px;
+	color: ds.$accent-gain;
+	margin-right: 2px;
+}
+
 .pulseItem {
-	font-size: 0.7rem;
+	font-size: 0.75rem;
 	font-weight: 700;
 	color: ds.$text-primary-on-dark;
 	font-variant-numeric: tabular-nums;
@@ -38,8 +66,14 @@
 
 .pulseLabel {
 	color: ds.$accent-gain;
-	font-weight: 800;
+	font-weight: 700;
 	margin-right: 2px;
+}
+
+.pulseDivider {
+	color: ds.$border-subtle;
+	font-size: 0.75rem;
+	margin: 0 2px;
 }
 
 .marqueeTrackWrapper {
@@ -54,7 +88,7 @@
 .marqueeTrack {
 	display: flex;
 	align-items: center;
-	gap: ds.$space-md;
+	gap: ds.$space-sm;
 	white-space: nowrap;
 	animation: scrollTicker 35s linear infinite;
 
@@ -81,16 +115,16 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	padding: 2px 10px;
-	border-radius: 4px;
+	padding: 3px 10px;
+	border-radius: 6px;
 	text-decoration: none;
-	background: ds.$surface-data-control-soft;
-	border: 1px solid ds.$border-subtle;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
 	font-size: 0.75rem;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 
 	&:hover {
-		background: ds.$surface-data-control;
+		background: ds.$surface-card-subtle;
 		border-color: ds.$accent-gain;
 	}
 }

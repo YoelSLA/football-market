@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { TrendingUp } from "@/shared/icons";
 import type { PerformanceSeries } from "../../types/models";
 import styles from "./PerformanceBenchmarkChart.module.scss";
 
@@ -106,11 +107,16 @@ export function PerformanceBenchmarkChart({
 	return (
 		<div className={`${styles.card} ${className ?? ""}`.trim()}>
 			<header className={styles.header}>
-				<div className={styles.titleGroup}>
-					<h2 className={styles.title}>Benchmark de Rendimiento</h2>
-					<span className={styles.subtitle}>
-						Evolución comparada vs Football Market Index (FMI)
+				<div className={styles.headerLeft}>
+					<span className={styles.headerIcon} aria-hidden="true">
+						<TrendingUp />
 					</span>
+					<div className={styles.titleGroup}>
+						<h2 className={styles.title}>Benchmark de Rendimiento</h2>
+						<span className={styles.subtitle}>
+							Evolución comparada vs Football Market Index (FMI)
+						</span>
+					</div>
 				</div>
 
 				<div className={styles.controls}>
@@ -142,7 +148,16 @@ export function PerformanceBenchmarkChart({
 			<div className={styles.chartContainer}>
 				{!hasData ? (
 					<div className={styles.emptyContainer}>
-						<p>Historial insuficiente para calcular el benchmark.</p>
+						<span className={styles.emptyIcon} aria-hidden="true">
+							📊
+						</span>
+						<p className={styles.emptyTitle}>
+							Historial en proceso de consolidación
+						</p>
+						<p className={styles.emptyDesc}>
+							La curva de rendimiento se genera automáticamente a medida que se
+							acumulan sesiones de recálculo oficial del mercado.
+						</p>
 					</div>
 				) : (
 					<svg
@@ -211,7 +226,6 @@ export function PerformanceBenchmarkChart({
 
 						{/* Líneas de fecha en el eje X */}
 						{dates.map((d, idx) => {
-							// Mostrar solo 5 etiquetas espaciadas
 							const step = Math.max(1, Math.floor(dates.length / 5));
 							if (idx % step !== 0 && idx !== dates.length - 1) return null;
 							const x = PAD_LEFT + (PLOT_WIDTH / (dates.length - 1)) * idx;

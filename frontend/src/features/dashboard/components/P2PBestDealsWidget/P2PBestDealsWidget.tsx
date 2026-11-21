@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PlayerPortrait, TeamBadge } from "@/shared/components";
+import { ArrowRight, Handshake } from "@/shared/icons";
 import type { P2PDeal } from "../../types/models";
 import styles from "./P2PBestDealsWidget.module.scss";
 
@@ -23,14 +24,24 @@ export function P2PBestDealsWidget({
 		<div className={`${styles.card} ${className ?? ""}`.trim()}>
 			<header className={styles.header}>
 				<div className={styles.titleGroup}>
-					<h2 className={styles.title}>Oportunidades P2P</h2>
-					<span className={styles.subtitle}>
-						Listados de la comunidad con descuento sobre cotización oficial
+					<span className={styles.headerIconTile} aria-hidden="true">
+						<Handshake className={styles.headerIcon} />
 					</span>
+					<div className={styles.headerTitles}>
+						<h2 className={styles.title}>Oportunidades P2P</h2>
+						<span className={styles.subtitle}>
+							Listados de la comunidad con descuento sobre cotización oficial
+						</span>
+					</div>
 				</div>
 
 				<Link to="/market/p2p" className={styles.viewAllLink}>
-					Ver Mercado P2P →
+					<span>Ver Mercado P2P</span>
+					<ArrowRight
+						size={14}
+						className={styles.linkArrow}
+						aria-hidden="true"
+					/>
 				</Link>
 			</header>
 

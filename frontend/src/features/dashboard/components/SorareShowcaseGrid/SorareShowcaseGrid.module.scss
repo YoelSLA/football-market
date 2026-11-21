@@ -3,7 +3,11 @@
 .container {
 	display: flex;
 	flex-direction: column;
-	margin-bottom: ds.$space-lg;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .header {
@@ -17,11 +21,34 @@
 
 .titleGroup {
 	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.headerIconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 9px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$accent-highlight;
+	flex-shrink: 0;
+}
+
+.headerIcon {
+	width: 20px;
+	height: 20px;
+}
+
+.headerTitles {
+	display: flex;
 	flex-direction: column;
 }
 
 .title {
-	font-size: 1.125rem;
+	font-size: 1.05rem;
 	font-weight: 700;
 	color: ds.$text-primary-on-dark;
 	margin: 0;
@@ -42,6 +69,9 @@
 }
 
 .tabBtn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
 	padding: 6px 14px;
 	border: none;
 	background: transparent;
@@ -55,6 +85,10 @@
 	&:hover {
 		color: ds.$text-body-on-dark;
 	}
+}
+
+.tabIcon {
+	flex-shrink: 0;
 }
 
 .tabBtnActive {

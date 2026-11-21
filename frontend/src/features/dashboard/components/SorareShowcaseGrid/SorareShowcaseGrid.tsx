@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Flame, Radar, Sparkles } from "@/shared/icons";
 import type { PlayerMover, ValuePick } from "../../types/models";
 import { SorarePlayerCard } from "./SorarePlayerCard/SorarePlayerCard";
 import styles from "./SorareShowcaseGrid.module.scss";
@@ -23,10 +24,15 @@ export function SorareShowcaseGrid({
 		>
 			<header className={styles.header}>
 				<div className={styles.titleGroup}>
-					<h2 className={styles.title}>Showcase Deportivo</h2>
-					<span className={styles.subtitle}>
-						Cartas coleccionables destacadas por algoritmo y rendimiento
+					<span className={styles.headerIconTile} aria-hidden="true">
+						<Sparkles className={styles.headerIcon} />
 					</span>
+					<div className={styles.headerTitles}>
+						<h2 className={styles.title}>Showcase Deportivo</h2>
+						<span className={styles.subtitle}>
+							Cartas coleccionables destacadas por algoritmo y rendimiento
+						</span>
+					</div>
 				</div>
 
 				<div
@@ -41,7 +47,8 @@ export function SorareShowcaseGrid({
 						className={`${styles.tabBtn} ${activeTab === "value" ? styles.tabBtnActive : ""}`}
 						onClick={() => setActiveTab("value")}
 					>
-						💎 Radar de Oportunidades
+						<Radar size={14} className={styles.tabIcon} aria-hidden="true" />
+						<span>Radar de Oportunidades</span>
 					</button>
 					<button
 						type="button"
@@ -50,7 +57,8 @@ export function SorareShowcaseGrid({
 						className={`${styles.tabBtn} ${activeTab === "gainers" ? styles.tabBtnActive : ""}`}
 						onClick={() => setActiveTab("gainers")}
 					>
-						🔥 Estrellas en Racha
+						<Flame size={14} className={styles.tabIcon} aria-hidden="true" />
+						<span>Estrellas en Racha</span>
 					</button>
 				</div>
 			</header>

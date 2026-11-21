@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { PlayerPortrait, TeamBadge } from "@/shared/components";
+import { Star } from "@/shared/icons";
 import styles from "./SorarePlayerCard.module.scss";
 
 export interface SorarePlayerCardProps {
@@ -59,7 +60,8 @@ export function SorarePlayerCard({
 
 				{score !== undefined && score !== null && (
 					<span className={styles.scoreBadge} title="Score WhoScored">
-						★ {score.toFixed(2)}
+						<Star size={11} className={styles.starIcon} aria-hidden="true" />
+						<span>{score.toFixed(2)}</span>
 					</span>
 				)}
 			</header>

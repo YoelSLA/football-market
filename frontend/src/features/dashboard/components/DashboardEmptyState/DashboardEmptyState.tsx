@@ -1,4 +1,11 @@
 import { Link } from "react-router-dom";
+import {
+	Coins,
+	Handshake,
+	LayoutDashboard,
+	TrendingUp,
+	Zap,
+} from "@/shared/icons";
 import styles from "./DashboardEmptyState.module.scss";
 
 export interface DashboardEmptyStateProps {
@@ -13,7 +20,7 @@ export function DashboardEmptyState({
 	return (
 		<div className={`${styles.emptyCard} ${className ?? ""}`.trim()}>
 			<div className={styles.iconGlow} aria-hidden="true">
-				⚽
+				<LayoutDashboard size={44} className={styles.emptyIcon} />
 			</div>
 
 			<h2 className={styles.title}>¡Bienvenido a Football Market!</h2>
@@ -33,7 +40,9 @@ export function DashboardEmptyState({
 
 			<div className={styles.featuresGrid}>
 				<div className={styles.featureItem}>
-					<span className={styles.featureIcon}>📈</span>
+					<span className={styles.featureIcon} aria-hidden="true">
+						<TrendingUp size={22} />
+					</span>
 					<span className={styles.featureTitle}>Mercado Oficial</span>
 					<span className={styles.featureDesc}>
 						Compra tokens directamente al club a precio de cotización.
@@ -41,7 +50,9 @@ export function DashboardEmptyState({
 				</div>
 
 				<div className={styles.featureItem}>
-					<span className={styles.featureIcon}>🤝</span>
+					<span className={styles.featureIcon} aria-hidden="true">
+						<Handshake size={22} />
+					</span>
 					<span className={styles.featureTitle}>Comunidad P2P</span>
 					<span className={styles.featureDesc}>
 						Aprovecha descuentos y negocia con otros managers.
@@ -49,7 +60,9 @@ export function DashboardEmptyState({
 				</div>
 
 				<div className={styles.featureItem}>
-					<span className={styles.featureIcon}>💎</span>
+					<span className={styles.featureIcon} aria-hidden="true">
+						<Coins size={22} />
+					</span>
 					<span className={styles.featureTitle}>Dividendos Deportivos</span>
 					<span className={styles.featureDesc}>
 						Tus futbolistas revalorizan su cotización según su rendimiento real.
@@ -59,7 +72,8 @@ export function DashboardEmptyState({
 
 			<div className={styles.actions}>
 				<Link to="/market/buy" className={styles.primaryBtn}>
-					⚡ Comprar mis primeros tokens
+					<Zap size={15} aria-hidden="true" />
+					<span>Comprar mis primeros tokens</span>
 				</Link>
 				<Link to="/players" className={styles.secondaryBtn}>
 					Explorar Catálogo

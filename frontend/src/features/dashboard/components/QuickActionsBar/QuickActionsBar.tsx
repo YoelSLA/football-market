@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { BarChart3, Handshake, Tag, Zap } from "@/shared/icons";
 import styles from "./QuickActionsBar.module.scss";
 
 export interface QuickActionsBarProps {
@@ -11,48 +12,32 @@ export function QuickActionsBar({ className }: QuickActionsBarProps) {
 			className={`${styles.bar} ${className ?? ""}`.trim()}
 			aria-label="Acciones rápidas del mercado"
 		>
-			<Link
-				to="/market/buy"
-				className={`${styles.actionBtn} ${styles.btnPrimary}`}
-			>
-				<span className={styles.icon} aria-hidden="true">
-					⚡
-				</span>
-				<div className={styles.labelGroup}>
-					<span className={styles.title}>Comprar Tokens</span>
-					<span className={styles.desc}>Mercado Primario Oficial</span>
-				</div>
-			</Link>
+			<span className={styles.barLabel}>Acciones Rápidas:</span>
 
-			<Link to="/market/p2p" className={styles.actionBtn}>
-				<span className={styles.icon} aria-hidden="true">
-					🤝
-				</span>
-				<div className={styles.labelGroup}>
-					<span className={styles.title}>Mercado P2P</span>
-					<span className={styles.desc}>Ofertas de la Comunidad</span>
-				</div>
-			</Link>
+			<div className={styles.actionsList}>
+				<Link
+					to="/market/buy"
+					className={`${styles.actionBtn} ${styles.btnPrimary}`}
+				>
+					<Zap className={styles.icon} aria-hidden="true" />
+					<span>Comprar Tokens</span>
+				</Link>
 
-			<Link to="/market/sell" className={styles.actionBtn}>
-				<span className={styles.icon} aria-hidden="true">
-					🏷️
-				</span>
-				<div className={styles.labelGroup}>
-					<span className={styles.title}>Vender Tokens</span>
-					<span className={styles.desc}>Publicar en P2P</span>
-				</div>
-			</Link>
+				<Link to="/market/p2p" className={styles.actionBtn}>
+					<Handshake className={styles.icon} aria-hidden="true" />
+					<span>Mercado P2P</span>
+				</Link>
 
-			<Link to="/portfolio" className={styles.actionBtn}>
-				<span className={styles.icon} aria-hidden="true">
-					💼
-				</span>
-				<div className={styles.labelGroup}>
-					<span className={styles.title}>Mi Cartera</span>
-					<span className={styles.desc}>Gestión de Posiciones</span>
-				</div>
-			</Link>
+				<Link to="/market/sell" className={styles.actionBtn}>
+					<Tag className={styles.icon} aria-hidden="true" />
+					<span>Vender Tokens</span>
+				</Link>
+
+				<Link to="/portfolio" className={styles.actionBtn}>
+					<BarChart3 className={styles.icon} aria-hidden="true" />
+					<span>Mi Cartera</span>
+				</Link>
+			</div>
 		</nav>
 	);
 }

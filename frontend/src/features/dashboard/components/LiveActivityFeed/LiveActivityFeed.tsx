@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowRight, History } from "@/shared/icons";
 import type { RecentActivityItem } from "../../types/models";
 import styles from "./LiveActivityFeed.module.scss";
 
@@ -36,14 +37,24 @@ export function LiveActivityFeed({
 		<div className={`${styles.card} ${className ?? ""}`.trim()}>
 			<header className={styles.header}>
 				<div className={styles.titleGroup}>
-					<h2 className={styles.title}>Actividad Reciente</h2>
-					<span className={styles.subtitle}>
-						Últimas transacciones ejecutadas en tu cuenta
+					<span className={styles.headerIconTile} aria-hidden="true">
+						<History className={styles.headerIcon} />
 					</span>
+					<div className={styles.headerTitles}>
+						<h2 className={styles.title}>Actividad Reciente</h2>
+						<span className={styles.subtitle}>
+							Últimas transacciones ejecutadas en tu cuenta
+						</span>
+					</div>
 				</div>
 
 				<Link to="/portfolio" className={styles.viewAllLink}>
-					Historial Completo →
+					<span>Historial Completo</span>
+					<ArrowRight
+						size={14}
+						className={styles.linkArrow}
+						aria-hidden="true"
+					/>
 				</Link>
 			</header>
 

@@ -3,8 +3,8 @@
 .cockpitGrid {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
-	gap: ds.$space-md;
-	margin-bottom: ds.$space-lg;
+	gap: 16px;
+	margin-bottom: 4px;
 
 	@media (max-width: 1200px) {
 		grid-template-columns: repeat(2, 1fr);

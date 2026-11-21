@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Coins, Package, TrendingUp, Wallet } from "@/shared/icons";
 import type { FinancialSummary } from "../../types/models";
 import { FinancialHeroCard } from "./FinancialHeroCard/FinancialHeroCard";
 import styles from "./FinancialHeroCockpit.module.scss";
@@ -41,6 +42,8 @@ export function FinancialHeroCockpit({
 			{/* 1. Patrimonio Neto */}
 			<FinancialHeroCard
 				title="Patrimonio Neto"
+				icon={Wallet}
+				accentTone="gain"
 				value={
 					summary.valuationComplete
 						? formatCredits(summary.netWorth)
@@ -60,17 +63,19 @@ export function FinancialHeroCockpit({
 					<PatrimonySparkline
 						data={sparklineData}
 						trend={pnlTrend}
-						width={90}
-						height={36}
+						width={80}
+						height={32}
 					/>
 				}
 			/>
 
-			{/* 2. P&L Total */}
+			{/* 2. P&L Consolidado */}
 			<FinancialHeroCard
 				title="P&L Consolidado"
+				icon={TrendingUp}
+				accentTone={pnl >= 0 ? "gain" : "loss"}
 				value={formatCredits(summary.totalProfitLoss)}
-				subtitle={`No realizado: ${unrealizedText} · Realizado: ${realizedText}`}
+				subtitle={`No real.: ${unrealizedText} · Real.: ${realizedText}`}
 				delta={{
 					value: pnlPercentage,
 					isPercentage: true,
@@ -82,6 +87,8 @@ export function FinancialHeroCockpit({
 			{/* 3. Liquidez Disponible */}
 			<FinancialHeroCard
 				title="Liquidez Disponible"
+				icon={Coins}
+				accentTone="highlight"
 				value={formatCredits(summary.availableCredits)}
 				subtitle="Efectivo disponible para adquisiciones"
 				trend="neutral"
@@ -95,6 +102,8 @@ export function FinancialHeroCockpit({
 			{/* 4. Custodia de Tokens */}
 			<FinancialHeroCard
 				title="Custodia de Tokens"
+				icon={Package}
+				accentTone="investment"
 				value={`${summary.totalTokens} Tokens`}
 				subtitle={`${summary.availableTokens} libres · ${summary.reservedTokens} en venta P2P`}
 				trend="neutral"

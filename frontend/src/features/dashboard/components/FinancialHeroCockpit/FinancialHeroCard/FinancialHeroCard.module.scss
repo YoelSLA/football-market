@@ -1,67 +1,108 @@
 @use "@/styles/abstracts" as ds;
 
 .card {
+	position: relative;
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
 	padding: ds.$space-md;
-	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	background-color: ds.$surface-panel-from;
 	border: 1px solid ds.$border-panel;
-	border-radius: ds.$space-xs;
-	min-height: 140px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-	transition: border-color 0.2s ease, transform 0.2s ease;
+	border-left: 4px solid var(--card-accent, #{ds.$accent-highlight});
+	border-radius: 12px;
+	box-shadow: inset 0 1px ds.$surface-glass-interactive, 0 4px 16px ds.$shadow-medium;
+	transition: transform 0.2s ease, border-color 0.2s ease;
 
 	&:hover {
+		transform: translateY(-2px);
 		border-color: ds.$border-subtle;
 	}
+}
+
+.accent_gain {
+	--card-accent: #{ds.$accent-gain};
+	--tile-bg: #{ds.$surface-metric-tile-gain};
+}
+
+.accent_loss {
+	--card-accent: #{ds.$state-loss};
+	--tile-bg: #{ds.$surface-metric-tile-loss};
+}
+
+.accent_highlight {
+	--card-accent: #{ds.$accent-highlight};
+	--tile-bg: #{ds.$surface-metric-tile-highlight};
+}
+
+.accent_investment {
+	--card-accent: #{ds.$accent-investment};
+	--tile-bg: #{ds.$surface-metric-tile-investment};
 }
 
 .cardWarning {
 	border-color: ds.$state-loss;
 }
 
+.cardLayout {
+	display: flex;
+	gap: ds.$space-md;
+	align-items: flex-start;
+}
+
+.tileWrapper {
+	flex-shrink: 0;
+}
+
+.iconTile {
+	display: grid;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+	background-color: var(--tile-bg, #{ds.$surface-metric-tile-highlight});
+	color: var(--card-accent, #{ds.$accent-highlight});
+
+	svg {
+		width: 26px;
+		height: 26px;
+		stroke-width: 2.2;
+	}
+}
+
+.contentCol {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+}
+
 .header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: ds.$space-xs;
+	margin-bottom: 4px;
 }
 
 .title {
-	font-size: 0.75rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.06em;
-	color: ds.$text-label-on-dark;
-}
-
-.iconContainer {
-	color: ds.$text-muted-on-dark;
-	display: flex;
-	align-items: center;
-}
-
-.mainContent {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: ds.$space-sm;
-	margin: ds.$space-xs 0;
-	flex-wrap: wrap;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: ds.$text-subtle-on-dark;
+	text-transform: none;
+	letter-spacing: normal;
 }
 
 .valueRow {
 	display: flex;
 	align-items: baseline;
+	justify-content: space-between;
 	gap: ds.$space-xs;
+	margin: 2px 0 6px;
 	flex-wrap: wrap;
 }
 
 .value {
-	font-size: 1.5rem;
+	font-size: clamp(1.35rem, 1.6vw, 1.75rem);
 	font-weight: 700;
-	color: ds.$text-primary-on-dark;
+	color: ds.$text-value-on-dark;
 	font-variant-numeric: tabular-nums;
 	letter-spacing: -0.02em;
 }
@@ -111,16 +152,20 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-top: ds.$space-xs;
+	margin-top: 2px;
 	font-size: 0.75rem;
-	color: ds.$text-muted-on-dark;
+	color: ds.$text-dimmed-on-dark;
 }
 
 .subtitle {
 	color: ds.$text-subtle-on-dark;
 	font-size: 0.75rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .extraAction {
 	margin-left: auto;
+	flex-shrink: 0;
 }

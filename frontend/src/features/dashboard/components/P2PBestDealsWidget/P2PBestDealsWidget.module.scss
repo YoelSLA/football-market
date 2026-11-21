@@ -6,7 +6,7 @@
 	padding: ds.$space-md;
 	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
 	border: 1px solid ds.$border-panel;
-	border-radius: ds.$space-xs;
+	border-radius: 12px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
@@ -20,6 +20,29 @@
 }
 
 .titleGroup {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.headerIconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$accent-highlight;
+	flex-shrink: 0;
+}
+
+.headerIcon {
+	width: 18px;
+	height: 18px;
+}
+
+.headerTitles {
 	display: flex;
 	flex-direction: column;
 }
@@ -38,6 +61,9 @@
 }
 
 .viewAllLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 	font-size: 0.75rem;
 	font-weight: 600;
 	color: ds.$accent-gain;
@@ -48,6 +74,10 @@
 		color: ds.$state-gain;
 		text-decoration: underline;
 	}
+}
+
+.linkArrow {
+	flex-shrink: 0;
 }
 
 .dealsList {
@@ -61,15 +91,15 @@
 	grid-template-columns: 1fr auto auto auto;
 	align-items: center;
 	gap: ds.$space-sm;
-	padding: ds.$space-xs ds.$space-sm;
-	background: ds.$surface-data-control-soft;
-	border: 1px solid ds.$surface-data-control;
-	border-radius: ds.$space-xs;
+	padding: 8px 12px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	border-radius: 8px;
 	transition: border-color 0.15s ease, background-color 0.15s ease;
 
 	&:hover {
-		border-color: ds.$border-panel;
-		background: ds.$surface-data-control;
+		border-color: ds.$border-gain-subtle;
+		background: ds.$surface-control-active;
 	}
 
 	@media (max-width: 640px) {

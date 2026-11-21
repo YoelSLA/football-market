@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Activity } from "@/shared/icons";
 import type { MarketPulse, PlayerMover } from "../../types/models";
 import styles from "./MarketTicker.module.scss";
 
@@ -15,7 +16,6 @@ export function MarketTicker({
 }: MarketTickerProps) {
 	if (!movers || movers.length === 0) return null;
 
-	// Duplicar elementos para efecto marquee continuo infinito
 	const tickerItems = [...movers, ...movers];
 
 	const formatPrice = (price: number) => {
@@ -36,24 +36,29 @@ export function MarketTicker({
 			className={`${styles.tickerBar} ${className ?? ""}`.trim()}
 			aria-label="Cinta de cotizaciones en tiempo real"
 		>
-			{marketPulse && (
-				<div className={styles.pulseSummary}>
-					<span className={styles.pulseItem}>
-						<span className={styles.pulseLabel}>CAP:</span>{" "}
-						{marketPulse.totalMarketCap.toLocaleString("es-ES", {
-							maximumFractionDigits: 0,
-						})}{" "}
-						₢
-					</span>
-					<span className={styles.pulseItem}>
-						<span className={styles.pulseLabel}>VOL 24H:</span>{" "}
-						{marketPulse.volume24h.toLocaleString("es-ES", {
-							maximumFractionDigits: 0,
-						})}{" "}
-						₢
-					</span>
-				</div>
-			)}
+			<div className={styles.pulseSummary}>
+				<span className={styles.pulseLiveDot} aria-hidden="true" />
+				<Activity className={styles.pulseIcon} aria-hidden="true" />
+				{marketPulse && (
+					<>
+						<span className={styles.pulseItem}>
+							<span className={styles.pulseLabel}>CAP:</span>{" "}
+							{marketPulse.totalMarketCap.toLocaleString("es-ES", {
+								maximumFractionDigits: 0,
+							})}{" "}
+							₢
+						</span>
+						<span className={styles.pulseDivider}>|</span>
+						<span className={styles.pulseItem}>
+							<span className={styles.pulseLabel}>VOL 24H:</span>{" "}
+							{marketPulse.volume24h.toLocaleString("es-ES", {
+								maximumFractionDigits: 0,
+							})}{" "}
+							₢
+						</span>
+					</>
+				)}
+			</div>
 
 			<div className={styles.marqueeTrackWrapper}>
 				<div className={styles.marqueeTrack}>
