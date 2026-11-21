@@ -16,7 +16,13 @@ export function MarketTicker({
 }: MarketTickerProps) {
 	if (!movers || movers.length === 0) return null;
 
-	const tickerItems = [...movers, ...movers];
+	// Duplicar elementos 4 veces para garantizar cobertura continua y animación sin saltos
+	const tickerItems = [
+		...movers.map((m) => ({ ...m, instance: "a" })),
+		...movers.map((m) => ({ ...m, instance: "b" })),
+		...movers.map((m) => ({ ...m, instance: "c" })),
+		...movers.map((m) => ({ ...m, instance: "d" })),
+	];
 
 	const formatPrice = (price: number) => {
 		return `${price.toLocaleString("es-ES", {
@@ -39,8 +45,10 @@ export function MarketTicker({
 			<div className={styles.pulseSummary}>
 				<span className={styles.pulseLiveDot} aria-hidden="true" />
 				<Activity className={styles.pulseIcon} aria-hidden="true" />
+				<span className={styles.pulseTitle}>EN VIVO</span>
 				{marketPulse && (
 					<>
+						<span className={styles.pulseDivider}>|</span>
 						<span className={styles.pulseItem}>
 							<span className={styles.pulseLabel}>CAP:</span>{" "}
 							{marketPulse.totalMarketCap.toLocaleString("es-ES", {
@@ -62,12 +70,11 @@ export function MarketTicker({
 
 			<div className={styles.marqueeTrackWrapper}>
 				<div className={styles.marqueeTrack}>
-					{tickerItems.map((item, idx) => {
+					{tickerItems.map((item) => {
 						const isUp = (item.deltaPercentage ?? 0) >= 0;
-						const trackInstance = idx < movers.length ? "primary" : "clone";
 						return (
 							<Link
-								key={`${trackInstance}-${item.playerId}`}
+								key={`${item.instance}-${item.playerId}`}
 								to={`/players/${item.playerId}`}
 								className={styles.tickerChip}
 							>

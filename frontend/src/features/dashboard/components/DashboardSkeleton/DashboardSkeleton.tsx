@@ -11,24 +11,11 @@ export function DashboardSkeleton({ className }: DashboardSkeletonProps) {
 			aria-busy="true"
 			aria-label="Cargando panel de control del mercado..."
 		>
+			{/* Ticker bar skeleton en la parte superior full-width */}
+			<div className={styles.tickerSkeleton} />
+
 			<div className={styles.scrollRegion}>
 				{/* Header skeleton */}
-				<div className={styles.headerSkeleton}>
-					<div className={styles.headerTitleGroup}>
-						<div className={styles.headerIconSkeleton} />
-						<div className={styles.headerTextSkeleton}>
-							<div className={styles.headerTitleSkeleton} />
-							<div className={styles.headerDescSkeleton} />
-						</div>
-					</div>
-					<div className={styles.headerMetricsSkeleton}>
-						<div className={styles.metricItemSkeleton} />
-						<div className={styles.metricItemSkeleton} />
-					</div>
-				</div>
-
-				{/* Ticker bar skeleton */}
-				<div className={styles.tickerSkeleton} />
 
 				{/* Cockpit 4 cards skeleton */}
 				<div className={styles.cockpitGrid}>

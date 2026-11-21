@@ -100,6 +100,12 @@ export default function DashboardPage() {
 	return (
 		<PageLayout>
 			<div className={styles.dashboardPage}>
+				{/* Cinta ticker continua en la parte superior (full-width, fija) */}
+				<MarketTicker
+					movers={combinedMovers}
+					marketPulse={overview.marketPulse}
+				/>
+
 				<div className={styles.dashboardPage__scrollRegion}>
 					{/* Header de página con identidad Football Market */}
 					<header className={styles.header}>
@@ -142,12 +148,6 @@ export default function DashboardPage() {
 							</div>
 						</div>
 					</header>
-
-					{/* Ribbon Ticker continuo */}
-					<MarketTicker
-						movers={combinedMovers}
-						marketPulse={overview.marketPulse}
-					/>
 
 					{isNewUser ? (
 						<DashboardEmptyState
