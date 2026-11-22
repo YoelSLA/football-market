@@ -14,8 +14,8 @@ function formatValue(player: PlayerRankingItem, mode: RankingMode): string {
 	}
 
 	return player.price !== undefined
-		? `${player.price.toFixed(2).replace(".", ",")} cr.`
-		: "0,00 cr.";
+		? `${player.price.toFixed(2).replace(".", ",")} ₵`
+		: "0,00 ₵";
 }
 
 export default function RankingPlaceValue({ player, mode }: Props) {

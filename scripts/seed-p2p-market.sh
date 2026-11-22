@@ -7,6 +7,8 @@ DEMO_PASSWORD="${P2P_DEMO_PASSWORD:-P2pDemo2026!}"
 SELLER_COUNT="${P2P_SELLER_COUNT:-12}"
 PLAYER_POOL_SIZE="${P2P_PLAYER_POOL_SIZE:-3}"
 INTERVAL_SECONDS="${P2P_INTERVAL_SECONDS:-10800}"
+P2P_MIN_TOKENS="${P2P_MIN_TOKENS:-1}"
+P2P_MAX_TOKENS="${P2P_MAX_TOKENS:-5}"
 MAX_INITIAL_CREDITS_CENTS=10000
 
 for dependency in curl jq; do
@@ -138,10 +140,26 @@ for seller_index in $(seq 0 $((SELLER_COUNT - 1))); do
   player_name="$(jq -er ".content[$player_index].name" <<<"$CATALOG")"
   official_price="$(jq -er ".content[$player_index].quote.price // 100" <<<"$CATALOG")"
 
-  # Cantidad actual (1 token). Para la demo se podrá variar entre 1 y 3 tokens:
-  token_quantity=1
-  # [DEMO FEATURE #94] Descomentar para variar cantidad de tokens:
-  # token_quantity=$(( (seller_index % 3) + 1 ))
+  # Cantidad aleatoria de tokens a comprar y publicar (simula oferta realista):
+  max_affordable=$(( MAX_INITIAL_CREDITS_CENTS / official_price ))
+  max_allowed=$(( max_affordable < P2P_MAX_TOKENS ? max_affordable : P2P_MAX_TOKENS ))
+
+  if (( max_allowed <= P2P_MIN_TOKENS )); then
+    token_quantity=$(( max_allowed > 0 ? max_allowed : 1 ))
+  else
+    # Distribución realista: 60% probabilidad de 1-2 tokens, 30% de 3-4, 10% de 5+
+    distribution_roll=$(( RANDOM % 100 ))
+    if (( distribution_roll < 60 )); then
+      upper=$(( max_allowed < 2 ? max_allowed : 2 ))
+      token_quantity=$(( (RANDOM % (upper - P2P_MIN_TOKENS + 1)) + P2P_MIN_TOKENS ))
+    elif (( distribution_roll < 90 )); then
+      lower=$(( max_allowed < 3 ? max_allowed : 3 ))
+      upper=$(( max_allowed < 4 ? max_allowed : 4 ))
+      token_quantity=$(( (RANDOM % (upper - lower + 1)) + lower ))
+    else
+      token_quantity="$max_allowed"
+    fi
+  fi
 
   buy_body="$(jq -n --argjson playerId "$player_id" --argjson quantity "$token_quantity" \
     '{playerId: $playerId, quantity: $quantity}')"
@@ -177,33 +195,32 @@ for seller_index in $(seq 0 $((SELLER_COUNT - 1))); do
 done
 
 # -----------------------------------------------------------------------------
-# [PENDIENTE - ISSUES #94, #96, #97 / SPEC-026, SPEC-028, SPEC-029]
-# MOVIMIENTOS Y LIQUIDACIÓN REAL EN EL MERCADO P2P PARA LA DEMO
+# MOVIMIENTOS Y LIQUIDACIÓN REAL EN EL MERCADO P2P (ALIMENTA EL DASHBOARD)
 # -----------------------------------------------------------------------------
-# Actualmente el script solo publica ofertas pero nadie las compra.
-# Al activar este bloque, el comprador liquida un porcentaje de los listings
-# (por ejemplo el 50%), logrando:
+# Un comprador regular (NO superusuario) liquida un porcentaje de los listings
+# (por defecto 40%), logrando:
 #  1. Publicaciones que pasan a estado 'SOLD' (visible en historial).
 #  2. Registros reales en 'market_transactions' (compras/ventas secundarias).
-#  3. Datos para el Tablero de Tendencias y Sentimiento (BULLISH/BEARISH).
-#  4. Ofertas remanentes en 'ACTIVE' para que el usuario compre en vivo en la demo.
-#
-# BUY_RATIO_PERCENT=50
-# echo
-# echo "=== [DEMO] Simulando compras P2P para generar transacciones y sentimiento ==="
-# for listing_to_buy in "${CREATED_LISTINGS[@]}"; do
-#   if (( (RANDOM % 100) < BUY_RATIO_PERCENT )); then
-#     buy_p2p_body="$(jq -n --argjson listingId "$listing_to_buy" '{listingId: $listingId}')"
-#     request POST "$API_BASE_URL/api/orders/buy" "$BUYER_TOKEN" "$buy_p2p_body"
-#     if [[ "$HTTP_STATUS" == "200" ]]; then
-#       echo "  ✔ [TRADE P2P] Listing $listing_to_buy comprado por $BUYER_EMAIL (generó transacción)"
-#     else
-#       echo "  ✖ [TRADE P2P] Falló compra del listing $listing_to_buy (HTTP $HTTP_STATUS)"
-#     fi
-#   else
-#     echo "  ➜ [OFERTA ABIERTA] Listing $listing_to_buy queda activo para comprar en vivo durante la demo"
-#   fi
-# done
+#  3. Datos para el Tablero de Tendencias y Volumen 24h del Dashboard.
+#  4. Ofertas remanentes en 'ACTIVE' (60%) para que el usuario compre en la UI.
+P2P_BUY_RATIO_PERCENT="${P2P_BUY_RATIO_PERCENT:-40}"
+if (( P2P_BUY_RATIO_PERCENT > 0 && ${#CREATED_LISTINGS[@]} > 0 )); then
+  echo
+  echo "=== [TRADES] Simulando compras P2P de la tanda para generar transacciones y volumen ==="
+  for listing_to_buy in "${CREATED_LISTINGS[@]}"; do
+    if (( (RANDOM % 100) < P2P_BUY_RATIO_PERCENT )); then
+      buy_p2p_body="$(jq -n --argjson listingId "$listing_to_buy" '{listingId: $listingId}')"
+      request POST "$API_BASE_URL/api/orders/buy" "$BUYER_TOKEN" "$buy_p2p_body"
+      if [[ "$HTTP_STATUS" == "200" ]]; then
+        echo "  ✔ [TRADE P2P] Listing $listing_to_buy comprado por $BUYER_EMAIL (generó transacción)"
+      else
+        echo "  ✖ [TRADE P2P] Falló compra del listing $listing_to_buy (HTTP $HTTP_STATUS)"
+      fi
+    else
+      echo "  ➜ [OFERTA ABIERTA] Listing $listing_to_buy queda activo para comprar en vivo"
+    fi
+  done
+fi
 
 # -----------------------------------------------------------------------------
 # [PENDIENTE - ISSUE #94 / SPEC-026: VENTA INMEDIATA OFICIAL (BUYBACK)]

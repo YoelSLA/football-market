@@ -37,7 +37,7 @@ export default function PlayerOverviewQuote({
 				{loading
 					? "Cargando…"
 					: quote
-						? `${quote.price.toFixed(2).replace(".", ",")} cr.`
+						? `${quote.price.toFixed(2).replace(".", ",")} ₵`
 						: "Sin cotización"}
 			</strong>
 			{changeLabel && (

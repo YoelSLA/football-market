@@ -1,0 +1,31 @@
+@use "@/styles/abstracts" as ds;
+
+.cockpitGrid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 16px;
+	margin-bottom: 4px;
+
+	@media (max-width: 1200px) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.actionLink {
+	display: inline-flex;
+	align-items: center;
+	color: ds.$accent-gain;
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-decoration: none;
+	transition: color 0.15s ease;
+
+	&:hover {
+		color: ds.$state-gain;
+		text-decoration: underline;
+	}
+}

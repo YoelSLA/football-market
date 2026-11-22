@@ -22,13 +22,13 @@ const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
  */
 export function formatCredits(
 	centimes: number | null | undefined,
-	compact = false,
+	_compact = false,
 ): string {
 	if (centimes === null || centimes === undefined || Number.isNaN(centimes)) {
 		return "—";
 	}
 	const formatted = creditsFormatter.format(centimes / 100);
-	return compact ? `${formatted} cr.` : `${formatted} créditos`;
+	return `${formatted} ₵`;
 }
 
 /**
@@ -36,13 +36,13 @@ export function formatCredits(
  */
 export function formatCreditsAmount(
 	credits: number | null | undefined,
-	compact = false,
+	_compact = false,
 ): string {
 	if (credits === null || credits === undefined || Number.isNaN(credits)) {
 		return "—";
 	}
 	const formatted = creditsFormatter.format(credits);
-	return compact ? `${formatted} cr.` : `${formatted} créditos`;
+	return `${formatted} ₵`;
 }
 
 /**

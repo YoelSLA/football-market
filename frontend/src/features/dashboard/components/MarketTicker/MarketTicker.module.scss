@@ -1,0 +1,177 @@
+@use "@/styles/abstracts" as ds;
+
+.tickerBar {
+	display: flex;
+	align-items: center;
+	height: 38px;
+	background: ds.$surface-data-header;
+	border-bottom: 1px solid ds.$border-panel;
+	overflow: hidden;
+	user-select: none;
+	width: 100%;
+	flex-shrink: 0;
+	z-index: 10;
+}
+
+.pulseSummary {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 ds.$space-md;
+	height: 100%;
+	background: ds.$surface-data-control;
+	border-right: 1px solid ds.$border-panel;
+	flex-shrink: 0;
+	z-index: 2;
+
+	@media (max-width: 860px) {
+		display: none;
+	}
+}
+
+.pulseLiveDot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background-color: ds.$accent-gain;
+	box-shadow: 0 0 8px ds.$surface-gain-glow;
+	animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.4;
+		transform: scale(0.8);
+	}
+}
+
+.pulseIcon {
+	width: 14px;
+	height: 14px;
+	color: ds.$accent-gain;
+}
+
+.pulseTitle {
+	font-size: 0.6875rem;
+	font-weight: 800;
+	letter-spacing: 0.05em;
+	color: ds.$accent-gain;
+	margin-right: 2px;
+}
+
+.pulseItem {
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.pulseLabel {
+	color: ds.$text-muted-on-dark;
+	font-weight: 700;
+	margin-right: 2px;
+}
+
+.pulseDivider {
+	color: ds.$border-subtle;
+	font-size: 0.75rem;
+	margin: 0 4px;
+}
+
+.marqueeTrackWrapper {
+	flex: 1;
+	overflow: hidden;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	position: relative;
+	mask-image: linear-gradient(
+		to right,
+		transparent 0px,
+		black 20px,
+		black calc(100% - 20px),
+		transparent 100%
+	);
+}
+
+.marqueeTrack {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+	white-space: nowrap;
+	width: max-content;
+	animation: scrollTicker 40s linear infinite;
+
+	&:hover {
+		animation-play-state: paused;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+		overflow-x: auto;
+	}
+}
+
+@keyframes scrollTicker {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.tickerChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 10px;
+	border-radius: 4px;
+	text-decoration: none;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	font-size: 0.75rem;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	&:hover {
+		background: ds.$surface-card-subtle;
+		border-color: ds.$accent-gain;
+	}
+}
+
+.chipName {
+	font-weight: 700;
+	color: ds.$text-strong-on-dark;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+}
+
+.chipTeam {
+	color: ds.$text-auxiliary-on-dark;
+	font-size: 0.7rem;
+}
+
+.chipPrice {
+	font-weight: 600;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+}
+
+.chipDelta {
+	font-weight: 700;
+	font-size: 0.7rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.chipDeltaUp {
+	color: ds.$state-gain;
+}
+
+.chipDeltaDown {
+	color: ds.$state-loss;
+}

@@ -1,0 +1,201 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-md;
+	flex-wrap: wrap;
+	gap: ds.$space-sm;
+}
+
+.titleGroup {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.headerIconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$accent-highlight;
+	flex-shrink: 0;
+}
+
+.headerIcon {
+	width: 18px;
+	height: 18px;
+}
+
+.headerTitles {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+}
+
+.subtitle {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+}
+
+.viewAllLink {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: ds.$accent-gain;
+	text-decoration: none;
+	transition: color 0.15s ease;
+
+	&:hover {
+		color: ds.$state-gain;
+		text-decoration: underline;
+	}
+}
+
+.linkArrow {
+	flex-shrink: 0;
+}
+
+.feedList {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-xs;
+}
+
+.activityItem {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: ds.$space-sm;
+	padding: 8px 12px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	border-radius: 8px;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	&:hover {
+		background: ds.$surface-control-active;
+		border-color: ds.$border-gain-subtle;
+	}
+}
+
+.typeBadgeCol {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.typeBadge {
+	font-size: 0.65rem;
+	font-weight: 800;
+	padding: 2px 6px;
+	border-radius: 4px;
+	text-align: center;
+	letter-spacing: 0.04em;
+}
+
+.buyBadge {
+	background: ds.$surface-gain-soft;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.sellBadge {
+	background: ds.$surface-loss-subtle;
+	color: ds.$state-loss;
+	border: 1px solid ds.$border-loss-emphasis;
+}
+
+.marketBadge {
+	font-size: 0.6rem;
+	font-weight: 600;
+	color: ds.$text-auxiliary-on-dark;
+	text-align: center;
+}
+
+.detailCol {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.playerRow {
+	display: flex;
+	align-items: center;
+}
+
+.playerLink {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: ds.$text-primary-on-dark;
+	text-decoration: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+
+	&:hover {
+		color: ds.$accent-gain;
+		text-decoration: underline;
+	}
+}
+
+.unitPrice {
+	font-size: 0.7rem;
+	color: ds.$text-muted-on-dark;
+}
+
+.amountCol {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+.totalAmount {
+	font-size: 0.8125rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.amountBuy {
+	color: ds.$text-body-on-dark;
+}
+
+.amountSell {
+	color: ds.$state-gain;
+}
+
+.timestamp {
+	font-size: 0.65rem;
+	color: ds.$text-auxiliary-on-dark;
+}
+
+.emptyState {
+	text-align: center;
+	padding: ds.$space-xl 0;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.875rem;
+}
