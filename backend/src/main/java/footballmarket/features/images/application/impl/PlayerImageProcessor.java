@@ -101,8 +101,14 @@ public class PlayerImageProcessor {
 
     PlayerImageSyncRun run = this.runs.findById(runId).orElseThrow();
     PlayerImageSyncRunItem item =
-        this.items.save(new PlayerImageSyncRunItem(run, player, resolution.getStatus()));
-    run.evaluate();
+        this.items
+            .findByRunIdAndPlayerId(runId, playerId)
+            .orElseGet(
+                () -> {
+                  run.evaluate();
+                  return this.items.save(
+                      new PlayerImageSyncRunItem(run, player, resolution.getStatus()));
+                });
 
     PlayerImageSkipReason reason = this.skip(resolution, force);
     if (reason != null) {

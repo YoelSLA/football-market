@@ -245,9 +245,11 @@ public class PlayerImageRosterSyncService {
           this.items
               .findByRunIdAndPlayerId(runId, player.getId())
               .orElseGet(
-                  () ->
-                      this.items.save(
-                          new PlayerImageSyncRunItem(run, player, resolution.getStatus())));
+                  () -> {
+                    run.evaluate();
+                    return this.items.save(
+                        new PlayerImageSyncRunItem(run, player, resolution.getStatus()));
+                  });
 
       item.finish(
           outcome,
@@ -264,6 +266,7 @@ public class PlayerImageRosterSyncService {
       updatedCount++;
     }
 
+    this.runs.saveAndFlush(run);
     LOG.info("Plantel procesado para equipo {}: {} jugadores actualizados", teamId, updatedCount);
     return updatedCount;
   }
