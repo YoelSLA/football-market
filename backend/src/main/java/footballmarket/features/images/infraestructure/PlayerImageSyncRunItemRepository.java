@@ -15,5 +15,7 @@ public interface PlayerImageSyncRunItemRepository
 
   List<PlayerImageSyncRunItem> findByRunIdAndFinishedAtIsNull(Long runId);
 
+  java.util.Optional<PlayerImageSyncRunItem> findByRunIdAndPlayerId(Long runId, Long playerId);
+
   void deleteByRunId(Long runId);
 }

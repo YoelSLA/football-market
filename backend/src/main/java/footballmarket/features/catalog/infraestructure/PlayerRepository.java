@@ -108,6 +108,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
   Optional<Player> findFirstByIdGreaterThanOrderByIdAsc(Long id);
 
+  List<Player> findByTeamIdAndActiveTrueOrderByIdAsc(Long teamId);
+
   @Query(
       "select p.id from Player p where p.id > :fromId and p.active = true"
           + " and (:missingOnly = false or p.imageUrl is null)"

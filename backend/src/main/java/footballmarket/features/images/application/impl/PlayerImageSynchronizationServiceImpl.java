@@ -1,7 +1,9 @@
 package footballmarket.features.images.application.impl;
 
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
+import footballmarket.features.catalog.infraestructure.TeamRepository;
 import footballmarket.features.images.application.PlayerImageSynchronizationService;
 import footballmarket.features.images.application.exceptions.PlayerImageSyncInProgressException;
 import footballmarket.features.images.application.exceptions.PlayerImageSynchronizationException;
@@ -27,20 +29,26 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
       LoggerFactory.getLogger(PlayerImageSynchronizationServiceImpl.class);
 
   private final PlayerRepository players;
+  private final TeamRepository teams;
   private final PlayerImageSyncRunRepository runs;
   private final PlayerImageProcessor processor;
+  private final PlayerImageRosterSyncService rosterSync;
   private final TransactionTemplate transaction;
   private final AtomicBoolean executing = new AtomicBoolean();
   private final Clock clock = Clock.systemUTC();
 
   public PlayerImageSynchronizationServiceImpl(
       PlayerRepository players,
+      TeamRepository teams,
       PlayerImageSyncRunRepository runs,
       PlayerImageProcessor processor,
+      PlayerImageRosterSyncService rosterSync,
       PlatformTransactionManager manager) {
     this.players = players;
+    this.teams = teams;
     this.runs = runs;
     this.processor = processor;
+    this.rosterSync = rosterSync;
     this.transaction = new TransactionTemplate(manager);
     this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
   }
@@ -74,7 +82,12 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
                       .saveAndFlush(new PlayerImageSyncRun(force, this.clock.instant()))
                       .getId());
 
-      this.processBatch(runId, force, missingOnly, limit, teamId);
+      Long currentRunId = runId;
+      if (teamId != null) {
+        this.rosterSync.syncTeamRoster(currentRunId, teamId, force);
+      }
+
+      this.processBatch(currentRunId, force, missingOnly, limit, teamId);
 
       Long completedId = runId;
       PlayerImageSyncSummary summary =
@@ -90,6 +103,71 @@ public class PlayerImageSynchronizationServiceImpl implements PlayerImageSynchro
 
     } catch (RuntimeException exception) {
       LOG.error("Fallo global en sincronización: run={}", runId, exception);
+      if (runId != null) {
+        Long failedId = runId;
+        try {
+          this.transaction.executeWithoutResult(
+              status ->
+                  this.runs
+                      .findById(failedId)
+                      .ifPresent(run -> run.fail(this.clock.instant(), "GLOBAL_FAILURE")));
+        } catch (RuntimeException persistenceFailure) {
+          LOG.error("No se pudo cerrar el run fallido: run={}", failedId, persistenceFailure);
+        }
+      }
+      throw new PlayerImageSynchronizationException();
+    } finally {
+      this.executing.set(false);
+    }
+  }
+
+  @Override
+  public PlayerImageSyncSummary synchronizeRoster(boolean force, Long teamId) {
+    LOG.info("Inicia sincronización por plantel: force={}, teamId={}", force, teamId);
+
+    if (!this.executing.compareAndSet(false, true)) {
+      LOG.warn("Rechazado: ya existe otra sincronización activa");
+      throw new PlayerImageSyncInProgressException();
+    }
+
+    Long runId = null;
+    try {
+      runId =
+          this.transaction.execute(
+              status ->
+                  this.runs
+                      .saveAndFlush(new PlayerImageSyncRun(force, this.clock.instant()))
+                      .getId());
+
+      Long currentRunId = runId;
+      if (teamId != null) {
+        this.rosterSync.syncTeamRoster(currentRunId, teamId, force);
+      } else {
+        List<Long> currentTeamIds =
+            this.transaction.execute(
+                status ->
+                    this.teams.findByCurrentTrueOrderByIdAsc().stream().map(Team::getId).toList());
+        if (currentTeamIds != null) {
+          for (Long tId : currentTeamIds) {
+            this.rosterSync.syncTeamRoster(currentRunId, tId, force);
+          }
+        }
+      }
+
+      Long completedId = runId;
+      PlayerImageSyncSummary summary =
+          this.transaction.execute(
+              status -> {
+                PlayerImageSyncRun run = this.runs.findById(completedId).orElseThrow();
+                run.complete(this.clock.instant());
+                return run.summary();
+              });
+
+      LOG.info("Sincronización por plantel concluida: run={}, estado={}", runId, summary.status());
+      return summary;
+
+    } catch (RuntimeException exception) {
+      LOG.error("Fallo global en sincronización por plantel: run={}", runId, exception);
       if (runId != null) {
         Long failedId = runId;
         try {

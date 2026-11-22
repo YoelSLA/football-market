@@ -53,6 +53,16 @@ Síncrona: responde al concluir. Un único run activo por instancia; una solicit
 
 Errores: `401` sin credenciales válidas; `409 Conflict` (código `PLAYER_IMAGE_SYNC_IN_PROGRESS`) si ya hay run activo; un error global/fatal deja run `FAILED` y devuelve el estado HTTP de error correspondiente (código `PLAYER_IMAGE_SYNC_FAILED`, cuando sea posible), conservando resultados y auditoría previos. Un error de configuración antes de admitir la ejecución también devuelve error y no afirma que se haya creado un run.
 
+## `POST /api/players/images/sync/roster`
+
+Sincronización masiva por plantel completo de equipo. Consulta el plantel de TheSportsDB en una sola llamada por equipo (`lookup_all_players.php?id={teamExternalId}`) y asocia en memoria las fotos de los jugadores del club.
+
+Parámetros query opcionales:
+- `force`: booleano (`false` por defecto). Si es `true`, sobreescribe imágenes previas.
+- `teamId`: entero opcional. Restringe la sincronización a ese equipo; si se omite, recorre todos los equipos vigentes.
+
+`200 OK` con `PlayerImageSyncRunResponseDTO` con contadores del run. Mismos códigos de error que la sincronización general.
+
 ## `GET /api/players/images/sync-runs`
 
 Historial autenticado paginado: `page` desde 0 (por defecto 0), `size` 1–100 (por defecto 20). Estos defaults y límites son decisiones de diseño siguiendo la paginación existente del catálogo, **no** requisitos funcionales adicionales de la spec; esta solo exige paginación. `200 OK` con `content` de resúmenes con los campos del POST y metadatos `page`, `size`, `totalElements`, `totalPages`; ordenar por `startedAt` descendente, `id` descendente para empates. Una ejecución `RUNNING` muestra `finishedAt`, `durationMillis` y `failureReason` nulos. `400` ante paginación inválida, `401` sin autenticación. No se incluyen items.

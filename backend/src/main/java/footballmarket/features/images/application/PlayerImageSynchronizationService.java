@@ -8,4 +8,6 @@ public interface PlayerImageSynchronizationService {
 
   PlayerImageSyncSummary synchronize(
       boolean force, boolean missingOnly, Integer limit, Long teamId);
+
+  PlayerImageSyncSummary synchronizeRoster(boolean force, Long teamId);
 }
