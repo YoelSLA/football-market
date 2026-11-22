@@ -86,6 +86,38 @@ class PlayerIdentityMatcherTest {
     }
 
     @Test
+    @DisplayName("Admite nombre compatible cuando club y fecha de nacimiento coinciden exactamente")
+    void acceptsCompatibleNameWhenClubAndDateMatch() {
+      League league = new League("Premier League");
+      Team team = new Team("Arsenal FC", league, true);
+      Player player = new Player("Gabriel Magalhães", team, "Defender");
+      player.updateOptionalDetails(LocalDate.of(1997, 12, 19), "Brazil");
+
+      Candidate candidate =
+          new Candidate("Gabriel", null, "Arsenal", "Soccer", LocalDate.of(1997, 12, 19), "Brazil");
+      assertThat(matcher.matches(player, candidate)).isTrue();
+    }
+
+    @Test
+    @DisplayName("Admite equivalencia de nacionalidad The Netherlands con Netherlands")
+    void acceptsTheNetherlandsAlias() {
+      League league = new League("Premier League");
+      Team team = new Team("Arsenal FC", league, true);
+      Player player = new Player("Jurriën Timber", team, "Defender");
+      player.updateOptionalDetails(LocalDate.of(2001, 6, 17), "Netherlands");
+
+      Candidate candidate =
+          new Candidate(
+              "Jurrien Timber",
+              null,
+              "Arsenal",
+              "Soccer",
+              LocalDate.of(2001, 6, 17),
+              "The Netherlands");
+      assertThat(matcher.matches(player, candidate)).isTrue();
+    }
+
+    @Test
     @DisplayName("Un jugador sin equipo resuelto no existe como Player y por tanto no coincide")
     void refusesPlayerWithoutTeam() {
       // Arrange / Act / Assert: el Player definitivo no admite equipo nulo, de modo que un jugador

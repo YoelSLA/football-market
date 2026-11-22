@@ -108,6 +108,17 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
   Optional<Player> findFirstByIdGreaterThanOrderByIdAsc(Long id);
 
+  @Query(
+      "select p.id from Player p where p.id > :fromId and p.active = true"
+          + " and (:missingOnly = false or p.imageUrl is null)"
+          + " and (:teamId is null or p.team.id = :teamId)"
+          + " order by p.id asc")
+  List<Long> findEligiblePlayerIds(
+      @Param("fromId") Long fromId,
+      @Param("missingOnly") boolean missingOnly,
+      @Param("teamId") Long teamId,
+      Pageable pageable);
+
   /** Materializa el snapshot de las ligas seleccionadas, sin filtros de vigencia adicionales. */
   @EntityGraph(attributePaths = {"team", "team.league", "externalReferences"})
   @Query("select distinct p from Player p where p.team.league.id in :leagueIds order by p.id")

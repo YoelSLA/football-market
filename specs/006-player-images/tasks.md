@@ -252,3 +252,14 @@ su referencia describe un estado del proyecto ya superado y no habilita ninguna 
 
 **Documentos actualizados.** Solo este registro. **Documentos conservados sin reescribir por contener
 decisiones o estados históricos:** `plan.md`, `research.md`, `spec.md`, `data-model.md` y `contracts/`.
+
+---
+
+## Fase 7: Refactorización y optimización de procesamiento (2026-11-22)
+
+- [X] T075 Desacoplar `PlayerImageSynchronizationServiceImpl` extrayendo `PlayerImageProcessor` para la resolución atómica individual de cada jugador con aislamiento transaccional.
+- [X] T076 Ampliar `PlayerRepository` con `findEligiblePlayerIds` para filtrar directamente en base de datos jugadores sin imagen (`missingOnly`), por equipo (`teamId`) y con soporte de paginación/lotes.
+- [X] T077 Incorporar en `PlayerIdentityAliases` equivalencias de país faltantes (`THE NETHERLANDS`, `DR CONGO`, etc.) para evitar falsos negativos en matching.
+- [X] T078 Flexibilizar `PlayerIdentityMatcher` para admitir compatibilidad de nombres (subcadenas, apodos y nombres compuestos) cuando club y fecha de nacimiento coinciden exactamente.
+- [X] T079 Exponer en `PlayerImageController` los parámetros opcionales `missingOnly`, `limit` y `teamId` preservando compatibilidad con el contrato base.
+- [X] T080 Diseñar pruebas unitarias de matching en `PlayerIdentityMatcherTest` para validar los casos de equivalencia de país y nombres compatibles.

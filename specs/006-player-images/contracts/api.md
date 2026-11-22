@@ -14,7 +14,13 @@ Ambas URLs pueden ser `null`. Consulta local sin llamadas a TheSportsDB y sin re
 
 ## `POST /api/players/images/sync`
 
-Solicitud manual sin body; query opcional `force` booleano (`false` por defecto). Síncrona: responde al concluir. `force=true` salta la elegibilidad de los activos, pero **no** vuelve a buscar identidad externa ya resuelta. Un único run activo por instancia; una solicitud concurrente devuelve `409` sin crear otro run.
+Solicitud manual sin body; parámetros query opcionales:
+- `force`: booleano (`false` por defecto). Salta la elegibilidad de los activos, pero no vuelve a buscar identidad externa ya resuelta.
+- `missingOnly`: booleano opcional. Si es `true`, filtra en base de datos para evaluar únicamente jugadores sin imagen asignada (`imageUrl is null`).
+- `limit`: entero opcional positivo. Acota el número máximo de jugadores a procesar remotamente en la ejecución.
+- `teamId`: entero opcional. Restringe la evaluación a los jugadores pertenecientes a ese equipo.
+
+Síncrona: responde al concluir. Un único run activo por instancia; una solicitud concurrente devuelve `409` sin crear otro run.
 
 `200 OK` para `COMPLETED` o `PARTIAL`:
 
