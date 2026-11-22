@@ -140,7 +140,7 @@ crontab -l 2>/dev/null | grep -E "football-market" | while read -r cron_line; do
 done || echo "      (Sin tareas en crontab)"
 
 echo "  - Procesos en segundo plano activos:"
-RUNNING_SCRIPTS="$(ps aux | grep -E "run-quote-scheduler|run-p2p|seed-p2p" | grep -v grep || true)"
+RUNNING_SCRIPTS="$(ps aux | grep -E "run-quote-scheduler|run-p2p|seed-p2p|auto-trader|simulate-trades" | grep -v grep || true)"
 if [[ -n "$RUNNING_SCRIPTS" ]]; then
   echo "$RUNNING_SCRIPTS" | awk '{print "      PID " $2 ": " $11 " " $12}'
 else

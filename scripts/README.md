@@ -14,9 +14,10 @@ Este directorio contiene la suite de herramientas y utilitarios en Bash para adm
 | **[`seed-p2p-market.sh`](#4-seed-p2p-market-sh--generador-de-ofertas-p2p)** | Siembra publicaciones P2P con cantidades aleatorias y trades. | `./scripts/seed-p2p-market.sh` | Llena el catálogo P2P y genera compras parciales. |
 | **[`run-p2p-market-generator.sh`](#5-run-p2p-market-generator-sh--demonio-p2p-continuo)** | Bucle continuo para generar ofertas P2P periódicas. | `./scripts/run-p2p-market-generator.sh &` | Rondas continuas de publicaciones cada N segundos. |
 | **[`simulate-trades.sh`](#6-simulate-trades-sh--simulador-de-compras-y-volumen)** | Compras P2P y oficiales simuladas (usuarios estándar). | `./scripts/simulate-trades.sh` | Alimenta el Live Activity Feed y el Volumen 24h. |
-| **[`seed-user-portfolio.sh`](#7-seed-user-portfolio-sh--fondeo-de-portfolio-de-usuario)** | Acredita saldo y tokens diversificados a un usuario. | `./scripts/seed-user-portfolio.sh yoel@gmail.com` | Llena el Donut Chart, Sorare Cards y Patrimonio. |
-| **[`setup-demo.sh`](#8-setup-demo-sh--preparación-one-click-para-demo)** | Master script para dejar el entorno 100% listo para demo. | `./scripts/setup-demo.sh` | Ejecuta la secuencia completa de inicialización y siembra. |
-| **[`clean-demo-data.sh`](#9-clean-demo-data-sh--limpieza-y-mantenimiento)** | Cancela ofertas vencidas y controla el tamaño de logs. | `./scripts/clean-demo-data.sh` | Mantenimiento higiénico de la base de datos y logs. |
+| **[`auto-trader.sh`](#7-auto-tradersh--motor-de-trading-automático-yoel-nicolas-y-mercado)** | Trading continuo entre usuarios reales (Yoel y Nicolas) y recálculos. | `./scripts/auto-trader.sh` o `--loop` | Compras/ventas cruzadas reales, rotación de carteras y cotizaciones. |
+| **[`seed-user-portfolio.sh`](#8-seed-user-portfolio-sh--fondeo-de-portfolio-de-usuario)** | Acredita saldo y tokens diversificados a un usuario. | `./scripts/seed-user-portfolio.sh yoel@gmail.com` | Llena el Donut Chart, Sorare Cards y Patrimonio. |
+| **[`setup-demo.sh`](#9-setup-demo-sh--preparación-one-click-para-demo)** | Master script para dejar el entorno 100% listo para demo. | `./scripts/setup-demo.sh` | Ejecuta la secuencia completa de inicialización y siembra. |
+| **[`clean-demo-data.sh`](#10-clean-demo-data-sh--limpieza-y-mantenimiento)** | Cancela ofertas vencidas y controla el tamaño de logs. | `./scripts/clean-demo-data.sh` | Mantenimiento higiénico de la base de datos y logs. |
 
 ---
 
@@ -136,7 +137,38 @@ P2P_TRADES_COUNT=10 OFFICIAL_TRADES_COUNT=5 ./scripts/simulate-trades.sh
 
 ---
 
-## 7. `seed-user-portfolio.sh` — Fondeo de Portfolio de Usuario
+## 7. `auto-trader.sh` — Motor de Trading Automático (Yoel, Nicolas y Mercado)
+
+Motor integral de operaciones continuas diseñado para mantener el mercado dinámico y realista en vivo:
+* **Participación activa de usuarios clave:** Utiliza las cuentas de `yoel@gmail.com` y `nicolas@gmail.com` como traders reales del sistema.
+* **Ventas P2P inteligentes:** Yoel y Nicolas revisan su portfolio (`/api/portfolio/me`) y ofrecen a la venta tokens de su tenencia disponible en el mercado secundario.
+* **Compras cruzadas (P2P Cross-Trading):**
+  * Nicolas detecta las publicaciones de Yoel y las compra (`POST /api/orders/buy` con `listingId`).
+  * Yoel detecta las publicaciones de Nicolas y las compra.
+* **Absorción de liquidez de mercado:** Un comprador demo regular (`trader.buyerX@example.test`) adquiere ofertas remanentes para que los usuarios siempre cobren sus créditos y tengan liquidez.
+* **Compras primarias (Mercado Oficial):** Yoel y Nicolas adquieren periódicamente nuevos tokens emitidos por la casa oficial, diversificando sus carteras.
+* **Recálculo dinámico de cotizaciones integrado:** Al final de cada ciclo (o configurable con `--no-recalc`), invoca `recalculate-quotes.sh` con climas bursátiles aleatorios, haciendo que los precios de los 1861 jugadores suban o bajen y actualizando los Market Movers (Top Ganadores y Top Perdedores) del Dashboard.
+
+```bash
+# Ejecutar un ciclo completo de trading y recálculo:
+./scripts/auto-trader.sh
+
+# Modo bucle continuo en segundo plano (cada 60 segundos por defecto):
+./scripts/auto-trader.sh --loop &
+
+# Modo bucle con intervalo personalizado (ej. cada 30 segundos):
+./scripts/auto-trader.sh --loop --interval 30
+
+# Ejecutar N rondas y terminar:
+./scripts/auto-trader.sh --rounds 5
+
+# Solo compras y ventas entre usuarios sin recalcular cotizaciones:
+./scripts/auto-trader.sh --no-recalc
+```
+
+---
+
+## 8. `seed-user-portfolio.sh` — Fondeo de Portfolio de Usuario
 
 Acredita créditos y una cartera diversificada de jugadores destacados a un usuario real para que su Dashboard y su vista de Portfolio se vean poblados.
 
@@ -156,7 +188,7 @@ Acredita créditos y una cartera diversificada de jugadores destacados a un usua
 
 ---
 
-## 8. `setup-demo.sh` — Preparación "One-Click" para Demos
+## 9. `setup-demo.sh` — Preparación "One-Click" para Demos
 
 El orquestador maestro para preparar la aplicación desde cero antes de una presentación:
 1. Comprueba y levanta PostgreSQL y el Backend si están apagados.
@@ -173,7 +205,7 @@ El orquestador maestro para preparar la aplicación desde cero antes de una pres
 
 ---
 
-## 9. `clean-demo-data.sh` — Limpieza y Mantenimiento
+## 10. `clean-demo-data.sh` — Limpieza y Mantenimiento
 
 * Cancela ordenadamente las publicaciones P2P que hayan superado su ventana de expiración de 24 horas (`status = 'CANCELLED'`).
 * Verifica el tamaño de los archivos `.log` en la carpeta `scripts/`. Si superan los 5 MB, los rota automáticamente para evitar archivos excesivamente grandes.
@@ -206,4 +238,7 @@ crontab -e
 
 # 3. Mantenimiento y cancelación de ofertas vencidas cada 6 horas
 0 */6 * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/clean-demo-data.sh >> /home/yoelsla/Escritorio/football-market/scripts/maintenance.log 2>&1 # football-market-clean
+
+# 4. (Opcional) Trading automático continuo entre Yoel, Nicolas y el mercado cada 10 minutos
+*/10 * * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/auto-trader.sh --once >> /home/yoelsla/Escritorio/football-market/scripts/auto-trader.log 2>&1 # football-market-auto-trader
 ```
