@@ -267,3 +267,4 @@ decisiones o estados históricos:** `plan.md`, `research.md`, `spec.md`, `data-m
 - [X] T082 Crear `PlayerImageRosterSyncService` para orquestar la resolución de identidad de equipos y la asignación masiva de imágenes de plantel en memoria.
 - [X] T083 Exponer `POST /api/players/images/sync/roster` en `PlayerImageController` y `PlayerImageSynchronizationService`.
 - [X] T084 Diseñar prueba unitaria de `lookupPlayersByTeam` en `TheSportsDbIntegrationTest`.
+- [X] T085 Corregir carga de referencias de equipo con `@EntityGraph` y registrar apertura de evaluación de run (`run.evaluate()`) en la creación de items de plantel.
