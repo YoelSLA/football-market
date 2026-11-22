@@ -4,6 +4,7 @@ import footballmarket.features.catalog.domain.enums.ExternalProvider;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.catalog.domain.models.player.PlayerExternalReference;
 import footballmarket.features.catalog.domain.models.team.Team;
+import footballmarket.features.catalog.domain.models.team.TeamExternalReference;
 import footballmarket.features.catalog.infraestructure.PlayerExternalReferenceRepository;
 import footballmarket.features.catalog.infraestructure.PlayerRepository;
 import footballmarket.features.catalog.infraestructure.TeamRepository;
@@ -85,7 +86,8 @@ public class PlayerImageRosterSyncService {
   public int syncTeamRoster(Long runId, Long teamId, boolean force) {
     Team team =
         this.transaction.execute(
-            status -> this.teams.findById(teamId).filter(Team::isCurrent).orElse(null));
+            status ->
+                this.teams.findWithReferencesById(teamId).filter(Team::isCurrent).orElse(null));
 
     if (team == null) {
       LOG.info("Equipo {} no encontrado o no vigente, se omite", teamId);
@@ -125,12 +127,19 @@ public class PlayerImageRosterSyncService {
 
   private String resolveTeamExternalId(Team team) {
     Optional<String> existingId =
-        team.getExternalReferences().stream()
-            .filter(r -> r.getProvider() == ExternalProvider.THE_SPORTS_DB)
-            .map(PlayerExternalReferenceBase -> PlayerExternalReferenceBase.getExternalId())
-            .findFirst();
+        this.transaction.execute(
+            status -> {
+              Team currentTeam = this.teams.findWithReferencesById(team.getId()).orElse(null);
+              if (currentTeam == null) {
+                return Optional.empty();
+              }
+              return currentTeam.getExternalReferences().stream()
+                  .filter(r -> r.getProvider() == ExternalProvider.THE_SPORTS_DB)
+                  .map(TeamExternalReference::getExternalId)
+                  .findFirst();
+            });
 
-    if (existingId.isPresent()) {
+    if (existingId != null && existingId.isPresent()) {
       return existingId.get();
     }
 
@@ -144,18 +153,17 @@ public class PlayerImageRosterSyncService {
         List<TeamData> soccerTeams =
             search.candidates().stream().filter(c -> "Soccer".equalsIgnoreCase(c.sport())).toList();
 
-        if (!soccerTeams.isEmpty()) {
-          TeamData match = soccerTeams.getFirst();
-          String externalId = match.externalId();
-          this.transaction.executeWithoutResult(
-              status -> {
-                Team managed = this.teams.findById(team.getId()).orElseThrow();
-                managed.addExternalReference(ExternalProvider.THE_SPORTS_DB, externalId);
-                this.teams.saveAndFlush(managed);
-              });
-          LOG.info("Equipo {} vinculado con TheSportsDB id={}", team.getName(), externalId);
-          return externalId;
-        }
+        TeamData match =
+            !soccerTeams.isEmpty() ? soccerTeams.getFirst() : search.candidates().getFirst();
+        String externalId = match.externalId();
+        this.transaction.executeWithoutResult(
+            status -> {
+              Team managed = this.teams.findWithReferencesById(team.getId()).orElseThrow();
+              managed.addExternalReference(ExternalProvider.THE_SPORTS_DB, externalId);
+              this.teams.saveAndFlush(managed);
+            });
+        LOG.info("Equipo {} vinculado con TheSportsDB id={}", team.getName(), externalId);
+        return externalId;
       }
     } catch (RuntimeException exception) {
       LOG.warn(
