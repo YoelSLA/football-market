@@ -47,8 +47,12 @@ public class MarketSettlementExecutor {
    * Bloquea las cuentas de crédito de comprador y vendedor para el mercado oficial en orden
    * ascendente de identificador.
    *
+   * <p>Sirve tanto a la compra oficial como a la venta oficial: en esta última el superusuario es
+   * el comprador y el usuario autenticado el vendedor. La ausencia de la cuenta del comprador se
+   * traduce como saldo insuficiente y la del vendedor como contraparte no disponible.
+   *
    * @param buyerId identificador del comprador
-   * @param sellerId identificador del vendedor (superusuario)
+   * @param sellerId identificador del vendedor
    * @return mapa de cuentas bloqueadas indexadas por identificador de usuario
    */
   public Map<Long, UserCredit> lockOfficialAccounts(Long buyerId, Long sellerId) {
@@ -91,7 +95,10 @@ public class MarketSettlementExecutor {
 
   /**
    * Inserta la primera tenencia del comprador si está ausente y bloquea ambas tenencias en orden
-   * ascendente de propietario para la compra oficial.
+   * ascendente de propietario para una operación del mercado oficial.
+   *
+   * <p>Se usa en la compra oficial y en la venta oficial; en esta última los tokens se transfieren
+   * del vendedor al superusuario comprador.
    *
    * @param playerId identificador del jugador
    * @param buyerId identificador del comprador
@@ -239,6 +246,73 @@ public class MarketSettlementExecutor {
             player,
             quantity,
             quote.price(),
+            totalAmount,
+            buyerCreditsBefore,
+            buyerCreditsAfter,
+            sellerCreditsBefore,
+            sellerCreditsAfter,
+            buyerTokensBefore,
+            buyerTokensAfter,
+            sellerTokensBefore,
+            sellerTokensAfter,
+            quote.calculatedAt(),
+            quote.strategyVersion(),
+            confirmedAt));
+  }
+
+  /**
+   * Registra y persiste la transacción inmutable de auditoría para una venta oficial inmediata.
+   *
+   * <p>El superusuario compra y el usuario autenticado vende. El registro conserva la cotización de
+   * referencia y la comisión aplicada, además del precio neto realmente pagado.
+   *
+   * @param buyer superusuario comprador
+   * @param seller usuario vendedor
+   * @param player jugador vendido
+   * @param quantity cantidad de tokens transferida
+   * @param quote cotización vigente aplicada
+   * @param discountPercentage comisión aplicada (se conserva el nombre por compatibilidad)
+   * @param unitPrice precio neto por token
+   * @param totalAmount importe total en centésimas
+   * @param buyerCreditsBefore créditos del comprador previos
+   * @param buyerCreditsAfter créditos del comprador posteriores
+   * @param sellerCreditsBefore créditos del vendedor previos
+   * @param sellerCreditsAfter créditos del vendedor posteriores
+   * @param buyerTokensBefore tokens del comprador previos
+   * @param buyerTokensAfter tokens del comprador posteriores
+   * @param sellerTokensBefore tokens del vendedor previos
+   * @param sellerTokensAfter tokens del vendedor posteriores
+   * @param confirmedAt instante de confirmación
+   * @return transacción inmutable persistida
+   */
+  public MarketTransaction recordBuyback(
+      User buyer,
+      User seller,
+      Player player,
+      int quantity,
+      CurrentQuote quote,
+      int discountPercentage,
+      long unitPrice,
+      long totalAmount,
+      long buyerCreditsBefore,
+      long buyerCreditsAfter,
+      long sellerCreditsBefore,
+      long sellerCreditsAfter,
+      int buyerTokensBefore,
+      int buyerTokensAfter,
+      int sellerTokensBefore,
+      int sellerTokensAfter,
+      OffsetDateTime confirmedAt) {
+
+    return this.transactions.save(
+        MarketTransaction.recordBuyback(
+            buyer,
+            seller,
+            player,
+            quantity,
+            quote.price(),
+            discountPercentage,
+            unitPrice,
             totalAmount,
             buyerCreditsBefore,
             buyerCreditsAfter,

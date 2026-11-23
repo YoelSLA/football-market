@@ -268,6 +268,16 @@ class BuyOrderServiceTest {
       assertThat(transaction.getPlayer().getId()).isEqualTo(player.getId());
       assertThat(transaction.getBuyer().getId()).isEqualTo(buyer.getId());
       assertThat(transaction.getSeller().getId()).isEqualTo(superuser.getId());
+      assertThat(transaction.getBuyerCreditsBefore() - transaction.getBuyerCreditsAfter())
+          .isEqualTo(PRICE * QUANTITY);
+      assertThat(transaction.getSellerCreditsAfter() - transaction.getSellerCreditsBefore())
+          .isEqualTo(PRICE * QUANTITY);
+      assertThat(transaction.getBuyerTokensAfter() - transaction.getBuyerTokensBefore())
+          .isEqualTo(QUANTITY);
+      assertThat(transaction.getSellerTokensBefore() - transaction.getSellerTokensAfter())
+          .isEqualTo(QUANTITY);
+      assertThat(transaction.getQuotePrice()).isNull();
+      assertThat(transaction.getDiscountPercentage()).isNull();
       assertThat(transaction.getExecutedAt()).isNotNull();
     }
 

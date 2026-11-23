@@ -73,7 +73,7 @@ public final class ListingMapper {
   }
 
   public static SellOrderRequest toSellRequest(OrderSellRequestDTO request) {
-    return new SellOrderRequest(request.playerId(), request.quantity());
+    return new SellOrderRequest(request.playerId(), request.quantity(), request.unitPrice());
   }
 
   public static OrderSellResponseDTO toSellResponse(TokenListing listing) {

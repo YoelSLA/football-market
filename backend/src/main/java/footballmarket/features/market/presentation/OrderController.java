@@ -37,7 +37,7 @@ public class OrderController {
   @Operation(
       summary = "Publicar tokens para la venta",
       description =
-          "Reserva tokens propios a precio congelado en centésimas, sin mover créditos ni tokens ni generar transacción. Solo USER persistido.")
+          "Reserva tokens propios a precio congelado en centésimas, sin mover créditos ni tokens ni generar transacción. El precio unitario opcional debe estar entre el 80% y el 120% de la cotización vigente; si se omite, se usa esa cotización. Solo USER persistido.")
   @SecurityRequirement(name = "bearerAuth")
   @ApiResponse(
       responseCode = "201",
@@ -62,7 +62,7 @@ public class OrderController {
   @ApiResponse(
       responseCode = "409",
       description =
-          "INSUFFICIENT_STOCK (tenencia menos reservas vigentes), QUOTE_UNAVAILABLE o INVALID_QUOTE_PRICE. No revela existencias.",
+          "INSUFFICIENT_STOCK (tenencia menos reservas vigentes), QUOTE_UNAVAILABLE, INVALID_QUOTE_PRICE o INVALID_LISTING_PRICE. No revela existencias.",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(
       responseCode = "500",

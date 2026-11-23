@@ -2,6 +2,7 @@ package footballmarket.features.market.domain.models;
 
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.domain.exceptions.InvalidBuybackTransactionException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -58,6 +59,12 @@ public class MarketTransaction {
   @Column(name = "total_amount", nullable = false)
   private long totalAmount;
 
+  @Column(name = "quote_price")
+  private Long quotePrice;
+
+  @Column(name = "discount_percentage")
+  private Short discountPercentage;
+
   @Column(name = "buyer_credits_before", nullable = false)
   private long buyerCreditsBefore;
 
@@ -98,6 +105,8 @@ public class MarketTransaction {
       int quantity,
       long unitPrice,
       long totalAmount,
+      Long quotePrice,
+      Short discountPercentage,
       long buyerCreditsBefore,
       long buyerCreditsAfter,
       long sellerCreditsBefore,
@@ -115,6 +124,8 @@ public class MarketTransaction {
     this.quantity = quantity;
     this.unitPrice = unitPrice;
     this.totalAmount = totalAmount;
+    this.quotePrice = quotePrice;
+    this.discountPercentage = discountPercentage;
     this.buyerCreditsBefore = buyerCreditsBefore;
     this.buyerCreditsAfter = buyerCreditsAfter;
     this.sellerCreditsBefore = sellerCreditsBefore;
@@ -176,6 +187,8 @@ public class MarketTransaction {
         quantity,
         unitPrice,
         totalAmount,
+        null,
+        null,
         buyerCreditsBefore,
         buyerCreditsAfter,
         sellerCreditsBefore,
@@ -187,6 +200,110 @@ public class MarketTransaction {
         quoteCalculatedAt,
         quoteStrategyVersion,
         executedAt);
+  }
+
+  /**
+   * Registra una venta oficial confirmada conservando la cotización de referencia y la comisión
+   * aplicados, además del precio neto y del importe transferido.
+   *
+   * <p>La cotización y la comisión son obligatorias para esta modalidad: sin ellos el registro no
+   * permitiría reconstruir las condiciones económicas de la operación. El importe debe ser
+   * exactamente la cantidad por el precio neto.
+   *
+   * @param buyer superusuario comprador
+   * @param seller usuario vendedor
+   * @param player jugador vendido
+   * @param quantity cantidad transferida
+   * @param quotePrice cotización de referencia en centésimas
+   * @param discountPercentage comisión aplicada entre 10 y 99
+   * @param unitPrice precio neto por token en centésimas
+   * @param totalAmount importe total en centésimas
+   * @param buyerCreditsBefore saldo del comprador antes de la transferencia
+   * @param buyerCreditsAfter saldo del comprador después de la transferencia
+   * @param sellerCreditsBefore saldo del vendedor antes de la transferencia
+   * @param sellerCreditsAfter saldo del vendedor después de la transferencia
+   * @param buyerTokensBefore tenencia del comprador antes de la transferencia
+   * @param buyerTokensAfter tenencia del comprador después de la transferencia
+   * @param sellerTokensBefore tenencia del vendedor antes de la transferencia
+   * @param sellerTokensAfter tenencia del vendedor después de la transferencia
+   * @param quoteCalculatedAt instante de cálculo de la cotización aplicada
+   * @param quoteStrategyVersion estrategia que produjo la cotización
+   * @param executedAt instante de confirmación de la operación
+   * @return registro financiero de la venta oficial
+   * @throws InvalidBuybackTransactionException si alguna condición de la auditoría no se cumple
+   */
+  public static MarketTransaction recordBuyback(
+      User buyer,
+      User seller,
+      Player player,
+      int quantity,
+      long quotePrice,
+      int discountPercentage,
+      long unitPrice,
+      long totalAmount,
+      long buyerCreditsBefore,
+      long buyerCreditsAfter,
+      long sellerCreditsBefore,
+      long sellerCreditsAfter,
+      int buyerTokensBefore,
+      int buyerTokensAfter,
+      int sellerTokensBefore,
+      int sellerTokensAfter,
+      OffsetDateTime quoteCalculatedAt,
+      String quoteStrategyVersion,
+      OffsetDateTime executedAt) {
+    requireBuybackInvariants(quantity, quotePrice, discountPercentage, unitPrice, totalAmount);
+    return new MarketTransaction(
+        buyer,
+        seller,
+        player,
+        quantity,
+        unitPrice,
+        totalAmount,
+        quotePrice,
+        (short) discountPercentage,
+        buyerCreditsBefore,
+        buyerCreditsAfter,
+        sellerCreditsBefore,
+        sellerCreditsAfter,
+        buyerTokensBefore,
+        buyerTokensAfter,
+        sellerTokensBefore,
+        sellerTokensAfter,
+        quoteCalculatedAt,
+        quoteStrategyVersion,
+        executedAt);
+  }
+
+  private static void requireBuybackInvariants(
+      int quantity, long quotePrice, int discountPercentage, long unitPrice, long totalAmount) {
+    if (quantity < 1) {
+      throw new InvalidBuybackTransactionException(
+          "La cantidad de una venta oficial debe ser positiva.");
+    }
+    if (quotePrice < 1) {
+      throw new InvalidBuybackTransactionException(
+          "La cotización de una venta oficial debe ser positiva.");
+    }
+    if (discountPercentage < 10 || discountPercentage > 99) {
+      throw new InvalidBuybackTransactionException(
+          "La comisión de una venta oficial debe estar entre 10 y 99.");
+    }
+    if (unitPrice < 1) {
+      throw new InvalidBuybackTransactionException(
+          "El precio neto de una venta oficial debe ser positivo.");
+    }
+    long expected;
+    try {
+      expected = Math.multiplyExact((long) quantity, unitPrice);
+    } catch (ArithmeticException overflow) {
+      throw new InvalidBuybackTransactionException(
+          "El importe de la venta oficial excede el rango representable.");
+    }
+    if (totalAmount != expected) {
+      throw new InvalidBuybackTransactionException(
+          "El importe debe ser exactamente la cantidad por el precio neto.");
+    }
   }
 
   /** Registra una liquidación secundaria conservando la fábrica original de compra directa. */

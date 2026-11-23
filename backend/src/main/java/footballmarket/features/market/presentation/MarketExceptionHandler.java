@@ -18,6 +18,8 @@ import footballmarket.features.market.application.exceptions.SuperuserCannotBuyE
 import footballmarket.features.market.application.exceptions.SuperuserCannotSellException;
 import footballmarket.features.market.domain.exceptions.InsufficientPlayerTokensException;
 import footballmarket.features.market.domain.exceptions.InsufficientUserCreditsException;
+import footballmarket.features.market.domain.exceptions.InvalidBuybackTransactionException;
+import footballmarket.features.market.domain.exceptions.InvalidListingPriceException;
 import footballmarket.features.market.domain.exceptions.InvalidTokenListingException;
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -58,6 +60,20 @@ public class MarketExceptionHandler {
       InvalidQuantityException exception, HttpServletRequest request) {
     return ErrorResponses.build(
         exception.getMessage(), "INVALID_QUANTITY", HttpStatus.BAD_REQUEST, request);
+  }
+
+  /**
+   * Traduce un precio de publicación fuera de la banda permitida.
+   *
+   * @param exception error de precio P2P
+   * @param request petición HTTP en curso
+   * @return respuesta HTTP formateada
+   */
+  @ExceptionHandler(InvalidListingPriceException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidListingPrice(
+      InvalidListingPriceException exception, HttpServletRequest request) {
+    return ErrorResponses.build(
+        exception.getMessage(), "INVALID_LISTING_PRICE", HttpStatus.CONFLICT, request);
   }
 
   /**
@@ -232,6 +248,22 @@ public class MarketExceptionHandler {
   public ResponseEntity<ErrorResponseDTO> handleInternalOrderFailure(HttpServletRequest request) {
     return ErrorResponses.build(
         "No se pudo procesar la compra. Intentá nuevamente más tarde.",
+        "INTERNAL_ERROR",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        request);
+  }
+
+  /**
+   * Traduce inconsistencias de auditoría de una venta oficial a error interno sanitizado.
+   *
+   * @param request petición HTTP en curso
+   * @return respuesta HTTP formateada
+   */
+  @ExceptionHandler(InvalidBuybackTransactionException.class)
+  public ResponseEntity<ErrorResponseDTO> handleInvalidBuybackTransaction(
+      HttpServletRequest request) {
+    return ErrorResponses.build(
+        "No se pudo procesar la operación. Intentá nuevamente más tarde.",
         "INTERNAL_ERROR",
         HttpStatus.INTERNAL_SERVER_ERROR,
         request);

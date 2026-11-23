@@ -3,12 +3,24 @@ package footballmarket.features.market.presentation;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import footballmarket.features.market.application.OfficialBuybackService;
 import footballmarket.features.market.application.OfficialMarketCatalogService;
+import footballmarket.features.market.application.exceptions.InsufficientCreditsException;
+import footballmarket.features.market.application.exceptions.InsufficientStockException;
+import footballmarket.features.market.application.exceptions.InvalidQuantityException;
+import footballmarket.features.market.application.exceptions.SuperuserCannotSellException;
+import footballmarket.features.market.domain.records.OfficialBuybackReceipt;
+import footballmarket.features.market.domain.records.OfficialBuybackRequest;
 import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
 import footballmarket.features.market.domain.records.OfficialMarketPriceRange;
@@ -18,6 +30,7 @@ import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import javax.crypto.SecretKey;
@@ -31,6 +44,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -48,6 +62,7 @@ class OfficialMarketControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private OfficialMarketCatalogService catalogService;
+  @MockitoBean private OfficialBuybackService buybackService;
   @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mvc;
@@ -350,6 +365,159 @@ class OfficialMarketControllerTest {
     @DisplayName("Rechaza con 401 Unauthorized cuando no se envía credencial JWT")
     void rejectsUnauthenticatedRequest() throws Exception {
       mvc.perform(get("/api/market/official")).andExpect(status().isUnauthorized());
+    }
+  }
+
+  @Nested
+  @DisplayName("Venta oficial inmediata")
+  class OfficialBuyback {
+
+    private static final Long PLAYER_ID = 7821L;
+    private static final Long TRANSACTION_ID = 12345L;
+
+    private String validBody() {
+      return "{\"playerId\":" + PLAYER_ID + ",\"quantity\":5}";
+    }
+
+    private OfficialBuybackReceipt receipt() {
+      return new OfficialBuybackReceipt(
+          TRANSACTION_ID,
+          1L,
+          42L,
+          PLAYER_ID,
+          5,
+          100L,
+          10,
+          90L,
+          450L,
+          OffsetDateTime.parse("2026-11-22T10:30:00Z"));
+    }
+
+    @Test
+    @DisplayName("Confirma la venta con 200 y el comprobante completo del contrato")
+    void confirmaLaVenta() throws Exception {
+      // Arrange
+      when(buybackService.sellToSuperuser(anyString(), any())).thenReturn(receipt());
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(validBody()))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.transactionId").value(TRANSACTION_ID))
+          .andExpect(jsonPath("$.buyerId").value(1))
+          .andExpect(jsonPath("$.sellerId").value(42))
+          .andExpect(jsonPath("$.playerId").value(PLAYER_ID))
+          .andExpect(jsonPath("$.quantity").value(5))
+          .andExpect(jsonPath("$.quotePrice").value(100))
+          .andExpect(jsonPath("$.discountPercentage").value(10))
+          .andExpect(jsonPath("$.unitPrice").value(90))
+          .andExpect(jsonPath("$.totalAmount").value(450))
+          .andExpect(jsonPath("$.executedAt").exists());
+
+      // Verify
+      verify(buybackService)
+          .sellToSuperuser(eq("user@example.com"), eq(new OfficialBuybackRequest(PLAYER_ID, 5)));
+    }
+
+    @Test
+    @DisplayName("Rechaza con 401 una venta sin autenticación")
+    void rechazaVentaSinAutenticacion() throws Exception {
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(validBody()))
+          .andExpect(status().isUnauthorized());
+
+      // Verify
+      verify(buybackService, never()).sellToSuperuser(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Rechaza con 403 la venta solicitada por el superusuario")
+    void rechazaVentaDelSuperusuario() throws Exception {
+      // Arrange
+      when(buybackService.sellToSuperuser(anyString(), any()))
+          .thenThrow(new SuperuserCannotSellException());
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(validBody()))
+          .andExpect(status().isForbidden())
+          .andExpect(jsonPath("$.code").value("SUPERUSER_CANNOT_SELL"));
+    }
+
+    @Test
+    @DisplayName("Traduce con 400 una cantidad fuera del rango 1–100")
+    void rechazaCantidadInvalida() throws Exception {
+      // Arrange
+      when(buybackService.sellToSuperuser(anyString(), any()))
+          .thenThrow(new InvalidQuantityException());
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(validBody()))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_QUANTITY"));
+    }
+
+    @Test
+    @DisplayName("Traduce con 409 la falta de tenencia libre")
+    void rechazaTenenciaInsuficiente() throws Exception {
+      // Arrange
+      when(buybackService.sellToSuperuser(anyString(), any()))
+          .thenThrow(new InsufficientStockException());
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(validBody()))
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("INSUFFICIENT_STOCK"));
+    }
+
+    @Test
+    @DisplayName("Traduce con 409 la falta de saldo del superusuario")
+    void rechazaSaldoInsuficienteDelSuperusuario() throws Exception {
+      // Arrange
+      when(buybackService.sellToSuperuser(anyString(), any()))
+          .thenThrow(new InsufficientCreditsException());
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(validBody()))
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("INSUFFICIENT_CREDITS"));
+    }
+
+    @Test
+    @DisplayName("Rechaza con 400 un cuerpo estructuralmente inválido sin invocar el caso de uso")
+    void rechazaCuerpoEstructural() throws Exception {
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell-official")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"quantity\":5}"))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+      // Verify
+      verify(buybackService, never()).sellToSuperuser(anyString(), any());
     }
   }
 }
