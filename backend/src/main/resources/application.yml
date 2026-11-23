@@ -101,6 +101,10 @@ footballmarket:
 market:
   listing:
     expiration-duration: ${MARKET_LISTING_EXPIRATION_DURATION:PT24H}
+  buyback:
+    # Comisión entera aplicada por la venta oficial inmediata. Rango inclusivo 10–99; un valor
+    # fuera de rango impide el arranque.
+    discount-percentage: ${MARKET_BUYBACK_DISCOUNT_PERCENTAGE:10}
   quote:
     strategy: ${MARKET_QUOTE_STRATEGY:POSITIONAL_PERFORMANCE}
     schedule:

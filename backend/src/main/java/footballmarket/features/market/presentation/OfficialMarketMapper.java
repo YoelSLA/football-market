@@ -6,12 +6,16 @@ import footballmarket.features.market.application.exceptions.InvalidPaginationEx
 import footballmarket.features.market.application.exceptions.InvalidPriceRangeException;
 import footballmarket.features.market.application.exceptions.InvalidSortParameterException;
 import footballmarket.features.market.application.internal.OfficialMarketAssembler;
+import footballmarket.features.market.domain.records.OfficialBuybackReceipt;
+import footballmarket.features.market.domain.records.OfficialBuybackRequest;
 import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
 import footballmarket.features.market.domain.records.OfficialMarketPriceRange;
 import footballmarket.features.market.domain.records.OfficialMarketQuote;
 import footballmarket.features.market.infraestructure.projections.OfficialMarketPlayerProjection;
+import footballmarket.features.market.presentation.dtos.request.OfficialBuybackRequestDTO;
 import footballmarket.features.market.presentation.dtos.request.OfficialMarketQueryRequestDTO;
+import footballmarket.features.market.presentation.dtos.response.OfficialBuybackResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketPageResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketPlayerResponseDTO;
 import footballmarket.features.market.presentation.dtos.response.OfficialMarketPriceRangeResponseDTO;
@@ -197,5 +201,35 @@ public final class OfficialMarketMapper {
         player.leagueName(),
         player.imageUrl(),
         quoteDTO);
+  }
+
+  /**
+   * Convierte una solicitud HTTP validada de venta oficial en la solicitud de dominio.
+   *
+   * @param requestDTO solicitud validada
+   * @return solicitud de dominio
+   */
+  public static OfficialBuybackRequest toBuybackRequest(OfficialBuybackRequestDTO requestDTO) {
+    return new OfficialBuybackRequest(requestDTO.playerId(), requestDTO.quantity());
+  }
+
+  /**
+   * Expone el comprobante de una venta oficial confirmada.
+   *
+   * @param receipt comprobante de dominio
+   * @return respuesta contractual de la operación
+   */
+  public static OfficialBuybackResponseDTO toBuybackResponse(OfficialBuybackReceipt receipt) {
+    return new OfficialBuybackResponseDTO(
+        receipt.transactionId(),
+        receipt.buyerId(),
+        receipt.sellerId(),
+        receipt.playerId(),
+        receipt.quantity(),
+        receipt.quotePrice(),
+        receipt.discountPercentage(),
+        receipt.unitPrice(),
+        receipt.totalAmount(),
+        receipt.executedAt());
   }
 }

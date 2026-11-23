@@ -24,10 +24,12 @@ import footballmarket.features.market.application.exceptions.ListingNotFoundExce
 import footballmarket.features.market.application.exceptions.SellerUnavailableException;
 import footballmarket.features.market.application.exceptions.SuperuserCannotBuyException;
 import footballmarket.features.market.domain.exceptions.InsufficientUserCreditsException;
+import footballmarket.features.market.domain.exceptions.InvalidListingPriceException;
 import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.BuyListingRequest;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
+import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.quote.application.exceptions.InvalidQuotePriceException;
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
@@ -339,6 +341,9 @@ class OrderControllerTest {
           .andExpect(jsonPath("$.unitPrice").value(100))
           .andExpect(jsonPath("$.totalAmount").value(1000))
           .andExpect(jsonPath("$.executedAt").exists());
+
+      // Verify
+      verify(buyOrderService).buy(eq(BUYER_EMAIL), eq(new BuyOrderRequest(PLAYER_ID, 10)));
     }
 
     @Test
@@ -766,6 +771,112 @@ class OrderControllerTest {
       // Assert
       verify(buyOrderService).buy(eq(BUYER_EMAIL), eq(new BuyOrderRequest(PLAYER_ID, 10)));
       verify(buyOrderService, never()).buyListing(anyString(), any());
+    }
+  }
+
+  @Nested
+  @DisplayName("Precio opcional de publicación P2P")
+  class ListingPrice {
+    @Test
+    @DisplayName("Acepta el precio unitario solicitado y devuelve el importe acordado")
+    void aceptaPrecioExplicito() throws Exception {
+      // Arrange
+      OffsetDateTime now = OffsetDateTime.now();
+      CurrentQuote quote = new CurrentQuote(PLAYER_ID, 100L, now, "fixture");
+      TokenListing listing =
+          TokenListing.publish(
+              TestFixtures.user(3L),
+              TestFixtures.player(PLAYER_ID),
+              5,
+              85L,
+              quote,
+              now,
+              now.plusDays(1));
+      when(tokenListingService.publish(anyString(), any())).thenReturn(listing);
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"playerId\":" + PLAYER_ID + ",\"quantity\":5,\"unitPrice\":85}"))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.unitPrice").value(85))
+          .andExpect(jsonPath("$.totalAmount").value(425));
+
+      // Verify
+      verify(tokenListingService)
+          .publish(eq(BUYER_EMAIL), eq(new SellOrderRequest(PLAYER_ID, 5, 85L)));
+    }
+
+    @Test
+    @DisplayName("La omisión del precio llega al Service como valor predeterminado")
+    void omitePrecioUnitario() throws Exception {
+      // Arrange
+      OffsetDateTime now = OffsetDateTime.now();
+      CurrentQuote quote = new CurrentQuote(PLAYER_ID, 100L, now, "fixture");
+      TokenListing listing =
+          TokenListing.publish(
+              TestFixtures.user(3L),
+              TestFixtures.player(PLAYER_ID),
+              5,
+              quote,
+              now,
+              now.plusDays(1));
+      when(tokenListingService.publish(anyString(), any())).thenReturn(listing);
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"playerId\":" + PLAYER_ID + ",\"quantity\":5}"))
+          .andExpect(status().isCreated())
+          .andExpect(jsonPath("$.unitPrice").value(100))
+          .andExpect(jsonPath("$.totalAmount").value(500));
+
+      // Verify
+      verify(tokenListingService).publish(eq(BUYER_EMAIL), eq(new SellOrderRequest(PLAYER_ID, 5)));
+    }
+
+    @Test
+    @DisplayName("Un precio fuera de banda responde 409 INVALID_LISTING_PRICE")
+    void rechazaPrecioFueraDeBanda() throws Exception {
+      // Arrange
+      when(tokenListingService.publish(anyString(), any()))
+          .thenThrow(new InvalidListingPriceException());
+
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"playerId\":" + PLAYER_ID + ",\"quantity\":5,\"unitPrice\":125}"))
+          .andExpect(status().isConflict())
+          .andExpect(jsonPath("$.code").value("INVALID_LISTING_PRICE"))
+          .andExpect(jsonPath("$.path").value("/api/orders/sell"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"85.5", "1e2", "\"85\"", "true", "[]", "{}", "9223372036854775808"})
+    @DisplayName("Rechaza un precio que no sea literal entero Long sin invocar el Service")
+    void rechazaRepresentacionEstructuralInvalida(String unitPriceJson) throws Exception {
+      // Act / Assert
+      mvc.perform(
+              post("/api/orders/sell")
+                  .header("Authorization", authorization)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(
+                      "{\"playerId\":"
+                          + PLAYER_ID
+                          + ",\"quantity\":5,\"unitPrice\":"
+                          + unitPriceJson
+                          + "}"))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+      // Verify
+      verify(tokenListingService, never()).publish(anyString(), any());
     }
   }
 }
