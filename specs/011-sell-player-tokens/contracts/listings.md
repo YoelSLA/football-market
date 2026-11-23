@@ -37,7 +37,8 @@ Content-Type: application/json
 
 {
   "playerId": 7821,
-  "quantity": 5
+  "quantity": 5,
+  "unitPrice": 85
 }
 ```
 
@@ -45,6 +46,7 @@ Content-Type: application/json
 |---|---|---|---|
 | `playerId` | integer (Long) | Sí | Identificador interno. Debe existir y estar visible. Un valor no positivo responde 404 `PLAYER_NOT_FOUND`, no 400 |
 | `quantity` | integer | Sí | Literal entero entre 1 y 100, sin coerción, redondeo ni truncamiento |
+| `unitPrice` | integer (Long) | No | Precio unitario opcional en centésimas. Si se omite se usa la cotización vigente; si se informa debe ser un entero JSON positivo entre el 80% y el 120%, inclusive, de esa cotización. Sin coerción decimal o textual. |
 
 ### Response 201 Created
 
@@ -61,8 +63,8 @@ convención es acotada y deliberada: `201` identifica la creación y el cuerpo t
   "listingId": 25,
   "playerId": 7821,
   "quantity": 5,
-  "unitPrice": 100,
-  "totalAmount": 500,
+  "unitPrice": 85,
+  "totalAmount": 425,
   "status": "ACTIVE",
   "createdAt": "2026-10-17T15:30:00.123Z",
   "expiresAt": "2026-10-18T15:30:00.123Z"
@@ -81,6 +83,9 @@ convención es acotada y deliberada: `201` identifica la creación y el cuerpo t
 | `expiresAt` | string (ISO-8601) | Instante de vencimiento, 24 horas después de la creación |
 
 Una publicación creada nunca arranca en `SOLD`, `CANCELLED` ni `EXPIRED`.
+El precio e importe acordados quedan congelados en la publicación aunque cambie la cotización
+posteriormente. Si `unitPrice` se omite, el precio congelado es la cotización vigente al crearla.
+Cuando se omite el campo, el ejemplo de respuesta usa `unitPrice: 100` y `totalAmount: 500`.
 
 ### Errores
 
@@ -95,6 +100,7 @@ Una publicación creada nunca arranca en `SOLD`, `CANCELLED` ni `EXPIRED`.
 | 409 | `INSUFFICIENT_STOCK` | La cantidad supera la disponibilidad del vendedor, es decir su tenencia menos las reservas de publicaciones efectivamente activas y no vencidas |
 | 409 | `QUOTE_UNAVAILABLE` | No hay cotización vigente para el jugador |
 | 409 | `INVALID_QUOTE_PRICE` | La cotización vigente no es positiva |
+| 409 | `INVALID_LISTING_PRICE` | `unitPrice` es no positivo o queda fuera del intervalo inclusivo del 80% al 120% de la cotización vigente |
 | 500 | `INTERNAL_ERROR` | Fallo interno; la operación se revierte por completo |
 
 Ningún rechazo crea publicación ni altera reservas, saldos, tenencias ni transacciones.

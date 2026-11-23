@@ -265,6 +265,10 @@ class OfficialMarketRepositoryTest {
     @Test
     @DisplayName("Obtiene los extremos globales de cotizaciones vigentes elegibles")
     void findsGlobalPriceRange() {
+      // Arrange
+      Player player = testData.createVisiblePlayer();
+      testData.initializeMarket(player);
+
       // Act
       OfficialMarketPriceRangeProjection projection =
           officialMarketRepository.findGlobalOfficialMarketPriceRange();

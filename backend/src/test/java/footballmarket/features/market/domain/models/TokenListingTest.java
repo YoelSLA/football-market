@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.domain.enums.TokenListingStatus;
+import footballmarket.features.market.domain.exceptions.InvalidListingPriceException;
 import footballmarket.features.market.domain.exceptions.InvalidTokenListingException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import footballmarket.support.TestFixtures;
@@ -26,6 +27,14 @@ class TokenListingTest {
     Player player = TestFixtures.player(1L);
     CurrentQuote quote = new CurrentQuote(1L, unitPrice, NOW, "v1");
     return TokenListing.publish(seller, player, quantity, quote, NOW, NOW.plusDays(1));
+  }
+
+  private TokenListing listing(int quantity, Long requestedUnitPrice, long quotePrice) {
+    User seller = TestFixtures.user(2L);
+    Player player = TestFixtures.player(1L);
+    CurrentQuote quote = new CurrentQuote(1L, quotePrice, NOW, "v1");
+    return TokenListing.publish(
+        seller, player, quantity, requestedUnitPrice, quote, NOW, NOW.plusDays(1));
   }
 
   @Nested
@@ -67,6 +76,46 @@ class TokenListingTest {
       // Act / Assert
       assertThatThrownBy(() -> listing(100, Long.MAX_VALUE))
           .isInstanceOf(ArithmeticException.class);
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"80, 400", "120, 600"})
+    @DisplayName("Acepta ambos límites inclusivos y congela el importe correspondiente")
+    void aceptaLimitesDePrecio(long price, long total) {
+      // Act
+      TokenListing result = listing(5, price, 100);
+      // Assert
+      assertThat(result.getUnitPrice()).isEqualTo(price);
+      assertThat(result.getTotalAmount()).isEqualTo(total);
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(longs = {0, -1, 79, 121})
+    @DisplayName("Rechaza precios no positivos o fuera de la banda inclusiva")
+    void rechazaPrecioFueraDeBanda(long price) {
+      // Act / Assert
+      assertThatThrownBy(() -> listing(1, price, 100))
+          .isInstanceOf(InvalidListingPriceException.class);
+    }
+
+    @Test
+    @DisplayName("Usa la cotización vigente cuando no se solicita un precio")
+    void usaCotizacionVigenteSiSeOmitePrecio() {
+      // Act
+      TokenListing result = listing(3, null, 100);
+      // Assert
+      assertThat(result.getUnitPrice()).isEqualTo(100);
+      assertThat(result.getTotalAmount()).isEqualTo(300);
+    }
+
+    @Test
+    @DisplayName("Compara precios grandes sin desbordar la aritmética de la banda")
+    void comparaPreciosGrandesSinDesbordamiento() {
+      // Act
+      TokenListing result = listing(1, Long.MAX_VALUE, Long.MAX_VALUE);
+      // Assert
+      assertThat(result.getUnitPrice()).isEqualTo(Long.MAX_VALUE);
+      assertThat(result.getTotalAmount()).isEqualTo(Long.MAX_VALUE);
     }
   }
 

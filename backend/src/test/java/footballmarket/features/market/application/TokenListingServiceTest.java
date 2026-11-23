@@ -17,7 +17,9 @@ import footballmarket.features.market.application.exceptions.ListingNotAvailable
 import footballmarket.features.market.application.exceptions.ListingNotFoundException;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.market.application.exceptions.SuperuserCannotSellException;
+import footballmarket.features.market.domain.exceptions.InvalidListingPriceException;
 import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.domain.records.BuyListingRequest;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
 import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.quote.application.QuoteSource;
@@ -427,6 +429,72 @@ class TokenListingServiceTest {
                   listingService.publish(
                       seller.getEmail(), new SellOrderRequest(player.getId(), 5)))
           .isInstanceOf(QuoteUnavailableException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("Precio acordado de la publicación")
+  class NegotiatedPrice {
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"80, 400", "85, 425", "120, 600"})
+    @DisplayName("Publica al precio solicitado y congela el importe exacto")
+    void publicaPrecioDentroDeBanda(long unitPrice, long totalAmount) {
+      // Act
+      TokenListing listing =
+          listingService.publish(
+              seller.getEmail(), new SellOrderRequest(player.getId(), 5, unitPrice));
+
+      // Assert
+      assertThat(listing.getUnitPrice()).isEqualTo(unitPrice);
+      assertThat(listing.getTotalAmount()).isEqualTo(totalAmount);
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, 79, 121})
+    @DisplayName("Rechaza el precio fuera de banda sin crear ni reservar la publicación")
+    void rechazaPrecioFueraDeBanda(long unitPrice) {
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  listingService.publish(
+                      seller.getEmail(), new SellOrderRequest(player.getId(), 5, unitPrice)))
+          .isInstanceOf(InvalidListingPriceException.class);
+
+      // Verify
+      assertThat(
+              listingService
+                  .mine(seller.getEmail(), null, 0, 100, "NEWEST")
+                  .summary()
+                  .activeOrders())
+          .isZero();
+      TokenListing fullHolding =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 20));
+      assertThat(fullHolding.getQuantity()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("La compra posterior liquida al precio acordado aunque cambie la cotización")
+    void compraUsaElPrecioCongelado() {
+      // Arrange
+      TokenListing listing =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5, 85L));
+      User buyer = market.registerBuyer();
+      when(quotes.currentQuote(any()))
+          .thenReturn(
+              Optional.of(
+                  new CurrentQuote(player.getId(), 1000L, OffsetDateTime.now(), "updated-quote")));
+
+      // Act
+      footballmarket.features.market.domain.models.MarketTransaction transaction =
+          buyService.buyListing(buyer.getEmail(), new BuyListingRequest(listing.getId()));
+
+      // Assert
+      assertThat(transaction.getUnitPrice()).isEqualTo(85);
+      assertThat(transaction.getTotalAmount()).isEqualTo(425);
+      assertThat(listingService.detail(seller.getEmail(), listing.getId()).unitPrice())
+          .isEqualTo(85);
+      assertThat(listingService.detail(seller.getEmail(), listing.getId()).totalAmount())
+          .isEqualTo(425);
     }
   }
 }

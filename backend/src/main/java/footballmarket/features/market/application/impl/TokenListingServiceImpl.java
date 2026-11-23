@@ -94,7 +94,13 @@ public class TokenListingServiceImpl implements TokenListingService {
     try {
       return this.listings.save(
           TokenListing.publish(
-              seller, player, order.quantity(), quote, now, now.plus(this.expirationDuration)));
+              seller,
+              player,
+              order.quantity(),
+              order.unitPrice(),
+              quote,
+              now,
+              now.plus(this.expirationDuration)));
     } catch (ArithmeticException overflow) {
       throw new ArithmeticOverflowException();
     }

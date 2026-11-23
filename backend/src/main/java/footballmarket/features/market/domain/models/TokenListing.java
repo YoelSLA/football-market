@@ -3,10 +3,12 @@ package footballmarket.features.market.domain.models;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.domain.enums.TokenListingStatus;
+import footballmarket.features.market.domain.exceptions.InvalidListingPriceException;
 import footballmarket.features.market.domain.exceptions.InvalidTokenListingException;
 import footballmarket.features.market.domain.records.TokenListingView;
 import footballmarket.features.quote.domain.records.CurrentQuote;
 import jakarta.persistence.*;
+import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -70,6 +72,31 @@ public class TokenListing {
       CurrentQuote quote,
       OffsetDateTime createdAt,
       OffsetDateTime expiresAt) {
+    return TokenListing.publish(seller, player, quantity, null, quote, createdAt, expiresAt);
+  }
+
+  /**
+   * Construye una publicación con precio acordado explícito o con la cotización vigente.
+   *
+   * @param seller propietario de los tokens reservados
+   * @param player jugador publicado
+   * @param quantity cantidad de tokens reservada
+   * @param requestedUnitPrice precio opcional solicitado en centésimas
+   * @param quote cotización vigente usada como referencia
+   * @param createdAt instante de publicación
+   * @param expiresAt instante de vencimiento
+   * @return publicación con precio e importe congelados
+   * @throws InvalidTokenListingException si los datos estructurales de la publicación son inválidos
+   * @throws InvalidListingPriceException si el precio solicitado queda fuera de la banda permitida
+   */
+  public static TokenListing publish(
+      User seller,
+      Player player,
+      int quantity,
+      Long requestedUnitPrice,
+      CurrentQuote quote,
+      OffsetDateTime createdAt,
+      OffsetDateTime expiresAt) {
     if (seller == null
         || player == null
         || quantity < 1
@@ -82,18 +109,32 @@ public class TokenListing {
         || !expiresAt.isAfter(createdAt)) {
       throw new InvalidTokenListingException();
     }
+    long unitPrice = requestedUnitPrice == null ? quote.price() : requestedUnitPrice;
+    if (!TokenListing.isWithinAllowedPrice(unitPrice, quote.price())) {
+      throw new InvalidListingPriceException();
+    }
     TokenListing listing = new TokenListing();
     listing.seller = seller;
     listing.player = player;
     listing.quantity = quantity;
-    listing.unitPrice = quote.price();
-    listing.totalAmount = Math.multiplyExact((long) quantity, quote.price());
+    listing.unitPrice = unitPrice;
+    listing.totalAmount = Math.multiplyExact((long) quantity, unitPrice);
     listing.quoteCalculatedAt = quote.calculatedAt();
     listing.quoteStrategyVersion = quote.strategyVersion();
     listing.status = TokenListingStatus.ACTIVE;
     listing.createdAt = createdAt;
     listing.expiresAt = expiresAt;
     return listing;
+  }
+
+  private static boolean isWithinAllowedPrice(long unitPrice, long quotePrice) {
+    if (unitPrice <= 0) {
+      return false;
+    }
+    BigInteger price = BigInteger.valueOf(unitPrice).multiply(BigInteger.valueOf(100));
+    BigInteger quote = BigInteger.valueOf(quotePrice);
+    return price.compareTo(quote.multiply(BigInteger.valueOf(80))) >= 0
+        && price.compareTo(quote.multiply(BigInteger.valueOf(120))) <= 0;
   }
 
   /** Usa el instante decisivo obtenido bajo bloqueo, no una segunda lectura del reloj al cerrar. */

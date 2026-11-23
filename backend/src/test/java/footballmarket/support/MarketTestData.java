@@ -258,17 +258,16 @@ public class MarketTestData {
   }
 
   /**
-   * Retira la inicialización del mercado, dejando el mercado sin cotizaciones iniciales.
+   * Retira todas las cotizaciones para dejar el mercado sin datos con los que operar.
    *
    * <p>Permite preparar en Arrange la precondición de un mercado todavía no inicializado, que es el
-   * escenario de rechazo controlado de las operaciones de mercado.
+   * escenario de rechazo controlado de las operaciones de mercado. Se eliminan todas las
+   * cotizaciones porque la guarda consulta si existe alguna, no solo cotizaciones iniciales.
    */
   @Transactional
   public void clearMarketInitialization() {
     for (PlayerQuote quote : quotes.findAll()) {
-      if (quote.getOrigin() == QuoteOrigin.INITIAL) {
-        quotes.delete(quote);
-      }
+      quotes.delete(quote);
     }
   }
 
