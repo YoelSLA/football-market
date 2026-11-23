@@ -2,10 +2,10 @@
 
 .dialog {
 	// 1. 🏷️ Custom Properties
-	--modal-custom-max-width: 520px;
+	--modal-custom-max-width: 530px;
 
 	// 4. 📦 Box Model
-	width: min(520px, calc(100vw - 2rem));
+	width: min(530px, calc(100vw - 2rem));
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-panel-to;

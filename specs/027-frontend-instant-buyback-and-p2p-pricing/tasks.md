@@ -1,7 +1,7 @@
 # Tasks: UI de venta inmediata oficial y selector de precio flexible en P2P (SPEC-027)
 
-**Input**: Documentos de diseño desde `/specs/027-frontend-instant-buyback-and-p2p-pricing/`  
-**Prerequisites**: [plan.md](plan.md), [spec.md](spec.md), [research.md](research.md), [data-model.md](data-model.md), [contracts/](contracts/)  
+**Input**: Documentos de diseño desde `/specs/027-frontend-instant-buyback-and-p2p-pricing/`
+**Prerequisites**: [plan.md](plan.md), [spec.md](spec.md), [research.md](research.md), [data-model.md](data-model.md), [contracts/](contracts/)
 
 **Tests**: Conforme a la Constitución y normas del proyecto, el frontend está exento de testing: MUST NOT crear tests ni infraestructura frontend. Los controles permitidos son la verificación estática de linter y compilación (`npm run build`).
 
@@ -21,9 +21,9 @@
 
 **Purpose**: Definir modelos, interfaces TypeScript, DTOs y mappers compartidos que sustentan las User Stories.
 
-- [ ] T001 [P] Definir tipos de dominio `SellMode`, `SellOfficialResult`, `SellOfficialEstimation`, `SellP2PEstimation` y `P2POpportunity` en `frontend/src/features/market/types/models.ts`
-- [ ] T002 [P] Definir DTOs `OrderSellOfficialRequestDTO`, `OrderSellOfficialResponseDTO` y agregar `unitPrice` opcional a `CreateListingRequestDTO` en `frontend/src/features/market/types/dtos.ts`
-- [ ] T003 [P] Implementar funciones mapper para transformar respuestas de venta oficial y calcular deltas de oportunidad en `frontend/src/features/market/market.mapper.ts`
+- [x] T001 [P] Definir tipos de dominio `SellMode`, `SellOfficialResult`, `SellOfficialEstimation`, `SellP2PEstimation` y `P2POpportunity` en `frontend/src/features/market/types/models.ts`
+- [x] T002 [P] Definir DTOs `OrderSellOfficialRequestDTO`, `OrderSellOfficialResponseDTO` y agregar `unitPrice` opcional a `CreateListingRequestDTO` en `frontend/src/features/market/types/dtos.ts`
+- [x] T003 [P] Implementar funciones mapper para transformar respuestas de venta oficial y calcular deltas de oportunidad en `frontend/src/features/market/market.mapper.ts`
 
 ---
 
@@ -33,9 +33,9 @@
 
 **⚠️ CRITICAL**: Completar antes de implementar los componentes de las User Stories.
 
-- [ ] T004 Implementar método de servicio HTTP `sellTokensOfficial(request)` y actualizar `sellTokens(request)` con `unitPrice` en `frontend/src/features/market/market.service.ts`
-- [ ] T005 [P] Crear hook de mutación `useSellOfficialTokensMutation` en `frontend/src/features/market/hooks/mutations/useSellOfficialTokensMutation.ts`
-- [ ] T006 [P] Actualizar hook de mutación `useSellTokensMutation` para admitir `unitPrice` opcional en `frontend/src/features/market/hooks/mutations/useSellTokensMutation.ts`
+- [x] T004 Implementar método de servicio HTTP `sellTokensOfficial(request)` y actualizar `sellTokens(request)` con `unitPrice` en `frontend/src/features/market/market.service.ts`
+- [x] T005 [P] Crear hook de mutación `useSellOfficialTokensMutation` en `frontend/src/features/market/hooks/mutations/useSellOfficialTokensMutation.ts`
+- [x] T006 [P] Actualizar hook de mutación `useSellTokensMutation` para admitir `unitPrice` opcional en `frontend/src/features/market/hooks/mutations/useSellTokensMutation.ts`
 
 **Checkpoint**: Base de datos y servicios lista — la implementación de componentes de User Stories puede comenzar.
 
@@ -49,11 +49,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T007 [P] [US1] Crear componente accesible `SellModeSelector` con tabs segmentadas (`OFFICIAL` vs `P2P`) en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModeSelector.tsx`
-- [ ] T008 [P] [US1] Crear componente `SellModalOfficialEstimation` con desglose en tiempo real de cotización oficial, spread del 10%, valor unitario neto y créditos netos en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModalOfficialEstimation.tsx`
-- [ ] T009 [US1] Actualizar hook `useMarketSellPage` para incorporar estado `sellMode`, mutación `useSellOfficialTokensMutation`, desglose de venta oficial e invalidación reactiva de queries (`userCredits`, `userHoldings`, `portfolioSummary`) en `frontend/src/features/market/hooks/pages/useMarketSellPage.ts`
-- [ ] T010 [US1] Actualizar `SellModalFooter` para adaptar botón de confirmación ("Confirmar venta inmediata") y estado `isBusy` según `sellMode` en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModalFooter.tsx`
-- [ ] T011 [US1] Integrar `SellModeSelector`, `SellModalOfficialEstimation` y el flujo de confirmación oficial en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/SellTokenModal.tsx`
+- [x] T007 [P] [US1] Crear componente accesible `SellModeSelector` con tabs segmentadas (`OFFICIAL` vs `P2P`) en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModeSelector.tsx`
+- [x] T008 [P] [US1] Crear componente `SellModalOfficialEstimation` con desglose en tiempo real de cotización oficial, spread del 10%, valor unitario neto y créditos netos en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModalOfficialEstimation.tsx`
+- [x] T009 [US1] Actualizar hook `useMarketSellPage` para incorporar estado `sellMode`, mutación `useSellOfficialTokensMutation`, desglose de venta oficial e invalidación reactiva de queries (`userCredits`, `userHoldings`, `portfolioSummary`) en `frontend/src/features/market/hooks/pages/useMarketSellPage.ts`
+- [x] T010 [US1] Actualizar `SellModalFooter` para adaptar botón de confirmación ("Confirmar venta inmediata") y estado `isBusy` según `sellMode` en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModalFooter.tsx`
+- [x] T011 [US1] Integrar `SellModeSelector`, `SellModalOfficialEstimation` y el flujo de confirmación oficial en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/SellTokenModal.tsx`
 
 ---
 
@@ -65,10 +65,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [P] [US2] Crear componente interactivo `P2PPriceSelector` con slider HTML5 nativo, input numérico y botones de salto rápido (-20%, -10%, 0%, +10%, +20%) en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/P2PPriceSelector.tsx`
-- [ ] T013 [P] [US2] Crear estilos SCSS para el selector de precio en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/P2PPriceSelector.module.scss`
-- [ ] T014 [US2] Extender `useMarketSellPage` con estado `p2pUnitPriceCentimes`, cálculo de variaciones, límites de banda y transmisión de `unitPrice` en la mutación P2P en `frontend/src/features/market/hooks/pages/useMarketSellPage.ts`
-- [ ] T015 [US2] Integrar `P2PPriceSelector` en la vista de publicación comunitaria de `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/SellTokenModal.tsx`
+- [x] T012 [P] [US2] Crear componente interactivo `P2PPriceSelector` con slider HTML5 nativo, input numérico y botones de salto rápido (-20%, -10%, 0%, +10%, +20%) en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/P2PPriceSelector.tsx`
+- [x] T013 [P] [US2] Crear estilos SCSS para el selector de precio en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/P2PPriceSelector.module.scss`
+- [x] T014 [US2] Extender `useMarketSellPage` con estado `p2pUnitPriceCentimes`, cálculo de variaciones, límites de banda y transmisión de `unitPrice` en la mutación P2P en `frontend/src/features/market/hooks/pages/useMarketSellPage.ts`
+- [x] T015 [US2] Integrar `P2PPriceSelector` en la vista de publicación comunitaria de `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/SellTokenModal.tsx`
 
 ---
 
@@ -80,9 +80,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T016 [P] [US3] Crear componente `P2POpportunityBadge` con lógica de cálculo delta y estilos visuales verde/naranja en `frontend/src/features/market/pages/MarketP2PPage/components/P2POpportunityBadge/P2POpportunityBadge.tsx`
-- [ ] T017 [P] [US3] Crear estilos SCSS encapsulados para el badge en `frontend/src/features/market/pages/MarketP2PPage/components/P2POpportunityBadge/P2POpportunityBadge.module.scss`
-- [ ] T018 [US3] Integrar `P2POpportunityBadge` en las tarjetas y filas de órdenes de `frontend/src/features/market/pages/MarketP2PPage/components/CommunityMarketPanel/CommunityMarketPanel.tsx`
+- [x] T016 [P] [US3] Crear componente `P2POpportunityBadge` con lógica de cálculo delta y estilos visuales verde/naranja en `frontend/src/features/market/pages/MarketP2PPage/components/P2POpportunityBadge/P2POpportunityBadge.tsx`
+- [x] T017 [P] [US3] Crear estilos SCSS encapsulados para el badge en `frontend/src/features/market/pages/MarketP2PPage/components/P2POpportunityBadge/P2POpportunityBadge.module.scss`
+- [x] T018 [US3] Integrar `P2POpportunityBadge` en las tarjetas y filas de órdenes de `frontend/src/features/market/pages/MarketP2PPage/components/CommunityMarketPanel/CommunityMarketPanel.tsx`
 
 ---
 
@@ -94,9 +94,9 @@
 
 ### Implementation for User Story 4
 
-- [ ] T019 [P] [US4] Actualizar componente `SellModalSuccess` para presentar el comprobante de venta oficial detallando créditos netos percibidos y saldo actualizado en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModalSuccess.tsx`
-- [ ] T020 [US4] Asegurar emisión de toast global (`useMarketToast`) simultánea al comprobante en `frontend/src/features/market/hooks/pages/useMarketSellPage.ts`
-- [ ] T021 [US4] Revisar estilos en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/SellTokenModal.module.scss` para asegurar layout desktop estricto ($\ge 1024\text{px}$) y contraste accesible (WCAG 2.1 AA)
+- [x] T019 [P] [US4] Actualizar componente `SellModalSuccess` para presentar el comprobante de venta oficial detallando créditos netos percibidos y saldo actualizado en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/components/SellModalSuccess.tsx`
+- [x] T020 [US4] Asegurar emisión de toast global (`useMarketToast`) simultánea al comprobante en `frontend/src/features/market/hooks/pages/useMarketSellPage.ts`
+- [x] T021 [US4] Revisar estilos en `frontend/src/features/market/pages/MarketSellPage/components/SellTokenModal/SellTokenModal.module.scss` para asegurar layout desktop estricto ($\ge 1024\text{px}$) y contraste accesible (WCAG 2.1 AA)
 
 ---
 
@@ -104,8 +104,8 @@
 
 **Purpose**: Verificaciones de consistencia, compilación y validación cruzada.
 
-- [ ] T022 [P] Ejecutar verificación de tipos y linter Biome en `frontend/`
-- [ ] T023 Ejecutar compilación de frontend (`npm run build` en `frontend/`) verificando ausencia de errores
+- [x] T022 [P] Ejecutar verificación de tipos y linter Biome en `frontend/`
+- [x] T023 Ejecutar compilación de frontend (`npm run build` en `frontend/`) verificando ausencia de errores
 - [ ] T024 Recorrer y validar los 4 escenarios interactivos de `specs/027-frontend-instant-buyback-and-p2p-pricing/quickstart.md`
 
 ---

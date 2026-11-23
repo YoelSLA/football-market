@@ -60,6 +60,9 @@ export default function CommunityMarketPanel({ community }: Props) {
 					<CommunityListingsPanel
 						player={community.selectedPlayer}
 						hasPriceLimit={community.filters.maxPrice !== null}
+						officialQuote={community.getOfficialQuote(
+							community.selectedPlayer.id,
+						)}
 						onBack={community.closePlayer}
 						onClearPriceLimit={community.clearMaxPrice}
 						onBuy={community.openListing}
@@ -115,6 +118,7 @@ export default function CommunityMarketPanel({ community }: Props) {
 						community.filters.maxPrice !== null
 					}
 					isUpdating={community.isUpdating}
+					getOfficialQuote={community.getOfficialQuote}
 					onRetry={community.retry}
 					onOpenPlayer={community.openPlayer}
 				/>

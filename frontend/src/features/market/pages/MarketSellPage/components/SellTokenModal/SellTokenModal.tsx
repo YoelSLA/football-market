@@ -7,16 +7,21 @@ import type {
 	MarketQuote,
 	MarketQuoteStatus,
 	SellEstimation,
+	SellMode,
+	SellOfficialEstimation,
+	SellOfficialResult,
 	SellQuantityForm,
 	SellResult,
 } from "@/features/market/types";
 import { Modal } from "@/shared/components";
 import {
-	SellModalEstimation,
+	P2PPriceSelector,
 	SellModalFooter,
 	SellModalHeader,
 	SellModalHoldingInfo,
+	SellModalOfficialEstimation,
 	SellModalSuccess,
+	SellModeSelector,
 } from "./components";
 import styles from "./SellTokenModal.module.scss";
 
@@ -31,13 +36,18 @@ interface Props {
 	canRetryQuote: boolean;
 	onRetryQuote: () => void;
 	estimation: SellEstimation | null;
+	officialEstimation?: SellOfficialEstimation | null;
+	sellMode: SellMode;
+	onSellModeChange: (mode: SellMode) => void;
+	p2pUnitPriceCentimes: number;
+	onP2PUnitPriceChange: (price: number) => void;
 	formRegister: UseFormRegister<SellQuantityForm>;
 	formError?: string;
 	quantity: string;
 	maximum: number;
 	presets: number[];
 	onQuantityChange: (quantity: number) => void;
-	result: SellResult | null;
+	result: SellResult | SellOfficialResult | null;
 	errorMessage: string | null;
 	confirmationBlockReason: string | null;
 	isBusy: boolean;
@@ -58,19 +68,32 @@ export default function SellTokenModal(props: Props) {
 		props.initialFocusRef.current = element;
 	};
 
+	const modalTitle = `${
+		props.sellMode === "OFFICIAL"
+			? "Venta inmediata oficial de"
+			: "Publicar venta de"
+	} ${player.name}`;
+
 	return (
 		<Modal
 			className={styles.dialog}
 			isOpen={props.isOpen}
 			onClose={props.onClose}
-			title={`Publicar venta de ${player.name}`}
+			title={modalTitle}
 			closeOnEsc={!props.isBusy}
 			closeOnOverlayClick={!props.isBusy}
 			isBusy={props.isBusy}
 			triggerRef={props.triggerRef}
 			initialFocusRef={props.initialFocusRef}
 		>
-			<section className={styles.modal} aria-label="Publicar venta de tokens">
+			<section
+				className={styles.modal}
+				aria-label={
+					props.sellMode === "OFFICIAL"
+						? "Venta inmediata oficial de tokens"
+						: "Publicar venta de tokens"
+				}
+			>
 				<SellModalHeader onClose={props.onClose} disabled={props.isBusy} />
 
 				<div className={styles.modal__content}>
@@ -98,9 +121,19 @@ export default function SellTokenModal(props: Props) {
 						<SellModalSuccess result={props.result} playerName={player.name} />
 					) : (
 						<div className={styles.modal__form}>
+							<SellModeSelector
+								mode={props.sellMode}
+								onChange={props.onSellModeChange}
+								disabled={props.isBusy}
+							/>
+
 							<TokenQuantityStepper
 								id="sell-token-quantity"
-								label={`Cantidad a publicar (máx. ${props.maximum})`}
+								label={
+									props.sellMode === "OFFICIAL"
+										? `Cantidad a vender (máx. ${props.maximum})`
+										: `Cantidad a publicar (máx. ${props.maximum})`
+								}
 								quantity={Number(props.quantity)}
 								min={1}
 								max={props.maximum}
@@ -115,9 +148,21 @@ export default function SellTokenModal(props: Props) {
 								onQuantityChange={props.onQuantityChange}
 							/>
 
-							{props.estimation && (
-								<SellModalEstimation estimation={props.estimation} />
-							)}
+							{props.sellMode === "OFFICIAL"
+								? props.officialEstimation && (
+										<SellModalOfficialEstimation
+											estimation={props.officialEstimation}
+										/>
+									)
+								: props.quote && (
+										<P2PPriceSelector
+											officialPriceCentimes={props.quote.price}
+											unitPriceCentimes={props.p2pUnitPriceCentimes}
+											quantity={Number(props.quantity) || 1}
+											disabled={props.isBusy}
+											onChange={props.onP2PUnitPriceChange}
+										/>
+									)}
 						</div>
 					)}
 
@@ -132,6 +177,7 @@ export default function SellTokenModal(props: Props) {
 					isSuccess={Boolean(props.result)}
 					isBusy={props.isBusy}
 					canConfirm={props.canConfirm}
+					sellMode={props.sellMode}
 					onClose={props.onClose}
 					onConfirm={props.onConfirm}
 				/>

@@ -8,8 +8,10 @@ import {
 	toMarketQuote,
 	toOfficialMarketPage,
 	toOrderBuyRequestDTO,
+	toOrderSellOfficialRequestDTO,
 	toOrderSellRequestDTO,
 	toP2PMarketPage,
+	toSellOfficialResult,
 	toSellResult,
 	toUserOrdersPage,
 } from "./market.mapper";
@@ -23,8 +25,10 @@ import type {
 	OfficialMarketCriteria,
 	OfficialMarketPage,
 	OrderBuyResponseDTO,
+	OrderSellOfficialResponseDTO,
 	OrderSellResponseDTO,
 	P2PMarketPage,
+	SellOfficialResult,
 	SellResult,
 	UserOrdersPage,
 } from "./types";
@@ -86,12 +90,28 @@ async function buyTokens(request: {
 async function sellTokens(request: {
 	playerId: number;
 	quantity: number;
+	unitPrice?: number;
 }): Promise<SellResult> {
 	const dto = toOrderSellRequestDTO(request);
 	const { data } = await http.post<OrderSellResponseDTO>("/orders/sell", dto, {
 		authenticated: true,
 	});
 	return toSellResult(data);
+}
+
+async function sellTokensOfficial(request: {
+	playerId: number;
+	quantity: number;
+}): Promise<SellOfficialResult> {
+	const dto = toOrderSellOfficialRequestDTO(request);
+	const { data } = await http.post<OrderSellOfficialResponseDTO>(
+		"/orders/sell-official",
+		dto,
+		{
+			authenticated: true,
+		},
+	);
+	return toSellOfficialResult(data);
 }
 
 async function getListings(
@@ -194,6 +214,7 @@ export const marketService = {
 	getCurrentQuote,
 	buyTokens,
 	sellTokens,
+	sellTokensOfficial,
 	getListings,
 	getP2PMarket,
 	getOfficialMarket,

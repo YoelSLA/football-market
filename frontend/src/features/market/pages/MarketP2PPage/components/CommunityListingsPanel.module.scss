@@ -157,6 +157,13 @@
 			overflow: hidden;
 		}
 
+		.panel__priceMetric {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			flex-wrap: wrap;
+		}
+
 		span {
 			// 5. 🔤 Typography
 			font-size: 0.65rem;
@@ -344,6 +351,13 @@
 
 			// 7. ⚙️ Behavior
 			overflow: hidden;
+		}
+
+		.listing__priceMetric {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			flex-wrap: wrap;
 		}
 	}
 

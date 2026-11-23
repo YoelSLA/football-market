@@ -77,6 +77,47 @@ export interface BuyQuantityForm {
 	quantity: string;
 }
 
+export type SellMode = "OFFICIAL" | "P2P";
+
+export type P2POpportunityType = "DISCOUNT" | "PREMIUM" | "NEUTRAL";
+
+export interface P2POpportunity {
+	type: P2POpportunityType;
+	percentageDelta: number;
+	label: string;
+}
+
+export interface SellOfficialResult {
+	transactionId: number;
+	buyerId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	quotePrice: number;
+	discountPercentage: number;
+	unitPrice: number;
+	totalAmount: number;
+	executedAt: string;
+}
+
+export interface SellOfficialEstimation {
+	quantity: number;
+	officialPriceCentimes: number;
+	discountPercentage: number;
+	spreadCentimes: number;
+	unitPriceNetCentimes: number;
+	totalNetCentimes: number;
+}
+
+export interface SellP2PEstimation {
+	quantity: number;
+	officialPriceCentimes: number;
+	unitPriceCentimes: number;
+	percentageDelta: number;
+	totalCentimes: number;
+	opportunityType: P2POpportunityType;
+}
+
 export interface SellResult {
 	listingId: number;
 	playerId: number;

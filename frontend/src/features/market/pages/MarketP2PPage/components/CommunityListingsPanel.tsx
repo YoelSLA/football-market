@@ -2,14 +2,17 @@ import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummar
 import type {
 	CommunityMarketPlayer,
 	MarketListing,
+	MarketQuote,
 } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
 import { Button } from "@/shared/components";
 import styles from "./CommunityListingsPanel.module.scss";
+import P2POpportunityBadge from "./P2POpportunityBadge";
 
 interface Props {
 	player: CommunityMarketPlayer;
 	hasPriceLimit: boolean;
+	officialQuote?: MarketQuote | null;
 	onBack: () => void;
 	onClearPriceLimit: () => void;
 	onBuy: (listing: MarketListing, trigger: HTMLElement | null) => void;
@@ -28,6 +31,7 @@ const remaining = (expiresAt: string) => {
 export default function CommunityListingsPanel({
 	player,
 	hasPriceLimit,
+	officialQuote,
 	onBack,
 	onClearPriceLimit,
 	onBuy,
@@ -54,7 +58,15 @@ export default function CommunityListingsPanel({
 				<dl className={styles.panel__metrics}>
 					<div>
 						<dt>Mejor precio</dt>
-						<dd>{formatCredits(player.minimumUnitPrice)}</dd>
+						<dd className={styles.panel__priceMetric}>
+							<span>{formatCredits(player.minimumUnitPrice)}</span>
+							{officialQuote && (
+								<P2POpportunityBadge
+									unitPrice={player.minimumUnitPrice}
+									officialPrice={officialQuote.price}
+								/>
+							)}
+						</dd>
 						<span>Por token</span>
 					</div>
 					<div>
@@ -102,7 +114,15 @@ export default function CommunityListingsPanel({
 								<dl className={styles.listing__details}>
 									<div>
 										<dt>Precio por token</dt>
-										<dd>{formatCredits(listing.unitPrice)}</dd>
+										<dd className={styles.listing__priceMetric}>
+											<span>{formatCredits(listing.unitPrice)}</span>
+											{officialQuote && (
+												<P2POpportunityBadge
+													unitPrice={listing.unitPrice}
+													officialPrice={officialQuote.price}
+												/>
+											)}
+										</dd>
 									</div>
 									<div>
 										<dt>Cantidad</dt>
