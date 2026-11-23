@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Invariantes del registro financiero de una venta oficial, sin Spring ni persistencia.
  *
-     * <p>Comprueba que el comprobante conserva la cotización de referencia y la comisión aplicada y
- * que rechaza combinaciones económicas imposibles sin construir un registro parcial.
+ * <p>Comprueba que el comprobante conserva la cotización de referencia y la comisión aplicada y que
+ * rechaza combinaciones económicas imposibles sin construir un registro parcial.
  */
 @Tag("unit")
 class MarketTransactionTest {

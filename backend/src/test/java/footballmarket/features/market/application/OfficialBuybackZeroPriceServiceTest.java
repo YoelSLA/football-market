@@ -69,7 +69,8 @@ class OfficialBuybackZeroPriceServiceTest {
   class ZeroNetPrice {
 
     @Test
-    @DisplayName("Rechaza el neto cero antes de liquidar y conserva los tokens para una venta válida")
+    @DisplayName(
+        "Rechaza el neto cero antes de liquidar y conserva los tokens para una venta válida")
     void rechazaAntesDeLiquidar() {
       // Act / Assert
       assertThatThrownBy(

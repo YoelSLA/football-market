@@ -91,7 +91,8 @@ public class OfficialMarketController {
 
   /**
    * Vende tokens libres del usuario autenticado al superusuario con la comisión configurada entre
-   * 10% y 99% (10% por defecto). Si el precio neto redondeado es cero, rechaza la venta sin cambios.
+   * 10% y 99% (10% por defecto). Si el precio neto redondeado es cero, rechaza la venta sin
+   * cambios.
    *
    * <p>La operación transfiere créditos y tokens y registra la venta en una única transacción. El
    * vendedor es siempre el sujeto de la sesión y no se aceptan partes en el cuerpo.
