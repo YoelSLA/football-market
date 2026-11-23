@@ -24,7 +24,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 @Testcontainers
 @Tag("integration")
 class FlywaySchemaTest {
-  private static final String LAST_VERSION = "20261122201632";
+  private static final String LAST_VERSION = "20261123000000";
 
   @Container
   static final PostgreSQLContainer DATABASE =
@@ -61,7 +61,7 @@ class FlywaySchemaTest {
       ValidateResult validation = flyway.validateWithResult();
 
       // Assert
-      assertThat(result.migrationsExecuted).isEqualTo(32);
+      assertThat(result.migrationsExecuted).isEqualTo(33);
       assertThat(result.targetSchemaVersion).hasToString(LAST_VERSION);
       assertThat(validation.validationSuccessful).isTrue();
       try (Connection connection =
@@ -71,7 +71,7 @@ class FlywaySchemaTest {
               statement.executeQuery(
                   "SELECT count(*) FROM flyway_schema_history WHERE success AND type = 'SQL'")) {
         rows.next();
-        assertThat(rows.getInt(1)).isEqualTo(32);
+        assertThat(rows.getInt(1)).isEqualTo(33);
       }
     }
   }
