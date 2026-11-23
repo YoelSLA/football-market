@@ -252,3 +252,19 @@ su referencia describe un estado del proyecto ya superado y no habilita ninguna 
 
 **Documentos actualizados.** Solo este registro. **Documentos conservados sin reescribir por contener
 decisiones o estados históricos:** `plan.md`, `research.md`, `spec.md`, `data-model.md` y `contracts/`.
+
+---
+
+## Fase 7: Refactorización y optimización de procesamiento (2026-11-22)
+
+- [X] T075 Desacoplar `PlayerImageSynchronizationServiceImpl` extrayendo `PlayerImageProcessor` para la resolución atómica individual de cada jugador con aislamiento transaccional.
+- [X] T076 Ampliar `PlayerRepository` con `findEligiblePlayerIds` para filtrar directamente en base de datos jugadores sin imagen (`missingOnly`), por equipo (`teamId`) y con soporte de paginación/lotes.
+- [X] T077 Incorporar en `PlayerIdentityAliases` equivalencias de país faltantes (`THE NETHERLANDS`, `DR CONGO`, etc.) para evitar falsos negativos en matching.
+- [X] T078 Flexibilizar `PlayerIdentityMatcher` para admitir compatibilidad de nombres (subcadenas, apodos y nombres compuestos) cuando club y fecha de nacimiento coinciden exactamente.
+- [X] T079 Exponer en `PlayerImageController` los parámetros opcionales `missingOnly`, `limit` y `teamId` preservando compatibilidad con el contrato base.
+- [X] T080 Diseñar pruebas unitarias de matching en `PlayerIdentityMatcherTest` para validar los casos de equivalencia de país y nombres compatibles.
+- [X] T081 Ampliar `TheSportsDbIntegration` con `lookupPlayersByTeam` para consultar el plantel completo (`lookup_all_players.php`) y corregir la compatibilidad de raíz `teams`/`team` en `searchTeams`.
+- [X] T082 Crear `PlayerImageRosterSyncService` para orquestar la resolución de identidad de equipos y la asignación masiva de imágenes de plantel en memoria.
+- [X] T083 Exponer `POST /api/players/images/sync/roster` en `PlayerImageController` y `PlayerImageSynchronizationService`.
+- [X] T084 Diseñar prueba unitaria de `lookupPlayersByTeam` en `TheSportsDbIntegrationTest`.
+- [X] T085 Corregir carga de referencias de equipo con `@EntityGraph` y registrar apertura de evaluación de run (`run.evaluate()`) en la creación de items de plantel.

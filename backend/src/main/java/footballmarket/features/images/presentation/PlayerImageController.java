@@ -4,6 +4,7 @@ import footballmarket.common.presentation.dtos.ErrorResponseDTO;
 import footballmarket.features.catalog.presentation.exceptions.InvalidPlayerPageException;
 import footballmarket.features.images.application.PlayerImageAuditService;
 import footballmarket.features.images.application.PlayerImageSynchronizationService;
+import footballmarket.features.images.domain.records.PlayerImageSyncSummary;
 import footballmarket.features.images.presentation.dtos.response.PlayerImageSyncRunItemPageResponseDTO;
 import footballmarket.features.images.presentation.dtos.response.PlayerImageSyncRunPageResponseDTO;
 import footballmarket.features.images.presentation.dtos.response.PlayerImageSyncRunResponseDTO;
@@ -60,8 +61,50 @@ public class PlayerImageController {
   public ResponseEntity<PlayerImageSyncRunResponseDTO> synchronize(
       @Parameter(description = "Fuerza el refresco de activos sin rematching")
           @RequestParam(defaultValue = "false")
-          boolean force) {
-    return ResponseEntity.ok(PlayerImageMapper.toResponse(this.synchronization.synchronize(force)));
+          boolean force,
+      @Parameter(description = "Solo procesa jugadores que no tienen imagen")
+          @RequestParam(required = false)
+          Boolean missingOnly,
+      @Parameter(description = "Límite máximo de jugadores a procesar")
+          @RequestParam(required = false)
+          Integer limit,
+      @Parameter(description = "Filtro opcional por equipo") @RequestParam(required = false)
+          Long teamId) {
+    PlayerImageSyncSummary summary =
+        (missingOnly != null || limit != null || teamId != null)
+            ? this.synchronization.synchronize(
+                force, missingOnly != null && missingOnly, limit, teamId)
+            : this.synchronization.synchronize(force);
+    return ResponseEntity.ok(PlayerImageMapper.toResponse(summary));
+  }
+
+  @PostMapping("/sync/roster")
+  @Operation(
+      summary = "Sincronizar imágenes por plantel completo de equipo",
+      description =
+          "Consulta el plantel completo de TheSportsDB en una única petición por equipo, "
+              + "asociando masivamente las fotos de los jugadores sin peticiones individuales.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Resumen de la sincronización por plantel",
+      content = @Content(schema = @Schema(implementation = PlayerImageSyncRunResponseDTO.class)))
+  @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+  @ApiResponse(
+      responseCode = "409",
+      description = "Sincronización activa (PLAYER_IMAGE_SYNC_IN_PROGRESS)",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  @ApiResponse(
+      responseCode = "502",
+      description = "Fallo global (PLAYER_IMAGE_SYNC_FAILED)",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  public ResponseEntity<PlayerImageSyncRunResponseDTO> synchronizeRoster(
+      @Parameter(description = "Fuerza el refresco de activos sin rematching")
+          @RequestParam(defaultValue = "false")
+          boolean force,
+      @Parameter(description = "Filtro opcional por equipo") @RequestParam(required = false)
+          Long teamId) {
+    return ResponseEntity.ok(
+        PlayerImageMapper.toResponse(this.synchronization.synchronizeRoster(force, teamId)));
   }
 
   @GetMapping("/sync-runs")
