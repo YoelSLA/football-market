@@ -17,6 +17,10 @@ public interface TeamRepository extends JpaRepository<Team, Long> {
   @EntityGraph(attributePaths = {"league", "externalReferences"})
   List<Team> findByCurrentTrueOrderByIdAsc();
 
+  @EntityGraph(attributePaths = {"externalReferences"})
+  @Query("select t from Team t where t.id = :id")
+  Optional<Team> findWithReferencesById(@Param("id") Long id);
+
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query("select t from Team t where t.id = :id")
   Optional<Team> findForEnrichment(@Param("id") Long id);

@@ -68,6 +68,11 @@ public class TheSportsDbIntegration {
     return this.request("lookupplayer.php", "id", externalId, "player");
   }
 
+  /** Consulta los jugadores del plantel de un equipo en una única llamada. */
+  public List<PlayerData> lookupPlayersByTeam(String teamExternalId) {
+    return this.request("lookup_all_players.php", "id", teamExternalId, "player");
+  }
+
   /** Contrato externo de equipos; no transporta ni solicita imágenes. */
   public record TeamData(String externalId, String name, String sport) {}
 
@@ -103,13 +108,15 @@ public class TheSportsDbIntegration {
                     throw new InvalidTheSportsDbResponseException();
                   })
               .body(Map.class);
-      if (body == null || !body.containsKey("team")) {
+      if (body == null || (!body.containsKey("teams") && !body.containsKey("team"))) {
         throw new InvalidTheSportsDbResponseException();
       }
-      if (body.get("team") == null) {
+      String key = body.containsKey("teams") ? "teams" : "team";
+      Object payload = body.get(key);
+      if (payload == null) {
         return new TeamSearch(List.of(), false);
       }
-      if (!(body.get("team") instanceof List<?> rows)) {
+      if (!(payload instanceof List<?> rows)) {
         throw new InvalidTheSportsDbResponseException();
       }
       List<TeamData> candidates = new ArrayList<>();

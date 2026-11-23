@@ -4,8 +4,11 @@ import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.identity.domain.records.PlayerIdentityAliases;
 import java.text.Normalizer;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /** Comparación conservadora de identidades sin puntuaciones ni acceso al proveedor. */
@@ -36,13 +39,18 @@ public final class PlayerIdentityMatcher {
 
   /** Reutiliza las reglas fuertes para validar la identidad consultada por un ID ya conocido. */
   public boolean matches(Player player, Candidate candidate) {
-    if (player.getTeam() == null
-        || candidate == null
-        || !"Soccer".equals(candidate.sport())
-        || (!normalize(player.getName()).equals(normalize(candidate.name()))
-            && !normalize(player.getName()).equals(normalize(candidate.alternateName())))) {
+    if (player.getTeam() == null || candidate == null || !"Soccer".equals(candidate.sport())) {
       return false;
     }
+
+    String normPlayerName = normalize(player.getName());
+    String normCandName = normalize(candidate.name());
+    String normCandAltName = normalize(candidate.alternateName());
+
+    boolean exactName =
+        normPlayerName.equals(normCandName)
+            || (!normCandAltName.isEmpty() && normPlayerName.equals(normCandAltName));
+
     boolean sameTeam =
         this.normalizeTeam(player.getTeam().getName()).equals(this.normalizeTeam(candidate.team()));
     boolean sameDate =
@@ -54,11 +62,45 @@ public final class PlayerIdentityMatcher {
             && candidate.nationality() != null
             && this.normalizeNationality(player.getNationality())
                 .equals(this.normalizeNationality(candidate.nationality()));
+
     if (!sameTeam) {
-      return sameDate && sameCountry;
+      return exactName && sameDate && sameCountry;
     }
+
+    boolean nameMatches = exactName || (sameDate && isNameCompatible(normPlayerName, normCandName));
+    if (!nameMatches) {
+      return false;
+    }
+
     return (player.getDateOfBirth() == null || candidate.dateOfBirth() == null || sameDate)
         && (player.getNationality() == null || candidate.nationality() == null || sameCountry);
+  }
+
+  private boolean isNameCompatible(String normPlayer, String normCandidate) {
+    if (normPlayer.isEmpty() || normCandidate.isEmpty()) {
+      return false;
+    }
+    if (normPlayer.contains(normCandidate) || normCandidate.contains(normPlayer)) {
+      return true;
+    }
+    String[] playerTokens = normPlayer.split(" ");
+    String[] candTokens = normCandidate.split(" ");
+    if (playerTokens.length > 0 && candTokens.length > 0) {
+      String playerLast = playerTokens[playerTokens.length - 1];
+      String candLast = candTokens[candTokens.length - 1];
+      if (playerLast.equals(candLast)) {
+        String playerFirst = playerTokens[0];
+        String candFirst = candTokens[0];
+        if (playerFirst.startsWith(candFirst) || candFirst.startsWith(playerFirst)) {
+          return true;
+        }
+      }
+      Set<String> playerSet = new HashSet<>(Arrays.asList(playerTokens));
+      if (playerSet.containsAll(Arrays.asList(candTokens))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private String normalizeNationality(String nationality) {
