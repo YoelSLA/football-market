@@ -1,7 +1,7 @@
 # Contrato de Interfaz: Publicación P2P con Precio Flexible
 
-**Protocolo**: HTTP / REST  
-**Seguridad**: Bearer JWT (`authenticated: true`)  
+**Protocolo**: HTTP / REST
+**Seguridad**: Bearer JWT (`authenticated: true`)
 **Contexto**: Invocado desde `SellTokenModal` en modalidad *"Publicación en Comunidad P2P"*.
 
 ---

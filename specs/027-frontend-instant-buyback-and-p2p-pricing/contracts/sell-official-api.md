@@ -1,7 +1,7 @@
 # Contrato de Interfaz: Venta Inmediata Oficial (Buyback)
 
-**Protocolo**: HTTP / REST  
-**Seguridad**: Bearer JWT (`authenticated: true`)  
+**Protocolo**: HTTP / REST
+**Seguridad**: Bearer JWT (`authenticated: true`)
 **Contexto**: Invocado desde `SellTokenModal` en modalidad *"Venta Inmediata Oficial"*.
 
 ---

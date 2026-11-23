@@ -33,4 +33,3 @@
 
 - Especificación completa y consistente con los requerimientos del issue #95 y la dependencia backend de SPEC-026.
 - Lista para proceder a la fase de CLARIFY (`/speckit.clarify`).
-
