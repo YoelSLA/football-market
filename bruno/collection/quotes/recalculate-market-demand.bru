@@ -1,0 +1,27 @@
+meta {
+  name: Recalcular cotizaciones solo por demanda de mercado
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/quotes/recalculate/market-demand
+  body: none
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

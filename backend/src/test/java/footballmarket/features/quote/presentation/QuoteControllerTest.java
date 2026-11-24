@@ -191,6 +191,8 @@ class QuoteControllerTest {
           .andExpect(jsonPath("$.strategy").value("POSITIONAL_PERFORMANCE"))
           .andExpect(jsonPath("$.strategyVersion").value("v1"))
           .andExpect(jsonPath("$.adjustmentFactor").value(0.10))
+          .andExpect(jsonPath("$.recalculationType").value("SPORT_AND_MARKET"))
+          .andExpect(jsonPath("$.demandWindow").value("PT24H"))
           .andExpect(jsonPath("$.variationCap").value(0.10))
           .andExpect(jsonPath("$.minPriceFloor").value(1))
           .andExpect(jsonPath("$.pricedPlayers").value(5))
@@ -216,6 +218,8 @@ class QuoteControllerTest {
           .andExpect(jsonPath("$.executions.length()").value(1))
           .andExpect(jsonPath("$.executions[0].quoteDate").value("2026-10-21"))
           .andExpect(jsonPath("$.executions[0].strategy").value("POSITIONAL_PERFORMANCE"))
+          .andExpect(jsonPath("$.executions[0].recalculationType").value("SPORT_AND_MARKET"))
+          .andExpect(jsonPath("$.executions[0].demandWindow").value("PT24H"))
           .andExpect(jsonPath("$.executions[0].adjustmentFactor").value(0.10))
           .andExpect(jsonPath("$.executions[0].variationCap").value(0.10))
           .andExpect(jsonPath("$.executions[0].minPriceFloor").value(1))
@@ -409,7 +413,9 @@ class QuoteControllerTest {
               1,
               0,
               Instant.parse("2026-10-21T10:00:00Z"),
-              Instant.parse("2026-10-21T10:00:05Z"));
+              Instant.parse("2026-10-21T10:00:05Z"),
+              footballmarket.features.quote.domain.enums.QuoteRecalculationType.SPORT_AND_MARKET,
+              java.time.Duration.ofHours(24));
       org.springframework.test.util.ReflectionTestUtils.setField(execution, "id", 1L);
       return execution;
     }

@@ -1,0 +1,27 @@
+meta {
+  name: Consultar tendencias del mercado
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/market/trends
+  body: none
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

@@ -7,5 +7,7 @@ public enum QuoteOrigin {
   /** Fila cuyo precio surge de aplicar el multiplicador a un score disponible. */
   RECOMPUTED,
   /** Fila sin valuación para la estrategia elegida: el precio vigente se repite. */
-  CARRIED_FORWARD
+  CARRIED_FORWARD,
+  /** Fila cuyo precio surge exclusivamente de la demanda de mercado. */
+  MARKET_DEMAND
 }

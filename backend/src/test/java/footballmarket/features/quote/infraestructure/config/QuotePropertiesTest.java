@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import footballmarket.features.quote.application.QuoteRecalculationService;
 import footballmarket.features.quote.infraestructure.scheduling.AutomaticQuoteRecalculationScheduler;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
+import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
@@ -38,6 +39,7 @@ class QuotePropertiesTest {
             assertThat(properties.variationCap()).isEqualByComparingTo("0.10");
             assertThat(properties.minPriceFloor()).isEqualTo(1L);
             assertThat(properties.initialAnchor()).isEqualTo(100L);
+            assertThat(properties.demandWindow()).isEqualTo(Duration.ofHours(24));
           });
     }
 
@@ -51,6 +53,7 @@ class QuotePropertiesTest {
               "market.quote.adjustment-factor=0.25",
               "market.quote.variation-cap=0.20",
               "market.quote.min-price-floor=7",
+              "market.quote.demand-window=PT12H",
               "market.quote.schedule.cron=0 30 2 * * TUE",
               "market.quote.schedule.enabled=false")
           .run(
@@ -61,6 +64,7 @@ class QuotePropertiesTest {
                 assertThat(properties.adjustmentFactor()).isEqualByComparingTo("0.25");
                 assertThat(properties.variationCap()).isEqualByComparingTo("0.20");
                 assertThat(properties.minPriceFloor()).isEqualTo(7L);
+                assertThat(properties.demandWindow()).isEqualTo(Duration.ofHours(12));
                 assertThat(properties.schedule().cron()).isEqualTo("0 30 2 * * TUE");
                 assertThat(properties.schedule().enabled()).isFalse();
               });

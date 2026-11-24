@@ -14,4 +14,14 @@ public interface PersistedIdentityValidator {
    * @return {@code true} si la identidad existe; {@code false} si es nula, vacía o no existe
    */
   boolean exists(String subject);
+
+  /**
+   * Comprueba si la identidad persistida tiene la capacidad existente de superusuario.
+   *
+   * @param subject sujeto del token JWT (correo electrónico)
+   * @return {@code true} si el usuario es SUPERUSER
+   */
+  default boolean isSuperuser(String subject) {
+    return false;
+  }
 }

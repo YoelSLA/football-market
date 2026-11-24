@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.infraestructure.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -65,6 +66,29 @@ class UserRepositoryIdentityValidatorTest {
 
       assertThatThrownBy(() -> validator.exists("db-error@example.com"))
           .isInstanceOf(DataAccessResourceFailureException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("Validación de capacidad administrativa")
+  class SuperuserValidation {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"  ", "\t"})
+    @DisplayName("Niega sujetos vacíos sin consultar el repositorio")
+    void rejectsBlankSubjectWithoutRepositoryLookup(String subject) {
+      assertThat(validator.isSuperuser(subject)).isFalse();
+      verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    @DisplayName("Consulta la capacidad SUPERUSER persistida con el correo normalizado")
+    void checksPersistedSuperuserRole() {
+      when(userRepository.existsByEmailAndRole("owner@example.com", UserRole.SUPERUSER))
+          .thenReturn(true);
+
+      assertThat(validator.isSuperuser("OWNER@EXAMPLE.COM")).isTrue();
+      verify(userRepository).existsByEmailAndRole("owner@example.com", UserRole.SUPERUSER);
     }
   }
 }

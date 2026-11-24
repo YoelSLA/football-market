@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,7 +19,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -73,6 +76,15 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http, PersistedIdentityValidator identityValidator) {
+    AccessDeniedHandler accessDeniedHandler =
+        (request, response, exception) -> {
+          if (HttpMethod.POST.name().equals(request.getMethod())
+              && "/api/quotes/recalculate/market-demand".equals(request.getRequestURI())) {
+            response.sendError(HttpStatus.UNAUTHORIZED.value());
+          } else {
+            new BearerTokenAccessDeniedHandler().handle(request, response, exception);
+          }
+        };
     http
         // API stateless: authentication is handled through JWT Bearer tokens,
         // not browser-managed cookies, so CSRF protection is not required here.
@@ -105,14 +117,19 @@ public class SecurityConfig {
                         "/api/players/statistics/whoscored/sync/json",
                         "/api/valuations/evaluate")
                     .authenticated()
+                    .requestMatchers(HttpMethod.POST, "/api/quotes/recalculate/market-demand")
+                    .hasRole("SUPERUSER")
                     .anyRequest()
                     .authenticated())
+        .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(accessDeniedHandler))
         .oauth2ResourceServer(
             oauth2 ->
-                oauth2.jwt(
-                    jwt ->
-                        jwt.jwtAuthenticationConverter(
-                            new PersistedUserJwtAuthenticationConverter(identityValidator))));
+                oauth2
+                    .accessDeniedHandler(accessDeniedHandler)
+                    .jwt(
+                        jwt ->
+                            jwt.jwtAuthenticationConverter(
+                                new PersistedUserJwtAuthenticationConverter(identityValidator))));
 
     return http.build();
   }

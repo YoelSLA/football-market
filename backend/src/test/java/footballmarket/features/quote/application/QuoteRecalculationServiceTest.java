@@ -3,17 +3,22 @@ package footballmarket.features.quote.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
+import footballmarket.features.market.domain.records.BuyOrderRequest;
 import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
+import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.support.IdentityCatalogueFixture;
+import footballmarket.support.MarketTestData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.ScoreRankingTestData;
 import footballmarket.support.TestcontainersConfiguration;
@@ -51,6 +56,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 @Import({
   TestcontainersConfiguration.class,
   IdentityCatalogueFixture.class,
+  MarketTestData.class,
   ValuationTestData.class,
   ScoreRankingTestData.class
 })
@@ -63,10 +69,13 @@ class QuoteRecalculationServiceTest {
   private static final Instant NOW = Instant.parse("2026-10-19T09:00:00Z");
   @Autowired private QuoteRecalculationService service;
   @Autowired private QuoteMarketInitializationService initialization;
+  @Autowired private QuoteQueryService quoteQuery;
+  @Autowired private BuyOrderService buyOrderService;
   @Autowired private ValuationEvaluationService valuation;
   @Autowired private PlayerCatalogService players;
   @Autowired private IdentityCatalogueFixture catalogue;
   @Autowired private ValuationTestData data;
+  @Autowired private MarketTestData market;
   @Autowired private ScoreRankingTestData scores;
 
   @TestBean(name = "statisticsClock", methodName = "valuationClock")
@@ -92,6 +101,57 @@ class QuoteRecalculationServiceTest {
   @Nested
   @DisplayName("Recálculo diario por jugador")
   class DailyRecalculation {
+    @Test
+    @DisplayName("Compone el score deportivo con la demanda de mercado y audita ambos")
+    void incorporatesMarketDemandWithSportsScore() {
+      // Arrange
+      prepareMarket(true);
+      Player player = players.getActivePlayers(0, 10).getContent().getFirst();
+      User buyer = market.registerBuyer();
+      User superuser = market.registerSuperuser();
+      market.emitInitialTokens(player, superuser);
+      buyOrderService.buy(buyer.getEmail(), new BuyOrderRequest(player.getId(), 10));
+      ((ControlledClock) marketClock).time.set(NOW.plusSeconds(1));
+
+      // Act
+      QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+
+      // Assert
+      PlayerQuote quote = quoteQuery.findOnDate(player.getId(), QUOTE_DATE);
+      assertThat(result.getDemandWindow()).isEqualTo(java.time.Duration.ofHours(24));
+      assertThat(quote.getMarketNetDemandTokens()).isEqualTo(10L);
+      assertThat(quote.getMarketDemandFactor()).isEqualByComparingTo("0.050000");
+      assertThat(quote.getMarketMultiplier()).isEqualByComparingTo("1.050000");
+      assertThat(quote.getSportMultiplier()).isNotNull();
+      assertThat(quote.getMultiplier())
+          .isEqualByComparingTo(
+              quote
+                  .getSportMultiplier()
+                  .multiply(quote.getMarketMultiplier())
+                  .max(BigDecimal.ONE.subtract(result.getVariationCap()))
+                  .min(BigDecimal.ONE.add(result.getVariationCap()))
+                  .setScale(6, java.math.RoundingMode.HALF_UP));
+      assertThat(quote.getPrice()).isGreaterThanOrEqualTo(result.getMinPriceFloor());
+    }
+
+    @Test
+    @DisplayName("Conserva el arrastre existente cuando no hay score deportivo")
+    void preservesCarryForwardWithoutSportsScore() {
+      // Arrange
+      prepareMarket(false);
+
+      // Act
+      QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      Player player = players.getActivePlayers(0, 10).getContent().getFirst();
+      PlayerQuote quote = quoteQuery.findOnDate(player.getId(), QUOTE_DATE);
+
+      // Assert
+      assertThat(result.getCarriedForwardRows()).isEqualTo(5);
+      assertThat(quote.getOrigin().name()).isEqualTo("CARRIED_FORWARD");
+      assertThat(quote.getMarketDemandFactor()).isNull();
+      assertThat(quote.getMarketNetDemandTokens()).isNull();
+    }
+
     @Test
     @DisplayName("Un score neutro existente es recalculado, no arrastrado")
     void neutralScoreIsRecomputed() {

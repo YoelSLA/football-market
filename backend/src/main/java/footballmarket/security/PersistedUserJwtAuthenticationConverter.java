@@ -3,9 +3,11 @@ package footballmarket.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 /** Valida la identidad persistida antes de aceptar una autenticación JWT. */
 @RequiredArgsConstructor
@@ -29,6 +31,16 @@ public final class PersistedUserJwtAuthenticationConverter
     if (subject == null || subject.isBlank() || !this.identityValidator.exists(subject)) {
       throw new InvalidBearerTokenException("La identidad de la sesion no es valida.");
     }
-    return this.delegate.convert(jwt);
+    AbstractAuthenticationToken authentication = this.delegate.convert(jwt);
+    if (this.identityValidator.isSuperuser(subject)) {
+      return new JwtAuthenticationToken(
+          jwt,
+          java.util.stream.Stream.concat(
+                  authentication.getAuthorities().stream(),
+                  java.util.stream.Stream.of(new SimpleGrantedAuthority("ROLE_SUPERUSER")))
+              .toList(),
+          subject);
+    }
+    return authentication;
   }
 }

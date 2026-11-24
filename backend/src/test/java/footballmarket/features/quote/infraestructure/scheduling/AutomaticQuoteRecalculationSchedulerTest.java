@@ -142,7 +142,7 @@ class AutomaticQuoteRecalculationSchedulerTest {
 
   private AutomaticQuoteRecalculationScheduler scheduler(boolean enabled) {
     QuoteProperties.Schedule schedule = new QuoteProperties.Schedule(null, enabled);
-    QuoteProperties properties = new QuoteProperties(null, null, null, null, null, schedule);
+    QuoteProperties properties = new QuoteProperties(null, null, null, null, null, schedule, null);
     return new AutomaticQuoteRecalculationScheduler(service, properties);
   }
 }
