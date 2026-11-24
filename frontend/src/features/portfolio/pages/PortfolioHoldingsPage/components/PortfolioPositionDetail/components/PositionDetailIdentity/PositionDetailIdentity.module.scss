@@ -1,0 +1,129 @@
+@use "@/styles/abstracts" as ds;
+
+.identity {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+	align-items: center;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-xs;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+	background-color: ds.$surface-panel-to;
+}
+
+.player {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	h3 {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 18px;
+	}
+
+	p {
+		// 4. 📦 Box Model
+		margin-block: ds.$space-3xs;
+
+		// 5. 🔤 Typography
+		font-size: 14px;
+	}
+}
+
+.portrait {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	img {
+		// 4. 📦 Box Model
+		width: 94px;
+		height: 98px;
+		object-fit: cover;
+		padding: 0;
+	}
+}
+
+.statusLine {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: ds.$space-xs;
+
+	// 5. 🔤 Typography
+	font-size: 13px;
+}
+
+.badge {
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+
+	// 4. 📦 Box Model
+	padding: 4px 10px;
+
+	// 5. 🔤 Typography
+	font-size: 11px;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$accent-gain;
+	border-radius: 12px;
+	background-color: ds.$surface-control-active;
+	color: ds.$accent-gain;
+
+	&_closed {
+		border-color: ds.$state-closed;
+		color: ds.$state-closed;
+		background-color: ds.$surface-status-closed;
+	}
+}
+
+.identifiers {
+	// 4. 📦 Box Model
+	padding: ds.$space-2xs ds.$space-xs;
+
+	// 5. 🔤 Typography
+	font-size: 12px;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
+	background-color: ds.$surface-panel-from;
+
+	div {
+		// 3. 🧩 Layout
+		display: flex;
+		justify-content: space-between;
+		gap: ds.$space-2xs;
+
+		// 4. 📦 Box Model
+		padding-block: 4px;
+	}
+
+	dt {
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
+	}
+
+	dd {
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		overflow-wrap: anywhere;
+		text-align: right;
+	}
+}

@@ -31,6 +31,7 @@ export {
 	CalendarDays,
 	ChartNoAxesCombined,
 	ChartPie,
+	Check,
 	CheckCheck,
 	CheckCircle2,
 	ChevronLeft,

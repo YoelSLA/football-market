@@ -8,20 +8,79 @@ Este directorio contiene la suite de herramientas y utilitarios en Bash para adm
 
 | Script | Propósito | Uso Típico | Impacto en el Sistema |
 | :--- | :--- | :--- | :--- |
-| **[`market-status.sh`](#1-market-statussh--monitor-de-estado-en-terminal)** | Tablero de control y diagnóstico en terminal. | `./scripts/market-status.sh` | Inspección general de salud, BD, cotizaciones y trades. |
-| **[`recalculate-quotes.sh`](#2-recalculate-quotes-sh--recálculo-atómico-de-cotizaciones)** | Recalcula cotizaciones con climas bursátiles aleatorios. | `./scripts/recalculate-quotes.sh` | Mueve precios oficiales, alimenta Gainers, Losers y Ticker. |
-| **[`run-quote-scheduler.sh`](#3-run-quote-scheduler-sh--scheduler-de-4-recálculos-obligatorios)** | Garantiza 4 recálculos diarios con *catch-up* tras suspensión. | `./scripts/run-quote-scheduler.sh &` o `--once` | Automatización diaria ininterrumpida. |
-| **[`seed-p2p-market.sh`](#4-seed-p2p-market-sh--generador-de-ofertas-p2p)** | Siembra publicaciones P2P con cantidades aleatorias y trades. | `./scripts/seed-p2p-market.sh` | Llena el catálogo P2P y genera compras parciales. |
-| **[`run-p2p-market-generator.sh`](#5-run-p2p-market-generator-sh--demonio-p2p-continuo)** | Bucle continuo para generar ofertas P2P periódicas. | `./scripts/run-p2p-market-generator.sh &` | Rondas continuas de publicaciones cada N segundos. |
-| **[`simulate-trades.sh`](#6-simulate-trades-sh--simulador-de-compras-y-volumen)** | Compras P2P y oficiales simuladas (usuarios estándar). | `./scripts/simulate-trades.sh` | Alimenta el Live Activity Feed y el Volumen 24h. |
-| **[`auto-trader.sh`](#7-auto-tradersh--motor-de-trading-automático-yoel-nicolas-y-mercado)** | Trading continuo entre usuarios reales (Yoel y Nicolas) y recálculos. | `./scripts/auto-trader.sh` o `--loop` | Compras/ventas cruzadas reales, rotación de carteras y cotizaciones. |
-| **[`seed-user-portfolio.sh`](#8-seed-user-portfolio-sh--fondeo-de-portfolio-de-usuario)** | Acredita saldo y tokens diversificados a un usuario. | `./scripts/seed-user-portfolio.sh yoel@gmail.com` | Llena el Donut Chart, Sorare Cards y Patrimonio. |
-| **[`setup-demo.sh`](#9-setup-demo-sh--preparación-one-click-para-demo)** | Master script para dejar el entorno 100% listo para demo. | `./scripts/setup-demo.sh` | Ejecuta la secuencia completa de inicialización y siembra. |
-| **[`clean-demo-data.sh`](#10-clean-demo-data-sh--limpieza-y-mantenimiento)** | Cancela ofertas vencidas y controla el tamaño de logs. | `./scripts/clean-demo-data.sh` | Mantenimiento higiénico de la base de datos y logs. |
+| **[`market-engine.sh`](#1-market-enginesh--motor-autónomo-de-mercado-continuo-10-transacciones--3-min)** | Motor integral: **10 transacciones confirmadas cada 3 min** (oficial + P2P). | `./scripts/market-engine.sh start` | Mantiene vivo el 100% del mercado, cotizaciones, Dashboard y órdenes. |
+| **[`market-status.sh`](#2-market-statussh--monitor-de-estado-en-terminal)** | Tablero de control y diagnóstico en terminal. | `./scripts/market-status.sh` | Inspección general de salud, BD, cotizaciones y trades. |
+| **[`recalculate-quotes.sh`](#3-recalculate-quotes-sh--recálculo-atómico-de-cotizaciones)** | Recalcula cotizaciones con climas bursátiles aleatorios. | `./scripts/recalculate-quotes.sh` | Mueve precios oficiales, alimenta Gainers, Losers y Ticker. |
+| **[`run-quote-scheduler.sh`](#4-run-quote-scheduler-sh--scheduler-de-4-recálculos-obligatorios)** | Garantiza 4 recálculos diarios con *catch-up* tras suspensión. | `./scripts/run-quote-scheduler.sh &` o `--once` | Automatización diaria ininterrumpida. |
+| **[`seed-p2p-market.sh`](#5-seed-p2p-market-sh--generador-de-ofertas-p2p)** | Siembra publicaciones P2P con cantidades aleatorias y trades. | `./scripts/seed-p2p-market.sh` | Llena el catálogo P2P y genera compras parciales. |
+| **[`run-p2p-market-generator.sh`](#6-run-p2p-market-generator-sh--demonio-p2p-continuo)** | Bucle continuo para generar ofertas P2P periódicas. | `./scripts/run-p2p-market-generator.sh &` | Rondas continuas de publicaciones cada N segundos. |
+| **[`simulate-trades.sh`](#7-simulate-trades-sh--simulador-de-compras-y-volumen)** | Compras P2P y oficiales simuladas (usuarios estándar). | `./scripts/simulate-trades.sh` | Alimenta el Live Activity Feed y el Volumen 24h. |
+| **[`auto-trader.sh`](#8-auto-tradersh--motor-de-trading-automático-yoel-nicolas-y-mercado)** | Trading continuo entre usuarios reales (Yoel y Nicolas) y recálculos. | `./scripts/auto-trader.sh` o `--loop` | Compras/ventas cruzadas reales, rotación de carteras y cotizaciones. |
+| **[`seed-user-portfolio.sh`](#9-seed-user-portfolio-sh--fondeo-de-portfolio-de-usuario)** | Acredita saldo y tokens diversificados a un usuario. | `./scripts/seed-user-portfolio.sh yoel@gmail.com` | Llena el Donut Chart, Sorare Cards y Patrimonio. |
+| **[`setup-demo.sh`](#10-setup-demo-sh--preparación-one-click-para-demo)** | Master script para dejar el entorno 100% listo para demo. | `./scripts/setup-demo.sh` | Ejecuta la secuencia completa de inicialización y siembra. |
+| **[`clean-demo-data.sh`](#11-clean-demo-data-sh--limpieza-y-mantenimiento)** | Cancela ofertas vencidas y controla el tamaño de logs. | `./scripts/clean-demo-data.sh` | Mantenimiento higiénico de la base de datos y logs. |
 
 ---
 
-## 1. `market-status.sh` — Monitor de Estado en Terminal
+## 1. `market-engine.sh` — Motor Autónomo de Mercado Continuo (10 transacciones / 3 min)
+
+El motor principal y más completo del ecosistema. Coordina y ejecuta en cada ciclo un flujo económico cerrado garantizando **exactamente 10 transacciones financieras confirmadas** cada 3 minutos (200 transacciones/hora):
+
+* **Distribución de las 10 transacciones por ciclo:**
+  * **Compras en Mercado Oficial (Emisión Primaria):** Compradores (Bot 1, Bot 2, Bot 3, Yoel y Nicolas) adquieren de forma aleatoria entre **1 y 10 tokens** directamente al Superusuario. Aplica rotación táctica equilibrada por posición (*Delantero, Centrocampista, Defensa, Portero*) y ligas para enriquecer el **gráfico Donut del Dashboard**, con un 30% de compras concentradas en futbolistas estrella ("Hot Assets" como Yamal, Mbappé, Haaland, Kane).
+  * **Liquidación Inmediata Oficial / Buyback a la Casa (SPEC-026 / PR #111):** Vendedores liquidan tokens directamente al Superusuario vía `POST /api/orders/sell-official` para obtener liquidez inmediata en créditos, aplicándose la comisión oficial del 10% de spread y registrando transacciones auditadas.
+  * **Compras en Mercado P2P:** Compradores adquieren y liquidan publicaciones activas de la comunidad (`token_listings`), acreditando los créditos a los vendedores y pasando las órdenes a `SOLD`.
+  * **Mecanismo de Cuota Garantizada:** Si las ofertas P2P o de liquidación no alcanzaran para completar las 10 operaciones, el motor ejecuta compras oficiales adicionales con bots rotativos hasta alcanzar **estrictamente las 10 transacciones confirmadas**.
+* **Inyección Continua y Robusta de Oferta P2P (15–25 órdenes activas garantizadas):**
+  * Para asegurar que el catálogo P2P nunca se quede vacío, en cada ciclo todos los bots disponibles (Bot #1 a Bot #8) junto a Yoel y Nicolas publican de **8 a 16 órdenes de venta simultáneas** con cantidades realistas (1 a 5 tokens) y precios flexibles (85% a 115% de cotización con etiquetas *Best Deal* o *Sobreprecio*).
+  * Si un bot carece de variedad en su cartera, el motor le abastece tokens oficiales de diferentes posiciones y clubes automáticamente antes de publicar.
+  * El motor regula las compras cruzadas P2P a un máximo de 2 a 4 adquisiciones por ciclo, garantizando que el libro de órdenes conserve una **profundidad viva de entre 15 y 25+ órdenes activas** en todo momento para que los usuarios humanos puedan navegar y comprar en la web.
+* **Comando de Inyección Directa (`--inject-p2p`):** Permite sembrar un lote instantáneo de N publicaciones P2P (por defecto 16) con un solo comando.
+* **Publicaciones P2P con Precios Flexibles (SPEC-026):** Antes de las compras, los vendedores ofrecen paquetes de entre 1 y 5 tokens asignando un precio unitario flexible (`unitPrice`) entre el 85% y 115% de la cotización actual, creando ofertas con descuento o con sobreprecio.
+* **Cancelaciones Esporádicas (SPEC-030):** Cancela con un 15% de probabilidad una orden activa para poblar el estado `CANCELLED` en la pantalla de *Mis órdenes*.
+* **Recálculo Bursátil Controlado (Máximo 4 al día):** Se integra con `run-quote-scheduler.sh` para respetar estrictamente las 4 ventanas diarias obligatorias (00:00, 06:00, 12:00 y 18:00). No recalcula en cada ciclo de 3 minutos para no inflar artificialmente las ejecuciones diarias. Solo cuando se cruza a una nueva franja de 6 horas se ejecuta un recálculo bursátil con climas aleatorios (*Calmo, Moderado o Volátil*). También cuenta con la bandera `--force-recalc` por si se desea forzar el recálculo en cada ciclo durante una demo. Al ejecutarse tras las publicaciones P2P, aquellas ofertas cuyos jugadores suben de precio se transforman orgánicamente en **ofertas con descuento**, alimentando el widget *P2P Best Deals*.
+* **Auto-liquidez dinámica:** Si el saldo de cualquier participante cae por debajo de 20 créditos (2.000 centésimas), se le inyectan créditos automáticamente para que el ciclo corra de forma indefinida sin bloquearse jamás.
+* **Auto-rotación de logs:** Si `market-engine.log` supera los 10 MB, se archiva automáticamente en `.bak`.
+
+### Comandos de servicio (segundo plano):
+```bash
+# Iniciar en segundo plano (demonio con 10 transacciones cada 3 minutos):
+./scripts/market-engine.sh start
+
+# Ver estado, PID activo, cuota y últimas transacciones en vivo:
+./scripts/market-engine.sh status
+
+# Detener el demonio ordenadamente:
+./scripts/market-engine.sh stop
+
+# Reiniciar el demonio:
+./scripts/market-engine.sh restart
+```
+
+### Modos interactivos en consola:
+```bash
+# Bucle interactivo con salida coloreada (10 transacciones cada 180s):
+./scripts/market-engine.sh
+
+# Modo Demo Rápido (10 transacciones cada 20 segundos para presentaciones):
+./scripts/market-engine.sh --fast
+
+# Modo Ráfaga (dispara 3 ciclos inmediatos de 10 transacciones y luego continúa normal):
+./scripts/market-engine.sh --burst
+
+# Una sola corrida de 10 transacciones y salir (para cron o pruebas puntuales):
+./scripts/market-engine.sh --once
+
+# Inyectar inmediatamente un lote de ofertas P2P (por ejemplo 16 o 25):
+./scripts/market-engine.sh --inject-p2p 20
+
+# Personalizar intervalo o cantidad de transacciones:
+./scripts/market-engine.sh --interval 60 -t 15
+```
+
+---
+
+## 2. `market-status.sh` — Monitor de Estado en Terminal
 
 Proporciona un reporte integral del estado del sistema en un solo comando:
 * Estado de **PostgreSQL**, **Backend Spring Boot** (8080) y **Frontend Vite** (5173).
@@ -39,7 +98,7 @@ Proporciona un reporte integral del estado del sistema en un solo comando:
 
 ---
 
-## 2. `recalculate-quotes.sh` — Recálculo Atómico de Cotizaciones
+## 3. `recalculate-quotes.sh` — Recálculo Atómico de Cotizaciones
 
 Dispara una corrida de recálculo sobre el backend vía `POST /api/quotes/recalculate` autenticado como operador técnico.
 
@@ -63,7 +122,7 @@ QUOTE_STRATEGY=GENERAL_ATTRIBUTES ./scripts/recalculate-quotes.sh
 
 ---
 
-## 3. `run-quote-scheduler.sh` — Scheduler de 4 Recálculos Obligatorios
+## 4. `run-quote-scheduler.sh` — Scheduler de 4 Recálculos Obligatorios
 
 Orquesta los **4 recálculos obligatorios diarios** (cada 6 horas: franjas 00:00, 06:00, 12:00 y 18:00).
 
@@ -85,11 +144,11 @@ QUOTE_INTERVAL_SECONDS=30 ./scripts/run-quote-scheduler.sh
 
 ---
 
-## 4. `seed-p2p-market.sh` — Generador de Ofertas P2P
+## 5. `seed-p2p-market.sh` — Generador de Ofertas P2P
 
 Crea ofertas de venta en el mercado secundario P2P utilizando un grupo de vendedores demo.
 
-* **Cantidades aleatorias de tokens:** En lugar de crear siempre 1 token fijo, sortea cantidades realistas (por defecto entre 1 y 5 tokens por publicación, con un 60% de publicaciones pequeñas de 1-2 tokens y 40% de 3-5 tokens).
+* **Cantidades aleatorias de tokens:** Sortea cantidades realistas (por defecto entre 1 y 5 tokens por publicación, con un 60% de publicaciones pequeñas de 1-2 tokens y 40% de 3-5 tokens).
 * **Protección de saldo:** Calcula `MAX_INITIAL_CREDITS_CENTS / official_price` para que ningún vendedor exceda su crédito disponible.
 * **Liquidación parcial automática:** Un comprador demo adquiere automáticamente el 40% de las publicaciones creadas, pasando ofertas a estado `SOLD` y generando volumen inmediato en `market_transactions`.
 
@@ -103,7 +162,7 @@ P2P_SELLER_COUNT=16 P2P_MIN_TOKENS=2 P2P_MAX_TOKENS=8 ./scripts/seed-p2p-market.
 
 ---
 
-## 5. `run-p2p-market-generator.sh` — Demonio P2P Continuo
+## 6. `run-p2p-market-generator.sh` — Demonio P2P Continuo
 
 Mantiene un bucle en segundo plano que ejecuta periódicamente `seed-p2p-market.sh` y vuelca la salida en `scripts/p2p-generator.log`.
 
@@ -117,7 +176,7 @@ P2P_INTERVAL_SECONDS=15 ./scripts/run-p2p-market-generator.sh
 
 ---
 
-## 6. `simulate-trades.sh` — Simulador de Compras y Volumen
+## 7. `simulate-trades.sh` — Simulador de Compras y Volumen
 
 Simula actividad de trading real en el mercado secundario y en el mercado oficial.
 
@@ -137,17 +196,13 @@ P2P_TRADES_COUNT=10 OFFICIAL_TRADES_COUNT=5 ./scripts/simulate-trades.sh
 
 ---
 
-## 7. `auto-trader.sh` — Motor de Trading Automático (Yoel, Nicolas y Mercado)
+## 8. `auto-trader.sh` — Motor de Trading Automático (Yoel, Nicolas y Mercado)
 
-Motor integral de operaciones continuas diseñado para mantener el mercado dinámico y realista en vivo:
-* **Participación activa de usuarios clave:** Utiliza las cuentas de `yoel@gmail.com` y `nicolas@gmail.com` como traders reales del sistema.
-* **Ventas P2P inteligentes:** Yoel y Nicolas revisan su portfolio (`/api/portfolio/me`) y ofrecen a la venta tokens de su tenencia disponible en el mercado secundario.
-* **Compras cruzadas (P2P Cross-Trading):**
-  * Nicolas detecta las publicaciones de Yoel y las compra (`POST /api/orders/buy` con `listingId`).
-  * Yoel detecta las publicaciones de Nicolas y las compra.
-* **Absorción de liquidez de mercado:** Un comprador demo regular (`trader.buyerX@example.test`) adquiere ofertas remanentes para que los usuarios siempre cobren sus créditos y tengan liquidez.
-* **Compras primarias (Mercado Oficial):** Yoel y Nicolas adquieren periódicamente nuevos tokens emitidos por la casa oficial, diversificando sus carteras.
-* **Recálculo dinámico de cotizaciones integrado:** Al final de cada ciclo (o configurable con `--no-recalc`), invoca `recalculate-quotes.sh` con climas bursátiles aleatorios, haciendo que los precios de los 1861 jugadores suban o bajen y actualizando los Market Movers (Top Ganadores y Top Perdedores) del Dashboard.
+Motor de operaciones continuas diseñado para mantener el mercado dinámico involucrando las cuentas de `yoel@gmail.com` y `nicolas@gmail.com`:
+* **Ventas P2P inteligentes:** Yoel y Nicolas ofrecen tokens disponibles de su tenencia en P2P.
+* **Compras cruzadas:** Nicolas compra publicaciones de Yoel y Yoel compra publicaciones de Nicolas.
+* **Absorción de liquidez:** Compradores demo absorben ofertas remanentes para que los usuarios cobren sus créditos.
+* **Compras oficiales y recálculo:** Adquieren nuevos tokens oficiales y disparan recálculo de precios.
 
 ```bash
 # Ejecutar un ciclo completo de trading y recálculo:
@@ -158,17 +213,11 @@ Motor integral de operaciones continuas diseñado para mantener el mercado diná
 
 # Modo bucle con intervalo personalizado (ej. cada 30 segundos):
 ./scripts/auto-trader.sh --loop --interval 30
-
-# Ejecutar N rondas y terminar:
-./scripts/auto-trader.sh --rounds 5
-
-# Solo compras y ventas entre usuarios sin recalcular cotizaciones:
-./scripts/auto-trader.sh --no-recalc
 ```
 
 ---
 
-## 8. `seed-user-portfolio.sh` — Fondeo de Portfolio de Usuario
+## 9. `seed-user-portfolio.sh` — Fondeo de Portfolio de Usuario
 
 Acredita créditos y una cartera diversificada de jugadores destacados a un usuario real para que su Dashboard y su vista de Portfolio se vean poblados.
 
@@ -188,7 +237,7 @@ Acredita créditos y una cartera diversificada de jugadores destacados a un usua
 
 ---
 
-## 9. `setup-demo.sh` — Preparación "One-Click" para Demos
+## 10. `setup-demo.sh` — Preparación "One-Click" para Demos
 
 El orquestador maestro para preparar la aplicación desde cero antes de una presentación:
 1. Comprueba y levanta PostgreSQL y el Backend si están apagados.
@@ -205,7 +254,7 @@ El orquestador maestro para preparar la aplicación desde cero antes de una pres
 
 ---
 
-## 10. `clean-demo-data.sh` — Limpieza y Mantenimiento
+## 11. `clean-demo-data.sh` — Limpieza y Mantenimiento
 
 * Cancela ordenadamente las publicaciones P2P que hayan superado su ventana de expiración de 24 horas (`status = 'CANCELLED'`).
 * Verifica el tamaño de los archivos `.log` en la carpeta `scripts/`. Si superan los 5 MB, los rota automáticamente para evitar archivos excesivamente grandes.
@@ -229,16 +278,16 @@ Para que el mercado opere de forma autónoma sin intervención humana, la config
 # Editar crontab:
 crontab -e
 
-# Entradas recomendadas:
-# 1. Siembra periódica de publicaciones P2P cada 3 horas
-0 */3 * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/seed-p2p-market.sh >> /home/yoelsla/Escritorio/football-market/scripts/p2p-generator.log 2>&1 # football-market-p2p
+# Opción A: Motor integral continuo (10 transacciones cada 3 minutos en segundo plano como demonio):
+# (Basta con ejecutar una vez en la terminal: ./scripts/market-engine.sh start)
+
+# Opción B: Tareas periódicas en crontab:
+# 1. Ejecutar 1 ciclo de 10 transacciones de mercado cada 3 minutos
+*/3 * * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/market-engine.sh --once >> /home/yoelsla/Escritorio/football-market/scripts/market-engine.log 2>&1 # football-market-engine
 
 # 2. Verificación y recálculos obligatorios de cotizaciones cada 15 minutos (con catch-up automático)
 */15 * * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/run-quote-scheduler.sh --once >> /home/yoelsla/Escritorio/football-market/scripts/quote-scheduler.log 2>&1 # football-market-quotes
 
 # 3. Mantenimiento y cancelación de ofertas vencidas cada 6 horas
 0 */6 * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/clean-demo-data.sh >> /home/yoelsla/Escritorio/football-market/scripts/maintenance.log 2>&1 # football-market-clean
-
-# 4. (Opcional) Trading automático continuo entre Yoel, Nicolas y el mercado cada 10 minutos
-*/10 * * * * cd /home/yoelsla/Escritorio/football-market && ./scripts/auto-trader.sh --once >> /home/yoelsla/Escritorio/football-market/scripts/auto-trader.log 2>&1 # football-market-auto-trader
 ```

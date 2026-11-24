@@ -87,6 +87,11 @@ export default function MarketSellPage() {
 					canRetryQuote={sell.selectedQuoteState?.canRetry ?? false}
 					onRetryQuote={sell.selectedQuoteState?.onRetry ?? (() => {})}
 					estimation={sell.estimation}
+					officialEstimation={sell.officialEstimation}
+					sellMode={sell.sellMode}
+					onSellModeChange={sell.setSellMode}
+					p2pUnitPriceCentimes={sell.p2pUnitPriceCentimes}
+					onP2PUnitPriceChange={sell.setP2PUnitPriceCentimes}
 					formRegister={sell.form.register}
 					formError={
 						sell.form.formState.errors.quantity?.message ??

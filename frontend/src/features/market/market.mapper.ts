@@ -9,10 +9,14 @@ import type {
 	OfficialMarketPage,
 	OrderBuyRequestDTO,
 	OrderBuyResponseDTO,
+	OrderSellOfficialRequestDTO,
+	OrderSellOfficialResponseDTO,
 	OrderSellRequestDTO,
 	OrderSellResponseDTO,
 	P2PMarketPage,
+	P2POpportunity,
 	QuoteResponseDTO,
+	SellOfficialResult,
 	SellResult,
 	UserOrderListing,
 	UserOrdersPage,
@@ -376,8 +380,84 @@ export function toSellResult(dto: OrderSellResponseDTO): SellResult {
 export function toOrderSellRequestDTO(params: {
 	playerId: number;
 	quantity: number;
+	unitPrice?: number;
 }): OrderSellRequestDTO {
-	return { playerId: params.playerId, quantity: params.quantity };
+	return {
+		playerId: params.playerId,
+		quantity: params.quantity,
+		...(params.unitPrice !== undefined ? { unitPrice: params.unitPrice } : {}),
+	};
+}
+
+export function toOrderSellOfficialRequestDTO(params: {
+	playerId: number;
+	quantity: number;
+}): OrderSellOfficialRequestDTO {
+	return {
+		playerId: params.playerId,
+		quantity: params.quantity,
+	};
+}
+
+export function toSellOfficialResult(
+	dto: OrderSellOfficialResponseDTO,
+): SellOfficialResult {
+	return {
+		transactionId: dto.transactionId,
+		buyerId: dto.buyerId,
+		sellerId: dto.sellerId,
+		playerId: dto.playerId,
+		quantity: dto.quantity,
+		quotePrice: dto.quotePrice,
+		discountPercentage: dto.discountPercentage,
+		unitPrice: dto.unitPrice,
+		totalAmount: dto.totalAmount,
+		executedAt: dto.executedAt,
+	};
+}
+
+export function calculateP2POpportunity(
+	unitPrice: number,
+	officialPrice: number | null | undefined,
+): P2POpportunity {
+	if (
+		!officialPrice ||
+		officialPrice <= 0 ||
+		!Number.isFinite(unitPrice) ||
+		unitPrice <= 0
+	) {
+		return {
+			type: "NEUTRAL",
+			percentageDelta: 0,
+			label: "",
+		};
+	}
+
+	const percentageDelta = Math.round(
+		((unitPrice - officialPrice) / officialPrice) * 100,
+	);
+
+	if (percentageDelta < 0) {
+		return {
+			type: "DISCOUNT",
+			percentageDelta,
+			label: `🏷️ ${percentageDelta}% Oferta`,
+		};
+	}
+
+	if (percentageDelta > 0) {
+		return {
+			type: "PREMIUM",
+			percentageDelta,
+			label: `🔥 +${percentageDelta}% Premium`,
+		};
+	}
+
+	return {
+		type: "NEUTRAL",
+		percentageDelta: 0,
+		label: "",
+	};
 }
 
 export function toMarketPlayer(player: Player): MarketPlayer {

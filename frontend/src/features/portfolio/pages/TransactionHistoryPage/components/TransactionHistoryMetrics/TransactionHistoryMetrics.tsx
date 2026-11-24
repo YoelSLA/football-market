@@ -1,5 +1,6 @@
 import type { TransactionHistorySummary } from "@/features/portfolio/types";
 import { formatCount, formatCredits } from "@/features/portfolio/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { Coins, ShoppingCart, Tag, Wallet } from "@/shared/icons";
 import styles from "./TransactionHistoryMetrics.module.scss";
 
@@ -12,13 +13,13 @@ export default function TransactionHistoryMetrics({ summary }: Props) {
 		{
 			label: "Compras",
 			value: formatCount(summary.buyTransactions, "operación", "operaciones"),
-			detail: formatCount(summary.boughtTokens, "token", "tokens"),
+			detail: `${summary.boughtTokens} ${TOKEN_SYMBOL}`,
 			icon: ShoppingCart,
 		},
 		{
 			label: "Ventas",
 			value: formatCount(summary.sellTransactions, "operación", "operaciones"),
-			detail: formatCount(summary.soldTokens, "token", "tokens"),
+			detail: `${summary.soldTokens} ${TOKEN_SYMBOL}`,
 			icon: Tag,
 		},
 		{

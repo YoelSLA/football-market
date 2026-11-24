@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { Coins, Package, TrendingUp, Wallet } from "@/shared/icons";
 import type { FinancialSummary } from "../../types/models";
 import { FinancialHeroCard } from "./FinancialHeroCard/FinancialHeroCard";
@@ -104,7 +105,7 @@ export function FinancialHeroCockpit({
 				title="Custodia de Tokens"
 				icon={Package}
 				accentTone="investment"
-				value={`${summary.totalTokens} Tokens`}
+				value={`${summary.totalTokens} ${TOKEN_SYMBOL}`}
 				subtitle={`${summary.availableTokens} libres · ${summary.reservedTokens} en venta P2P`}
 				trend="neutral"
 				extraAction={

@@ -1,3 +1,5 @@
+import { CREDIT_SYMBOL } from "@/shared/constants";
+
 const credits = new Intl.NumberFormat("es-AR", {
 	minimumFractionDigits: 2,
 	maximumFractionDigits: 2,
@@ -12,5 +14,5 @@ const credits = new Intl.NumberFormat("es-AR", {
 export function formatCredits(value: number | null, _compact = false): string {
 	if (value === null) return "—";
 	const amount = credits.format(value / 100);
-	return `${amount} ₵`;
+	return `${amount} ${CREDIT_SYMBOL}`;
 }

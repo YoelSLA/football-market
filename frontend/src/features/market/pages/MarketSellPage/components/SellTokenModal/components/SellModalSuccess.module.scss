@@ -77,6 +77,11 @@
 		background-color: ds.$border-gain-subtle;
 	}
 
+	&__spread {
+		color: ds.$state-negative !important;
+		font-weight: 700;
+	}
+
 	&__total {
 		color: ds.$accent-gain !important;
 		font-size: 14px;

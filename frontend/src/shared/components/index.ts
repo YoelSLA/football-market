@@ -26,6 +26,8 @@ export type {
 export type { PageHeadingProps } from "./PageHeading";
 export { default as PageHeading } from "./PageHeading";
 export { default as Pagination } from "./Pagination";
+export type { PlayerCardShellProps } from "./PlayerCardShell";
+export { default as PlayerCardShell } from "./PlayerCardShell";
 export type { PlayerPortraitProps } from "./PlayerPortrait";
 export { default as PlayerPortrait } from "./PlayerPortrait";
 export { default as Slider } from "./Slider";

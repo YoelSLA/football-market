@@ -1,0 +1,182 @@
+@use "tokens/colors" as colors;
+@use "tokens/spacing" as spacing;
+
+@mixin operation-dialog {
+	// 1. 🏷️ Custom Properties
+	--modal-custom-max-width: 860px;
+
+	// 4. 📦 Box Model
+	width: min(860px, calc(100vw - 2rem));
+
+	// 6. 🎨 Visual
+	background-color: colors.$surface-panel-to;
+	color: colors.$text-title-on-dark;
+}
+
+@mixin operation-modal-shell {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	max-height: min(92vh, 680px);
+
+	// 6. 🎨 Visual
+	color: colors.$text-title-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+}
+
+@mixin operation-modal-content {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: 16px 18px;
+
+	// 7. ⚙️ Behavior
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+@mixin operation-modal-grid {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: 310px 1fr;
+	gap: 16px;
+	align-items: stretch;
+
+	// 4. 📦 Box Model
+	min-height: 440px;
+
+	@media (max-width: 768px) {
+		grid-template-columns: 1fr;
+		min-height: auto;
+	}
+}
+
+@mixin operation-modal-col {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+}
+
+@mixin operation-estimation-card {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+
+	// 4. 📦 Box Model
+	min-height: 240px;
+	height: 100%;
+	padding: 10px 14px;
+	box-sizing: border-box;
+
+	// 6. 🎨 Visual
+	border: 1px solid colors.$border-panel;
+	border-radius: 8px;
+	background-color: colors.$surface-card-subtle;
+}
+
+@mixin operation-estimation-header {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: 6px;
+
+	// 5. 🔤 Typography
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+
+	// 6. 🎨 Visual
+	color: colors.$accent-highlight;
+
+	svg {
+		width: 14px;
+		height: 14px;
+		color: colors.$accent-highlight;
+	}
+}
+
+@mixin operation-estimation-body {
+	// 3. 🧩 Layout
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 6px;
+
+	// 4. 📦 Box Model
+	margin-top: 6px;
+}
+
+@mixin operation-estimation-divider {
+	// 4. 📦 Box Model
+	height: 1px;
+	margin: 2px 0;
+
+	// 6. 🎨 Visual
+	background-color: colors.$border-panel;
+}
+
+@mixin operation-breakdown-row {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	// 5. 🔤 Typography
+	font-size: 12px;
+
+	span {
+		color: colors.$text-label-on-dark;
+	}
+
+	strong,
+	span:last-child {
+		color: colors.$text-title-on-dark;
+		font-weight: 650;
+	}
+}
+
+@mixin operation-breakdown-total {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+
+	// 4. 📦 Box Model
+	padding-top: 3px;
+}
+
+@mixin operation-estimation-total-amount {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 1px;
+
+	strong {
+		font-size: 1.2rem;
+		font-weight: 800;
+		letter-spacing: -0.02em;
+		color: colors.$accent-gain;
+	}
+
+	small {
+		font-size: 10.5px;
+		color: colors.$text-muted-on-dark;
+	}
+}

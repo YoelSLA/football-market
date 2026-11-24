@@ -1,6 +1,7 @@
 import MarketPageHeader, {
 	MarketHeaderMetric,
 } from "@/features/market/components/MarketPageHeader";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { CheckCircle2, Lock, Package, Tag } from "@/shared/icons";
 import type { PlayerHolding } from "../../MarketSellPage";
 
@@ -27,19 +28,19 @@ export default function MarketSellHeader({ players }: Props) {
 			<MarketHeaderMetric
 				icon={Package}
 				label="Total tenencias"
-				value={`${totals.total.toLocaleString("es-AR")} tokens`}
+				value={`${totals.total.toLocaleString("es-AR")} ${TOKEN_SYMBOL}`}
 				title="Total de tokens en cartera"
 			/>
 			<MarketHeaderMetric
 				icon={CheckCircle2}
 				label="Disponibles"
-				value={`${totals.available.toLocaleString("es-AR")} tokens`}
+				value={`${totals.available.toLocaleString("es-AR")} ${TOKEN_SYMBOL}`}
 				title="Tokens disponibles para publicar"
 			/>
 			<MarketHeaderMetric
 				icon={Lock}
 				label="Reservados"
-				value={`${totals.reserved.toLocaleString("es-AR")} tokens`}
+				value={`${totals.reserved.toLocaleString("es-AR")} ${TOKEN_SYMBOL}`}
 				title="Tokens en órdenes de venta activas"
 			/>
 		</MarketPageHeader>

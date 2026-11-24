@@ -1,10 +1,11 @@
-import type { SellResult } from "@/features/market/types";
+import type { SellOfficialResult, SellResult } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { CheckCircle2 } from "@/shared/icons";
 import styles from "./SellModalSuccess.module.scss";
 
 interface Props {
-	result: SellResult;
+	result: SellResult | SellOfficialResult;
 	playerName: string;
 }
 
@@ -23,7 +24,65 @@ function formatExpiryDate(expiresAt: string): string {
 		: expiryDateFormatter.format(date);
 }
 
+function isOfficialResult(
+	result: SellResult | SellOfficialResult,
+): result is SellOfficialResult {
+	return "transactionId" in result;
+}
+
 export default function SellModalSuccess({ result, playerName }: Props) {
+	if (isOfficialResult(result)) {
+		return (
+			<div role="status" className={styles.success}>
+				<div className={styles.success__header}>
+					<div className={styles.success__icon}>
+						<CheckCircle2 aria-hidden="true" />
+					</div>
+					<div className={styles.success__titleBlock}>
+						<h4>Venta inmediata completada</h4>
+						<span>
+							Transacción #{result.transactionId} registrada exitosamente
+						</span>
+					</div>
+				</div>
+
+				<div className={styles.success__details}>
+					<div className={styles.success__row}>
+						<span>Jugador</span>
+						<strong>{playerName}</strong>
+					</div>
+					<div className={styles.success__row}>
+						<span>Tokens vendidos</span>
+						<strong>
+							{result.quantity} {TOKEN_SYMBOL}
+						</strong>
+					</div>
+					<div className={styles.success__row}>
+						<span>Cotización oficial</span>
+						<span>{formatCredits(result.quotePrice)}</span>
+					</div>
+					<div className={styles.success__row}>
+						<span>Comisión oficial</span>
+						<span className={styles.success__spread}>
+							-{result.discountPercentage}%
+						</span>
+					</div>
+					<div className={styles.success__row}>
+						<span>Precio unitario neto</span>
+						<span>{formatCredits(result.unitPrice)}</span>
+					</div>
+					<div className={styles.success__divider} />
+					<div className={styles.success__row}>
+						<span>Créditos acreditados</span>
+						<strong className={styles.success__total}>
+							{formatCredits(result.totalAmount)}
+						</strong>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div role="status" className={styles.success}>
 			<div className={styles.success__header}>
@@ -44,7 +103,7 @@ export default function SellModalSuccess({ result, playerName }: Props) {
 				<div className={styles.success__row}>
 					<span>Tokens publicados</span>
 					<strong>
-						{result.quantity} {result.quantity === 1 ? "token" : "tokens"}
+						{result.quantity} {TOKEN_SYMBOL}
 					</strong>
 				</div>
 				<div className={styles.success__row}>

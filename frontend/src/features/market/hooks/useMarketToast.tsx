@@ -1,6 +1,10 @@
 import { toast } from "react-toastify";
 import MarketToastContent from "@/features/market/components/MarketToastContent";
-import type { BuyResult, SellResult } from "@/features/market/types";
+import type {
+	BuyResult,
+	SellOfficialResult,
+	SellResult,
+} from "@/features/market/types";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
 	day: "2-digit",
@@ -69,6 +73,24 @@ export function useMarketToast() {
 		);
 	};
 
+	const notifySellOfficialSuccess = (
+		playerName: string,
+		result: SellOfficialResult,
+	) => {
+		toast.success(
+			<MarketToastContent
+				variant="sell"
+				title="Venta inmediata completada"
+				badge={`#${result.transactionId}`}
+				playerName={playerName}
+				quantity={result.quantity}
+				totalAmount={result.totalAmount}
+				unitPrice={result.unitPrice}
+			/>,
+			{ autoClose: 4500 },
+		);
+	};
+
 	const notifyCancelSuccess = (
 		listingId: number,
 		playerName: string,
@@ -90,6 +112,7 @@ export function useMarketToast() {
 		notifySuccess,
 		notifyError,
 		notifySellSuccess,
+		notifySellOfficialSuccess,
 		notifyCancelSuccess,
 	};
 }

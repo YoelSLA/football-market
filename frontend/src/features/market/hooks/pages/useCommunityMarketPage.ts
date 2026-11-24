@@ -8,6 +8,7 @@ import {
 } from "@/features/market/constants";
 import { useBuyListingMutation } from "@/features/market/hooks/mutations";
 import {
+	useMarketQuotesQuery,
 	useP2PMarketQuery,
 	usePlayerListingsQuery,
 } from "@/features/market/hooks/queries";
@@ -19,6 +20,7 @@ import type {
 	CommunityMarketFilters,
 	CommunityMarketPlayer,
 	MarketListing,
+	MarketQuote,
 } from "@/features/market/types";
 import {
 	parseCommunityMarketCriteria,
@@ -27,7 +29,7 @@ import {
 import { sanitizePositions, useAllPlayersQuery } from "@/features/players";
 import { portfolioQueryKeys } from "@/features/portfolio";
 import { getErrorCode, getErrorMessage } from "@/infrastructure/http";
-import { useAuthStore } from "@/infrastructure/storage";
+import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 
 function p2pErrorMessage(error: unknown) {
 	switch (getErrorCode(error)) {
@@ -57,6 +59,10 @@ export function useCommunityMarketPage(
 	const queryClient = useQueryClient();
 	const { notifySuccess, notifyError } = useMarketToast();
 	const revision = useAuthStore((state) => state.revision);
+	const authenticated = useAuthStore(
+		(state) =>
+			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
+	);
 	const currentUser = useCurrentUserQuery(true, revision);
 	const [searchParams, setSearchParams] = useSearchParams();
 	const urlState = useMemo(
@@ -131,6 +137,23 @@ export function useCommunityMarketPage(
 	const totalPlayers = p2pQuery.data?.totalElements ?? 0;
 	const priceRange = p2pQuery.data?.priceRange ?? { min: null, max: null };
 
+	const quotePlayerIds = useMemo(() => {
+		const ids = players.map((p) => p.id);
+		if (urlState.player && !ids.includes(urlState.player)) {
+			ids.push(urlState.player);
+		}
+		return ids;
+	}, [players, urlState.player]);
+
+	const quoteQuery = useMarketQuotesQuery(quotePlayerIds, authenticated);
+
+	const getOfficialQuote = useCallback(
+		(playerId: number): MarketQuote | null => {
+			return quoteQuery.getQuoteState(playerId)?.quote ?? null;
+		},
+		[quoteQuery],
+	);
+
 	const selectedPlayerFromPage = useMemo(
 		() =>
 			players.find(
@@ -151,23 +174,40 @@ export function useCommunityMarketPage(
 		if (urlState.player === null) return null;
 		const base = selectedPlayerFromPage ?? selectedPlayerFromAll;
 		if (!base) return null;
-		const listings = playerListingsQuery.data ?? [];
+		const rawListings = playerListingsQuery.data ?? [];
+		const listings = rawListings
+			.filter((l) => l.playerId === urlState.player)
+			.sort((a, b) => a.unitPrice - b.unitPrice || a.listingId - b.listingId);
+
+		const listingCount =
+			playerListingsQuery.data !== undefined
+				? listings.length
+				: "listingCount" in base && typeof base.listingCount === "number"
+					? base.listingCount
+					: listings.length;
+
+		const availableQuantity =
+			playerListingsQuery.data !== undefined
+				? listings.reduce((sum, l) => sum + l.quantity, 0)
+				: "availableQuantity" in base &&
+						typeof base.availableQuantity === "number"
+					? base.availableQuantity
+					: listings.reduce((sum, l) => sum + l.quantity, 0);
+
+		const minimumUnitPrice =
+			listings.length > 0
+				? listings[0].unitPrice
+				: "minimumUnitPrice" in base &&
+						typeof base.minimumUnitPrice === "number"
+					? base.minimumUnitPrice
+					: 0;
+
 		return {
 			...base,
 			listings,
-			listingCount:
-				"listingCount" in base && typeof base.listingCount === "number"
-					? base.listingCount
-					: listings.length,
-			availableQuantity:
-				"availableQuantity" in base &&
-				typeof base.availableQuantity === "number"
-					? base.availableQuantity
-					: listings.reduce((sum, l) => sum + l.quantity, 0),
-			minimumUnitPrice:
-				"minimumUnitPrice" in base && typeof base.minimumUnitPrice === "number"
-					? base.minimumUnitPrice
-					: (listings[0]?.unitPrice ?? 0),
+			listingCount,
+			availableQuantity,
+			minimumUnitPrice,
 		};
 	}, [
 		playerListingsQuery.data,
@@ -498,6 +538,8 @@ export function useCommunityMarketPage(
 			: null,
 		retry,
 		triggerRef,
+		quoteQuery,
+		getOfficialQuote,
 	};
 }
 

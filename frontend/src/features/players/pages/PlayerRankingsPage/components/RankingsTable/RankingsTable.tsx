@@ -1,22 +1,7 @@
-import { Link, useLocation } from "react-router-dom";
-import type {
-	PlayerRankingItem,
-	RankingMode,
-	RankingOrigin,
-} from "@/features/players/types";
-import {
-	CompetitionLogo,
-	PlayerPortrait,
-	TeamBadge,
-} from "@/shared/components";
+import { useLocation } from "react-router-dom";
+import type { PlayerRankingItem, RankingMode } from "@/features/players/types";
 import styles from "./RankingsTable.module.scss";
-import TableMedal from "./TableMedal";
-
-const ORIGIN_CLASSES: Record<RankingOrigin, string> = {
-	INITIAL: styles.originChip_carried,
-	RECOMPUTED: styles.originChip_recomputed,
-	CARRIED_FORWARD: styles.originChip_carried,
-};
+import { RankingsTableRow } from "./RankingsTableRow";
 
 interface Props {
 	items: PlayerRankingItem[];
@@ -25,16 +10,7 @@ interface Props {
 
 export default function RankingsTable({ items, mode }: Props) {
 	const location = useLocation();
-	const formatValue = (player: PlayerRankingItem) => {
-		if (mode === "PERFORMANCE") {
-			return player.score !== undefined
-				? player.score.toFixed(6).replace(".", ",")
-				: "0,000000";
-		}
-		return player.price !== undefined
-			? `${player.price.toFixed(2).replace(".", ",")} ₵`
-			: "0,00 ₵";
-	};
+	const fromLocation = `${location.pathname}${location.search}`;
 
 	return (
 		<div className={styles.tableWrapper}>
@@ -84,103 +60,12 @@ export default function RankingsTable({ items, mode }: Props) {
 				</thead>
 				<tbody>
 					{items.map((player) => (
-						<tr
+						<RankingsTableRow
 							key={`${player.position}-${player.playerId}`}
-							className={styles.row}
-						>
-							<td className={styles.td_pos}>
-								{player.position <= 3 ? (
-									<div className={styles.medalWrapper}>
-										<TableMedal rank={player.position as 1 | 2 | 3} />
-									</div>
-								) : (
-									<span className={styles.posNumber}>{player.position}</span>
-								)}
-							</td>
-
-							<td className={styles.td_player}>
-								<Link
-									to={`/players/${player.playerId}`}
-									state={{ from: `${location.pathname}${location.search}` }}
-									className={styles.playerLink}
-									title={`Ver detalle de ${player.playerName}`}
-								>
-									<PlayerPortrait
-										src={player.playerAvatar}
-										name={player.playerName}
-										alt=""
-										className={styles.playerAvatar}
-									/>
-									<span className={styles.playerName}>{player.playerName}</span>
-								</Link>
-							</td>
-
-							<td className={styles.td_team}>
-								<div className={styles.teamContainer}>
-									<TeamBadge
-										src={player.teamBadge}
-										teamName={player.teamName ?? "Equipo no disponible"}
-										leagueName={player.leagueName ?? undefined}
-										className={styles.teamBadge}
-									/>
-									<span className={styles.teamName}>
-										{player.teamName ?? "—"}
-									</span>
-								</div>
-							</td>
-
-							<td className={styles.td_league}>
-								<div className={styles.leagueContainer}>
-									<CompetitionLogo
-										src={player.leagueFlag}
-										competitionName={player.leagueName ?? "Liga"}
-										className={styles.leagueFlag}
-										decorative
-									/>
-									<span className={styles.leagueName}>
-										{player.leagueName ?? "—"}
-									</span>
-								</div>
-							</td>
-
-							<td className={styles.td_role}>
-								{player.tacticalPosition ? (
-									<span
-										className={`${styles.positionBadge} ${
-											styles[`positionBadge_${player.tacticalPosition}`]
-										}`}
-									>
-										{player.tacticalPosition}
-									</span>
-								) : (
-									<span className={styles.positionBadge}>—</span>
-								)}
-							</td>
-
-							<td className={styles.td_value}>
-								<strong className={styles.valueStrong}>
-									{formatValue(player)}
-								</strong>
-							</td>
-
-							<td className={styles.td_date}>
-								<span className={styles.dateText}>{player.formattedDate}</span>
-							</td>
-
-							{mode === "VALUATION" && (
-								<td className={styles.td_origin}>
-									{player.origin && (
-										<span
-											className={`${styles.originChip} ${
-												ORIGIN_CLASSES[player.origin]
-											}`}
-										>
-											{player.origin}
-										</span>
-									)}
-								</td>
-							)}
-						</tr>
+							player={player}
+							mode={mode}
+							fromLocation={fromLocation}
+						/>
 					))}
 				</tbody>
 			</table>

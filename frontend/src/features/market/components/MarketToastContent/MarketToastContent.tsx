@@ -1,4 +1,5 @@
 import { formatCredits } from "@/features/market/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./MarketToastContent.module.scss";
 
 interface BaseToastProps {
@@ -45,7 +46,7 @@ export default function MarketToastContent(props: MarketToastProps) {
 					</div>
 					<p className={styles.toast__primary}>
 						<strong>
-							{props.quantity} {props.quantity === 1 ? "token" : "tokens"}
+							{props.quantity} {TOKEN_SYMBOL}
 						</strong>{" "}
 						de {props.playerName}
 					</p>
@@ -74,11 +75,13 @@ export default function MarketToastContent(props: MarketToastProps) {
 					</div>
 					<p className={styles.toast__primary}>
 						<strong>
-							{props.quantity} {props.quantity === 1 ? "token" : "tokens"}
+							{props.quantity} {TOKEN_SYMBOL}
 						</strong>{" "}
 						de {props.playerName}
 					</p>
-					<p className={styles.toast__subtext}>Tokens devueltos a tu cartera</p>
+					<p className={styles.toast__subtext}>
+						{TOKEN_SYMBOL} devueltos a tu cartera
+					</p>
 				</div>
 			);
 

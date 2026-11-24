@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import genericPlayerImage from "@/shared/assets/Player Generic-Icon.png";
+import genericPlayerImage from "@/shared/assets/player-mystery-silhouette.svg";
 import styles from "./PlayerPortrait.module.scss";
 
 export interface PlayerPortraitProps {

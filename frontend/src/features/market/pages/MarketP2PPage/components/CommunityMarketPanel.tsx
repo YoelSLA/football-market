@@ -1,5 +1,6 @@
 import MarketFilters from "@/features/market/components/MarketFilters";
 import MarketPagination from "@/features/market/components/MarketPagination";
+import { COMMUNITY_MARKET_PAGE_SIZE } from "@/features/market/constants";
 import type { CommunityMarketState } from "@/features/market/hooks";
 import { Button } from "@/shared/components";
 import CommunityListingsPanel from "./CommunityListingsPanel";
@@ -60,6 +61,9 @@ export default function CommunityMarketPanel({ community }: Props) {
 					<CommunityListingsPanel
 						player={community.selectedPlayer}
 						hasPriceLimit={community.filters.maxPrice !== null}
+						officialQuote={community.getOfficialQuote(
+							community.selectedPlayer.id,
+						)}
 						onBack={community.closePlayer}
 						onClearPriceLimit={community.clearMaxPrice}
 						onBuy={community.openListing}
@@ -115,6 +119,7 @@ export default function CommunityMarketPanel({ community }: Props) {
 						community.filters.maxPrice !== null
 					}
 					isUpdating={community.isUpdating}
+					getOfficialQuote={community.getOfficialQuote}
 					onRetry={community.retry}
 					onOpenPlayer={community.openPlayer}
 				/>
@@ -126,7 +131,7 @@ export default function CommunityMarketPanel({ community }: Props) {
 						totalPages={community.totalPages}
 						totalPlayers={community.totalPlayers}
 						visiblePlayers={community.players.length}
-						pageSize={8}
+						pageSize={COMMUNITY_MARKET_PAGE_SIZE}
 						showSummary={false}
 						variant="official"
 						onPageChange={community.setPage}

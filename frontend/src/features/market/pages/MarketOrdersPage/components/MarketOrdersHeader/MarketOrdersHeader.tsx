@@ -3,6 +3,7 @@ import MarketPageHeader, {
 } from "@/features/market/components/MarketPageHeader";
 import type { UserOrdersSummary } from "@/features/market/types";
 import { formatCreditsAmount } from "@/features/market/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { CheckCircle2, CircleX, Coins, Puzzle, Tag } from "@/shared/icons";
 
 interface Props {
@@ -29,7 +30,7 @@ export default function MarketOrdersHeader({ summary, isLoading }: Props) {
 								summary.activeOrders === 1 ? "activa" : "activas"
 							}`
 				}
-				title={`${summary.activeTokens} tokens en venta`}
+				title={`${summary.activeTokens} ${TOKEN_SYMBOL} en venta`}
 			/>
 			<MarketHeaderMetric
 				icon={Coins}
@@ -47,7 +48,7 @@ export default function MarketOrdersHeader({ summary, isLoading }: Props) {
 								summary.soldOrders === 1 ? "vendida" : "vendidas"
 							}`
 				}
-				title={`${summary.soldTokens} tokens liquidados`}
+				title={`${summary.soldTokens} ${TOKEN_SYMBOL} liquidados`}
 			/>
 			<MarketHeaderMetric
 				icon={CircleX}

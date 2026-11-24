@@ -6,7 +6,7 @@ export function useSellTokensMutation() {
 	return useMutation<
 		SellResult,
 		unknown,
-		{ playerId: number; quantity: number }
+		{ playerId: number; quantity: number; unitPrice?: number }
 	>({
 		mutationFn: (request) => marketService.sellTokens(request),
 	});

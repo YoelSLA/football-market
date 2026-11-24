@@ -6,16 +6,14 @@ import {
 	formatDateTime,
 	formatPercentage,
 } from "@/features/portfolio/utils";
-import { Button, Drawer, PlayerPortrait } from "@/shared/components";
+import { Drawer } from "@/shared/components";
+import { Activity, BarChart3, FileText, Package } from "@/shared/icons";
 import {
-	Activity,
-	BarChart3,
-	Coins,
-	FileText,
-	Package,
-	TrendingUp,
-	X,
-} from "@/shared/icons";
+	PositionDetailHeader,
+	PositionDetailIdentity,
+	PositionDetailMetrics,
+	PositionTenureTrack,
+} from "./components";
 import DetailPanel from "./DetailPanel";
 import styles from "./PortfolioPositionDetail.module.scss";
 
@@ -34,15 +32,6 @@ export default function PortfolioPositionDetail({
 		p.valuationStatus === "UNVALUED"
 			? "Sin cotización"
 			: formatCredits(p.currentUnitPrice, true);
-	const available =
-		p.quantity > 0 ? (p.availableQuantity / p.quantity) * 100 : 0;
-	const reserved = p.quantity > 0 ? (p.reservedQuantity / p.quantity) * 100 : 0;
-	const resultClass =
-		p.totalProfitLoss == null || p.totalProfitLoss === 0
-			? styles.portfolioDetail__neutral
-			: p.totalProfitLoss > 0
-				? styles.portfolioDetail__positive
-				: styles.portfolioDetail__negative;
 
 	return (
 		<Drawer
@@ -53,88 +42,16 @@ export default function PortfolioPositionDetail({
 			initialFocusRef={closeRef}
 			className={styles.portfolioDetail}
 		>
-			<header className={styles.portfolioDetail__header}>
-				<div>
-					<h2 id="portfolio-detail-title">Detalle de la posición</h2>
-					<p id="portfolio-detail-description">
-						Información financiera y actividad del jugador
-					</p>
-				</div>
-				<Button
-					unstyled
-					ref={closeRef}
-					type="button"
-					onClick={onClose}
-					aria-label="Cerrar detalle de la posición"
-					className={styles.portfolioDetail__closeButton}
-				>
-					<X size={20} aria-hidden="true" />
-				</Button>
-			</header>
-			<div className={styles.portfolioDetail__body}>
-				<section
-					className={styles.portfolioDetail__identity}
-					aria-label="Información del jugador"
-				>
-					<div className={styles.portfolioDetail__player}>
-						<div className={styles.portfolioDetail__portrait}>
-							<PlayerPortrait src={p.imageUrl} name={p.playerName} />
-						</div>
-						<div>
-							<h3>{p.playerName ?? portfolioLabels.missing}</h3>
-							<p>{p.teamName ?? portfolioLabels.missing}</p>
-							<div className={styles.portfolioDetail__statusLine}>
-								<span>{p.position ?? portfolioLabels.missing}</span>
-								<span
-									className={`${styles.portfolioDetail__badge} ${p.status === "CLOSED" ? styles.portfolioDetail__badge_closed : ""}`}
-								>
-									<span aria-hidden="true">●</span>
-									{p.status === "OPEN" ? "ABIERTA" : "CERRADA"}
-								</span>
-							</div>
-						</div>
-					</div>
-					<dl className={styles.portfolioDetail__identifiers}>
-						<div>
-							<dt>ID del jugador</dt>
-							<dd>{p.playerId}</dd>
-						</div>
-						<div>
-							<dt>Jugador activo</dt>
-							<dd>{p.active ? "Sí" : "No"}</dd>
-						</div>
-						<div>
-							<dt>Estado de valoración</dt>
-							<dd>{p.valuationStatus}</dd>
-						</div>
-					</dl>
-				</section>
+			<PositionDetailHeader onClose={onClose} closeRef={closeRef} />
 
-				<div className={styles.portfolioDetail__metrics}>
-					<section className={styles.portfolioDetail__metric}>
-						<div>
-							<Coins aria-hidden="true" />
-							<h3>Costo de adquisición</h3>
-						</div>
-						<strong>{formatCredits(p.acquisitionCost, true)}</strong>
-					</section>
-					<section className={styles.portfolioDetail__metric}>
-						<div>
-							<TrendingUp aria-hidden="true" />
-							<h3>Valor actual</h3>
-						</div>
-						<strong>{formatCredits(p.currentValue, true)}</strong>
-					</section>
-					<section
-						className={`${styles.portfolioDetail__metric} ${resultClass}`}
-					>
-						<div>
-							<TrendingUp aria-hidden="true" />
-							<h3>Resultado total</h3>
-						</div>
-						<strong>{formatCredits(p.totalProfitLoss, true)}</strong>
-					</section>
-				</div>
+			<div className={styles.portfolioDetail__body}>
+				<PositionDetailIdentity position={p} />
+
+				<PositionDetailMetrics
+					acquisitionCost={p.acquisitionCost}
+					currentValue={p.currentValue}
+					totalProfitLoss={p.totalProfitLoss}
+				/>
 
 				<div className={styles.portfolioDetail__sections}>
 					<DetailPanel
@@ -150,23 +67,11 @@ export default function PortfolioPositionDetail({
 							},
 						]}
 					>
-						<div
-							className={styles.portfolioDetail__track}
-							role="img"
-							aria-label={`${p.availableQuantity} disponibles y ${p.reservedQuantity} reservados de ${p.quantity} tokens`}
-						>
-							<span style={{ width: `${available}%` }} />
-							<span style={{ width: `${reserved}%` }} />
-						</div>
-						<div className={styles.portfolioDetail__legend}>
-							<span>
-								Disponibles {formatPercentage(available)} ({p.availableQuantity}
-								)
-							</span>
-							<span>
-								Reservados {formatPercentage(reserved)} ({p.reservedQuantity})
-							</span>
-						</div>
+						<PositionTenureTrack
+							quantity={p.quantity}
+							availableQuantity={p.availableQuantity}
+							reservedQuantity={p.reservedQuantity}
+						/>
 					</DetailPanel>
 					<DetailPanel
 						title="Inversión y cotización"

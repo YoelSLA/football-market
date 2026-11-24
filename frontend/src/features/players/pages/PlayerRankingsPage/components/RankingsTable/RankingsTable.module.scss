@@ -1,21 +1,15 @@
 @use "@/styles/abstracts" as ds;
 
 .tableWrapper {
+	@include ds.data-table-wrapper;
 	// 3. 🧩 Layout
 	flex: 0 0 413px;
 
 	// 4. 📦 Box Model
-	width: 100%;
-	min-width: 0;
 	height: 413px;
 
 	// 6. 🎨 Visual
-	background-color: ds.$surface-data-table;
-	border-radius: 8px;
 	box-shadow: 0 4px 16px ds.$shadow-black-soft;
-
-	// 7. ⚙️ Behavior
-	overflow: hidden;
 }
 
 .table {
