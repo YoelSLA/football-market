@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from "react";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { ChartPie, TriangleAlert } from "@/shared/icons";
 import type { PortfolioAllocation } from "../../types/models";
 import styles from "./PortfolioAllocationChart.module.scss";
@@ -170,7 +171,7 @@ export function PortfolioAllocationChart({
 												textAnchor="middle"
 												className={styles.centerSub}
 											>
-												{totalTokens} tokens
+												{totalTokens} {TOKEN_SYMBOL}
 											</text>
 										</>
 									)}

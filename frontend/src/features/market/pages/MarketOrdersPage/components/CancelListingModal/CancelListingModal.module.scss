@@ -35,36 +35,6 @@
 		}
 	}
 
-	&__details {
-		list-style: none;
-		margin: 0;
-		padding: 10px 14px;
-		border-radius: 6px;
-		border: 1px solid ds.$border-panel;
-		background-color: ds.$surface-card-subtle;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-
-		li {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			font-size: 12px;
-
-			span {
-				color: ds.$text-label-on-dark;
-				font-weight: 500;
-			}
-
-			strong {
-				color: ds.$text-value-on-dark;
-				font-weight: 600;
-				font-variant-numeric: tabular-nums;
-			}
-		}
-	}
-
 	&__warning {
 		padding: 8px 12px;
 		border-radius: 6px;
@@ -90,24 +60,8 @@
 		justify-content: center;
 		height: 36px;
 		padding: 0 14px;
-		border-radius: 6px;
-		border: 1px solid ds.$border-panel-mid;
-		background-color: ds.$surface-transparent;
-		color: ds.$text-body-on-dark;
 		font-size: 12px;
 		font-weight: 600;
-		cursor: pointer;
-		transition: background-color 0.15s ease, border-color 0.15s ease;
-
-		&:hover:not(:disabled) {
-			background-color: ds.$surface-glass-interactive;
-			border-color: ds.$border-strong;
-		}
-
-		&:disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
-		}
 	}
 
 	&__confirmBtn {
@@ -116,22 +70,14 @@
 		justify-content: center;
 		height: 36px;
 		padding: 0 16px;
-		border-radius: 6px;
-		border: 1px solid ds.$state-error-border;
-		background-color: ds.$state-error;
-		color: ds.$text-primary-on-dark;
 		font-size: 12px;
 		font-weight: 700;
-		cursor: pointer;
-		transition: opacity 0.15s ease;
+		background-color: ds.$state-error-on-dark;
+		border-color: ds.$state-error-border;
+		color: #ffffff;
 
 		&:hover:not(:disabled) {
-			opacity: 0.9;
-		}
-
-		&:disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
+			background-color: #dc2626;
 		}
 	}
 }

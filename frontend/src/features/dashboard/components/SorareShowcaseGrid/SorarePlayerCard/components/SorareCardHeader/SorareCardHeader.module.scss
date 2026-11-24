@@ -1,0 +1,55 @@
+@use "@/styles/abstracts" as ds;
+
+.header {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	// 4. 📦 Box Model
+	margin-bottom: ds.$space-sm;
+	z-index: 2;
+}
+
+.positionBadge {
+	// 4. 📦 Box Model
+	padding: 2px 6px;
+
+	// 5. 🔤 Typography
+	font-size: 0.7rem;
+	font-weight: 800;
+	letter-spacing: 0.05em;
+
+	// 6. 🎨 Visual
+	border-radius: 4px;
+	background: ds.$surface-data-control;
+	color: ds.$text-label-on-dark;
+	border: 1px solid ds.$border-subtle;
+}
+
+.scoreBadge {
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+
+	// 4. 📦 Box Model
+	padding: 2px 8px;
+
+	// 5. 🔤 Typography
+	font-size: 0.75rem;
+	font-weight: 700;
+
+	// 6. 🎨 Visual
+	border-radius: 12px;
+	background: linear-gradient(135deg, ds.$surface-gain-emphasis, ds.$surface-control-active);
+	color: ds.$accent-sports-green;
+	border: 1px solid ds.$border-gain-subtle;
+	box-shadow: 0 0 8px ds.$surface-gain-glow;
+}
+
+.starIcon {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+}
+

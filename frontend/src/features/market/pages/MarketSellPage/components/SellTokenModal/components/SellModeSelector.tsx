@@ -24,7 +24,8 @@ export default function SellModeSelector({ mode, onChange, disabled }: Props) {
 				disabled={disabled}
 				onClick={() => onChange("OFFICIAL")}
 			>
-				<span>⚡ Venta Inmediata Oficial</span>
+				<span className={styles.tab__title}>⚡ Venta Inmediata Oficial</span>
+				<span className={styles.tab__badgeOfficial}>(superusuario)</span>
 			</button>
 			<button
 				type="button"
@@ -36,7 +37,10 @@ export default function SellModeSelector({ mode, onChange, disabled }: Props) {
 				disabled={disabled}
 				onClick={() => onChange("P2P")}
 			>
-				<span>👥 Publicación en Comunidad P2P</span>
+				<span className={styles.tab__title}>
+					👥 Publicación en Comunidad P2P
+				</span>
+				<span className={styles.tab__badgeP2P}>(mercado secundario)</span>
 			</button>
 		</div>
 	);

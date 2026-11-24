@@ -1,5 +1,6 @@
 import type { SellOfficialResult, SellResult } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import { CheckCircle2 } from "@/shared/icons";
 import styles from "./SellModalSuccess.module.scss";
 
@@ -53,7 +54,7 @@ export default function SellModalSuccess({ result, playerName }: Props) {
 					<div className={styles.success__row}>
 						<span>Tokens vendidos</span>
 						<strong>
-							{result.quantity} {result.quantity === 1 ? "token" : "tokens"}
+							{result.quantity} {TOKEN_SYMBOL}
 						</strong>
 					</div>
 					<div className={styles.success__row}>
@@ -102,7 +103,7 @@ export default function SellModalSuccess({ result, playerName }: Props) {
 				<div className={styles.success__row}>
 					<span>Tokens publicados</span>
 					<strong>
-						{result.quantity} {result.quantity === 1 ? "token" : "tokens"}
+						{result.quantity} {TOKEN_SYMBOL}
 					</strong>
 				</div>
 				<div className={styles.success__row}>

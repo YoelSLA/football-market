@@ -11,6 +11,7 @@ export {
 	formatOrderRelativeExpiration,
 	formatQuoteCalculatedAt,
 	formatQuoteEffectiveDate,
+	formatTokens,
 	formatVariationPercentage,
 	getVariationDirection,
 	type VariationDirection,

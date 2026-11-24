@@ -174,23 +174,40 @@ export function useCommunityMarketPage(
 		if (urlState.player === null) return null;
 		const base = selectedPlayerFromPage ?? selectedPlayerFromAll;
 		if (!base) return null;
-		const listings = playerListingsQuery.data ?? [];
+		const rawListings = playerListingsQuery.data ?? [];
+		const listings = rawListings
+			.filter((l) => l.playerId === urlState.player)
+			.sort((a, b) => a.unitPrice - b.unitPrice || a.listingId - b.listingId);
+
+		const listingCount =
+			playerListingsQuery.data !== undefined
+				? listings.length
+				: "listingCount" in base && typeof base.listingCount === "number"
+					? base.listingCount
+					: listings.length;
+
+		const availableQuantity =
+			playerListingsQuery.data !== undefined
+				? listings.reduce((sum, l) => sum + l.quantity, 0)
+				: "availableQuantity" in base &&
+						typeof base.availableQuantity === "number"
+					? base.availableQuantity
+					: listings.reduce((sum, l) => sum + l.quantity, 0);
+
+		const minimumUnitPrice =
+			listings.length > 0
+				? listings[0].unitPrice
+				: "minimumUnitPrice" in base &&
+						typeof base.minimumUnitPrice === "number"
+					? base.minimumUnitPrice
+					: 0;
+
 		return {
 			...base,
 			listings,
-			listingCount:
-				"listingCount" in base && typeof base.listingCount === "number"
-					? base.listingCount
-					: listings.length,
-			availableQuantity:
-				"availableQuantity" in base &&
-				typeof base.availableQuantity === "number"
-					? base.availableQuantity
-					: listings.reduce((sum, l) => sum + l.quantity, 0),
-			minimumUnitPrice:
-				"minimumUnitPrice" in base && typeof base.minimumUnitPrice === "number"
-					? base.minimumUnitPrice
-					: (listings[0]?.unitPrice ?? 0),
+			listingCount,
+			availableQuantity,
+			minimumUnitPrice,
 		};
 	}, [
 		playerListingsQuery.data,

@@ -1,52 +1,18 @@
 @use "@/styles/abstracts" as ds;
 
 .estimation {
-	display: flex;
-	flex-direction: column;
-	gap: 7px;
-	padding: 10px 14px;
-	border: 1px solid ds.$border-panel;
-	border-radius: 8px;
-	background-color: ds.$surface-card-subtle;
+	@include ds.operation-estimation-card;
 
 	&__header {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: ds.$accent-highlight;
-
-		svg {
-			width: 14px;
-			height: 14px;
-			color: ds.$accent-highlight;
-		}
+		@include ds.operation-estimation-header;
 	}
 
 	&__body {
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
+		@include ds.operation-estimation-body;
 	}
 
 	&__row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		font-size: 12px;
-
-		span {
-			color: ds.$text-label-on-dark;
-		}
-
-		strong,
-		span:last-child {
-			color: ds.$text-title-on-dark;
-			font-weight: 650;
-		}
+		@include ds.operation-breakdown-row;
 	}
 
 	&__spread {
@@ -55,17 +21,11 @@
 	}
 
 	&__divider {
-		height: 1px;
-		margin: 2px 0;
-		background-color: ds.$border-panel;
+		@include ds.operation-estimation-divider;
 	}
 
 	&__totalRow {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 12px;
-		padding-top: 3px;
+		@include ds.operation-breakdown-total;
 	}
 
 	&__totalHeader {
@@ -88,21 +48,6 @@
 	}
 
 	&__totalAmount {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 1px;
-
-		strong {
-			font-size: 1.2rem;
-			font-weight: 800;
-			letter-spacing: -0.02em;
-			color: ds.$accent-gain;
-		}
-
-		small {
-			font-size: 10.5px;
-			color: ds.$text-muted-on-dark;
-		}
+		@include ds.operation-estimation-total-amount;
 	}
 }

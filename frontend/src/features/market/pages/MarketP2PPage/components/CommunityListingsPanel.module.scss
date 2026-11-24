@@ -1,408 +1,236 @@
 @use "@/styles/abstracts" as ds;
 
 .panel {
-	// 3. 🧩 Layout
-	display: flex;
-	flex: 1;
-	flex-direction: column;
-	gap: 8px;
-
-	// 4. 📦 Box Model
-	min-width: 0;
+	display: grid;
+	grid-template-columns: 310px 1fr;
+	gap: 16px;
+	height: 100%;
 	min-height: 0;
-
-	// 6. 🎨 Visual
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
 	color: ds.$text-title-on-dark;
 
-	// 7. ⚙️ Behavior
-	overflow: hidden;
+	@media (max-width: 899px) {
+		display: flex;
+		flex-direction: column;
+		height: auto;
+		overflow-y: auto;
+	}
+
+	&__leftCol {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		height: 100%;
+		min-height: 0;
+		min-width: 0;
+	}
 
 	&__back {
-		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
 		align-self: flex-start;
-
-		// 4. 📦 Box Model
-		min-height: 28px;
-		padding: 2px 6px;
-
-		// 5. 🔤 Typography
-		font: inherit;
-		font-size: 0.75rem;
-
-		// 6. 🎨 Visual
-		border: 0;
-		border-radius: 0.35rem;
-		background-color: ds.$surface-transparent;
+		min-height: 32px;
+		padding: 5px 12px;
+		font-size: 11.5px;
+		font-weight: 650;
+		border: 1px solid ds.$border-panel;
+		border-radius: 6px;
+		background-color: ds.$surface-data-table;
 		color: ds.$text-label-on-dark;
-
-		// 7. ⚙️ Behavior
 		cursor: pointer;
+		transition: all 0.15s ease;
+
+		svg {
+			width: 14px;
+			height: 14px;
+			color: ds.$accent-gain;
+		}
 
 		&:hover {
-			// 6. 🎨 Visual
 			background-color: ds.$surface-card-subtle;
+			border-color: ds.$accent-gain;
 			color: ds.$text-title-on-dark;
 		}
 
 		&:focus-visible {
-			// 6. 🎨 Visual
 			outline: 2px solid ds.$focus-ring-dark;
-			outline-offset: 2px;
+			outline-offset: 1px;
 		}
 	}
 
-	&__header {
-		// 1. 🏷️ Custom Properties
-		--market-player-summary-gap: 12px;
-		--market-player-summary-height: auto;
-		--market-player-portrait-width: 68px;
-		--market-player-portrait-height: 72px;
-
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: minmax(300px, 1.15fr) minmax(420px, 1fr);
-		grid-template-rows: auto 1fr;
-		align-items: center;
-		gap: 6px 20px;
-
-		// 4. 📦 Box Model
+	&__rightCol {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
 		min-width: 0;
-		min-height: 116px;
-		padding: 10px 14px 12px;
+		overflow: hidden;
+		gap: 10px;
+	}
 
-		// 6. 🎨 Visual
+	&__noticeBar {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 10px;
+		background: rgba(14, 26, 42, 0.75);
 		border: 1px solid ds.$border-panel;
-		border-radius: 0.65rem;
-		background-color: ds.$surface-panel-from;
+		border-radius: 10px;
+		padding: 10px 14px;
+	}
+
+	&__noticeTitle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+
+		svg {
+			width: 16px;
+			height: 16px;
+			color: ds.$accent-highlight;
+		}
 	}
 
 	&__title {
-		// 3. 🧩 Layout
-		grid-column: 1 / -1;
-
-		// 4. 📦 Box Model
 		margin: 0;
+		font-size: 13.5px;
+		font-weight: 750;
+		color: ds.$text-title-on-dark;
+	}
 
-		// 5. 🔤 Typography
-		font-size: 0.72rem;
+	&__countBadge {
+		font-size: 10.5px;
+		font-weight: 750;
+		color: ds.$accent-gain;
+		background: rgba(0, 223, 160, 0.12);
+		border: 1px solid rgba(0, 223, 160, 0.3);
+		padding: 2px 7px;
+		border-radius: 12px;
+	}
+
+	&__noticePill {
+		font-size: 11px;
+		color: ds.$text-muted-on-dark;
+		background: rgba(0, 0, 0, 0.25);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		padding: 3px 10px;
+		border-radius: 20px;
+	}
+
+	&__clearPriceBtn {
+		font-size: 11px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
-		line-height: 1.2;
-		text-transform: uppercase;
+		color: ds.$action-link;
+		cursor: pointer;
+		padding: 2px 6px;
 
-		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
-	}
-
-	&__summary {
-		// 4. 📦 Box Model
-		min-width: 0;
-	}
-
-	&__metrics {
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		align-self: stretch;
-		align-items: center;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-		margin: 0;
-
-		> div {
-			// 3. 🧩 Layout
-			display: grid;
-			align-content: center;
-			gap: 3px;
-
-			// 4. 📦 Box Model
-			min-width: 0;
-			min-height: 66px;
-			padding: 0 12px;
-
-			// 6. 🎨 Visual
-			border-left: 1px solid ds.$border-panel;
-		}
-
-		dt {
-			// 5. 🔤 Typography
-			font-size: 0.65rem;
-			font-weight: 650;
-			letter-spacing: 0.03em;
-			line-height: 1.2;
-			text-transform: uppercase;
-
-			// 6. 🎨 Visual
-			color: ds.$text-label-on-dark;
-		}
-
-		dd {
-			// 4. 📦 Box Model
-			min-width: 0;
-			margin: 0;
-
-			// 5. 🔤 Typography
-			font-size: 1.25rem;
-			font-weight: 750;
-			letter-spacing: -0.02em;
-			line-height: 1.1;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-
-			// 6. 🎨 Visual
-			color: ds.$text-value-on-dark;
-
-			// 7. ⚙️ Behavior
-			overflow: hidden;
-		}
-
-		.panel__priceMetric {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			flex-wrap: wrap;
-		}
-
-		span {
-			// 5. 🔤 Typography
-			font-size: 0.65rem;
-			line-height: 1.2;
-			white-space: nowrap;
-
-			// 6. 🎨 Visual
-			color: ds.$text-muted-on-dark;
+		&:hover {
+			color: ds.$accent-gain;
+			text-decoration: underline;
 		}
 	}
 
-	&__notice {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: space-between;
-		gap: 16px;
-
-		// 4. 📦 Box Model
-		min-height: 38px;
-		padding: 7px 12px;
-
-		// 5. 🔤 Typography
-		font-size: 0.75rem;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$border-panel;
-		border-left: 3px solid ds.$accent-highlight;
-		border-radius: 0.45rem;
-		background-color: ds.$surface-card-subtle;
-		color: ds.$text-body-on-dark;
-
-		p {
-			// 3. 🧩 Layout
-			display: flex;
-			align-items: center;
-			gap: 6px;
-
-			// 4. 📦 Box Model
-			margin: 0;
-		}
-
-		button {
-			// 4. 📦 Box Model
-			padding: 0;
-
-			// 5. 🔤 Typography
-			font: inherit;
-			font-weight: 700;
-
-			// 6. 🎨 Visual
-			border: 0;
-			background-color: ds.$surface-transparent;
-			color: ds.$action-link;
-
-			// 7. ⚙️ Behavior
-			cursor: pointer;
-
-			&:hover {
-				// 6. 🎨 Visual
-				color: ds.$accent-gain;
-			}
-
-			&:focus-visible {
-				// 6. 🎨 Visual
-				outline: 2px solid ds.$focus-ring-dark;
-				outline-offset: 2px;
-			}
-		}
+	&__scrollRegion {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		scrollbar-gutter: stable;
+		overscroll-behavior: contain;
+		padding-right: 4px;
+		padding-bottom: 8px;
 	}
 
 	&__list {
-		// 3. 🧩 Layout
 		display: grid;
-		flex: 1;
-		grid-template-columns: repeat(auto-fill, minmax(260px, 320px));
-		grid-auto-rows: max-content;
-		align-content: start;
-		justify-content: start;
-		gap: 8px;
-
-		// 4. 📦 Box Model
-		min-width: 0;
-		min-height: 0;
-		margin: 0;
-		padding: 0 4px 0 0;
-
-		// 7. ⚙️ Behavior
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		gap: 14px;
 		list-style: none;
-		overflow-y: auto;
-		scrollbar-gutter: stable;
+		margin: 0;
+		padding: 4px 2px;
+	}
+
+	&__emptyItem {
+		grid-column: 1 / -1;
+		padding: 32px 16px;
+		text-align: center;
+		color: ds.$text-muted-on-dark;
+		font-size: 13px;
+		background: ds.$surface-card-subtle;
+		border: 1px dashed ds.$border-panel;
+		border-radius: 10px;
+	}
+
+	&__footer {
+		flex-shrink: 0;
+		height: 48px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-top: 1px solid ds.$border-panel;
+		padding-top: 4px;
 	}
 }
 
-.listing {
-	// 4. 📦 Box Model
-	min-width: 0;
+// ---------------------------------------------------------------------------
+// BADGES Y MÉTRICAS DE HERO CARD
+// ---------------------------------------------------------------------------
+.pillCommunity {
+	font-size: 10.5px;
+	font-weight: 750;
+	color: #38bdf8;
+	background: rgba(13, 187, 250, 0.14);
+	border: 1px solid rgba(13, 187, 250, 0.35);
+	padding: 3px 8px;
+	border-radius: 12px;
+	letter-spacing: 0.02em;
+}
 
-	// 6. 🎨 Visual
-	border: 1px solid ds.$border-panel;
-	border-radius: 0.65rem;
-	background-color: ds.$surface-panel-from;
-	color: ds.$text-title-on-dark;
+.lotesBadge {
+	font-size: 9.5px;
+	font-weight: 750;
+	color: #38bdf8;
+	background: rgba(13, 187, 250, 0.14);
+	padding: 1px 5px;
+	border-radius: 4px;
+}
 
-	&__content {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
+.statLabel {
+	font-size: 9.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: ds.$text-muted-on-dark;
+	display: block;
+}
 
-		// 4. 📦 Box Model
-		box-sizing: border-box;
-		min-height: 218px;
-		padding: 12px;
+.statValRow {
+	display: flex;
+	align-items: baseline;
+	gap: 5px;
+	flex-wrap: wrap;
+}
+
+.statValue {
+	font-size: 14px;
+	font-weight: 800;
+	color: ds.$accent-gain;
+
+	&_cyan {
+		font-size: 14px;
+		font-weight: 800;
+		color: #38bdf8;
 	}
+}
 
-	&__header {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 8px;
-
-		// 4. 📦 Box Model
-		padding-bottom: 8px;
-
-		// 6. 🎨 Visual
-		border-bottom: 1px solid ds.$border-panel;
-
-		span {
-			// 5. 🔤 Typography
-			font-size: 0.68rem;
-			font-weight: 650;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
-
-			// 6. 🎨 Visual
-			color: ds.$text-label-on-dark;
-		}
-
-		h3 {
-			// 4. 📦 Box Model
-			margin: 0;
-
-			// 5. 🔤 Typography
-			font-size: 0.9rem;
-		}
-	}
-
-	&__details {
-		// 3. 🧩 Layout
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 8px;
-
-		// 4. 📦 Box Model
-		margin: 0;
-
-		div {
-			// 4. 📦 Box Model
-			min-width: 0;
-		}
-
-		dt {
-			// 5. 🔤 Typography
-			font-size: 0.63rem;
-			line-height: 1.2;
-
-			// 6. 🎨 Visual
-			color: ds.$text-muted-on-dark;
-		}
-
-		dd {
-			// 4. 📦 Box Model
-			min-width: 0;
-			margin: 3px 0 0;
-
-			// 5. 🔤 Typography
-			font-size: 0.76rem;
-			font-weight: 650;
-			line-height: 1.2;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-
-			// 7. ⚙️ Behavior
-			overflow: hidden;
-		}
-
-		.listing__priceMetric {
-			display: flex;
-			align-items: center;
-			gap: 4px;
-			flex-wrap: wrap;
-		}
-	}
-
-	&__total {
-		// 3. 🧩 Layout
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 10px;
-
-		// 4. 📦 Box Model
-		min-height: 48px;
-		padding: 8px 10px;
-
-		// 6. 🎨 Visual
-		border: 1px solid ds.$accent-gain;
-		border-radius: 0.45rem;
-		background-color: ds.$surface-control-active;
-
-		span {
-			// 5. 🔤 Typography
-			font-size: 0.68rem;
-			line-height: 1.2;
-
-			// 6. 🎨 Visual
-			color: ds.$text-label-on-dark;
-		}
-
-		strong {
-			// 5. 🔤 Typography
-			font-size: 1.05rem;
-			white-space: nowrap;
-
-			// 6. 🎨 Visual
-			color: ds.$accent-gain;
-		}
-	}
-
-	&__action {
-		@include ds.market-action;
-
-		// 4. 📦 Box Model
-		width: 100%;
-		height: 38px;
-		padding: 6px 12px;
-		margin-top: auto;
-	}
+.statSub {
+	font-size: 9px;
+	color: ds.$text-muted-on-dark;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.2;
 }

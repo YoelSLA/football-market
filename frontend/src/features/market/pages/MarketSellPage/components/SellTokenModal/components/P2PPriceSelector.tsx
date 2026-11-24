@@ -1,5 +1,6 @@
 import { calculateP2POpportunity } from "@/features/market/market.mapper";
 import { formatCentimes, formatCredits } from "@/features/market/utils";
+import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
 import { Coins, Tag } from "@/shared/icons";
 import styles from "./P2PPriceSelector.module.scss";
 
@@ -82,7 +83,7 @@ export default function P2PPriceSelector({
 						htmlFor="p2p-price-input"
 						className={styles.p2pPrice__inputLabel}
 					>
-						Precio por token (créditos)
+						Precio por {TOKEN_SYMBOL} ({CREDIT_SYMBOL})
 					</label>
 					<div className={styles.p2pPrice__inputWrapper}>
 						<Coins className={styles.p2pPrice__coinsIcon} aria-hidden="true" />

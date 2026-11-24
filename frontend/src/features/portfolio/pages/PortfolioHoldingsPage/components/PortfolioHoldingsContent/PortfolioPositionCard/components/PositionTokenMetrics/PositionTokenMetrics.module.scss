@@ -1,0 +1,103 @@
+@use "@/styles/abstracts" as ds;
+
+.tokenMetrics {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	margin: ds.$space-2xs 0 0;
+	padding: 0;
+}
+
+.metric {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: ds.$space-2xs;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: ds.$space-2xs;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-panel-from;
+	border-radius: 10px;
+}
+
+.iconWrapper {
+	// 3. 🧩 Layout
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	width: 40px;
+	height: 40px;
+
+	// 6. 🎨 Visual
+	border-radius: 10px;
+
+	&_tokens {
+		background-color: ds.$surface-highlight-glow;
+		color: ds.$accent-highlight;
+	}
+
+	&_available {
+		background-color: ds.$surface-gain-soft;
+		color: ds.$accent-gain;
+	}
+
+	&_reserved {
+		background-color: ds.$surface-investment-glow;
+		color: ds.$accent-investment;
+	}
+}
+
+.icon {
+	// 4. 📦 Box Model
+	width: 22px;
+	height: 22px;
+}
+
+.info {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+}
+
+.value {
+	// 4. 📦 Box Model
+	margin: 0;
+
+	// 5. 🔤 Typography
+	font-size: 16px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+	white-space: normal;
+
+	// 6. 🎨 Visual
+	color: ds.$text-value-on-dark;
+}
+
+.label {
+	// 4. 📦 Box Model
+	margin: 0;
+
+	// 5. 🔤 Typography
+	font-size: 11px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	color: ds.$text-subtle-on-dark;
+}

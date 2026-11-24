@@ -1,6 +1,6 @@
 import { PageLayout } from "@/app/layouts";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { usePlayersPage } from "@/features/players/hooks";
-import { Pagination } from "@/shared/components";
 import PlayersCatalog from "./components/PlayersCatalog";
 import PlayersToolbar from "./components/PlayersToolbar";
 import styles from "./PlayersPage.module.scss";
@@ -22,22 +22,21 @@ export default function PlayersPage() {
 
 	return (
 		<PageLayout>
-			<div
-				className={`${styles.playersPage} ${showPagination ? styles.playersPage_withFloatingPagination : ""}`}
-				aria-busy={page.isLoading}
-			>
-				<PlayersToolbar
-					totalElements={page.playersPage?.totalElements}
-					searchText={page.searchText}
-					onSearchChange={page.setSearchText}
-					criteria={page.criteria}
-					options={page.options}
-					optionsLoading={page.optionsLoading}
-					optionsError={page.optionsError}
-					onChangeFilter={page.changeFilter}
-					onClearFilters={page.clearFilters}
-					onRetryOptions={page.retryOptions}
-				/>
+			<div className={styles.playersPage} aria-busy={page.isLoading}>
+				<div className={styles.playersPage__header}>
+					<PlayersToolbar
+						totalElements={page.playersPage?.totalElements}
+						searchText={page.searchText}
+						onSearchChange={page.setSearchText}
+						criteria={page.criteria}
+						options={page.options}
+						optionsLoading={page.optionsLoading}
+						optionsError={page.optionsError}
+						onChangeFilter={page.changeFilter}
+						onClearFilters={page.clearFilters}
+						onRetryOptions={page.retryOptions}
+					/>
+				</div>
 
 				<div className={styles.playersPage__scrollRegion}>
 					<PlayersCatalog
@@ -50,11 +49,16 @@ export default function PlayersPage() {
 				</div>
 
 				{showPagination && page.playersPage && (
-					<div className={styles.playersPage__pagination}>
-						<Pagination
+					<div className={styles.playersPage__footer}>
+						<MarketPagination
 							page={page.selectedPage}
 							totalPages={page.playersPage.totalPages}
-							onChange={page.selectPage}
+							visiblePlayers={players.length}
+							totalPlayers={page.playersPage.totalElements}
+							pageSize={page.playersPage.size}
+							showSummary={false}
+							variant="official"
+							onPageChange={page.selectPage}
 						/>
 					</div>
 				)}

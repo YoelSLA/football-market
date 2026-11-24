@@ -114,24 +114,24 @@
 	font-size: 0.8125rem;
 
 	th {
+		@include ds.data-table-header;
 		text-align: left;
 		padding: ds.$space-xs ds.$space-sm;
 		font-size: 0.7rem;
-		font-weight: 600;
-		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: ds.$text-auxiliary-on-dark;
 		border-bottom: 1px solid ds.$border-panel;
 	}
 
 	td {
+		@include ds.data-table-cell;
 		padding: ds.$space-xs ds.$space-sm;
 		border-bottom: 1px solid ds.$surface-data-control-soft;
 	}
 }
 
 .row {
-	transition: background-color 0.15s ease;
+	@include ds.data-table-row;
 
 	&:hover {
 		background-color: ds.$surface-data-control;

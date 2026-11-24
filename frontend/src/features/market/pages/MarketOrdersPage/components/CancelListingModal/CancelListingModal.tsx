@@ -1,7 +1,8 @@
 import type { EnrichedUserOrder } from "@/features/market/hooks";
-import { formatCreditsAmount } from "@/features/market/utils";
-import { Modal } from "@/shared/components";
+import { Button, Modal } from "@/shared/components";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./CancelListingModal.module.scss";
+import { CancelListingDetails } from "./components";
 
 interface Props {
 	isOpen: boolean;
@@ -37,54 +38,33 @@ export default function CancelListingModal({
 				<div className={styles.cancelModal__body}>
 					<p>¿Estás seguro de que deseás retirar esta orden de venta activa?</p>
 
-					<ul className={styles.cancelModal__details}>
-						<li>
-							<span>Jugador:</span>
-							<strong>
-								{order.playerName}
-								{order.teamName ? ` (${order.teamName})` : ""}
-							</strong>
-						</li>
-						<li>
-							<span>Lote publicado:</span>
-							<strong>
-								{order.quantity} {order.quantity === 1 ? "token" : "tokens"}
-							</strong>
-						</li>
-						<li>
-							<span>Precio unitario:</span>
-							<strong>{formatCreditsAmount(order.unitPrice)}</strong>
-						</li>
-						<li>
-							<span>Total del lote:</span>
-							<strong>{formatCreditsAmount(order.totalAmount)}</strong>
-						</li>
-					</ul>
+					<CancelListingDetails order={order} />
 
 					<div className={styles.cancelModal__warning}>
-						Los {order.quantity} tokens reservados se liberarán inmediatamente y
-						volverán a estar disponibles en tu cartera.
+						Los {order.quantity} {TOKEN_SYMBOL} reservados se liberarán
+						inmediatamente y volverán a estar disponibles en tu cartera.
 					</div>
 				</div>
 
 				<div className={styles.cancelModal__footer}>
-					<button
+					<Button
 						type="button"
+						variant="secondary"
 						onClick={onClose}
 						disabled={isBusy}
 						className={styles.cancelModal__cancelBtn}
 					>
 						Conservar orden
-					</button>
+					</Button>
 
-					<button
+					<Button
 						type="button"
 						onClick={onConfirm}
 						disabled={isBusy}
 						className={styles.cancelModal__confirmBtn}
 					>
 						{isBusy ? "Retirando..." : "Confirmar retiro"}
-					</button>
+					</Button>
 				</div>
 			</div>
 		</Modal>

@@ -1,4 +1,6 @@
 import type { TokenQuoteSnapshot } from "@/features/players/types";
+import { CREDIT_SYMBOL } from "@/shared/constants";
+import { QuoteMetricItem } from "./components";
 import styles from "./PlayerQuotePanel.module.scss";
 
 interface Props {
@@ -26,6 +28,20 @@ export default function PlayerQuotePanel({
 	const variationKnown =
 		snapshot?.absoluteChange !== null && snapshot?.absoluteChange !== undefined;
 
+	const variationTone =
+		snapshot?.direction === "up"
+			? "positive"
+			: snapshot?.direction === "down"
+				? "negative"
+				: "neutral";
+
+	const percentageTone =
+		snapshot?.percentageChange != null && snapshot.percentageChange !== 0
+			? snapshot.percentageChange > 0
+				? "positive"
+				: "negative"
+			: "neutral";
+
 	return (
 		<section
 			className={`${styles.playerQuotePanel} ${className ?? ""}`.trim()}
@@ -42,31 +58,30 @@ export default function PlayerQuotePanel({
 				<p role="status">El jugador aún no tiene cotizaciones oficiales.</p>
 			) : (
 				<dl>
-					<div>
-						<dt>Precio</dt>
-						<dd>{snapshot?.price} ₵</dd>
-					</div>
-					<div>
-						<dt>Fecha</dt>
-						<dd>{snapshot?.date}</dd>
-					</div>
-					<div>
-						<dt>Variación</dt>
-						<dd>
-							{variationKnown
-								? `${snapshot?.absoluteChange} ₵ (${DIRECTION_LABEL[(snapshot?.direction as keyof typeof DIRECTION_LABEL) ?? "unknown"]})`
-								: "Variación no disponible"}
-						</dd>
-					</div>
-					<div>
-						<dt>Variación porcentual</dt>
-						<dd>
-							{snapshot?.percentageChange === null ||
+					<QuoteMetricItem
+						label="Precio"
+						value={`${snapshot?.price} ${CREDIT_SYMBOL}`}
+					/>
+					<QuoteMetricItem label="Fecha" value={snapshot?.date ?? "—"} />
+					<QuoteMetricItem
+						label="Variación"
+						value={
+							variationKnown
+								? `${snapshot?.absoluteChange} ${CREDIT_SYMBOL} (${DIRECTION_LABEL[snapshot?.direction ?? "unknown"]})`
+								: "Variación no disponible"
+						}
+						tone={variationKnown ? variationTone : "neutral"}
+					/>
+					<QuoteMetricItem
+						label="Variación porcentual"
+						value={
+							snapshot?.percentageChange === null ||
 							snapshot?.percentageChange === undefined
 								? "Variación porcentual no disponible"
-								: `${snapshot.percentageChange.toFixed(2)} %`}
-						</dd>
-					</div>
+								: `${snapshot.percentageChange.toFixed(2)} %`
+						}
+						tone={percentageTone}
+					/>
 				</dl>
 			)}
 		</section>

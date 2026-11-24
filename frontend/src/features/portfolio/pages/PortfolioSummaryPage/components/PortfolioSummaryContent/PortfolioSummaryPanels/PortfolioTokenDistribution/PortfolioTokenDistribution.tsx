@@ -1,3 +1,4 @@
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./PortfolioTokenDistribution.module.scss";
 
 interface Props {
@@ -32,7 +33,7 @@ export default function PortfolioTokenDistribution({
 			<div
 				className={styles.portfolioDistribution__track}
 				role="img"
-				aria-label={`${available} tokens disponibles y ${reserved} reservados de ${total}`}
+				aria-label={`${available} ${TOKEN_SYMBOL} disponibles y ${reserved} reservados de ${total} ${TOKEN_SYMBOL}`}
 			>
 				<span
 					className={styles.portfolioDistribution__fill}

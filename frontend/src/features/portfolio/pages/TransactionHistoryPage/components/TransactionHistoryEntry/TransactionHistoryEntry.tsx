@@ -1,15 +1,12 @@
 import type { TransactionHistoryEntry as TransactionHistoryEntryModel } from "@/features/portfolio/types";
 import { TransactionType } from "@/features/portfolio/types";
-import {
-	formatCount,
-	formatCredits,
-	formatDateTime,
-} from "@/features/portfolio/utils";
+import { formatCredits, formatDateTime } from "@/features/portfolio/utils";
 import {
 	CompetitionLogo,
 	PlayerPortrait,
 	TeamBadge,
 } from "@/shared/components";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./TransactionHistoryEntry.module.scss";
 
 interface Props {
@@ -24,7 +21,7 @@ const BADGE_CLASSES: Record<TransactionType, string> = {
 export default function TransactionHistoryEntry({ transaction }: Props) {
 	const typeLabel =
 		transaction.type === TransactionType.BUY ? "COMPRA" : "VENTA";
-	const quantityLabel = formatCount(transaction.quantity, "token", "tokens");
+	const quantityLabel = `${transaction.quantity} ${TOKEN_SYMBOL}`;
 	const badgeClass = `${styles.transactionHistoryEntry__badge} ${BADGE_CLASSES[transaction.type]}`;
 
 	return (

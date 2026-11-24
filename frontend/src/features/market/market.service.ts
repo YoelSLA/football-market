@@ -1,5 +1,8 @@
 import axios from "axios";
-import { OFFICIAL_MARKET_DEFAULT_PAGE_SIZE } from "@/features/market/constants";
+import {
+	COMMUNITY_MARKET_PAGE_SIZE,
+	OFFICIAL_MARKET_DEFAULT_PAGE_SIZE,
+} from "@/features/market/constants";
 import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toBuyResult,
@@ -123,7 +126,10 @@ async function getListings(
 		signal,
 		params: playerId ? { playerId } : undefined,
 	});
-	return toMarketListings(data);
+	const listings = toMarketListings(data);
+	return playerId !== undefined
+		? listings.filter((l) => l.playerId === playerId)
+		: listings;
 }
 
 async function getP2PMarket(
@@ -135,7 +141,7 @@ async function getP2PMarket(
 		signal,
 		params: {
 			page: criteria.page,
-			size: 8,
+			size: COMMUNITY_MARKET_PAGE_SIZE,
 			sort: criteria.sort,
 			search: criteria.search || undefined,
 			leagueId: criteria.leagueId ?? undefined,

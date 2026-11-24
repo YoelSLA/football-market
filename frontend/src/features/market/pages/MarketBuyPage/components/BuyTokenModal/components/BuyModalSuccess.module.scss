@@ -1,0 +1,58 @@
+@use "@/styles/abstracts" as ds;
+
+.successCard {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px 14px;
+	border: 1px solid ds.$border-gain-subtle;
+	border-radius: 8px;
+	background: rgba(0, 223, 160, 0.05);
+}
+
+.successHeader {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: ds.$accent-gain;
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	h4 {
+		margin: 0;
+		font-size: 14.5px;
+		font-weight: 750;
+		color: ds.$text-title-on-dark;
+	}
+}
+
+.successSub {
+	margin: 0;
+	font-size: 11px;
+	color: ds.$text-label-on-dark;
+}
+
+.successDetails {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding-top: 6px;
+	border-top: 1px solid ds.$border-panel;
+}
+
+.detailRow {
+	@include ds.operation-breakdown-row;
+}
+
+.detailDivider {
+	@include ds.operation-estimation-divider;
+}
+
+.successTotal {
+	color: ds.$accent-gain !important;
+	font-size: 1.1rem;
+	font-weight: 800;
+}

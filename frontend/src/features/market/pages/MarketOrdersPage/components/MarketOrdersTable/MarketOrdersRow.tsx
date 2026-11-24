@@ -4,6 +4,7 @@ import {
 	formatOrderRelativeExpiration,
 } from "@/features/market/utils";
 import { PlayerPortrait, TeamBadge } from "@/shared/components";
+import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
 import { CircleX } from "@/shared/icons";
 import styles from "./MarketOrdersTable.module.scss";
 
@@ -98,16 +99,14 @@ export default function MarketOrdersRow({ order, onCancel }: Props) {
 				<div className={styles.ordersTable__quantityValue}>
 					{order.quantity}
 				</div>
-				<div className={styles.ordersTable__quantityUnit}>
-					{order.quantity === 1 ? "token" : "tokens"}
-				</div>
+				<div className={styles.ordersTable__quantityUnit}>{TOKEN_SYMBOL}</div>
 			</td>
 
 			<td className={styles.ordersTable__colPrice}>
 				<div className={styles.ordersTable__priceValue}>
 					{formatCreditsAmount(order.unitPrice, true)}
 				</div>
-				<div className={styles.ordersTable__priceUnit}>/ token</div>
+				<div className={styles.ordersTable__priceUnit}>/ {TOKEN_SYMBOL}</div>
 			</td>
 
 			<td className={styles.ordersTable__colTotal}>
@@ -120,7 +119,7 @@ export default function MarketOrdersRow({ order, onCancel }: Props) {
 				>
 					{formatCreditsAmount(order.totalAmount, true)}
 				</div>
-				<div className={styles.ordersTable__totalUnit}>₵</div>
+				<div className={styles.ordersTable__totalUnit}>{CREDIT_SYMBOL}</div>
 			</td>
 
 			<td className={styles.ordersTable__colStatus}>

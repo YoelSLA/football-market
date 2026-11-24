@@ -35,9 +35,9 @@
 
 		.marketPagination__pages {
 			// 1. 🏷️ Custom Properties
-			--pagination-gap: 4px;
+			--pagination-gap: 6px;
 			--pagination-min-height: 44px;
-			--pagination-padding: 5px 6px;
+			--pagination-padding: 5px 12px;
 			--pagination-radius: 8px;
 			--pagination-background-color: #{ds.$surface-panel-to};
 			--pagination-container-border: 1px solid #{ds.$border-panel};

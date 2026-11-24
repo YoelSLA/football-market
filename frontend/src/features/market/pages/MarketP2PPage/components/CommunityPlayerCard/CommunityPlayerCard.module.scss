@@ -1,0 +1,70 @@
+@use "@/styles/abstracts" as ds;
+
+.priceBlock {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	flex-shrink: 0;
+}
+
+.priceLabel {
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: ds.$text-muted-on-dark;
+}
+
+.priceValue {
+	font-size: 1.25rem;
+	font-weight: 850;
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+	white-space: nowrap;
+	color: ds.$accent-gain;
+}
+
+.liquidityBar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 5px 9px;
+	border-radius: 0.5rem;
+	font-size: 0.72rem;
+	font-weight: 650;
+	background: rgba(3, 23, 44, 0.42);
+	border: 1px solid rgba(43, 83, 120, 0.32);
+	color: ds.$text-body-on-dark;
+}
+
+.liquidityItem {
+	white-space: nowrap;
+}
+
+.liquiditySeparator {
+	color: ds.$border-panel;
+	font-weight: 700;
+}
+
+.actionButton {
+	@include ds.market-action;
+
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	width: 100%;
+	height: 38px;
+	padding: 0 12px;
+	font-size: 0.8rem;
+	font-weight: 750;
+	border-radius: 0.5rem;
+}
+
+.actionArrow {
+	font-size: 0.85rem;
+	font-weight: 800;
+	transition: transform 0.2s ease;
+}
+

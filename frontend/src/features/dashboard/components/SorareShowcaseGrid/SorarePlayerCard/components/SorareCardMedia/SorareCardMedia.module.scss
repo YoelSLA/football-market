@@ -1,0 +1,53 @@
+@use "@/styles/abstracts" as ds;
+
+.portraitSection {
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: flex;
+	justify-content: center;
+
+	// 4. 📦 Box Model
+	margin: ds.$space-xs 0 ds.$space-sm;
+}
+
+.portrait {
+	// 4. 📦 Box Model
+	width: 90px;
+	height: 90px;
+
+	// 6. 🎨 Visual
+	border-radius: 10px;
+	border: 2px solid ds.$border-panel;
+	background: ds.$surface-data-avatar;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.badgeOverlay {
+	// 2. 📍 Positioning
+	position: absolute;
+	bottom: -4px;
+	right: calc(50% - 54px);
+
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	// 4. 📦 Box Model
+	padding: 3px;
+
+	// 6. 🎨 Visual
+	background: ds.$surface-card-dark;
+	border: 1px solid ds.$border-panel;
+	border-radius: 50%;
+}
+
+.teamShield {
+	// 4. 📦 Box Model
+	width: 20px;
+	height: 20px;
+	object-fit: contain;
+}
+

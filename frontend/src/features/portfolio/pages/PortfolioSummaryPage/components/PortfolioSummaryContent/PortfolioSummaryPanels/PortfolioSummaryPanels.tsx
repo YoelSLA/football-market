@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import type { PortfolioSummary } from "@/features/portfolio/types";
 import { formatCredits, formatPercentage } from "@/features/portfolio/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import {
 	ArrowRight,
 	BarChart3,
@@ -47,21 +48,21 @@ export default function PortfolioSummaryPanels({ summary }: Props) {
 						},
 						{
 							label: "Tokens totales",
-							value: summary.totalTokens,
+							value: `${summary.totalTokens} ${TOKEN_SYMBOL}`,
 							icon: Coins,
 							iconTone: "gold",
 							iconTile: true,
 						},
 						{
 							label: "Tokens disponibles",
-							value: summary.totalAvailableTokens,
+							value: `${summary.totalAvailableTokens} ${TOKEN_SYMBOL}`,
 							icon: Package,
 							iconTone: "green",
 							iconTile: true,
 						},
 						{
 							label: "Tokens reservados",
-							value: summary.totalReservedTokens,
+							value: `${summary.totalReservedTokens} ${TOKEN_SYMBOL}`,
 							icon: Lock,
 							iconTone: "violet",
 							iconTile: true,
