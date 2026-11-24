@@ -1,0 +1,26 @@
+meta {
+  name: Actuator Prometheus
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/actuator/prometheus
+  auth: bearer
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: text/plain
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}
