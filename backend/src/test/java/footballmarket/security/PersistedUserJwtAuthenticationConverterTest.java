@@ -103,5 +103,19 @@ class PersistedUserJwtAuthenticationConverterTest {
           .extracting("authority")
           .contains("SCOPE_read", "SCOPE_write");
     }
+
+    @Test
+    @DisplayName("Agrega la autoridad del superusuario según la identidad persistida")
+    void agregaAutoridadDeSuperusuario() {
+      Jwt jwt = buildJwt("owner@example.com");
+      when(identityValidator.exists("owner@example.com")).thenReturn(true);
+      when(identityValidator.isSuperuser("owner@example.com")).thenReturn(true);
+
+      AbstractAuthenticationToken token = converter.convert(jwt);
+
+      assertThat(token.getAuthorities())
+          .extracting("authority")
+          .contains("SCOPE_read", "SCOPE_write", "ROLE_SUPERUSER");
+    }
   }
 }

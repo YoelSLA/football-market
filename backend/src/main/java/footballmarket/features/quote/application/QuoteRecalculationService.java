@@ -10,6 +10,9 @@ public interface QuoteRecalculationService {
   QuoteExecution recalculate(
       String strategy, BigDecimal adjustmentFactor, BigDecimal variationCap, Long minPriceFloor);
 
+  /** Recalcula todos los jugadores cotizables usando exclusivamente la demanda del mercado. */
+  QuoteExecution recalculateMarketDemand();
+
   /** Ejecuta el mismo recálculo con la estrategia y los parámetros configurados del mercado. */
   QuoteExecution recalculateAutomatic();
 

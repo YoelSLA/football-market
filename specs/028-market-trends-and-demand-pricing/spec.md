@@ -14,7 +14,7 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 
 **Created**: 2026-11-23
 
-**Status**: Draft
+**Status**: Ready for implementation
 
 <!-- Estados y criterios de transición: ../../specs/README.md. -->
 
@@ -25,6 +25,7 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 ### Session 2026-11-23
 
 - Q: ¿Qué período de transacciones deben usar los recálculos habitual y exclusivo de mercado para calcular la demanda neta? → A: Ambos recálculos usan la misma ventana configurable de tendencias, predeterminada a 24 horas.
+- Q: ¿Cómo se contabiliza una liquidación P2P para las métricas de compra/venta y la demanda neta? → A: Se cuenta solo como compra: suma sus tokens y créditos al volumen de compras y a la demanda del jugador; no se cuenta otra vez como venta por identificar también al vendedor. La demanda neta que ajusta cada cotización se calcula por jugador.
 
 ## User Scenarios & Testing *(mandatory)*
 

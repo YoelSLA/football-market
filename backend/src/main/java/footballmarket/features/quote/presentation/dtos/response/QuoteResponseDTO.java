@@ -12,11 +12,18 @@ import java.time.LocalDate;
  * @param price precio vigente en centésimas de crédito
  * @param previousPrice precio anterior; nulo solo en la fila inicial
  * @param multiplier multiplicador aplicado, a seis decimales
+ * @param sportMultiplier multiplicador deportivo antes de componer la demanda
+ * @param marketDemandFactor factor de demanda neta del jugador
+ * @param marketMultiplier multiplicador de mercado
+ * @param marketNetDemandTokens demanda neta en tokens dentro de la ventana
+ * @param variationCap límite de variación de la ejecución
+ * @param minPriceFloor precio mínimo aplicado por la ejecución
  * @param score score que sustenta el precio; nulo en las filas inicial y arrastrada
  * @param strategy estrategia que produjo el precio; nula en la fila inicial
  * @param strategyVersion versión de la estrategia; nula en la fila inicial
  * @param sourceValuationDate fecha de la valuación de origen; nula sin valuación
- * @param origin origen de la fila: {@code INITIAL}, {@code RECOMPUTED} o {@code CARRIED_FORWARD}
+ * @param origin origen de la fila: {@code INITIAL}, {@code RECOMPUTED}, {@code CARRIED_FORWARD} o
+ *     {@code MARKET_DEMAND}
  * @param calculatedAt instante de cálculo de la cotización, no el de la lectura
  */
 @Schema(
@@ -35,6 +42,20 @@ public record QuoteResponseDTO(
         Long previousPrice,
     @Schema(description = "Multiplicador aplicado, a seis decimales", example = "1.050000")
         BigDecimal multiplier,
+    @Schema(
+            description = "Multiplicador deportivo previo al componente de mercado",
+            nullable = true)
+        BigDecimal sportMultiplier,
+    @Schema(description = "Factor de mercado aplicado, entre -0.5 y 0.5", nullable = true)
+        BigDecimal marketDemandFactor,
+    @Schema(description = "Multiplicador de mercado aplicado", nullable = true)
+        BigDecimal marketMultiplier,
+    @Schema(description = "Demanda neta por jugador en tokens", nullable = true)
+        Long marketNetDemandTokens,
+    @Schema(description = "Límite de variación de la ejecución", nullable = true)
+        BigDecimal variationCap,
+    @Schema(description = "Precio mínimo de la ejecución en centésimas", nullable = true)
+        Long minPriceFloor,
     @Schema(
             description = "Score que sustenta el precio; nulo en las filas inicial y arrastrada",
             example = "0.6",
@@ -57,9 +78,10 @@ public record QuoteResponseDTO(
             nullable = true)
         LocalDate sourceValuationDate,
     @Schema(
-            description = "Origen de la fila",
+            description =
+                "Origen de la fila; MARKET_DEMAND identifica un recálculo sin score deportivo",
             example = "RECOMPUTED",
-            allowableValues = {"INITIAL", "RECOMPUTED", "CARRIED_FORWARD"})
+            allowableValues = {"INITIAL", "RECOMPUTED", "CARRIED_FORWARD", "MARKET_DEMAND"})
         String origin,
     @Schema(
             description = "Instante de cálculo de la cotización, no el de la lectura",

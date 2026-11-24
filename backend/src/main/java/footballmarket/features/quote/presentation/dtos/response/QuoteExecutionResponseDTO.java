@@ -3,9 +3,11 @@ package footballmarket.features.quote.presentation.dtos.response;
 import footballmarket.features.quote.domain.enums.QuoteExecutionFailureReason;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
+import footballmarket.features.quote.domain.enums.QuoteRecalculationType;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -17,9 +19,11 @@ import java.time.LocalDate;
  * @param origin origen manual o automático de la corrida
  * @param result resultado derivado de los fallos individuales
  * @param failureReason motivo cerrado de fallo individual, nulo si hubo éxito
- * @param strategy estrategia aplicada en la corrida
- * @param strategyVersion versión de la estrategia aplicada
- * @param adjustmentFactor factor de ajuste aplicado
+ * @param strategy estrategia aplicada; nula en recálculos solo de mercado
+ * @param strategyVersion versión de la estrategia; nula en recálculos solo de mercado
+ * @param adjustmentFactor factor deportivo; nulo en recálculos solo de mercado
+ * @param recalculationType señales aplicadas por la corrida
+ * @param demandWindow ventana de actividad de mercado usada
  * @param variationCap tope de variación aplicado
  * @param minPriceFloor piso mínimo de precio aplicado, en centésimas
  * @param pricedPlayers jugadores cotizados en la corrida, incluidos los que no se repreciaron
@@ -53,12 +57,24 @@ public record QuoteExecutionResponseDTO(
             example = "INDIVIDUAL_PLAYER_FAILURES",
             allowableValues = {"INDIVIDUAL_PLAYER_FAILURES"})
         QuoteExecutionFailureReason failureReason,
-    @Schema(description = "Estrategia aplicada en la corrida", example = "POSITIONAL_PERFORMANCE")
+    @Schema(
+            description = "Estrategia aplicada; nula en recálculos solo de mercado",
+            example = "POSITIONAL_PERFORMANCE",
+            nullable = true)
         ValuationStrategy strategy,
-    @Schema(description = "Versión de la estrategia aplicada", example = "v1")
+    @Schema(
+            description = "Versión de la estrategia; nula en recálculos solo de mercado",
+            nullable = true)
         String strategyVersion,
-    @Schema(description = "Factor de ajuste aplicado", example = "0.10")
+    @Schema(
+            description = "Factor deportivo; nulo en recálculos solo de mercado",
+            example = "0.10",
+            nullable = true)
         BigDecimal adjustmentFactor,
+    @Schema(description = "Señales aplicadas por la corrida", example = "SPORT_AND_MARKET")
+        QuoteRecalculationType recalculationType,
+    @Schema(description = "Ventana de actividad de mercado", example = "PT24H")
+        Duration demandWindow,
     @Schema(description = "Tope de variación aplicado", example = "0.10") BigDecimal variationCap,
     @Schema(description = "Piso mínimo de precio aplicado, en centésimas", example = "1")
         long minPriceFloor,

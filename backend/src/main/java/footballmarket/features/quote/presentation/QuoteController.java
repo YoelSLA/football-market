@@ -86,6 +86,9 @@ public class QuoteController {
           "Ejecuta una corrida identificable para el día UTC fijado al iniciar, con la estrategia y los límites "
               + "indicados. Todos los parámetros salvo la estrategia tienen valores por defecto. "
               + "Admite manuales ilimitadas y actualiza la cotización del mismo día; omite solo fechas posteriores. "
+              + "Cuando hay score, combina el multiplicador deportivo con la demanda neta del jugador y aplica "
+              + "el tope general y el piso mínimo; sin score conserva el comportamiento de arrastre existente. "
+              + "La respuesta identifica el tipo de recálculo y la ventana de demanda usada. "
               + "El resumen identifica executionId, origin=MANUAL, result y failureReason derivado; "
               + "no expone detalles internos de los fallos individuales.")
   @ApiResponse(
@@ -116,6 +119,31 @@ public class QuoteController {
                 request == null ? null : request.adjustmentFactor(),
                 request == null ? null : request.variationCap(),
                 request == null ? null : request.minPriceFloor())));
+  }
+
+  @PostMapping("/recalculate/market-demand")
+  @Operation(
+      summary = "Recalcular cotizaciones solo por demanda de mercado",
+      description =
+          "Ejecuta manualmente el recálculo de todos los jugadores elegibles usando únicamente "
+              + "la demanda neta en la ventana configurada. No consulta ni aplica scores deportivos. "
+              + "Requiere JWT válido y la autorización vigente para operaciones administrativas del mercado.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Resumen persistido de la corrida de mercado",
+      content = @Content(schema = @Schema(implementation = QuoteExecutionResponseDTO.class)))
+  @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+  @ApiResponse(
+      responseCode = "409",
+      description = "MARKET_NOT_INITIALIZED",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  @ApiResponse(
+      responseCode = "500",
+      description = "INTERNAL_ERROR",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  public ResponseEntity<QuoteExecutionResponseDTO> recalculateMarketDemand() {
+    return ResponseEntity.ok(
+        QuoteExecutionMapper.toResponse(this.recalculationService.recalculateMarketDemand()));
   }
 
   @GetMapping("/executions")

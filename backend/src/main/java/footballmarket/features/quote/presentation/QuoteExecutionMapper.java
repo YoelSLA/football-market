@@ -19,6 +19,8 @@ public final class QuoteExecutionMapper {
         execution.getStrategyName(),
         execution.getStrategyVersion(),
         execution.getAdjustmentFactor(),
+        execution.getRecalculationType(),
+        execution.getDemandWindow(),
         execution.getVariationCap(),
         execution.getMinPriceFloor(),
         execution.getPricedPlayers(),

@@ -1,5 +1,6 @@
 package footballmarket.features.auth.security;
 
+import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.infraestructure.UserRepository;
 import footballmarket.security.PersistedIdentityValidator;
 import java.util.Locale;
@@ -31,5 +32,16 @@ public class UserRepositoryIdentityValidator implements PersistedIdentityValidat
       return false;
     }
     return this.userRepository.existsByEmail(subject.toLowerCase(Locale.ROOT));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  @Transactional(readOnly = true)
+  public boolean isSuperuser(String subject) {
+    if (subject == null || subject.isBlank()) {
+      return false;
+    }
+    return this.userRepository.existsByEmailAndRole(
+        subject.toLowerCase(Locale.ROOT), UserRole.SUPERUSER);
   }
 }
