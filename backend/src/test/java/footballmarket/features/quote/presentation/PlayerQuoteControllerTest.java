@@ -89,6 +89,12 @@ class PlayerQuoteControllerTest {
           .andExpect(jsonPath("$.quotes[0].price").value(105))
           .andExpect(jsonPath("$.quotes[0].previousPrice").value(100))
           .andExpect(jsonPath("$.quotes[0].multiplier").value(Matchers.closeTo(1.05, 0.0001)))
+          .andExpect(jsonPath("$.quotes[0].sportMultiplier").value(1.000000))
+          .andExpect(jsonPath("$.quotes[0].marketDemandFactor").value(0.050000))
+          .andExpect(jsonPath("$.quotes[0].marketMultiplier").value(1.050000))
+          .andExpect(jsonPath("$.quotes[0].marketNetDemandTokens").value(10))
+          .andExpect(jsonPath("$.quotes[0].variationCap").value(0.10))
+          .andExpect(jsonPath("$.quotes[0].minPriceFloor").value(1))
           .andExpect(jsonPath("$.quotes[0].score").value(Matchers.closeTo(0.6, 0.0001)))
           .andExpect(jsonPath("$.quotes[0].strategy").value("POSITIONAL_PERFORMANCE"))
           .andExpect(jsonPath("$.quotes[0].strategyVersion").value("v1"))
@@ -453,7 +459,13 @@ class PlayerQuoteControllerTest {
             0,
             0,
             Instant.parse("2026-10-20T18:00:00Z"),
-            Instant.parse("2026-10-20T18:00:01Z")));
+            Instant.parse("2026-10-20T18:00:01Z"),
+            footballmarket.features.quote.domain.enums.QuoteRecalculationType.SPORT_AND_MARKET,
+            java.time.Duration.ofHours(24)),
+        BigDecimal.ONE,
+        new BigDecimal("0.050000"),
+        new BigDecimal("1.050000"),
+        10L);
   }
 
   private PlayerQuote initial() {

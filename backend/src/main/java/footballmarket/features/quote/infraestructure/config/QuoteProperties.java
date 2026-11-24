@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -28,7 +29,8 @@ public record QuoteProperties(
     @NotNull @Positive Long minPriceFloor,
     @NotNull @Positive Long initialAnchor,
     @NotNull ValuationStrategy strategy,
-    @NotNull @Valid Schedule schedule) {
+    @NotNull @Valid Schedule schedule,
+    @NotNull Duration demandWindow) {
 
   /** Factor de ajuste por defecto. */
   public static final BigDecimal DEFAULT_ADJUSTMENT_FACTOR = new BigDecimal("0.10");
@@ -42,6 +44,9 @@ public record QuoteProperties(
   /** Ancla inicial de 1 crédito por token, en centésimas de crédito. */
   public static final long DEFAULT_INITIAL_ANCHOR = 100L;
 
+  /** Ventana compartida por las métricas y los cálculos de demanda del mercado. */
+  public static final Duration DEFAULT_DEMAND_WINDOW = Duration.ofHours(24);
+
   public QuoteProperties {
     adjustmentFactor = adjustmentFactor == null ? DEFAULT_ADJUSTMENT_FACTOR : adjustmentFactor;
     variationCap = variationCap == null ? DEFAULT_VARIATION_CAP : variationCap;
@@ -49,6 +54,7 @@ public record QuoteProperties(
     initialAnchor = initialAnchor == null ? DEFAULT_INITIAL_ANCHOR : initialAnchor;
     strategy = strategy == null ? ValuationStrategy.POSITIONAL_PERFORMANCE : strategy;
     schedule = schedule == null ? new Schedule(null, null) : schedule;
+    demandWindow = demandWindow == null ? DEFAULT_DEMAND_WINDOW : demandWindow;
   }
 
   /** Cadencia UTC y habilitación del disparador; Spring valida la sintaxis del cron al arrancar. */

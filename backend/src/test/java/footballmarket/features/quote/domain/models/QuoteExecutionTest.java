@@ -6,9 +6,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import footballmarket.features.quote.domain.enums.QuoteExecutionFailureReason;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
 import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
+import footballmarket.features.quote.domain.enums.QuoteRecalculationType;
 import footballmarket.features.quote.domain.exceptions.InvalidQuoteException;
 import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +28,36 @@ class QuoteExecutionTest {
     void rejectsMissingOrigin() {
       // Act / Assert
       assertThatThrownBy(() -> execution(null, 0)).isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @Test
+    @DisplayName("El constructor histórico identifica el recálculo habitual")
+    void defaultsLegacyExecutionToSportAndMarket() {
+      assertThat(execution(QuoteExecutionOrigin.MANUAL, 0).getRecalculationType())
+          .isEqualTo(QuoteRecalculationType.SPORT_AND_MARKET);
+    }
+
+    @Test
+    @DisplayName("Admite ejecución exclusiva de mercado sin parámetros deportivos")
+    void createsMarketOnlyExecutionWithoutSportParameters() {
+      QuoteExecution execution = marketOnlyExecution();
+
+      assertThat(execution.getStrategyName()).isNull();
+      assertThat(execution.getStrategyVersion()).isNull();
+      assertThat(execution.getAdjustmentFactor()).isNull();
+      assertThat(execution.getRecalculationType())
+          .isEqualTo(QuoteRecalculationType.MARKET_DEMAND_ONLY);
+      assertThat(execution.getDemandWindow()).isEqualTo(Duration.ofHours(24));
+    }
+
+    @Test
+    @DisplayName("Rechaza ejecución exclusiva de mercado sin ventana")
+    void rejectsMarketOnlyExecutionWithoutWindow() {
+      assertThatThrownBy(
+              () ->
+                  marketOnlyExecution(
+                      null, QuoteRecalculationType.MARKET_DEMAND_ONLY, null, null, null))
+          .isInstanceOf(InvalidQuoteException.class);
     }
 
     @Test
@@ -107,5 +139,35 @@ class QuoteExecutionTest {
         failures,
         Instant.parse("2026-11-04T00:00:00Z"),
         Instant.parse("2026-11-04T00:00:01Z"));
+  }
+
+  private QuoteExecution marketOnlyExecution() {
+    return marketOnlyExecution(
+        Duration.ofHours(24), QuoteRecalculationType.MARKET_DEMAND_ONLY, null, null, null);
+  }
+
+  private QuoteExecution marketOnlyExecution(
+      Duration demandWindow,
+      QuoteRecalculationType recalculationType,
+      ValuationStrategy strategyName,
+      String strategyVersion,
+      BigDecimal adjustmentFactor) {
+    return new QuoteExecution(
+        LocalDate.of(2026, 11, 4),
+        QuoteExecutionOrigin.MANUAL,
+        strategyName,
+        strategyVersion,
+        adjustmentFactor,
+        new BigDecimal("0.10"),
+        1L,
+        0,
+        0,
+        0,
+        0,
+        0,
+        Instant.parse("2026-11-04T00:00:00Z"),
+        null,
+        recalculationType,
+        demandWindow);
   }
 }

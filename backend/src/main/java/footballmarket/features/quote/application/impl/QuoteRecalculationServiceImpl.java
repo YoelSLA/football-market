@@ -12,6 +12,7 @@ import footballmarket.features.quote.application.internal.QuoteExecutionRecorder
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.application.internal.QuotePopulationSelector;
 import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
+import footballmarket.features.quote.domain.enums.QuoteRecalculationType;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
@@ -86,6 +87,85 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
         QuoteExecutionOrigin.AUTOMATIC);
   }
 
+  @Override
+  public QuoteExecution recalculateMarketDemand() {
+    if (this.quotes.count() == 0) {
+      throw new MarketNotInitializedException();
+    }
+    BigDecimal cap = this.properties.variationCap();
+    long floor = this.properties.minPriceFloor();
+    Instant startedAt = Instant.now(this.marketClock);
+    LocalDate quoteDate = startedAt.atOffset(ZoneOffset.UTC).toLocalDate();
+    LOG.info(
+        "market_demand_quote_execution_started quoteDate={} demandWindow={} variationCap={}"
+            + " minPriceFloor={} origin={}",
+        quoteDate,
+        this.properties.demandWindow(),
+        cap,
+        floor,
+        QuoteExecutionOrigin.MANUAL);
+    QuoteExecution execution =
+        new QuoteExecution(
+            quoteDate,
+            QuoteExecutionOrigin.MANUAL,
+            null,
+            null,
+            null,
+            cap,
+            floor,
+            0,
+            0,
+            0,
+            0,
+            0,
+            startedAt,
+            null,
+            QuoteRecalculationType.MARKET_DEMAND_ONLY,
+            this.properties.demandWindow());
+    execution = this.recorder.start(execution);
+
+    List<Player> players = this.population.pricablePlayers();
+    int recomputed = 0;
+    int notRepriced = 0;
+    int failed = 0;
+    for (Player player : players) {
+      try {
+        QuotePlayerPublisher.PublicationResult result =
+            this.publisher.publishMarketDemand(player, quoteDate, cap, floor, startedAt, execution);
+        switch (result.publication()) {
+          case MARKET_DEMAND -> recomputed++;
+          case NOT_REPRICED -> notRepriced++;
+          case RECOMPUTED, CARRIED_FORWARD -> failed++;
+        }
+      } catch (RuntimeException exception) {
+        failed++;
+        LOG.error(
+            "quote_player_market_demand_recalculation_failed playerId={} stage=recalculate cause={}",
+            player.getId(),
+            exception.getClass().getSimpleName());
+      }
+    }
+    QuoteExecution completed =
+        this.recorder.complete(
+            execution.getId(),
+            players.size(),
+            recomputed,
+            0,
+            notRepriced,
+            failed,
+            Instant.now(this.marketClock));
+    LOG.info(
+        "market_demand_quote_execution_completed quoteDate={} pricedPlayers={} recomputedRows={}"
+            + " notRepricedPlayers={} failedPlayers={} origin={}",
+        quoteDate,
+        players.size(),
+        recomputed,
+        notRepriced,
+        failed,
+        QuoteExecutionOrigin.MANUAL);
+    return completed;
+  }
+
   private QuoteExecution recalculate(
       String requestedStrategy,
       BigDecimal requestedFactor,
@@ -123,7 +203,22 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
         origin);
     QuoteExecution execution =
         new QuoteExecution(
-            quoteDate, origin, strategy, "v1", factor, cap, floor, 0, 0, 0, 0, 0, startedAt, null);
+            quoteDate,
+            origin,
+            strategy,
+            "v1",
+            factor,
+            cap,
+            floor,
+            0,
+            0,
+            0,
+            0,
+            0,
+            startedAt,
+            null,
+            QuoteRecalculationType.SPORT_AND_MARKET,
+            this.properties.demandWindow());
     try {
       execution = this.recorder.start(execution);
     } catch (DataIntegrityViolationException exception) {
@@ -145,6 +240,7 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
                 player, quoteDate, strategy, factor, cap, floor, startedAt, execution);
         switch (result.publication()) {
           case RECOMPUTED -> recomputed++;
+          case MARKET_DEMAND -> recomputed++;
           case CARRIED_FORWARD -> carried++;
           case NOT_REPRICED -> notRepriced++;
         }

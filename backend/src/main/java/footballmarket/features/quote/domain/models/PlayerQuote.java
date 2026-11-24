@@ -57,6 +57,18 @@ public class PlayerQuote {
   @Column(name = "multiplier", nullable = false)
   private BigDecimal multiplier;
 
+  @Column(name = "sport_multiplier")
+  private BigDecimal sportMultiplier;
+
+  @Column(name = "market_demand_factor")
+  private BigDecimal marketDemandFactor;
+
+  @Column(name = "market_multiplier")
+  private BigDecimal marketMultiplier;
+
+  @Column(name = "market_net_demand_tokens")
+  private Long marketNetDemandTokens;
+
   @Column(name = "score")
   private BigDecimal score;
 
@@ -123,6 +135,10 @@ public class PlayerQuote {
         sourceValuationDate,
         origin,
         calculatedAt,
+        null,
+        null,
+        null,
+        null,
         null);
   }
 
@@ -140,6 +156,62 @@ public class PlayerQuote {
       QuoteOrigin origin,
       Instant calculatedAt,
       QuoteExecution execution) {
+    this(
+        player,
+        effectiveDate,
+        price,
+        previousPrice,
+        multiplier,
+        score,
+        strategyName,
+        strategyVersion,
+        sourceValuationDate,
+        origin,
+        calculatedAt,
+        execution,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  /**
+   * Crea una fila de cotización con sus componentes explícitos de auditoría deportiva y de mercado.
+   *
+   * @param player jugador cotizable de la fila
+   * @param effectiveDate fecha de vigencia de la fila
+   * @param price precio resultante en centésimas de crédito
+   * @param previousPrice precio anterior, nulo solo en la fila inicial
+   * @param multiplier multiplicador final aplicado
+   * @param score score utilizado, nulo si no aplica
+   * @param strategyName estrategia que produjo el precio, nula si no aplica
+   * @param strategyVersion versión de la estrategia, nula si no aplica
+   * @param sourceValuationDate fecha de la valuación de origen, nula si no aplica
+   * @param origin origen de la fila
+   * @param calculatedAt instante de cálculo de la fila
+   * @param execution ejecución que produjo la fila
+   * @param sportMultiplier multiplicador deportivo previo a la composición
+   * @param marketDemandFactor factor de mercado aplicado
+   * @param marketMultiplier multiplicador de mercado aplicado
+   * @param marketNetDemandTokens demanda neta individual del jugador
+   */
+  public PlayerQuote(
+      Player player,
+      LocalDate effectiveDate,
+      long price,
+      Long previousPrice,
+      BigDecimal multiplier,
+      BigDecimal score,
+      ValuationStrategy strategyName,
+      String strategyVersion,
+      LocalDate sourceValuationDate,
+      QuoteOrigin origin,
+      Instant calculatedAt,
+      QuoteExecution execution,
+      BigDecimal sportMultiplier,
+      BigDecimal marketDemandFactor,
+      BigDecimal marketMultiplier,
+      Long marketNetDemandTokens) {
     if (player == null
         || effectiveDate == null
         || multiplier == null
@@ -160,12 +232,20 @@ public class PlayerQuote {
         score,
         strategyName,
         strategyVersion,
-        sourceValuationDate);
+        sourceValuationDate,
+        sportMultiplier,
+        marketDemandFactor,
+        marketMultiplier,
+        marketNetDemandTokens);
     this.player = player;
     this.effectiveDate = effectiveDate;
     this.price = price;
     this.previousPrice = previousPrice;
     this.multiplier = multiplier;
+    this.sportMultiplier = sportMultiplier;
+    this.marketDemandFactor = marketDemandFactor;
+    this.marketMultiplier = marketMultiplier;
+    this.marketNetDemandTokens = marketNetDemandTokens;
     this.score = score;
     this.strategyName = strategyName;
     this.strategyVersion = strategyVersion;
@@ -185,6 +265,10 @@ public class PlayerQuote {
     this.price = calculation.getPrice();
     this.previousPrice = calculation.getPreviousPrice();
     this.multiplier = calculation.getMultiplier();
+    this.sportMultiplier = calculation.getSportMultiplier();
+    this.marketDemandFactor = calculation.getMarketDemandFactor();
+    this.marketMultiplier = calculation.getMarketMultiplier();
+    this.marketNetDemandTokens = calculation.getMarketNetDemandTokens();
     this.score = calculation.getScore();
     this.strategyName = calculation.getStrategyName();
     this.strategyVersion = calculation.getStrategyVersion();
@@ -201,7 +285,11 @@ public class PlayerQuote {
       BigDecimal score,
       ValuationStrategy strategyName,
       String strategyVersion,
-      LocalDate sourceValuationDate) {
+      LocalDate sourceValuationDate,
+      BigDecimal sportMultiplier,
+      BigDecimal marketDemandFactor,
+      BigDecimal marketMultiplier,
+      Long marketNetDemandTokens) {
     boolean hasPreviousPrice = previousPrice != null && previousPrice > 0;
     if (origin == QuoteOrigin.INITIAL) {
       if (previousPrice != null
@@ -209,7 +297,11 @@ public class PlayerQuote {
           || score != null
           || strategyName != null
           || strategyVersion != null
-          || sourceValuationDate != null) {
+          || sourceValuationDate != null
+          || sportMultiplier != null
+          || marketDemandFactor != null
+          || marketMultiplier != null
+          || marketNetDemandTokens != null) {
         throw new InvalidQuoteException(
             "La fila inicial solo admite el ancla sin estrategia ni score");
       }
@@ -219,9 +311,31 @@ public class PlayerQuote {
       throw new InvalidQuoteException("Una cotización no inicial exige el precio anterior");
     }
     if (origin == QuoteOrigin.CARRIED_FORWARD) {
-      if (score != null || sourceValuationDate != null || !this.isUnitMultiplier(multiplier)) {
+      if (score != null
+          || sourceValuationDate != null
+          || !this.isUnitMultiplier(multiplier)
+          || sportMultiplier != null
+          || marketDemandFactor != null
+          || marketMultiplier != null
+          || marketNetDemandTokens != null) {
         throw new InvalidQuoteException(
             "La fila arrastrada repite el precio sin score, sin valuación y con multiplicador 1");
+      }
+      return;
+    }
+    if (origin == QuoteOrigin.MARKET_DEMAND) {
+      if (score != null
+          || strategyName != null
+          || strategyVersion != null
+          || sourceValuationDate != null
+          || sportMultiplier != null
+          || marketDemandFactor == null
+          || marketMultiplier == null
+          || marketNetDemandTokens == null
+          || marketDemandFactor.abs().compareTo(new BigDecimal("0.50")) > 0
+          || marketMultiplier.compareTo(BigDecimal.ONE.add(marketDemandFactor)) != 0) {
+        throw new InvalidQuoteException(
+            "La cotización exclusiva de mercado requiere solo auditoría de demanda");
       }
       return;
     }
@@ -231,6 +345,21 @@ public class PlayerQuote {
         || sourceValuationDate == null) {
       throw new InvalidQuoteException(
           "La cotización recalculada exige score, estrategia, versión y fecha de valuación");
+    }
+    boolean legacyAudit =
+        sportMultiplier == null
+            && marketDemandFactor == null
+            && marketMultiplier == null
+            && marketNetDemandTokens == null;
+    boolean completeAudit =
+        sportMultiplier != null
+            && marketDemandFactor != null
+            && marketMultiplier != null
+            && marketNetDemandTokens != null
+            && marketDemandFactor.abs().compareTo(new BigDecimal("0.50")) <= 0
+            && marketMultiplier.compareTo(BigDecimal.ONE.add(marketDemandFactor)) == 0;
+    if (!legacyAudit && !completeAudit) {
+      throw new InvalidQuoteException("La auditoría deportiva y de mercado debe estar completa");
     }
   }
 
