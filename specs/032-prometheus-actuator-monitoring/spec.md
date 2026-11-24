@@ -26,7 +26,8 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 
 ### Session 2026-11-24
 
-- Q: ¿Qué endpoints de Actuator deben quedar accesibles por HTTP y con qué protección? → A: Exponer `/actuator/prometheus` solo a identidades autorizadas, mantener `/actuator/health` público con estado mínimo y bloquear los demás endpoints de Actuator.
+- Q: ¿Qué endpoints de Actuator deben quedar accesibles por HTTP y con qué protección? → A: Exponer `/actuator/prometheus` solo a identidades autorizadas, mantener `/actuator/health` público con estado mínimo, exponer `/actuator/info` públicamente sin datos sensibles y bloquear los demás endpoints de Actuator.
+- Q: ¿Cómo debe quedar el acceso HTTP a `/actuator/info`? → A: Exponerlo públicamente, solo con datos no sensibles.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -58,12 +59,14 @@ El equipo de operaciones accede a los endpoints de monitoreo autorizados, mientr
 1. **Given** un solicitante sin autorización, **When** intenta consultar métricas o endpoints de monitoreo protegidos, **Then** el acceso es denegado y la respuesta no revela métricas ni datos protegidos.
 2. **Given** un solicitante autorizado, **When** consulta un endpoint de monitoreo expuesto, **Then** recibe solo la información de monitoreo permitida y no recibe secretos, credenciales, tokens ni configuración sensible.
 3. **Given** un endpoint de Actuator que no forma parte de los endpoints de monitoreo permitidos, **When** cualquier solicitante intenta acceder por HTTP, **Then** el endpoint no queda expuesto.
+4. **Given** un solicitante anónimo, **When** consulta `/actuator/info`, **Then** recibe únicamente información no sensible.
 
 ## Edge Cases
 
 - Una solicitud a métricas sin credenciales válidas o con credenciales de una identidad no autorizada se rechaza sin revelar el contenido protegido.
 - Si la aplicación no puede producir temporalmente una métrica particular, el endpoint no debe sustituir la ausencia de esa métrica con información sensible ni habilitar endpoints adicionales.
 - `/actuator/health` permanece público solo con un estado mínimo; sus subendpoints y los demás endpoints de Actuator no quedan expuestos por HTTP.
+- `/actuator/info` puede consultarse sin autenticación, pero su respuesta no debe incluir información sensible.
 
 ## Requirements *(mandatory)*
 
@@ -74,9 +77,10 @@ El equipo de operaciones accede a los endpoints de monitoreo autorizados, mientr
 - **FR-003**: El acceso a las métricas y a los endpoints de monitoreo protegidos MUST limitarse a identidades autorizadas mediante los mecanismos de seguridad existentes en la aplicación.
 - **FR-004**: El backend MUST denegar el acceso no autorizado a los endpoints de monitoreo protegidos sin devolver su contenido.
 - **FR-005**: La información expuesta por los endpoints de monitoreo MUST NOT incluir secretos, credenciales, tokens ni valores de configuración sensibles.
-- **FR-006**: La exposición HTTP de Actuator MUST limitarse a `/actuator/prometheus` y `/actuator/health`; los demás endpoints de Actuator, incluidos sus subendpoints, MUST permanecer inaccesibles por HTTP.
+- **FR-006**: La exposición HTTP de Actuator MUST limitarse a `/actuator/prometheus`, `/actuator/health` y `/actuator/info`; los demás endpoints de Actuator, incluidos sus subendpoints, MUST permanecer inaccesibles por HTTP.
 - **FR-007**: `/actuator/health` MUST permanecer accesible sin autenticación y limitar su respuesta a un estado mínimo, sin revelar detalles de componentes, dependencias o configuración.
 - **FR-008**: Esta funcionalidad MUST reutilizar Actuator existente y MUST NOT incluir el despliegue de un servidor Prometheus ni la creación de dashboards de Grafana.
+- **FR-009**: `/actuator/info` MUST permanecer accesible sin autenticación y MUST NOT exponer información sensible.
 
 ### Key Entities *(include if data involved)*
 
@@ -90,7 +94,7 @@ El equipo de operaciones accede a los endpoints de monitoreo autorizados, mientr
 - **SC-001**: El endpoint `/actuator/prometheus` devuelve métricas que un recolector compatible puede interpretar, incluyendo las categorías de estado, recursos y rendimiento.
 - **SC-002**: El 100 % de las solicitudes no autorizadas a métricas y endpoints protegidos son denegadas y no reciben el contenido protegido.
 - **SC-003**: Ninguna respuesta HTTP de monitoreo contiene secretos, credenciales, tokens ni valores de configuración sensibles.
-- **SC-004**: Por HTTP, `/actuator/prometheus` solo es accesible a identidades autorizadas, `/actuator/health` devuelve únicamente un estado mínimo y ningún otro endpoint de Actuator es accesible.
+- **SC-004**: Por HTTP, `/actuator/prometheus` solo es accesible a identidades autorizadas, `/actuator/health` devuelve únicamente un estado mínimo, `/actuator/info` no expone información sensible y ningún otro endpoint de Actuator es accesible.
 
 ## Assumptions
 
