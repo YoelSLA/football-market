@@ -1,16 +1,12 @@
 @use "@/styles/abstracts" as ds;
 
 .ordersTable {
+	@include ds.data-table-wrapper;
 	display: flex;
 	flex: 1;
 	flex-direction: column;
 	min-height: 0;
 	box-sizing: border-box;
-	width: 100%;
-	border: 1px solid ds.$border-panel;
-	border-radius: 8px;
-	overflow: hidden;
-	background-color: ds.$surface-data-table;
 
 	&__container {
 		flex: 1;
@@ -29,30 +25,19 @@
 		font-size: 12px;
 
 		th {
+			@include ds.data-table-header;
 			position: sticky;
 			top: 0;
 			z-index: 2;
 			height: 40px;
 			padding: 0 16px;
-			background-color: ds.$surface-data-header;
-			border-bottom: 1px solid ds.$border-glass-subtle;
-			color: ds.$text-header-table;
-			font-size: 11px;
-			font-weight: 600;
-			letter-spacing: 0.06em;
-			text-transform: uppercase;
-			white-space: nowrap;
 			text-align: inherit;
-			box-sizing: border-box;
 		}
 
 		td {
+			@include ds.data-table-cell;
 			height: 64px;
 			padding: 8px 16px;
-			border-bottom: 1px solid ds.$border-glass-faint;
-			color: ds.$text-body-on-dark;
-			vertical-align: middle;
-			box-sizing: border-box;
 			text-align: inherit;
 		}
 
@@ -61,7 +46,7 @@
 		}
 
 		tr {
-			transition: background-color 0.15s ease;
+			@include ds.data-table-row;
 
 			&:hover td {
 				background-color: ds.$surface-glass-subtle;

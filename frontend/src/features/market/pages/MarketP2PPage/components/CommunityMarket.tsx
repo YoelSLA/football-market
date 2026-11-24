@@ -1,13 +1,18 @@
 import { Link } from "react-router-dom";
 import MarketCatalogState from "@/features/market/components/MarketCatalogState";
 import MarketPlayerCardSkeleton from "@/features/market/components/MarketPlayerCardSkeleton";
-import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
-import type { CommunityMarketPlayer } from "@/features/market/types";
-import { formatCredits } from "@/features/market/utils";
-import { Button } from "@/shared/components";
+import { COMMUNITY_MARKET_PAGE_SIZE } from "@/features/market/constants";
+import type {
+	CommunityMarketPlayer,
+	MarketQuote,
+} from "@/features/market/types";
 import styles from "./CommunityMarket.module.scss";
+import CommunityPlayerCard from "./CommunityPlayerCard";
 
-const SKELETON_ITEMS = Array.from({ length: 8 }, (_, index) => index);
+const SKELETON_ITEMS = Array.from(
+	{ length: COMMUNITY_MARKET_PAGE_SIZE },
+	(_, index) => index,
+);
 
 interface Props {
 	isLoading: boolean;
@@ -16,6 +21,7 @@ interface Props {
 	players: CommunityMarketPlayer[];
 	hasFilters: boolean;
 	isUpdating: boolean;
+	getOfficialQuote?: (playerId: number) => MarketQuote | null;
 	onRetry: () => void;
 	onOpenPlayer: (player: CommunityMarketPlayer) => void;
 }
@@ -27,6 +33,7 @@ export default function CommunityMarket({
 	players,
 	hasFilters,
 	isUpdating,
+	getOfficialQuote,
 	onRetry,
 	onOpenPlayer,
 }: Props) {
@@ -66,48 +73,26 @@ export default function CommunityMarket({
 		return (
 			<div className={styles.catalog__grid}>
 				{players.map((player) => (
-					<article className={styles.card} key={player.id}>
-						<div className={styles.card__identity}>
-							<MarketPlayerSummary player={player} variant="communityCard" />
-						</div>
-						<div className={styles.card__metrics}>
-							<span>Publicaciones</span>
-							<span>Tokens ofrecidos</span>
-							<span>Mejor precio</span>
-							<strong>{player.listingCount}</strong>
-							<strong>{player.availableQuantity}</strong>
-							<strong>{formatCredits(player.minimumUnitPrice)}</strong>
-							<span className={styles.card__metricCaption}>
-								Ofertas activas
-							</span>
-							<span className={styles.card__metricCaption}>Disponibles</span>
-							<span className={styles.card__metricCaption}>Por token</span>
-						</div>
-						<div className={styles.card__actions}>
-							<Button
-								className={styles.card__action}
-								onClick={() => onOpenPlayer(player)}
-							>
-								Ver ofertas
-							</Button>
-						</div>
-					</article>
+					<CommunityPlayerCard
+						key={player.id}
+						player={player}
+						officialQuote={getOfficialQuote?.(player.id)}
+						onOpenPlayer={onOpenPlayer}
+					/>
 				))}
 			</div>
 		);
 	};
+
 	return (
-		<section
-			className={styles.catalog}
-			aria-label="Jugadores con ofertas"
-			aria-busy={isLoading || isUpdating ? "true" : undefined}
-		>
-			{isUpdating && (
+		<main className={styles.catalog} aria-busy={isLoading || isUpdating}>
+			{isUpdating && !isLoading && !isError && (
 				<span className={styles.catalog__status} role="status">
 					Actualizando ofertas…
 				</span>
 			)}
+
 			{renderContent()}
-		</section>
+		</main>
 	);
 }

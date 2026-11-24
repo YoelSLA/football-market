@@ -1,5 +1,8 @@
 import axios from "axios";
-import { OFFICIAL_MARKET_DEFAULT_PAGE_SIZE } from "@/features/market/constants";
+import {
+	COMMUNITY_MARKET_PAGE_SIZE,
+	OFFICIAL_MARKET_DEFAULT_PAGE_SIZE,
+} from "@/features/market/constants";
 import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toBuyResult,
@@ -8,8 +11,10 @@ import {
 	toMarketQuote,
 	toOfficialMarketPage,
 	toOrderBuyRequestDTO,
+	toOrderSellOfficialRequestDTO,
 	toOrderSellRequestDTO,
 	toP2PMarketPage,
+	toSellOfficialResult,
 	toSellResult,
 	toUserOrdersPage,
 } from "./market.mapper";
@@ -23,8 +28,10 @@ import type {
 	OfficialMarketCriteria,
 	OfficialMarketPage,
 	OrderBuyResponseDTO,
+	OrderSellOfficialResponseDTO,
 	OrderSellResponseDTO,
 	P2PMarketPage,
+	SellOfficialResult,
 	SellResult,
 	UserOrdersPage,
 } from "./types";
@@ -86,12 +93,28 @@ async function buyTokens(request: {
 async function sellTokens(request: {
 	playerId: number;
 	quantity: number;
+	unitPrice?: number;
 }): Promise<SellResult> {
 	const dto = toOrderSellRequestDTO(request);
 	const { data } = await http.post<OrderSellResponseDTO>("/orders/sell", dto, {
 		authenticated: true,
 	});
 	return toSellResult(data);
+}
+
+async function sellTokensOfficial(request: {
+	playerId: number;
+	quantity: number;
+}): Promise<SellOfficialResult> {
+	const dto = toOrderSellOfficialRequestDTO(request);
+	const { data } = await http.post<OrderSellOfficialResponseDTO>(
+		"/orders/sell-official",
+		dto,
+		{
+			authenticated: true,
+		},
+	);
+	return toSellOfficialResult(data);
 }
 
 async function getListings(
@@ -103,7 +126,10 @@ async function getListings(
 		signal,
 		params: playerId ? { playerId } : undefined,
 	});
-	return toMarketListings(data);
+	const listings = toMarketListings(data);
+	return playerId !== undefined
+		? listings.filter((l) => l.playerId === playerId)
+		: listings;
 }
 
 async function getP2PMarket(
@@ -115,7 +141,7 @@ async function getP2PMarket(
 		signal,
 		params: {
 			page: criteria.page,
-			size: 8,
+			size: COMMUNITY_MARKET_PAGE_SIZE,
 			sort: criteria.sort,
 			search: criteria.search || undefined,
 			leagueId: criteria.leagueId ?? undefined,
@@ -194,6 +220,7 @@ export const marketService = {
 	getCurrentQuote,
 	buyTokens,
 	sellTokens,
+	sellTokensOfficial,
 	getListings,
 	getP2PMarket,
 	getOfficialMarket,

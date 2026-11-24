@@ -1,13 +1,24 @@
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { authQueryKeys } from "@/features/auth";
 import { marketQueryKeys } from "@/features/market/constants";
 import { useSellQuantityForm } from "@/features/market/form";
-import { useSellTokensMutation } from "@/features/market/hooks/mutations";
+import {
+	useSellOfficialTokensMutation,
+	useSellTokensMutation,
+} from "@/features/market/hooks/mutations";
 import { useMarketQuotesQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
 import { toMarketPlayer } from "@/features/market/market.mapper";
-import type { PlayerHolding, SellResult } from "@/features/market/types";
+import type {
+	PlayerHolding,
+	SellEstimation,
+	SellMode,
+	SellOfficialEstimation,
+	SellOfficialResult,
+	SellResult,
+} from "@/features/market/types";
 import {
 	sanitizePositions,
 	useAllPlayersQuery,
@@ -50,6 +61,11 @@ function safeMessage(error: unknown): string {
 		case "PLAYER_NOT_FOUND":
 		case "PLAYER_NOT_VISIBLE":
 			return "Jugador no disponible.";
+		case "INSUFFICIENT_SUPERUSER_FUNDS":
+		case "INSUFFICIENT_LIQUIDITY":
+			return "La casa oficial no dispone de fondos suficientes en este momento.";
+		case "PRICE_OUT_OF_BOUNDS":
+			return "El precio acordado se encuentra fuera del margen permitido (-20% a +20%).";
 		default:
 			return "Error del servidor, intente más tarde.";
 	}
@@ -65,7 +81,7 @@ export function useMarketSellPage({
 	onRefreshHoldings,
 }: Params = {}) {
 	const queryClient = useQueryClient();
-	const { notifySellSuccess } = useMarketToast();
+	const { notifySellSuccess, notifySellOfficialSuccess } = useMarketToast();
 	const authenticated = useAuthStore(
 		(state) =>
 			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
@@ -156,7 +172,11 @@ export function useMarketSellPage({
 			setSelectedPlayer(refreshed);
 	}, [allHoldings, selectedPlayer]);
 
-	const [result, setResult] = useState<SellResult | null>(null);
+	const [sellMode, setSellMode] = useState<SellMode>("OFFICIAL");
+	const [p2pUnitPriceCentimes, setP2PUnitPriceCentimes] = useState<number>(0);
+	const [result, setResult] = useState<SellResult | SellOfficialResult | null>(
+		null,
+	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [searchInput, setSearchInput] = useState("");
 	const filterOptionsQuery = usePlayerCatalogFiltersQuery();
@@ -176,6 +196,7 @@ export function useMarketSellPage({
 	const initialFocusRef = useRef<HTMLInputElement | null>(null);
 	const form = useSellQuantityForm(selectedPlayer?.availableQuantity ?? 0);
 	const mutation = useSellTokensMutation();
+	const officialMutation = useSellOfficialTokensMutation();
 	const quantity = form.validatedQuantity;
 
 	const leagues = useMemo(
@@ -257,17 +278,57 @@ export function useMarketSellPage({
 		? quoteQuery.getQuoteState(selectedPlayer.id)
 		: null;
 	const selectedQuote = selectedQuoteState?.quote ?? null;
-	const estimation = useMemo(
-		() =>
-			selectedQuote && quantity
-				? {
-						quantity,
-						unitPriceCentimes: selectedQuote.price,
-						totalCentimes: quantity * selectedQuote.price,
-					}
-				: null,
-		[selectedQuote, quantity],
-	);
+
+	useEffect(() => {
+		if (!selectedPlayer) {
+			setSellMode("OFFICIAL");
+			setP2PUnitPriceCentimes(0);
+			return;
+		}
+		if (
+			selectedQuote &&
+			selectedQuote.price > 0 &&
+			p2pUnitPriceCentimes === 0
+		) {
+			setP2PUnitPriceCentimes(Math.round(selectedQuote.price * 0.9));
+		}
+	}, [selectedPlayer, selectedQuote, p2pUnitPriceCentimes]);
+
+	const officialEstimation = useMemo((): SellOfficialEstimation | null => {
+		if (!selectedQuote || !quantity || selectedQuote.price <= 0) return null;
+		const discountPercentage = 10;
+		const spreadCentimes = Math.round(selectedQuote.price * 0.1);
+		const unitPriceNetCentimes = selectedQuote.price - spreadCentimes;
+		return {
+			quantity,
+			officialPriceCentimes: selectedQuote.price,
+			discountPercentage,
+			spreadCentimes,
+			unitPriceNetCentimes,
+			totalNetCentimes: quantity * unitPriceNetCentimes,
+		};
+	}, [selectedQuote, quantity]);
+
+	const minP2PPrice = selectedQuote ? Math.round(selectedQuote.price * 0.8) : 0;
+	const maxP2PPrice = selectedQuote ? Math.round(selectedQuote.price * 1.2) : 0;
+	const isP2PPriceValid =
+		Boolean(selectedQuote) &&
+		p2pUnitPriceCentimes >= minP2PPrice &&
+		p2pUnitPriceCentimes <= maxP2PPrice &&
+		p2pUnitPriceCentimes > 0;
+
+	const estimation = useMemo((): SellEstimation | null => {
+		if (!selectedQuote || !quantity || selectedQuote.price <= 0) return null;
+		const unitPrice =
+			sellMode === "OFFICIAL"
+				? selectedQuote.price - Math.round(selectedQuote.price * 0.1)
+				: p2pUnitPriceCentimes;
+		return {
+			quantity,
+			unitPriceCentimes: unitPrice,
+			totalCentimes: quantity * unitPrice,
+		};
+	}, [selectedQuote, quantity, sellMode, p2pUnitPriceCentimes]);
 
 	const open = useCallback(
 		(player: PlayerHolding, trigger: HTMLElement | null) => {
@@ -275,6 +336,8 @@ export function useMarketSellPage({
 			setSelectedPlayer(player);
 			setResult(null);
 			setErrorMessage(null);
+			setSellMode("OFFICIAL");
+			setP2PUnitPriceCentimes(0);
 			form.resetQuantity();
 			refreshHoldings();
 			onRefreshHoldings?.(player.id);
@@ -283,12 +346,46 @@ export function useMarketSellPage({
 	);
 
 	const close = useCallback(() => {
-		if (mutation.isPending || submittingRef.current) return;
+		if (
+			mutation.isPending ||
+			officialMutation.isPending ||
+			submittingRef.current
+		)
+			return;
 		setSelectedPlayer(null);
 		setResult(null);
 		setErrorMessage(null);
+		setSellMode("OFFICIAL");
+		setP2PUnitPriceCentimes(0);
 		form.resetQuantity();
-	}, [form, mutation.isPending]);
+	}, [form, mutation.isPending, officialMutation.isPending]);
+
+	const isBusy =
+		mutation.isPending || officialMutation.isPending || isRevalidating;
+
+	const canConfirm = Boolean(
+		authenticated &&
+			quantity &&
+			quantity <= (selectedPlayer?.availableQuantity ?? 0) &&
+			selectedQuoteState?.status === "available" &&
+			selectedQuote &&
+			!isBusy &&
+			!submittingRef.current &&
+			!result &&
+			(sellMode === "OFFICIAL" ? true : isP2PPriceValid),
+	);
+
+	const confirmationBlockReason = !authenticated
+		? "Iniciá sesión para publicar."
+		: !quantity
+			? "Cantidad entre 1 y 100"
+			: quantity > (selectedPlayer?.availableQuantity ?? 0)
+				? "Cantidad superior a los tokens disponibles."
+				: selectedQuoteState?.status !== "available"
+					? "La cotización no está disponible."
+					: sellMode === "P2P" && !isP2PPriceValid
+						? "El precio debe encontrarse entre -20% y +20% de la cotización oficial."
+						: null;
 
 	const confirm = useCallback(async () => {
 		if (
@@ -298,14 +395,19 @@ export function useMarketSellPage({
 			!selectedQuote ||
 			selectedQuoteState?.status !== "available" ||
 			mutation.isPending ||
+			officialMutation.isPending ||
 			submittingRef.current ||
 			result
 		)
 			return;
+
+		if (sellMode === "P2P" && !isP2PPriceValid) return;
+
 		submittingRef.current = true;
 		setIsRevalidating(true);
 		setErrorMessage(null);
 		let postStarted = false;
+
 		try {
 			const latestResult = await selectedQuoteState.refetch();
 			const latest = latestResult.data;
@@ -317,21 +419,50 @@ export function useMarketSellPage({
 				);
 				return;
 			}
+
 			postStarted = true;
-			const sellResult = await mutation.mutateAsync({
-				playerId: selectedPlayer.id,
-				quantity,
-			});
-			setResult(sellResult);
-			notifySellSuccess(selectedPlayer.name, sellResult);
-			queryClient.invalidateQueries({
-				queryKey: marketQueryKeys.currentQuote(selectedPlayer.id),
-			});
-			queryClient.invalidateQueries({
-				queryKey: portfolioQueryKeys.summary,
-			});
-			refreshHoldings();
-			onSellSuccess?.(selectedPlayer.id);
+
+			if (sellMode === "OFFICIAL") {
+				const officialResult = await officialMutation.mutateAsync({
+					playerId: selectedPlayer.id,
+					quantity,
+				});
+				setResult(officialResult);
+				notifySellOfficialSuccess(selectedPlayer.name, officialResult);
+				void queryClient.invalidateQueries({
+					queryKey: authQueryKeys.all,
+				});
+				void queryClient.invalidateQueries({
+					queryKey: marketQueryKeys.currentQuote(selectedPlayer.id),
+				});
+				void queryClient.invalidateQueries({
+					queryKey: marketQueryKeys.all,
+				});
+				void queryClient.invalidateQueries({
+					queryKey: portfolioQueryKeys.summary,
+				});
+				refreshHoldings();
+				onSellSuccess?.(selectedPlayer.id);
+			} else {
+				const sellResult = await mutation.mutateAsync({
+					playerId: selectedPlayer.id,
+					quantity,
+					unitPrice: p2pUnitPriceCentimes,
+				});
+				setResult(sellResult);
+				notifySellSuccess(selectedPlayer.name, sellResult);
+				void queryClient.invalidateQueries({
+					queryKey: marketQueryKeys.currentQuote(selectedPlayer.id),
+				});
+				void queryClient.invalidateQueries({
+					queryKey: marketQueryKeys.p2pAll(),
+				});
+				void queryClient.invalidateQueries({
+					queryKey: portfolioQueryKeys.summary,
+				});
+				refreshHoldings();
+				onSellSuccess?.(selectedPlayer.id);
+			}
 		} catch (error: unknown) {
 			setErrorMessage(
 				!postStarted &&
@@ -362,12 +493,17 @@ export function useMarketSellPage({
 		selectedQuoteState?.status,
 		selectedQuoteState?.refetch,
 		mutation,
+		officialMutation,
 		result,
+		sellMode,
+		isP2PPriceValid,
+		p2pUnitPriceCentimes,
 		queryClient,
 		refreshHoldings,
 		onSellSuccess,
 		onRefreshHoldings,
 		notifySellSuccess,
+		notifySellOfficialSuccess,
 	]);
 
 	return {
@@ -422,27 +558,18 @@ export function useMarketSellPage({
 		selectedQuote,
 		selectedQuoteState,
 		estimation,
+		officialEstimation,
+		sellMode,
+		setSellMode,
+		p2pUnitPriceCentimes,
+		setP2PUnitPriceCentimes,
 		form,
 		isOpen: Boolean(selectedPlayer),
 		result,
 		errorMessage,
-		isBusy: mutation.isPending || isRevalidating,
-		canConfirm: Boolean(
-			authenticated &&
-				quantity &&
-				selectedQuoteState?.status === "available" &&
-				selectedQuote &&
-				!mutation.isPending &&
-				!submittingRef.current &&
-				!result,
-		),
-		confirmationBlockReason: !authenticated
-			? "Iniciá sesión para publicar."
-			: !quantity
-				? "Cantidad entre 1 y 100"
-				: selectedQuoteState?.status !== "available"
-					? "La cotización no está disponible."
-					: null,
+		isBusy,
+		canConfirm,
+		confirmationBlockReason,
 		triggerRef,
 		initialFocusRef,
 		open,

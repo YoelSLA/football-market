@@ -1,0 +1,67 @@
+@use "@/styles/abstracts" as ds;
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	min-height: 62px;
+	padding: 12px 16px;
+	border-bottom: 1px solid ds.$border-panel;
+}
+
+.heading {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+
+	h3 {
+		margin: 0;
+		font-size: 1.05rem;
+		font-weight: 750;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+	}
+
+	span {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		line-height: 1.2;
+		text-transform: uppercase;
+		color: ds.$text-label-on-dark;
+	}
+}
+
+.close {
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 1px solid ds.$border-panel;
+	border-radius: 0.45rem;
+	background-color: ds.$surface-data-control-soft;
+	color: ds.$text-label-on-dark;
+	cursor: pointer;
+
+	svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	&:hover:not(:disabled) {
+		border-color: ds.$border-strong-hover;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$text-title-on-dark;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}

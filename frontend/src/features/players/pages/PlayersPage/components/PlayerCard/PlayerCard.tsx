@@ -1,106 +1,101 @@
 import { Link, useLocation } from "react-router-dom";
+import PlayerPositionBadge from "@/features/players/components/PlayerPositionBadge";
 import { getLeagueClassification } from "@/features/players/constants";
 import type { Player } from "@/features/players/types";
-import {
-	CompetitionLogo,
-	NationalityFlag,
-	PlayerPortrait,
-	TeamBadge,
-} from "@/shared/components";
+import { CompetitionLogo, PlayerCardShell } from "@/shared/components";
 import styles from "./PlayerCard.module.scss";
 
 interface Props {
 	player: Player;
 }
-const positions: Record<string, string> = {
-	Goalkeeper: "POR",
-	Defence: "DEF",
-	Defender: "DEF",
-	Midfield: "MED",
-	Midfielder: "MED",
-	Offence: "DEL",
-	Forward: "DEL",
-};
+
 const number = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 2 });
 
 export default function PlayerCard({ player }: Props) {
 	const location = useLocation();
 	const league = getLeagueClassification(player.leagueName);
 	const stats = player.statistics;
-	const values = [
-		{ label: "Partidos", value: stats?.appearancesTotal },
-		{ label: "Goles", value: stats?.goalsTotal },
-		{ label: "Asistencias", value: stats?.assistsTotal },
-	];
-	return (
-		<article className={styles.playerCard}>
-			<div className={styles.playerCard__visual}>
-				<div className={styles.playerCard__identityPanel}>
-					<span className={styles.playerCard__position} title={player.position}>
-						{positions[player.position] ?? player.position}
-					</span>
-					<TeamBadge
-						key={player.teamName}
-						teamName={player.teamName}
-						leagueName={player.leagueName}
-					/>
-					<CompetitionLogo
-						competitionName={player.leagueName}
-						src={league.image}
-						className={styles.playerCard__leagueIcon}
-					/>
-					<NationalityFlag
-						key={player.nationality}
-						nationality={player.nationality}
-					/>
-				</div>
-				<PlayerPortrait
-					key={`${player.id}:${player.imageUrl}:${player.fallbackImageUrl}`}
-					src={player.imageUrl}
-					fallbackSrc={player.fallbackImageUrl}
-					name={player.name}
-					alt=""
-					fit="contain"
-					className={styles.playerCard__portrait}
-				/>
+	const hasGoals = stats?.goalsTotal != null && stats.goalsTotal > 0;
+	const hasAssists = stats?.assistsTotal != null && stats.assistsTotal > 0;
+
+	const headerRight = (
+		<div className={styles.leagueBadge} title={player.leagueName}>
+			<CompetitionLogo
+				competitionName={player.leagueName}
+				src={league.image}
+				className={styles.leagueIcon}
+				decorative
+			/>
+			<span className={styles.leagueText}>{player.leagueName}</span>
+		</div>
+	);
+
+	const headerMeta = (
+		<div className={styles.statusBadge}>
+			<span className={styles.statusDot} aria-hidden="true" />
+			<span>Activo</span>
+		</div>
+	);
+
+	const metricsStrip = (
+		<div className={styles.statsStrip}>
+			<div className={`${styles.statItem} ${styles.statDivider}`}>
+				<span className={styles.statLabel}>Partidos</span>
+				<strong className={styles.statValue}>
+					{stats?.appearancesTotal != null
+						? number.format(stats.appearancesTotal)
+						: "—"}
+				</strong>
 			</div>
-			<header className={styles.playerCard__header}>
-				<h2>
-					<Link
-						to={`/players/${player.id}`}
-						state={{ from: `${location.pathname}${location.search}` }}
-					>
-						{player.name}
-					</Link>
-				</h2>
-				<p>{player.teamName}</p>
-				<div className={styles.playerCard__league}>
-					<CompetitionLogo
-						competitionName={player.leagueName}
-						src={league.image}
-						decorative
-					/>
-					<span>{player.leagueName}</span>
-				</div>
-				<small>
-					{player.nationality ?? "Nacionalidad no disponible"} · Activo
-				</small>
-			</header>
-			<dl className={styles.playerCard__statistics}>
-				{values.map((item) => (
-					<div key={item.label}>
-						<dt>{item.label}</dt>
-						<dd>
-							{item.value !== null && item.value !== undefined
-								? number.format(item.value)
-								: "Sin datos"}
-						</dd>
-					</div>
-				))}
-			</dl>
-			<p className={styles.playerCard__context}>
-				Estadísticas oficiales consolidadas
-			</p>
-		</article>
+			<div className={`${styles.statItem} ${styles.statDivider}`}>
+				<span className={styles.statLabel}>Goles</span>
+				<strong
+					className={`${styles.statValue} ${
+						hasGoals ? styles.statValue_gain : ""
+					}`}
+				>
+					{stats?.goalsTotal != null ? number.format(stats.goalsTotal) : "—"}
+				</strong>
+			</div>
+			<div className={styles.statItem}>
+				<span className={styles.statLabel}>Asistencias</span>
+				<strong
+					className={`${styles.statValue} ${
+						hasAssists ? styles.statValue_highlight : ""
+					}`}
+				>
+					{stats?.assistsTotal != null
+						? number.format(stats.assistsTotal)
+						: "—"}
+				</strong>
+			</div>
+		</div>
+	);
+
+	const actions = (
+		<Link
+			to={`/players/${player.id}`}
+			state={{ from: `${location.pathname}${location.search}` }}
+			className={styles.detailButton}
+			aria-label={`Ver ficha de ${player.name}`}
+		>
+			<span>Ver ficha de jugador</span>
+			<span className={styles.actionArrow} aria-hidden="true">
+				→
+			</span>
+		</Link>
+	);
+
+	return (
+		<PlayerCardShell
+			player={player}
+			positionBadge={<PlayerPositionBadge position={player.position} />}
+			headerRight={headerRight}
+			headerMeta={headerMeta}
+			metricsStrip={metricsStrip}
+			actions={actions}
+			nameHref={`/players/${player.id}`}
+			nameLinkState={{ from: `${location.pathname}${location.search}` }}
+		/>
 	);
 }

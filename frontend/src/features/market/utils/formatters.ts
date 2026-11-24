@@ -1,3 +1,4 @@
+import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
 import type { BuyEstimation } from "../types";
 
 const creditsFormatter = new Intl.NumberFormat("es-AR", {
@@ -28,7 +29,7 @@ export function formatCredits(
 		return "—";
 	}
 	const formatted = creditsFormatter.format(centimes / 100);
-	return `${formatted} ₵`;
+	return `${formatted} ${CREDIT_SYMBOL}`;
 }
 
 /**
@@ -42,7 +43,17 @@ export function formatCreditsAmount(
 		return "—";
 	}
 	const formatted = creditsFormatter.format(credits);
-	return `${formatted} ₵`;
+	return `${formatted} ${CREDIT_SYMBOL}`;
+}
+
+/**
+ * Formatea una cantidad de tokens con el símbolo canónico (Ⓣ).
+ */
+export function formatTokens(quantity: number | null | undefined): string {
+	if (quantity === null || quantity === undefined || Number.isNaN(quantity)) {
+		return "—";
+	}
+	return `${quantity.toLocaleString("es-AR")} ${TOKEN_SYMBOL}`;
 }
 
 /**

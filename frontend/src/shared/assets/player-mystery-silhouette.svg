@@ -1,0 +1,62 @@
+<svg viewBox="0 0 512 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Silueta genérica de jugador</title>
+  <defs>
+    <linearGradient id="bodyGrad" x1="256" y1="60" x2="256" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0e3c63"/>
+      <stop offset="30%" stop-color="#082742"/>
+      <stop offset="65%" stop-color="#041a2c"/>
+      <stop offset="100%" stop-color="#011522" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="rimGrad" x1="80" y1="60" x2="432" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#00dfa0" stop-opacity="0.9"/>
+      <stop offset="25%" stop-color="#0dbbfa" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#51c4ff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0dbbfa" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="collarGrad" x1="216" y1="260" x2="296" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0dbbfa" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#00dfa0" stop-opacity="0.4"/>
+    </linearGradient>
+    <radialGradient id="headLight" cx="256" cy="150" r="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0dbbfa" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Resplandor sutil detrás de la cabeza -->
+  <circle cx="256" cy="170" r="140" fill="url(#headLight)"/>
+
+  <!-- Torso, hombros y cuerpo atlético -->
+  <path d="M80 560 C80 410, 140 330, 216 305 L216 260 C200 250, 190 230, 190 200 L190 170 C180 160, 185 140, 195 138 C190 110, 205 75, 230 65 C245 58, 275 58, 292 68 C315 80, 325 110, 320 138 C330 140, 335 160, 325 170 L325 200 C325 230, 315 250, 296 260 L296 305 C372 330, 432 410, 432 560 Z"
+        fill="url(#bodyGrad)"
+        stroke="url(#rimGrad)"
+        stroke-width="2.5"
+        stroke-linejoin="round"/>
+
+  <!-- Cuello deportivo en V con ribete de luz -->
+  <path d="M216 295 C236 335, 276 335, 296 295"
+        stroke="url(#collarGrad)"
+        stroke-width="3"
+        stroke-linecap="round"
+        fill="#041a2c"/>
+
+  <!-- Costuras y líneas de hombros atléticas -->
+  <path d="M170 360 C195 385, 215 440, 220 560"
+        stroke="rgba(81, 196, 255, 0.2)"
+        stroke-width="1.8"
+        stroke-dasharray="6 6"/>
+  <path d="M342 360 C317 385, 297 440, 292 560"
+        stroke="rgba(81, 196, 255, 0.2)"
+        stroke-width="1.8"
+        stroke-dasharray="6 6"/>
+
+  <!-- Destello de contorno en la coronilla / cabello -->
+  <path d="M210 110 C218 78, 250 64, 285 70 C305 74, 316 88, 318 105"
+        stroke="#00dfa0"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-opacity="0.75"/>
+
+  <!-- Detalle sutil en el pecho (logo técnico minimalista) -->
+  <path d="M250 375 L256 368 L262 375 L256 382 Z" fill="#0dbbfa" fill-opacity="0.35" stroke="#0dbbfa" stroke-width="1"/>
+</svg>

@@ -1,0 +1,87 @@
+@use "@/styles/abstracts" as ds;
+
+.holdingBadge {
+	display: flex;
+	align-items: center;
+}
+
+.pillAvailable {
+	font-size: 10.5px;
+	font-weight: 750;
+	color: ds.$accent-gain;
+	background: rgba(0, 223, 160, 0.14);
+	border: 1px solid rgba(0, 223, 160, 0.35);
+	padding: 3px 8px;
+	border-radius: 12px;
+	letter-spacing: 0.02em;
+}
+
+.pillReserved {
+	font-size: 10.5px;
+	font-weight: 700;
+	color: ds.$state-caution;
+	background: rgba(245, 158, 11, 0.14);
+	border: 1px solid rgba(245, 158, 11, 0.3);
+	padding: 3px 8px;
+	border-radius: 12px;
+}
+
+.statLabel {
+	font-size: 9.5px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: ds.$text-muted-on-dark;
+	display: block;
+}
+
+.statValRow {
+	display: flex;
+	align-items: baseline;
+	gap: 5px;
+	flex-wrap: wrap;
+}
+
+.statValue {
+	font-size: 13.5px;
+	font-weight: 800;
+	color: ds.$text-title-on-dark;
+
+	&_available {
+		color: ds.$accent-gain;
+	}
+}
+
+.libresBadge {
+	font-size: 9.5px;
+	font-weight: 700;
+	color: ds.$accent-gain;
+	background: rgba(0, 223, 160, 0.12);
+	padding: 1px 5px;
+	border-radius: 4px;
+}
+
+.variationBadge {
+	font-size: 9.5px;
+	font-weight: 750;
+	padding: 1px 4px;
+	border-radius: 4px;
+
+	&_gain {
+		color: ds.$accent-gain;
+		background: rgba(0, 223, 160, 0.12);
+	}
+
+	&_loss {
+		color: ds.$state-negative;
+		background: rgba(239, 68, 68, 0.12);
+	}
+}
+
+.statSub {
+	font-size: 9px;
+	color: ds.$text-muted-on-dark;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.2;
+}

@@ -1,6 +1,5 @@
 import type { RefObject } from "react";
 import type { UseFormRegister } from "react-hook-form";
-import MarketPlayerSummary from "@/features/market/components/MarketPlayerSummary";
 import TokenQuantityStepper from "@/features/market/components/TokenQuantityStepper";
 import type {
 	BuyEstimation,
@@ -9,14 +8,16 @@ import type {
 	OfficialMarketPlayer,
 	OfficialMarketQuote,
 } from "@/features/market/types";
-import {
-	formatCredits,
-	formatQuoteEffectiveDate,
-	formatVariationPercentage,
-} from "@/features/market/utils";
-import { Button, Modal } from "@/shared/components";
-import { LoaderCircle, ShoppingCart, X } from "@/shared/icons";
+import { Modal } from "@/shared/components";
 import styles from "./BuyTokenModal.module.scss";
+import {
+	BuyModalFooter,
+	BuyModalHeader,
+	BuyModalHeroCard,
+	BuyModalOfficialBanner,
+	BuyModalOfficialEstimation,
+	BuyModalSuccess,
+} from "./components";
 
 interface Props {
 	isOpen: boolean;
@@ -38,11 +39,6 @@ interface Props {
 	triggerRef?: RefObject<HTMLElement | null>;
 	initialFocusRef?: RefObject<HTMLInputElement | null>;
 }
-
-const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
-	dateStyle: "short",
-	timeStyle: "short",
-});
 
 export default function BuyTokenModal({
 	isOpen,
@@ -74,8 +70,13 @@ export default function BuyTokenModal({
 	};
 	const numericQuantity = Number(quantity);
 	const safeQuantity = Number.isInteger(numericQuantity) ? numericQuantity : 1;
+	const totalCentimes = estimation
+		? estimation.totalCentimes
+		: quote.price * safeQuantity;
+
 	return (
 		<Modal
+			className={styles.dialog}
 			isOpen={isOpen}
 			onClose={onClose}
 			title={`Comprar tokens de ${player.name}`}
@@ -85,125 +86,90 @@ export default function BuyTokenModal({
 			triggerRef={triggerRef}
 			initialFocusRef={initialFocusRef as RefObject<HTMLElement | null>}
 		>
-			<div className={styles.modal}>
-				<header className={styles.modal__header}>
-					<h3 className={styles.modal__title}>Comprar tokens</h3>
-					<Button
-						unstyled
-						type="button"
-						aria-label="Cerrar compra"
-						onClick={onClose}
-						disabled={isBusy}
-					>
-						<X aria-hidden="true" />
-					</Button>
-				</header>
+			<section
+				className={styles.modal}
+				aria-label={`Comprar tokens de ${player.name}`}
+			>
+				<BuyModalHeader
+					playerName={player.name}
+					isBusy={isBusy}
+					onClose={onClose}
+				/>
+
 				<div className={styles.modal__content}>
-					<section aria-label="Jugador seleccionado">
-						<MarketPlayerSummary player={player} />
-					</section>
-					<dl className={styles.modal__prices}>
-						<div>
-							<dt>Precio actual</dt>
-							<dd>{formatCredits(quote.price)}</dd>
+					<div className={styles.modal__grid}>
+						{/* Columna Izquierda: Ficha Hero del Jugador */}
+						<div className={styles.modal__heroCol}>
+							<BuyModalHeroCard player={player} quote={quote} />
 						</div>
-						<div>
-							<dt>Variación</dt>
-							<dd>
-								{formatVariationPercentage(
-									quote.variationPercentage,
-									"Sin referencia previa",
-								)}
-							</dd>
-						</div>
-						<div>
-							<dt>Precio anterior</dt>
-							<dd>{formatCredits(quote.previousPrice)}</dd>
-						</div>
-						<div>
-							<dt>Vigencia</dt>
-							<dd>{formatQuoteEffectiveDate(quote.effectiveDate)}</dd>
-						</div>
-					</dl>
-					{errorMessage && !isSuccess && (
-						<p role="alert" className={styles.modal__errorAlert}>
-							{errorMessage}
-						</p>
-					)}
-					{isSuccess && purchaseResult ? (
-						<div role="status" className={styles.modal__successCard}>
-							<h4>Compra confirmada</h4>
-							<p>Transacción #{purchaseResult.transactionId}</p>
-							<p>
-								{purchaseResult.quantity} tokens ·{" "}
-								{formatCredits(purchaseResult.unitPrice)} por token
-							</p>
-							<p>Total: {formatCredits(purchaseResult.totalAmount)}</p>
-							<p>
-								{dateTimeFormatter.format(new Date(purchaseResult.executedAt))}
-							</p>
-						</div>
-					) : (
-						<form
-							onSubmit={(event) => {
-								event.preventDefault();
-								onConfirm();
-							}}
-							className={styles.modal__form}
-						>
-							<TokenQuantityStepper
-								id="buy-token-quantity"
-								label="Cantidad de tokens (1 a 100)"
-								quantity={safeQuantity}
-								min={1}
-								max={100}
-								disabled={isBusy}
-								error={formError}
-								inputRef={setInputRef}
-								inputProps={quantityProps}
-								presets={[1, 5, 10, 50, 100]}
-								onQuantityChange={onQuantityChange}
-							/>
-							{estimation && (
-								<div className={styles.modal__estimation}>
-									<p>
-										Importe estimado:{" "}
-										<strong>{formatCredits(estimation.totalCentimes)}</strong>
-									</p>
-									<p>
-										El servidor confirma precio y disponibilidad al comprar.
-									</p>
-								</div>
+
+						{/* Columna Derecha: Consola de Compra */}
+						<div className={styles.modal__formCol}>
+							<BuyModalOfficialBanner />
+
+							{errorMessage && !isSuccess && (
+								<p role="alert" className={styles.modal__errorAlert}>
+									{errorMessage}
+								</p>
 							)}
-						</form>
-					)}
-				</div>
-				{confirmationBlockReason && !isSuccess && (
-					<p id="market-buy-block-reason" role="status">
-						{confirmationBlockReason}
-					</p>
-				)}
-				<footer className={styles.modal__footer}>
-					<Button type="button" onClick={onClose} disabled={isBusy}>
-						{isSuccess ? "Cerrar" : "Cancelar"}
-					</Button>
-					{!isSuccess && (
-						<Button
-							type="button"
-							onClick={onConfirm}
-							disabled={!canConfirm || isBusy}
-							aria-busy={isBusy}
-						>
-							{isBusy ? (
-								<LoaderCircle aria-hidden="true" />
+
+							{isSuccess && purchaseResult ? (
+								<BuyModalSuccess
+									player={player}
+									purchaseResult={purchaseResult}
+								/>
 							) : (
-								<ShoppingCart aria-hidden="true" />
+								<form
+									onSubmit={(event) => {
+										event.preventDefault();
+										onConfirm();
+									}}
+									className={styles.modal__form}
+								>
+									<TokenQuantityStepper
+										id="buy-token-quantity"
+										label="Cantidad de tokens a comprar (1 a 100)"
+										quantity={safeQuantity}
+										min={1}
+										max={100}
+										disabled={isBusy}
+										error={formError}
+										inputRef={setInputRef}
+										inputProps={quantityProps}
+										presets={[1, 5, 10, 50, 100]}
+										onQuantityChange={onQuantityChange}
+									/>
+
+									<BuyModalOfficialEstimation
+										quote={quote}
+										quantity={safeQuantity}
+										totalCentimes={totalCentimes}
+									/>
+								</form>
 							)}
-							{isBusy ? "Procesando…" : "Confirmar compra"}
-						</Button>
-					)}
-				</footer>
-			</div>
+
+							{confirmationBlockReason && !isSuccess && (
+								<p
+									id="market-buy-block-reason"
+									role="status"
+									className={styles.modal__blockReason}
+								>
+									{confirmationBlockReason}
+								</p>
+							)}
+						</div>
+					</div>
+				</div>
+
+				<BuyModalFooter
+					isSuccess={isSuccess}
+					isBusy={isBusy}
+					canConfirm={canConfirm}
+					totalCentimes={totalCentimes}
+					onClose={onClose}
+					onConfirm={onConfirm}
+				/>
+			</section>
 		</Modal>
 	);
 }

@@ -139,6 +139,25 @@ export interface OfficialMarketPageResponseDTO {
 export interface OrderSellRequestDTO {
 	playerId: number;
 	quantity: number;
+	unitPrice?: number;
+}
+
+export interface OrderSellOfficialRequestDTO {
+	playerId: number;
+	quantity: number;
+}
+
+export interface OrderSellOfficialResponseDTO {
+	transactionId: number;
+	buyerId: number;
+	sellerId: number;
+	playerId: number;
+	quantity: number;
+	quotePrice: number;
+	discountPercentage: number;
+	unitPrice: number;
+	totalAmount: number;
+	executedAt: string;
 }
 
 export interface OrderSellResponseDTO {

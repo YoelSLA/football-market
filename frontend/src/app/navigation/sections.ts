@@ -2,7 +2,6 @@ import type { NavSection } from "@/shared/components";
 import {
 	BarChart3,
 	FileText,
-	LayoutDashboard,
 	Package,
 	Puzzle,
 	ShoppingCart,
@@ -27,14 +26,7 @@ export const NAV_SECTIONS: NavSection[] = [
 		label: "Inicio",
 		icon: "home",
 		path: "/home",
-		tabs: [
-			{
-				key: "home-dashboard",
-				label: "Dashboard",
-				icon: LayoutDashboard,
-				path: "/home",
-			},
-		],
+		tabs: [],
 	},
 	{
 		key: "players",

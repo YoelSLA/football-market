@@ -1,0 +1,60 @@
+@use "@/styles/abstracts" as ds;
+
+.estimationSlot {
+	min-height: 240px;
+	height: 240px;
+	display: flex;
+	flex-direction: column;
+}
+
+.estimation {
+	@include ds.operation-estimation-card;
+}
+
+.estimationHeader {
+	@include ds.operation-estimation-header;
+}
+
+.estimationBody {
+	@include ds.operation-estimation-body;
+}
+
+.detailRow {
+	@include ds.operation-breakdown-row;
+}
+
+.zeroFee {
+	color: ds.$accent-gain !important;
+	font-weight: 700 !important;
+}
+
+.detailDivider {
+	@include ds.operation-estimation-divider;
+}
+
+.totalRow {
+	@include ds.operation-breakdown-total;
+}
+
+.totalHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.totalLabel {
+	font-size: 12.5px;
+	font-weight: 750;
+	color: ds.$text-title-on-dark;
+}
+
+.totalDisclaimer {
+	font-size: 10px;
+	color: ds.$text-muted-on-dark;
+	margin: 0;
+	line-height: 1.3;
+}
+
+.totalAmount {
+	@include ds.operation-estimation-total-amount;
+}

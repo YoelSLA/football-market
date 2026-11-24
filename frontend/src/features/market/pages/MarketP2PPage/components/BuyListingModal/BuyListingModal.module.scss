@@ -1,0 +1,30 @@
+@use "@/styles/abstracts" as ds;
+
+.dialog {
+	--modal-custom-max-width: 560px;
+	width: min(560px, calc(100vw - 2rem));
+	background-color: ds.$surface-panel-to;
+	color: ds.$text-title-on-dark;
+}
+
+.modal {
+	--market-player-summary-gap: 12px;
+	--market-player-summary-height: auto;
+	--market-player-portrait-width: 68px;
+	--market-player-portrait-height: 72px;
+
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 0;
+
+	&__player {
+		min-width: 0;
+		min-height: 94px;
+		margin-inline: 16px;
+		padding: 10px 12px;
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.55rem;
+		background-color: ds.$surface-panel-from;
+	}
+}

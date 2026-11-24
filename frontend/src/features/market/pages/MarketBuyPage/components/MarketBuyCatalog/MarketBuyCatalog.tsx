@@ -1,10 +1,14 @@
 import MarketCatalogState from "@/features/market/components/MarketCatalogState";
 import MarketPlayerCardSkeleton from "@/features/market/components/MarketPlayerCardSkeleton";
+import { OFFICIAL_MARKET_DEFAULT_PAGE_SIZE } from "@/features/market/constants";
 import type { OfficialMarketPlayer } from "@/features/market/types";
 import MarketPlayerCard from "../MarketPlayerCard";
 import styles from "./MarketBuyCatalog.module.scss";
 
-const SKELETON_ITEMS = Array.from({ length: 8 }, (_, index) => index);
+const SKELETON_ITEMS = Array.from(
+	{ length: OFFICIAL_MARKET_DEFAULT_PAGE_SIZE },
+	(_, index) => index,
+);
 
 interface Props {
 	isLoading: boolean;
