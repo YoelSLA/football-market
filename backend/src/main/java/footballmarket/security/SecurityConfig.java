@@ -19,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -64,11 +66,6 @@ public class SecurityConfig {
   /**
    * Define autorización, CSRF y autenticación Bearer de la API.
    *
-   * <p>Los endpoints de monitoreo de Actuator quedan accesibles sin token para el diagnóstico
-   * local. La lista es explícita y no cubre {@code /actuator/**} completo, de modo que exponer por
-   * error un endpoint sensible no lo volvería accesible. Esa condición es temporal y está
-   * registrada como deuda técnica en docs/backend/technologies.md.
-   *
    * @param http configurador de seguridad HTTP
    * @param identityValidator validador de identidad persistida
    * @return cadena de filtros configurada
@@ -76,6 +73,12 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http, PersistedIdentityValidator identityValidator) {
+    BearerTokenResolver defaultBearerTokenResolver = new DefaultBearerTokenResolver();
+    BearerTokenResolver bearerTokenResolver =
+        request ->
+            (request.getContextPath() + "/actuator/prometheus").equals(request.getRequestURI())
+                ? null
+                : defaultBearerTokenResolver.resolve(request);
     AccessDeniedHandler accessDeniedHandler =
         (request, response, exception) -> {
           if (HttpMethod.POST.name().equals(request.getMethod())
@@ -98,18 +101,13 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                     .permitAll()
-                    // Monitoreo de Actuator. El health check no muestra detalle interno porque
-                    // show-details es `never`; las métricas solo responden si el entorno las
-                    // habilitó de forma explícita.
-                    .requestMatchers(
-                        "/actuator",
-                        "/actuator/health",
-                        "/actuator/health/**",
-                        "/actuator/info",
-                        "/actuator/info/**",
-                        "/actuator/metrics",
-                        "/actuator/metrics/**")
+                    // Solo se permite anónimamente el acceso a los endpoints de monitoreo
+                    // acordados.
+                    .requestMatchers("/actuator/prometheus", "/actuator/health", "/actuator/info")
                     .permitAll()
+                    // Bloquea la raíz, subendpoints y cualquier otro endpoint de Actuator.
+                    .requestMatchers("/actuator", "/actuator/**")
+                    .denyAll()
                     // Estadísticas WhoScored: mismas condiciones que las sincronizaciones
                     // del catálogo. El JWT protege la API propia y nunca se propaga al proveedor.
                     .requestMatchers(
@@ -125,6 +123,9 @@ public class SecurityConfig {
         .oauth2ResourceServer(
             oauth2 ->
                 oauth2
+                    // Prometheus ignora cualquier Bearer: credenciales inválidas no deben cambiar
+                    // el comportamiento de este endpoint público. El resto de la API mantiene JWT.
+                    .bearerTokenResolver(bearerTokenResolver)
                     .accessDeniedHandler(accessDeniedHandler)
                     .jwt(
                         jwt ->
