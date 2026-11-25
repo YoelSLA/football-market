@@ -1,143 +1,115 @@
-# Feature Specification: [FEATURE NAME]
+# Feature Specification: Caché de consultas frecuentes del backend
 
-<!-- MUST seguir Constitution (§V) y docs/development/sdd-workflow.md.
-Documentación viva: este documento describe exclusivamente el comportamiento funcional
-vigente y aprobado del sistema. El historial de cambios, decisiones superadas y requisitos
-derogados se delega íntegramente a Git; queda prohibido acumular secciones de antecedentes
-históricos o revisiones pasadas en este archivo. Forma parte de la tríada permanente
-obligatoria junto a plan.md y tasks.md.
-Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
-manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,
-no de épicas REQ. La existencia de este archivo no completa Specify ni habilita Ready. -->
+**Feature Branch**: `feat/034-high-frequency-query-caching`
 
-**Feature Branch**: `[<type>/<spec-id>-<scope>]` — rama Git de la feature. El directorio de esta spec usa el nombre de spec, `<spec-id>-<scope>`, sin el prefijo de tipo. La convención de ramas es normativa; ver la constitución §7. El `<scope>` va en inglés, con independencia del idioma de la descripción de origen.
+**Created**: 2026-11-25
 
-**Created**: [DATE]
+**Status**: Ready for planning
 
-**Status**: Draft
-
-<!-- Estados y criterios de transición: ../../specs/README.md. -->
-
-**Input**: User description: "$ARGUMENTS"
+**Input**: REQ-S3-04, issue #101: reducir la latencia de las consultas frecuentes del ranking, el catálogo de jugadores y los mercados oficial y P2P, evitando consultas redundantes y pesadas a PostgreSQL. Definir una caché de backend con Spring Cache y Caffeine en memoria, claves determinísticas que consideren filtros y paginación y, para P2P, el usuario consultante (`viewerId`); TTL y tamaños máximos acordes con la volatilidad, con aproximadamente 10 segundos para P2P; invalidación al terminar el recálculo de cotizaciones y al completar una sincronización de jugadores; consistencia ante mutaciones de mercado incluidas en el alcance; fallback a PostgreSQL ante ausencia, expiración o reinicio, sin errores ni cambios en los contratos. Incluir `GET /api/rankings/score`, `GET /api/players/filters`, `GET /api/players`, `GET /api/players/{id}`, `GET /api/market/official` y `GET /api/market/p2p`. Excluir endpoints transaccionales, consultas personales en tiempo real y caché distribuida con Redis.
 
 ## User Scenarios & Testing *(mandatory)*
 
-<!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
+### User Story 1 - Consultar rankings y jugadores (Priority: P1)
 
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
--->
+Como usuario que consulta el ranking o el catálogo, quiero reutilizar resultados de consultas equivalentes mientras sus datos sigan vigentes, para evitar lecturas repetidas y pesadas sin perder la correspondencia entre los filtros solicitados y los resultados.
 
-### User Story 1 - [Brief Title] (Priority: P1)
+**Why this priority**: El ranking y el catálogo son las consultas de lectura identificadas por REQ-S3-04 y constituyen el núcleo del alcance.
 
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: Consultar repetidamente cada endpoint con la misma selección efectiva y comprobar que la respuesta se conserva y que las variantes de filtros o página no reutilizan resultados ajenos.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** que no existe un resultado vigente para una consulta, **When** el cliente consulta el ranking, los filtros del catálogo, una página del catálogo o el detalle de un jugador, **Then** el sistema obtiene el resultado desde PostgreSQL y lo hace disponible para consultas equivalentes posteriores.
+2. **Given** un resultado vigente de una consulta filtrada y paginada, **When** se repite esa consulta, **Then** se entrega el resultado correspondiente a esa combinación exacta, sin sustituirlo por el de otros filtros, ordenamientos o páginas.
+3. **Given** dos consultas cuyos filtros, paginación u otros parámetros que determinan la respuesta difieren, **When** se ejecutan, **Then** cada una se resuelve con su propio resultado correcto.
 
 ---
 
-### User Story 2 - [Brief Title] (Priority: P2)
+### User Story 2 - Consultar mercados con datos pertinentes al usuario (Priority: P1)
 
-[Describe this user journey in plain language]
+Como usuario del mercado oficial o P2P, quiero recibir resultados vigentes para la consulta solicitada y para mi identidad cuando corresponda, para que la reutilización no muestre información personalizada de otro usuario.
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: Los datos del mercado pueden cambiar y P2P depende del usuario que consulta.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Repetir consultas idénticas de ambos mercados y comparar consultas P2P realizadas por distintos `viewerId`, verificando que cada respuesta corresponde a su endpoint y contexto.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** una consulta P2P con resultado vigente para un `viewerId`, **When** el mismo usuario repite los mismos parámetros, **Then** recibe el resultado asociado a su consulta.
+2. **Given** dos usuarios distintos que consultan los mismos parámetros P2P, **When** sus consultas se resuelven, **Then** la identidad de cada usuario distingue los resultados y ninguno recibe el resultado personalizado del otro.
+3. **Given** resultados de consultas oficiales o P2P con parámetros diferentes, **When** se repiten las solicitudes, **Then** se devuelve el resultado de la combinación de parámetros correspondiente.
 
 ---
 
-### User Story 3 - [Brief Title] (Priority: P3)
+### User Story 3 - Mantener lecturas coherentes tras cambios y recuperar datos faltantes (Priority: P1)
 
-[Describe this user journey in plain language]
+Como usuario de la plataforma, quiero que las consultas reflejen los recálculos, sincronizaciones y mutaciones de mercado completados, y que sigan funcionando si la caché está vacía, expirada o reiniciada.
 
-**Why this priority**: [Explain the value and why it has this priority level]
+**Why this priority**: La reutilización de resultados no debe sustituir datos actualizados ni impedir que una lectura se atienda desde la fuente persistente.
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: Precargar resultados, completar cada operación de actualización correspondiente y volver a consultar; además, consultar con caché fría, expirada o reiniciada y verificar una respuesta normal de PostgreSQL.
 
 **Acceptance Scenarios**:
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
+1. **Given** resultados cacheados de ranking y mercado oficial, **When** termina correctamente un recálculo de cotizaciones, **Then** las siguientes consultas a dichos endpoints se resuelven con datos posteriores al recálculo.
+2. **Given** resultados cacheados del catálogo, **When** termina correctamente una sincronización de jugadores, **Then** las siguientes consultas de filtros, listado y detalle se resuelven con datos posteriores a la sincronización.
+3. **Given** resultados cacheados de mercado, **When** se completa una mutación existente que altera los datos expuestos por un endpoint de mercado, **Then** las siguientes consultas afectadas no devuelven el resultado anterior a esa mutación.
+4. **Given** que el resultado no está en caché, expiró o se reinició el proceso, **When** se consulta cualquiera de los endpoints incluidos, **Then** se consulta PostgreSQL y se conserva la respuesta y el comportamiento HTTP existentes.
 
----
+## Edge Cases
 
-[Add more user stories as needed, each with an assigned priority]
-
-### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+- Claves para peticiones con valores por defecto explícitos o implícitos: parámetros equivalentes según el contrato vigente deben identificar la misma consulta efectiva.
+- Respuestas de página vacía y resultados de filtros sin opciones deben conservar su respuesta actual y poder volver a obtenerse desde PostgreSQL tras una ausencia, expiración o reinicio.
+- Dos solicitudes concurrentes de la misma clave no deben provocar que una respuesta asociada a filtros, página o usuario diferente se entregue al solicitante.
+- Un fallo antes de que una operación de recálculo, sincronización o mutación se complete no debe presentarse como una actualización completada; la invalidación de esa operación se produce tras su finalización correcta.
 
 ## Requirements *(mandatory)*
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
-
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-001**: El backend MUST aplicar una caché local en memoria mediante Spring Cache y Caffeine a las lecturas de `GET /api/rankings/score`, `GET /api/players/filters`, `GET /api/players`, `GET /api/players/{id}`, `GET /api/market/official` y `GET /api/market/p2p`.
+- **FR-002**: Las claves MUST ser determinísticas y distinguir toda entrada que pueda cambiar el resultado de la respuesta. Para listados y mercados paginados MUST incluir los filtros efectivos, la paginación y los demás parámetros de consulta que alteren el resultado; los filtros del catálogo MUST considerar sus criterios efectivos. La consulta de detalle MUST distinguir el identificador del jugador.
+- **FR-003**: La clave P2P MUST incluir el `viewerId` autenticado además de todos los parámetros que determinan el resultado. La identidad MUST obtenerse del contexto autenticado existente, no de un valor de cliente que permita atribuir la respuesta a otro usuario.
+- **FR-004**: La política inicial de duración y límite máximo de entradas MUST ser la siguiente, con cachés diferenciadas por tipo de dato:
 
-*Example of marking unclear requirements:*
+  | Consulta | Duración máxima | Máximo de entradas |
+  | --- | ---: | ---: |
+  | Ranking por score | 5 minutos | 128 |
+  | Filtros del catálogo | 60 minutos | 1 |
+  | Listado de jugadores | 5 minutos | 256 |
+  | Detalle de jugador | 30 minutos | 1.024 |
+  | Mercado oficial | 1 minuto | 128 |
+  | Mercado P2P | 10 segundos | 1.024 |
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-005**: Al completar correctamente un recálculo de cotizaciones, el sistema MUST invalidar los resultados cacheados del ranking por score y del mercado oficial antes de que nuevas consultas puedan reutilizarlos.
+- **FR-006**: Al completar correctamente una sincronización de jugadores, el sistema MUST invalidar los resultados cacheados de filtros, listado y detalle del catálogo.
+- **FR-007**: Cuando una mutación de mercado existente y exitosa cambie información expuesta por `GET /api/market/official` o `GET /api/market/p2p`, el sistema MUST invalidar el conjunto afectado de resultados de lectura para que las solicitudes posteriores no reutilicen el estado anterior. La invalidación MUST ocurrir después de que la mutación se complete correctamente. Esta exigencia no incorpora endpoints transaccionales al alcance ni altera sus contratos.
+- **FR-008**: Ante una ausencia de resultado cacheado, expiración o reinicio del proceso, el sistema MUST resolver la consulta desde PostgreSQL y entregar la respuesta según el contrato HTTP vigente, sin requerir una inicialización o recuperación manual de la caché.
+- **FR-009**: La caché MUST ser local al backend; Redis y cualquier caché distribuida quedan fuera del alcance.
+- **FR-010**: La incorporación de caché MUST mantener los contratos existentes de los seis endpoints: ruta, parámetros, formato y significado de respuesta, autenticación, códigos y comportamiento de errores. La caché no MUST incorporar consultas personales de datos en tiempo real.
 
 ### Key Entities *(include if feature involves data)*
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **Consulta cacheable**: resultado de uno de los seis endpoints junto con los parámetros efectivos que identifican inequívocamente la consulta; para P2P incluye además el `viewerId`.
+- **Resultado de catálogo**: opciones de filtro, página de jugadores o detalle individual, con la vigencia acotada por su política y por la finalización de una sincronización.
+- **Resultado de mercado**: respuesta oficial o P2P, con vigencia acotada por su política y por las operaciones de actualización que afectan sus datos.
+- **Evento de actualización**: finalización exitosa de un recálculo, una sincronización o una mutación de mercado que requiere invalidar resultados de lectura dependientes.
 
 ## Success Criteria *(mandatory)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: Para cada uno de los seis endpoints, una consulta repetida con la misma clave durante su vigencia devuelve el resultado de esa misma combinación; cambiar cualquier criterio que determine la respuesta no devuelve el resultado de la combinación anterior.
+- **SC-002**: En verificaciones de ciclo de vida, las consultas posteriores a un recálculo, sincronización o mutación de mercado completados correctamente no muestran los resultados que precedían al evento para los conjuntos de datos afectados.
+- **SC-003**: Para cada uno de los seis endpoints, una consulta con caché ausente, expirada o reiniciada obtiene la respuesta desde PostgreSQL y conserva el contrato HTTP vigente.
+- **SC-004**: Dos consultas P2P con parámetros iguales y distinto `viewerId` quedan separadas; no se entrega a un usuario el resultado personalizado del otro.
+- **SC-005**: Cada caché mantiene sus entradas dentro del límite máximo y duración especificados en FR-004, incluida la duración aproximada de 10 segundos para P2P.
 
 ## Assumptions
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right assumptions based on reasonable defaults
-  chosen when the feature description did not specify certain details.
--->
-
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- Los valores de TTL y límites de FR-004 son valores iniciales funcionales para esta feature, elegidos según la volatilidad relativa de los datos. No representan objetivos cuantitativos de latencia, tasa de aciertos o reducción porcentual de consultas.
+- La equivalencia de parámetros se determina por los valores efectivos conforme a los valores por defecto y reglas del contrato existente. No se cambia la interpretación de esos parámetros.
+- Las operaciones existentes que recalculan cotizaciones, sincronizan jugadores o mutan el mercado son responsables de notificar la invalidación correspondiente únicamente tras su finalización correcta. La especificación cubre ese efecto sobre las lecturas, no la implementación de dichas operaciones ni sus endpoints transaccionales.
+- La expiración es un límite máximo de reutilización; las invalidaciones explícitas pueden retirar resultados antes de dicho límite.
+- La caché no es persistente: al iniciar o reiniciar el backend, los resultados se reconstruyen consultando PostgreSQL.
