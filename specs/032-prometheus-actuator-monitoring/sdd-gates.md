@@ -112,3 +112,46 @@
 
 - El usuario confirmó que las pruebas de T005 también pasaron.
 - Se marca T005 como completada. No se ejecutaron tests por el agente ni se modificó el seguimiento remoto; la confirmación de tareas no constituye por sí sola aprobación del gate general de TESTING ni cierre de la Feature.
+
+## ANALYZE — 2026-11-24 — cobertura de variantes JWT en T004
+
+- **Ejecución**: `/speckit.analyze` sobre los artefactos locales vigentes de SPEC-032, después de actualizar T004 para incluir solicitudes a `/actuator/prometheus` con JWT ausente, válido, vencido o inválido.
+- **Prerrequisitos**: `check-prerequisites.sh --json --require-tasks --include-tasks` resolvió `specs/032-prometheus-actuator-monitoring` y encontró `research.md`, `data-model.md`, `contracts/`, `quickstart.md` y `tasks.md`.
+- **Resultado**: sin hallazgos ni blockers. Se inventariaron 13 requisitos y criterios y 6 tareas; cobertura asociada 100%, sin tareas huérfanas, ambigüedades ni duplicaciones. FR-004 queda explícitamente cubierto por T004.
+- **Constitución**: sin conflictos detectados.
+- **Checklists y contrato**: los criterios de acceso público y las variantes JWT son consistentes con la especificación y el contrato HTTP.
+- **Hooks y verificación**: `.specify/extensions.yml` no existe; no había hooks `before_analyze` ni `after_analyze`. No se ejecutaron tests ni builds.
+- **Status de la spec**: observado `Ready for planning`; no se modificó durante ANALYZE.
+- **Seguimiento remoto**: PENDING / no verificado. Este registro es evidencia local y no afirma sincronización con GitHub Issues o Projects.
+- **Alcance**: no se ejecutaron fases posteriores ni se concede autorización de implementación, revisión, testing o cierre.
+
+## IMPLEMENT AUTHORIZATION — 2026-11-24 — acceso público a Prometheus
+
+- **Autorizó**: usuario, mediante instrucción explícita en la sesión activa.
+- **Alcance autorizado**: tareas T002–T005 que quedaron desmarcadas tras actualizar la spec para que Prometheus sea público y para comprobar que el JWT no modifica su respuesta.
+- **Evidencia comparativa**: instrucción del usuario «tenes mi autorizacion para implementar/actualizar las tasks que quedaron desmarcadas», recibida el 2026-11-24; `spec.md`, `plan.md`, `contracts/`, checklist de monitoreo y `tasks.md` locales vigentes.
+- **Límites**: no alterar la seguridad de endpoints de dominio, no ejecutar tests, no avanzar a CODE REVIEW/TESTING/CONVERGE ni modificar el seguimiento remoto; sin commit ni push.
+- **Vigencia**: habilita únicamente IMPLEMENT de ese alcance.
+
+## IMPLEMENT — acceso público a Prometheus — 2026-11-24
+
+- T002 queda completada: se verificó que `application.yml` limita la exposición a `prometheus,health,info`, mantiene health sin detalles/componentes y publica los dos valores acordados en info.
+- T003 queda completada: se permitió anónimamente solo las rutas exactas acordadas y se configuró el resolver Bearer para ignorar el JWT exclusivamente en `/actuator/prometheus`; las demás rutas de dominio conservan el procesamiento JWT.
+- Se actualizaron T004 y T005: T004 compara las familias métricas para solicitudes sin JWT, con JWT válido, vencido e inválido; T005 comprueba Prometheus anónimo, el contenido exacto de info, endpoints Actuator no permitidos con identidad y el rechazo anónimo de una ruta de dominio protegida.
+- Verificación: `./gradlew build -x test` terminó con `BUILD SUCCESSFUL`; Spotless y clasificación estática pasaron. La primera ejecución había detectado solo formato Java, corregido antes de la ejecución exitosa. El build no compila ni ejecuta necesariamente las suites de tests y no acredita su comportamiento.
+- T004 y T005 permanecen desmarcadas hasta que el usuario ejecute las dos suites actualizadas. No se ejecutaron tests, CODE REVIEW, CONVERGE ni se modificó el seguimiento remoto.
+
+## TESTING — fallo reportado por el usuario — 2026-11-25 — JWT expirado en Prometheus
+
+- El usuario reportó que `ActuatorMetricsHttpIntegrationTest.devuelveMetricasIgualesConCualquierEstadoDeJwt` recibió `401` al consultar `/actuator/prometheus` con JWT vencido, aunque las solicitudes sin JWT y con JWT válido respondieron `200`.
+- La causa era identificar la ruta del resolver con `HttpServletRequest.getServletPath()`, que en el contexto del endpoint Actuator reportado no coincidía con `/actuator/prometheus`; el resolver delegaba entonces al extractor Bearer estándar.
+- Se cambió la comparación a `getRequestURI()` frente al path exacto compuesto por `getContextPath()` y `/actuator/prometheus`. El bypass continúa limitado a ese endpoint exacto; cualquier otra ruta conserva el resolver estándar.
+- Se sincronizó `docs/backend/technologies.md` con el acceso público vigente y la regla de ignorar JWT.
+- Verificación: `./gradlew build -x test` finalizó con `BUILD SUCCESSFUL`; Spotless y la clasificación estática pasaron. `git diff --check` no reportó errores.
+- No se ejecutaron tests. T004 y T005 siguen desmarcadas; el usuario debe volver a ejecutar las suites actualizadas. No se modificó el seguimiento remoto ni se avanzó de gate.
+
+## TESTING — confirmación del usuario — 2026-11-25 — suites actualizadas
+
+- El usuario confirmó que pasaron `ActuatorMetricsHttpIntegrationTest` y `ActuatorMonitoringSecurityIntegrationTest` después de la corrección del resolver Bearer.
+- Se marcan T004 y T005 como completadas conforme a los resultados aportados por el usuario.
+- El agente no ejecutó tests. Esta confirmación de resultados no se registra como aprobación del gate general de TESTING ni como autorización de cierre de la Feature; no se modificó el seguimiento remoto.

@@ -34,29 +34,14 @@ class ActuatorMonitoringSecurityIntegrationTest {
   @Autowired private AuthenticationService authenticationService;
 
   @Nested
-  @DisplayName("Autenticación de Prometheus")
-  class PrometheusAuthentication {
+  @DisplayName("Acceso público a Prometheus")
+  class PublicPrometheus {
     @Test
-    @DisplayName("Rechaza solicitudes anónimas y con token inválido")
-    void rechazaSolicitudesAnonimasYTokensInvalidos() throws Exception {
+    @DisplayName("Permite consultar las métricas sin autenticación")
+    void permiteConsultaAnonima() throws Exception {
       mvc.perform(get("/actuator/prometheus"))
-          .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""));
-
-      mvc.perform(get("/actuator/prometheus").header("Authorization", "Bearer invalid-token"))
-          .andExpect(status().isUnauthorized())
-          .andExpect(content().string(""));
-    }
-
-    @Test
-    @DisplayName("Permite Prometheus a cualquier identidad con JWT válido")
-    void permiteAccederAIdentidadesAutenticadas() throws Exception {
-      User user = new User("monitoring.security", "monitoring-security@test.com", "password123");
-      authenticationService.register(user);
-      String token = authenticationService.login(user.getEmail(), "password123");
-
-      mvc.perform(get("/actuator/prometheus").header("Authorization", "Bearer " + token))
-          .andExpect(status().isOk());
+          .andExpect(status().isOk())
+          .andExpect(content().string(containsString("# HELP")));
     }
   }
 
@@ -68,6 +53,11 @@ class ActuatorMonitoringSecurityIntegrationTest {
     void permiteConsultarInfoAnonimamenteSinDatosSensibles() throws Exception {
       mvc.perform(get("/actuator/info"))
           .andExpect(status().isOk())
+          .andExpect(
+              content()
+                  .json(
+                      "{\"app\":{\"name\":\"Football Market\",\"description\":\"API de mercado de jugadores de fútbol\"}}",
+                      true))
           .andExpect(jsonPath("$.app.name").value("Football Market"))
           .andExpect(jsonPath("$.app.description").value("API de mercado de jugadores de fútbol"))
           .andExpect(content().string(not(containsString("password"))))
@@ -101,6 +91,16 @@ class ActuatorMonitoringSecurityIntegrationTest {
         org.assertj.core.api.Assertions.assertThat(result.getResponse().getContentAsString())
             .doesNotContain("href");
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("Seguridad de endpoints de dominio")
+  class DomainEndpointSecurity {
+    @Test
+    @DisplayName("Mantiene autenticación en las rutas de dominio")
+    void rechazaConsultaAnonimaDeUsuarioActual() throws Exception {
+      mvc.perform(get("/api/auth/me")).andExpect(status().isUnauthorized());
     }
   }
 }

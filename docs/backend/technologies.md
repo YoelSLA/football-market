@@ -46,7 +46,7 @@ las rutas `/api/**`, y su configuración se resuelve por entorno.
 
 | Endpoint | Habilitado | Expuesto por HTTP | Acceso |
 | --- | --- | --- | --- |
-| `/actuator/prometheus` | Sí | Sí | JWT requerido |
+| `/actuator/prometheus` | Sí | Sí | Público; ignora cualquier JWT |
 | `/actuator/health` | Sí | Sí | Sin token; devuelve únicamente `{"status":"UP"}` |
 | `/actuator/info` | Sí | Sí | Sin token; publica solo nombre y descripción estáticos |
 | Raíz `/actuator`, subendpoints y demás endpoints | Según Actuator | **Nunca** | — |
@@ -67,8 +67,9 @@ management:
 - `management.endpoint.health.show-details` y `show-components` son `never`: el health check no
   revela componentes, rutas, versiones ni datos de conexión. Es la razón por la que puede quedar
   accesible sin token.
-- `SecurityConfig` exige JWT para Prometheus, deja públicos solo health e info y deniega la raíz,
-  los subendpoints y cualquier otro endpoint de Actuator.
+- `SecurityConfig` permite Prometheus sin autenticación e ignora cualquier JWT enviado a esa ruta;
+  deja públicos health e info y deniega la raíz, los subendpoints y cualquier otro endpoint de
+  Actuator.
 - `info` usa únicamente `info.app.name` y `info.app.description` estáticos mediante el contributor
   `management.info.env`; ambos valores son públicos y no se agregan credenciales ni otros valores
   del entorno.

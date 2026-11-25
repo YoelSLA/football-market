@@ -19,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -71,6 +73,12 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http, PersistedIdentityValidator identityValidator) {
+    BearerTokenResolver defaultBearerTokenResolver = new DefaultBearerTokenResolver();
+    BearerTokenResolver bearerTokenResolver =
+        request ->
+            (request.getContextPath() + "/actuator/prometheus").equals(request.getRequestURI())
+                ? null
+                : defaultBearerTokenResolver.resolve(request);
     AccessDeniedHandler accessDeniedHandler =
         (request, response, exception) -> {
           if (HttpMethod.POST.name().equals(request.getMethod())
@@ -93,11 +101,10 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                     .permitAll()
-                    // Health e info son públicos; Prometheus requiere la autenticación JWT.
-                    .requestMatchers("/actuator/health", "/actuator/info")
+                    // Solo se permite anónimamente el acceso a los endpoints de monitoreo
+                    // acordados.
+                    .requestMatchers("/actuator/prometheus", "/actuator/health", "/actuator/info")
                     .permitAll()
-                    .requestMatchers("/actuator/prometheus")
-                    .authenticated()
                     // Bloquea la raíz, subendpoints y cualquier otro endpoint de Actuator.
                     .requestMatchers("/actuator", "/actuator/**")
                     .denyAll()
@@ -116,6 +123,9 @@ public class SecurityConfig {
         .oauth2ResourceServer(
             oauth2 ->
                 oauth2
+                    // Prometheus ignora cualquier Bearer: credenciales inválidas no deben cambiar
+                    // el comportamiento de este endpoint público. El resto de la API mantiene JWT.
+                    .bearerTokenResolver(bearerTokenResolver)
                     .accessDeniedHandler(accessDeniedHandler)
                     .jwt(
                         jwt ->

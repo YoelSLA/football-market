@@ -29,6 +29,7 @@ no de épicas REQ. La existencia de este archivo no completa Specify ni habilita
 - Q: ¿Qué endpoints de Actuator deben quedar accesibles por HTTP y con qué protección? → A: Exponer `/actuator/prometheus` públicamente, sin JWT, para cualquier cliente que alcance el backend; mantener `/actuator/health` público con estado mínimo; exponer `/actuator/info` públicamente sin datos sensibles; y bloquear los demás endpoints de Actuator.
 - Q: ¿Cómo debe quedar el acceso HTTP a `/actuator/info`? → A: Exponerlo públicamente, solo con datos no sensibles.
 - Q: ¿Qué métricas cubren el estado, los recursos y el rendimiento sin agregar instrumentación propia? → A: Reutilizar las métricas estándar de Spring Boot/Micrometer: CPU del sistema y del proceso; memoria, hilos y pausas de GC de la JVM; y recuento y duración de solicitudes HTTP. El estado general se consulta por separado en `/actuator/health`; la tasa de errores se obtiene de los resultados de las solicitudes HTTP. No se requieren métricas de negocio, métricas personalizadas ni percentiles de latencia.
+- Q: ¿Cambia la respuesta pública de `/actuator/prometheus` si la solicitud incluye un JWT? → A: No. La presencia, ausencia o validez del JWT no afecta el acceso ni la respuesta; el endpoint no requiere ni utiliza ese token.
 - Q: ¿Qué información operativa se considera sensible en las respuestas de monitoreo? → A: Secretos, credenciales, tokens y valores de configuración sensibles no deben exponerse en ningún endpoint. Las métricas estándar de CPU, JVM y HTTP y el estado mínimo de health, así como información técnica no sensible del programa o de la máquina, pueden mostrarse y no se consideran sensibles por sí mismos. `/actuator/info` puede incluir información de programa o máquina únicamente si no pertenece a las categorías sensibles indicadas.
 - Q: ¿Qué autenticación permite consultar `/actuator/prometheus`? → A: No requiere autenticación ni JWT; cualquier cliente que alcance el backend puede consultarlo, sin roles ni permisos adicionales.
 - Q: ¿Qué información estática debe mostrar `/actuator/info`? → A: Debe mostrar el nombre público `Football Market` y la descripción `API de mercado de jugadores de fútbol`. No debe exponer otros valores del entorno ni configuración sensible.
@@ -64,10 +65,11 @@ Los clientes que alcanzan el backend pueden consultar las métricas sin autentic
 2. **Given** una respuesta de `/actuator/prometheus`, **When** cualquier cliente la consulta, **Then** no contiene secretos, credenciales, tokens ni valores de configuración sensibles.
 3. **Given** un endpoint de Actuator que no forma parte de los endpoints de monitoreo permitidos, **When** cualquier solicitante intenta acceder por HTTP, **Then** el endpoint no queda expuesto.
 4. **Given** un solicitante anónimo, **When** consulta `/actuator/info`, **Then** recibe el nombre y la descripción pública del backend, sin información sensible.
+5. **Given** una solicitud a `/actuator/prometheus` con un JWT ausente, válido, vencido o inválido, **When** un cliente alcanza el backend, **Then** recibe el mismo estado HTTP y las mismas métricas; el JWT no se requiere ni se utiliza.
 
 ## Edge Cases
 
-- `/actuator/prometheus` no requiere JWT ni roles o permisos de aplicación; cualquier cliente que alcance el backend puede consultarlo.
+- `/actuator/prometheus` no requiere ni utiliza JWT; su presencia, ausencia o validez no cambia el acceso ni la respuesta.
 - Si la aplicación no puede producir temporalmente una métrica particular, el endpoint no debe sustituir la ausencia de esa métrica con información sensible ni habilitar endpoints adicionales.
 - `/actuator/health` permanece público solo con un estado mínimo; sus subendpoints y los demás endpoints de Actuator no quedan expuestos por HTTP.
 - `/actuator/info` puede consultarse sin autenticación, pero su respuesta no debe incluir información sensible.
@@ -78,8 +80,8 @@ Los clientes que alcanzan el backend pueden consultar las métricas sin autentic
 
 - **FR-001**: El backend MUST exponer `/actuator/prometheus` para que herramientas compatibles con Prometheus consulten métricas del backend.
 - **FR-002**: `/actuator/prometheus` MUST exponer las métricas estándar de Spring Boot/Micrometer para monitorear recursos y rendimiento: uso de CPU del sistema y del proceso; memoria, hilos y pausas de garbage collection de la JVM cuando se produzcan eventos de GC; y recuento y duración de solicitudes HTTP. El estado general MUST consultarse por separado mediante `/actuator/health`. La tasa de errores MUST poder obtenerse de los resultados de las solicitudes HTTP; no se requiere una métrica de tasa de errores independiente.
-- **FR-003**: `/actuator/prometheus` MUST ser accesible sin autenticación ni JWT para cualquier cliente que alcance el backend y MUST NOT requerir roles ni permisos de aplicación.
-- **FR-004**: El backend MUST responder con HTTP `200` y las métricas en formato compatible con Prometheus a solicitudes anónimas a `/actuator/prometheus`, sin exigir un encabezado de autorización.
+- **FR-003**: `/actuator/prometheus` MUST ser accesible sin autenticación ni JWT para cualquier cliente que alcance el backend y MUST NOT requerir roles ni permisos de aplicación. La presencia o validez de un JWT suministrado por el solicitante MUST NOT afectar el acceso.
+- **FR-004**: El backend MUST responder con HTTP `200` y las métricas en formato compatible con Prometheus a solicitudes a `/actuator/prometheus`, independientemente de que incluyan un JWT válido, vencido o inválido; el estado HTTP y las métricas devueltas MUST ser los mismos que para una solicitud sin JWT.
 - **FR-005**: La información expuesta por los endpoints de monitoreo MUST NOT incluir secretos, credenciales, tokens ni valores de configuración sensibles.
 - **FR-006**: La exposición HTTP de Actuator MUST limitarse a `/actuator/prometheus`, `/actuator/health` y `/actuator/info`; los demás endpoints de Actuator, incluidos sus subendpoints, MUST permanecer inaccesibles por HTTP.
 - **FR-007**: `/actuator/health` MUST permanecer accesible sin autenticación y limitar su respuesta a un estado mínimo, sin revelar detalles de componentes, dependencias o configuración.

@@ -7,19 +7,21 @@ Micrometer producen las mediciones en memoria y las serializan para la consulta 
 
 ### Métrica de monitoreo
 
-- **Propósito**: medición del estado, los recursos o el rendimiento del backend.
+- **Propósito**: medición de recursos o rendimiento del backend. El estado general se consulta
+  separadamente mediante `/actuator/health`.
 - **Representación**: nombre, tipo, valor y etiquetas según el formato de exposición de Micrometer
   compatible con Prometheus.
-- **Ciclo de vida**: observada por la instrumentación existente durante la ejecución de la
-  aplicación; consultable en `/actuator/prometheus`.
+- **Cobertura**: CPU del sistema y del proceso; memoria, hilos y pausas de GC de JVM; recuento y
+  duración de solicitudes HTTP. La tasa de errores se obtiene de los resultados de las solicitudes.
+- **Ciclo de vida**: observada por la instrumentación estándar de Spring Boot/Micrometer durante la
+  ejecución de la aplicación; consultable en `/actuator/prometheus`.
 - **Persistencia**: ninguna en esta feature.
 
-### Identidad operativa autenticada
+### Cliente solicitante
 
-- **Propósito**: identidad con un JWT válido aceptado por la autenticación existente, habilitada
-  para consultar las métricas sin roles ni permisos adicionales.
-- **Representación y validación**: JWT Bearer validado por el Resource Server y el
-  `PersistedIdentityValidator` existentes. No se crea una identidad, rol ni almacenamiento nuevo.
+- **Propósito**: consumidor que alcanza el backend y consulta las métricas públicas.
+- **Autenticación**: no requiere JWT, identidad, rol ni permiso de aplicación para acceder a
+  `/actuator/prometheus`.
 
-No se define relación persistida entre métricas e identidades; la identidad solo gobierna el acceso
-al endpoint.
+No se define relación persistida entre métricas y clientes; las métricas no se asocian a una
+identidad.

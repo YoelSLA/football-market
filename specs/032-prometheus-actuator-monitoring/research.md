@@ -24,26 +24,39 @@
 - **Alternativas consideradas**: Conservar la variable de lista abierta (no garantiza el límite
   normativo); exponer `metrics` en lugar de `prometheus` (no satisface la ruta y formato pedidos).
 
-### Autorización de monitoreo
+### Acceso a los endpoints de monitoreo
 
-- **Decisión**: Reutilizar el JWT Resource Server y el validador de identidad persistida existente.
-  Prometheus requiere autenticación. Solo las rutas exactas de health e info reciben acceso
-  anónimo; los subendpoints y cualquier otro endpoint de Actuator no se permiten.
-- **Rationale**: Cumple las clarificaciones de SPEC-032 y evita inventar roles o mecanismos de
-  autenticación. El comportamiento general `anyRequest().authenticated()` ya protege rutas no
-  permitidas explícitamente.
-- **Alternativas consideradas**: Permitir todas las rutas `/actuator/**` (abre subendpoints y
-  contradice FR-006); exponer Prometheus sin autenticación (contradice FR-001/003); agregar un rol
-  nuevo (la spec ordena reutilizar la seguridad existente y no define roles de dominio nuevos).
+- **Decisión**: Permitir anónimamente las rutas exactas `/actuator/prometheus`,
+  `/actuator/health` y `/actuator/info`. Mantener la autenticación y autorización actuales para la
+  API de dominio y no abrir `/actuator/**`. No exigir JWT, roles ni permisos para Prometheus.
+- **Rationale**: La clarificación vigente de SPEC-032 establece explícitamente que cualquier
+  cliente que alcance el backend puede consultar las métricas. La seguridad se preserva limitando
+  estrictamente la superficie expuesta y evitando publicar datos sensibles.
+- **Alternativas consideradas**: Exigir JWT a Prometheus (contradice FR-003/004); permitir todas
+  las rutas `/actuator/**` (contradice FR-006); modificar la seguridad de endpoints de dominio (no
+  es necesario para cumplir la feature).
 
-### Salud e información no sensible
+### Salud e información pública
 
-- **Decisión**: Conservar `management.endpoint.health.show-details: never`; mantener info pública
-  sin configurar propiedades `management.info.*` con datos sensibles.
-- **Rationale**: La configuración ya satisface la respuesta mínima de health y actualmente no
-  aporta valores de info. Se reutiliza esta protección en lugar de crear filtros o DTO propios.
-- **Alternativas consideradas**: Proteger ambos endpoints (contradice la clarificación); publicar
-  detalles de componentes o valores de configuración (contradice FR-005/007/009).
+- **Decisión**: Conservar health mínimo con `show-details: never` y `show-components: never`.
+  Configurar info exclusivamente con el nombre `Football Market` y la descripción
+  `API de mercado de jugadores de fútbol`.
+- **Rationale**: La spec exige estos valores estáticos y prohíbe otros valores de entorno o
+  configuración. Se reutiliza Actuator sin crear Controllers ni DTOs propios.
+- **Alternativas consideradas**: Proteger health/info (contradice la clarificación); publicar
+  detalles de componentes, build o configuración (contradice FR-005/007/009).
+
+### Métricas incluidas
+
+- **Decisión**: Utilizar métricas estándar de Spring Boot/Micrometer para CPU del sistema y proceso,
+  memoria, hilos y pausas de GC de JVM, además del recuento y duración de solicitudes HTTP. El
+  estado general se consulta por `/actuator/health`; no se añade instrumentación de negocio ni
+  percentiles de latencia.
+- **Rationale**: Corresponde a las métricas expresamente acordadas en la aclaración vigente y evita
+  instrumentación propia.
+- **Alternativas consideradas**: Crear métricas de negocio o percentiles personalizados
+  (explícitamente fuera del alcance); representar health como métrica duplicada (la spec asigna el
+  estado a `/actuator/health`).
 
 ## Resultado de investigación de contexto
 
@@ -52,7 +65,8 @@
 - `application.yml` expone actualmente una lista configurable de Actuator con default
   `health,info`; debe sustituirse por el límite fijo exigido por la spec.
 - `SecurityConfig` permite anónimamente `/actuator`, health/info y metrics, incluidos varios
-  subpaths. El diseño debe retirar el acceso anónimo amplio y proteger explícitamente Prometheus.
+  subpaths. El diseño debe retirar el acceso anónimo amplio, permitir las tres rutas exactas
+  requeridas y mantener cerrados los demás endpoints y subpaths.
 - Health ya usa `show-details: never`.
 - No hay datos persistidos ni entidades de dominio necesarias para esta feature.
 - Fuentes funcionales: `spec.md` de SPEC-032, en particular sus clarificaciones, FR-001–FR-009 y

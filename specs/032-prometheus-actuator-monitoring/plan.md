@@ -13,14 +13,14 @@ IMPLEMENT; siguen CHECKLIST, TASKS y ANALYZE.
 ## Summary
 
 Exponer las métricas del backend en formato Prometheus mediante el Actuator existente,
-restringiendo ese endpoint a identidades autenticadas por la seguridad actual. La exposición HTTP
-se limita expresamente a `prometheus`, `health` e `info`: `health` es público con respuesta mínima;
-`info` es público con nombre y descripción estáticos no sensibles; los demás endpoints y subendpoints de Actuator permanecen
-inaccesibles. La solución reutiliza Spring Boot Actuator y la cadena JWT existente; agrega solo el
-exportador Micrometer Prometheus requerido si no está ya presente en la configuración efectiva.
-Se limita a las métricas estándar de CPU, JVM y solicitudes HTTP; no agrega métricas de negocio ni
-instrumentación propia. El estado general se consulta por `/actuator/health`, y la tasa de errores
-se obtiene de los resultados HTTP. No instala ni despliega un servidor Prometheus ni crea dashboards.
+disponible públicamente sin JWT, roles ni permisos. La exposición HTTP se limita expresamente a
+`prometheus`, `health` e `info`: health es público con estado mínimo; info es público con nombre y
+descripción estáticos no sensibles; los demás endpoints y subendpoints de Actuator permanecen
+inaccesibles. La solución reutiliza Spring Boot Actuator y Micrometer, agregando solo el registry
+Prometheus requerido si no está ya presente en la configuración efectiva. Expone métricas estándar
+de CPU, JVM y solicitudes HTTP; el estado general se consulta por `/actuator/health` y la tasa de
+errores se obtiene de los resultados HTTP. No agrega métricas de negocio ni instrumentación propia,
+y no instala ni despliega un servidor Prometheus ni crea dashboards.
 
 ## Technical Context
 
@@ -33,8 +33,8 @@ publicar `/actuator/prometheus` (versión administrada por Spring Boot).
 **Storage**: N/A; esta feature expone métricas en memoria y no agrega persistencia.
 
 **Testing**: Pruebas backend existentes con Spring Boot Test, JUnit Jupiter, MockMvc y Spring
-Security; se añadirán/ajustarán pruebas de autorización y exposición conforme al contrato. El
-agente no ejecuta tests.
+Security; se añadirán/ajustarán pruebas de acceso anónimo, contenido y exposición conforme al
+contrato. El agente no ejecuta tests.
 
 **Target Platform**: Servicio backend Spring Boot, puerto HTTP compartido con la API.
 
@@ -44,11 +44,12 @@ agente no ejecuta tests.
 exponer las métricas estándar de CPU, JVM y solicitudes HTTP, y consultar el estado general por
 `/actuator/health`, sin introducir una ruta de dominio.
 
-**Constraints**: Mantener el alcance HTTP mínimo y explícito; no usar exposición comodín. Solo
-identidades autenticadas mediante el mecanismo existente acceden a Prometheus. Health conserva
-`show-details: never` y `show-components: never`; info publica únicamente el nombre y descripción
-estáticos configurados, sin habilitar exposición de otros valores del entorno. Sin nueva autenticación, rol de
-dominio, puerto de administración, servidor Prometheus ni dashboards.
+**Constraints**: Mantener el alcance HTTP mínimo y explícito; no usar exposición comodín.
+Prometheus, health e info son públicos; las métricas no requieren JWT, rol ni permiso. Health
+conserva `show-details: never` y `show-components: never`; info publica únicamente el nombre
+`Football Market` y la descripción `API de mercado de jugadores de fútbol`. Ningún endpoint expone
+secretos, credenciales, tokens ni configuración sensible. Sin puerto de administración, servidor
+Prometheus ni dashboards.
 
 **Scale/Scope**: Un servicio backend y tres endpoints de Actuator (`/actuator/prometheus`,
 `/actuator/health`, `/actuator/info`); no cambia el modelo de dominio ni la persistencia.
@@ -65,22 +66,24 @@ dominio, puerto de administración, servidor Prometheus ni dashboards.
 - **Principios II y VI — proporcionalidad**: PASS. El diseño cubre los requisitos FR-001–FR-009;
   excluye expresamente servidor Prometheus y Grafana, y no agrega SLAs ni métricas de negocio no
   requeridos.
-- **Principio III — seguridad**: PASS CONDICIONADO AL DISEÑO. Métricas solo autenticadas;
-  health/info públicos con superficie mínima; demás endpoints y subendpoints cerrados.
+- **Principio III — seguridad**: PASS CONDICIONADO AL DISEÑO. La exposición pública de Prometheus
+  está aprobada explícitamente por la especificación; el contenido se limita a métricas estándar.
+  Health/info públicos con respuesta definida y no sensible; demás endpoints y subendpoints
+  cerrados.
 - **Principio IV — coherencia de contratos**: PASS. El contrato HTTP de monitoreo se documenta en
   `contracts/`; si se añade una dependencia, su inventario vigente se refleja en tecnologías del
   backend durante implementación.
-- **Principio V — trazabilidad/documentación viva**: PASS. Los artefactos de esta spec describen
-  solo el diseño vigente; no se modifica la especificación ni el seguimiento en esta fase.
+- **Principio V — trazabilidad/documentación viva**: PASS. El diseño refleja las clarificaciones
+  vigentes de la spec; no se modifica el seguimiento en esta fase.
 - **Verificación/autorizaciones**: PASS. No se ejecutan tests ni builds; este plan no autoriza
   IMPLEMENT, CHECKLIST, TASKS ni fases posteriores.
 
 ### Después de Phase 1
 
-- **Seguridad y exposición**: PASS. El contrato especifica autorización de Prometheus, excepciones
-  públicas limitadas a health e info, y denegación del resto. La configuración deberá listar
-  únicamente esos tres endpoints y la cadena de seguridad deberá proteger Prometheus sin abrir
-  `/actuator/**`.
+- **Seguridad y exposición**: PASS. El contrato especifica Prometheus público, health/info públicos
+  con contenido limitado y denegación del resto. La configuración deberá listar únicamente esos
+  tres endpoints y la cadena de seguridad deberá permitir las rutas exactas acordadas, sin abrir
+  `/actuator/**` ni afectar la seguridad de la API de dominio.
 - **Simplicidad/tecnologías**: PASS. Una dependencia de registry solo si hace falta para el
   endpoint requerido; versión bajo gestión de Spring Boot. No se agrega persistencia ni capa
   arquitectónica propia.
@@ -95,16 +98,17 @@ No se identifican violaciones constitucionales que requieran justificar compleji
 
 ```text
 specs/032-prometheus-actuator-monitoring/
+├── spec.md
 ├── plan.md
 ├── research.md
 ├── data-model.md
 ├── quickstart.md
+├── tasks.md
 └── contracts/
     └── actuator-monitoring.md
 ```
 
-`spec.md` y `tasks.md` son también miembros permanentes de la tríada/artefactos de la feature;
-PLAN no genera ni modifica `tasks.md`.
+`tasks.md` permanece como artefacto de la feature; PLAN no lo genera ni modifica.
 
 ### Source Code (repository root)
 

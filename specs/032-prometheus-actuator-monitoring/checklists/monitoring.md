@@ -11,20 +11,20 @@
 ## Completitud de requisitos y cobertura de escenarios
 
 - [x] CHK001 ¿Los requisitos definen qué categorías de métricas deben poder observarse y con qué alcance, sin dejar “estado, recursos y rendimiento” indeterminados? [Clarity, Spec §FR-002, §SC-001; TP §5.1]
-- [x] CHK002 ¿Los escenarios cubren acceso con JWT válido, acceso anónimo y credenciales inválidas, sin exigir roles o permisos adicionales para Prometheus? [Coverage, Spec §US2, §FR-003–FR-004]
+- [x] CHK002 ¿Los escenarios reflejan que cualquier cliente que alcanza el backend puede consultar `/actuator/prometheus` sin autenticación, JWT, roles ni permisos? [Coverage, Spec §US1–US2, §FR-003–FR-004]
 - [x] CHK003 ¿Está definido el comportamiento requerido ante la ausencia temporal de una métrica sin ampliar la superficie expuesta ni revelar información sensible? [Edge Case, Spec §Edge Cases]
 - [x] CHK004 ¿El alcance distingue con claridad los endpoints permitidos, sus subendpoints y el resto de Actuator, incluidos el acceso público y el protegido? [Completeness, Spec §FR-006–FR-009]
 
 ## Claridad y calidad del contrato HTTP
 
 - [x] CHK005 ¿El contrato especifica inequívocamente el formato de respuesta de Prometheus y el contenido mínimo necesario para considerar útiles las métricas? [Clarity, Spec §FR-001–FR-002; Contract §GET /actuator/prometheus; TP §5.1]
-- [x] CHK006 ¿Están definidos los resultados de acceso con JWT válido, anónimo y token inválido, sin exigir una respuesta diferenciada por roles o permisos? [Clarity, Spec §FR-003–FR-004; Contract §GET /actuator/prometheus]
+- [x] CHK006 ¿El contrato especifica que `/actuator/prometheus` responde HTTP 200 en formato compatible con Prometheus sin exigir encabezado de autorización, JWT, roles ni permisos? [Clarity, Spec §FR-003–FR-004; Contract §GET /actuator/prometheus]
 - [x] CHK007 ¿Los criterios de éxito permiten determinar objetivamente qué significa “estado mínimo” en `/actuator/health` y qué información queda excluida? [Measurability, Spec §FR-007, §SC-004; Contract §GET /actuator/health]
 - [x] CHK008 ¿Los requisitos delimitan de forma verificable qué información puede contener `/actuator/info` y qué se considera sensible? [Clarity, Spec §FR-005, §FR-009; Contract §GET /actuator/info]
 
 ## Consistencia y seguridad de los requisitos
 
-- [x] CHK009 ¿Las reglas de autenticación de Prometheus son consistentes entre los requisitos funcionales, los escenarios y el contrato HTTP? [Consistency, Spec §FR-001, §FR-003–FR-004; Contract §GET /actuator/prometheus]
+- [x] CHK009 ¿La regla de acceso público a Prometheus coincide entre las clarificaciones, los requisitos funcionales, los escenarios y el contrato HTTP? [Consistency, Spec §Clarifications, §FR-003–FR-004; Contract §GET /actuator/prometheus]
 - [x] CHK010 ¿Las excepciones públicas de health e info están limitadas de manera coherente, sin contradecir la prohibición de exponer los demás endpoints o subendpoints? [Consistency, Spec §FR-006–FR-009; Contract §GET /actuator/health, §GET /actuator/info]
 - [x] CHK011 ¿La prohibición de exponer secretos, credenciales, tokens y configuración sensible se aplica explícitamente a todas las respuestas HTTP de monitoreo? [Coverage, Spec §FR-005, §SC-003]
 - [x] CHK012 ¿Las exclusiones de servidor Prometheus y dashboards de Grafana se mantienen consistentes con el valor de la feature y con sus límites de alcance? [Scope, Spec §FR-008, §Assumptions]
