@@ -1180,19 +1180,20 @@ resuelta por la alineación documental ni por build.
 | **Área afectada** | Backend / Seguridad |
 | **Fecha de resolución** | — |
 
-**Descripción.** La configuración de Actuator y seguridad requiere limitar la superficie HTTP y
-proteger las métricas, manteniendo accesibles públicamente solo las respuestas de health e info
-definidas por SPEC-032. La implementación de la SPEC restringe Prometheus a JWT válido y deniega la
-raíz, los subendpoints y los demás endpoints; la verificación en ejecución queda pendiente.
+**Descripción.** La configuración de Actuator debe limitar la superficie HTTP a los endpoints
+definidos por SPEC-032 y evitar información sensible. `/actuator/prometheus` es público y no requiere
+ni utiliza JWT; `/actuator/health` y `/actuator/info` son públicos con respuestas mínimas/no
+sensibles. La verificación del comportamiento en ejecución queda pendiente.
 
-**Decisión vigente.** `/actuator/prometheus` requiere solo un JWT válido aceptado por la
-autenticación existente; no se exige rol o permiso adicional. `/actuator/health` y
+**Decisión vigente.** `/actuator/prometheus` es accesible sin autenticación ni JWT; la presencia,
+ausencia o validez de un JWT no cambia el acceso ni la respuesta. `/actuator/health` y
 `/actuator/info` permanecen públicos, con respuestas mínimas/no sensibles. La lista HTTP se limita
 exactamente a `prometheus,health,info`, sin raíz, subendpoints ni otros endpoints.
 
 **Criterios de resolución.** La deuda no se considera resuelta hasta:
 
-1. Verificar en ejecución que Prometheus exige JWT válido y lo permite a toda identidad autenticada.
+1. Verificar en ejecución que `/actuator/prometheus` devuelve métricas sin JWT y conserva el mismo
+   acceso cuando se presenta un JWT válido, vencido o inválido.
 2. Verificar health/info públicos sin información sensible.
 3. Verificar que la raíz, los subendpoints y el resto de endpoints no están expuestos.
 
@@ -1210,6 +1211,7 @@ exactamente a `prometheus,health,info`, sin raíz, subendpoints ni otros endpoin
 | 2026-10-14 16:29:48 | Registro inicial en `docs/TECHNICAL_DEBT.md`. La anotación previa existía en `specs/trello.md` y en `docs/backend/technologies.md`; la fecha de creación original de esas anotaciones no se conoce, por lo que se registra la de incorporación a este documento. |
 | 2026-10-14 16:52:29 | Actualización de la referencia al mecanismo de habilitación: `FOOTBALLMARKET_MONITORING_LOCAL_METRICS` se reemplaza por `MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics`. La corrección del arranque no altera el alcance, la prioridad ni el estado de la deuda, que continúa `Pendiente`. Sin cambios funcionales: la exposición sigue siendo abierta para las rutas de monitoreo. |
 | 2026-11-24 13:23:07 | SPEC-032 implementa la protección de Prometheus mediante JWT válido, la exposición explícita de `prometheus,health,info`, y la denegación de las demás rutas; las pruebas de ejecución aún no han sido ejecutadas por el usuario. Se actualizan la decisión vigente, los criterios y las referencias. Estado `En curso`; no se declara resuelta hasta verificar el comportamiento en ejecución. |
+| 2026-11-25 | Se corrige la decisión vigente conforme a SPEC-032: `/actuator/prometheus` es público y no requiere ni utiliza JWT. La anotación del 2026-11-24 se conserva como historial documental, pero no describe la política vigente. No se modificó código ni se ejecutaron verificaciones; el estado permanece `En curso`. |
 
 ### TD-002 — Autorización por rol inexistente, prometida en el contrato público
 

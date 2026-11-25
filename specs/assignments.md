@@ -49,3 +49,4 @@ se corrige con una fila nueva que la referencie.
 | SPEC-030 | Visualizar y gestionar órdenes de venta personales (Mis órdenes) | YoelSLA | https://github.com/YoelSLA/football-market/issues/105 | REQ-S2-FEAT-ADD | feat/030-my-orders | 2026-11-19 |
 | SPEC-031 | Dashboard interactivo y resumen ejecutivo de mercado (Bloomberg & Sorare) | YoelSLA | https://github.com/YoelSLA/football-market/issues/109 | REQ-S2-FEAT-ADD | feat/031-home-dashboard | 2026-11-20 |
 | SPEC-032 | Configurar métricas con Spring Boot Prometheus y monitoreo con Actuator | Vaqui26 | https://github.com/YoelSLA/football-market/issues/100 | REQ-S3-03 | feat/032-prometheus-actuator-monitoring | 2026-11-24 |
+| SPEC-033 | Desplegar Prometheus y Grafana para monitoreo del backend | Vaqui26 | https://github.com/YoelSLA/football-market/issues/117 | REQ-S3-06 | feat/033-deploy-prometheus-grafana-monitoring | 2026-11-24 |

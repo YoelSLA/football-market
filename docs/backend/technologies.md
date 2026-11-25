@@ -75,3 +75,14 @@ management:
   del entorno.
 - Los endpoints de Actuator comparten el puerto de la API. `management.server.port` no está
   configurado.
+
+## Demostración local de monitoreo (SPEC-033)
+
+| Tecnología | Versión | Uso en el proyecto |
+| ---------- | ------- | ------------------ |
+| Docker Compose | v2 | Reproducir localmente, como proyecto independiente en `monitoring/compose.yml`, Prometheus y Grafana conectados al endpoint de métricas existente. |
+| Prometheus | `prom/prometheus:v3.16.0` | Recolectar y almacenar localmente las métricas expuestas por Actuator; permanece en la red privada de Compose. |
+| Grafana OSS | `grafana/grafana:13.3.2` | Consultar las métricas mediante el dashboard aprovisionado; su interfaz de demostración requiere autenticación y se publica solo en `127.0.0.1:3000`. |
+
+Estas imágenes y esta herramienta corresponden a la demostración local de SPEC-033; no son
+dependencias de ejecución de la aplicación backend.
