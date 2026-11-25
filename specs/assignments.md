@@ -50,3 +50,4 @@ se corrige con una fila nueva que la referencie.
 | SPEC-031 | Dashboard interactivo y resumen ejecutivo de mercado (Bloomberg & Sorare) | YoelSLA | https://github.com/YoelSLA/football-market/issues/109 | REQ-S2-FEAT-ADD | feat/031-home-dashboard | 2026-11-20 |
 | SPEC-032 | Configurar métricas con Spring Boot Prometheus y monitoreo con Actuator | Vaqui26 | https://github.com/YoelSLA/football-market/issues/100 | REQ-S3-03 | feat/032-prometheus-actuator-monitoring | 2026-11-24 |
 | SPEC-033 | Desplegar Prometheus y Grafana para monitoreo del backend | Vaqui26 | https://github.com/YoelSLA/football-market/issues/117 | REQ-S3-06 | feat/033-deploy-prometheus-grafana-monitoring | 2026-11-24 |
+| SPEC-034 | Optimizar ranking de jugadores según estrategia activa para alta frecuencia de consultas | Vaqui26 | https://github.com/YoelSLA/football-market/issues/101 | REQ-S3-04 | feat/034-high-frequency-query-caching | 2026-11-25 |
