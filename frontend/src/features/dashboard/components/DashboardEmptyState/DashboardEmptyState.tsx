@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { TokenSymbol } from "@/shared/components";
 import {
 	Coins,
 	Handshake,
@@ -45,7 +46,8 @@ export function DashboardEmptyState({
 					</span>
 					<span className={styles.featureTitle}>Mercado Oficial</span>
 					<span className={styles.featureDesc}>
-						Compra tokens directamente al club a precio de cotización.
+						Compra <TokenSymbol size="xs" /> directamente al club a precio de
+						cotización.
 					</span>
 				</div>
 
@@ -73,7 +75,9 @@ export function DashboardEmptyState({
 			<div className={styles.actions}>
 				<Link to="/market/buy" className={styles.primaryBtn}>
 					<Zap size={15} aria-hidden="true" />
-					<span>Comprar mis primeros tokens</span>
+					<span>
+						Comprar mis primeros <TokenSymbol size="sm" />
+					</span>
 				</Link>
 				<Link to="/players" className={styles.secondaryBtn}>
 					Explorar Catálogo

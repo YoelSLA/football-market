@@ -3,7 +3,7 @@
 .tickerBar {
 	display: flex;
 	align-items: center;
-	height: 38px;
+	height: 54px;
 	background: ds.$surface-data-header;
 	border-bottom: 1px solid ds.$border-panel;
 	overflow: hidden;
@@ -16,7 +16,7 @@
 .pulseSummary {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 8px;
 	padding: 0 ds.$space-md;
 	height: 100%;
 	background: ds.$surface-data-control;
@@ -24,17 +24,17 @@
 	flex-shrink: 0;
 	z-index: 2;
 
-	@media (max-width: 860px) {
-		display: none;
+	@media (max-width: 640px) {
+		padding: 0 ds.$space-sm;
 	}
 }
 
 .pulseLiveDot {
-	width: 8px;
-	height: 8px;
+	width: 9px;
+	height: 9px;
 	border-radius: 50%;
 	background-color: ds.$accent-gain;
-	box-shadow: 0 0 8px ds.$surface-gain-glow;
+	box-shadow: 0 0 10px ds.$surface-gain-glow;
 	animation: pulseGlow 2s infinite ease-in-out;
 }
 
@@ -50,37 +50,21 @@
 }
 
 .pulseIcon {
-	width: 14px;
-	height: 14px;
+	width: 15px;
+	height: 15px;
 	color: ds.$accent-gain;
 }
 
 .pulseTitle {
-	font-size: 0.6875rem;
+	font-size: 0.75rem;
 	font-weight: 800;
-	letter-spacing: 0.05em;
+	letter-spacing: 0.06em;
 	color: ds.$accent-gain;
-	margin-right: 2px;
-}
-
-.pulseItem {
-	font-size: 0.75rem;
-	font-weight: 700;
-	color: ds.$text-primary-on-dark;
-	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
-}
 
-.pulseLabel {
-	color: ds.$text-muted-on-dark;
-	font-weight: 700;
-	margin-right: 2px;
-}
-
-.pulseDivider {
-	color: ds.$border-subtle;
-	font-size: 0.75rem;
-	margin: 0 4px;
+	@media (max-width: 640px) {
+		display: none;
+	}
 }
 
 .marqueeTrackWrapper {
@@ -93,8 +77,8 @@
 	mask-image: linear-gradient(
 		to right,
 		transparent 0px,
-		black 20px,
-		black calc(100% - 20px),
+		black 28px,
+		black calc(100% - 28px),
 		transparent 100%
 	);
 }
@@ -102,10 +86,10 @@
 .marqueeTrack {
 	display: flex;
 	align-items: center;
-	gap: ds.$space-sm;
+	gap: ds.$space-md;
 	white-space: nowrap;
 	width: max-content;
-	animation: scrollTicker 40s linear infinite;
+	animation: scrollTicker 45s linear infinite;
 
 	&:hover {
 		animation-play-state: paused;
@@ -129,49 +113,94 @@
 .tickerChip {
 	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	padding: 2px 10px;
-	border-radius: 4px;
+	gap: 10px;
+	padding: 5px 14px 5px 8px;
+	border-radius: 10px;
 	text-decoration: none;
 	background: ds.$surface-data-control;
 	border: 1px solid ds.$border-panel;
-	font-size: 0.75rem;
-	transition: background-color 0.15s ease, border-color 0.15s ease;
+	font-size: 0.8125rem;
+	transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 
 	&:hover {
 		background: ds.$surface-card-subtle;
 		border-color: ds.$accent-gain;
+		transform: translateY(-1px);
 	}
+
+	.teamBadge {
+		width: 18px;
+		height: 18px;
+		object-fit: contain;
+		flex-shrink: 0;
+		vertical-align: middle;
+	}
+}
+
+.chipPortrait {
+	width: 34px;
+	height: 34px;
+	border-radius: 50% !important;
+	object-fit: cover;
+	flex-shrink: 0;
+	border: 1.5px solid ds.$border-subtle;
+	background-color: ds.$surface-card-dark;
 }
 
 .chipName {
 	font-weight: 700;
 	color: ds.$text-strong-on-dark;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
+	white-space: nowrap;
+	letter-spacing: 0.01em;
 }
 
-.chipTeam {
-	color: ds.$text-auxiliary-on-dark;
-	font-size: 0.7rem;
+.chipTeamGroup {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 8px;
+	background: ds.$surface-card-dark;
+	border-radius: 6px;
+	border: 1px solid ds.$border-subtle;
+}
+
+.chipTeamName {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: ds.$text-muted-on-dark;
+	white-space: nowrap;
 }
 
 .chipPrice {
-	font-weight: 600;
+	font-weight: 700;
 	color: ds.$text-primary-on-dark;
 	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	margin-left: 2px;
 }
 
 .chipDelta {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 	font-weight: 700;
-	font-size: 0.7rem;
+	font-size: 0.75rem;
 	font-variant-numeric: tabular-nums;
+	padding: 2px 8px;
+	border-radius: 6px;
+	white-space: nowrap;
+}
+
+.chipArrow {
+	font-size: 0.6875rem;
 }
 
 .chipDeltaUp {
 	color: ds.$state-gain;
+	background: ds.$surface-gain-soft;
 }
 
 .chipDeltaDown {
 	color: ds.$state-loss;
+	background: ds.$surface-loss-subtle;
 }

@@ -1,4 +1,5 @@
-import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
+import { CREDIT_SYMBOL } from "@/shared/constants";
 import styles from "./SorareCardFooter.module.scss";
 
 interface Props {
@@ -39,7 +40,7 @@ export default function SorareCardFooter({
 			<div className={styles.metaBlock}>
 				{tokensOwned !== undefined && (
 					<span className={styles.tokensBadge}>
-						{tokensOwned} {TOKEN_SYMBOL}
+						{tokensOwned} <TokenSymbol size="xs" />
 					</span>
 				)}
 

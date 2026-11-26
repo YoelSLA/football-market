@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PlayerPortrait, TeamBadge } from "@/shared/components";
 import { Activity } from "@/shared/icons";
 import type { MarketPulse, PlayerMover } from "../../types/models";
 import styles from "./MarketTicker.module.scss";
@@ -11,17 +12,22 @@ export interface MarketTickerProps {
 
 export function MarketTicker({
 	movers,
-	marketPulse,
+	marketPulse: _marketPulse,
 	className,
 }: MarketTickerProps) {
 	if (!movers || movers.length === 0) return null;
 
-	// Duplicar elementos 4 veces para garantizar cobertura continua y animación sin saltos
+	// Desduplicar movers por playerId para evitar claves redundantes
+	const uniqueMovers = Array.from(
+		new Map(movers.map((m) => [m.playerId, m])).values(),
+	);
+
+	// Duplicar elementos para garantizar cobertura continua y animación fluida sin saltos
 	const tickerItems = [
-		...movers.map((m) => ({ ...m, instance: "a" })),
-		...movers.map((m) => ({ ...m, instance: "b" })),
-		...movers.map((m) => ({ ...m, instance: "c" })),
-		...movers.map((m) => ({ ...m, instance: "d" })),
+		...uniqueMovers.map((m) => ({ ...m, instance: "a" })),
+		...uniqueMovers.map((m) => ({ ...m, instance: "b" })),
+		...uniqueMovers.map((m) => ({ ...m, instance: "c" })),
+		...uniqueMovers.map((m) => ({ ...m, instance: "d" })),
 	];
 
 	const formatPrice = (price: number) => {
@@ -46,26 +52,6 @@ export function MarketTicker({
 				<span className={styles.pulseLiveDot} aria-hidden="true" />
 				<Activity className={styles.pulseIcon} aria-hidden="true" />
 				<span className={styles.pulseTitle}>EN VIVO</span>
-				{marketPulse && (
-					<>
-						<span className={styles.pulseDivider}>|</span>
-						<span className={styles.pulseItem}>
-							<span className={styles.pulseLabel}>CAP:</span>{" "}
-							{marketPulse.totalMarketCap.toLocaleString("es-ES", {
-								maximumFractionDigits: 0,
-							})}{" "}
-							₵
-						</span>
-						<span className={styles.pulseDivider}>|</span>
-						<span className={styles.pulseItem}>
-							<span className={styles.pulseLabel}>VOL 24H:</span>{" "}
-							{marketPulse.volume24h.toLocaleString("es-ES", {
-								maximumFractionDigits: 0,
-							})}{" "}
-							₵
-						</span>
-					</>
-				)}
 			</div>
 
 			<div className={styles.marqueeTrackWrapper}>
@@ -78,15 +64,34 @@ export function MarketTicker({
 								to={`/players/${item.playerId}`}
 								className={styles.tickerChip}
 							>
+								<PlayerPortrait
+									src={item.imageUrl}
+									name={item.name}
+									size="sm"
+									fit="cover"
+									className={styles.chipPortrait}
+								/>
 								<span className={styles.chipName}>{item.name}</span>
-								<span className={styles.chipTeam}>({item.team})</span>
+								<span className={styles.chipTeamGroup}>
+									<TeamBadge
+										teamName={item.team}
+										leagueName={item.league}
+										className={styles.teamBadge}
+									/>
+									<span className={styles.chipTeamName}>{item.team}</span>
+								</span>
 								<span className={styles.chipPrice}>
 									{formatPrice(item.currentPrice)}
 								</span>
 								<span
-									className={`${styles.chipDelta} ${isUp ? styles.chipDeltaUp : styles.chipDeltaDown}`}
+									className={`${styles.chipDelta} ${
+										isUp ? styles.chipDeltaUp : styles.chipDeltaDown
+									}`}
 								>
-									{isUp ? "▲" : "▼"} {formatDelta(item.deltaPercentage)}
+									<span className={styles.chipArrow} aria-hidden="true">
+										{isUp ? "▲" : "▼"}
+									</span>
+									{formatDelta(item.deltaPercentage)}
 								</span>
 							</Link>
 						);

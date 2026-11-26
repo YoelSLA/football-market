@@ -78,8 +78,9 @@
 .header {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 4px;
+	gap: 8px;
+	margin-bottom: 6px;
+	flex-wrap: wrap;
 }
 
 .title {
@@ -92,11 +93,10 @@
 
 .valueRow {
 	display: flex;
-	align-items: baseline;
+	align-items: center;
 	justify-content: space-between;
-	gap: ds.$space-xs;
-	margin: 2px 0 6px;
-	flex-wrap: wrap;
+	gap: ds.$space-sm;
+	margin: 4px 0 8px;
 }
 
 .value {
