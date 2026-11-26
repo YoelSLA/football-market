@@ -6,7 +6,7 @@ import {
 	formatDateTime,
 	formatPercentage,
 } from "@/features/portfolio/utils";
-import { Drawer } from "@/shared/components";
+import { Drawer, TokenSymbol } from "@/shared/components";
 import { Activity, BarChart3, FileText, Package } from "@/shared/icons";
 import {
 	PositionDetailHeader,
@@ -58,9 +58,30 @@ export default function PortfolioPositionDetail({
 						title="Tenencia"
 						icon={Package}
 						rows={[
-							{ label: "Tokens totales", value: p.quantity },
-							{ label: "Disponibles", value: p.availableQuantity },
-							{ label: "Reservados", value: p.reservedQuantity },
+							{
+								label: "Tokens totales",
+								value: (
+									<>
+										{p.quantity} <TokenSymbol />
+									</>
+								),
+							},
+							{
+								label: "Disponibles",
+								value: (
+									<>
+										{p.availableQuantity} <TokenSymbol />
+									</>
+								),
+							},
+							{
+								label: "Reservados",
+								value: (
+									<>
+										{p.reservedQuantity} <TokenSymbol />
+									</>
+								),
+							},
 							{
 								label: "Peso del portfolio",
 								value: formatPercentage(p.portfolioWeightPercentage),

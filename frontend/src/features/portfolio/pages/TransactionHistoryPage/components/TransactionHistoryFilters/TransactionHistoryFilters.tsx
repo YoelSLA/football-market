@@ -2,7 +2,13 @@ import {
 	TransactionHistorySort,
 	TransactionType,
 } from "@/features/portfolio/types";
-import { Button } from "@/shared/components";
+import {
+	Button,
+	FilterSearch,
+	FilterSelect,
+	type FilterSelectOption,
+} from "@/shared/components";
+import { CalendarDays, X } from "@/shared/icons";
 import styles from "./TransactionHistoryFilters.module.scss";
 
 interface Props {
@@ -16,6 +22,19 @@ interface Props {
 	onClear: () => void;
 }
 
+const TYPE_OPTIONS: FilterSelectOption[] = [
+	{ value: "ALL", label: "Tipo: Todas" },
+	{ value: TransactionType.BUY, label: "Tipo: Compras" },
+	{ value: TransactionType.SELL, label: "Tipo: Ventas" },
+];
+
+const SORT_OPTIONS: FilterSelectOption[] = [
+	{ value: TransactionHistorySort.NEWEST, label: "Orden: Más recientes" },
+	{ value: TransactionHistorySort.OLDEST, label: "Orden: Más antiguas" },
+	{ value: TransactionHistorySort.AMOUNT_DESC, label: "Orden: Mayor importe" },
+	{ value: TransactionHistorySort.AMOUNT_ASC, label: "Orden: Menor importe" },
+];
+
 export default function TransactionHistoryFilters({
 	search,
 	type,
@@ -27,78 +46,75 @@ export default function TransactionHistoryFilters({
 	onClear,
 }: Props) {
 	return (
-		<search
-			aria-label="Filtrar historial"
-			className={styles.transactionHistoryFilters}
-		>
-			<form
-				className={styles.transactionHistoryFilters__form}
-				onSubmit={(event) => event.preventDefault()}
-			>
-				<label className={styles.transactionHistoryFilters__search}>
-					<span>Buscar jugador</span>
-					<input
-						type="search"
-						value={search}
-						placeholder="Buscar jugador…"
-						onChange={(event) => onChange("search", event.target.value)}
+		<search aria-label="Filtrar transacciones" className={styles.toolbar}>
+			<div className={styles.toolbar__left}>
+				<FilterSearch
+					id="tx-filter-search"
+					className={styles.toolbar__search}
+					label="Buscar jugador"
+					accessibleLabel="Buscar jugador por nombre"
+					placeholder="Buscar jugador…"
+					value={search}
+					onChange={(value) => onChange("search", value)}
+				/>
+				<FilterSelect
+					id="tx-filter-type"
+					className={styles.toolbar__select}
+					label="Tipo de operación"
+					value={type ?? "ALL"}
+					options={TYPE_OPTIONS}
+					onChange={(value) => onChange("type", value === "ALL" ? "" : value)}
+				/>
+				<div
+					className={styles.toolbar__dateRange}
+					title="Filtrar por rango de fechas"
+				>
+					<CalendarDays
+						aria-hidden="true"
+						className={styles.toolbar__dateIcon}
 					/>
-				</label>
-				<label className={styles.transactionHistoryFilters__field}>
-					<span>Tipo</span>
-					<select
-						value={type ?? ""}
-						onChange={(event) => onChange("type", event.target.value)}
-					>
-						<option value="">Todas</option>
-						<option value={TransactionType.BUY}>Compras</option>
-						<option value={TransactionType.SELL}>Ventas</option>
-					</select>
-				</label>
-				<label className={styles.transactionHistoryFilters__field}>
-					<span>Desde</span>
+					<span className={styles.toolbar__datePrefix}>Desde</span>
 					<input
 						type="date"
 						value={from}
 						max={to || undefined}
+						aria-label="Fecha desde"
+						className={styles.toolbar__dateInput}
 						onChange={(event) => onChange("from", event.target.value)}
 					/>
-				</label>
-				<label className={styles.transactionHistoryFilters__field}>
-					<span>Hasta</span>
+					<span className={styles.toolbar__dateSeparator}>–</span>
+					<span className={styles.toolbar__datePrefix}>Hasta</span>
 					<input
 						type="date"
 						value={to}
 						min={from || undefined}
+						aria-label="Fecha hasta"
+						className={styles.toolbar__dateInput}
 						onChange={(event) => onChange("to", event.target.value)}
 					/>
-				</label>
-				<label className={styles.transactionHistoryFilters__sort}>
-					<span>Orden</span>
-					<select
-						value={sort}
-						onChange={(event) => onChange("sort", event.target.value)}
+				</div>
+				<FilterSelect
+					id="tx-filter-sort"
+					className={styles.toolbar__sort}
+					label="Ordenar por"
+					value={sort}
+					options={SORT_OPTIONS}
+					onChange={(value) => onChange("sort", value)}
+				/>
+			</div>
+			{hasFilters && (
+				<div className={styles.toolbar__right}>
+					<Button
+						type="button"
+						className={styles.toolbar__clear}
+						onClick={onClear}
+						title="Restablecer todos los filtros"
 					>
-						<option value={TransactionHistorySort.NEWEST}>Más recientes</option>
-						<option value={TransactionHistorySort.OLDEST}>Más antiguas</option>
-						<option value={TransactionHistorySort.AMOUNT_DESC}>
-							Mayor importe
-						</option>
-						<option value={TransactionHistorySort.AMOUNT_ASC}>
-							Menor importe
-						</option>
-					</select>
-				</label>
-				<Button
-					className={styles.transactionHistoryFilters__clear}
-					type="button"
-					variant="secondary"
-					onClick={onClear}
-					disabled={!hasFilters}
-				>
-					Limpiar
-				</Button>
-			</form>
+						<X aria-hidden="true" />
+						<span>Limpiar</span>
+					</Button>
+				</div>
+			)}
 		</search>
 	);
 }

@@ -61,6 +61,7 @@ export interface OperationHistoryPlayerResponseDTO {
 	name: string;
 	imageUrl: string | null;
 	fallbackImageUrl: string | null;
+	position?: string | null;
 	team: { id: number; name: string };
 	league: { id: number; name: string };
 }

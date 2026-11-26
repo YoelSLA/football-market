@@ -1,4 +1,5 @@
 import { formatPercentage } from "@/features/portfolio/utils";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./PositionTenureTrack.module.scss";
 
 interface Props {
@@ -20,7 +21,7 @@ export default function PositionTenureTrack({
 			<div
 				className={styles.track}
 				role="img"
-				aria-label={`${availableQuantity} disponibles y ${reservedQuantity} reservados de ${quantity} tokens`}
+				aria-label={`${availableQuantity} disponibles y ${reservedQuantity} reservados de ${quantity} ${TOKEN_SYMBOL}`}
 			>
 				<span style={{ width: `${available}%` }} />
 				<span style={{ width: `${reserved}%` }} />
