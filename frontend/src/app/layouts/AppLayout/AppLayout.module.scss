@@ -22,9 +22,9 @@
 
 	// 4. 📦 Box Model
 	padding: 0;
-	/* Fondo transparente: las paginas proveen su propio fondo full-viewport. */
+	/* Fondo base: toda la aplicación comparte el tono oscuro de la marca. */
 	// 6. 🎨 Visual
-	background-color: ds.$surface-transparent;
+	background-color: ds.$surface-page;
 	/* ================= CONTENT ================= */
 
 	/* El contenido ocupa el espacio restante y puede encogerse dentro del

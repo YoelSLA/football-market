@@ -25,6 +25,8 @@ body,
 #root {
 	// 4. 📦 Box Model
 	min-height: 100%;
+	background-color: ds.$surface-page;
+	color: ds.$text-body-on-dark;
 }
 
 html {

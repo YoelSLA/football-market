@@ -49,6 +49,7 @@ export {
 	Crosshair,
 	Crown,
 	Database,
+	Download,
 	FastForward,
 	FileText,
 	Flag,

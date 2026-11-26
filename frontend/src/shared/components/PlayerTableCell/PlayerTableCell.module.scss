@@ -1,0 +1,134 @@
+@use "@/styles/abstracts" as ds;
+
+.playerCell {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+}
+
+.playerPortrait {
+	width: 44px;
+	height: 44px;
+	border-radius: 8px;
+	flex-shrink: 0;
+	border: 1px solid ds.$border-panel-soft;
+	background-color: ds.$surface-data-portrait;
+
+	&_sm {
+		width: 32px;
+		height: 32px;
+		border-radius: 6px;
+	}
+}
+
+.playerInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.playerNameRow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.playerLink {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-decoration: none;
+	color: inherit;
+
+	&:hover .playerName {
+		color: ds.$action-selected-accent;
+	}
+}
+
+.playerName {
+	font-size: 14px;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 1.2;
+	transition: color 0.15s ease;
+}
+
+.affiliations {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	font-size: 11px;
+	color: ds.$text-dimmed-on-dark;
+	line-height: 1.2;
+}
+
+.affiliationTeam {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	width: 120px;
+	flex-shrink: 0;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.metaDivider {
+	color: ds.$text-auxiliary-on-dark;
+	font-size: 11px;
+	flex-shrink: 0;
+	user-select: none;
+	opacity: 0.6;
+}
+
+.affiliationLeague {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+
+	span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+.teamBadge {
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	object-fit: contain;
+	border: 0;
+	background-color: transparent;
+}
+
+.leagueLogo {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	object-fit: contain;
+	background-color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	border-radius: 3px !important;
+	padding: 1px !important;
+	box-sizing: border-box;
+}
+

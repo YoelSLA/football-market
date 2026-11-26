@@ -4,13 +4,14 @@
 	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
-	gap: 1.15rem;
+	gap: 12px;
 
 	// 4. 📦 Box Model
 	min-width: 0;
 
 	// 6. 🎨 Visual
 	color: ds.$text-title-on-dark;
+
 	&__icon {
 		// 3. 🧩 Layout
 		display: grid;
@@ -18,17 +19,19 @@
 		flex-shrink: 0;
 
 		// 4. 📦 Box Model
-		width: 4rem;
-		height: 4rem;
+		width: 48px;
+		height: 48px;
 
 		// 6. 🎨 Visual
-		border-radius: 0.65rem;
-		background-color: ds.$surface-control-active;
+		border-radius: 12px;
+		background-color: ds.$surface-card-subtle;
 		color: ds.$accent-gain;
+
 		svg {
 			// 4. 📦 Box Model
-			width: 2.4rem;
-			height: 2.4rem;
+			width: 24px;
+			height: 24px;
+			stroke-width: 2.5;
 		}
 	}
 
@@ -42,22 +45,26 @@
 
 	&__title {
 		// 4. 📦 Box Model
-		margin: 0 0 0.35rem;
+		margin: 0;
 
 		// 5. 🔤 Typography
-		font-size: clamp(1.3rem, 1.8vw, 1.75rem);
-		line-height: 1.25;
+		font-size: 20px;
+		line-height: 1.2;
 		font-weight: 700;
+		color: ds.$text-title-on-dark;
+		white-space: nowrap;
 	}
 
 	&__description {
 		// 4. 📦 Box Model
-		margin: 0;
+		margin: 3px 0 0;
 
 		// 5. 🔤 Typography
-		font-size: 0.9rem;
+		font-size: 13px;
+		line-height: 1.3;
 
 		// 6. 🎨 Visual
-		color: ds.$text-label-on-dark;
+		color: ds.$text-subtle-on-dark;
+		white-space: nowrap;
 	}
 }
