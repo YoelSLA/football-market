@@ -14,6 +14,8 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Spring Dependency Management Plugin | 1.1.7 | Aplica la gestión de versiones de dependencias provista por Spring Boot. |
 | Spring Boot | 4.1.1 | Arranque, configuración y plataforma de versiones de la aplicación backend. |
 | Spring Web MVC y `RestClient` | Gestionada por Spring Boot 4.1.1 | Endpoints HTTP, serialización web y clientes HTTP para Football-Data.org, TheSportsDB, identidad WhoScored y pruebas E2E. WhoScored usa cliente JDK dedicado sin redirecciones, timeouts y parsing JSON explícito independiente del MIME. |
+| Spring Cache | Gestionada por Spring Boot 4.1.1 | Abstracción de caché para lecturas de alta frecuencia del ranking, catálogo de jugadores y mercados; proveedor local Caffeine. |
+| Caffeine | Gestionada por Spring Boot 4.1.1 | Cachés locales en memoria con expiración y capacidad diferenciadas para las consultas de SPEC-034. |
 | Spring Data JPA | Gestionada por Spring Boot 4.1.1 | Repositories del catálogo de jugadores y usuarios, paginación y acceso a persistencia. Las conexiones utilizan el pool HikariCP, también gestionado por Spring Boot, con UTC configurado en desarrollo y testing. |
 | Hibernate ORM | Gestionada por Spring Boot 4.1.1 | Implementación JPA y validación del esquema de entidades contra la base migrada; soporte JDBC JSON para estructuras JSONB de los modelos persistidos. La sincronización WhoScored conserva solo referencias de catálogo: candidatos y resultados son transitorios, sin auditoría propia persistida. |
 | Spring Security y OAuth2 Resource Server | Gestionada por Spring Boot 4.1.1 | Cadena de seguridad, autenticación Bearer JWT, autorización de endpoints y conversión del principal persistido. |

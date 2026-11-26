@@ -2,6 +2,7 @@ package footballmarket.features.catalog.application;
 
 import static org.assertj.core.api.Assertions.*;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerSynchronizationPersistenceException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -28,6 +29,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
@@ -48,6 +50,7 @@ class PlayerCatalogServiceTest {
   @Autowired private PlayerCatalogService playerCatalogService;
   @Autowired private PlayerCatalogQueryData catalogData;
   @Autowired private PlayerStatisticsQueryData statistics;
+  @Autowired private CacheManager cacheManager;
 
   private PlayerCandidate candidate(String id, String name) {
     return new PlayerCandidate(id, name, "Team", "League", "Forward", null, null, "100");
@@ -83,6 +86,39 @@ class PlayerCatalogServiceTest {
   @Nested
   @DisplayName("Sincronización del catálogo")
   class Synchronization {
+    @Test
+    @DisplayName("Invalida filtros, listado y detalles después de confirmar la sincronización")
+    void invalidatesCatalogReadsAfterSynchronizationCommit() {
+      // Arrange
+      Object filtersKey = new Object();
+      Object catalogKey = new Object();
+      Object playerKey = new Object();
+      Object officialMarketKey = new Object();
+      cacheManager
+          .getCache(QueryCacheConfiguration.PLAYER_CATALOG_FILTERS)
+          .put(filtersKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.PLAYER_CATALOG).put(catalogKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.PLAYER_DETAILS).put(playerKey, "cached");
+      cacheManager
+          .getCache(QueryCacheConfiguration.OFFICIAL_MARKET)
+          .put(officialMarketKey, "cached");
+
+      // Act
+      playerCatalogService.applySynchronization(snapshot());
+
+      // Assert
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.PLAYER_CATALOG_FILTERS).get(filtersKey))
+          .isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.PLAYER_CATALOG).get(catalogKey))
+          .isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.PLAYER_DETAILS).get(playerKey))
+          .isNull();
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialMarketKey))
+          .isNotNull();
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     @DisplayName(

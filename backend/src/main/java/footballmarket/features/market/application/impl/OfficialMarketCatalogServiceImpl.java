@@ -1,5 +1,6 @@
 package footballmarket.features.market.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.market.application.OfficialMarketCatalogService;
 import footballmarket.features.market.application.OfficialMarketQuery;
 import footballmarket.features.market.application.internal.OfficialMarketAssembler;
@@ -12,6 +13,8 @@ import footballmarket.features.market.infraestructure.projections.OfficialMarket
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -29,9 +32,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class OfficialMarketCatalogServiceImpl implements OfficialMarketCatalogService {
 
   private final OfficialMarketRepository officialMarketRepository;
+  private final CacheManager cacheManager;
 
   @Override
   public OfficialMarketCatalog getOfficialCatalog(OfficialMarketQuery query) {
+    Cache cache = this.cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET);
+    OfficialMarketCatalog cached = cache.get(query, OfficialMarketCatalog.class);
+    if (cached != null) {
+      return cached;
+    }
+
     OfficialMarketPriceRangeProjection priceRangeProjection =
         this.officialMarketRepository.findGlobalOfficialMarketPriceRange();
     OfficialMarketPriceRange priceRange =
@@ -42,17 +52,26 @@ public class OfficialMarketCatalogServiceImpl implements OfficialMarketCatalogSe
 
     long totalElements = this.countTotalElements(query);
     if (totalElements == 0) {
-      return new OfficialMarketCatalog(
-          new PageImpl<>(Collections.emptyList(), PageRequest.of(query.page(), query.size()), 0),
-          priceRange);
+      OfficialMarketCatalog catalog =
+          new OfficialMarketCatalog(
+              new PageImpl<>(
+                  Collections.emptyList(), PageRequest.of(query.page(), query.size()), 0),
+              priceRange);
+      cache.put(query, catalog);
+      return catalog;
     }
 
     int offset = query.page() * query.size();
     if (offset >= totalElements) {
-      return new OfficialMarketCatalog(
-          new PageImpl<>(
-              Collections.emptyList(), PageRequest.of(query.page(), query.size()), totalElements),
-          priceRange);
+      OfficialMarketCatalog catalog =
+          new OfficialMarketCatalog(
+              new PageImpl<>(
+                  Collections.emptyList(),
+                  PageRequest.of(query.page(), query.size()),
+                  totalElements),
+              priceRange);
+      cache.put(query, catalog);
+      return catalog;
     }
 
     List<OfficialMarketPlayerProjection> projections =
@@ -73,9 +92,12 @@ public class OfficialMarketCatalogServiceImpl implements OfficialMarketCatalogSe
     List<OfficialMarketPlayer> players =
         projections.stream().map(OfficialMarketAssembler::toDomain).toList();
 
-    return new OfficialMarketCatalog(
-        new PageImpl<>(players, PageRequest.of(query.page(), query.size()), totalElements),
-        priceRange);
+    OfficialMarketCatalog catalog =
+        new OfficialMarketCatalog(
+            new PageImpl<>(players, PageRequest.of(query.page(), query.size()), totalElements),
+            priceRange);
+    cache.put(query, catalog);
+    return catalog;
   }
 
   private long countTotalElements(OfficialMarketQuery query) {

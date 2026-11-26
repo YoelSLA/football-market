@@ -3,6 +3,7 @@ package footballmarket.features.market.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
@@ -38,6 +39,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -63,6 +65,7 @@ class OfficialBuybackServiceTest {
   @Autowired private BuyOrderService buyOrderService;
   @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
+  @Autowired private CacheManager cacheManager;
 
   @MockitoBean private QuoteSource quotes;
 
@@ -359,6 +362,42 @@ class OfficialBuybackServiceTest {
           .isInstanceOf(MarketNotInitializedException.class);
       org.mockito.Mockito.verify(quotes, org.mockito.Mockito.never())
           .currentQuote(org.mockito.ArgumentMatchers.any());
+    }
+  }
+
+  @Nested
+  @DisplayName("Invalidación tras ventas oficiales")
+  class CacheInvalidation {
+    @Test
+    @DisplayName("La venta confirmada invalida solo el mercado oficial")
+    void invalidatesOfficialMarketAfterSale() {
+      // Arrange
+      Object officialKey = new Object();
+      Object p2pKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+
+      // Act
+      sell(player.getId(), 1);
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Una venta oficial rechazada conserva las lecturas cacheadas")
+    void preservesReadsWhenSaleFails() {
+      // Arrange
+      Object officialKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+
+      // Act / Assert
+      assertThatThrownBy(() -> sell(player.getId(), 0))
+          .isInstanceOf(InvalidQuantityException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNotNull();
     }
   }
 }

@@ -2,6 +2,7 @@ package footballmarket.features.ranking.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.ranking.domain.records.ScoreRanking;
@@ -16,11 +17,13 @@ import footballmarket.support.TestcontainersConfiguration;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
@@ -41,10 +44,67 @@ class ScoreRankingQueryServiceTest {
   @Autowired private PlayerCatalogService playerCatalogue;
   @Autowired private IdentityCatalogueFixture catalogue;
   @Autowired private ScoreRankingTestData data;
+  @Autowired private CacheManager cacheManager;
+
+  @BeforeEach
+  void clearsRankingCache() {
+    cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).clear();
+  }
 
   @Nested
   @DisplayName("Consulta del ranking posicional")
   class PositionalRanking {
+    @Test
+    @DisplayName("Reutiliza la misma consulta y separa páginas y resultados vacíos")
+    void cachesByCompleteQuery() {
+      // Arrange
+      catalogue.prepare();
+      data.prepareCatalogueMetrics();
+      List<Player> players =
+          playerCatalogue.getActivePlayers(0, 10).getContent().stream()
+              .sorted(java.util.Comparator.comparing(Player::getId))
+              .toList();
+      LocalDate date = LocalDate.of(2026, 10, 20);
+      data.preparePlayer(players.get(0), date, date, new BigDecimal("0.900000"));
+      data.preparePlayer(players.get(1), date, date, new BigDecimal("0.800000"));
+      data.prepareExecution(date);
+      ScoreRankingQuery firstQuery = new ScoreRankingQuery(0, 1, null, null, null);
+      ScoreRankingQuery secondPage = new ScoreRankingQuery(1, 1, null, null, null);
+      ScoreRankingQuery emptyPage = new ScoreRankingQuery(10, 1, null, null, null);
+      ScoreRankingQuery filteredQuery =
+          new ScoreRankingQuery(0, 1, "Jugador inexistente", null, null);
+
+      // Act
+      ScoreRankingPage firstResult = queryService.findScoreRanking(firstQuery);
+      ScoreRankingPage repeatedResult = queryService.findScoreRanking(firstQuery);
+      ScoreRankingPage secondResult = queryService.findScoreRanking(secondPage);
+      ScoreRankingPage emptyResult = queryService.findScoreRanking(emptyPage);
+      ScoreRankingPage filteredResult = queryService.findScoreRanking(filteredQuery);
+
+      // Assert
+      assertThat(repeatedResult).isEqualTo(firstResult);
+      assertThat(firstResult.content()).hasSize(1);
+      assertThat(secondResult.content()).hasSize(1);
+      assertThat(secondResult.content().getFirst().playerId())
+          .isNotEqualTo(firstResult.content().getFirst().playerId());
+      assertThat(emptyResult.content()).isEmpty();
+      assertThat(filteredResult.content()).isEmpty();
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(firstQuery).get())
+          .isSameAs(firstResult);
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(secondPage).get())
+          .isSameAs(secondResult);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(emptyPage).get())
+          .isSameAs(emptyResult);
+      assertThat(
+              cacheManager
+                  .getCache(QueryCacheConfiguration.SCORE_RANKINGS)
+                  .get(filteredQuery)
+                  .get())
+          .isSameAs(filteredResult);
+    }
+
     @Test
     @DisplayName("Normaliza los filtros y conserva las opciones globales")
     void normalizesFilters() {

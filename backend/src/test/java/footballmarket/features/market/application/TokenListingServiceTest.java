@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
@@ -44,6 +45,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -195,6 +197,7 @@ class TokenListingServiceTest {
   @Autowired private BuyOrderService buyService;
   @Autowired private MarketTestData market;
   @Autowired private PlayerStatisticsQueryData statistics;
+  @Autowired private CacheManager cacheManager;
   @MockitoBean private QuoteSource quotes;
   @MockitoBean private java.time.Clock marketClock;
   private User seller;
@@ -495,6 +498,56 @@ class TokenListingServiceTest {
           .isEqualTo(85);
       assertThat(listingService.detail(seller.getEmail(), listing.getId()).totalAmount())
           .isEqualTo(425);
+    }
+  }
+
+  @Nested
+  @DisplayName("Invalidación de lecturas P2P")
+  class CacheInvalidation {
+    @Test
+    @DisplayName("Publicar y cancelar ofertas invalida solo el mercado P2P")
+    void invalidatesP2PReadsAfterPublicationAndCancellation() {
+      // Arrange
+      Object p2pKey = new Object();
+      Object officialKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+
+      // Act
+      TokenListing listing =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNotNull();
+
+      // Arrange
+      Object cancellationKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(cancellationKey, "cached");
+
+      // Act
+      listingService.cancel(seller.getEmail(), listing.getId());
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(cancellationKey))
+          .isNull();
+    }
+
+    @Test
+    @DisplayName("Una publicación rechazada conserva las lecturas cacheadas")
+    void preservesP2PReadsWhenPublicationFails() {
+      // Arrange
+      Object p2pKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  listingService.publish(
+                      seller.getEmail(), new SellOrderRequest(player.getId(), 0)))
+          .isInstanceOf(InvalidQuantityException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNotNull();
     }
   }
 }
