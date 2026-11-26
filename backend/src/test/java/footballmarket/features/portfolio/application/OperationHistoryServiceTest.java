@@ -91,6 +91,7 @@ class OperationHistoryServiceTest {
                       player.getName(),
                       player.getImageUrl(),
                       player.getFallbackImageUrl(),
+                      player.getPosition(),
                       new RelatedData(player.getTeam().getId(), player.getTeam().getName()),
                       new RelatedData(player.getLeague().getId(), player.getLeague().getName())),
                   4,

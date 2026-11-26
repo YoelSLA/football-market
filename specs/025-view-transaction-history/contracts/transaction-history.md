@@ -36,6 +36,7 @@ Lectura autenticada y paginada. La identidad procede exclusivamente del JWT.
       "player": {
         "id": 41,
         "name": "Lionel Messi",
+        "position": "Attacker",
         "imageUrl": "https://example.test/player-cutout.png",
         "fallbackImageUrl": "https://example.test/player-thumbnail.png",
         "team": { "id": 17, "name": "Inter Miami CF" },

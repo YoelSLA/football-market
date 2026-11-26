@@ -188,7 +188,7 @@ public class PlayerImageRosterSyncService {
       PlayerData match = null;
       List<PlayerData> matches =
           roster.stream()
-              .filter(candidate -> this.matcher.matches(player, this.identity(candidate)))
+              .filter(candidate -> this.matcher.matchesRoster(player, this.identity(candidate)))
               .toList();
 
       if (matches.size() == 1) {
@@ -276,11 +276,40 @@ public class PlayerImageRosterSyncService {
       return "";
     }
     String cleaned = name;
-    for (String suffix : Set.of("FC", "CF", "AC", "SC", "CD", "UD")) {
-      if (cleaned.endsWith(" " + suffix)) {
-        cleaned = cleaned.substring(0, cleaned.length() - suffix.length() - 1);
-      } else if (cleaned.startsWith(suffix + " ")) {
-        cleaned = cleaned.substring(suffix.length() + 1);
+    boolean changed = true;
+    while (changed) {
+      changed = false;
+      for (String suffix :
+          Set.of(
+              "FC",
+              "CF",
+              "AC",
+              "SC",
+              "CD",
+              "UD",
+              "AFC",
+              "AS",
+              "RC",
+              "RCD",
+              "ACF",
+              "SV",
+              "SCO",
+              "OLYMPIQUE DE",
+              "OLYMPIQUE",
+              "STADE",
+              "1901",
+              "CA",
+              "BALOMPIE",
+              "1909")) {
+        if (cleaned.endsWith(" " + suffix)) {
+          cleaned = cleaned.substring(0, cleaned.length() - suffix.length() - 1).strip();
+          changed = true;
+          break;
+        } else if (cleaned.startsWith(suffix + " ")) {
+          cleaned = cleaned.substring(suffix.length() + 1).strip();
+          changed = true;
+          break;
+        }
       }
     }
     return cleaned.strip();

@@ -23,9 +23,15 @@ public record QuoteRankingQueryRequestDTO(
         Long leagueId,
     @Schema(description = "Posición del catálogo, sin distinguir mayúsculas")
         @Size(max = 255, message = "La posición no puede superar 255 caracteres")
-        String position) {
+        String position,
+    @Schema(description = "Dirección de ordenamiento: asc o desc", defaultValue = "desc")
+        @jakarta.validation.constraints.Pattern(
+            regexp = "(?i)^(asc|desc)$",
+            message = "El orden debe ser 'asc' o 'desc'")
+        String order) {
   public QuoteRankingQueryRequestDTO {
     page = page == null ? 0 : page;
     size = size == null ? 20 : size;
+    order = order == null || order.isBlank() ? "desc" : order.toLowerCase(java.util.Locale.ROOT);
   }
 }

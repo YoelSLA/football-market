@@ -14,7 +14,12 @@ public final class ScoreRankingMapper {
 
   public static ScoreRankingQuery toQuery(ScoreRankingQueryRequestDTO request) {
     return new ScoreRankingQuery(
-        request.page(), request.size(), request.name(), request.leagueId(), request.position());
+        request.page(),
+        request.size(),
+        request.name(),
+        request.leagueId(),
+        request.position(),
+        request.order());
   }
 
   public static ScoreRankingPageResponseDTO toResponse(ScoreRankingPage page) {

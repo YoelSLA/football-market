@@ -99,7 +99,12 @@ public class QuoteQueryServiceImpl implements QuoteQueryService {
     List<PlayerRankingEntry> entries =
         this.quotes
             .findRankingPage(
-                query.name(), query.leagueId(), query.position(), query.size(), query.offset())
+                query.name(),
+                query.leagueId(),
+                query.position(),
+                query.order(),
+                query.size(),
+                query.offset())
             .stream()
             .map(
                 row ->

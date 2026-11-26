@@ -168,6 +168,7 @@ public class OperationHistoryServiceImpl implements OperationHistoryService {
             player.getName(),
             player.getImageUrl(),
             player.getFallbackImageUrl(),
+            player.getPosition(),
             new RelatedData(team.getId(), team.getName()),
             new RelatedData(league.getId(), league.getName())),
         transaction.getQuantity(),

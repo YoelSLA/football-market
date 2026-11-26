@@ -55,10 +55,15 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
           RANKED_QUOTES
               + "select * from ranked "
               + RANKING_FILTERS
-              + " order by position limit :size offset :offset",
+              + " order by (case when cast(:order as text) = 'asc' then -position else position end) limit :size offset :offset",
       nativeQuery = true)
   List<QuoteRankingRow> findRankingPage(
-      String name, Long leagueId, String position, int size, long offset);
+      String name, Long leagueId, String position, String order, int size, long offset);
+
+  default List<QuoteRankingRow> findRankingPage(
+      String name, Long leagueId, String position, int size, long offset) {
+    return findRankingPage(name, leagueId, position, "desc", size, offset);
+  }
 
   /** Conteo del mismo conjunto filtrado de la página, incluso si el offset está fuera de rango. */
   @Query(
@@ -92,7 +97,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
    * @return fila vigente del jugador, o vacío si nunca fue cotizado
    */
   @Query(
-      "select q from PlayerQuote q where q.player.id = :playerId"
+      "select q from PlayerQuote q left join fetch q.execution where q.player.id = :playerId"
           + " order by q.effectiveDate desc,"
           + " q.calculatedAt desc, q.id desc")
   List<PlayerQuote> findLatestByPlayerId(@Param("playerId") Long playerId);
@@ -104,7 +109,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
    * @return filas del historial ordenadas por fecha de vigencia descendente
    */
   @Query(
-      "select q from PlayerQuote q where q.player.id = :playerId"
+      "select q from PlayerQuote q left join fetch q.execution where q.player.id = :playerId"
           + " order by q.effectiveDate desc,"
           + " q.calculatedAt desc, q.id desc")
   List<PlayerQuote> findHistoryByPlayerId(@Param("playerId") Long playerId);
@@ -117,7 +122,7 @@ public interface PlayerQuoteRepository extends JpaRepository<PlayerQuote, Long> 
    * @return fila vigente a esa fecha, o vacío si el jugador no tenía cotización
    */
   @Query(
-      "select q from PlayerQuote q where q.player.id = :playerId and q.effectiveDate <= :date"
+      "select q from PlayerQuote q left join fetch q.execution where q.player.id = :playerId and q.effectiveDate <= :date"
           + " order by q.effectiveDate desc,"
           + " q.calculatedAt desc, q.id desc")
   List<PlayerQuote> findLatestByPlayerIdOnOrBefore(

@@ -15,7 +15,12 @@ public interface PositionalValuationRepository extends JpaRepository<PositionalV
       value = ScoreRankingSql.POSITIONAL + ScoreRankingSql.RANKED + ScoreRankingSql.PAGE,
       nativeQuery = true)
   List<ScoreRankingRow> findRankingPage(
-      String name, Long leagueId, String position, int size, long offset);
+      String name, Long leagueId, String position, String order, int size, long offset);
+
+  default List<ScoreRankingRow> findRankingPage(
+      String name, Long leagueId, String position, int size, long offset) {
+    return findRankingPage(name, leagueId, position, "desc", size, offset);
+  }
 
   @Query(
       value = ScoreRankingSql.POSITIONAL + ScoreRankingSql.RANKED + ScoreRankingSql.COUNT,

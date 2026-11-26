@@ -15,7 +15,12 @@ public interface AttributeValuationRepository extends JpaRepository<AttributeVal
       value = ScoreRankingSql.ATTRIBUTE + ScoreRankingSql.RANKED + ScoreRankingSql.PAGE,
       nativeQuery = true)
   List<ScoreRankingRow> findRankingPage(
-      String name, Long leagueId, String position, int size, long offset);
+      String name, Long leagueId, String position, String order, int size, long offset);
+
+  default List<ScoreRankingRow> findRankingPage(
+      String name, Long leagueId, String position, int size, long offset) {
+    return findRankingPage(name, leagueId, position, "desc", size, offset);
+  }
 
   @Query(
       value = ScoreRankingSql.ATTRIBUTE + ScoreRankingSql.RANKED + ScoreRankingSql.COUNT,

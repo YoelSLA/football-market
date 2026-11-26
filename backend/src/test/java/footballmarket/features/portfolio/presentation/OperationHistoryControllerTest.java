@@ -82,6 +82,7 @@ class OperationHistoryControllerTest {
                   "Joel Robles",
                   "https://image.test/player.png",
                   null,
+                  "Goalkeeper",
                   new RelatedData(7L, "Equipo"),
                   new RelatedData(3L, "Liga")),
               5,
