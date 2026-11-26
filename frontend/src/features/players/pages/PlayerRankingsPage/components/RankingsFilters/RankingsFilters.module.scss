@@ -1,186 +1,94 @@
 @use "@/styles/abstracts" as ds;
 
-.filtersBar {
-	// 3. 🧩 Layout
-	display: grid;
-	grid-template-columns: minmax(0, 990px) 320px 320px 170px;
+.toolbar {
+	display: flex;
 	align-items: center;
-	gap: 24px;
-	flex: 0 0 60px;
-
-	// 4. 📦 Box Model
+	justify-content: space-between;
+	gap: 12px;
+	box-sizing: border-box;
 	width: 100%;
-	min-width: 0;
-	height: 60px;
+	height: 48px;
+	min-height: 48px;
 	padding: 0 16px;
+	background-color: ds.$surface-data-header;
+	border-bottom: 1px solid ds.$border-glass-subtle;
 
-	// 6. 🎨 Visual
-	background-color: ds.$surface-data-table;
-	border-radius: 8px;
-}
-
-.searchContainer {
-	// 4. 📦 Box Model
-	width: 100%;
-	min-width: 0;
-}
-
-.searchInputWrapper {
-	// 2. 📍 Positioning
-	position: relative;
-
-	// 3. 🧩 Layout
-	display: flex;
-	align-items: center;
-
-	// 4. 📦 Box Model
-	width: 100%;
-}
-
-.searchInput {
-	// 4. 📦 Box Model
-	height: 34px;
-	width: 100%;
-	padding: 0 12px;
-
-	// 5. 🔤 Typography
-	font-size: 13px;
-
-	// 6. 🎨 Visual
-	border-radius: 6px;
-	background-color: ds.$surface-data-control;
-	border: 1px solid ds.$border-glass;
-	color: ds.$text-primary-on-dark;
-
-	// 8. ✨ Animation
-	transition: border-color 0.15s ease;
-	&::placeholder {
-		// 6. 🎨 Visual
-		color: ds.$text-header-table;
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex: 1;
+		min-width: 0;
 	}
 
-	&:focus {
-		// 6. 🎨 Visual
-		outline: none;
-		border-color: ds.$action-selected-accent;
-		box-shadow: 0 0 0 1px ds.$action-selected-accent;
-	}
-}
+	&__search {
+		flex: 0 1 240px;
+		min-width: 160px;
 
-.filterControl {
-	// 3. 🧩 Layout
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-
-	// 4. 📦 Box Model
-	min-width: 0;
-}
-
-.filterLabel {
-	// 5. 🔤 Typography
-	font-size: 10px;
-	font-weight: 500;
-	letter-spacing: 0.02em;
-
-	// 6. 🎨 Visual
-	color: ds.$text-header-table;
-}
-
-.selectWrapper {
-	// 2. 📍 Positioning
-	position: relative;
-}
-
-.select {
-	// 4. 📦 Box Model
-	height: 34px;
-	padding: 0 32px 0 10px;
-	width: 100%;
-	min-width: 0;
-
-	// 5. 🔤 Typography
-	font-size: 13px;
-
-	// 6. 🎨 Visual
-	background-color: ds.$surface-data-control;
-	border: 1px solid ds.$border-glass;
-	color: ds.$text-primary-on-dark;
-	border-radius: 6px;
-
-	// 7. ⚙️ Behavior
-	cursor: pointer;
-
-	// 8. ✨ Animation
-	transition: border-color 0.15s ease;
-	&:focus {
-		// 6. 🎨 Visual
-		outline: none;
-		border-color: ds.$action-selected-accent;
-		box-shadow: 0 0 0 1px ds.$action-selected-accent;
-	}
-
-	option {
-		// 6. 🎨 Visual
-		background-color: ds.$surface-data-control;
-		color: ds.$text-primary-on-dark;
-	}
-}
-
-.actionsContainer {
-	// 3. 🧩 Layout
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-
-	// 4. 📦 Box Model
-	min-width: 0;
-}
-
-.clearButton {
-	// 3. 🧩 Layout
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-
-	// 4. 📦 Box Model
-	height: 34px;
-	padding: 0 14px;
-
-	// 5. 🔤 Typography
-	font-size: 13px;
-	font-weight: 500;
-
-	// 6. 🎨 Visual
-	background-color: ds.$surface-glass-subtle;
-	border: 1px solid ds.$border-glass-subtle;
-	color: ds.$text-auxiliary-on-dark;
-	border-radius: 6px;
-
-	// 7. ⚙️ Behavior
-	cursor: pointer;
-
-	// 8. ✨ Animation
-	transition: all 0.15s ease;
-	&_active {
-		// 6. 🎨 Visual
-		color: ds.$text-primary-on-dark;
-		border-color: ds.$border-glass-strong;
-		&:hover {
-			// 6. 🎨 Visual
-			background-color: ds.$surface-glass-interactive;
-			border-color: ds.$text-primary-on-dark;
+		label {
+			display: none;
 		}
+
+		--filter-control-height: 32px;
 	}
 
-	&:disabled {
-		// 7. ⚙️ Behavior
-		opacity: 0.35;
-		cursor: not-allowed;
+	&__select {
+		flex: 0 0 auto;
+		min-width: 155px;
+
+		label {
+			display: none;
+		}
+
+		--filter-control-height: 32px;
 	}
 
-	&:focus-visible {
-		// 6. 🎨 Visual
-		outline: 2px solid ds.$focus-ring-dark;
+	&__sort {
+		flex: 0 0 auto;
+		min-width: 180px;
+
+		label {
+			display: none;
+		}
+
+		--filter-control-height: 32px;
+	}
+
+	&__right {
+		display: flex;
+		align-items: center;
+		flex-shrink: 0;
+	}
+
+	&__clearBtn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 32px;
+		padding: 0 12px;
+		border-radius: 8px;
+		border: 1px solid ds.$border-glass-subtle;
+		background: ds.$surface-glass-interactive;
+		color: ds.$text-auxiliary-on-dark;
+		font-size: 12px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background: ds.$surface-card-subtle;
+			color: ds.$text-primary-on-dark;
+			border-color: ds.$border-panel-soft;
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+
+		&_active {
+			border-color: ds.$border-panel-soft;
+			color: ds.$accent-highlight;
+		}
 	}
 }

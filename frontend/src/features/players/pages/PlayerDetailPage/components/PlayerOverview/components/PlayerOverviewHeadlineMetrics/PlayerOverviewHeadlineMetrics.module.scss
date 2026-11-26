@@ -14,8 +14,9 @@
 	border-radius: 12px;
 
 	// 6. 🎨 Visual
-	background-color: ds.$surface-accent-deep;
-	border: 1px solid ds.$border-panel;
+	background-color: ds.$surface-page-deep;
+	border: 1px solid ds.$border-panel-tint;
+	box-shadow: inset 0 1px 2px ds.$shadow-subtle;
 
 	&__card {
 		// 3. 🧩 Layout
@@ -28,13 +29,13 @@
 		// 4. 📦 Box Model
 		box-sizing: border-box;
 		min-width: 0;
-		padding: 2px 6px;
+		padding: 4px 8px;
 
 		// 5. 🔤 Typography
 		text-align: center;
 
 		// 6. 🎨 Visual
-		border-right: 1px solid ds.$border-panel;
+		border-right: 1px solid ds.$border-panel-soft;
 
 		&:last-child {
 			border-right: none;
@@ -43,7 +44,7 @@
 
 	&__icon {
 		flex-shrink: 0;
-		color: ds.$accent-sports-green;
+		color: ds.$accent-gain;
 		margin-bottom: 2px;
 	}
 
@@ -58,29 +59,21 @@
 		line-height: 1.2;
 		text-overflow: ellipsis;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		white-space: nowrap;
-
-		// 6. 🎨 Visual
-		color: ds.$text-primary-on-dark;
+		letter-spacing: 0.04em;
+		color: ds.$text-muted-on-dark;
 	}
 
 	&__value {
 		// 5. 🔤 Typography
-		font-size: 22px;
+		font-size: 19px;
 		font-weight: 800;
 		line-height: 1.15;
-		color: ds.$text-primary-on-dark;
-		margin: 2px 0;
+		color: ds.$text-title-on-dark;
 	}
 
 	&__unit {
 		// 5. 🔤 Typography
-		font-size: 11px;
-		line-height: 1.2;
-		white-space: nowrap;
-
-		// 6. 🎨 Visual
+		font-size: 10px;
 		color: ds.$text-muted-on-dark;
 	}
 }

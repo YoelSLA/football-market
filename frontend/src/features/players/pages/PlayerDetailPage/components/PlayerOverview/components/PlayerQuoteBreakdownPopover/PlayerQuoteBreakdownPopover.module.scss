@@ -1,0 +1,209 @@
+@use "@/styles/abstracts" as ds;
+
+.wrapper {
+	position: relative;
+	display: inline-flex;
+}
+
+.triggerButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-subtle;
+	color: ds.$text-muted-on-dark;
+	font-size: 10px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover,
+	&:focus-visible {
+		color: ds.$accent-highlight;
+		border-color: ds.$accent-highlight;
+		background-color: ds.$surface-raised;
+		outline: none;
+	}
+}
+
+.triggerIcon {
+	width: 12px;
+	height: 12px;
+}
+
+.popover {
+	// 3. 🧩 Layout
+	position: absolute;
+	top: calc(100% + 6px);
+	right: 0;
+	z-index: 50;
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	width: 320px;
+	padding: ds.$space-md;
+	border-radius: 12px;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+	text-align: left;
+}
+
+.popoverHeader {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: ds.$space-xs;
+	border-bottom: 1px solid ds.$border-strong;
+	padding-bottom: ds.$space-2xs;
+}
+
+.title {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+}
+
+.subtitle {
+	margin: 2px 0 0;
+	font-size: 11px;
+	color: ds.$text-muted-on-dark;
+}
+
+.closeButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: 9999px;
+	background: transparent;
+	border: none;
+	color: ds.$text-muted-on-dark;
+	cursor: pointer;
+	padding: 0;
+	transition: color 0.2s ease;
+
+	&:hover,
+	&:focus-visible {
+		color: ds.$text-title-on-dark;
+		outline: none;
+	}
+}
+
+.closeIcon {
+	width: 16px;
+	height: 16px;
+}
+
+.factorsList {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-xs;
+}
+
+.factorItem {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: ds.$space-2xs ds.$space-xs;
+	border-radius: 8px;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-strong;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: ds.$space-2xs;
+	}
+
+	&__titleGroup {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	&__iconSport {
+		width: 14px;
+		height: 14px;
+		color: ds.$accent-highlight;
+	}
+
+	&__iconMarket {
+		width: 14px;
+		height: 14px;
+		color: ds.$state-caution;
+	}
+
+	&__name {
+		font-size: 11px;
+		font-weight: 500;
+		color: ds.$text-body-on-dark;
+	}
+
+	&__badge {
+		font-size: 11px;
+		font-weight: 700;
+
+		&--positive {
+			color: ds.$accent-open;
+		}
+
+		&--negative {
+			color: ds.$state-loss;
+		}
+	}
+
+	&__meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 10px;
+		color: ds.$text-dimmed-on-dark;
+	}
+}
+
+.totalRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: ds.$space-2xs ds.$space-xs;
+	border-radius: 8px;
+	background-color: ds.$surface-card-subtle;
+	border: 1px solid ds.$border-subtle;
+	margin-top: 2px;
+}
+
+.totalLabel {
+	font-size: 11px;
+	font-weight: 600;
+	color: ds.$text-strong-on-dark;
+}
+
+.totalValue {
+	font-size: 12px;
+	font-weight: 700;
+
+	&--positive {
+		color: ds.$accent-open;
+	}
+
+	&--negative {
+		color: ds.$state-loss;
+	}
+}
+
+.footnote {
+	margin: 0;
+	font-size: 10px;
+	color: ds.$text-dimmed-on-dark;
+	line-height: 1.4;
+}

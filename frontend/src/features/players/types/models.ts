@@ -117,7 +117,22 @@ export interface TokenQuoteSeries {
 }
 
 /** Origen de la cotización según el backend. */
-export type PlayerQuoteOrigin = "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD";
+export type PlayerQuoteOrigin =
+	| "INITIAL"
+	| "RECOMPUTED"
+	| "CARRIED_FORWARD"
+	| "MARKET_DEMAND";
+
+/** Factores del desglose de cotización híbrida (SPEC-029). */
+export interface QuoteBreakdownFactors {
+	sportMultiplier: number;
+	sportContributionPercentage: number;
+	marketDemandFactor: number;
+	marketMultiplier: number;
+	marketContributionPercentage: number;
+	netDemandTokens: number;
+	totalVariationPercentage: number;
+}
 
 /** Cotización persistida real del jugador con datos de auditoría y cálculo de variación. */
 export interface PlayerQuote {
@@ -134,6 +149,7 @@ export interface PlayerQuote {
 	absoluteChange: number | null;
 	percentageChange: number | null;
 	direction: "up" | "down" | "flat" | "unknown";
+	breakdown?: QuoteBreakdownFactors | null;
 }
 
 /** Historial completo de cotizaciones de un jugador. */
@@ -182,6 +198,7 @@ export interface RankingQuery {
 	name?: string;
 	leagueId?: number;
 	position?: string;
+	order?: "asc" | "desc";
 }
 
 export interface RankingFilterOptions {
@@ -223,8 +240,15 @@ export interface RankingMetadata {
 	totalClassified: number | null;
 }
 
+export type RankingSort =
+	| "score_desc"
+	| "score_asc"
+	| "price_desc"
+	| "price_asc";
+
 export interface RankingFilterCriteria {
 	name: string;
 	leagueId: string;
 	position: string;
+	sort?: RankingSort;
 }

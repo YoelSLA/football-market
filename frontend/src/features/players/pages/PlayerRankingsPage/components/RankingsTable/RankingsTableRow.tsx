@@ -1,40 +1,28 @@
-import { Link } from "react-router-dom";
-import type {
-	PlayerRankingItem,
-	RankingMode,
-	RankingOrigin,
-} from "@/features/players/types";
-import {
-	CompetitionLogo,
-	PlayerPortrait,
-	TeamBadge,
-} from "@/shared/components";
+import type { PlayerRankingItem } from "@/features/players/types";
+import { PlayerTableCell } from "@/shared/components";
 import styles from "./RankingsTable.module.scss";
 import TableMedal from "./TableMedal";
 
-const ORIGIN_CLASSES: Record<RankingOrigin, string> = {
-	INITIAL: styles.originChip_carried,
-	RECOMPUTED: styles.originChip_recomputed,
-	CARRIED_FORWARD: styles.originChip_carried,
-};
-
 interface Props {
 	player: PlayerRankingItem;
-	mode: RankingMode;
 	fromLocation: string;
 }
 
-export function RankingsTableRow({ player, mode, fromLocation }: Props) {
-	const formatValue = (p: PlayerRankingItem) => {
-		if (mode === "PERFORMANCE") {
-			return p.score !== undefined
-				? p.score.toFixed(6).replace(".", ",")
-				: "0,000000";
-		}
-		return p.price !== undefined
-			? `${p.price.toFixed(2).replace(".", ",")} ₵`
-			: "0,00 ₵";
-	};
+export function RankingsTableRow({ player, fromLocation }: Props) {
+	const scoreText =
+		player.score !== undefined
+			? player.score.toFixed(6).replace(".", ",")
+			: "—";
+
+	const scorePercent =
+		player.score !== undefined
+			? Math.min(100, Math.max(0, player.score * 100))
+			: 0;
+
+	const priceText =
+		player.price !== undefined
+			? `${player.price.toFixed(2).replace(".", ",")} ₵`
+			: "—";
 
 	return (
 		<tr className={styles.row}>
@@ -44,86 +32,54 @@ export function RankingsTableRow({ player, mode, fromLocation }: Props) {
 						<TableMedal rank={player.position as 1 | 2 | 3} />
 					</div>
 				) : (
-					<span className={styles.posNumber}>{player.position}</span>
+					<span className={styles.rankNumber}>{player.position}</span>
 				)}
 			</td>
 
 			<td className={styles.td_player}>
-				<Link
-					to={`/players/${player.playerId}`}
-					state={{ from: fromLocation }}
-					className={styles.playerLink}
-					title={`Ver detalle de ${player.playerName}`}
-				>
-					<PlayerPortrait
-						src={player.playerAvatar}
-						name={player.playerName}
-						alt=""
-						className={styles.playerAvatar}
-					/>
-					<span className={styles.playerName}>{player.playerName}</span>
-				</Link>
+				<PlayerTableCell
+					player={{
+						id: player.playerId,
+						name: player.playerName,
+						imageUrl: player.playerAvatar,
+						position: player.tacticalPosition ?? undefined,
+						teamName: player.teamName,
+						teamBadgeUrl: player.teamBadge,
+						leagueName: player.leagueName,
+						leagueLogoUrl: player.leagueFlag,
+					}}
+					href={`/players/${player.playerId}`}
+					linkState={{ from: fromLocation }}
+				/>
 			</td>
 
-			<td className={styles.td_team}>
-				<div className={styles.teamContainer}>
-					<TeamBadge
-						src={player.teamBadge}
-						teamName={player.teamName ?? "Equipo no disponible"}
-						leagueName={player.leagueName ?? undefined}
-						className={styles.teamBadge}
-					/>
-					<span className={styles.teamName}>{player.teamName ?? "—"}</span>
+			<td className={styles.td_score}>
+				<div className={styles.scoreContainer}>
+					<strong className={styles.scoreValue}>{scoreText}</strong>
+					{player.score !== undefined && (
+						<div
+							className={styles.scoreBar}
+							title={`Score: ${scorePercent.toFixed(1)}%`}
+						>
+							<div
+								className={styles.scoreBarFill}
+								style={{ width: `${scorePercent}%` }}
+							/>
+						</div>
+					)}
 				</div>
 			</td>
 
-			<td className={styles.td_league}>
-				<div className={styles.leagueContainer}>
-					<CompetitionLogo
-						src={player.leagueFlag}
-						competitionName={player.leagueName ?? "Liga"}
-						className={styles.leagueFlag}
-						decorative
-					/>
-					<span className={styles.leagueName}>{player.leagueName ?? "—"}</span>
+			<td className={styles.td_price}>
+				<div className={styles.priceContainer}>
+					<span className={styles.priceValue}>{priceText}</span>
+					<span className={styles.priceUnit}>/ token</span>
 				</div>
-			</td>
-
-			<td className={styles.td_role}>
-				{player.tacticalPosition ? (
-					<span
-						className={`${styles.positionBadge} ${
-							styles[`positionBadge_${player.tacticalPosition}`]
-						}`}
-					>
-						{player.tacticalPosition}
-					</span>
-				) : (
-					<span className={styles.positionBadge}>—</span>
-				)}
-			</td>
-
-			<td className={styles.td_value}>
-				<strong className={styles.valueStrong}>{formatValue(player)}</strong>
 			</td>
 
 			<td className={styles.td_date}>
-				<span className={styles.dateText}>{player.formattedDate}</span>
+				<span className={styles.dateValue}>{player.formattedDate}</span>
 			</td>
-
-			{mode === "VALUATION" && (
-				<td className={styles.td_origin}>
-					{player.origin && (
-						<span
-							className={`${styles.originChip} ${
-								ORIGIN_CLASSES[player.origin]
-							}`}
-						>
-							{player.origin}
-						</span>
-					)}
-				</td>
-			)}
 		</tr>
 	);
 }

@@ -12,6 +12,7 @@ export {
 } from "./hooks";
 export {
 	PlayerDetailPage,
+	PlayerQuoteHistoryPage,
 	PlayerRankingsPage,
 	PlayersPage,
 } from "./pages";

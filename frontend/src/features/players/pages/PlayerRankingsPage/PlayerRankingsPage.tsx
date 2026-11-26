@@ -1,9 +1,9 @@
 import { PageLayout } from "@/app/layouts";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { usePlayerRankingsPage } from "@/features/players/hooks";
 import RankingsStatus from "./components/RankingStatus";
 import PlayerRankingsFilters from "./components/RankingsFilters";
 import PlayerRankingsHeader from "./components/RankingsHeader";
-import PlayerRankingsPagination from "./components/RankingsPagination";
 import PlayerRankingsPodium from "./components/RankingsPodium";
 import PlayerRankingsTable from "./components/RankingsTable";
 import styles from "./PlayerRankingsPage.module.scss";
@@ -11,7 +11,6 @@ import styles from "./PlayerRankingsPage.module.scss";
 export default function PlayerRankingsPage() {
 	const {
 		mode,
-		handleModeChange,
 		metadata,
 		podiumItems,
 		tableItems,
@@ -32,9 +31,8 @@ export default function PlayerRankingsPage() {
 				aria-label="Página de ranking de jugadores"
 			>
 				<PlayerRankingsHeader
-					mode={mode}
-					onModeChange={handleModeChange}
 					metadata={metadata}
+					isLoading={status.isLoading}
 				/>
 
 				<div className={styles.playerRankings__scrollRegion}>
@@ -50,32 +48,37 @@ export default function PlayerRankingsPage() {
 							<PlayerRankingsPodium topPlayers={podiumItems} mode={mode} />
 						)}
 
-						<PlayerRankingsFilters
-							filters={filters}
-							onFilterChange={handleFilterChange}
-							onClearFilters={handleClearFilters}
-							availableLeagues={filterOptions.leagues}
-							availablePositions={filterOptions.positions}
+						<PlayerRankingsTable
+							items={tableItems}
+							toolbar={
+								<PlayerRankingsFilters
+									filters={filters}
+									onFilterChange={handleFilterChange}
+									onClearFilters={handleClearFilters}
+									availableLeagues={filterOptions.leagues}
+									availablePositions={filterOptions.positions}
+								/>
+							}
 						/>
-
-						{tableItems.length > 0 && (
-							<PlayerRankingsTable items={tableItems} mode={mode} />
-						)}
 					</RankingsStatus>
 				</div>
 
-				{!status.isLoading && !status.isError && pagination.totalItems > 0 ? (
-					<PlayerRankingsPagination
-						currentPage={pagination.currentPage}
-						totalPages={pagination.totalPages}
-						totalItems={pagination.totalItems}
-						itemsOnPage={pagination.itemsOnPage}
-						pageSize={pagination.pageSize}
-						pageSizeOptions={pagination.pageSizeOptions}
-						onPageChange={pagination.onPageChange}
-						onPageSizeChange={pagination.onPageSizeChange}
-					/>
-				) : null}
+				{!status.isLoading && !status.isError && pagination.totalItems > 0 && (
+					<footer className={styles.playerRankings__footer}>
+						<MarketPagination
+							page={pagination.currentPage - 1}
+							totalPages={pagination.totalPages}
+							visiblePlayers={pagination.itemsOnPage}
+							totalPlayers={pagination.totalItems}
+							pageSize={pagination.pageSize}
+							showSummary={false}
+							variant="official"
+							onPageChange={(zeroBasedPage) =>
+								pagination.onPageChange(zeroBasedPage + 1)
+							}
+						/>
+					</footer>
+				)}
 			</main>
 		</PageLayout>
 	);

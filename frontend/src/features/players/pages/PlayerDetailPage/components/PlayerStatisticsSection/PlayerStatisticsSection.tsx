@@ -59,6 +59,8 @@ export default function PlayerStatisticsSection({
 				quotesState={quotesState}
 				quotesErrorMessage={quotesErrorMessage}
 				onRetryQuotes={onRetryQuotes}
+				playerName={player.name}
+				playerId={player.id}
 			/>
 			{statisticsState === "error" && (
 				<section role="alert" className={styles.statisticsSection__bannerError}>

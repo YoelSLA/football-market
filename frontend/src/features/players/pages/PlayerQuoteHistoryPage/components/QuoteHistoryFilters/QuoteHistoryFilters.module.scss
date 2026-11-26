@@ -1,0 +1,188 @@
+@use "@/styles/abstracts" as ds;
+
+.toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	box-sizing: border-box;
+	width: 100%;
+	height: 48px;
+	min-height: 48px;
+	padding: 0 16px;
+	background-color: ds.$surface-data-header;
+	border-bottom: 1px solid ds.$border-glass-subtle;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__pills {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin: 0;
+		padding: 0;
+		border: none;
+	}
+
+	&__pill {
+		display: inline-flex;
+		align-items: center;
+		height: 30px;
+		padding: 0 10px;
+		border-radius: 6px;
+		font-size: 11px;
+		font-weight: 600;
+		background-color: ds.$surface-glass-interactive;
+		border: 1px solid ds.$border-glass-subtle;
+		color: ds.$text-auxiliary-on-dark;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		white-space: nowrap;
+
+		&:hover {
+			color: ds.$text-primary-on-dark;
+			background-color: ds.$surface-card-subtle;
+			border-color: ds.$border-panel-soft;
+		}
+
+		&_active {
+			background-color: rgba(6, 182, 212, 0.15);
+			border-color: rgba(6, 182, 212, 0.5);
+			color: ds.$accent-highlight;
+			font-weight: 700;
+		}
+	}
+
+	&__divider {
+		width: 1px;
+		height: 20px;
+		background-color: ds.$border-glass-subtle;
+		flex-shrink: 0;
+	}
+
+	&__dates {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 11px;
+		color: ds.$text-auxiliary-on-dark;
+	}
+
+	&__dateGroup {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+	&__dateLabel {
+		font-size: 11px;
+		font-weight: 600;
+		color: ds.$text-auxiliary-on-dark;
+	}
+
+	&__dateInput {
+		height: 30px;
+		padding: 0 8px;
+		border-radius: 6px;
+		border: 1px solid ds.$border-glass-subtle;
+		background-color: ds.$surface-data-control;
+		color: ds.$text-primary-on-dark;
+		font-size: 11px;
+		font-family: inherit;
+		outline: none;
+		transition: border-color 0.15s ease;
+
+		&:focus {
+			border-color: ds.$accent-highlight;
+		}
+
+		&::-webkit-calendar-picker-indicator {
+			filter: invert(0.8);
+			cursor: pointer;
+		}
+	}
+
+	&__right {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-shrink: 0;
+	}
+
+	&__exportBtn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 30px;
+		padding: 0 12px;
+		border-radius: 6px;
+		font-size: 11px;
+		font-weight: 600;
+		background-color: ds.$surface-card-subtle;
+		border: 1px solid ds.$border-panel-soft;
+		color: ds.$text-primary-on-dark;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		svg {
+			color: ds.$accent-highlight;
+		}
+
+		&:hover:not(:disabled) {
+			background-color: ds.$surface-glass-interactive;
+			border-color: ds.$accent-highlight;
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
+	}
+
+	&__clearBtn {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		height: 30px;
+		padding: 0 10px;
+		border-radius: 6px;
+		border: 1px solid ds.$border-glass-subtle;
+		background: ds.$surface-glass-interactive;
+		color: ds.$text-auxiliary-on-dark;
+		font-size: 11px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover {
+			background: ds.$surface-card-subtle;
+			color: ds.$text-primary-on-dark;
+			border-color: ds.$border-panel-soft;
+		}
+	}
+}
+
+@media (max-width: 900px) {
+	.toolbar {
+		height: auto;
+		min-height: auto;
+		flex-direction: column;
+		align-items: stretch;
+		padding: 10px 14px;
+		gap: 10px;
+
+		&__left {
+			flex-wrap: wrap;
+		}
+
+		&__divider {
+			display: none;
+		}
+	}
+}

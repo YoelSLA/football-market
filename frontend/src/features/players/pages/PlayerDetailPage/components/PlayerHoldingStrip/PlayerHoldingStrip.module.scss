@@ -1,0 +1,84 @@
+@use "@/styles/abstracts" as ds;
+
+.holdingStrip {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+
+	// 4. 📦 Box Model
+	width: 100%;
+	box-sizing: border-box;
+	padding: 10px 16px;
+	margin-top: 4px;
+	border-radius: 10px;
+
+	// 5. 🔤 Typography
+	font-size: 12px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-data-table;
+	border: 1px solid ds.$border-panel-tint;
+	color: ds.$text-body-on-dark;
+
+	&__position {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+	}
+
+	&__badge {
+		padding: 3px 8px;
+		border-radius: 6px;
+		font-weight: 700;
+		font-size: 11px;
+		background-color: ds.$surface-highlight-tint;
+		border: 1px solid ds.$border-highlight-subtle;
+		color: ds.$accent-highlight;
+	}
+
+	&__details {
+		color: ds.$text-body-on-dark;
+
+		strong {
+			color: ds.$text-title-on-dark;
+			font-weight: 700;
+		}
+	}
+
+	&__cost {
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__empty {
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	&__credits {
+		color: ds.$text-muted-on-dark;
+
+		strong {
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__p2pLink {
+		color: ds.$accent-highlight;
+		text-decoration: underline;
+		font-weight: 600;
+		transition: opacity 0.2s ease;
+
+		&:hover {
+			opacity: 0.8;
+		}
+	}
+}

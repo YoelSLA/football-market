@@ -1,75 +1,65 @@
 @use "@/styles/abstracts" as ds;
 
 .playerStatisticsTabs {
-	// 3. 🧩 Layout
 	display: flex;
 	flex-shrink: 0;
-
-	// 4. 📦 Box Model
 	box-sizing: border-box;
 	width: 100%;
-	height: 40px;
-	margin: 12px 0 0;
+	height: 46px;
+	margin: 8px 0 0;
 	padding: 0;
-
-	// 6. 🎨 Visual
 	border-bottom: 1px solid ds.$border-panel;
 
 	button {
-		// 3. 🧩 Layout
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 10px;
-
-		// 4. 📦 Box Model
+		gap: 8px;
 		box-sizing: border-box;
-		min-width: 220px;
-		height: 40px;
-		padding: 0 24px;
+		min-width: 180px;
+		height: 46px;
+		padding: 0 18px;
 		margin: 0;
-
-		// 5. 🔤 Typography
 		font: inherit;
 		font-size: 13px;
 		font-weight: 500;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-
-		// 6. 🎨 Visual
-		background-color: ds.$surface-panel-from;
+		text-transform: none;
+		letter-spacing: 0.01em;
+		background-color: transparent;
 		color: ds.$text-muted-on-dark;
-		border: 1px solid ds.$border-panel;
-		border-bottom: none;
-		border-radius: 6px 6px 0 0;
-
-		// 7. ⚙️ Behavior
+		border: none;
+		border-bottom: 2px solid transparent;
+		border-radius: 8px 8px 0 0;
 		cursor: pointer;
 		transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 
 		&:hover {
 			color: ds.$text-primary-on-dark;
-			background-color: ds.$surface-card-dark;
+			background-color: ds.$surface-glass-subtle;
 		}
 
 		&[aria-selected="true"] {
-			// 5. 🔤 Typography
 			font-weight: 700;
-
-			// 6. 🎨 Visual
-			color: ds.$text-primary-on-dark;
-			background-color: ds.$surface-control-active;
-			border-color: ds.$accent-sports-green;
-
-			svg {
-				color: ds.$accent-sports-green;
-			}
+			color: ds.$accent-gain;
+			background-color: ds.$surface-highlight-tint;
+			border-bottom: 2px solid ds.$accent-gain;
 		}
 
 		&:focus-visible {
-			// 6. 🎨 Visual
-			outline: 2px solid ds.$focus-ring-dark;
+			outline: 2px solid ds.$accent-gain;
 			outline-offset: -2px;
+		}
+	}
+}
+
+@media (max-width: 768px) {
+	.playerStatisticsTabs {
+		button {
+			min-width: 0;
+			flex: 1;
+			padding: 0 8px;
+			font-size: 11px;
+			gap: 4px;
 		}
 	}
 }

@@ -130,8 +130,17 @@ export interface PlayerQuoteResponseDTO {
 	strategy: string | null;
 	strategyVersion: string | null;
 	sourceValuationDate: string | null;
-	origin: "INITIAL" | "RECOMPUTED" | "CARRIED_FORWARD" | string;
+	origin:
+		| "INITIAL"
+		| "RECOMPUTED"
+		| "CARRIED_FORWARD"
+		| "MARKET_DEMAND"
+		| string;
 	calculatedAt: string;
+	sportMultiplier?: number | string | null;
+	marketDemandFactor?: number | string | null;
+	marketMultiplier?: number | string | null;
+	marketNetDemandTokens?: number | null;
 }
 
 export interface PlayerQuoteHistoryResponseDTO {

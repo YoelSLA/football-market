@@ -1,74 +1,56 @@
+import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import type { PlayerRankingItem, RankingMode } from "@/features/players/types";
+import type { PlayerRankingItem } from "@/features/players/types";
 import styles from "./RankingsTable.module.scss";
 import { RankingsTableRow } from "./RankingsTableRow";
 
 interface Props {
 	items: PlayerRankingItem[];
-	mode: RankingMode;
+	toolbar?: ReactNode;
 }
 
-export default function RankingsTable({ items, mode }: Props) {
+export default function RankingsTable({ items, toolbar }: Props) {
 	const location = useLocation();
 	const fromLocation = `${location.pathname}${location.search}`;
 
 	return (
 		<div className={styles.tableWrapper}>
-			<table
-				className={`${styles.table} ${
-					mode === "VALUATION"
-						? styles.table_valuation
-						: styles.table_performance
-				}`}
-				aria-label="Tabla de posiciones del ranking"
-			>
-				<thead>
-					<tr>
-						<th scope="col" className={styles.th_pos}>
-							#
-						</th>
-						<th scope="col" className={styles.th_player}>
-							Jugador
-						</th>
-						<th scope="col" className={styles.th_team}>
-							Equipo
-						</th>
-						<th scope="col" className={styles.th_league}>
-							Liga
-						</th>
-						<th scope="col" className={styles.th_role}>
-							Posición
-						</th>
-						<th
-							scope="col"
-							className={`${styles.th_value} ${styles.th_activeSort}`}
-						>
-							<span>{mode === "PERFORMANCE" ? "Score" : "Cotización"}</span>
-							<span className={styles.sortArrow} aria-hidden="true">
-								▾
-							</span>
-						</th>
-						<th scope="col" className={styles.th_date}>
-							{mode === "PERFORMANCE" ? "Fecha de valuación" : "Vigencia"}
-						</th>
-						{mode === "VALUATION" && (
-							<th scope="col" className={styles.th_origin}>
-								Origen
+			{toolbar && <div className={styles.tableWrapper__toolbar}>{toolbar}</div>}
+			<div className={styles.tableWrapper__container}>
+				<table
+					className={styles.table}
+					aria-label="Tabla de posiciones del ranking"
+				>
+					<thead>
+						<tr>
+							<th scope="col" className={styles.th_pos}>
+								# Pos
 							</th>
-						)}
-					</tr>
-				</thead>
-				<tbody>
-					{items.map((player) => (
-						<RankingsTableRow
-							key={`${player.position}-${player.playerId}`}
-							player={player}
-							mode={mode}
-							fromLocation={fromLocation}
-						/>
-					))}
-				</tbody>
-			</table>
+							<th scope="col" className={styles.th_player}>
+								Jugador
+							</th>
+							<th scope="col" className={styles.th_score}>
+								Score
+							</th>
+							<th scope="col" className={styles.th_price}>
+								Cotización
+							</th>
+							<th scope="col" className={styles.th_date}>
+								Fecha valuación
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{items.map((player) => (
+							<RankingsTableRow
+								key={`${player.position}-${player.playerId}`}
+								player={player}
+								fromLocation={fromLocation}
+							/>
+						))}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	);
 }

@@ -1,56 +1,40 @@
 @use "@/styles/abstracts" as ds;
 
 .playerOverview {
-	// 2. 📍 Positioning
 	position: relative;
-
-	// 3. 🧩 Layout
-	display: grid;
-	grid-template-columns: minmax(350px, 1.2fr) minmax(370px, 1.05fr) minmax(230px, 0.75fr);
-	align-items: center;
+	display: flex;
+	flex-direction: column;
 	gap: 16px;
-
-	// 4. 📦 Box Model
 	box-sizing: border-box;
 	width: 100%;
-	height: 125px;
 	min-width: 0;
-	padding: 12px 20px;
+	padding: 20px 24px;
 	flex-shrink: 0;
-
-	// 6. 🎨 Visual
 	color: ds.$text-body-on-dark;
-	background-color: ds.$surface-page-deep;
-	border: 1px solid ds.$border-panel;
+	background: linear-gradient(135deg, ds.$surface-panel-from 0%, ds.$surface-page-deep 100%);
+	border: 1px solid ds.$border-panel-tint;
 	border-radius: 16px;
-
-	// 7. ⚙️ Behavior
+	box-shadow: 0 4px 20px -2px ds.$shadow-panel;
 	overflow: hidden;
+
+	&__mainRow {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		width: 100%;
+		min-width: 0;
+	}
 }
 
-@media (max-width: 1279px) {
+@media (max-width: 1024px) {
 	.playerOverview {
-		// 3. 🧩 Layout
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 8px 16px;
+		padding: 16px;
 
-		// 4. 📦 Box Model
-		height: auto;
-		min-height: 169px;
-		padding: 10px 14px;
-
-		&__headlineMetrics {
-			// 3. 🧩 Layout
-			grid-column: 1 / -1;
-			grid-row: 2;
-
-			// 4. 📦 Box Model
-			width: 100%;
-		}
-
-		&__quoteContext {
-			grid-column: 2;
-			grid-row: 1;
+		&__mainRow {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 16px;
 		}
 	}
 }

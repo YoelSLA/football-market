@@ -1,6 +1,12 @@
 import type { RankingFilterCriteria } from "@/features/players/types";
 import { sanitizePositions } from "@/features/players/utils";
-import { Button } from "@/shared/components";
+import {
+	Button,
+	CompetitionLogo,
+	FilterSearch,
+	FilterSelect,
+	type FilterSelectOption,
+} from "@/shared/components";
 import { X } from "@/shared/icons";
 import styles from "./RankingsFilters.module.scss";
 
@@ -12,6 +18,13 @@ interface Props {
 	availablePositions: string[];
 }
 
+const SORT_OPTIONS: FilterSelectOption[] = [
+	{ value: "score_desc", label: "Ordenar: Mayor score" },
+	{ value: "score_asc", label: "Ordenar: Menor score" },
+	{ value: "price_desc", label: "Ordenar: Mayor cotización" },
+	{ value: "price_asc", label: "Ordenar: Menor cotización" },
+];
+
 export default function RankingsFilters({
 	filters,
 	onFilterChange,
@@ -19,81 +32,95 @@ export default function RankingsFilters({
 	availableLeagues,
 	availablePositions,
 }: Props) {
+	const leagueOptions: FilterSelectOption[] = [
+		{ value: "ALL", label: "Todas las ligas" },
+		...availableLeagues.map((league) => ({
+			value: String(league.id),
+			label: league.name,
+			visual: (
+				<CompetitionLogo
+					competitionId={league.id}
+					competitionName={league.name}
+					decorative
+				/>
+			),
+		})),
+	];
+
+	const positionOptions: FilterSelectOption[] = [
+		{ value: "ALL", label: "Todas las posiciones" },
+		...sanitizePositions(availablePositions).map((p) => ({
+			value: p,
+			label: p,
+		})),
+	];
+
 	const hasActiveFilters =
 		Boolean(filters.name.trim()) ||
-		Boolean(filters.leagueId) ||
-		Boolean(filters.position);
+		(Boolean(filters.leagueId) && filters.leagueId !== "ALL") ||
+		(Boolean(filters.position) && filters.position !== "ALL") ||
+		Boolean(filters.sort && filters.sort !== "score_desc");
 
 	return (
-		<search className={styles.filtersBar} aria-label="Filtros del ranking">
-			<div className={styles.searchContainer}>
-				<div className={styles.searchInputWrapper}>
-					<input
-						type="search"
-						placeholder="Buscar jugador..."
-						value={filters.name}
-						onChange={(e) => onFilterChange("name", e.target.value)}
-						className={styles.searchInput}
-						aria-label="Buscar jugador por nombre"
-					/>
-				</div>
+		<search className={styles.toolbar} aria-label="Filtros del ranking">
+			<div className={styles.toolbar__left}>
+				<FilterSearch
+					id="ranking-filter-search"
+					className={styles.toolbar__search}
+					label="Buscar jugador"
+					accessibleLabel="Buscar jugador por nombre"
+					placeholder="Buscar jugador…"
+					value={filters.name}
+					onChange={(val) => onFilterChange("name", val)}
+				/>
+
+				<FilterSelect
+					id="ranking-filter-league"
+					className={styles.toolbar__select}
+					label="Liga"
+					value={filters.leagueId || "ALL"}
+					options={leagueOptions}
+					searchable
+					searchPlaceholder="Buscar liga…"
+					onChange={(val) =>
+						onFilterChange("leagueId", val === "ALL" ? "" : val)
+					}
+				/>
+
+				<FilterSelect
+					id="ranking-filter-position"
+					className={styles.toolbar__select}
+					label="Posición"
+					value={filters.position || "ALL"}
+					options={positionOptions}
+					onChange={(val) =>
+						onFilterChange("position", val === "ALL" ? "" : val)
+					}
+				/>
+
+				<FilterSelect
+					id="ranking-filter-sort"
+					className={styles.toolbar__sort}
+					label="Ordenar"
+					value={filters.sort || "score_desc"}
+					options={SORT_OPTIONS}
+					onChange={(val) => onFilterChange("sort", val)}
+				/>
 			</div>
 
-			<div className={styles.filterControl}>
-				<label htmlFor="filter-league-select" className={styles.filterLabel}>
-					Liga
-				</label>
-				<div className={styles.selectWrapper}>
-					<select
-						id="filter-league-select"
-						value={filters.leagueId}
-						onChange={(e) => onFilterChange("leagueId", e.target.value)}
-						className={styles.select}
-					>
-						<option value="">Todas las ligas</option>
-						{availableLeagues.map((league) => (
-							<option key={league.id} value={String(league.id)}>
-								{league.name}
-							</option>
-						))}
-					</select>
-				</div>
-			</div>
-
-			<div className={styles.filterControl}>
-				<label htmlFor="filter-position-select" className={styles.filterLabel}>
-					Posición
-				</label>
-				<div className={styles.selectWrapper}>
-					<select
-						id="filter-position-select"
-						value={filters.position}
-						onChange={(e) => onFilterChange("position", e.target.value)}
-						className={styles.select}
-					>
-						<option value="">Todas las posiciones</option>
-						{sanitizePositions(availablePositions).map((position) => (
-							<option key={position} value={position}>
-								{position}
-							</option>
-						))}
-					</select>
-				</div>
-			</div>
-
-			<div className={styles.actionsContainer}>
+			<div className={styles.toolbar__right}>
 				<Button
 					unstyled
 					type="button"
 					onClick={onClearFilters}
 					disabled={!hasActiveFilters}
-					className={`${styles.clearButton} ${
-						hasActiveFilters ? styles.clearButton_active : ""
+					className={`${styles.toolbar__clearBtn} ${
+						hasActiveFilters ? styles.toolbar__clearBtn_active : ""
 					}`}
-					title="Restablecer todos los filtros"
+					title="Restablecer filtros"
 				>
 					<X size={14} aria-hidden="true" />
-					<span>Limpiar filtros</span>
+					<span>Limpiar</span>
 				</Button>
 			</div>
 		</search>

@@ -2,6 +2,7 @@ import { PageLayout } from "@/app/layouts";
 import MarketPagination from "@/features/market/components/MarketPagination";
 import { usePlayersPage } from "@/features/players/hooks";
 import PlayersCatalog from "./components/PlayersCatalog";
+import PlayersHeader from "./components/PlayersHeader";
 import PlayersToolbar from "./components/PlayersToolbar";
 import styles from "./PlayersPage.module.scss";
 
@@ -9,11 +10,13 @@ export default function PlayersPage() {
 	const page = usePlayersPage();
 	const players = page.playersPage?.players ?? [];
 	const hasActiveFilters = Boolean(
-		page.criteria.name ||
+		page.searchText.trim() ||
+			page.criteria.name ||
 			page.criteria.leagueId ||
 			page.criteria.teamId ||
 			page.criteria.position ||
-			page.criteria.nationality,
+			page.criteria.nationality ||
+			(page.criteria.sort && page.criteria.sort !== "name,asc"),
 	);
 
 	const showPagination =
@@ -24,8 +27,16 @@ export default function PlayersPage() {
 		<PageLayout>
 			<div className={styles.playersPage} aria-busy={page.isLoading}>
 				<div className={styles.playersPage__header}>
-					<PlayersToolbar
+					<PlayersHeader
 						totalElements={page.playersPage?.totalElements}
+						options={page.options}
+						isLoading={page.isLoading}
+						optionsLoading={page.optionsLoading}
+					/>
+				</div>
+
+				<div className={styles.playersPage__toolbar}>
+					<PlayersToolbar
 						searchText={page.searchText}
 						onSearchChange={page.setSearchText}
 						criteria={page.criteria}
