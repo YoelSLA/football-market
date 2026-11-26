@@ -11,7 +11,7 @@ Specify ni habilita la implementación. -->
 
 **Created**: 2026-11-26
 
-**Status**: Draft
+**Status**: Ready for planning
 
 <!-- Estados y criterios de transición: ../../specs/README.md. -->
 
