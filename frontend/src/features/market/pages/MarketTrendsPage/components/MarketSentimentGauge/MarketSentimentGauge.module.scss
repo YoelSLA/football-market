@@ -1,0 +1,119 @@
+@use "@/styles/abstracts" as ds;
+
+.gaugeContainer {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-md;
+	border-radius: 12px;
+	min-width: 0;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: ds.$space-sm;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 600;
+		color: ds.$text-strong-on-dark;
+	}
+
+	&__bias {
+		display: inline-flex;
+		align-items: center;
+		padding: ds.$space-3xs ds.$space-xs;
+		border-radius: 9999px;
+		font-size: 12px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+
+		&--bullish {
+			background-color: ds.$surface-status-open;
+			color: ds.$accent-open;
+			border: 1px solid ds.$border-status-open;
+		}
+
+		&--bearish {
+			background-color: ds.$surface-status-closed;
+			color: ds.$state-loss;
+			border: 1px solid ds.$border-status-closed;
+		}
+
+		&--neutral {
+			background-color: ds.$surface-raised;
+			color: ds.$text-body-on-dark;
+			border: 1px solid ds.$border-strong;
+		}
+	}
+}
+
+.gaugeWrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	position: relative;
+	width: 100%;
+}
+
+.svg {
+	width: 100%;
+	max-width: 280px;
+	height: auto;
+	overflow: visible;
+}
+
+.axisLabel {
+	font-size: 10px;
+	fill: ds.$text-muted-on-dark;
+	font-weight: 500;
+}
+
+.axisLabelCenter {
+	font-size: 10px;
+	fill: ds.$text-dimmed-on-dark;
+	font-weight: 500;
+}
+
+.needle {
+	fill: ds.$text-primary-on-dark;
+	filter: drop-shadow(0 2px 4px #00000080);
+	transition: points 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pivot {
+	fill: ds.$text-primary-on-dark;
+	stroke: ds.$surface-card-dark;
+}
+
+.readout {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-top: - ds.$space-2xs;
+
+	&__value {
+		font-size: 28px;
+		font-weight: 800;
+		color: ds.$text-title-on-dark;
+		line-height: 1.2;
+	}
+
+	&__label {
+		font-size: 12px;
+		color: ds.$text-muted-on-dark;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+}

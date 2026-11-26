@@ -78,6 +78,14 @@ export interface UserOrderListingDTO {
 	status: "ACTIVE" | "SOLD" | "CANCELLED" | "EXPIRED";
 	createdAt: string;
 	expiresAt: string;
+	playerName?: string | null;
+	teamId?: number | null;
+	teamName?: string | null;
+	leagueId?: number | null;
+	leagueName?: string | null;
+	position?: string | null;
+	imageUrl?: string | null;
+	fallbackImageUrl?: string | null;
 }
 
 export interface UserOrdersPageResponseDTO {
@@ -197,4 +205,29 @@ export interface P2PMarketPageResponseDTO {
 		min: number | null;
 		max: number | null;
 	};
+}
+
+export type MarketBiasDTO = "BULLISH" | "BEARISH" | "NEUTRAL";
+
+export interface MarketTrendsWindowDTO {
+	startsAt: string;
+	endsAt: string;
+}
+
+export interface TopHotPlayerDTO {
+	playerId: number;
+	playerName: string;
+	boughtTokens: number;
+	buyVolume: number;
+}
+
+export interface MarketTrendsResponseDTO {
+	window: MarketTrendsWindowDTO;
+	topHotPlayers: TopHotPlayerDTO[];
+	buyTransactionsPercentage: number | null;
+	sellTransactionsPercentage: number | null;
+	marketBias: MarketBiasDTO | null;
+	totalTransactions: number;
+	totalTradedTokens: number;
+	totalTradedCredits: number;
 }

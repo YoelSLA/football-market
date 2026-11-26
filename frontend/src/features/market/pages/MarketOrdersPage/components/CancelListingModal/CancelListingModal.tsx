@@ -1,6 +1,5 @@
 import type { EnrichedUserOrder } from "@/features/market/hooks";
-import { Button, Modal } from "@/shared/components";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { Button, Modal, TokenSymbol } from "@/shared/components";
 import styles from "./CancelListingModal.module.scss";
 import { CancelListingDetails } from "./components";
 
@@ -41,7 +40,7 @@ export default function CancelListingModal({
 					<CancelListingDetails order={order} />
 
 					<div className={styles.cancelModal__warning}>
-						Los {order.quantity} {TOKEN_SYMBOL} reservados se liberarán
+						Los {order.quantity} <TokenSymbol /> reservados se liberarán
 						inmediatamente y volverán a estar disponibles en tu cartera.
 					</div>
 				</div>

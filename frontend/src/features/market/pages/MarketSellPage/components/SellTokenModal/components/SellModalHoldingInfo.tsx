@@ -5,6 +5,7 @@ import {
 	formatCredits,
 	formatQuoteCalculatedAt,
 } from "@/features/market/utils";
+import { TokenSymbol } from "@/shared/components";
 import styles from "./SellModalHoldingInfo.module.scss";
 
 interface Props {
@@ -57,7 +58,7 @@ export default function SellModalHoldingInfo({
 							availableQuantity > 0 ? styles.holdingInfo__available_active : ""
 						}`}
 					>
-						{availableQuantity}
+						{availableQuantity} <TokenSymbol size="sm" />
 					</strong>
 					<span className={styles.holdingInfo__caption}>
 						{reservedQuantity} en reserva · Total: {totalQuantity}

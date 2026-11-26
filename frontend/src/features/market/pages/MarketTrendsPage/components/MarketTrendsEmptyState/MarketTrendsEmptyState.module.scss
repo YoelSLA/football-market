@@ -1,0 +1,52 @@
+@use "@/styles/abstracts" as ds;
+
+.container {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-xl ds.$space-lg;
+	border-radius: 12px;
+	width: 100%;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px dashed ds.$border-subtle;
+}
+
+.iconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 9999px;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-strong;
+	color: ds.$accent-highlight;
+}
+
+.icon {
+	width: 24px;
+	height: 24px;
+}
+
+.title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+}
+
+.description {
+	margin: 0;
+	max-width: 520px;
+	font-size: 14px;
+	color: ds.$text-muted-on-dark;
+	line-height: 1.6;
+}

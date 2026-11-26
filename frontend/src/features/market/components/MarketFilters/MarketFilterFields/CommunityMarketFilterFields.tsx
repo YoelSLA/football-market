@@ -6,11 +6,13 @@ import { formatCredits } from "@/features/market/utils";
 import { sanitizePositions } from "@/features/players";
 import {
 	CompetitionLogo,
+	FilterPopover,
 	FilterSearch,
 	FilterSelect,
 	Slider,
 	TeamBadge,
 } from "@/shared/components";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./MarketFilterFields.module.scss";
 
 interface Props {
@@ -23,6 +25,12 @@ interface Props {
 	onChange: (next: Partial<CommunityMarketFilters>) => void;
 	onMaxPriceCommit: (value: number | null) => void;
 }
+
+const COMMUNITY_SORT_OPTIONS = [
+	{ value: "price", label: "Mejor precio" },
+	{ value: "quantity", label: "Mayor cantidad ofrecida" },
+	{ value: "name", label: "Nombre" },
+];
 
 export default function CommunityMarketFilterFields({
 	scope,
@@ -38,25 +46,34 @@ export default function CommunityMarketFilterFields({
 		(team) => filters.leagueId === null || team.leagueId === filters.leagueId,
 	);
 
+	const popoverActiveCount = [
+		filters.teamId !== null,
+		filters.maxPrice !== null,
+		filters.sort !== "price",
+	].filter(Boolean).length;
+
+	const handleClearPopover = () => {
+		onChange({ teamId: null, sort: "price" });
+		onMaxPriceCommit(null);
+	};
+
 	return (
-		<fieldset
-			className={`${styles.marketFilterFields} ${styles.marketFilterFields_community}`}
-		>
+		<div className={styles.fields}>
 			<FilterSearch
 				id={`${scope}-search`}
-				className={styles.marketFilterFields__search}
+				className={styles.search}
 				value={filters.search}
 				onChange={(value) => onChange({ search: value })}
 				label="Buscar jugador o club"
-				placeholder="Nombre o club..."
+				placeholder="Buscar jugador o club…"
 			/>
 			<FilterSelect
 				id={`${scope}-league`}
-				className={styles.marketFilterFields__league}
+				className={styles.select}
 				label="Liga"
 				value={filters.leagueId === null ? "all" : String(filters.leagueId)}
 				options={[
-					{ value: "all", label: "Todas" },
+					{ value: "all", label: "Todas las ligas" },
 					...leagues.map((league) => ({
 						value: String(league.id),
 						label: league.name,
@@ -76,38 +93,12 @@ export default function CommunityMarketFilterFields({
 				}
 			/>
 			<FilterSelect
-				id={`${scope}-team`}
-				className={styles.marketFilterFields__team}
-				label="Equipo"
-				value={filters.teamId === null ? "all" : String(filters.teamId)}
-				options={[
-					{ value: "all", label: "Todos" },
-					...availableTeams.map((team) => ({
-						value: String(team.id),
-						label: team.name,
-						visual: (
-							<TeamBadge
-								teamId={team.id}
-								teamName={team.name}
-								leagueId={team.leagueId}
-								leagueName={team.leagueName}
-							/>
-						),
-					})),
-				]}
-				searchable
-				searchPlaceholder="Buscar equipo…"
-				onChange={(value) =>
-					onChange({ teamId: value === "all" ? null : Number(value) })
-				}
-			/>
-			<FilterSelect
 				id={`${scope}-position`}
-				className={styles.marketFilterFields__position}
+				className={styles.select}
 				label="Posición"
 				value={filters.position ?? "all"}
 				options={[
-					{ value: "all", label: "Todas" },
+					{ value: "all", label: "Todas las posiciones" },
 					...sanitizePositions(positions).map((position) => ({
 						value: position,
 						label: position,
@@ -117,37 +108,68 @@ export default function CommunityMarketFilterFields({
 					onChange({ position: value === "all" ? null : value })
 				}
 			/>
-			{priceRange.min !== null && priceRange.max !== null ? (
-				<Slider
-					id={`${scope}-max-price`}
-					className={styles.marketFilterFields__maxPrice}
-					variant="single"
-					label="Precio máximo por token"
-					min={priceRange.min}
-					max={priceRange.max}
-					step={1}
-					value={filters.maxPrice}
-					formatValue={formatCredits}
-					allowNoLimit
-					onCommit={onMaxPriceCommit}
+			<FilterPopover
+				triggerLabel="Más filtros"
+				title="Filtros avanzados"
+				activeCount={popoverActiveCount}
+				onClear={handleClearPopover}
+				panelWidth="md"
+			>
+				<FilterSelect
+					id={`${scope}-team`}
+					className={styles.popoverField}
+					label="Equipo"
+					value={filters.teamId === null ? "all" : String(filters.teamId)}
+					options={[
+						{ value: "all", label: "Todos los equipos" },
+						...availableTeams.map((team) => ({
+							value: String(team.id),
+							label: team.name,
+							visual: (
+								<TeamBadge
+									teamId={team.id}
+									teamName={team.name}
+									leagueId={team.leagueId}
+									leagueName={team.leagueName}
+								/>
+							),
+						})),
+					]}
+					searchable
+					searchPlaceholder="Buscar equipo…"
+					onChange={(value) =>
+						onChange({ teamId: value === "all" ? null : Number(value) })
+					}
 				/>
-			) : (
-				<div className={styles.marketFilterFields__maxPrice} role="status">
-					Precio máximo: sin publicaciones disponibles
-				</div>
-			)}
-			<FilterSelect
-				id={`${scope}-sort`}
-				className={styles.marketFilterFields__sort}
-				label="Orden"
-				value={filters.sort}
-				options={[
-					{ value: "price", label: "Mejor precio" },
-					{ value: "quantity", label: "Mayor cantidad ofrecida" },
-					{ value: "name", label: "Nombre" },
-				]}
-				onChange={(value) => onChange({ sort: value as CommunityMarketSort })}
-			/>
-		</fieldset>
+				{priceRange.min !== null && priceRange.max !== null ? (
+					<div className={styles.popoverSlider}>
+						<Slider
+							id={`${scope}-max-price`}
+							variant="single"
+							label={`Precio máximo por ${TOKEN_SYMBOL}`}
+							min={priceRange.min}
+							max={priceRange.max}
+							step={1}
+							value={filters.maxPrice}
+							formatValue={formatCredits}
+							allowNoLimit
+							onCommit={onMaxPriceCommit}
+						/>
+					</div>
+				) : (
+					<div className={styles.popoverStatus} role="status">
+						Precio máximo: sin publicaciones disponibles
+					</div>
+				)}
+				<FilterSelect
+					id={`${scope}-sort`}
+					className={styles.popoverField}
+					label="Orden"
+					value={filters.sort}
+					options={COMMUNITY_SORT_OPTIONS}
+					onChange={(value) => onChange({ sort: value as CommunityMarketSort })}
+				/>
+			</FilterPopover>
+		</div>
 	);
 }

@@ -1,6 +1,7 @@
 import type { OfficialMarketQuote } from "@/features/market/types";
 import { formatCentimes, formatCredits } from "@/features/market/utils";
-import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
+import { CREDIT_SYMBOL } from "@/shared/constants";
 import { Store } from "@/shared/icons";
 import styles from "./BuyModalOfficialEstimation.module.scss";
 
@@ -25,9 +26,11 @@ export function BuyModalOfficialEstimation({
 
 				<div className={styles.estimationBody}>
 					<div className={styles.detailRow}>
-						<span>Tokens a comprar</span>
+						<span>
+							<TokenSymbol size="xs" /> a comprar
+						</span>
 						<strong>
-							{quantity} {TOKEN_SYMBOL}
+							{quantity} <TokenSymbol />
 						</strong>
 					</div>
 					<div className={styles.detailRow}>

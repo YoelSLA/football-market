@@ -1,7 +1,8 @@
+import HotDemandBadge from "@/features/market/components/HotDemandBadge";
+import { useHotPlayerIds } from "@/features/market/hooks";
 import type { MarketListing, MarketQuote } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
-import { Button } from "@/shared/components";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { Button, TokenSymbol } from "@/shared/components";
 import { Clock, Coins } from "@/shared/icons";
 import P2POpportunityBadge from "../P2POpportunityBadge";
 import styles from "./CommunityListingCard.module.scss";
@@ -25,6 +26,8 @@ function remaining(expiresAt: string): string {
 }
 
 export function CommunityListingCard({ listing, officialQuote, onBuy }: Props) {
+	const { hotPlayerIds } = useHotPlayerIds();
+	const isHot = hotPlayerIds.has(listing.playerId);
 	const expired = Date.parse(listing.expiresAt) <= Date.now();
 
 	return (
@@ -35,12 +38,15 @@ export function CommunityListingCard({ listing, officialQuote, onBuy }: Props) {
 						<span>Lote</span>
 						<h3>#{listing.listingId}</h3>
 					</div>
-					{officialQuote && (
-						<P2POpportunityBadge
-							unitPrice={listing.unitPrice}
-							officialPrice={officialQuote.price}
-						/>
-					)}
+					<div className={styles.lotCard__headerBadges}>
+						{isHot && <HotDemandBadge />}
+						{officialQuote && (
+							<P2POpportunityBadge
+								unitPrice={listing.unitPrice}
+								officialPrice={officialQuote.price}
+							/>
+						)}
+					</div>
 				</div>
 
 				<div className={styles.lotCard__metricsBox}>
@@ -49,7 +55,7 @@ export function CommunityListingCard({ listing, officialQuote, onBuy }: Props) {
 							<Coins className={styles.lotCard__coinsIcon} aria-hidden="true" />
 						</div>
 						<span className={styles.lotCard__tokenCount}>
-							{listing.quantity} {TOKEN_SYMBOL}
+							{listing.quantity} <TokenSymbol />
 						</span>
 					</div>
 
@@ -58,7 +64,7 @@ export function CommunityListingCard({ listing, officialQuote, onBuy }: Props) {
 							{formatCredits(listing.unitPrice)}
 						</strong>
 						<span className={styles.lotCard__unitPriceLabel}>
-							/ {TOKEN_SYMBOL}
+							/ <TokenSymbol />
 						</span>
 					</div>
 				</div>

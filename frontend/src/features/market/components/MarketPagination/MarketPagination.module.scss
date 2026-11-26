@@ -35,9 +35,9 @@
 
 		.marketPagination__pages {
 			// 1. 🏷️ Custom Properties
-			--pagination-gap: 6px;
+			--pagination-gap: 12px;
 			--pagination-min-height: 44px;
-			--pagination-padding: 5px 12px;
+			--pagination-padding: 6px 16px;
 			--pagination-radius: 8px;
 			--pagination-background-color: #{ds.$surface-panel-to};
 			--pagination-container-border: 1px solid #{ds.$border-panel};
@@ -54,7 +54,7 @@
 			--pagination-control-hover-color: #{ds.$text-title-on-dark};
 			--pagination-disabled-opacity: .35;
 			--pagination-focus-ring: #{ds.$focus-ring-dark};
-			--pagination-pages-gap: 4px;
+			--pagination-pages-gap: 6px;
 			--pagination-page-background-color: #{ds.$surface-transparent};
 			--pagination-page-border: #{ds.$border-transparent};
 			--pagination-page-color: #{ds.$text-pagination};
@@ -70,6 +70,8 @@
 			width: fit-content;
 			height: 44px;
 			max-width: 100%;
+			padding: 6px 16px;
+			box-sizing: border-box;
 		}
 	}
 }

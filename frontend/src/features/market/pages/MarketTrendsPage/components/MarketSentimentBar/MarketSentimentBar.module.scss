@@ -1,0 +1,162 @@
+@use "@/styles/abstracts" as ds;
+
+.container {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-md;
+	border-radius: 12px;
+	min-width: 0;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	flex-wrap: wrap;
+}
+
+.title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: ds.$text-strong-on-dark;
+}
+
+.subtitle {
+	margin: ds.$space-3xs 0 0;
+	font-size: 12px;
+	color: ds.$text-muted-on-dark;
+}
+
+.biasBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: ds.$space-2xs;
+	padding: ds.$space-3xs ds.$space-sm;
+	border-radius: 9999px;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.biasIcon {
+	width: 14px;
+	height: 14px;
+}
+
+.bias--bullish {
+	background-color: ds.$surface-status-open;
+	color: ds.$accent-open;
+	border: 1px solid ds.$border-status-open;
+}
+
+.bias--bearish {
+	background-color: ds.$surface-status-closed;
+	color: ds.$state-loss;
+	border: 1px solid ds.$border-status-closed;
+}
+
+.bias--neutral {
+	background-color: ds.$surface-raised;
+	color: ds.$text-body-on-dark;
+	border: 1px solid ds.$border-strong;
+}
+
+.barWrapper {
+	display: flex;
+	height: 32px;
+	width: 100%;
+	border-radius: 8px;
+	overflow: hidden;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-strong;
+}
+
+.segmentBuy {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+	color: ds.$text-inverse;
+	font-weight: 700;
+	font-size: 12px;
+	transition: width 0.5s ease-out;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.segmentSell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+	color: ds.$text-inverse;
+	font-weight: 700;
+	font-size: 12px;
+	transition: width 0.5s ease-out;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.segmentLabel {
+	padding: 0 ds.$space-2xs;
+	text-shadow: 0 1px 2px #00000080;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	font-size: 12px;
+	flex-wrap: wrap;
+}
+
+.legend {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-md;
+}
+
+.legendBuy {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-3xs;
+	color: ds.$text-body-on-dark;
+}
+
+.legendSell {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-3xs;
+	color: ds.$text-body-on-dark;
+}
+
+.dotBuy {
+	width: 8px;
+	height: 8px;
+	border-radius: 9999px;
+	background-color: #10b981;
+}
+
+.dotSell {
+	width: 8px;
+	height: 8px;
+	border-radius: 9999px;
+	background-color: #ef4444;
+}
+
+.transactions {
+	color: ds.$text-muted-on-dark;
+	font-weight: 500;
+}

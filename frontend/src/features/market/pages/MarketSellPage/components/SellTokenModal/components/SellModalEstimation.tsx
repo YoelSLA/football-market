@@ -1,6 +1,6 @@
 import type { SellEstimation } from "@/features/market/types";
 import { formatCentimes, formatCredits } from "@/features/market/utils";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
 import { Receipt } from "@/shared/icons";
 import styles from "./SellModalEstimation.module.scss";
 
@@ -18,9 +18,11 @@ export default function SellModalEstimation({ estimation }: Props) {
 
 			<div className={styles.estimation__body}>
 				<div className={styles.estimation__row}>
-					<span>Tokens a publicar</span>
+					<span>
+						<TokenSymbol size="xs" /> a publicar
+					</span>
 					<strong>
-						{estimation.quantity} {TOKEN_SYMBOL}
+						{estimation.quantity} <TokenSymbol />
 					</strong>
 				</div>
 

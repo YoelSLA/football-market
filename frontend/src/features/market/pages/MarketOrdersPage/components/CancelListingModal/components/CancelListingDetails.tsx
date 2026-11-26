@@ -1,6 +1,6 @@
 import type { EnrichedUserOrder } from "@/features/market/hooks";
 import { formatCreditsAmount } from "@/features/market/utils";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
 import styles from "./CancelListingDetails.module.scss";
 
 interface Props {
@@ -20,7 +20,7 @@ export function CancelListingDetails({ order }: Props) {
 			<li>
 				<span>Lote publicado:</span>
 				<strong>
-					{order.quantity} {TOKEN_SYMBOL}
+					{order.quantity} <TokenSymbol />
 				</strong>
 			</li>
 			<li>

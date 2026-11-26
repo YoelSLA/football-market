@@ -7,9 +7,11 @@ import {
 	MarketOrdersPage,
 	MarketP2PPage,
 	MarketSellPage,
+	MarketTrendsPage,
 } from "@/features/market";
 import {
 	PlayerDetailPage,
+	PlayerQuoteHistoryPage,
 	PlayerRankingsPage,
 	PlayersPage,
 } from "@/features/players";
@@ -47,8 +49,13 @@ export default function AppRouter() {
 					<Route path="/players" element={<PlayersPage />} />
 					<Route path="/players/ranking" element={<PlayerRankingsPage />} />
 					<Route path="/players/:id" element={<PlayerDetailPage />} />
+					<Route
+						path="/players/:id/history"
+						element={<PlayerQuoteHistoryPage />}
+					/>
 					<Route path="/market/buy" element={<MarketBuyPage />} />
 					<Route path="/market/p2p" element={<MarketP2PPage />} />
+					<Route path="/market/trends" element={<MarketTrendsPage />} />
 					<Route path="/market/sell" element={<MarketSellPage />} />
 					<Route path="/market/orders" element={<MarketOrdersPage />} />
 				</Route>

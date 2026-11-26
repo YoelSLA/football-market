@@ -1,8 +1,9 @@
 import { PageLayout } from "@/app/layouts";
-import MarketFilters from "@/features/market/components/MarketFilters";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { useMyOrdersPage } from "@/features/market/hooks";
 import CancelListingModal from "./components/CancelListingModal";
 import MarketOrdersEmptyState from "./components/MarketOrdersEmptyState";
+import MarketOrdersFilters from "./components/MarketOrdersFilters";
 import MarketOrdersHeader from "./components/MarketOrdersHeader";
 import MarketOrdersTable from "./components/MarketOrdersTable";
 import styles from "./MarketOrdersPage.module.scss";
@@ -36,7 +37,6 @@ export default function MarketOrdersPage() {
 	const isFiltering = Boolean(
 		status || searchInput.trim() || (sort && sort !== "NEWEST"),
 	);
-	const hasNoOrders = !isLoading && !isError && orders.length === 0;
 
 	return (
 		<PageLayout>
@@ -45,47 +45,47 @@ export default function MarketOrdersPage() {
 					<MarketOrdersHeader summary={summary} isLoading={isLoading} />
 				</div>
 
-				<MarketFilters
-					variant="orders"
-					search={searchInput}
-					status={status}
-					sort={sort}
-					onSearchChange={setSearchInput}
-					onStatusChange={setStatus}
-					onSortChange={setSort}
-					onClear={clearFilters}
-					summary={`${summary.totalOrders} ${
-						summary.totalOrders === 1
-							? "orden registrada"
-							: "órdenes registradas"
-					}`}
+				<MarketOrdersTable
+					toolbar={
+						<MarketOrdersFilters
+							search={searchInput}
+							status={status}
+							sort={sort}
+							hasFilters={isFiltering}
+							onSearchChange={setSearchInput}
+							onStatusChange={setStatus}
+							onSortChange={setSort}
+							onClear={clearFilters}
+						/>
+					}
+					isLoading={isLoading}
+					errorMessage={
+						isError ? "Ocurrió un error al cargar tus órdenes de venta." : null
+					}
+					onRetry={() => refetch()}
+					orders={orders}
+					emptyState={
+						<MarketOrdersEmptyState
+							isFiltering={isFiltering}
+							onClearFilters={clearFilters}
+						/>
+					}
+					onCancel={openCancelModal}
 				/>
 
-				{isError ? (
-					<div className={styles.ordersPage__error}>
-						<p>Ocurrió un error al cargar tus órdenes de venta.</p>
-						<button
-							type="button"
-							onClick={() => refetch()}
-							className={styles.ordersPage__retryBtn}
-						>
-							Reintentar consulta
-						</button>
+				{!isLoading && !isError && totalElements > 0 && (
+					<div className={styles.ordersPage__footer}>
+						<MarketPagination
+							page={page}
+							totalPages={totalPages}
+							visiblePlayers={orders.length}
+							totalPlayers={totalElements}
+							pageSize={10}
+							showSummary={false}
+							variant="official"
+							onPageChange={setPage}
+						/>
 					</div>
-				) : hasNoOrders ? (
-					<MarketOrdersEmptyState
-						isFiltering={isFiltering}
-						onClearFilters={clearFilters}
-					/>
-				) : (
-					<MarketOrdersTable
-						orders={orders}
-						page={page}
-						totalPages={totalPages}
-						totalElements={totalElements}
-						onPageChange={setPage}
-						onCancel={openCancelModal}
-					/>
 				)}
 
 				<CancelListingModal

@@ -9,6 +9,7 @@ import {
 	toCancelListingResult,
 	toMarketListings,
 	toMarketQuote,
+	toMarketTrends,
 	toOfficialMarketPage,
 	toOrderBuyRequestDTO,
 	toOrderSellOfficialRequestDTO,
@@ -24,6 +25,8 @@ import type {
 	CommunityMarketCriteria,
 	MarketListing,
 	MarketQuote,
+	MarketTrends,
+	MarketTrendsResponseDTO,
 	MyOrdersQueryParams,
 	OfficialMarketCriteria,
 	OfficialMarketPage,
@@ -216,6 +219,14 @@ async function cancelListing(listingId: number): Promise<CancelListingResult> {
 	return toCancelListingResult(data);
 }
 
+async function getTrends(signal?: AbortSignal): Promise<MarketTrends> {
+	const { data } = await http.get<MarketTrendsResponseDTO>("/market/trends", {
+		authenticated: true,
+		signal,
+	});
+	return toMarketTrends(data);
+}
+
 export const marketService = {
 	getCurrentQuote,
 	buyTokens,
@@ -227,4 +238,5 @@ export const marketService = {
 	buyListing,
 	getMyListings,
 	cancelListing,
+	getTrends,
 };

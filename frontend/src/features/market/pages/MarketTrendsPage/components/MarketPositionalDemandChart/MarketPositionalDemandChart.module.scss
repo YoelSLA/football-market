@@ -1,0 +1,110 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-md;
+	padding: ds.$space-md;
+	border-radius: 12px;
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+	min-width: 0;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.titleGroup {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+}
+
+.icon {
+	width: 22px;
+	height: 22px;
+	color: ds.$accent-highlight;
+}
+
+.title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: ds.$text-strong-on-dark;
+}
+
+.subtitle {
+	margin: ds.$space-3xs 0 0;
+	font-size: 12px;
+	color: ds.$text-muted-on-dark;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-sm;
+}
+
+.item {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.itemMeta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 12px;
+	flex-wrap: wrap;
+	gap: ds.$space-xs;
+}
+
+.itemPos {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.itemLabel {
+	font-weight: 600;
+	color: ds.$text-title-on-dark;
+}
+
+.itemCount {
+	color: ds.$text-muted-on-dark;
+	font-size: 11px;
+}
+
+.itemStats {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-2xs;
+}
+
+.itemTokens {
+	color: ds.$text-body-on-dark;
+}
+
+.itemPercent {
+	color: ds.$accent-open;
+	font-weight: 700;
+}
+
+.track {
+	height: 8px;
+	width: 100%;
+	border-radius: 9999px;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-strong;
+	overflow: hidden;
+}
+
+.fill {
+	height: 100%;
+	border-radius: 9999px;
+	transition: width 0.5s ease;
+}

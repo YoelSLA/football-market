@@ -1,0 +1,92 @@
+@use "@/styles/abstracts" as ds;
+
+.grid {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: ds.$space-md;
+	width: 100%;
+}
+
+.card {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: ds.$space-md;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-md;
+	border-radius: 12px;
+	min-width: 0;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+	transition: border-color 0.2s ease, transform 0.2s ease;
+
+	&:hover {
+		border-color: ds.$border-strong-hover;
+	}
+}
+
+.iconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 8px;
+	flex-shrink: 0;
+
+	&--blue {
+		background-color: #0c233e;
+		border: 1px solid #1e3a8a;
+		color: ds.$accent-highlight;
+	}
+
+	&--purple {
+		background-color: #1e1b4b;
+		border: 1px solid #3730a3;
+		color: ds.$accent-investment;
+	}
+
+	&--amber {
+		background-color: #451a03;
+		border: 1px solid #92400e;
+		color: ds.$state-caution;
+	}
+}
+
+.icon {
+	width: 22px;
+	height: 22px;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.label {
+	font-size: 12px;
+	color: ds.$text-muted-on-dark;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	font-weight: 500;
+}
+
+.value {
+	margin: 2px 0;
+	font-size: 18px;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.subtext {
+	font-size: 12px;
+	color: ds.$text-dimmed-on-dark;
+}

@@ -1,0 +1,252 @@
+@use "@/styles/abstracts" as ds;
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-md;
+	width: 100%;
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.titleGroup {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+}
+
+.flameIcon {
+	width: 24px;
+	height: 24px;
+	color: ds.$state-caution;
+}
+
+.title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+}
+
+.subtitle {
+	margin: ds.$space-3xs 0 0;
+	font-size: 12px;
+	color: ds.$text-muted-on-dark;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: ds.$space-md;
+	width: 100%;
+}
+
+.playerCard {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	padding: ds.$space-md;
+	border-radius: 12px;
+	min-width: 0;
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+	transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+	&:hover {
+		border-color: ds.$accent-sports-green;
+		transform: translateY(-2px);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+	}
+
+	&__top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: ds.$space-xs;
+	}
+
+	&__rankBadge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 9999px;
+		background-color: ds.$surface-dark;
+		border: 1px solid ds.$border-strong;
+		font-size: 12px;
+		font-weight: 700;
+		color: ds.$accent-highlight;
+	}
+
+	&__badges {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	&__hotBadge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 2px ds.$space-2xs;
+		border-radius: 9999px;
+		background-color: #451a03;
+		border: 1px solid #92400e;
+		color: #fde047;
+		font-size: 11px;
+		font-weight: 700;
+	}
+
+	&__flameIcon {
+		width: 12px;
+		height: 12px;
+		color: #f59e0b;
+	}
+
+	&__identity {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-sm;
+		padding: ds.$space-2xs 0;
+	}
+
+	&__portraitWrapper {
+		position: relative;
+		width: 52px;
+		height: 52px;
+		border-radius: 9999px;
+		border: 2px solid ds.$border-strong;
+		overflow: visible;
+		flex-shrink: 0;
+	}
+
+	&__portrait {
+		width: 100%;
+		height: 100%;
+		border-radius: 9999px;
+		object-fit: cover;
+	}
+
+	&__flag {
+		position: absolute;
+		bottom: -2px;
+		right: -2px;
+		width: 18px;
+		height: 14px;
+		border-radius: 2px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+		border: 1px solid #ffffff33;
+	}
+
+	&__meta {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	&__name {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 700;
+		line-height: 1.2;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__link {
+		color: ds.$text-title-on-dark;
+		text-decoration: none;
+		transition: color 0.2s ease;
+
+		&:hover,
+		&:focus-visible {
+			color: ds.$accent-highlight;
+			text-decoration: underline;
+		}
+	}
+
+	&__clubLeague {
+		font-size: 11px;
+		color: ds.$text-muted-on-dark;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	&__stats {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		padding: ds.$space-2xs ds.$space-xs;
+		background-color: ds.$surface-dark;
+		border-radius: 8px;
+		border: 1px solid ds.$border-strong;
+	}
+
+	&__actions {
+		display: flex;
+		width: 100%;
+		margin-top: ds.$space-3xs;
+	}
+}
+
+.statRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 12px;
+}
+
+.statLabel {
+	color: ds.$text-muted-on-dark;
+}
+
+.statValue {
+	color: ds.$text-strong-on-dark;
+}
+
+.statValueAccent {
+	color: ds.$accent-open;
+	font-weight: 700;
+}
+
+.statValueShare {
+	color: ds.$accent-highlight;
+	font-weight: 700;
+}
+
+.actionButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: ds.$space-2xs;
+	width: 100%;
+	padding: 8px ds.$space-sm;
+	border-radius: 8px;
+	background-color: ds.$surface-action-subtle;
+	border: 1px solid ds.$border-status-open;
+	color: ds.$accent-open;
+	font-size: 12px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+
+	&:hover,
+	&:focus-visible {
+		background-color: ds.$surface-status-open;
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__icon {
+		width: 14px;
+		height: 14px;
+	}
+}

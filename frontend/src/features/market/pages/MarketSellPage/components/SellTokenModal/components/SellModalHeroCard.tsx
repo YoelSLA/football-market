@@ -10,6 +10,7 @@ import {
 	formatCredits,
 	formatQuoteCalculatedAt,
 } from "@/features/market/utils";
+import { TokenSymbol } from "@/shared/components";
 import styles from "./SellModalHeroCard.module.scss";
 
 interface Props {
@@ -49,11 +50,12 @@ export default function SellModalHeroCard({
 		<div className={styles.holdingBadge}>
 			{availableQuantity > 0 ? (
 				<span className={styles.pillAvailable}>
-					🪙 {availableQuantity} {availableQuantity === 1 ? "Libre" : "Libres"}
+					🪙 {availableQuantity} <TokenSymbol size="xs" />{" "}
+					{availableQuantity === 1 ? "Libre" : "Libres"}
 				</span>
 			) : (
 				<span className={styles.pillReserved}>
-					🔒 {reservedQuantity} en orden
+					🔒 {reservedQuantity} <TokenSymbol size="xs" /> en orden
 				</span>
 			)}
 		</div>
@@ -100,7 +102,7 @@ export default function SellModalHeroCard({
 						availableQuantity > 0 ? styles.statValue_available : ""
 					}`}
 				>
-					{availableQuantity}
+					{availableQuantity} <TokenSymbol size="sm" />
 				</strong>
 				<span className={styles.libresBadge}>Libres</span>
 			</div>

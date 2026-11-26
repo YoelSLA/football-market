@@ -4,8 +4,7 @@ import type {
 } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
 import { PlayerPositionBadge } from "@/features/players";
-import { Button, PlayerCardShell } from "@/shared/components";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { Button, PlayerCardShell, TokenSymbol } from "@/shared/components";
 import P2POpportunityBadge from "../P2POpportunityBadge";
 import styles from "./CommunityPlayerCard.module.scss";
 
@@ -45,7 +44,7 @@ export default function CommunityPlayerCard({
 				·
 			</span>
 			<span className={styles.liquidityItem}>
-				🪙 {player.availableQuantity} {TOKEN_SYMBOL} disp.
+				🪙 {player.availableQuantity} <TokenSymbol /> disp.
 			</span>
 		</div>
 	);

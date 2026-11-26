@@ -1,3 +1,5 @@
+import HotDemandBadge from "@/features/market/components/HotDemandBadge";
+import { useHotPlayerIds } from "@/features/market/hooks";
 import type { OfficialMarketPlayer } from "@/features/market/types";
 import {
 	formatCredits,
@@ -19,6 +21,8 @@ interface Props {
 }
 
 export default function MarketPlayerCard({ player, onBuyClick }: Props) {
+	const { hotPlayerIds } = useHotPlayerIds();
+	const isHot = hotPlayerIds.has(player.id);
 	const quote = player.quote;
 	const direction = quote
 		? getVariationDirection(quote.variationPercentage)
@@ -26,16 +30,21 @@ export default function MarketPlayerCard({ player, onBuyClick }: Props) {
 	const symbol =
 		direction === "positive" ? "↑" : direction === "negative" ? "↓" : "→";
 
-	const headerRight = quote ? (
-		<div
-			className={`${styles.variationBadge} ${styles[`variation_${direction}`]}`}
-		>
-			<span aria-hidden="true">{symbol}</span>
-			<span>{formatVariationPercentage(quote.variationPercentage)}</span>
-		</div>
-	) : (
-		<div className={styles.missingBadge}>
-			<span>Sin cotización</span>
+	const headerRight = (
+		<div className={styles.headerRightBadges}>
+			{isHot && <HotDemandBadge />}
+			{quote ? (
+				<div
+					className={`${styles.variationBadge} ${styles[`variation_${direction}`]}`}
+				>
+					<span aria-hidden="true">{symbol}</span>
+					<span>{formatVariationPercentage(quote.variationPercentage)}</span>
+				</div>
+			) : (
+				<div className={styles.missingBadge}>
+					<span>Sin cotización</span>
+				</div>
+			)}
 		</div>
 	);
 

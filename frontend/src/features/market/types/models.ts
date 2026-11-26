@@ -254,6 +254,14 @@ export interface UserOrderListing {
 	status: UserOrderStatus;
 	createdAt: string;
 	expiresAt: string;
+	playerName?: string | null;
+	teamId?: number | null;
+	teamName?: string | null;
+	leagueId?: number | null;
+	leagueName?: string | null;
+	position?: string | null;
+	imageUrl?: string | null;
+	fallbackImageUrl?: string | null;
 }
 
 export interface UserOrdersSummary {
@@ -295,4 +303,29 @@ export interface CancelListingResult {
 	createdAt: string;
 	expiresAt: string;
 	closedAt: string | null;
+}
+
+export type MarketBias = "BULLISH" | "BEARISH" | "NEUTRAL";
+
+export interface TopHotPlayer {
+	playerId: number;
+	playerName: string;
+	boughtTokens: number;
+	buyVolumeCredits: number;
+	sharePercentage: number;
+}
+
+export interface MarketTrends {
+	window: {
+		startsAt: string;
+		endsAt: string;
+	};
+	topHotPlayers: TopHotPlayer[];
+	buyTransactionsPercentage: number | null;
+	sellTransactionsPercentage: number | null;
+	marketBias: MarketBias | null;
+	totalTransactions: number;
+	totalTradedTokens: number;
+	totalTradedCredits: number;
+	isEmpty: boolean;
 }

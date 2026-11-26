@@ -3,8 +3,7 @@ import {
 	formatCreditsAmount,
 	formatOrderRelativeExpiration,
 } from "@/features/market/utils";
-import { PlayerPortrait, TeamBadge } from "@/shared/components";
-import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
+import { PlayerTableCell, TokenSymbol } from "@/shared/components";
 import { CircleX } from "@/shared/icons";
 import styles from "./MarketOrdersTable.module.scss";
 
@@ -19,9 +18,11 @@ const dateFormatter = new Intl.DateTimeFormat("es-AR", {
 	year: "numeric",
 	hour: "2-digit",
 	minute: "2-digit",
+	hour12: false,
 });
 
-function formatDate(iso: string): string {
+function formatDate(iso: string | null | undefined): string {
+	if (!iso) return "—";
 	try {
 		const d = new Date(iso);
 		if (!Number.isNaN(d.getTime())) return dateFormatter.format(d);
@@ -40,77 +41,48 @@ const statusLabels: Record<EnrichedUserOrder["status"], string> = {
 
 export default function MarketOrdersRow({ order, onCancel }: Props) {
 	return (
-		<tr>
+		<tr className={styles.ordersTable__row}>
 			<td className={styles.ordersTable__colOrder}>
-				<div className={styles.ordersTable__orderTicket}>
+				<span className={styles.ordersTable__ticketBadge}>
 					#{order.listingId}
-				</div>
+				</span>
 				<div className={styles.ordersTable__orderDate}>
 					{formatDate(order.createdAt)}
 				</div>
 			</td>
 
 			<td className={styles.ordersTable__colPlayer}>
-				<div className={styles.ordersTable__playerCell}>
-					<PlayerPortrait
-						src={order.imageUrl}
-						name={order.playerName}
-						size="sm"
-					/>
-					<div className={styles.ordersTable__playerInfo}>
-						<div className={styles.ordersTable__playerNameRow}>
-							<span className={styles.ordersTable__playerName}>
-								{order.playerName}
-							</span>
-							{order.position && (
-								<span
-									className={styles.ordersTable__positionBadge}
-									title={`Posición: ${order.position}`}
-								>
-									{order.position.slice(0, 3)}
-								</span>
-							)}
-						</div>
-						<div className={styles.ordersTable__playerMeta}>
-							{order.teamName ? (
-								<span className={styles.ordersTable__playerAffiliation}>
-									<TeamBadge
-										teamName={order.teamName}
-										leagueName={order.leagueName ?? undefined}
-										className={styles.ordersTable__teamBadge}
-									/>
-									<span>{order.teamName}</span>
-								</span>
-							) : (
-								<span>Sin club</span>
-							)}
-							{order.leagueName && (
-								<>
-									<span className={styles.ordersTable__metaSep}>·</span>
-									<span>{order.leagueName}</span>
-								</>
-							)}
-						</div>
-					</div>
-				</div>
+				<PlayerTableCell
+					player={{
+						id: order.playerId,
+						name: order.playerName,
+						imageUrl: order.imageUrl,
+						fallbackImageUrl: order.fallbackImageUrl,
+						position: order.position,
+						teamId: order.teamId,
+						teamName: order.teamName,
+						leagueId: order.leagueId,
+						leagueName: order.leagueName,
+					}}
+					href={`/players/${order.playerId}`}
+				/>
 			</td>
 
 			<td className={styles.ordersTable__colQuantity}>
-				<div className={styles.ordersTable__quantityValue}>
-					{order.quantity}
-				</div>
-				<div className={styles.ordersTable__quantityUnit}>{TOKEN_SYMBOL}</div>
+				<span className={styles.ordersTable__quantityValue}>
+					{order.quantity} <TokenSymbol />
+				</span>
 			</td>
 
 			<td className={styles.ordersTable__colPrice}>
-				<div className={styles.ordersTable__priceValue}>
-					{formatCreditsAmount(order.unitPrice, true)}
-				</div>
-				<div className={styles.ordersTable__priceUnit}>/ {TOKEN_SYMBOL}</div>
+				<span className={styles.ordersTable__priceValue}>
+					{formatCreditsAmount(order.unitPrice, true)} /{" "}
+					<TokenSymbol size="sm" />
+				</span>
 			</td>
 
 			<td className={styles.ordersTable__colTotal}>
-				<div
+				<strong
 					className={`${styles.ordersTable__totalValue} ${
 						order.status === "CANCELLED" || order.status === "EXPIRED"
 							? styles.ordersTable__totalValue_inactive
@@ -118,8 +90,7 @@ export default function MarketOrdersRow({ order, onCancel }: Props) {
 					}`}
 				>
 					{formatCreditsAmount(order.totalAmount, true)}
-				</div>
-				<div className={styles.ordersTable__totalUnit}>{CREDIT_SYMBOL}</div>
+				</strong>
 			</td>
 
 			<td className={styles.ordersTable__colStatus}>

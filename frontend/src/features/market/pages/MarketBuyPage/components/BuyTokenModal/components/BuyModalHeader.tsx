@@ -1,4 +1,4 @@
-import { Button } from "@/shared/components";
+import { Button, TokenSymbol } from "@/shared/components";
 import { ShoppingCart, X } from "@/shared/icons";
 import styles from "./BuyModalHeader.module.scss";
 
@@ -15,7 +15,9 @@ export function BuyModalHeader({ playerName, isBusy, onClose }: Props) {
 				<ShoppingCart aria-hidden="true" />
 			</div>
 			<div className={styles.heading}>
-				<h3 className={styles.title}>Comprar tokens de {playerName}</h3>
+				<h3 className={styles.title}>
+					Comprar <TokenSymbol size="sm" /> de {playerName}
+				</h3>
 				<p>Emisión oficial directa al valor de cotización vigente</p>
 			</div>
 			<Button

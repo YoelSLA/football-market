@@ -6,6 +6,7 @@ import {
 	Puzzle,
 	ShoppingCart,
 	Tag,
+	TrendingUp,
 	Trophy,
 	UsersRound,
 } from "@/shared/icons";
@@ -65,6 +66,12 @@ export const NAV_SECTIONS: NavSection[] = [
 				label: "Mercado P2P",
 				icon: UsersRound,
 				path: "/market/p2p",
+			},
+			{
+				key: "market-trends",
+				label: "Tendencias",
+				icon: TrendingUp,
+				path: "/market/trends",
 			},
 			{
 				key: "market-sell",

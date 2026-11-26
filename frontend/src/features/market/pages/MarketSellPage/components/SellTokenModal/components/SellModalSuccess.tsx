@@ -1,6 +1,6 @@
 import type { SellOfficialResult, SellResult } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
 import { CheckCircle2 } from "@/shared/icons";
 import styles from "./SellModalSuccess.module.scss";
 
@@ -15,6 +15,7 @@ const expiryDateFormatter = new Intl.DateTimeFormat("es-AR", {
 	year: "numeric",
 	hour: "2-digit",
 	minute: "2-digit",
+	hour12: false,
 });
 
 function formatExpiryDate(expiresAt: string): string {
@@ -52,9 +53,11 @@ export default function SellModalSuccess({ result, playerName }: Props) {
 						<strong>{playerName}</strong>
 					</div>
 					<div className={styles.success__row}>
-						<span>Tokens vendidos</span>
+						<span>
+							<TokenSymbol size="xs" /> vendidos
+						</span>
 						<strong>
-							{result.quantity} {TOKEN_SYMBOL}
+							{result.quantity} <TokenSymbol />
 						</strong>
 					</div>
 					<div className={styles.success__row}>
@@ -101,9 +104,11 @@ export default function SellModalSuccess({ result, playerName }: Props) {
 					<strong>{playerName}</strong>
 				</div>
 				<div className={styles.success__row}>
-					<span>Tokens publicados</span>
+					<span>
+						<TokenSymbol size="xs" /> publicados
+					</span>
 					<strong>
-						{result.quantity} {TOKEN_SYMBOL}
+						{result.quantity} <TokenSymbol />
 					</strong>
 				</div>
 				<div className={styles.success__row}>

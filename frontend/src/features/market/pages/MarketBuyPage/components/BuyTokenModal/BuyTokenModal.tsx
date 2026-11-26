@@ -9,6 +9,7 @@ import type {
 	OfficialMarketQuote,
 } from "@/features/market/types";
 import { Modal } from "@/shared/components";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./BuyTokenModal.module.scss";
 import {
 	BuyModalFooter,
@@ -79,7 +80,7 @@ export default function BuyTokenModal({
 			className={styles.dialog}
 			isOpen={isOpen}
 			onClose={onClose}
-			title={`Comprar tokens de ${player.name}`}
+			title={`Comprar ${TOKEN_SYMBOL} de ${player.name}`}
 			closeOnEsc={!isBusy}
 			closeOnOverlayClick={!isBusy}
 			isBusy={isBusy}
@@ -88,7 +89,7 @@ export default function BuyTokenModal({
 		>
 			<section
 				className={styles.modal}
-				aria-label={`Comprar tokens de ${player.name}`}
+				aria-label={`Comprar ${TOKEN_SYMBOL} de ${player.name}`}
 			>
 				<BuyModalHeader
 					playerName={player.name}
@@ -128,7 +129,7 @@ export default function BuyTokenModal({
 								>
 									<TokenQuantityStepper
 										id="buy-token-quantity"
-										label="Cantidad de tokens a comprar (1 a 100)"
+										label={`Cantidad de ${TOKEN_SYMBOL} a comprar (1 a 100)`}
 										quantity={safeQuantity}
 										min={1}
 										max={100}

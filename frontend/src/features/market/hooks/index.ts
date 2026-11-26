@@ -10,7 +10,9 @@ export {
 } from "./pages";
 export {
 	type MarketPlayerQuoteState,
+	useHotPlayerIds,
 	useMarketQuotesQuery,
+	useMarketTrendsQuery,
 	useOfficialMarketQuery,
 } from "./queries";
 export { useMarketToast } from "./useMarketToast";

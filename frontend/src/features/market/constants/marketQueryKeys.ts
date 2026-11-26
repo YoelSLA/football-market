@@ -28,4 +28,5 @@ export const marketQueryKeys = {
 		status?: string;
 		sort?: string;
 	}) => ["market", "listings", "mine", params] as const,
+	trends: () => ["market", "trends"] as const,
 };
