@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-25
 
-**Status**: Ready for planning
+**Status**: Ready for implementation
 
 **Input**: REQ-S3-04, issue #101: reducir la latencia de las consultas frecuentes del ranking, el catálogo de jugadores y los mercados oficial y P2P, evitando consultas redundantes y pesadas a PostgreSQL. Definir una caché de backend con Spring Cache y Caffeine en memoria, claves determinísticas que consideren filtros y paginación y, para P2P, el usuario consultante (`viewerId`); TTL y tamaños máximos acordes con la volatilidad, con aproximadamente 10 segundos para P2P; invalidación al terminar el recálculo de cotizaciones y al completar una sincronización de jugadores; consistencia ante mutaciones de mercado incluidas en el alcance; fallback a PostgreSQL ante ausencia, expiración o reinicio, sin errores ni cambios en los contratos. Incluir `GET /api/rankings/score`, `GET /api/players/filters`, `GET /api/players`, `GET /api/players/{id}`, `GET /api/market/official` y `GET /api/market/p2p`. Excluir endpoints transaccionales, consultas personales en tiempo real y caché distribuida con Redis.
 
@@ -84,7 +84,7 @@ Como usuario de la plataforma, quiero que las consultas reflejen los recálculos
 
 - **FR-005**: Al completar correctamente un recálculo de cotizaciones, el sistema MUST invalidar los resultados cacheados del ranking por score y del mercado oficial antes de que nuevas consultas puedan reutilizarlos.
 - **FR-006**: Al completar correctamente una sincronización de jugadores, el sistema MUST invalidar los resultados cacheados de filtros, listado y detalle del catálogo.
-- **FR-007**: Cuando una mutación de mercado existente y exitosa cambie información expuesta por `GET /api/market/official` o `GET /api/market/p2p`, el sistema MUST invalidar el conjunto afectado de resultados de lectura para que las solicitudes posteriores no reutilicen el estado anterior. La invalidación MUST ocurrir después de que la mutación se complete correctamente. Esta exigencia no incorpora endpoints transaccionales al alcance ni altera sus contratos.
+- **FR-007**: Cuando una compra o venta existente del mercado oficial se complete correctamente, el sistema MUST invalidar los resultados cacheados de `GET /api/market/official`. En P2P, tanto publicar o cancelar una oferta como completar su compra —que registra la venta para el vendedor— MUST invalidar los resultados cacheados de `GET /api/market/p2p`. Estas operaciones invalidan únicamente la caché del mercado que modifican. La invalidación MUST ocurrir después de que la operación se complete correctamente. Esta exigencia no incorpora endpoints transaccionales al alcance ni altera sus contratos.
 - **FR-008**: Ante una ausencia de resultado cacheado, expiración o reinicio del proceso, el sistema MUST resolver la consulta desde PostgreSQL y entregar la respuesta según el contrato HTTP vigente, sin requerir una inicialización o recuperación manual de la caché.
 - **FR-009**: La caché MUST ser local al backend; Redis y cualquier caché distribuida quedan fuera del alcance.
 - **FR-010**: La incorporación de caché MUST mantener los contratos existentes de los seis endpoints: ruta, parámetros, formato y significado de respuesta, autenticación, códigos y comportamiento de errores. La caché no MUST incorporar consultas personales de datos en tiempo real.

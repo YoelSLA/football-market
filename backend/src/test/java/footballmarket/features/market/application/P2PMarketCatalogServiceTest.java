@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.infraestructure.UserRepository;
 import footballmarket.features.market.application.impl.P2PMarketCatalogServiceImpl;
@@ -18,10 +20,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 @Tag("lightweight")
 class P2PMarketCatalogServiceTest {
@@ -30,13 +31,20 @@ class P2PMarketCatalogServiceTest {
   private P2PMarketRepository p2pRepository;
   private Clock clock;
   private P2PMarketCatalogService service;
+  private CacheManager cacheManager;
 
   @BeforeEach
   void setUp() {
     users = mock(UserRepository.class);
     p2pRepository = mock(P2PMarketRepository.class);
     clock = Clock.fixed(Instant.parse("2026-11-18T12:00:00Z"), ZoneId.of("UTC"));
-    service = new P2PMarketCatalogServiceImpl(users, p2pRepository, clock);
+    cacheManager = new ConcurrentMapCacheManager(QueryCacheConfiguration.P2P_MARKET);
+    service = new P2PMarketCatalogServiceImpl(users, p2pRepository, clock, cacheManager);
+  }
+
+  @AfterEach
+  void clearsCache() {
+    cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).clear();
   }
 
   @Test
@@ -109,5 +117,90 @@ class P2PMarketCatalogServiceTest {
     assertThat(catalog.players().getContent()).hasSize(1);
     assertThat(catalog.players().getContent().getFirst().name()).isEqualTo("Test Player");
     assertThat(catalog.players().getContent().getFirst().availableQuantity()).isEqualTo(15L);
+  }
+
+  @Nested
+  @DisplayName("Caché del catálogo P2P")
+  class Cache {
+
+    @Test
+    @DisplayName("Reutiliza resultados para el mismo usuario y criterios")
+    void reusesResultForSameViewerAndQuery() {
+      // Arrange
+      User viewer = mock(User.class);
+      when(viewer.getId()).thenReturn(99L);
+      when(users.findByEmail("viewer@example.com")).thenReturn(Optional.of(viewer));
+      when(p2pRepository.countP2PMarketPlayers(
+              eq(99L), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(0L);
+      P2PMarketQuery query =
+          new P2PMarketQuery(0, 8, "price", "asc", null, null, null, null, null, null);
+
+      // Act
+      P2PMarketCatalog first = service.getP2PCatalog("viewer@example.com", query);
+      P2PMarketCatalog repeated = service.getP2PCatalog("viewer@example.com", query);
+
+      // Assert
+      assertThat(repeated).isSameAs(first);
+      verify(p2pRepository)
+          .countP2PMarketPlayers(eq(99L), any(), any(), any(), any(), any(), any(), any());
+      verify(users, org.mockito.Mockito.times(2)).findByEmail("viewer@example.com");
+    }
+
+    @Test
+    @DisplayName("Aísla resultados entre usuarios y criterios diferentes")
+    void separatesViewerAndQueryKeys() {
+      // Arrange
+      User firstViewer = mock(User.class);
+      when(firstViewer.getId()).thenReturn(99L);
+      User secondViewer = mock(User.class);
+      when(secondViewer.getId()).thenReturn(100L);
+      when(users.findByEmail("first@example.com")).thenReturn(Optional.of(firstViewer));
+      when(users.findByEmail("second@example.com")).thenReturn(Optional.of(secondViewer));
+      when(p2pRepository.countP2PMarketPlayers(
+              any(), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(0L);
+      P2PMarketQuery query =
+          new P2PMarketQuery(0, 8, "price", "asc", null, null, null, null, null, null);
+      P2PMarketQuery differentQuery =
+          new P2PMarketQuery(1, 8, "price", "asc", null, null, null, null, null, null);
+
+      // Act
+      P2PMarketCatalog first = service.getP2PCatalog("first@example.com", query);
+      P2PMarketCatalog otherViewer = service.getP2PCatalog("second@example.com", query);
+      P2PMarketCatalog otherQuery = service.getP2PCatalog("first@example.com", differentQuery);
+
+      // Assert
+      assertThat(otherViewer).isNotSameAs(first);
+      assertThat(otherQuery).isNotSameAs(first);
+      verify(p2pRepository, org.mockito.Mockito.times(2))
+          .countP2PMarketPlayers(eq(99L), any(), any(), any(), any(), any(), any(), any());
+      verify(p2pRepository)
+          .countP2PMarketPlayers(eq(100L), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Vuelve al repositorio ante una ausencia de caché")
+    void reloadsAfterCacheIsCleared() {
+      // Arrange
+      User viewer = mock(User.class);
+      when(viewer.getId()).thenReturn(99L);
+      when(users.findByEmail("viewer@example.com")).thenReturn(Optional.of(viewer));
+      when(p2pRepository.countP2PMarketPlayers(
+              eq(99L), any(), any(), any(), any(), any(), any(), any()))
+          .thenReturn(0L);
+      P2PMarketQuery query =
+          new P2PMarketQuery(0, 8, "price", "asc", null, null, null, null, null, null);
+      service.getP2PCatalog("viewer@example.com", query);
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).clear();
+
+      // Act
+      P2PMarketCatalog reloaded = service.getP2PCatalog("viewer@example.com", query);
+
+      // Assert
+      assertThat(reloaded).isNotNull();
+      verify(p2pRepository, org.mockito.Mockito.times(2))
+          .countP2PMarketPlayers(eq(99L), any(), any(), any(), any(), any(), any(), any());
+    }
   }
 }

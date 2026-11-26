@@ -1,5 +1,7 @@
 package footballmarket.features.quote.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.common.config.QueryCacheInvalidationEvent;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.quote.application.QuoteRecalculationService;
@@ -27,6 +29,7 @@ import java.util.List;
 import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -45,6 +48,7 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
   private final QuotePlayerPublisher publisher;
   private final QuoteProperties properties;
   private final Clock marketClock;
+  private final ApplicationEventPublisher events;
 
   public QuoteRecalculationServiceImpl(
       PlayerQuoteRepository quotes,
@@ -53,7 +57,8 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       QuotePlayerPublisher publisher,
       QuoteProperties properties,
       Clock marketClock,
-      QuoteExecutionRecorder recorder) {
+      QuoteExecutionRecorder recorder,
+      ApplicationEventPublisher events) {
     this.quotes = quotes;
     this.executions = executions;
     this.population = population;
@@ -61,6 +66,7 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
     this.properties = properties;
     this.marketClock = marketClock;
     this.recorder = recorder;
+    this.events = events;
   }
 
   @Override
@@ -154,6 +160,10 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
             notRepriced,
             failed,
             Instant.now(this.marketClock));
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(
+            java.util.Set.of(
+                QueryCacheConfiguration.SCORE_RANKINGS, QueryCacheConfiguration.OFFICIAL_MARKET)));
     LOG.info(
         "market_demand_quote_execution_completed quoteDate={} pricedPlayers={} recomputedRows={}"
             + " notRepricedPlayers={} failedPlayers={} origin={}",
@@ -261,6 +271,10 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
             notRepriced,
             failed,
             Instant.now(this.marketClock));
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(
+            java.util.Set.of(
+                QueryCacheConfiguration.SCORE_RANKINGS, QueryCacheConfiguration.OFFICIAL_MARKET)));
     LOG.info(
         "quote_execution_completed quoteDate={} strategy={} strategyVersion=v1 pricedPlayers={}"
             + " recomputedRows={} carriedForwardRows={} notRepricedPlayers={} failedPlayers={} origin={}",

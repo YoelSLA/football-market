@@ -6,7 +6,7 @@
 
 ## Content Quality
 
-- [ ] Sin detalles de implementación (lenguajes, frameworks, APIs)
+- [x] Sin detalles de implementación (lenguajes, frameworks, APIs)
 - [x] Enfocada en el valor para usuarios y la necesidad de negocio
 - [x] Escrita para stakeholders técnicos y funcionales; los términos técnicos se limitan a los impuestos por el requerimiento
 - [x] Secciones obligatorias completas
@@ -27,7 +27,7 @@
 - [x] Los requisitos funcionales tienen escenarios de aceptación que los cubren
 - [x] Las historias cubren los flujos principales
 - [x] Los criterios de éxito tienen resultados verificables en los escenarios y requisitos
-- [ ] Sin detalles de implementación en la especificación
+- [x] Sin detalles de implementación en la especificación
 
 ## Notes
 

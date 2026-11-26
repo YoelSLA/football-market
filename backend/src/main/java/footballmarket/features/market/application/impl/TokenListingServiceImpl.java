@@ -1,5 +1,7 @@
 package footballmarket.features.market.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.common.config.QueryCacheInvalidationEvent;
 import footballmarket.features.auth.application.exceptions.UserNotFoundException;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +53,7 @@ public class TokenListingServiceImpl implements TokenListingService {
   private final QuoteSource quoteSource;
   private final MarketInitializationGuard marketInitialization;
   private final Clock marketClock;
+  private final ApplicationEventPublisher events;
 
   @Value("${market.listing.expiration-duration:PT24H}")
   private Duration expirationDuration;
@@ -92,15 +96,19 @@ public class TokenListingServiceImpl implements TokenListingService {
       throw new InsufficientStockException();
     }
     try {
-      return this.listings.save(
-          TokenListing.publish(
-              seller,
-              player,
-              order.quantity(),
-              order.unitPrice(),
-              quote,
-              now,
-              now.plus(this.expirationDuration)));
+      TokenListing listing =
+          this.listings.save(
+              TokenListing.publish(
+                  seller,
+                  player,
+                  order.quantity(),
+                  order.unitPrice(),
+                  quote,
+                  now,
+                  now.plus(this.expirationDuration)));
+      this.events.publishEvent(
+          new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
+      return listing;
     } catch (ArithmeticException overflow) {
       throw new ArithmeticOverflowException();
     }
@@ -126,6 +134,8 @@ public class TokenListingServiceImpl implements TokenListingService {
       throw new ListingNotAvailableException();
     }
     listing.markCancelled(now);
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
     return listing.snapshot(now);
   }
 

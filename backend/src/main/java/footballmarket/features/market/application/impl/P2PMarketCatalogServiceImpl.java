@@ -1,5 +1,6 @@
 package footballmarket.features.market.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.infraestructure.UserRepository;
 import footballmarket.features.market.application.P2PMarketCatalogService;
@@ -17,6 +18,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.interceptor.SimpleKey;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -34,10 +38,18 @@ public class P2PMarketCatalogServiceImpl implements P2PMarketCatalogService {
   private final UserRepository users;
   private final P2PMarketRepository p2pMarketRepository;
   private final Clock marketClock;
+  private final CacheManager cacheManager;
 
   @Override
   public P2PMarketCatalog getP2PCatalog(String viewerEmail, P2PMarketQuery query) {
     Long viewerId = this.resolveViewerId(viewerEmail);
+    Cache cache = this.cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET);
+    SimpleKey cacheKey = new SimpleKey(viewerId, query);
+    P2PMarketCatalog cached = cache.get(cacheKey, P2PMarketCatalog.class);
+    if (cached != null) {
+      return cached;
+    }
+
     OffsetDateTime now = OffsetDateTime.now(this.marketClock);
 
     P2PMarketPriceRangeProjection priceRangeProjection =
@@ -61,7 +73,9 @@ public class P2PMarketCatalogServiceImpl implements P2PMarketCatalogService {
     if (totalElements == 0) {
       Page<P2PMarketPlayer> page =
           new PageImpl<>(Collections.emptyList(), PageRequest.of(query.page(), query.size()), 0);
-      return new P2PMarketCatalog(page, priceRange);
+      P2PMarketCatalog catalog = new P2PMarketCatalog(page, priceRange);
+      cache.put(cacheKey, catalog);
+      return catalog;
     }
 
     int offset = query.page() * query.size();
@@ -69,7 +83,9 @@ public class P2PMarketCatalogServiceImpl implements P2PMarketCatalogService {
       Page<P2PMarketPlayer> page =
           new PageImpl<>(
               Collections.emptyList(), PageRequest.of(query.page(), query.size()), totalElements);
-      return new P2PMarketCatalog(page, priceRange);
+      P2PMarketCatalog catalog = new P2PMarketCatalog(page, priceRange);
+      cache.put(cacheKey, catalog);
+      return catalog;
     }
 
     List<P2PMarketPlayerProjection> projections =
@@ -91,7 +107,9 @@ public class P2PMarketCatalogServiceImpl implements P2PMarketCatalogService {
 
     Page<P2PMarketPlayer> page =
         new PageImpl<>(players, PageRequest.of(query.page(), query.size()), totalElements);
-    return new P2PMarketCatalog(page, priceRange);
+    P2PMarketCatalog catalog = new P2PMarketCatalog(page, priceRange);
+    cache.put(cacheKey, catalog);
+    return catalog;
   }
 
   private Long resolveViewerId(String viewerEmail) {

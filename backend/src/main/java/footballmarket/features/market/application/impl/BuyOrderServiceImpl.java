@@ -1,5 +1,7 @@
 package footballmarket.features.market.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.common.config.QueryCacheInvalidationEvent;
 import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.application.internal.OfficialBuyOrderExecutor;
 import footballmarket.features.market.application.internal.P2PBuyOrderExecutor;
@@ -7,6 +9,7 @@ import footballmarket.features.market.domain.models.MarketTransaction;
 import footballmarket.features.market.domain.records.BuyListingRequest;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,16 +31,23 @@ public class BuyOrderServiceImpl implements BuyOrderService {
 
   private final OfficialBuyOrderExecutor officialBuyOrderExecutor;
   private final P2PBuyOrderExecutor p2pBuyOrderExecutor;
+  private final ApplicationEventPublisher events;
 
   /** {@inheritDoc} */
   @Override
   public MarketTransaction buy(String buyerEmail, BuyOrderRequest order) {
-    return this.officialBuyOrderExecutor.execute(buyerEmail, order);
+    MarketTransaction transaction = this.officialBuyOrderExecutor.execute(buyerEmail, order);
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.OFFICIAL_MARKET)));
+    return transaction;
   }
 
   /** {@inheritDoc} */
   @Override
   public MarketTransaction buyListing(String buyerEmail, BuyListingRequest order) {
-    return this.p2pBuyOrderExecutor.execute(buyerEmail, order);
+    MarketTransaction transaction = this.p2pBuyOrderExecutor.execute(buyerEmail, order);
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
+    return transaction;
   }
 }
