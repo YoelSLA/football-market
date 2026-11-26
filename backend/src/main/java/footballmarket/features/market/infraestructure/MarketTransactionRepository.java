@@ -1,6 +1,7 @@
 package footballmarket.features.market.infraestructure;
 
 import footballmarket.features.market.domain.models.MarketTransaction;
+import footballmarket.features.market.infraestructure.projections.BusinessTransactionTotalsProjection;
 import footballmarket.features.market.infraestructure.projections.MarketTrendProjection;
 import footballmarket.features.market.infraestructure.projections.PlayerMarketDemandProjection;
 import footballmarket.features.portfolio.domain.records.OperationHistoryAggregate;
@@ -22,6 +23,21 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface MarketTransactionRepository extends JpaRepository<MarketTransaction, Long> {
+
+  /** Agrega compras, recompras oficiales y volúmenes financieros de todo el historial. */
+  @Query(
+      value =
+          """
+          select count(*) filter (where buyer.role = 'USER') as "purchases",
+                 count(*) filter (where buyer.role = 'SUPERUSER' and seller.role = 'USER') as "sales",
+                 coalesce(sum(t.quantity), 0) as "tokensTransferred",
+                 coalesce(sum(t.total_amount), 0) as "creditsTradedInCents"
+            from market_transactions t
+            join users buyer on buyer.id = t.buyer_id
+            join users seller on seller.id = t.seller_id
+          """,
+      nativeQuery = true)
+  BusinessTransactionTotalsProjection aggregateBusinessMetrics();
 
   /**
    * Lista los registros financieros de un jugador, del más reciente al más antiguo.

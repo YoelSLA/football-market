@@ -2,6 +2,7 @@ package footballmarket.features.market.application.impl;
 
 import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.common.config.QueryCacheInvalidationEvent;
+import footballmarket.features.businessmetrics.application.BusinessMetricTransactionEvent;
 import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.application.internal.OfficialBuyOrderExecutor;
 import footballmarket.features.market.application.internal.P2PBuyOrderExecutor;
@@ -38,6 +39,11 @@ public class BuyOrderServiceImpl implements BuyOrderService {
   public MarketTransaction buy(String buyerEmail, BuyOrderRequest order) {
     MarketTransaction transaction = this.officialBuyOrderExecutor.execute(buyerEmail, order);
     this.events.publishEvent(
+        new BusinessMetricTransactionEvent(
+            BusinessMetricTransactionEvent.TransactionKind.PURCHASE,
+            transaction.getQuantity(),
+            transaction.getTotalAmount()));
+    this.events.publishEvent(
         new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.OFFICIAL_MARKET)));
     return transaction;
   }
@@ -46,6 +52,11 @@ public class BuyOrderServiceImpl implements BuyOrderService {
   @Override
   public MarketTransaction buyListing(String buyerEmail, BuyListingRequest order) {
     MarketTransaction transaction = this.p2pBuyOrderExecutor.execute(buyerEmail, order);
+    this.events.publishEvent(
+        new BusinessMetricTransactionEvent(
+            BusinessMetricTransactionEvent.TransactionKind.PURCHASE,
+            transaction.getQuantity(),
+            transaction.getTotalAmount()));
     this.events.publishEvent(
         new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
     return transaction;
