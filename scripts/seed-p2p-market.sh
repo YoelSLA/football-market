@@ -11,6 +11,15 @@ P2P_MIN_TOKENS="${P2P_MIN_TOKENS:-1}"
 P2P_MAX_TOKENS="${P2P_MAX_TOKENS:-5}"
 MAX_INITIAL_CREDITS_CENTS=10000
 
+# Variación dinámica de ratio de ventas entre 40% y 60%
+P2P_SELLS_RATIO_PERCENT="${P2P_SELLS_RATIO_PERCENT:-$(( 40 + (RANDOM % 21) ))}"
+BUYBACK_SELLER_COUNT=$(( (SELLER_COUNT * P2P_SELLS_RATIO_PERCENT + 50) / 100 ))
+if (( BUYBACK_SELLER_COUNT < 1 && P2P_SELLS_RATIO_PERCENT > 0 )); then
+  BUYBACK_SELLER_COUNT=1
+fi
+COUNT_BUYS=0
+COUNT_SELLS=0
+
 for dependency in curl jq; do
   if ! command -v "$dependency" >/dev/null 2>&1; then
     echo "Error: $dependency es obligatorio." >&2
@@ -161,32 +170,37 @@ for seller_index in $(seq 0 $((SELLER_COUNT - 1))); do
     fi
   fi
 
-  buy_body="$(jq -n --argjson playerId "$player_id" --argjson quantity "$token_quantity" \
+  # Si este vendedor participará en liquidaciones oficiales (buyback), compra tokens adicionales para liquidar
+  extra_buyback_qty=0
+  if (( seller_index < BUYBACK_SELLER_COUNT )); then
+    extra_buyback_qty=$(( (RANDOM % 2) + 1 ))
+  fi
+  total_buy_qty=$(( token_quantity + extra_buyback_qty ))
+
+  buy_body="$(jq -n --argjson playerId "$player_id" --argjson quantity "$total_buy_qty" \
     '{playerId: $playerId, quantity: $quantity}')"
   request POST "$API_BASE_URL/api/orders/buy" "$seller_token" "$buy_body"
   require_status 200 "la compra oficial de $seller_email"
+  COUNT_BUYS=$(( COUNT_BUYS + 1 ))
 
-  # Publicación P2P estándar actual (precio congelado por backend al 100% de la cotización):
-  sell_body="$(jq -n --argjson playerId "$player_id" --argjson quantity "$token_quantity" \
-    '{playerId: $playerId, quantity: $quantity}')"
+  # Publicación P2P con precio flexible (85% - 115% de la cotización según SPEC-026)
+  variation_factor=$(( 85 + (RANDOM % 31) ))
+  flexible_unit_price=$(( (official_price * variation_factor) / 100 ))
+  if (( flexible_unit_price < 1 )); then flexible_unit_price=1; fi
 
-  # ---------------------------------------------------------------------------
-  # [PENDIENTE - ISSUE #94 / SPEC-026: PRECIO FLEXIBLE EN MERCADO P2P]
-  # Cuando se implemente el campo opcional 'unitPrice' en OrderSellRequestDTO:
-  # - Rango permitido: [quote.price * 0.8, quote.price * 1.2]
-  # - Permite ofertas con descuento (ej. 85-95%) o sobreprecio (ej. 105-115%)
-  # Descomentar el siguiente bloque cuando el endpoint acepte unitPrice:
-  #
-  # variation_factor=$(( 85 + (RANDOM % 31) )) # Entre 85% y 115% de la cotización
-  # flexible_unit_price=$(( (official_price * variation_factor) / 100 ))
-  # sell_body="$(jq -n \
-  #   --argjson playerId "$player_id" \
-  #   --argjson quantity "$token_quantity" \
-  #   --argjson unitPrice "$flexible_unit_price" \
-  #   '{playerId: $playerId, quantity: $quantity, unitPrice: $unitPrice}')"
-  # ---------------------------------------------------------------------------
-
+  sell_body="$(jq -n \
+    --argjson playerId "$player_id" \
+    --argjson quantity "$token_quantity" \
+    --argjson unitPrice "$flexible_unit_price" \
+    '{playerId: $playerId, quantity: $quantity, unitPrice: $unitPrice}')"
   request POST "$API_BASE_URL/api/orders/sell" "$seller_token" "$sell_body"
+
+  # Fallback si el backend no aceptara unitPrice
+  if [[ "$HTTP_STATUS" != "201" ]]; then
+    sell_body="$(jq -n --argjson playerId "$player_id" --argjson quantity "$token_quantity" \
+      '{playerId: $playerId, quantity: $quantity}')"
+    request POST "$API_BASE_URL/api/orders/sell" "$seller_token" "$sell_body"
+  fi
   require_status 201 "la publicación P2P de $seller_email"
 
   listing_id="$(jq -er '.listingId' "$RESPONSE_BODY")"
@@ -213,6 +227,7 @@ if (( P2P_BUY_RATIO_PERCENT > 0 && ${#CREATED_LISTINGS[@]} > 0 )); then
       request POST "$API_BASE_URL/api/orders/buy" "$BUYER_TOKEN" "$buy_p2p_body"
       if [[ "$HTTP_STATUS" == "200" ]]; then
         echo "  ✔ [TRADE P2P] Listing $listing_to_buy comprado por $BUYER_EMAIL (generó transacción)"
+        COUNT_BUYS=$(( COUNT_BUYS + 1 ))
       else
         echo "  ✖ [TRADE P2P] Falló compra del listing $listing_to_buy (HTTP $HTTP_STATUS)"
       fi
@@ -223,20 +238,64 @@ if (( P2P_BUY_RATIO_PERCENT > 0 && ${#CREATED_LISTINGS[@]} > 0 )); then
 fi
 
 # -----------------------------------------------------------------------------
-# [PENDIENTE - ISSUE #94 / SPEC-026: VENTA INMEDIATA OFICIAL (BUYBACK)]
-# Cuando se implemente POST /api/orders/sell-official (o similar):
-# Permite simular que usuarios venden de vuelta a la casa con spread (10% desc.)
-# para mostrar la función de liquidez inmediata.
-#
-# if (( ${#SELLER_TOKENS[@]} > 0 )); then
-#   # Un vendedor vende inmediatamente 1 token a la casa oficial
-#   sample_seller_token="${SELLER_TOKENS[0]}"
-#   sample_player_id="$(jq -er '.content[0].id' <<<"$CATALOG")"
-#   # buyback_body="$(jq -n --argjson playerId "$sample_player_id" --argjson quantity 1 \
-#   #   '{playerId: $playerId, quantity: $quantity}')"
-#   # request POST "$API_BASE_URL/api/orders/sell-official" "$sample_seller_token" "$buyback_body"
-#   # echo "  ✔ [BUYBACK] Venta oficial ejecutada al superusuario con spread aplicado."
-# fi
+# LIQUIDACIÓN INMEDIATA OFICIAL (BUYBACK - SPEC-026 / PR #111)
+# -----------------------------------------------------------------------------
+# Vendedores liquidan tokens de vuelta a la casa oficial con spread del 10%.
+# Genera ventas oficiales que equilibran dinámicamente las métricas de sentimiento
+# entre el 40% y el 60% de ventas (variación aleatoria).
+if (( BUYBACK_SELLER_COUNT > 0 && ${#SELLER_TOKENS[@]} > 0 )); then
+  echo
+  echo "=== [BUYBACK] Liquidaciones oficiales a la Casa (Objetivo ventas: $BUYBACK_SELLER_COUNT de $SELLER_COUNT vendedores) ==="
+  for s_idx in $(seq 0 $(( BUYBACK_SELLER_COUNT - 1 ))); do
+    sample_seller_token="${SELLER_TOKENS[$s_idx]}"
+    sample_seller_email="$BATCH_PREFIX.seller$((s_idx + 1))@example.test"
+    request GET "$API_BASE_URL/api/portfolio/me" "$sample_seller_token"
+    if [[ "$HTTP_STATUS" == "200" ]]; then
+      p_candidate="$(jq -c '.positions[]? | select(.availableQuantity > 0)' "$RESPONSE_BODY" | head -n 1)"
+      if [[ -n "$p_candidate" ]]; then
+        sample_p_id="$(jq -r '.playerId' <<<"$p_candidate")"
+        sample_p_name="$(jq -r '.playerName' <<<"$p_candidate")"
+        sample_p_avail="$(jq -r '.availableQuantity' <<<"$p_candidate")"
+        bb_qty=$(( sample_p_avail > 2 ? 2 : sample_p_avail ))
+        buyback_body="$(jq -n --argjson playerId "$sample_p_id" --argjson quantity "$bb_qty" \
+          '{playerId: $playerId, quantity: $quantity}')"
+        request POST "$API_BASE_URL/api/orders/sell-official" "$sample_seller_token" "$buyback_body"
+        if [[ "$HTTP_STATUS" == "200" ]]; then
+          echo "  ✔ [BUYBACK] $sample_seller_email liquidó $bb_qty token(s) de $sample_p_name a la casa oficial."
+          COUNT_SELLS=$(( COUNT_SELLS + 1 ))
+        fi
+      fi
+    fi
+  done
+
+  # El comprador también liquida 1 token de su inventario a la casa si tiene stock
+  request GET "$API_BASE_URL/api/portfolio/me" "$BUYER_TOKEN"
+  if [[ "$HTTP_STATUS" == "200" ]]; then
+    buyer_cand="$(jq -c '.positions[]? | select(.availableQuantity > 0)' "$RESPONSE_BODY" | head -n 1)"
+    if [[ -n "$buyer_cand" ]]; then
+      b_pid="$(jq -r '.playerId' <<<"$buyer_cand")"
+      b_pname="$(jq -r '.playerName' <<<"$buyer_cand")"
+      bb_body="$(jq -n --argjson playerId "$b_pid" --argjson quantity 1 '{playerId: $playerId, quantity: $quantity}')"
+      request POST "$API_BASE_URL/api/orders/sell-official" "$BUYER_TOKEN" "$bb_body"
+      if [[ "$HTTP_STATUS" == "200" ]]; then
+        echo "  ✔ [BUYBACK] $BUYER_EMAIL liquidó 1 token de $b_pname a la casa oficial."
+        COUNT_SELLS=$(( COUNT_SELLS + 1 ))
+      fi
+    fi
+  fi
+fi
+
+total_tanda_trades=$(( COUNT_BUYS + COUNT_SELLS ))
+tanda_buy_pct=0 tanda_sell_pct=0
+if (( total_tanda_trades > 0 )); then
+  tanda_buy_pct=$(( (COUNT_BUYS * 100) / total_tanda_trades ))
+  tanda_sell_pct=$(( (COUNT_SELLS * 100) / total_tanda_trades ))
+fi
+echo
+echo "=============================================================================="
+echo "📊 Balance de Operaciones de la Tanda P2P:"
+echo "   • Compras: $COUNT_BUYS ($tanda_buy_pct%) | Ventas: $COUNT_SELLS ($tanda_sell_pct%) [Objetivo: $P2P_SELLS_RATIO_PERCENT%]"
+echo "=============================================================================="
 
 # -----------------------------------------------------------------------------
 # [PENDIENTE - ISSUES #96 Y #97 / SPEC-028 Y SPEC-029: HOT PLAYERS DE TENDENCIAS]

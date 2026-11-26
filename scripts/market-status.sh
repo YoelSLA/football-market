@@ -90,13 +90,31 @@ echo "  - Publicaciones Activas vigentes: $ACTIVE_LISTINGS"
 echo "  - Publicaciones Vendidas (Trades): $SOLD_LISTINGS"
 echo "  - Publicaciones Canceladas / Expiradas: $EXPIRED_LISTINGS"
 
-# 4. VOLUMEN Y ACTIVIDAD (ÚLTIMAS 24 HORAS)
+# 4. VOLUMEN, ACTIVIDAD Y SENTIMIENTO (ÚLTIMAS 24 HORAS)
 echo
-echo "💰 ACTIVIDAD Y VOLUMEN (24 HORAS):"
+echo "💰 ACTIVIDAD, VOLUMEN Y SENTIMIENTO (24 HORAS):"
 TOTAL_TX_24H="$(psql_cmd "SELECT COUNT(*) FROM market_transactions WHERE executed_at >= NOW() - INTERVAL '24 hours';")"
 TOTAL_VOL_CENTS="$(psql_cmd "SELECT COALESCE(SUM(total_amount), 0) FROM market_transactions WHERE executed_at >= NOW() - INTERVAL '24 hours';")"
 ALL_TIME_TX="$(psql_cmd "SELECT COUNT(*) FROM market_transactions;")"
+BUY_TX_24H="$(psql_cmd "SELECT COUNT(*) FROM market_transactions t JOIN users b ON b.id = t.buyer_id WHERE b.role = 'USER' AND t.executed_at >= NOW() - INTERVAL '24 hours';")"
+SELL_TX_24H="$(psql_cmd "SELECT COUNT(*) FROM market_transactions t JOIN users b ON b.id = t.buyer_id JOIN users s ON s.id = t.seller_id WHERE b.role = 'SUPERUSER' AND s.role = 'USER' AND t.executed_at >= NOW() - INTERVAL '24 hours';")"
+
+BUY_PCT="0.0"
+SELL_PCT="0.0"
+BIAS_LABEL="NEUTRAL"
+if [[ "$TOTAL_TX_24H" =~ ^[1-9][0-9]*$ ]]; then
+  BUY_PCT="$(awk -v b="$BUY_TX_24H" -v t="$TOTAL_TX_24H" 'BEGIN { printf "%.1f", (b*100)/t }')"
+  SELL_PCT="$(awk -v s="$SELL_TX_24H" -v t="$TOTAL_TX_24H" 'BEGIN { printf "%.1f", (s*100)/t }')"
+  if (( BUY_TX_24H > SELL_TX_24H )); then
+    BIAS_LABEL="BULLISH (Alcista)"
+  elif (( BUY_TX_24H < SELL_TX_24H )); then
+    BIAS_LABEL="BEARISH (Bajista)"
+  fi
+fi
+
 echo "  - Transacciones últimas 24h: $TOTAL_TX_24H (Histórico total: $ALL_TIME_TX)"
+echo "  - Sentimiento colectivo: $BUY_TX_24H Compras ($BUY_PCT%) vs $SELL_TX_24H Ventas ($SELL_PCT%)"
+echo "  - Sesgo de mercado: $BIAS_LABEL"
 echo "  - Volumen negociado 24h: $(format_currency "$TOTAL_VOL_CENTS")"
 
 # 5. MARKET MOVERS (TOP GANADORES Y PERDEDORES)
