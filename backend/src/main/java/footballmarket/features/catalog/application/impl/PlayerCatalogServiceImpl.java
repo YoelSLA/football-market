@@ -1,5 +1,7 @@
 package footballmarket.features.catalog.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.common.config.QueryCacheInvalidationEvent;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.application.exceptions.IncompletePhotoException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
@@ -34,6 +36,8 @@ import java.util.Set;
 import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -62,6 +66,7 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
   private final TeamResolution teams;
   private final PlayerResolution playerResolution;
   private final TransactionTemplate transaction;
+  private final ApplicationEventPublisher events;
 
   public PlayerCatalogServiceImpl(
       PlayerRepository players,
@@ -69,12 +74,14 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
       LeagueResolution leagues,
       TeamResolution teams,
       PlayerResolution playerResolution,
-      PlatformTransactionManager manager) {
+      PlatformTransactionManager manager,
+      ApplicationEventPublisher events) {
     this.players = players;
     this.catalogStatistics = catalogStatistics;
     this.leagues = leagues;
     this.teams = teams;
     this.playerResolution = playerResolution;
+    this.events = events;
     this.transaction = new TransactionTemplate(manager);
     this.transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     this.transaction.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
@@ -94,6 +101,12 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
         PlayerSynchronizationResult result =
             Objects.requireNonNull(
                 this.transaction.execute(status -> this.apply(snapshot, exclusions, attempt)));
+        this.events.publishEvent(
+            new QueryCacheInvalidationEvent(
+                java.util.Set.of(
+                    QueryCacheConfiguration.PLAYER_CATALOG_FILTERS,
+                    QueryCacheConfiguration.PLAYER_CATALOG,
+                    QueryCacheConfiguration.PLAYER_DETAILS)));
         LOG.info(
             "Sincronización confirmada: obtenidos={}, creados={}, actualizados={}, "
                 + "inactivos={}, descartados={}",
@@ -125,6 +138,7 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
 
   @Override
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  @Cacheable(cacheNames = QueryCacheConfiguration.PLAYER_CATALOG)
   public PlayerCatalogPage queryCatalog(PlayerCatalogCriteria criteria, int page, int size) {
     Sort sort =
         "id,asc".equals(criteria.sort())
@@ -183,6 +197,7 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
 
   @Override
   @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+  @Cacheable(cacheNames = QueryCacheConfiguration.PLAYER_CATALOG_FILTERS)
   public PlayerCatalogFilters catalogFilters() {
     Comparator<String> textOrder =
         Comparator.comparing((String value) -> value.toLowerCase(Locale.ROOT))
@@ -215,6 +230,7 @@ public class PlayerCatalogServiceImpl implements PlayerCatalogService {
   }
 
   @Override
+  @Cacheable(cacheNames = QueryCacheConfiguration.PLAYER_DETAILS)
   public Player getVisiblePlayerById(long id) {
     return this.players
         .findVisibleById(id)

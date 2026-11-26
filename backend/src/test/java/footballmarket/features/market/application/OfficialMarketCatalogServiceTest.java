@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.market.application.impl.OfficialMarketCatalogServiceImpl;
 import footballmarket.features.market.domain.records.OfficialMarketCatalog;
 import footballmarket.features.market.domain.records.OfficialMarketPlayer;
@@ -18,22 +19,32 @@ import footballmarket.features.market.infraestructure.projections.OfficialMarket
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 @Tag("unit")
 class OfficialMarketCatalogServiceTest {
 
   private OfficialMarketRepository repository;
   private OfficialMarketCatalogServiceImpl service;
+  private CacheManager cacheManager;
 
   @BeforeEach
   void setUp() {
     repository = mock(OfficialMarketRepository.class);
-    service = new OfficialMarketCatalogServiceImpl(repository);
+    cacheManager = new ConcurrentMapCacheManager(QueryCacheConfiguration.OFFICIAL_MARKET);
+    service = new OfficialMarketCatalogServiceImpl(repository, cacheManager);
+  }
+
+  @AfterEach
+  void clearsCache() {
+    cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).clear();
   }
 
   @Nested
@@ -219,6 +230,42 @@ class OfficialMarketCatalogServiceTest {
       // Assert
       assertThat(result.priceRange().min()).isEqualTo(500L);
       assertThat(result.priceRange().max()).isEqualTo(15000L);
+    }
+  }
+
+  @Nested
+  @DisplayName("Caché del catálogo oficial")
+  class Cache {
+
+    @Test
+    @DisplayName("Reutiliza resultados idénticos y separa consultas con criterios distintos")
+    void cachesByCompleteQuery() {
+      // Arrange
+      OfficialMarketQuery query =
+          new OfficialMarketQuery(
+              0, 20, "id", "asc", null, null, null, null, null, null, null, null);
+      OfficialMarketQuery differentQuery =
+          new OfficialMarketQuery(
+              1, 20, "id", "asc", null, null, null, null, null, null, null, null);
+      when(repository.countOfficialMarketPlayersWithoutFinancialFilters(
+              null, null, null, null, null))
+          .thenReturn(0L);
+
+      // Act
+      OfficialMarketCatalog first = service.getOfficialCatalog(query);
+      OfficialMarketCatalog repeated = service.getOfficialCatalog(query);
+      OfficialMarketCatalog different = service.getOfficialCatalog(differentQuery);
+
+      // Assert
+      assertThat(repeated).isSameAs(first);
+      assertThat(different).isNotSameAs(first);
+      verify(repository, org.mockito.Mockito.times(2))
+          .countOfficialMarketPlayersWithoutFinancialFilters(null, null, null, null, null);
+      assertThat(
+              cacheManager
+                  .getCache(QueryCacheConfiguration.OFFICIAL_MARKET)
+                  .get(query, OfficialMarketCatalog.class))
+          .isSameAs(first);
     }
   }
 }

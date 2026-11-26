@@ -3,6 +3,7 @@ package footballmarket.features.quote.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
@@ -77,6 +79,7 @@ class QuoteRecalculationServiceTest {
   @Autowired private ValuationTestData data;
   @Autowired private MarketTestData market;
   @Autowired private ScoreRankingTestData scores;
+  @Autowired private CacheManager cacheManager;
 
   @TestBean(name = "statisticsClock", methodName = "valuationClock")
   private Clock statisticsClock;
@@ -101,6 +104,54 @@ class QuoteRecalculationServiceTest {
   @Nested
   @DisplayName("Recálculo diario por jugador")
   class DailyRecalculation {
+    @Test
+    @DisplayName("Invalida ranking y mercado oficial tras completar el recálculo")
+    void invalidatesReadsAfterSuccessfulRecalculation() {
+      // Arrange
+      prepareMarket(false);
+      Object rankingKey = new Object();
+      Object officialMarketKey = new Object();
+      Object p2pMarketKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).put(rankingKey, "cached");
+      cacheManager
+          .getCache(QueryCacheConfiguration.OFFICIAL_MARKET)
+          .put(officialMarketKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pMarketKey, "cached");
+
+      // Act
+      service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(rankingKey))
+          .isNull();
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialMarketKey))
+          .isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pMarketKey))
+          .isNotNull();
+    }
+
+    @Test
+    @DisplayName("Conserva las lecturas cacheadas si el recálculo es rechazado")
+    void preservesReadsWhenRecalculationFails() {
+      // Arrange
+      Object rankingKey = new Object();
+      Object officialMarketKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).put(rankingKey, "cached");
+      cacheManager
+          .getCache(QueryCacheConfiguration.OFFICIAL_MARKET)
+          .put(officialMarketKey, "cached");
+
+      // Act / Assert
+      assertThatThrownBy(() -> service.recalculate("UNKNOWN", null, null, null))
+          .isInstanceOf(UnknownQuoteStrategyException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(rankingKey))
+          .isNotNull();
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialMarketKey))
+          .isNotNull();
+    }
+
     @Test
     @DisplayName("Compone el score deportivo con la demanda de mercado y audita ambos")
     void incorporatesMarketDemandWithSportsScore() {

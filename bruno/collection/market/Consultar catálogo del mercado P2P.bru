@@ -1,0 +1,21 @@
+meta {
+  name: Consultar catálogo del mercado P2P
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/market/p2p
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ5b2VsQGdtYWlsLmNvbSIsImlhdCI6MTc5NTY2MjYwNSwiZXhwIjoxNzk1NzA1ODA1fQ.AsR55AUyN4MxcUiYrTOgfYReGqv5j1ENIbFGENOvWoI
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}

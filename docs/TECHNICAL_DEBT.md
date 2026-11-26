@@ -52,7 +52,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 
 | ID | Título | Área | Prioridad | Estado | Registrada |
 | --- | --- | --- | --- | --- | --- |
-| [TD-001](#td-001--protección-de-los-endpoints-de-monitoreo-de-spring-boot-actuator) | Protección de los endpoints de monitoreo de Spring Boot Actuator | Backend / Seguridad | Alta | Pendiente | 2026-10-14 16:29:48 |
+| [TD-001](#td-001--protección-de-los-endpoints-de-monitoreo-de-spring-boot-actuator) | Protección de los endpoints de monitoreo de Spring Boot Actuator | Backend / Seguridad | Alta | En curso | 2026-10-14 16:29:48 |
 | [TD-002](#td-002--autorización-por-rol-inexistente-prometida-en-el-contrato-público) | Autorización por rol inexistente, prometida en el contrato público | Backend / Seguridad | Alta | Pendiente | 2026-10-14 17:48:44 |
 | [TD-003](#td-003--sincronizaciones-del-catálogo-abiertas-a-cualquier-usuario-autenticado) | Sincronizaciones del catálogo abiertas a cualquier usuario autenticado | Backend / Seguridad | Alta | Pendiente | 2026-10-14 17:48:44 |
 | [TD-004](#td-004--migración-v5-reescrita-tras-su-publicación-rompe-la-validación-de-flyway) | Migración V5 reescrita tras su publicación rompe la validación de Flyway | Backend / Datos | Alta | Pendiente | 2026-10-14 17:48:44 |
@@ -162,7 +162,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | --- | --- |
 | **ID** | TD-035 |
 | **Fecha y hora de registro** | 2026-10-29 12:59:24 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `En curso` |
 | **Prioridad** | Alta |
 | **Área afectada** | Backend / Datos |
 | **Fecha de resolución** | — |
@@ -1175,59 +1175,34 @@ resuelta por la alineación documental ni por build.
 | --- | --- |
 | **ID** | TD-001 |
 | **Fecha y hora de registro** | 2026-10-14 16:29:48 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `En curso` |
 | **Prioridad** | Alta |
 | **Área afectada** | Backend / Seguridad |
 | **Fecha de resolución** | — |
 
-**Descripción.** Durante el desarrollo se decidió permitir temporalmente el acceso sin
-autenticación a los endpoints de monitoreo de Spring Boot Actuator, para poder consultarlos desde
-Postman durante el diagnóstico local. La configuración habilita `/actuator`, `/actuator/health`,
-`/actuator/info` y `/actuator/metrics`.
+**Descripción.** La configuración de Actuator debe limitar la superficie HTTP a los endpoints
+definidos por SPEC-032 y evitar información sensible. `/actuator/prometheus` es público y no requiere
+ni utiliza JWT; `/actuator/health` y `/actuator/info` son públicos con respuestas mínimas/no
+sensibles. La verificación del comportamiento en ejecución queda pendiente.
 
-La exposición por HTTP de las métricas es doblemente restrictiva: requiere la habilitación
-explícita por entorno `MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics`, que el repositorio no
-define por defecto. Aun así, la autorización es abierta para las rutas de monitoreo.
-
-**Motivo del aplazamiento.** La medida responde a una decisión consciente y temporal del
-responsable del proyecto: el monitoreo es una herramienta de diagnóstico local y no está prevista
-para ningún despliegue público. Implementar la protección antes de que exista un despliegue real
-sumaría complejidad arquitectónica —autorización por roles o un puerto de gestión independiente—
-que el proyecto todavía no necesita.
-
-**Impacto técnico.** Una exposición accidental en producción podría revelar información operativa:
-consumo de memoria de la JVM, uso de CPU del sistema y del proceso, número de hilos, tiempo de
-actividad y métricas de las solicitudes HTTP servidas. `/actuator/info` quedaría accesible en todos
-los perfiles; actualmente no expone datos porque no hay propiedades `management.info.*` declaradas,
-pero esa condición depende de la configuración y no de un control de acceso. `/actuator/health` no
-es parte del riesgo: `show-details` es `never` y solo informa el estado general.
-
-**Solución propuesta.** Implementar controles de acceso adecuados para los endpoints de monitoreo.
-Las alternativas a evaluar son:
-
-- **Autorización administrativa.** Requiere un rol con autoridad real, que el sistema todavía no
-  implementa: hoy `role` es informativo y no existe autorización por rol.
-- **Restricciones de red.** Puerto de gestión independiente ligado a la loopback. Es la única
-  variante que no depende del cliente, pero tiene un coste conocido: al compartir puerto los
-  endpoints, `/actuator/health` pasaría también a quedar ligado a la loopback y dejaría de ser
-  alcanzable desde fuera.
-- **Separación del puerto de gestión.** Puede combinarse con la anterior y permite tratar la
-  seguridad de ese contexto de forma independiente.
+**Decisión vigente.** `/actuator/prometheus` es accesible sin autenticación ni JWT; la presencia,
+ausencia o validez de un JWT no cambia el acceso ni la respuesta. `/actuator/health` y
+`/actuator/info` permanecen públicos, con respuestas mínimas/no sensibles. La lista HTTP se limita
+exactamente a `prometheus,health,info`, sin raíz, subendpoints ni otros endpoints.
 
 **Criterios de resolución.** La deuda no se considera resuelta hasta:
 
-1. Haber implementado el control de acceso elegido para `/actuator/info` y `/actuator/metrics/**`.
-2. Haber verificado el comportamiento efectivo de esa restricción en ejecución.
-3. Mantener `/actuator/health` accesible sin información interna sensible.
-4. No volver a exponer por error `env`, `heapdump`, `threaddump`, `configprops`, `beans` ni
-   `shutdown`, cuya exposición está hoy vedada en todos los perfiles.
+1. Verificar en ejecución que `/actuator/prometheus` devuelve métricas sin JWT y conserva el mismo
+   acceso cuando se presenta un JWT válido, vencido o inválido.
+2. Verificar health/info públicos sin información sensible.
+3. Verificar que la raíz, los subendpoints y el resto de endpoints no están expuestos.
 
 **Referencias.**
 
-- `backend/src/main/java/footballmarket/config/SecurityConfig.java`
+- `backend/src/main/java/footballmarket/security/SecurityConfig.java`
 - `backend/src/main/resources/application.yml`
 - `docs/backend/technologies.md`
-- `specs/trello.md`
+- `specs/032-prometheus-actuator-monitoring/`
 
 **Historial de cambios.**
 
@@ -1235,6 +1210,8 @@ Las alternativas a evaluar son:
 | --- | --- |
 | 2026-10-14 16:29:48 | Registro inicial en `docs/TECHNICAL_DEBT.md`. La anotación previa existía en `specs/trello.md` y en `docs/backend/technologies.md`; la fecha de creación original de esas anotaciones no se conoce, por lo que se registra la de incorporación a este documento. |
 | 2026-10-14 16:52:29 | Actualización de la referencia al mecanismo de habilitación: `FOOTBALLMARKET_MONITORING_LOCAL_METRICS` se reemplaza por `MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics`. La corrección del arranque no altera el alcance, la prioridad ni el estado de la deuda, que continúa `Pendiente`. Sin cambios funcionales: la exposición sigue siendo abierta para las rutas de monitoreo. |
+| 2026-11-24 13:23:07 | SPEC-032 implementa la protección de Prometheus mediante JWT válido, la exposición explícita de `prometheus,health,info`, y la denegación de las demás rutas; las pruebas de ejecución aún no han sido ejecutadas por el usuario. Se actualizan la decisión vigente, los criterios y las referencias. Estado `En curso`; no se declara resuelta hasta verificar el comportamiento en ejecución. |
+| 2026-11-25 | Se corrige la decisión vigente conforme a SPEC-032: `/actuator/prometheus` es público y no requiere ni utiliza JWT. La anotación del 2026-11-24 se conserva como historial documental, pero no describe la política vigente. No se modificó código ni se ejecutaron verificaciones; el estado permanece `En curso`. |
 
 ### TD-002 — Autorización por rol inexistente, prometida en el contrato público
 

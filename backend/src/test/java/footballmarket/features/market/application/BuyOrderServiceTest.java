@@ -3,12 +3,14 @@ package footballmarket.features.market.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.exceptions.ArithmeticOverflowException;
 import footballmarket.features.market.application.exceptions.InsufficientStockException;
+import footballmarket.features.market.application.exceptions.InvalidOrderRequestException;
 import footballmarket.features.market.application.exceptions.InvalidQuantityException;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.market.application.exceptions.SuperuserCannotBuyException;
@@ -42,6 +44,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -71,6 +74,7 @@ class BuyOrderServiceTest {
   @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
   @Autowired private PlayerStatisticsQueryData statistics;
+  @Autowired private CacheManager cacheManager;
   @Autowired private QuoteRecalculationService recalculation;
   @MockitoBean private QuoteSource quotes;
 
@@ -567,6 +571,85 @@ class BuyOrderServiceTest {
       assertThat(execution).isNotNull();
       assertThat(second.getBuyerCreditsBefore()).isEqualTo(first.getBuyerCreditsAfter());
       assertThat(second.getBuyerTokensBefore()).isEqualTo(first.getBuyerTokensAfter());
+    }
+  }
+
+  @Nested
+  @DisplayName("Invalidación tras compras confirmadas")
+  class CacheInvalidation {
+    @Test
+    @DisplayName("La compra oficial invalida solo el mercado oficial")
+    void invalidatesOfficialMarketAfterPurchase() {
+      // Arrange
+      Object officialKey = new Object();
+      Object p2pKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+
+      // Act
+      buy(1);
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Comprar una oferta invalida solo el mercado P2P")
+    void invalidatesP2PMarketAfterPurchase() {
+      // Arrange
+      buy(5);
+      footballmarket.features.market.domain.models.TokenListing listing =
+          listingService.publish(
+              buyer.getEmail(),
+              new footballmarket.features.market.domain.records.SellOrderRequest(
+                  player.getId(), 2));
+      User consumer = market.registerBuyer();
+      Object p2pKey = new Object();
+      Object officialKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+
+      // Act
+      buyOrderService.buyListing(
+          consumer.getEmail(),
+          new footballmarket.features.market.domain.records.BuyListingRequest(listing.getId()));
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNotNull();
+    }
+
+    @Test
+    @DisplayName("Una compra oficial rechazada conserva las lecturas cacheadas")
+    void preservesReadsWhenOfficialPurchaseFails() {
+      // Arrange
+      Object officialKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+
+      // Act / Assert
+      assertThatThrownBy(() -> buy(0)).isInstanceOf(InvalidQuantityException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNotNull();
+    }
+
+    @Test
+    @DisplayName("Una compra P2P rechazada conserva las lecturas cacheadas")
+    void preservesReadsWhenP2PPurchaseFails() {
+      // Arrange
+      Object p2pKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  buyOrderService.buyListing(
+                      buyer.getEmail(),
+                      new footballmarket.features.market.domain.records.BuyListingRequest(null)))
+          .isInstanceOf(InvalidOrderRequestException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNotNull();
     }
   }
 }

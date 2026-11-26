@@ -154,7 +154,10 @@ dependencies {
     implementation(libs.jjwt.api)
     implementation(libs.springdoc.openapi)
     implementation(libs.playwright)
+    implementation(libs.spring.cache)
+    implementation(libs.caffeine)
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
     developmentOnly("me.paulschwarz:springboot4-dotenv:5.1.0")
 
     implementation("org.flywaydb:flyway-database-postgresql")
