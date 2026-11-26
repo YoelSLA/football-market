@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.businessmetrics.application.BusinessMetricsService;
+import footballmarket.features.businessmetrics.domain.records.BusinessMetricsTotals;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -62,6 +64,7 @@ class OfficialBuybackServiceTest {
   private static final int DISCOUNT = 10;
 
   @Autowired private OfficialBuybackService buybackService;
+  @Autowired private BusinessMetricsService businessMetricsService;
   @Autowired private BuyOrderService buyOrderService;
   @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
@@ -120,8 +123,11 @@ class OfficialBuybackServiceTest {
     @Test
     @DisplayName("Acredita el importe neto y devuelve el comprobante con cotización y descuento")
     void devuelveElComprobanteConElImporteNeto() {
+      BusinessMetricsTotals before = businessMetricsService.getCurrentMetrics();
+
       // Act
       OfficialBuybackReceipt receipt = sell(player.getId(), 5);
+      BusinessMetricsTotals after = businessMetricsService.getCurrentMetrics();
 
       // Assert
       assertThat(receipt.transactionId()).isNotNull();
@@ -134,6 +140,9 @@ class OfficialBuybackServiceTest {
       assertThat(receipt.unitPrice()).isEqualTo(90L);
       assertThat(receipt.totalAmount()).isEqualTo(450L);
       assertThat(receipt.executedAt()).isEqualTo(OffsetDateTime.parse("2026-11-22T10:30:00Z"));
+      assertThat(after.sales() - before.sales()).isEqualTo(1L);
+      assertThat(after.tokensTransferred() - before.tokensTransferred()).isEqualTo(5L);
+      assertThat(after.creditsTradedInCents() - before.creditsTradedInCents()).isEqualTo(450L);
     }
 
     @Test

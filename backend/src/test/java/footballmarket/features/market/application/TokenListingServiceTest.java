@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.businessmetrics.application.BusinessMetricsService;
+import footballmarket.features.businessmetrics.domain.records.BusinessMetricsTotals;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -96,12 +98,15 @@ class TokenListingServiceTest {
       // Arrange
       TokenListing listing =
           listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
+      BusinessMetricsTotals before = businessMetricsService.getCurrentMetrics();
       // Act
       footballmarket.features.market.domain.records.TokenListingView result =
           listingService.cancel(seller.getEmail(), listing.getId());
+      BusinessMetricsTotals after = businessMetricsService.getCurrentMetrics();
       // Assert
       assertThat(result.status().name()).isEqualTo("CANCELLED");
       assertThat(result.closedAt()).isNotNull();
+      assertThat(after.cancelledListings() - before.cancelledListings()).isEqualTo(1L);
       assertThatThrownBy(() -> listingService.cancel(seller.getEmail(), listing.getId()))
           .isInstanceOf(ListingNotAvailableException.class);
     }
@@ -194,6 +199,7 @@ class TokenListingServiceTest {
   }
 
   @Autowired private TokenListingService listingService;
+  @Autowired private BusinessMetricsService businessMetricsService;
   @Autowired private BuyOrderService buyService;
   @Autowired private MarketTestData market;
   @Autowired private PlayerStatisticsQueryData statistics;

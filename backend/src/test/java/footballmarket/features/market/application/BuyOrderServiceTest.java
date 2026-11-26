@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.businessmetrics.application.BusinessMetricsService;
+import footballmarket.features.businessmetrics.domain.records.BusinessMetricsTotals;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -71,6 +73,7 @@ class BuyOrderServiceTest {
   private static final long PRICE = 100L;
 
   @Autowired private BuyOrderService buyOrderService;
+  @Autowired private BusinessMetricsService businessMetricsService;
   @Autowired private TokenListingService listingService;
   @Autowired private MarketTestData market;
   @Autowired private PlayerStatisticsQueryData statistics;
@@ -260,8 +263,11 @@ class BuyOrderServiceTest {
     @Test
     @DisplayName("Devuelve el registro con los importes calculados en centésimas")
     void devuelveElRegistroConLosImportesCalculados() {
+      BusinessMetricsTotals before = businessMetricsService.getCurrentMetrics();
+
       // Act
       MarketTransaction transaction = buy(QUANTITY);
+      BusinessMetricsTotals after = businessMetricsService.getCurrentMetrics();
 
       // Assert
       assertThat(transaction).isNotNull();
@@ -283,6 +289,10 @@ class BuyOrderServiceTest {
       assertThat(transaction.getQuotePrice()).isNull();
       assertThat(transaction.getDiscountPercentage()).isNull();
       assertThat(transaction.getExecutedAt()).isNotNull();
+      assertThat(after.purchases() - before.purchases()).isEqualTo(1L);
+      assertThat(after.tokensTransferred() - before.tokensTransferred()).isEqualTo(QUANTITY);
+      assertThat(after.creditsTradedInCents() - before.creditsTradedInCents())
+          .isEqualTo(PRICE * QUANTITY);
     }
 
     @Test

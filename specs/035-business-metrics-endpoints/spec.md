@@ -11,7 +11,7 @@ Specify ni habilita la implementación. -->
 
 **Created**: 2026-11-26
 
-**Status**: Ready for planning
+**Status**: Ready for implementation
 
 <!-- Estados y criterios de transición: ../../specs/README.md. -->
 
@@ -93,7 +93,7 @@ Como consumidor autenticado de las métricas de negocio, quiero que ambos endpoi
 - **FR-001** *(issue RF-02)*: El sistema MUST exponer dos endpoints REST autenticados para consultar métricas de negocio, separados de `/actuator/prometheus`:
   - `GET /api/business-metrics/historical`: totales históricos calculados desde los registros persistidos hasta el instante de consulta.
   - `GET /api/business-metrics/current`: contadores de negocio acumulados desde el último arranque de la aplicación.
-- **FR-002** *(issue RF-01, RF-04, RF-05)*: Las métricas MUST contar operaciones de negocio completadas, no solicitudes HTTP. Una solicitud que complete varias operaciones MUST contabilizar cada una; operaciones fallidas o rechazadas MUST NOT incrementar los contadores de eventos completados. El endpoint histórico MUST consultar los registros persistidos; el endpoint de ejecución MUST informar los contadores Micrometer acumulados desde el arranque actual para compras, ventas, publicaciones canceladas, tokens transferidos y créditos negociados, reiniciarse al iniciar un nuevo proceso y MUST NOT reemplazar el historial persistido.
+- **FR-002** *(issue RF-01, RF-04, RF-05)*: Las métricas MUST contar operaciones de negocio completadas, no solicitudes HTTP. Una solicitud que complete varias operaciones MUST contabilizar cada una; operaciones fallidas o rechazadas MUST NOT incrementar los contadores de eventos completados. El endpoint histórico MUST consultar los registros persistidos; el endpoint de ejecución MUST informar los contadores Micrometer acumulados desde el arranque actual para compras, ventas, publicaciones canceladas, tokens transferidos y créditos negociados, reiniciarse al iniciar un nuevo proceso y MUST NOT reemplazar el historial persistido. Ambos alcances MUST aplicar la misma clasificación de compras y ventas definida en FR-004.
 - **FR-003** *(issue RF-03)*: Ambos endpoints MUST devolver la misma estructura JSON, con exactamente estos campos y tipos:
 
   ```json
@@ -108,7 +108,7 @@ Como consumidor autenticado de las métricas de negocio, quiero que ambos endpoi
   ```
 
   `purchases`, `sales` y `cancelledListings` MUST ser conteos enteros; `tokensTransferred` MUST ser un volumen numérico acumulado; `creditsTradedInCents` MUST ser el volumen entero de créditos expresado en centésimas de crédito; `queriedAt` MUST ser el instante de consulta en formato ISO 8601 UTC. Cuando no haya actividad, los conteos y volúmenes MUST ser cero.
-- **FR-004** *(issue RF-04, RF-06)*: Para cada registro financiero, el volumen de tokens y el importe MUST contribuir una sola vez a los agregados correspondientes. El registro MUST contabilizarse como una compra o venta según la operación de negocio registrada, sin contar la misma operación en ambas categorías. El importe negociado MUST expresarse en centésimas de crédito.
+- **FR-004** *(issue RF-04, RF-06)*: Para cada registro financiero, el volumen de tokens y el importe MUST contribuir una sola vez a los agregados correspondientes. El registro MUST clasificarse como compra cuando el comprador tenga rol `USER`, y como venta cuando el comprador tenga rol `SUPERUSER` y el vendedor rol `USER`; una liquidación P2P con comprador `USER` MUST contar solo como compra, no también como venta. Esta clasificación MUST aplicarse tanto a los agregados históricos como a los contadores de ejecución. Ningún registro MUST contarse en ambas categorías. El importe negociado MUST expresarse en centésimas de crédito.
 - **FR-005** *(issue RF-01, RF-07)*: Una publicación MUST contribuir a `cancelledListings` únicamente cuando pase efectivamente a estado `CANCELLED`. Las publicaciones en estado `EXPIRED` MUST NOT contar como cancelaciones. Cancelar una publicación MUST NOT contabilizarse como movimiento de tenencias, tokens ni créditos.
 - **FR-006** *(issue RF-02)*: Las solicitudes no autenticadas a cualquiera de los dos endpoints MUST recibir `401 Unauthorized`. Cualquier cuenta autenticada mediante el mecanismo existente MUST poder consultarlos, sin requerir un rol adicional.
 - **FR-007** *(issue RF-09)*: Las respuestas y las etiquetas de métricas MUST NOT exponer datos personales ni identificadores individuales de usuario, jugador u otras dimensiones de alta cardinalidad.

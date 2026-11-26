@@ -1,5 +1,6 @@
 package footballmarket.features.market.infraestructure;
 
+import footballmarket.features.market.domain.enums.TokenListingStatus;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.ListingIdentity;
 import footballmarket.features.market.infraestructure.projections.ReservedQuantity;
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Repository;
 /** Reservas derivadas, lecturas de publicaciones y bloqueo exclusivo para compra y cancelación. */
 @Repository
 public interface TokenListingRepository extends JpaRepository<TokenListing, Long> {
+  /** Cuenta únicamente publicaciones persistidas en el estado indicado. */
+  long countByStatus(TokenListingStatus status);
+
   /**
    * Solo orienta los bloqueos; no incorpora una entidad potencialmente obsoleta al contexto JPA.
    */

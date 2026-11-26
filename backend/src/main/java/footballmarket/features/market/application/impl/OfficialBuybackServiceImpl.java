@@ -2,6 +2,7 @@ package footballmarket.features.market.application.impl;
 
 import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.common.config.QueryCacheInvalidationEvent;
+import footballmarket.features.businessmetrics.application.BusinessMetricTransactionEvent;
 import footballmarket.features.market.application.OfficialBuybackService;
 import footballmarket.features.market.application.internal.OfficialBuybackExecutor;
 import footballmarket.features.market.domain.records.OfficialBuybackReceipt;
@@ -29,6 +30,11 @@ public class OfficialBuybackServiceImpl implements OfficialBuybackService {
   @Override
   public OfficialBuybackReceipt sellToSuperuser(String sellerEmail, OfficialBuybackRequest order) {
     OfficialBuybackReceipt receipt = this.officialBuybackExecutor.execute(sellerEmail, order);
+    this.events.publishEvent(
+        new BusinessMetricTransactionEvent(
+            BusinessMetricTransactionEvent.TransactionKind.SALE,
+            receipt.quantity(),
+            receipt.totalAmount()));
     this.events.publishEvent(
         new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.OFFICIAL_MARKET)));
     return receipt;
