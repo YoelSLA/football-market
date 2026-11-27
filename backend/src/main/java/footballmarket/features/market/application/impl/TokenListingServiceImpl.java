@@ -6,6 +6,7 @@ import footballmarket.features.auth.application.exceptions.UserNotFoundException
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.infraestructure.UserRepository;
+import footballmarket.features.businessmetrics.application.BusinessMetricListingCancelledEvent;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -134,6 +135,7 @@ public class TokenListingServiceImpl implements TokenListingService {
       throw new ListingNotAvailableException();
     }
     listing.markCancelled(now);
+    this.events.publishEvent(new BusinessMetricListingCancelledEvent());
     this.events.publishEvent(
         new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
     return listing.snapshot(now);

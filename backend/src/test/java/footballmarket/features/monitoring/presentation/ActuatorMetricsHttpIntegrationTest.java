@@ -81,7 +81,8 @@ class ActuatorMetricsHttpIntegrationTest {
               "jvm_threads_live_threads",
               "jvm_gc_pause_seconds",
               "http_server_requests_seconds_count")
-          .doesNotContain("password", "secret", "token");
+          .doesNotContain(
+              "password123", user.getEmail(), validToken, expiredToken, "Bearer invalid-token");
 
       MvcResult validResult =
           mvc.perform(get("/actuator/prometheus").header("Authorization", "Bearer " + validToken))
@@ -105,13 +106,19 @@ class ActuatorMetricsHttpIntegrationTest {
       String expiredMetrics = expiredResult.getResponse().getContentAsString();
       String invalidMetrics = invalidResult.getResponse().getContentAsString();
 
-      assertThat(validMetrics).doesNotContain("password", "secret", "token");
+      assertThat(validMetrics)
+          .doesNotContain(
+              "password123", user.getEmail(), validToken, expiredToken, "Bearer invalid-token");
       assertThat(metricFamilies(expiredMetrics))
           .containsExactlyInAnyOrderElementsOf(expectedFamilies);
-      assertThat(expiredMetrics).doesNotContain("password", "secret", "token");
+      assertThat(expiredMetrics)
+          .doesNotContain(
+              "password123", user.getEmail(), validToken, expiredToken, "Bearer invalid-token");
       assertThat(metricFamilies(invalidMetrics))
           .containsExactlyInAnyOrderElementsOf(expectedFamilies);
-      assertThat(invalidMetrics).doesNotContain("password", "secret", "token");
+      assertThat(invalidMetrics)
+          .doesNotContain(
+              "password123", user.getEmail(), validToken, expiredToken, "Bearer invalid-token");
     }
 
     private Set<String> metricFamilies(String exposition) {
