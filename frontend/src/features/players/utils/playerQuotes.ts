@@ -4,17 +4,69 @@ import type {
 	PlayerQuoteHistoryResponseDTO,
 	PlayerQuoteOrigin,
 	PlayerQuoteResponseDTO,
+	QuoteBreakdownFactors,
 } from "../types";
+
+/**
+ * Deriva los factores de descomposición de la cotización (Aporte Deportivo vs Presión de Mercado)
+ * a partir de los campos de auditoría del DTO (SPEC-029).
+ */
+export function deriveQuoteBreakdown(
+	dto: PlayerQuoteResponseDTO,
+): QuoteBreakdownFactors | null {
+	if (
+		dto.sportMultiplier == null &&
+		dto.marketDemandFactor == null &&
+		dto.marketMultiplier == null
+	) {
+		return null;
+	}
+
+	const sportMultiplier =
+		typeof dto.sportMultiplier === "number"
+			? dto.sportMultiplier
+			: Number(dto.sportMultiplier) || 1;
+
+	const marketDemandFactor =
+		typeof dto.marketDemandFactor === "number"
+			? dto.marketDemandFactor
+			: Number(dto.marketDemandFactor) || 0;
+
+	const marketMultiplier =
+		typeof dto.marketMultiplier === "number"
+			? dto.marketMultiplier
+			: Number(dto.marketMultiplier) || 1;
+
+	const netDemandTokens =
+		typeof dto.marketNetDemandTokens === "number"
+			? dto.marketNetDemandTokens
+			: Number(dto.marketNetDemandTokens) || 0;
+
+	const sportContributionPercentage = (sportMultiplier - 1) * 100;
+	const marketContributionPercentage = (marketMultiplier - 1) * 100;
+	const totalMultiplier = sportMultiplier * marketMultiplier;
+	const totalVariationPercentage = (totalMultiplier - 1) * 100;
+
+	return {
+		sportMultiplier,
+		sportContributionPercentage,
+		marketDemandFactor,
+		marketMultiplier,
+		marketContributionPercentage,
+		netDemandTokens,
+		totalVariationPercentage,
+	};
+}
 
 /**
  * Transforma un DTO de cotización individual a modelo de dominio enriquecido
  * con cálculos puros de variación absoluta, variación porcentual y dirección.
  */
 export function toPlayerQuote(dto: PlayerQuoteResponseDTO): PlayerQuote {
-	const price = Number(dto.price) || 0;
+	const price = (Number(dto.price) || 0) / 100;
 	const previousPrice =
 		typeof dto.previousPrice === "number" && Number.isFinite(dto.previousPrice)
-			? dto.previousPrice
+			? dto.previousPrice / 100
 			: null;
 
 	let absoluteChange: number | null = null;
@@ -32,9 +84,12 @@ export function toPlayerQuote(dto: PlayerQuoteResponseDTO): PlayerQuote {
 	const origin: PlayerQuoteOrigin =
 		dto.origin === "INITIAL" ||
 		dto.origin === "RECOMPUTED" ||
-		dto.origin === "CARRIED_FORWARD"
+		dto.origin === "CARRIED_FORWARD" ||
+		dto.origin === "MARKET_DEMAND"
 			? dto.origin
 			: "RECOMPUTED";
+
+	const breakdown = deriveQuoteBreakdown(dto);
 
 	return {
 		effectiveDate: dto.effectiveDate,
@@ -58,6 +113,7 @@ export function toPlayerQuote(dto: PlayerQuoteResponseDTO): PlayerQuote {
 		absoluteChange,
 		percentageChange,
 		direction,
+		breakdown,
 	};
 }
 

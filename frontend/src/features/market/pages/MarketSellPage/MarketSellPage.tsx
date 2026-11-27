@@ -2,6 +2,7 @@ import { PageLayout } from "@/app/layouts";
 import MarketFilters from "@/features/market/components/MarketFilters";
 import MarketPagination from "@/features/market/components/MarketPagination";
 import { useMarketSellPage } from "@/features/market/hooks";
+import { usePortfolioSummaryQuery } from "@/features/portfolio/hooks/queries";
 import MarketSellCatalog from "./components/MarketSellCatalog";
 import MarketSellHeader from "./components/MarketSellHeader";
 import SellTokenModal from "./components/SellTokenModal";
@@ -11,12 +12,16 @@ export type { PlayerHolding } from "@/features/market/types";
 
 export default function MarketSellPage() {
 	const sell = useMarketSellPage();
+	const portfolioQuery = usePortfolioSummaryQuery();
 
 	return (
 		<PageLayout>
 			<div className={styles.sellPage}>
 				<div className={styles.sellPage__header}>
-					<MarketSellHeader players={sell.allHoldings} />
+					<MarketSellHeader
+						players={sell.allHoldings}
+						portfolioSummary={portfolioQuery.data?.summary}
+					/>
 				</div>
 
 				<MarketFilters

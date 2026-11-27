@@ -1,11 +1,13 @@
 import { formatCredits } from "@/features/portfolio/utils";
-import { ArrowRight, Check } from "@/shared/icons";
+import { ArrowRight, Check, Tag } from "@/shared/icons";
 import styles from "./PositionCardFooter.module.scss";
 
 interface Props {
 	result: number | null;
 	playerName?: string | null;
 	playerId: number | string;
+	canSell?: boolean;
+	onSell?: () => void;
 	onDetails: () => void;
 }
 
@@ -13,6 +15,8 @@ export default function PositionCardFooter({
 	result,
 	playerName,
 	playerId,
+	canSell = false,
+	onSell,
 	onDetails,
 }: Props) {
 	const resultTone =
@@ -41,15 +45,32 @@ export default function PositionCardFooter({
 					Resultado: {formatCredits(result, true)}
 				</span>
 			</span>
-			<button
-				type="button"
-				className={styles.details}
-				onClick={onDetails}
-				aria-label={`Ver detalles de ${playerName ?? `jugador ${playerId}`}`}
-			>
-				Ver detalles
-				<ArrowRight className={styles.arrowIcon} aria-hidden="true" size={16} />
-			</button>
+			<div className={styles.actions}>
+				{canSell && onSell && (
+					<button
+						type="button"
+						className={styles.sellButton}
+						onClick={onSell}
+						aria-label={`Publicar venta de ${playerName ?? `jugador ${playerId}`}`}
+					>
+						<Tag size={14} aria-hidden="true" />
+						Vender
+					</button>
+				)}
+				<button
+					type="button"
+					className={styles.details}
+					onClick={onDetails}
+					aria-label={`Ver detalles de ${playerName ?? `jugador ${playerId}`}`}
+				>
+					Ver detalles
+					<ArrowRight
+						className={styles.arrowIcon}
+						aria-hidden="true"
+						size={14}
+					/>
+				</button>
+			</div>
 		</footer>
 	);
 }

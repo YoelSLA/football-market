@@ -1,11 +1,11 @@
 import type { NavSection } from "@/shared/components";
 import {
-	BarChart3,
 	FileText,
 	Package,
 	Puzzle,
 	ShoppingCart,
 	Tag,
+	TrendingUp,
 	Trophy,
 	UsersRound,
 } from "@/shared/icons";
@@ -78,6 +78,12 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: Puzzle,
 				path: "/market/orders",
 			},
+			{
+				key: "market-trends",
+				label: "Tendencias",
+				icon: TrendingUp,
+				path: "/market/trends",
+			},
 		],
 	},
 	{
@@ -87,16 +93,10 @@ export const NAV_SECTIONS: NavSection[] = [
 		path: "/portfolio",
 		tabs: [
 			{
-				key: "portfolio-overview",
-				label: "Mi portfolio",
-				icon: BarChart3,
-				path: "/portfolio",
-			},
-			{
 				key: "portfolio-holdings",
-				label: "Mis tenencias",
+				label: "Posiciones",
 				icon: Package,
-				path: "/portfolio/holdings",
+				path: "/portfolio",
 			},
 			{
 				key: "portfolio-transactions",

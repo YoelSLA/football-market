@@ -1,6 +1,6 @@
 import type { MarketListing } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
 import styles from "./BuyListingBreakdown.module.scss";
 
 interface Props {
@@ -28,11 +28,13 @@ export function BuyListingBreakdown({
 				<div>
 					<dt>Cantidad</dt>
 					<dd>
-						{listing.quantity} {TOKEN_SYMBOL}
+						{listing.quantity} <TokenSymbol />
 					</dd>
 				</div>
 				<div>
-					<dt>Precio por {TOKEN_SYMBOL}</dt>
+					<dt>
+						Precio por <TokenSymbol />
+					</dt>
 					<dd>{formatCredits(listing.unitPrice)}</dd>
 				</div>
 				<div>

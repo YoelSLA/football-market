@@ -1,0 +1,224 @@
+@use "@/styles/abstracts" as ds;
+
+.page {
+	// 3. 🧩 Layout
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: ds.$space-2xs;
+
+	// 4. 📦 Box Model
+	min-height: 0;
+	min-width: 0;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	padding: ds.$space-2xs;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page;
+	color: ds.$text-title-on-dark;
+
+	// 7. ⚙️ Behavior
+	overflow-y: auto;
+}
+
+.content {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: ds.$space-2xs;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-md;
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: 100%;
+	height: 80px;
+	min-height: 80px;
+	padding: 0;
+
+	@media (max-width: 1000px) {
+		flex-direction: column;
+		align-items: flex-start;
+		height: auto;
+		gap: ds.$space-sm;
+	}
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-width: 0;
+		flex-shrink: 0;
+	}
+
+	&__iconWrapper {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 48px;
+		height: 48px;
+		border-radius: 12px;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$accent-gain;
+	}
+
+	&__icon {
+		width: 24px;
+		height: 24px;
+		stroke-width: 2.5;
+	}
+
+	&__titleWrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 20px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+		white-space: nowrap;
+	}
+
+	&__description {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.3;
+		color: ds.$text-subtle-on-dark;
+		white-space: nowrap;
+	}
+
+	&__metrics {
+		display: flex;
+		align-items: center;
+		flex: 1;
+		min-width: 0;
+		justify-content: flex-end;
+
+		@media (max-width: 1000px) {
+			width: 100%;
+			justify-content: flex-start;
+		}
+	}
+}
+
+.chartsRow {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: ds.$space-2xs;
+	align-items: stretch;
+	flex: 1;
+	min-height: 220px;
+
+	@media (max-width: 1100px) {
+		grid-template-columns: 1fr;
+		flex: none;
+	}
+}
+
+.chartCol {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	height: 100%;
+}
+
+.tablesRow {
+	display: grid;
+	grid-template-columns: 1.35fr 1fr;
+	gap: ds.$space-2xs;
+	align-items: stretch;
+	flex: 1.25;
+	min-height: 240px;
+
+	@media (max-width: 1100px) {
+		grid-template-columns: 1fr;
+		flex: none;
+	}
+}
+
+.hotAssetsCol,
+.topValuedCol {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	height: 100%;
+}
+
+.errorState {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: ds.$space-sm;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-xl ds.$space-lg;
+	border-radius: 12px;
+	width: 100%;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$state-error-border;
+}
+
+.errorIconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 9999px;
+	background-color: #450a0a;
+	border: 1px solid ds.$state-error-border;
+	color: ds.$state-negative;
+}
+
+.errorIcon {
+	width: 24px;
+	height: 24px;
+}
+
+.errorTitle {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 700;
+	color: ds.$text-title-on-dark;
+}
+
+.errorDescription {
+	margin: 0;
+	max-width: 480px;
+	font-size: 14px;
+	color: ds.$text-muted-on-dark;
+	line-height: 1.6;
+}
+
+.retryButton {
+	margin-top: ds.$space-xs;
+	padding: ds.$space-2xs ds.$space-lg;
+	cursor: pointer;
+}
+
+// Adaptabilidad móvil y pantallas reducidas
+@media (max-width: 640px) {
+	.page {
+		padding: ds.$space-xs;
+		gap: ds.$space-sm;
+	}
+}

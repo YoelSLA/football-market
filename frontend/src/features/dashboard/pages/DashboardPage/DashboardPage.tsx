@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { PageLayout } from "@/app/layouts";
-import {
-	Activity,
-	LayoutDashboard,
-	RotateCw,
-	TriangleAlert,
-	Wallet,
-} from "@/shared/icons";
+import { RotateCw, TriangleAlert } from "@/shared/icons";
 import {
 	DashboardEmptyState,
 	DashboardSkeleton,
@@ -41,14 +35,6 @@ export default function DashboardPage() {
 
 	const { data: performance, isLoading: isPerformanceLoading } =
 		useDashboardPerformanceQuery(performanceRange);
-
-	const formatCredits = (amount: number | null) => {
-		if (amount === null) return "—";
-		return `${amount.toLocaleString("es-ES", {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2,
-		})} ₵`;
-	};
 
 	if (isOverviewLoading) {
 		return (
@@ -101,61 +87,16 @@ export default function DashboardPage() {
 		<PageLayout>
 			<div className={styles.dashboardPage}>
 				{/* Cinta ticker continua en la parte superior (full-width, fija) */}
-				<MarketTicker
-					movers={combinedMovers}
-					marketPulse={overview.marketPulse}
-				/>
+				<MarketTicker movers={combinedMovers} />
 
 				<div className={styles.dashboardPage__scrollRegion}>
-					{/* Header de página con identidad Football Market */}
-					<header className={styles.header}>
-						<div className={styles.headerTitleGroup}>
-							<span className={styles.headerIcon} aria-hidden="true">
-								<LayoutDashboard />
-							</span>
-							<div className={styles.headerText}>
-								<h1 className={styles.title}>Dashboard Ejecutivo</h1>
-								<p className={styles.description}>
-									Supervisión financiera, analytics de cartera y pulso de
-									mercado en tiempo real
-								</p>
-							</div>
-						</div>
-
-						<div className={styles.headerMetrics}>
-							<div className={styles.headerMetricItem}>
-								<span className={styles.metricTile} aria-hidden="true">
-									<Wallet />
-								</span>
-								<div className={styles.metricContent}>
-									<span className={styles.metricLabel}>Saldo disponible</span>
-									<strong className={styles.metricValue}>
-										{formatCredits(overview.financialSummary.availableCredits)}
-									</strong>
-								</div>
-							</div>
-
-							<div className={styles.headerMetricItem}>
-								<span className={styles.metricTile} aria-hidden="true">
-									<Activity />
-								</span>
-								<div className={styles.metricContent}>
-									<span className={styles.metricLabel}>Cap. del Mercado</span>
-									<strong className={styles.metricValue}>
-										{formatCredits(overview.marketPulse.totalMarketCap)}
-									</strong>
-								</div>
-							</div>
-						</div>
-					</header>
-
 					{isNewUser ? (
 						<DashboardEmptyState
 							availableCredits={overview.financialSummary.availableCredits}
 						/>
 					) : (
 						<>
-							{/* Hero Cockpit Patrimonial */}
+							{/* Hero Cockpit Patrimonial: 4 Cards Principales */}
 							<FinancialHeroCockpit
 								summary={overview.financialSummary}
 								sparklineData={performance?.userPortfolioSeries}

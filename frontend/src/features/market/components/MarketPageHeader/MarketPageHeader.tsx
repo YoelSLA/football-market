@@ -1,65 +1,93 @@
 import type { ReactNode } from "react";
-import { PageHeading } from "@/shared/components";
-import { type LucideIcon, Wallet } from "@/shared/icons";
+import type { LucideIcon } from "@/shared/icons";
 import styles from "./MarketPageHeader.module.scss";
 
-export interface MarketHeaderMetricProps {
-	icon: LucideIcon;
+export interface MarketHeaderMetricItem {
 	label: string;
 	value: ReactNode;
-	title?: string;
+	detail: ReactNode;
+	tooltip?: string;
+	icon: LucideIcon;
+	variant: "blue" | "violet" | "indigo" | "rose";
 }
 
-export function MarketHeaderMetric({
-	icon: Icon,
-	label,
-	value,
-	title,
-}: MarketHeaderMetricProps) {
-	return (
-		<div className={styles.marketPageHeader__metric} title={title}>
-			<span className={styles.marketPageHeader__tile}>
-				<Icon aria-hidden="true" />
-			</span>
-			<div>
-				<p>{label}</p>
-				<strong>{value}</strong>
-			</div>
-		</div>
-	);
-}
+const VARIANT_CLASSES = {
+	blue: styles.marketPageHeader__metric_blue,
+	violet: styles.marketPageHeader__metric_violet,
+	indigo: styles.marketPageHeader__metric_indigo,
+	rose: styles.marketPageHeader__metric_rose,
+} as const;
 
-interface Props {
+export interface MarketPageHeaderProps {
 	title: string;
 	description: string;
-	icon?: LucideIcon | ReactNode;
-	availableCredits?: number;
+	icon: LucideIcon;
+	metrics?: MarketHeaderMetricItem[];
 	children?: ReactNode;
 }
 
 export default function MarketPageHeader({
 	title,
 	description,
-	icon,
-	availableCredits,
+	icon: Icon,
+	metrics,
 	children,
-}: Props) {
+}: MarketPageHeaderProps) {
 	return (
 		<header className={styles.marketPageHeader}>
-			<PageHeading title={title} description={description} icon={icon} />
-			<div className={styles.marketPageHeader__metrics}>
-				{children ?? (
-					<MarketHeaderMetric
-						icon={Wallet}
-						label="Saldo disponible"
-						value={
-							availableCredits != null
-								? `${availableCredits.toLocaleString("es-AR")} ₵`
-								: "No disponible"
-						}
-					/>
-				)}
+			<div className={styles.marketPageHeader__left}>
+				<div className={styles.marketPageHeader__iconWrapper}>
+					<Icon aria-hidden="true" className={styles.marketPageHeader__icon} />
+				</div>
+				<div className={styles.marketPageHeader__titleWrapper}>
+					<h1 className={styles.marketPageHeader__title}>{title}</h1>
+					<p className={styles.marketPageHeader__description}>{description}</p>
+				</div>
 			</div>
+
+			<section
+				aria-label="Indicadores del mercado"
+				className={styles.marketPageHeader__metrics}
+			>
+				{metrics
+					? metrics.map(
+							({
+								label,
+								value,
+								detail,
+								tooltip,
+								icon: MetricIcon,
+								variant,
+							}) => (
+								<div
+									key={label}
+									className={`${styles.marketPageHeader__metricItem} ${VARIANT_CLASSES[variant]}`}
+									title={tooltip}
+								>
+									<span
+										className={styles.marketPageHeader__metricIconWrapper}
+										aria-hidden="true"
+									>
+										<MetricIcon
+											className={styles.marketPageHeader__metricIcon}
+										/>
+									</span>
+									<div className={styles.marketPageHeader__metricBody}>
+										<span className={styles.marketPageHeader__metricLabel}>
+											{label}
+										</span>
+										<strong className={styles.marketPageHeader__metricValue}>
+											{value}
+										</strong>
+										<span className={styles.marketPageHeader__metricDetail}>
+											{detail}
+										</span>
+									</div>
+								</div>
+							),
+						)
+					: children}
+			</section>
 		</header>
 	);
 }

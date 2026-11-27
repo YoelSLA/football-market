@@ -161,7 +161,8 @@ class ListingControllerTest {
     }
 
     @Test
-    @DisplayName("El mercado devuelve el sobre y los nueve campos de cada elemento sin closedAt")
+    @DisplayName(
+        "El mercado devuelve el sobre y los diecisiete campos de cada elemento sin closedAt")
     void listaMercado() throws Exception {
       // Arrange
       footballmarket.features.market.domain.records.TokenListingView view = listing().snapshot(NOW);
@@ -174,7 +175,7 @@ class ListingControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(1))
           .andExpect(jsonPath("$.listings.length()").value(1))
-          .andExpect(jsonPath("$.listings[0].length()").value(9))
+          .andExpect(jsonPath("$.listings[0].length()").value(17))
           .andExpect(jsonPath("$.listings[0].listingId").value(25))
           .andExpect(jsonPath("$.listings[0].sellerId").value(2))
           .andExpect(jsonPath("$.listings[0].playerId").value(1))

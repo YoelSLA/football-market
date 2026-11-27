@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { authQueryKeys } from "@/features/auth";
 import { marketQueryKeys } from "@/features/market/constants";
 import { useSellQuantityForm } from "@/features/market/form";
@@ -178,11 +179,13 @@ export function useMarketSellPage({
 		null,
 	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-	const [searchInput, setSearchInput] = useState("");
+	const [searchParams] = useSearchParams();
+	const initialSearch = searchParams.get("search") ?? "";
+	const [searchInput, setSearchInput] = useState(initialSearch);
 	const filterOptionsQuery = usePlayerCatalogFiltersQuery();
 	const filterOptions = filterOptionsQuery.data;
 	const [filters, setFilters] = useState({
-		search: "",
+		search: initialSearch,
 		league: "all",
 		team: "all",
 		position: "all",

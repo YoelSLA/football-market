@@ -4,11 +4,13 @@ import {
 } from "@/features/players";
 import {
 	CompetitionLogo,
+	FilterPopover,
 	FilterSearch,
 	FilterSelect,
 	type FilterSelectOption,
 	TeamBadge,
 } from "@/shared/components";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import styles from "./MarketFilterFields.module.scss";
 
 interface Props {
@@ -43,10 +45,10 @@ const SORT_OPTIONS = [
 	{ value: "name,desc", label: "Nombre (Z–A)" },
 	{ value: "total,desc", label: "Mayor tenencia total" },
 	{ value: "total,asc", label: "Menor tenencia total" },
-	{ value: "available,desc", label: "Más tokens disponibles" },
-	{ value: "available,asc", label: "Menos tokens disponibles" },
-	{ value: "reserved,desc", label: "Más tokens reservados" },
-	{ value: "reserved,asc", label: "Menos tokens reservados" },
+	{ value: "available,desc", label: `Más ${TOKEN_SYMBOL} disponibles` },
+	{ value: "available,asc", label: `Menos ${TOKEN_SYMBOL} disponibles` },
+	{ value: "reserved,desc", label: `Más ${TOKEN_SYMBOL} reservados` },
+	{ value: "reserved,asc", label: `Menos ${TOKEN_SYMBOL} reservados` },
 ];
 
 export default function SellMarketFilterFields({
@@ -74,7 +76,7 @@ export default function SellMarketFilterFields({
 	);
 
 	const leagueOptions: FilterSelectOption[] = [
-		{ value: "all", label: "Todas" },
+		{ value: "all", label: "Todas las ligas" },
 		...(options?.leagues.map((option) => ({
 			value: String(option.id),
 			label: option.name,
@@ -89,7 +91,7 @@ export default function SellMarketFilterFields({
 	];
 
 	const teamOptions: FilterSelectOption[] = [
-		{ value: "all", label: "Todos" },
+		{ value: "all", label: "Todos los equipos" },
 		...(teams?.map((option) => ({
 			value: String(option.id),
 			label: option.name,
@@ -105,31 +107,40 @@ export default function SellMarketFilterFields({
 	];
 
 	const positionOptions: FilterSelectOption[] = [
-		{ value: "all", label: "Todas" },
+		{ value: "all", label: "Todas las posiciones" },
 		...sanitizePositions(options?.positions).map((value) => ({
 			value,
 			label: value,
 		})),
 	];
 
+	const popoverActiveCount = [
+		team !== "all",
+		availability !== "all",
+		Boolean(sort && sort !== "name,asc"),
+	].filter(Boolean).length;
+
+	const handleClearPopover = () => {
+		onTeamChange?.("all");
+		onAvailabilityChange?.("all");
+		onSortChange?.("name,asc");
+	};
+
 	return (
-		<fieldset
-			className={`${styles.marketFilterFields} ${styles.marketFilterFields_sell}`}
-			disabled={!active}
-			aria-label={active ? undefined : "Filtros pendientes"}
-		>
+		<div className={styles.fields}>
 			<FilterSearch
 				id={`${scope}-search`}
-				className={styles.marketFilterFields__search}
+				className={styles.search}
 				value={search ?? ""}
 				disabled={!active}
 				label="Buscar jugador o club"
 				accessibleLabel="Buscar jugador por nombre o club"
-				placeholder="Buscar jugador o club..."
+				placeholder="Buscar jugador o club…"
 				onChange={(value) => onSearchChange?.(value)}
 			/>
 			<FilterSelect
 				id={`${scope}-league`}
+				className={styles.select}
 				label="Liga"
 				value={league}
 				disabled={!active}
@@ -139,39 +150,52 @@ export default function SellMarketFilterFields({
 				onChange={(value) => onLeagueChange?.(value)}
 			/>
 			<FilterSelect
-				id={`${scope}-team`}
-				label="Equipo"
-				value={team}
-				disabled={!active}
-				options={teamOptions}
-				searchable
-				searchPlaceholder="Buscar equipo…"
-				onChange={(value) => onTeamChange?.(value)}
-			/>
-			<FilterSelect
 				id={`${scope}-position`}
+				className={styles.select}
 				label="Posición"
 				value={position}
 				disabled={!active}
 				options={positionOptions}
 				onChange={(value) => onPositionChange?.(value)}
 			/>
-			<FilterSelect
-				id={`${scope}-availability`}
-				label="Disponibilidad"
-				value={availability}
+			<FilterPopover
+				triggerLabel="Más filtros"
+				title="Filtros avanzados"
+				activeCount={popoverActiveCount}
+				onClear={handleClearPopover}
+				panelWidth="md"
 				disabled={!active}
-				options={AVAILABILITY_OPTIONS}
-				onChange={(value) => onAvailabilityChange?.(value)}
-			/>
-			<FilterSelect
-				id={`${scope}-sort`}
-				label="Ordenar por"
-				value={sort || "name,asc"}
-				disabled={!active}
-				options={SORT_OPTIONS}
-				onChange={(value) => onSortChange?.(value)}
-			/>
-		</fieldset>
+			>
+				<FilterSelect
+					id={`${scope}-team`}
+					className={styles.popoverField}
+					label="Equipo"
+					value={team}
+					disabled={!active}
+					options={teamOptions}
+					searchable
+					searchPlaceholder="Buscar equipo…"
+					onChange={(value) => onTeamChange?.(value)}
+				/>
+				<FilterSelect
+					id={`${scope}-availability`}
+					className={styles.popoverField}
+					label="Disponibilidad"
+					value={availability}
+					disabled={!active}
+					options={AVAILABILITY_OPTIONS}
+					onChange={(value) => onAvailabilityChange?.(value)}
+				/>
+				<FilterSelect
+					id={`${scope}-sort`}
+					className={styles.popoverField}
+					label="Ordenar por"
+					value={sort || "name,asc"}
+					disabled={!active}
+					options={SORT_OPTIONS}
+					onChange={(value) => onSortChange?.(value)}
+				/>
+			</FilterPopover>
+		</div>
 	);
 }

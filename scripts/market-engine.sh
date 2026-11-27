@@ -61,6 +61,9 @@ FORCE_RECALC_EVERY_CYCLE=false
 DAEMON_ACTION=""
 TARGET_ACTIVE_P2P=16           # Mantener al menos 16 órdenes activas en el libro P2P
 INJECT_P2P_COUNT=16            # Cantidad por defecto para --inject-p2p
+SELLS_RATIO_MIN=40             # Porcentaje mínimo de ventas en variación aleatoria (40%)
+SELLS_RATIO_MAX=60             # Porcentaje máximo de ventas en variación aleatoria (60%)
+FIXED_SELLS_RATIO=""           # Opcional: fijar porcentaje de ventas con --sells-ratio
 
 # Métricas acumuladas y contadores globales
 CYCLE_VOLUME=0
@@ -190,12 +193,17 @@ while [[ $# -gt 0 ]]; do
       FORCE_RECALC_EVERY_CYCLE=true
       shift
       ;;
+    --sells-ratio)
+      FIXED_SELLS_RATIO="$2"
+      shift 2
+      ;;
     -h|--help)
       echo -e "${CLR_BOLD}Uso de Football Market Engine:${CLR_RESET}"
       echo "  $0 [start | stop | status | restart]"
       echo "  $0 [--once | --loop | --fast | --burst] [--interval SEG] [--rounds N]"
       echo "  $0 [--inject-p2p [N]]                        # Inyecta N ofertas P2P de inmediato y sale"
       echo "  $0 [-t 10 | --trades-per-cycle 10] [--min-official-qty 1] [--max-official-qty 10]"
+      echo "  $0 [--sells-ratio 50]                        # Fija % de ventas (por defecto varía aleatorio 40-60%)"
       echo "  $0 [--target-p2p 16] [--pool-size 8] [--only-bots | --with-real-users]"
       exit 0
       ;;
@@ -517,10 +525,11 @@ ensure_bot_inventory() {
   if (( avail_count < min_positions )); then
     local needed=$(( min_positions - avail_count ))
     for (( b=0; b<needed; b++ )); do
-      local page=$(( (RANDOM % 15) + 1 ))
+      local target_league=$(( ((RANDOM + b) % 5) + 1 ))
       declare -a POS_LIST=("Offence" "Midfield" "Defence" "Goalkeeper")
       local target_pos="${POS_LIST[$(( (RANDOM + b) % 4 ))]}"
-      request GET "$API_BASE_URL/api/market/official?page=$page&size=10&hasQuote=true&position=$target_pos" "$bot_token"
+      local page=$(( RANDOM % 5 ))
+      request GET "$API_BASE_URL/api/market/official?leagueId=$target_league&position=$target_pos&page=$page&size=10&hasQuote=true" "$bot_token"
       if [[ "$HTTP_STATUS" == "200" ]]; then
         local c_len
         c_len="$(jq '.content | length' "$RESPONSE_BODY" 2>/dev/null || echo 0)"
@@ -532,7 +541,7 @@ ensure_bot_inventory() {
             local p_id p_price
             p_id="$(jq -r '.id' <<<"$candidate")"
             p_price="$(jq -r '.quote.price // 100' <<<"$candidate")"
-            local buy_qty=$(( (RANDOM % 4) + 3 )) # compra 3 a 6 tokens para tener stock
+            local buy_qty=$(( (RANDOM % 4) + 4 )) # compra 4 a 7 tokens para tener stock P2P y liquidación oficial
             local buy_body
             buy_body="$(jq -n --argjson id "$p_id" --argjson q "$buy_qty" '{playerId: $id, quantity: $q}')"
             request POST "$API_BASE_URL/api/orders/buy" "$bot_token" "$buy_body" >/dev/null 2>&1 || true
@@ -547,31 +556,49 @@ ensure_bot_inventory() {
 # Fases de Operación del Mercado
 # -----------------------------------------------------------------------------
 
-# 1. Compras Primarias en Mercado Oficial (1 a 10 tokens aleatorios con diversidad táctica)
+# 1. Compras Primarias en Mercado Oficial (1 a 10 tokens aleatorios con diversidad táctica y por liga)
 operate_official_buys() {
   local buyer_token="$1"
   local buyer_name="$2"
   local round_num="$3"
 
-  # Diversificación por posición para enriquecer el Donut Chart del Dashboard
+  # Diversificación rotativa por posición (4 demarcaciones)
   declare -a POSITIONS=("Offence" "Midfield" "Defence" "Goalkeeper")
-  local target_position="${POSITIONS[$(( round_num % 4 ))]}"
+  local target_position="${POSITIONS[$(( (round_num + RANDOM) % 4 ))]}"
 
-  # Lista de "Hot Players" estrella (30% de probabilidad de compra concentrada)
-  declare -a HOT_STARS=("Yamal" "Mbappé" "Haaland" "Kane" "Vinicius" "Salah" "Bellingham" "Pedri" "Musiala")
+  # Diversificación rotativa por liga (1: Premier League, 2: Bundesliga, 3: LaLiga, 4: Serie A, 5: Ligue 1)
+  local target_league=$(( ((round_num + RANDOM) % 5) + 1 ))
+
+  # Estrellas de las 5 ligas y las 4 demarcaciones para balancear Top 5, Demanda Táctica y Flujo por Liga
+  declare -a HOT_STARS=(
+    # LaLiga (Offence, Midfield)
+    "Lamine Yamal" "Kylian Mbappé" "Pedri" "Jude Bellingham" "Vinicius Junior" "Raphinha"
+    # Bundesliga (Offence, Midfield)
+    "Jamal Musiala" "Harry Kane" "Joshua Kimmich" "Florian Wirtz"
+    # Serie A (Defence, Midfield, Offence)
+    "Alessandro Bastoni" "Giorgio Cittadini" "Nicolò Barella" "Lautaro Martínez"
+    # Ligue 1 (Defence, Midfield, Offence, Goalkeeper)
+    "Achraf Hakimi" "Warren Zaïre-Emery" "Ousmane Dembélé" "Brice Samba"
+    # Premier League (Defence, Midfield, Offence, Goalkeeper)
+    "Declan Rice" "Erling Haaland" "Bukayo Saka" "Cole Palmer" "Gianluigi Donnarumma" "David Raya"
+  )
 
   local catalog_query
-  if (( (RANDOM % 100) < 30 )); then
+  if (( (RANDOM % 100) < 45 )); then
     local star_name="${HOT_STARS[$(( RANDOM % ${#HOT_STARS[@]} ))]}"
-    catalog_query="size=5&hasQuote=true&search=$star_name"
+    catalog_query="size=5&hasQuote=true&name=$star_name"
   else
-    catalog_query="size=5&hasQuote=true&position=$target_position&page=$(( RANDOM % 4 ))"
+    catalog_query="size=10&hasQuote=true&leagueId=$target_league&position=$target_position&page=$(( RANDOM % 5 ))"
   fi
 
   request GET "$API_BASE_URL/api/market/official?$catalog_query" "$buyer_token"
   if [[ "$HTTP_STATUS" == "200" ]]; then
-    local candidate
-    candidate="$(jq -c '.content[0] // empty' "$RESPONSE_BODY")"
+    local c_len
+    c_len="$(jq '.content | length' "$RESPONSE_BODY" 2>/dev/null || echo 0)"
+    if (( c_len > 0 )); then
+      local rand_idx=$(( RANDOM % c_len ))
+      local candidate
+      candidate="$(jq -c ".content[$rand_idx] // empty" "$RESPONSE_BODY")"
     if [[ -n "$candidate" ]]; then
       local p_id p_name p_pos p_price p_team
       p_id="$(jq -r '.id' <<<"$candidate")"
@@ -621,6 +648,7 @@ operate_official_buys() {
         fi
       fi
     fi
+    fi
   fi
   return 1
 }
@@ -649,6 +677,10 @@ operate_p2p_sell() {
         # Cantidad aleatoria a poner a la venta (entre 1 y min(p_avail, MAX_P2P_QTY))
         local max_sell=$p_avail
         if (( max_sell > MAX_P2P_QTY )); then max_sell=$MAX_P2P_QTY; fi
+        # Preservar al menos 1 token disponible para liquidación oficial si tiene más de 1
+        if (( max_sell > 1 && max_sell == p_avail )); then
+          max_sell=$(( p_avail - 1 ))
+        fi
         local sell_qty=$(( (RANDOM % max_sell) + 1 ))
 
         # Margen flexible de precio P2P: entre 85% y 115% de la cotización oficial vigente
@@ -704,6 +736,15 @@ operate_official_sell() {
   if [[ "$HTTP_STATUS" == "200" ]]; then
     local candidates
     candidates="$(jq -r '.positions[]? | select(.availableQuantity > 0) | "\(.playerId)|\(.playerName)|\(.availableQuantity)|\(.currentUnitPrice)"' "$RESPONSE_BODY")"
+
+    # Si el bot no tiene tokens disponibles en cartera, abastecerlo para liquidar
+    if [[ -z "$candidates" ]]; then
+      ensure_bot_inventory "$seller_token" "$seller_name" 2
+      request GET "$API_BASE_URL/api/portfolio/me" "$seller_token"
+      if [[ "$HTTP_STATUS" == "200" ]]; then
+        candidates="$(jq -r '.positions[]? | select(.availableQuantity > 0) | "\(.playerId)|\(.playerName)|\(.availableQuantity)|\(.currentUnitPrice)"' "$RESPONSE_BODY")"
+      fi
+    fi
 
     if [[ -n "$candidates" ]]; then
       local chosen_line
@@ -983,6 +1024,20 @@ run_single_market_cycle() {
   echo -e "${CLR_BOLD}==============================================================================${CLR_RESET}"
   echo -e "${CLR_BOLD}🚀 [$(date '+%Y-%m-%d %H:%M:%S')] CICLO DE MERCADO INTEGRAL #${round_num}${CLR_RESET}"
   echo -e "   Intervalo: ${INTERVAL_SECONDS}s | ${CLR_BOLD}Objetivo estricto: $TARGET_TRADES_PER_CYCLE transacciones${CLR_RESET}"
+
+  # Variación aleatoria de ventas por ciclo entre 40% y 60% (o ratio fijo si se especificó)
+  local cycle_sells_pct
+  if [[ -n "$FIXED_SELLS_RATIO" && "$FIXED_SELLS_RATIO" =~ ^[0-9]+$ ]]; then
+    cycle_sells_pct="$FIXED_SELLS_RATIO"
+  else
+    cycle_sells_pct=$(( SELLS_RATIO_MIN + (RANDOM % (SELLS_RATIO_MAX - SELLS_RATIO_MIN + 1)) ))
+  fi
+  local target_sells_this_cycle=$(( (TARGET_TRADES_PER_CYCLE * cycle_sells_pct + 50) / 100 ))
+  if (( target_sells_this_cycle < 1 && TARGET_TRADES_PER_CYCLE > 0 )); then target_sells_this_cycle=1; fi
+  local target_buys_this_cycle=$(( TARGET_TRADES_PER_CYCLE - target_sells_this_cycle ))
+  local cycle_buys_pct=$(( 100 - cycle_sells_pct ))
+
+  echo -e "   Dinámica del ciclo: ${CLR_BOLD}${CLR_GREEN}$target_buys_this_cycle Compras ($cycle_buys_pct%)${CLR_RESET} / ${CLR_BOLD}${CLR_YELLOW}$target_sells_this_cycle Ventas ($cycle_sells_pct%)${CLR_RESET} [Variación aleatoria 40%–60%]"
   echo -e "   Rango compra oficial: ${MIN_OFFICIAL_QTY}–${MAX_OFFICIAL_QTY} tokens | P2P: ${MIN_P2P_QTY}–${MAX_P2P_QTY} tokens"
   echo -e "${CLR_BOLD}==============================================================================${CLR_RESET}"
 
@@ -1042,31 +1097,43 @@ run_single_market_cycle() {
   # 3. Compras Primarias en Mercado Oficial (1 a 10 tokens aleatorios)
   echo
   echo -e "${CLR_CYAN}--- 2. MERCADO OFICIAL (COMPRAS AL SUPERUSUARIO - 1 A 10 TOKENS) ---${CLR_RESET}"
-  for (( b=0; b<3; b++ )); do
+  local initial_buys_count=$(( target_buys_this_cycle > 3 ? 3 : target_buys_this_cycle ))
+  for (( b=0; b<initial_buys_count; b++ )); do
     local b_idx=$(( b + 1 ))
     local b_tok="${BOT_TOKENS[$b]}"
     [[ -z "$b_tok" ]] || operate_official_buys "$b_tok" "Bot #$b_idx" "$(( round_num + b ))" || true
   done
-  if [[ "$WITH_REAL_USERS" == "true" && -n "$yoel_token" ]]; then
+  if [[ "$WITH_REAL_USERS" == "true" && -n "$yoel_token" ]] && (( COUNT_OFFICIAL_BUYS < target_buys_this_cycle )); then
     operate_official_buys "$yoel_token" "Yoel" "$(( round_num + 3 ))" || true
   fi
-  if [[ "$WITH_REAL_USERS" == "true" && -n "$nicolas_token" ]]; then
+  if [[ "$WITH_REAL_USERS" == "true" && -n "$nicolas_token" ]] && (( COUNT_OFFICIAL_BUYS < target_buys_this_cycle )); then
     operate_official_buys "$nicolas_token" "Nicolas" "$(( round_num + 4 ))" || true
   fi
 
   # 4. Liquidación Inmediata Oficial / Buyback a la Casa (SPEC-026 / PR #111)
   echo
-  echo -e "${CLR_CYAN}--- 3. MERCADO OFICIAL (LIQUIDACIÓN / BUYBACK INMEDIATO CON SPREAD 10%) ---${CLR_RESET}"
-  local sold_official=false
-  if [[ -n "${BOT_TOKENS[0]:-}" ]] && operate_official_sell "${BOT_TOKENS[0]}" "Bot #1"; then
-    sold_official=true
-  fi
-  if [[ "$WITH_REAL_USERS" == "true" && -n "$yoel_token" ]]; then
+  echo -e "${CLR_CYAN}--- 3. MERCADO OFICIAL (LIQUIDACIÓN / BUYBACK INMEDIATO CON SPREAD 10% - META: $target_sells_this_cycle VENTAS) ---${CLR_RESET}"
+  local sold_official_count=0
+  declare -a SHUFFLED_BOT_INDICES=($(seq 0 $(( ${#BOT_TOKENS[@]} - 1 )) | shuf))
+  for b_idx in "${SHUFFLED_BOT_INDICES[@]}"; do
+    if (( sold_official_count >= target_sells_this_cycle )); then break; fi
+    local b_tok="${BOT_TOKENS[$b_idx]}"
+    local b_num=$(( b_idx + 1 ))
+    if [[ -n "$b_tok" ]] && operate_official_sell "$b_tok" "Bot #$b_num"; then
+      sold_official_count=$(( sold_official_count + 1 ))
+    fi
+  done
+  if (( sold_official_count < target_sells_this_cycle )) && [[ "$WITH_REAL_USERS" == "true" && -n "$yoel_token" ]]; then
     if operate_official_sell "$yoel_token" "Yoel"; then
-      sold_official=true
+      sold_official_count=$(( sold_official_count + 1 ))
     fi
   fi
-  if [[ "$sold_official" == "false" ]]; then
+  if (( sold_official_count < target_sells_this_cycle )) && [[ "$WITH_REAL_USERS" == "true" && -n "$nicolas_token" ]]; then
+    if operate_official_sell "$nicolas_token" "Nicolas"; then
+      sold_official_count=$(( sold_official_count + 1 ))
+    fi
+  fi
+  if (( sold_official_count == 0 )); then
     if [[ "$HTTP_STATUS" == "404" ]]; then
       echo -e "  ${CLR_DIM}○ [LIQUIDACIÓN OFICIAL] Endpoint pendiente de activación (reiniciar backend para activar PR #111).${CLR_RESET}"
     else
@@ -1090,11 +1157,14 @@ run_single_market_cycle() {
     echo -e "  ${CLR_DIM}○ [P2P GESTIÓN] Sin cancelaciones en este ciclo (órdenes activas preservadas en el libro).${CLR_RESET}"
   fi
 
-  # 6. Compras Cruzadas en Mercado P2P (Absorción controlada: máx 3 trades para preservar stock vivo)
+  # 6. Compras Cruzadas en Mercado P2P (Absorción controlada)
   echo
   echo -e "${CLR_CYAN}--- 5. MERCADO P2P (COMPRAS CRUZADAS Y ABSORCIÓN) ---${CLR_RESET}"
   local p2p_trades_done=0
-  local max_p2p_trades=3
+  local remaining_buys_target=$(( target_buys_this_cycle - COUNT_OFFICIAL_BUYS ))
+  local max_p2p_trades=2
+  if (( remaining_buys_target > 2 )); then max_p2p_trades=3; fi
+  if (( remaining_buys_target <= 1 )); then max_p2p_trades=1; fi
 
   # Rotar compradores entre bots 4 a 8
   for (( b=3; b<${#BOT_TOKENS[@]}; b++ )); do
@@ -1120,12 +1190,12 @@ run_single_market_cycle() {
     echo -e "  ${CLR_DIM}○ [P2P TRADES] Sin compras P2P en este turno (ofertas activas permanecen en cartelera).${CLR_RESET}"
   fi
 
-  # 7. Compensación activa para garantizar EXACTAMENTE 10 transacciones
+  # 7. Compensación activa para garantizar EXACTAMENTE TARGET_TRADES_PER_CYCLE transacciones
   if (( CYCLE_TRADES < TARGET_TRADES_PER_CYCLE )); then
     local missing=$(( TARGET_TRADES_PER_CYCLE - CYCLE_TRADES ))
     echo
-    echo -e "${CLR_CYAN}--- 6. BALANCE Y CUOTA (COMPLETANDO HASTA EXACTAMENTE $TARGET_TRADES_PER_CYCLE TRADES) ---${CLR_RESET}"
-    echo -e "  ⚖ [CUOTA] Ejecutadas $CYCLE_TRADES de $TARGET_TRADES_PER_CYCLE. Completando $missing transacción(es) oficial(es)..."
+    echo -e "${CLR_CYAN}--- 6. BALANCE Y CUOTA (COMPLETANDO HASTA EXACTAMENTE $TARGET_TRADES_PER_CYCLE TRADES: $target_buys_this_cycle COMPRAS / $target_sells_this_cycle VENTAS) ---${CLR_RESET}"
+    echo -e "  ⚖ [CUOTA] Ejecutadas $CYCLE_TRADES de $TARGET_TRADES_PER_CYCLE (Compras: $(( COUNT_OFFICIAL_BUYS + COUNT_P2P_TRADES )), Ventas: $COUNT_OFFICIAL_SELLS). Completando $missing transacción(es)..."
 
     local comp_round=1
     while (( CYCLE_TRADES < TARGET_TRADES_PER_CYCLE && comp_round <= 15 )); do
@@ -1133,7 +1203,14 @@ run_single_market_cycle() {
       local comp_token="${BOT_TOKENS[$(( comp_bot_idx - 1 ))]}"
       if [[ -n "$comp_token" ]]; then
         ensure_liquidity "$comp_token" "eng_bot_${comp_bot_idx}@example.test"
-        operate_official_buys "$comp_token" "Bot #$comp_bot_idx" "$(( round_num + comp_round + 20 ))" || true
+        if (( COUNT_OFFICIAL_SELLS < target_sells_this_cycle )); then
+          if ! operate_official_sell "$comp_token" "Bot #$comp_bot_idx"; then
+            ensure_bot_inventory "$comp_token" "Bot #$comp_bot_idx" 2
+            operate_official_sell "$comp_token" "Bot #$comp_bot_idx" || operate_official_buys "$comp_token" "Bot #$comp_bot_idx" "$(( round_num + comp_round + 20 ))" || true
+          fi
+        else
+          operate_official_buys "$comp_token" "Bot #$comp_bot_idx" "$(( round_num + comp_round + 20 ))" || true
+        fi
       fi
       comp_round=$(( comp_round + 1 ))
     done
@@ -1157,7 +1234,20 @@ run_single_market_cycle() {
   if (( CYCLE_TRADES < TARGET_TRADES_PER_CYCLE )); then
     cuota_badge="${CLR_YELLOW}[Parcial: $CYCLE_TRADES/$TARGET_TRADES_PER_CYCLE]${CLR_RESET}"
   fi
+  local total_buys=$(( COUNT_OFFICIAL_BUYS + COUNT_P2P_TRADES ))
+  local buy_pct=0 sell_pct=0
+  if (( CYCLE_TRADES > 0 )); then
+    buy_pct=$(( (total_buys * 100) / CYCLE_TRADES ))
+    sell_pct=$(( (COUNT_OFFICIAL_SELLS * 100) / CYCLE_TRADES ))
+  fi
+  local bias_label="${CLR_DIM}NEUTRAL${CLR_RESET}"
+  if (( total_buys > COUNT_OFFICIAL_SELLS )); then
+    bias_label="${CLR_GREEN}BULLISH (Alcista)${CLR_RESET}"
+  elif (( total_buys < COUNT_OFFICIAL_SELLS )); then
+    bias_label="${CLR_RED}BEARISH (Bajista)${CLR_RESET}"
+  fi
   echo -e "  🤝 Transacciones confirmadas: ${CLR_BOLD}${CLR_GREEN}$CYCLE_TRADES de $TARGET_TRADES_PER_CYCLE${CLR_RESET} $cuota_badge"
+  echo -e "     • Balance de Sentimiento:            ${CLR_BOLD}${CLR_GREEN}$total_buys Compras ($buy_pct%)${CLR_RESET} | ${CLR_BOLD}${CLR_YELLOW}$COUNT_OFFICIAL_SELLS Ventas ($sell_pct%)${CLR_RESET} [Sesgo: $bias_label]"
   echo -e "     • Compras Oficiales (Casa):          ${CLR_BOLD}$COUNT_OFFICIAL_BUYS${CLR_RESET} transacciones"
   echo -e "     • Liquidaciones Inmediatas (Casa):   ${CLR_BOLD}$COUNT_OFFICIAL_SELLS${CLR_RESET} transacciones"
   echo -e "     • Trades P2P cruzados entre partes:  ${CLR_BOLD}$COUNT_P2P_TRADES${CLR_RESET} transacciones"

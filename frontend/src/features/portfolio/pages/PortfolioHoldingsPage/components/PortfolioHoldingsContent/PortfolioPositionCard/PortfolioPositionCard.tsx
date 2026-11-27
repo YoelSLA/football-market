@@ -10,11 +10,13 @@ import styles from "./PortfolioPositionCard.module.scss";
 interface Props {
 	position: PortfolioPosition;
 	onDetails: () => void;
+	onSell?: (position: PortfolioPosition) => void;
 }
 
 export default function PortfolioPositionCard({
 	position: p,
 	onDetails,
+	onSell,
 }: Props) {
 	return (
 		<article className={styles.portfolioPosition}>
@@ -43,6 +45,8 @@ export default function PortfolioPositionCard({
 				result={p.totalProfitLoss}
 				playerName={p.playerName}
 				playerId={p.playerId}
+				canSell={p.status === "OPEN" && p.availableQuantity > 0}
+				onSell={onSell ? () => onSell(p) : undefined}
 				onDetails={onDetails}
 			/>
 		</article>

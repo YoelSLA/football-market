@@ -80,14 +80,17 @@ public final class DashboardMapper {
       posValues.put(normPos, posValues.getOrDefault(normPos, 0L) + val);
       posTokens.put(normPos, posTokens.getOrDefault(normPos, 0) + pos.quantity());
 
-      String league = "Otras Ligas";
-      // Si la posición tiene liga disponible o asociamos por convención
-      leagueValues.put(league, leagueValues.getOrDefault(league, 0L) + val);
-      leagueTokens.put(league, leagueTokens.getOrDefault(league, 0) + pos.quantity());
+      String normLeague = normalizeLeague(pos.leagueName());
+      leagueValues.put(normLeague, leagueValues.getOrDefault(normLeague, 0L) + val);
+      leagueTokens.put(normLeague, leagueTokens.getOrDefault(normLeague, 0) + pos.quantity());
     }
 
     List<AllocationItemDTO> byPosition = new ArrayList<>();
-    for (Map.Entry<String, Long> entry : posValues.entrySet()) {
+    List<Map.Entry<String, Long>> sortedPositions =
+        posValues.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .toList();
+    for (Map.Entry<String, Long> entry : sortedPositions) {
       BigDecimal pct =
           totalPortfolioValue > 0
               ? BigDecimal.valueOf(entry.getValue())
@@ -104,7 +107,11 @@ public final class DashboardMapper {
     }
 
     List<AllocationItemDTO> byLeague = new ArrayList<>();
-    for (Map.Entry<String, Long> entry : leagueValues.entrySet()) {
+    List<Map.Entry<String, Long>> sortedLeagues =
+        leagueValues.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .toList();
+    for (Map.Entry<String, Long> entry : sortedLeagues) {
       BigDecimal pct =
           totalPortfolioValue > 0
               ? BigDecimal.valueOf(entry.getValue())
@@ -114,7 +121,7 @@ public final class DashboardMapper {
       byLeague.add(
           new AllocationItemDTO(
               entry.getKey(),
-              entry.getKey(),
+              getLeagueLabel(entry.getKey()),
               entry.getValue(),
               pct,
               leagueTokens.getOrDefault(entry.getKey(), 0)));
@@ -242,6 +249,30 @@ public final class DashboardMapper {
       case "DEFENSOR" -> "Defensores";
       case "ARQUERO" -> "Arqueros";
       default -> key;
+    };
+  }
+
+  private static String normalizeLeague(String league) {
+    if (league == null || league.isBlank()) {
+      return "OTRAS_LIGAS";
+    }
+    String l = league.trim().toUpperCase();
+    if (l.contains("PREMIER")) return "PREMIER_LEAGUE";
+    if (l.contains("PRIMERA") || l.contains("LIGA") || l.contains("SANTANDER")) return "LALIGA";
+    if (l.contains("SERIE A") || l.contains("CALCIO")) return "SERIE_A";
+    if (l.contains("BUNDESLIGA")) return "BUNDESLIGA";
+    if (l.contains("LIGUE 1")) return "LIGUE_1";
+    return "OTRAS_LIGAS";
+  }
+
+  private static String getLeagueLabel(String key) {
+    return switch (key) {
+      case "PREMIER_LEAGUE" -> "Premier League";
+      case "LALIGA" -> "LaLiga";
+      case "SERIE_A" -> "Serie A";
+      case "BUNDESLIGA" -> "Bundesliga";
+      case "LIGUE_1" -> "Ligue 1";
+      default -> "Otras Ligas";
     };
   }
 }

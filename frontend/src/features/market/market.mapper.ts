@@ -6,6 +6,8 @@ import type {
 	MarketListing,
 	MarketPlayer,
 	MarketQuote,
+	MarketTrends,
+	MarketTrendsResponseDTO,
 	OfficialMarketPage,
 	OrderBuyRequestDTO,
 	OrderBuyResponseDTO,
@@ -18,6 +20,8 @@ import type {
 	QuoteResponseDTO,
 	SellOfficialResult,
 	SellResult,
+	TopHotPlayer,
+	TopHotPlayerDTO,
 	UserOrderListing,
 	UserOrdersPage,
 	UserOrdersSummary,
@@ -499,6 +503,16 @@ export function toUserOrderListing(dto: unknown): UserOrderListing {
 		status,
 		createdAt: String(candidate.createdAt),
 		expiresAt: String(candidate.expiresAt),
+		playerName: candidate.playerName ? String(candidate.playerName) : null,
+		teamId: candidate.teamId ? Number(candidate.teamId) : null,
+		teamName: candidate.teamName ? String(candidate.teamName) : null,
+		leagueId: candidate.leagueId ? Number(candidate.leagueId) : null,
+		leagueName: candidate.leagueName ? String(candidate.leagueName) : null,
+		position: candidate.position ? String(candidate.position) : null,
+		imageUrl: candidate.imageUrl ? String(candidate.imageUrl) : null,
+		fallbackImageUrl: candidate.fallbackImageUrl
+			? String(candidate.fallbackImageUrl)
+			: null,
 	};
 }
 
@@ -625,5 +639,57 @@ export function toCancelListingResult(dto: unknown): CancelListingResult {
 		createdAt: String(candidate.createdAt),
 		expiresAt: String(candidate.expiresAt),
 		closedAt: candidate.closedAt ? String(candidate.closedAt) : null,
+	};
+}
+
+export function toMarketTrends(dto: MarketTrendsResponseDTO): MarketTrends {
+	const totalTransactions = Number(dto?.totalTransactions) || 0;
+	const totalTradedTokens = Number(dto?.totalTradedTokens) || 0;
+	const totalTradedCredits = (Number(dto?.totalTradedCredits) || 0) / 100;
+
+	const rawTopPlayers: TopHotPlayerDTO[] = Array.isArray(dto?.topHotPlayers)
+		? dto.topHotPlayers
+		: [];
+	const top5TotalTokens = rawTopPlayers.reduce(
+		(acc: number, p: TopHotPlayerDTO) => acc + (Number(p.boughtTokens) || 0),
+		0,
+	);
+
+	const topHotPlayers: TopHotPlayer[] = rawTopPlayers.map(
+		(player: TopHotPlayerDTO) => {
+			const boughtTokens = Number(player.boughtTokens) || 0;
+			const sharePercentage =
+				top5TotalTokens > 0 ? (boughtTokens / top5TotalTokens) * 100 : 0;
+			return {
+				playerId: Number(player.playerId),
+				playerName: player.playerName ?? "Desconocido",
+				boughtTokens,
+				buyVolumeCredits: (Number(player.buyVolume) || 0) / 100,
+				sharePercentage: Number(sharePercentage.toFixed(1)),
+			};
+		},
+	);
+
+	const isEmpty = totalTransactions === 0 && topHotPlayers.length === 0;
+
+	return {
+		window: {
+			startsAt: dto?.window?.startsAt ?? "",
+			endsAt: dto?.window?.endsAt ?? "",
+		},
+		topHotPlayers,
+		buyTransactionsPercentage:
+			dto?.buyTransactionsPercentage != null
+				? Number(dto.buyTransactionsPercentage)
+				: null,
+		sellTransactionsPercentage:
+			dto?.sellTransactionsPercentage != null
+				? Number(dto.sellTransactionsPercentage)
+				: null,
+		marketBias: dto?.marketBias ?? null,
+		totalTransactions,
+		totalTradedTokens,
+		totalTradedCredits,
+		isEmpty,
 	};
 }

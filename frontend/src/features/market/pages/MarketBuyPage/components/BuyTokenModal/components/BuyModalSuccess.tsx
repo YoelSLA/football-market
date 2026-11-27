@@ -1,6 +1,6 @@
 import type { BuyResult, OfficialMarketPlayer } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { TokenSymbol } from "@/shared/components";
 import { CheckCircle2 } from "@/shared/icons";
 import styles from "./BuyModalSuccess.module.scss";
 
@@ -12,6 +12,7 @@ interface Props {
 const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
 	dateStyle: "short",
 	timeStyle: "short",
+	hour12: false,
 });
 
 export function BuyModalSuccess({ player, purchaseResult }: Props) {
@@ -30,9 +31,11 @@ export function BuyModalSuccess({ player, purchaseResult }: Props) {
 					<strong>{player.name}</strong>
 				</div>
 				<div className={styles.detailRow}>
-					<span>Tokens adquiridos</span>
+					<span>
+						<TokenSymbol size="xs" /> adquiridos
+					</span>
 					<strong>
-						{purchaseResult.quantity} {TOKEN_SYMBOL}
+						{purchaseResult.quantity} <TokenSymbol />
 					</strong>
 				</div>
 				<div className={styles.detailRow}>

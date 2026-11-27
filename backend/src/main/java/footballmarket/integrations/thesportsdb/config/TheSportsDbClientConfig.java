@@ -23,7 +23,7 @@ public class TheSportsDbClientConfig {
 
     JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
 
-    factory.setReadTimeout(Duration.ofSeconds(15));
+    factory.setReadTimeout(Duration.ofSeconds(35));
 
     return RestClient.builder()
         .requestFactory(factory)

@@ -8,7 +8,9 @@
 	gap: ds.$space-md;
 
 	// 4. 📦 Box Model
-	min-height: var(--portfolio-summary-header-height, 76px);
+	height: 80px;
+	min-height: 80px;
+	box-sizing: border-box;
 	&__heading {
 		// 4. 📦 Box Model
 		min-width: 0;
@@ -18,8 +20,10 @@
 		// 3. 🧩 Layout
 		display: grid;
 		place-items: center;
-		flex: 0 0 52px;
-		align-self: stretch;
+		flex: 0 0 48px;
+		width: 48px;
+		height: 48px;
+		flex-shrink: 0;
 
 		// 6. 🎨 Visual
 		border-radius: 12px;
@@ -27,11 +31,11 @@
 		color: ds.$accent-gain;
 		svg {
 			// 4. 📦 Box Model
-			width: 40px;
-			height: 40px;
+			width: 24px;
+			height: 24px;
 
 			// 6. 🎨 Visual
-			stroke-width: 3;
+			stroke-width: 2.5;
 			filter: drop-shadow(0 0 10px ds.$surface-gain-glow);
 		}
 	}
@@ -41,9 +45,10 @@
 		margin: 0;
 
 		// 5. 🔤 Typography
-		font-size: clamp(26px, 2vw, 34px);
+		font-size: 20px;
 		line-height: 1.2;
 		font-weight: 700;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
 		color: ds.$text-title-on-dark;
@@ -51,10 +56,12 @@
 
 	&__description {
 		// 4. 📦 Box Model
-		margin: var(--portfolio-summary-subtitle-gap, 9px) 0 0;
+		margin: 3px 0 0;
 
 		// 5. 🔤 Typography
-		font-size: 15px;
+		font-size: 13px;
+		line-height: 1.3;
+		white-space: nowrap;
 
 		// 6. 🎨 Visual
 		color: ds.$text-subtle-on-dark;

@@ -13,4 +13,11 @@
 	overflow: hidden;
 	background-color: ds.$surface-page;
 	color: ds.$text-strong-on-dark;
+
+	&__footer {
+		@include ds.market-panel-footer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
 }

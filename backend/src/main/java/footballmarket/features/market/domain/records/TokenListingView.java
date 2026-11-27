@@ -14,4 +14,12 @@ public record TokenListingView(
     TokenListingStatus status,
     OffsetDateTime createdAt,
     OffsetDateTime expiresAt,
-    OffsetDateTime closedAt) {}
+    OffsetDateTime closedAt,
+    String playerName,
+    Long teamId,
+    String teamName,
+    Long leagueId,
+    String leagueName,
+    String position,
+    String imageUrl,
+    String fallbackImageUrl) {}

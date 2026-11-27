@@ -1,5 +1,11 @@
 @use "@/styles/abstracts" as ds;
 
+.headerRightBadges {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
 .variationBadge {
 	display: inline-flex;
 	align-items: center;

@@ -1,7 +1,6 @@
 import type { CommunityMarketFilters as CommunityFilterModel } from "@/features/market/types";
 import type { PlayerCatalogFilters } from "@/features/players";
-import { Button } from "@/shared/components";
-import { SlidersHorizontal } from "@/shared/icons";
+import { X } from "@/shared/icons";
 import {
 	CommunityMarketFilterFields,
 	OfficialMarketFilterFields,
@@ -87,7 +86,65 @@ export default function MarketFilters(props: Props) {
 		props.variant === "orders" ||
 		props.variant === "sell";
 
-	const renderFilterFields = () => {
+	const hasActiveFilters = (() => {
+		if (props.variant === "official") {
+			const isPriceActive = Boolean(
+				props.selectedPriceRange &&
+					props.priceRange.min !== null &&
+					props.priceRange.max !== null &&
+					(props.selectedPriceRange[0] > props.priceRange.min ||
+						props.selectedPriceRange[1] < props.priceRange.max),
+			);
+			return (
+				props.search.trim() !== "" ||
+				props.league !== "all" ||
+				props.team !== "all" ||
+				props.position !== "all" ||
+				props.nationality !== "all" ||
+				props.sort !== "id,asc" ||
+				isPriceActive
+			);
+		}
+		if (props.variant === "community") {
+			return (
+				props.filters.search.trim() !== "" ||
+				props.filters.leagueId !== null ||
+				props.filters.teamId !== null ||
+				props.filters.position !== null ||
+				props.filters.maxPrice !== null ||
+				props.filters.sort !== "price"
+			);
+		}
+		if (props.variant === "sell") {
+			return (
+				Boolean((props.search ?? "").trim()) ||
+				(props.league && props.league !== "all") ||
+				(props.team && props.team !== "all") ||
+				(props.position && props.position !== "all") ||
+				(props.availability && props.availability !== "all") ||
+				Boolean(props.sort && props.sort !== "name,asc")
+			);
+		}
+		if (props.variant === "orders") {
+			return (
+				props.search.trim() !== "" ||
+				(props.status && props.status !== "all" && props.status !== "ALL") ||
+				(props.sort && props.sort !== "NEWEST")
+			);
+		}
+		return false;
+	})();
+
+	const ariaLabel =
+		props.variant === "official"
+			? "Filtros del Mercado Oficial"
+			: props.variant === "community"
+				? "Filtros del Mercado P2P"
+				: props.variant === "orders"
+					? "Filtros de Mis Órdenes"
+					: "Filtros de Publicar venta";
+
+	const renderFields = () => {
 		if (props.variant === "official") {
 			return (
 				<OfficialMarketFilterFields
@@ -115,7 +172,7 @@ export default function MarketFilters(props: Props) {
 		if (props.variant === "community") {
 			return (
 				<CommunityMarketFilterFields
-					scope="community-market-desktop"
+					scope="community-market"
 					filters={props.filters}
 					leagues={props.leagues}
 					teams={props.teams}
@@ -130,7 +187,7 @@ export default function MarketFilters(props: Props) {
 		if (props.variant === "orders") {
 			return (
 				<OrdersMarketFilterFields
-					scope="orders-desktop"
+					scope="orders-market"
 					search={props.search}
 					status={props.status}
 					sort={props.sort}
@@ -143,7 +200,7 @@ export default function MarketFilters(props: Props) {
 
 		return (
 			<SellMarketFilterFields
-				scope="market-desktop"
+				scope="sell-market"
 				active={props.active}
 				options={props.options}
 				leagues={props.leagues}
@@ -166,51 +223,29 @@ export default function MarketFilters(props: Props) {
 	};
 
 	return (
-		<aside
-			className={`${styles.marketFilters} ${
-				props.variant === "official"
-					? styles.marketFilters_official
-					: props.variant === "community"
-						? styles.marketFilters_community
-						: props.variant === "orders"
-							? styles.marketFilters_orders
-							: styles.marketFilters_sell
-			}`}
-			aria-label={
-				props.variant === "official"
-					? "Filtros del Mercado Oficial"
-					: props.variant === "community"
-						? "Filtros del Mercado P2P"
-						: props.variant === "orders"
-							? "Filtros de Mis Órdenes"
-							: "Filtros de Publicar venta"
-			}
+		<search
+			className={styles.toolbar}
+			aria-label={ariaLabel}
 			aria-busy={props.isUpdating ? "true" : undefined}
 		>
-			<div className={styles.marketFilters__desktop}>
-				<div className={styles.marketFilters__heading}>
-					<h2>
-						<SlidersHorizontal aria-hidden="true" />
-						Filtros
-					</h2>
-					{props.summary && (
-						<span className={styles.marketFilters__summary}>
-							{props.summary}
-						</span>
-					)}
-
-					<Button
+			<div className={styles.toolbar__left}>{renderFields()}</div>
+			<div className={styles.toolbar__right}>
+				{props.summary && (
+					<span className={styles.toolbar__summary}>{props.summary}</span>
+				)}
+				{hasActiveFilters && (
+					<button
 						type="button"
-						className={styles.marketFilters__clear}
+						className={styles.toolbar__clear}
 						disabled={isCatalog ? false : !props.active}
 						onClick={props.onClear}
+						title="Restablecer filtros"
 					>
-						Limpiar filtros
-					</Button>
-				</div>
-
-				{renderFilterFields()}
+						<X aria-hidden="true" />
+						<span>Limpiar</span>
+					</button>
+				)}
 			</div>
-		</aside>
+		</search>
 	);
 }

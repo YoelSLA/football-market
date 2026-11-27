@@ -24,6 +24,7 @@ public record OperationHistoryEntry(
       String name,
       String imageUrl,
       String fallbackImageUrl,
+      String position,
       RelatedData team,
       RelatedData league) {}
 

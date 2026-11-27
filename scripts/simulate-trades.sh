@@ -21,8 +21,14 @@ set -euo pipefail
 API_BASE_URL="${API_BASE_URL:-http://localhost:8080}"
 P2P_TRADES_COUNT="${P2P_TRADES_COUNT:-4}"
 OFFICIAL_TRADES_COUNT="${OFFICIAL_TRADES_COUNT:-2}"
+TOTAL_SIM_TARGET="${TOTAL_SIM_TARGET:-10}"
+# Variación aleatoria de ventas entre 40% y 60%
+SELLS_PCT=$(( 40 + (RANDOM % 21) ))
+OFFICIAL_SELLS_COUNT="${OFFICIAL_SELLS_COUNT:-$(( (TOTAL_SIM_TARGET * SELLS_PCT + 50) / 100 ))}"
 BUYER_PASSWORD="${BUYER_PASSWORD:-TraderDemo2026!}"
 LOG_FILE="${TRADE_LOG_FILE:-$(dirname -- "${BASH_SOURCE[0]}")/trades.log}"
+COUNT_SIM_BUYS=0
+COUNT_SIM_SELLS=0
 
 for dependency in curl jq; do
   if ! command -v "$dependency" >/dev/null 2>&1; then
@@ -85,8 +91,8 @@ BUYER_EMAIL="trader.buyer${CURRENT_BUYER_INDEX}@example.test"
 echo "=============================================================================="
 echo "[$(date --iso-8601=seconds)] Simulación de Operaciones de Mercado"
 echo "  - Comprador regular: $BUYER_EMAIL (Usuario estándar, NO superusuario)"
-echo "  - Objetivo compras P2P: $P2P_TRADES_COUNT"
-echo "  - Objetivo compras oficiales: $OFFICIAL_TRADES_COUNT"
+echo "  - Objetivo compras: $P2P_TRADES_COUNT P2P + $OFFICIAL_TRADES_COUNT oficiales ($(( 100 - SELLS_PCT ))%)"
+echo "  - Objetivo ventas:  $OFFICIAL_SELLS_COUNT liquidaciones oficiales a la casa ($SELLS_PCT%)"
 echo "=============================================================================="
 
 TOTAL_VOLUME_CENTS=0
@@ -121,6 +127,7 @@ if [[ "$HTTP_STATUS" == "200" ]]; then
         echo "  ✔ [P2P TRADE] Transacción #$tx_id: Listing #$listing_id comprado ($quantity token(s) jugador #$player_id a ₵$(awk -v p="$unit_price" 'BEGIN{printf "%.2f", p/100}') c/u | Total: ₵$(awk -v t="$total_amount" 'BEGIN{printf "%.2f", t/100}'))"
         TOTAL_VOLUME_CENTS=$(( TOTAL_VOLUME_CENTS + total_amount ))
         SUCCESSFUL_TRADES=$(( SUCCESSFUL_TRADES + 1 ))
+        COUNT_SIM_BUYS=$(( COUNT_SIM_BUYS + 1 ))
       elif [[ "$HTTP_STATUS" == "400" ]] && grep -q "INSUFFICIENT" "$RESPONSE_BODY" 2>/dev/null; then
         echo "  [AVISO] Saldo insuficiente en $BUYER_EMAIL. Rotando a nuevo comprador..."
         CURRENT_BUYER_INDEX=$(( CURRENT_BUYER_INDEX + 1 ))
@@ -160,14 +167,75 @@ if (( OFFICIAL_TRADES_COUNT > 0 )); then
         echo "  ✔ [OFICIAL TRADE] Transacción #$tx_id: Comprados $buy_qty token(s) de $p_name al superusuario por ₵$(awk -v t="$item_total" 'BEGIN{printf "%.2f", t/100}')"
         TOTAL_VOLUME_CENTS=$(( TOTAL_VOLUME_CENTS + item_total ))
         SUCCESSFUL_TRADES=$(( SUCCESSFUL_TRADES + 1 ))
+        COUNT_SIM_BUYS=$(( COUNT_SIM_BUYS + 1 ))
       fi
     done <<<"$PLAYERS"
   fi
+fi
+
+# 5. Liquidaciones Oficiales a la Casa (Ventas / Buyback con spread 10% - SPEC-026)
+if (( OFFICIAL_SELLS_COUNT > 0 )); then
+  echo
+  echo "--- Ejecutando liquidaciones oficiales a la casa (Ventas / Buyback: meta $OFFICIAL_SELLS_COUNT) ---"
+  sells_done=0
+  for b_idx in $(seq 1 10 | shuf); do
+    if (( sells_done >= OFFICIAL_SELLS_COUNT )); then break; fi
+    trader_token="$(get_or_create_buyer_token "$b_idx")"
+    trader_email="trader.buyer${b_idx}@example.test"
+    request GET "$API_BASE_URL/api/portfolio/me" "$trader_token"
+    if [[ "$HTTP_STATUS" == "200" ]]; then
+      candidates="$(jq -c '[.positions[]? | select(.availableQuantity > 0)]' "$RESPONSE_BODY")"
+      c_len="$(jq 'length' <<<"$candidates")"
+      if (( c_len == 0 )); then
+        # Abastecer 1 posición rápida para poder vender
+        request GET "$API_BASE_URL/api/market/official?page=0&size=5&hasQuote=true" "$trader_token"
+        if [[ "$HTTP_STATUS" == "200" ]]; then
+          cand_id="$(jq -r '.content[0].id // empty' "$RESPONSE_BODY")"
+          if [[ -n "$cand_id" ]]; then
+            b_body="$(jq -n --argjson id "$cand_id" --argjson q 2 '{playerId: $id, quantity: $q}')"
+            request POST "$API_BASE_URL/api/orders/buy" "$trader_token" "$b_body" >/dev/null 2>&1 || true
+            request GET "$API_BASE_URL/api/portfolio/me" "$trader_token"
+            candidates="$(jq -c '[.positions[]? | select(.availableQuantity > 0)]' "$RESPONSE_BODY")"
+            c_len="$(jq 'length' <<<"$candidates")"
+          fi
+        fi
+      fi
+      if (( c_len > 0 )); then
+        cand="$(jq -c '.[0]' <<<"$candidates")"
+        p_id="$(jq -r '.playerId' <<<"$cand")"
+        p_name="$(jq -r '.playerName' <<<"$cand")"
+        p_avail="$(jq -r '.availableQuantity' <<<"$cand")"
+        sell_qty=$(( p_avail > 2 ? 2 : p_avail ))
+        bb_body="$(jq -n --argjson playerId "$p_id" --argjson quantity "$sell_qty" '{playerId: $playerId, quantity: $quantity}')"
+        request POST "$API_BASE_URL/api/orders/sell-official" "$trader_token" "$bb_body"
+        if [[ "$HTTP_STATUS" == "200" ]]; then
+          tx_id="$(jq -r '.transactionId // empty' "$RESPONSE_BODY")"
+          total_amt="$(jq -r '.totalAmount // 0' "$RESPONSE_BODY")"
+          echo "  ✔ [LIQUIDACIÓN OFICIAL] Transacción #$tx_id: $trader_email liquidó $sell_qty token(s) de $p_name al superusuario por ₵$(awk -v t="$total_amt" 'BEGIN{printf "%.2f", t/100}')"
+          TOTAL_VOLUME_CENTS=$(( TOTAL_VOLUME_CENTS + total_amt ))
+          SUCCESSFUL_TRADES=$(( SUCCESSFUL_TRADES + 1 ))
+          COUNT_SIM_SELLS=$(( COUNT_SIM_SELLS + 1 ))
+          sells_done=$(( sells_done + 1 ))
+        fi
+      fi
+    fi
+  done
 fi
 
 echo
 echo "=============================================================================="
 echo "[$(date --iso-8601=seconds)] Resumen de la Simulación:"
 echo "  - Operaciones completadas: $SUCCESSFUL_TRADES"
+if (( SUCCESSFUL_TRADES > 0 )); then
+  sim_buy_pct=$(( (COUNT_SIM_BUYS * 100) / SUCCESSFUL_TRADES ))
+  sim_sell_pct=$(( (COUNT_SIM_SELLS * 100) / SUCCESSFUL_TRADES ))
+  bias="NEUTRAL"
+  if (( COUNT_SIM_BUYS > COUNT_SIM_SELLS )); then
+    bias="BULLISH (Alcista)"
+  elif (( COUNT_SIM_BUYS < COUNT_SIM_SELLS )); then
+    bias="BEARISH (Bajista)"
+  fi
+  echo "  - Sentimiento generado: $COUNT_SIM_BUYS Compras ($sim_buy_pct%) vs $COUNT_SIM_SELLS Ventas ($sim_sell_pct%) [Sesgo: $bias]"
+fi
 echo "  - Volumen inyectado al Dashboard: ₵$(awk -v v="$TOTAL_VOLUME_CENTS" 'BEGIN{printf "%.2f", v/100}') ($TOTAL_VOLUME_CENTS centésimas)"
 echo "=============================================================================="

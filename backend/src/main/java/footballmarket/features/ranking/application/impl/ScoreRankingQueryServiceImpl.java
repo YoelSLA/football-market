@@ -109,9 +109,19 @@ public class ScoreRankingQueryServiceImpl implements ScoreRankingQueryService {
     List<ScoreRankingRow> rows =
         positional
             ? this.positionalValuations.findRankingPage(
-                query.name(), query.leagueId(), query.position(), query.size(), query.offset())
+                query.name(),
+                query.leagueId(),
+                query.position(),
+                query.order(),
+                query.size(),
+                query.offset())
             : this.attributeValuations.findRankingPage(
-                query.name(), query.leagueId(), query.position(), query.size(), query.offset());
+                query.name(),
+                query.leagueId(),
+                query.position(),
+                query.order(),
+                query.size(),
+                query.offset());
     long total =
         positional
             ? this.positionalValuations.countRanking(

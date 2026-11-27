@@ -1,3 +1,4 @@
+import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCurrentUserQuery } from "@/features/auth";
@@ -5,15 +6,20 @@ import { useCancelListingMutation } from "@/features/market/hooks/mutations";
 import { useMyListingsQuery } from "@/features/market/hooks/queries";
 import { useMarketToast } from "@/features/market/hooks/useMarketToast";
 import type { UserOrderListing } from "@/features/market/types";
-import { useAllPlayersQuery } from "@/features/players";
+import { playersQueryKeys } from "@/features/players/constants";
+import { playersService } from "@/features/players/players.service";
+import type { PlayerDetail } from "@/features/players/types";
 import { getErrorCode } from "@/infrastructure/http";
 import { useAuthStore } from "@/infrastructure/storage";
 
 export interface EnrichedUserOrder extends UserOrderListing {
 	playerName: string;
+	teamId: number | null;
 	teamName: string | null;
+	leagueId: number | null;
 	leagueName: string | null;
 	imageUrl: string | null;
+	fallbackImageUrl: string | null;
 	position: string | null;
 }
 
@@ -92,18 +98,34 @@ export function useMyOrdersPage() {
 		sort,
 	});
 
-	const { data: playersPage, isPending: isLoadingPlayers } =
-		useAllPlayersQuery();
+	const playerIds = useMemo(() => {
+		if (!ordersPage?.listings) return [];
+		return Array.from(
+			new Set(ordersPage.listings.map((item) => item.playerId)),
+		);
+	}, [ordersPage?.listings]);
 
-	const allPlayers = playersPage?.players ?? [];
+	const playerQueries = useQueries({
+		queries: playerIds.map((id) => ({
+			queryKey: playersQueryKeys.detail(id),
+			queryFn: ({ signal }: { signal: AbortSignal }) =>
+				playersService.getById(id, signal),
+			staleTime: 5 * 60 * 1000,
+		})),
+	});
 
 	const playerMap = useMemo(() => {
-		const map = new Map<number, (typeof allPlayers)[number]>();
-		for (const p of allPlayers) {
-			map.set(p.id, p);
+		const map = new Map<number, PlayerDetail>();
+		for (const q of playerQueries) {
+			if (q.data) {
+				map.set(q.data.id, q.data);
+			}
 		}
 		return map;
-	}, [allPlayers]);
+	}, [playerQueries]);
+
+	const isLoadingPlayers =
+		playerIds.length > 0 && playerQueries.some((q) => q.isPending);
 
 	const enrichedOrders: EnrichedUserOrder[] = useMemo(() => {
 		if (!ordersPage?.listings) return [];
@@ -111,11 +133,16 @@ export function useMyOrdersPage() {
 			const player = playerMap.get(item.playerId);
 			return {
 				...item,
-				playerName: player?.name ?? `Jugador #${item.playerId}`,
-				teamName: player?.teamName ?? null,
-				leagueName: player?.leagueName ?? null,
-				imageUrl: player?.imageUrl ?? null,
-				position: player?.position ?? null,
+				playerName:
+					item.playerName ?? player?.name ?? `Jugador #${item.playerId}`,
+				teamId: item.teamId ?? player?.teamId ?? null,
+				teamName: item.teamName ?? player?.teamName ?? null,
+				leagueId: item.leagueId ?? player?.leagueId ?? null,
+				leagueName: item.leagueName ?? player?.leagueName ?? null,
+				imageUrl: item.imageUrl ?? player?.imageUrl ?? null,
+				fallbackImageUrl:
+					item.fallbackImageUrl ?? player?.fallbackImageUrl ?? null,
+				position: item.position ?? player?.position ?? null,
 			};
 		});
 	}, [ordersPage?.listings, playerMap]);

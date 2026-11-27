@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import { TokenSymbol } from "@/shared/components";
 import { CircleDot, Coins, Lock } from "@/shared/icons";
 import styles from "./PositionTokenMetrics.module.scss";
 
@@ -12,29 +14,47 @@ export default function PositionTokenMetrics({
 	availableQuantity,
 	reservedQuantity,
 }: Props) {
-	const metrics = [
+	const metrics: Array<{
+		key: string;
+		iconClass: string;
+		icon: typeof Coins;
+		label: string;
+		value: ReactNode;
+	}> = [
 		{
 			key: "tokens",
 			iconClass: styles.iconWrapper_tokens,
 			icon: Coins,
 			label: "Tokens totales",
-			value: String(quantity),
+			value: (
+				<>
+					{quantity} <TokenSymbol size="sm" />
+				</>
+			),
 		},
 		{
 			key: "available",
 			iconClass: styles.iconWrapper_available,
 			icon: CircleDot,
 			label: "Disponibles",
-			value: String(availableQuantity),
+			value: (
+				<>
+					{availableQuantity} <TokenSymbol size="sm" />
+				</>
+			),
 		},
 		{
 			key: "reserved",
 			iconClass: styles.iconWrapper_reserved,
 			icon: Lock,
 			label: "Reservados",
-			value: String(reservedQuantity),
+			value: (
+				<>
+					{reservedQuantity} <TokenSymbol size="sm" />
+				</>
+			),
 		},
-	] as const;
+	];
 
 	return (
 		<section className={styles.tokenMetrics} aria-label="Métricas de tokens">

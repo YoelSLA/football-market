@@ -1,41 +1,105 @@
+import type { ReactNode } from "react";
 import type { EnrichedUserOrder } from "@/features/market/hooks";
-import { Pagination } from "@/shared/components";
 import MarketOrdersRow from "./MarketOrdersRow";
 import styles from "./MarketOrdersTable.module.scss";
 
 interface Props {
+	toolbar?: ReactNode;
+	isLoading?: boolean;
+	errorMessage?: string | null;
 	orders: EnrichedUserOrder[];
-	page: number;
-	totalPages: number;
-	totalElements: number;
-	onPageChange: (page: number) => void;
+	emptyState?: ReactNode;
 	onCancel: (order: EnrichedUserOrder) => void;
+	onRetry?: () => void;
 }
 
 export default function MarketOrdersTable({
+	toolbar,
+	isLoading,
+	errorMessage,
 	orders,
-	page,
-	totalPages,
-	totalElements,
-	onPageChange,
+	emptyState,
 	onCancel,
+	onRetry,
 }: Props) {
-	const fromIndex = totalElements === 0 ? 0 : page * 10 + 1;
-	const toIndex = Math.min((page + 1) * 10, totalElements);
+	if (errorMessage) {
+		return (
+			<div className={styles.ordersTable}>
+				{toolbar && (
+					<div className={styles.ordersTable__toolbarWrapper}>{toolbar}</div>
+				)}
+				<div className={styles.ordersTable__state}>
+					<p className={styles.ordersTable__errorMessage}>{errorMessage}</p>
+					{onRetry && (
+						<button
+							type="button"
+							onClick={onRetry}
+							className={styles.ordersTable__retryBtn}
+						>
+							Reintentar consulta
+						</button>
+					)}
+				</div>
+			</div>
+		);
+	}
+
+	if (isLoading) {
+		return (
+			<div className={styles.ordersTable}>
+				{toolbar && (
+					<div className={styles.ordersTable__toolbarWrapper}>{toolbar}</div>
+				)}
+				<div className={styles.ordersTable__state} aria-busy="true">
+					<p role="status" className={styles.ordersTable__loadingText}>
+						Cargando tus órdenes de venta…
+					</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (orders.length === 0) {
+		return (
+			<div className={styles.ordersTable}>
+				{toolbar && (
+					<div className={styles.ordersTable__toolbarWrapper}>{toolbar}</div>
+				)}
+				{emptyState}
+			</div>
+		);
+	}
 
 	return (
 		<div className={styles.ordersTable}>
+			{toolbar && (
+				<div className={styles.ordersTable__toolbarWrapper}>{toolbar}</div>
+			)}
 			<div className={styles.ordersTable__container}>
 				<table className={styles.ordersTable__grid}>
 					<thead>
 						<tr>
-							<th className={styles.ordersTable__colOrder}>Orden / Registro</th>
-							<th className={styles.ordersTable__colPlayer}>Jugador</th>
-							<th className={styles.ordersTable__colQuantity}>Cantidad</th>
-							<th className={styles.ordersTable__colPrice}>Precio Unit.</th>
-							<th className={styles.ordersTable__colTotal}>Total Importe</th>
-							<th className={styles.ordersTable__colStatus}>Estado</th>
-							<th className={styles.ordersTable__colAction}>Acción</th>
+							<th scope="col" className={styles.ordersTable__colOrder}>
+								Orden / Registro
+							</th>
+							<th scope="col" className={styles.ordersTable__colPlayer}>
+								Jugador
+							</th>
+							<th scope="col" className={styles.ordersTable__colQuantity}>
+								Cantidad
+							</th>
+							<th scope="col" className={styles.ordersTable__colPrice}>
+								Precio Unit.
+							</th>
+							<th scope="col" className={styles.ordersTable__colTotal}>
+								Total Importe
+							</th>
+							<th scope="col" className={styles.ordersTable__colStatus}>
+								Estado
+							</th>
+							<th scope="col" className={styles.ordersTable__colAction}>
+								Acción
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -48,21 +112,6 @@ export default function MarketOrdersTable({
 						))}
 					</tbody>
 				</table>
-			</div>
-
-			<div className={styles.ordersTable__footer}>
-				<span className={styles.ordersTable__footerText}>
-					Mostrando {fromIndex}–{toIndex} de {totalElements}{" "}
-					{totalElements === 1 ? "orden" : "órdenes"}
-				</span>
-
-				{totalPages > 1 && (
-					<Pagination
-						page={page}
-						totalPages={totalPages}
-						onChange={onPageChange}
-					/>
-				)}
 			</div>
 		</div>
 	);

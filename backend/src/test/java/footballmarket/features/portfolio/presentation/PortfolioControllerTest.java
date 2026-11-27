@@ -229,6 +229,7 @@ class PortfolioControllerTest {
             41L,
             "Joel Robles",
             "Real Betis Balompié",
+            "Primera Division",
             "Goalkeeper",
             "https://example.org/41.png",
             true,

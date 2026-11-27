@@ -8,7 +8,7 @@ import {
 } from "@/features/portfolio/types";
 import { getErrorMessage } from "@/infrastructure/http";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 12;
 
 function parseNonNegative(value: string | null): number {
 	const parsed = Number(value);

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { TokenSymbol } from "@/shared/components";
 import { ArrowRight, History } from "@/shared/icons";
 import type { RecentActivityItem } from "../../types/models";
 import styles from "./LiveActivityFeed.module.scss";
@@ -83,7 +84,7 @@ export function LiveActivityFeed({
 											to={`/players/${item.playerId}`}
 											className={styles.playerLink}
 										>
-											{item.tokens}x {item.playerName}
+											{item.tokens} <TokenSymbol size="xs" /> {item.playerName}
 										</Link>
 									</div>
 									<span className={styles.unitPrice}>

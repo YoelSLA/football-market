@@ -16,4 +16,12 @@ public record TokenListingSummaryResponseDTO(
             allowableValues = {"ACTIVE", "SOLD", "CANCELLED", "EXPIRED"})
         String status,
     @Schema(description = "Instante ISO-8601 con offset; creación.") OffsetDateTime createdAt,
-    @Schema(description = "Instante ISO-8601 con offset; vencimiento.") OffsetDateTime expiresAt) {}
+    @Schema(description = "Instante ISO-8601 con offset; vencimiento.") OffsetDateTime expiresAt,
+    @Schema(description = "Nombre del jugador.") String playerName,
+    @Schema(description = "ID del club.") Long teamId,
+    @Schema(description = "Nombre del club.") String teamName,
+    @Schema(description = "ID de la liga.") Long leagueId,
+    @Schema(description = "Nombre de la liga.") String leagueName,
+    @Schema(description = "Posición del jugador.") String position,
+    @Schema(description = "URL de imagen del jugador.") String imageUrl,
+    @Schema(description = "URL de imagen de respaldo.") String fallbackImageUrl) {}

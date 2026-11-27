@@ -176,6 +176,18 @@ public class TokenListing {
         this.effectiveStatus(now),
         this.createdAt,
         this.expiresAt,
-        this.closedAt);
+        this.closedAt,
+        this.player.getName(),
+        this.player.getTeam() != null ? this.player.getTeam().getId() : null,
+        this.player.getTeam() != null ? this.player.getTeam().getName() : null,
+        this.player.getTeam() != null && this.player.getTeam().getLeague() != null
+            ? this.player.getTeam().getLeague().getId()
+            : null,
+        this.player.getTeam() != null && this.player.getTeam().getLeague() != null
+            ? this.player.getTeam().getLeague().getName()
+            : null,
+        this.player.getPosition(),
+        this.player.getImageUrl(),
+        this.player.getFallbackImageUrl());
   }
 }

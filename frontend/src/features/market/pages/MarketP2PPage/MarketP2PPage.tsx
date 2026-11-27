@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { PageLayout } from "@/app/layouts";
 import { useCommunityMarketPage } from "@/features/market/hooks";
 import {
@@ -15,11 +16,23 @@ import styles from "./MarketP2PPage.module.scss";
 export default function MarketP2PPage() {
 	const community = useCommunityMarketPage();
 
+	const totalP2PTokens = useMemo(() => {
+		return community.players.reduce(
+			(sum, p) => sum + (p.availableQuantity || 0),
+			0,
+		);
+	}, [community.players]);
+
 	return (
 		<PageLayout>
 			<div className={styles.page}>
 				<div className={styles.page__header}>
-					<MarketP2PHeader availableCredits={community.availableCredits} />
+					<MarketP2PHeader
+						availableCredits={community.availableCredits}
+						totalPlayers={community.totalPlayers}
+						priceRange={community.priceRange}
+						totalP2PTokens={totalP2PTokens}
+					/>
 				</div>
 
 				<CommunityMarketPanel community={community} />

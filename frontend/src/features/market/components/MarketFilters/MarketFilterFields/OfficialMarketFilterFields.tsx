@@ -5,6 +5,7 @@ import {
 } from "@/features/players";
 import {
 	CompetitionLogo,
+	FilterPopover,
 	FilterSearch,
 	FilterSelect,
 	type FilterSelectOption,
@@ -71,7 +72,7 @@ export default function OfficialMarketFilterFields({
 		options?.leagues.map((option) => [option.id, option.name]) ?? [],
 	);
 	const leagueOptions: FilterSelectOption[] = [
-		{ value: "all", label: "Todas" },
+		{ value: "all", label: "Todas las ligas" },
 		...(options?.leagues.map((option) => ({
 			value: String(option.id),
 			label: option.name,
@@ -85,7 +86,7 @@ export default function OfficialMarketFilterFields({
 		})) ?? []),
 	];
 	const teamOptions: FilterSelectOption[] = [
-		{ value: "all", label: "Todos" },
+		{ value: "all", label: "Todos los equipos" },
 		...(teams?.map((option) => ({
 			value: String(option.id),
 			label: option.name,
@@ -100,7 +101,7 @@ export default function OfficialMarketFilterFields({
 		})) ?? []),
 	];
 	const nationalityOptions: FilterSelectOption[] = [
-		{ value: "all", label: "Todas" },
+		{ value: "all", label: "Todas las nacionalidades" },
 		...(options?.nationalities.map((value) => ({
 			value,
 			label: value,
@@ -108,22 +109,44 @@ export default function OfficialMarketFilterFields({
 		})) ?? []),
 	];
 
+	const isPriceRangeActive = Boolean(
+		selectedPriceRange &&
+			priceRange.min !== null &&
+			priceRange.max !== null &&
+			(selectedPriceRange[0] > priceRange.min ||
+				selectedPriceRange[1] < priceRange.max),
+	);
+
+	const popoverActiveCount = [
+		team !== "all",
+		nationality !== "all",
+		isPriceRangeActive,
+		sort !== "id,asc",
+	].filter(Boolean).length;
+
+	const handleClearPopover = () => {
+		onTeamChange("all");
+		onNationalityChange("all");
+		if (priceRange.min !== null && priceRange.max !== null) {
+			onPriceRangeCommit([priceRange.min, priceRange.max]);
+		}
+		onSortChange("id,asc");
+	};
+
 	return (
-		<fieldset
-			className={`${styles.marketFilterFields} ${styles.marketFilterFields_official}`}
-		>
+		<div className={styles.fields}>
 			<FilterSearch
 				id={`${scope}-search`}
-				className={styles.marketFilterFields__search}
+				className={styles.search}
 				value={search}
 				onChange={onSearchChange}
 				label="Buscar jugador"
 				accessibleLabel="Buscar jugador por nombre o apellido"
-				placeholder="Nombre o apellido..."
+				placeholder="Buscar jugador…"
 			/>
 			<FilterSelect
 				id={`${scope}-league`}
-				className={styles.marketFilterFields__league}
+				className={styles.select}
 				label="Liga"
 				value={league}
 				options={leagueOptions}
@@ -132,22 +155,12 @@ export default function OfficialMarketFilterFields({
 				onChange={onLeagueChange}
 			/>
 			<FilterSelect
-				id={`${scope}-team`}
-				className={styles.marketFilterFields__team}
-				label="Equipo"
-				value={team}
-				options={teamOptions}
-				searchable
-				searchPlaceholder="Buscar equipo…"
-				onChange={onTeamChange}
-			/>
-			<FilterSelect
 				id={`${scope}-position`}
-				className={styles.marketFilterFields__position}
+				className={styles.select}
 				label="Posición"
 				value={position}
 				options={[
-					{ value: "all", label: "Todas" },
+					{ value: "all", label: "Todas las posiciones" },
 					...sanitizePositions(options?.positions).map((value) => ({
 						value,
 						label: value,
@@ -155,45 +168,64 @@ export default function OfficialMarketFilterFields({
 				]}
 				onChange={onPositionChange}
 			/>
-			<FilterSelect
-				id={`${scope}-nationality`}
-				className={styles.marketFilterFields__nationality}
-				label="Nacionalidad"
-				value={nationality}
-				options={nationalityOptions}
-				searchable
-				searchPlaceholder="Buscar nacionalidad…"
-				onChange={onNationalityChange}
-			/>
-			{priceRange.min !== null &&
-			priceRange.max !== null &&
-			selectedPriceRange ? (
-				<Slider
-					id={`${scope}-price-range`}
-					className={styles.marketFilterFields__priceRange}
-					variant="range"
-					label="Rango de precio"
-					min={priceRange.min}
-					max={priceRange.max}
-					step={1}
-					value={selectedPriceRange}
-					formatValue={formatCredits}
-					disabled={priceRange.min === priceRange.max}
-					onCommit={onPriceRangeCommit}
+			<FilterPopover
+				triggerLabel="Más filtros"
+				title="Filtros avanzados"
+				activeCount={popoverActiveCount}
+				onClear={handleClearPopover}
+				panelWidth="md"
+			>
+				<FilterSelect
+					id={`${scope}-team`}
+					className={styles.popoverField}
+					label="Equipo"
+					value={team}
+					options={teamOptions}
+					searchable
+					searchPlaceholder="Buscar equipo…"
+					onChange={onTeamChange}
 				/>
-			) : (
-				<div className={styles.marketFilterFields__priceRange} role="status">
-					Rango de precio: sin cotizaciones disponibles
-				</div>
-			)}
-			<FilterSelect
-				id={`${scope}-sort`}
-				className={styles.marketFilterFields__sort}
-				label="Orden"
-				value={sort}
-				options={SORT_OPTIONS}
-				onChange={onSortChange}
-			/>
-		</fieldset>
+				<FilterSelect
+					id={`${scope}-nationality`}
+					className={styles.popoverField}
+					label="Nacionalidad"
+					value={nationality}
+					options={nationalityOptions}
+					searchable
+					searchPlaceholder="Buscar nacionalidad…"
+					onChange={onNationalityChange}
+				/>
+				{priceRange.min !== null &&
+				priceRange.max !== null &&
+				selectedPriceRange ? (
+					<div className={styles.popoverSlider}>
+						<Slider
+							id={`${scope}-price-range`}
+							variant="range"
+							label="Rango de precio"
+							min={priceRange.min}
+							max={priceRange.max}
+							step={1}
+							value={selectedPriceRange}
+							formatValue={formatCredits}
+							disabled={priceRange.min === priceRange.max}
+							onCommit={onPriceRangeCommit}
+						/>
+					</div>
+				) : (
+					<div className={styles.popoverStatus} role="status">
+						Rango de precio: sin cotizaciones disponibles
+					</div>
+				)}
+				<FilterSelect
+					id={`${scope}-sort`}
+					className={styles.popoverField}
+					label="Orden"
+					value={sort}
+					options={SORT_OPTIONS}
+					onChange={onSortChange}
+				/>
+			</FilterPopover>
+		</div>
 	);
 }

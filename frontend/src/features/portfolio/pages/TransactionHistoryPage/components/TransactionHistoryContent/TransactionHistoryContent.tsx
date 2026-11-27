@@ -1,42 +1,41 @@
+import type { ReactNode } from "react";
 import type { TransactionHistoryEntry as TransactionHistoryEntryModel } from "@/features/portfolio/types";
-import { Pagination } from "@/shared/components";
 import TransactionHistoryEmptyState from "../TransactionHistoryEmptyState";
 import TransactionHistoryEntry from "../TransactionHistoryEntry";
 import TransactionHistoryState from "../TransactionHistoryState";
 import styles from "./TransactionHistoryContent.module.scss";
 
 interface Props {
+	toolbar?: ReactNode;
 	isLoading: boolean;
 	errorMessage: string | null;
 	transactions?: TransactionHistoryEntryModel[];
-	page: number;
-	pageSize: number;
 	totalElements: number;
-	totalPages: number;
 	hasFilters: boolean;
 	onRetry: () => void;
 	onGoToMarket: () => void;
 	onClearFilters: () => void;
-	onPageChange: (page: number) => void;
 }
 
 export default function TransactionHistoryContent({
+	toolbar,
 	isLoading,
 	errorMessage,
 	transactions,
-	page,
-	pageSize,
 	totalElements,
-	totalPages,
 	hasFilters,
 	onRetry,
 	onGoToMarket,
 	onClearFilters,
-	onPageChange,
 }: Props) {
 	if (errorMessage) {
 		return (
 			<div className={styles.transactionHistoryContent}>
+				{toolbar && (
+					<div className={styles.transactionHistoryContent__toolbarWrapper}>
+						{toolbar}
+					</div>
+				)}
 				<TransactionHistoryState
 					type="error"
 					message={errorMessage}
@@ -46,17 +45,14 @@ export default function TransactionHistoryContent({
 		);
 	}
 
-	if (isLoading) {
+	if (isLoading || (transactions?.length === 0 && totalElements > 0)) {
 		return (
 			<div className={styles.transactionHistoryContent}>
-				<TransactionHistoryState type="loading" />
-			</div>
-		);
-	}
-
-	if (transactions?.length === 0 && totalElements > 0) {
-		return (
-			<div className={styles.transactionHistoryContent}>
+				{toolbar && (
+					<div className={styles.transactionHistoryContent__toolbarWrapper}>
+						{toolbar}
+					</div>
+				)}
 				<TransactionHistoryState type="loading" />
 			</div>
 		);
@@ -65,6 +61,11 @@ export default function TransactionHistoryContent({
 	if (!transactions || totalElements === 0) {
 		return (
 			<div className={styles.transactionHistoryContent}>
+				{toolbar && (
+					<div className={styles.transactionHistoryContent__toolbarWrapper}>
+						{toolbar}
+					</div>
+				)}
 				<TransactionHistoryEmptyState
 					type={hasFilters ? "no-results" : "empty"}
 					onAction={hasFilters ? onClearFilters : onGoToMarket}
@@ -78,36 +79,51 @@ export default function TransactionHistoryContent({
 			aria-label="Operaciones confirmadas"
 			className={styles.transactionHistoryContent}
 		>
-			<div
-				aria-hidden="true"
-				className={styles.transactionHistoryContent__headerRow}
-			>
-				<span>Jugador</span>
-				<span>Operación</span>
-				<span>Cantidad</span>
-				<span>Precio unitario</span>
-				<span>Total</span>
-				<span>Fecha</span>
+			{toolbar && (
+				<div className={styles.transactionHistoryContent__toolbarWrapper}>
+					{toolbar}
+				</div>
+			)}
+			<div className={styles.transactionHistoryContent__tableContainer}>
+				<table
+					className={styles.transactionHistoryContent__table}
+					aria-label="Historial de transacciones"
+				>
+					<thead>
+						<tr>
+							<th scope="col" className={styles.th_id}>
+								# ID
+							</th>
+							<th scope="col" className={styles.th_player}>
+								Jugador
+							</th>
+							<th scope="col" className={styles.th_operation}>
+								Operación
+							</th>
+							<th scope="col" className={styles.th_quantity}>
+								Cantidad
+							</th>
+							<th scope="col" className={styles.th_unitPrice}>
+								Precio unitario
+							</th>
+							<th scope="col" className={styles.th_total}>
+								Total
+							</th>
+							<th scope="col" className={styles.th_date}>
+								Fecha
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{transactions.map((transaction) => (
+							<TransactionHistoryEntry
+								key={transaction.transactionId}
+								transaction={transaction}
+							/>
+						))}
+					</tbody>
+				</table>
 			</div>
-			<ol className={styles.transactionHistoryContent__list}>
-				{transactions.map((transaction) => (
-					<TransactionHistoryEntry
-						key={transaction.transactionId}
-						transaction={transaction}
-					/>
-				))}
-			</ol>
-			<footer className={styles.transactionHistoryContent__footer}>
-				<p className={styles.transactionHistoryContent__range}>
-					Mostrando {page * pageSize + 1}–
-					{Math.min((page + 1) * pageSize, totalElements)} de {totalElements}
-				</p>
-				<Pagination
-					page={page}
-					totalPages={totalPages}
-					onChange={onPageChange}
-				/>
-			</footer>
 		</section>
 	);
 }

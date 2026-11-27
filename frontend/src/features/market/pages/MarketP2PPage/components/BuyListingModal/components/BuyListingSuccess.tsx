@@ -1,7 +1,6 @@
 import type { BuyResult } from "@/features/market/types";
 import { formatCredits } from "@/features/market/utils";
-import { Button } from "@/shared/components";
-import { TOKEN_SYMBOL } from "@/shared/constants";
+import { Button, TokenSymbol } from "@/shared/components";
 import styles from "./BuyListingSuccess.module.scss";
 
 interface Props {
@@ -23,7 +22,7 @@ export function BuyListingSuccess({
 				<div>
 					<dt>Cantidad</dt>
 					<dd>
-						{result.quantity} {TOKEN_SYMBOL}
+						{result.quantity} <TokenSymbol />
 					</dd>
 				</div>
 				<div>

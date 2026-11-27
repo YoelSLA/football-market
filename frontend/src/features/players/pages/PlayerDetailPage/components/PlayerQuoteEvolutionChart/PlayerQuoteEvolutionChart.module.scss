@@ -2,218 +2,244 @@
 
 .playerQuoteChart {
 	// 4. 📦 Box Model
-	padding: 1rem;
+	padding: 1.25rem;
 
 	// 6. 🎨 Visual
 	border-radius: 1rem;
-	background-color: ds.$surface-chart;
+	background: linear-gradient(135deg, ds.$surface-panel-from 0%, ds.$surface-chart 100%);
+	border: 1px solid ds.$border-panel-tint;
+	box-shadow: 0 4px 20px -2px ds.$shadow-panel;
 	color: ds.$text-body-on-dark;
-	header {
-		// 3. 🧩 Layout
+
+	&__header {
 		display: flex;
-		align-items: baseline;
+		flex-wrap: wrap;
+		align-items: center;
 		justify-content: space-between;
-		gap: 0.5rem;
+		gap: 12px;
+		margin-bottom: 12px;
+	}
+
+	&__subtitle {
+		display: block;
+		font-size: 11px;
+		color: ds.$text-muted-on-dark;
+		margin-top: 2px;
+	}
+
+	&__rangeSelector {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin: 0;
+		padding: 3px;
+		min-inline-size: 0;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel;
+		border-radius: 8px;
+	}
+
+	&__rangeBtn {
+		padding: 4px 10px;
+		font-size: 11px;
+		font-weight: 500;
+		color: ds.$text-muted-on-dark;
+		background: none;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&:hover {
+			color: ds.$text-title-on-dark;
+			background-color: ds.$surface-raised;
+		}
+
+		&_active {
+			padding: 4px 10px;
+			font-size: 11px;
+			font-weight: 700;
+			color: ds.$accent-highlight;
+			background-color: ds.$surface-highlight-tint;
+			border: 1px solid ds.$border-highlight-subtle;
+			border-radius: 6px;
+			cursor: default;
+		}
+	}
+
+	&__ribbon {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 10px;
+		padding: 10px 14px;
+		margin-bottom: 14px;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel-soft;
+		border-radius: 10px;
+	}
+
+	&__volume {
+		color: ds.$accent-highlight;
+	}
+
+	&__ribbonItem {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+
+		span {
+			font-size: 10px;
+			font-weight: 600;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: ds.$text-muted-on-dark;
+		}
+
+		strong {
+			font-size: 14px;
+			font-weight: 800;
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__positive {
+		color: ds.$state-gain !important;
+	}
+
+	&__negative {
+		color: ds.$state-loss !important;
 	}
 
 	h2 {
-		// 4. 📦 Box Model
 		margin: 0;
-
-		// 5. 🔤 Typography
-		font-size: 1rem;
+		font-size: 1.05rem;
+		font-weight: 700;
 		letter-spacing: 0.02em;
-		text-transform: uppercase;
+		color: ds.$text-title-on-dark;
 	}
 
-	details {
-		// 4. 📦 Box Model
-		margin-top: 0.75rem;
-	}
-
-	summary {
-		// 5. 🔤 Typography
-		font-size: 0.85rem;
-
-		// 6. 🎨 Visual
-		color: ds.$chart-axis-label;
-
-		// 7. ⚙️ Behavior
-		cursor: pointer;
-		&:hover {
-			// 6. 🎨 Visual
-			color: ds.$text-primary-on-dark;
-		}
-
-		&:focus-visible {
-			// 6. 🎨 Visual
-			border-radius: 4px;
-			outline: 2px solid ds.$state-info;
-			outline-offset: 3px;
-		}
-	}
-
-	table {
-		// 3. 🧩 Layout
-		display: block;
-		border-collapse: collapse;
-
-		// 4. 📦 Box Model
+	&__svgWrapper {
 		width: 100%;
-		max-height: 14rem;
-		margin-top: 0.5rem;
-
-		// 5. 🔤 Typography
-		font-size: 0.85rem;
-
-		// 7. ⚙️ Behavior
-		overflow-y: auto;
+		overflow-x: auto;
+		overflow-y: hidden;
+		border-radius: 10px;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel-soft;
 	}
 
-	th,
-	td {
-		// 4. 📦 Box Model
-		padding: 0.25rem 0.5rem;
-
-		// 5. 🔤 Typography
-		text-align: left;
-
-		// 6. 🎨 Visual
-		border-bottom: 1px solid ds.$chart-table-border;
+	&__svg {
+		display: block;
+		width: 100%;
+		min-width: 320px;
+		height: 200px;
+		background-color: transparent;
+		cursor: crosshair;
+		touch-action: none;
 	}
-}
 
-.playerQuoteChart__svg {
-	// 3. 🧩 Layout
-	display: block;
-
-	// 4. 📦 Box Model
-	width: 100%;
-	height: auto;
-	margin-top: 0.5rem;
-
-	// 7. ⚙️ Behavior
-	overflow: visible;
-}
-
-.playerQuoteChart__axisTitle {
-	// 5. 🔤 Typography
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-
-	// 6. 🎨 Visual
-	fill: ds.$chart-axis-label;
-}
-
-.playerQuoteChart__axisLabel {
-	// 5. 🔤 Typography
-	font-size: 10px;
-
-	// 6. 🎨 Visual
-	fill: ds.$chart-axis-label;
-}
-
-.playerQuoteChart__gridLine {
-	// 6. 🎨 Visual
-	stroke: ds.$chart-grid-line;
-}
-
-.playerQuoteChart__axisLine {
-	// 6. 🎨 Visual
-	stroke: ds.$chart-axis-line;
-}
-
-.playerQuoteChart__marker {
-	// 6. 🎨 Visual
-	fill: ds.$chart-point-fill;
-	stroke: ds.$chart-point-stroke;
-}
-
-.playerQuoteChart__lastMarker {
-	// 6. 🎨 Visual
-	fill: ds.$chart-point-active-fill;
-	stroke: ds.$chart-point-active-stroke;
-}
-
-.playerQuoteChart__lineStopStart {
-	// 6. 🎨 Visual
-	stop-color: ds.$chart-line-gradient-start;
-}
-
-.playerQuoteChart__lineStopEnd {
-	// 6. 🎨 Visual
-	stop-color: ds.$chart-line-gradient-end;
-}
-
-.playerQuoteChart__areaStopStart {
-	// 6. 🎨 Visual
-	stop-color: ds.$chart-area-gradient-start;
-}
-
-.playerQuoteChart__areaStopEnd {
-	// 6. 🎨 Visual
-	stop-color: ds.$chart-area-gradient-end;
-}
-
-/* ==========================================================
-   MODO COMPACTO — el grafico se adapta a la altura de su fila.
-
-	Sin esto, height:auto + viewBox hace que la altura de la pagina
-	la imponga la RELACION DE ASPECTO del SVG (720:280), que en un
-	ancho de ~1200px produce ~470px de alto.
-
-	Aqui el panel se convierte en columna flexible y el SVG recibe
-	el alto restante. El viewBox NO se modifica: preserveAspectRatio
-	mantiene la proporcion dentro del espacio disponible, de modo que
-	el dibujo nunca se deforma ni se recorta (queda centrado, con
-	aire lateral si sobra ancho).
-   ========================================================== */
-
-@include ds.compact-detail() {
-	.playerQuoteChart {
-		// 3. 🧩 Layout
-		display: flex;
-		flex-direction: column;
-
-		// 4. 📦 Box Model
-		height: 100%;
-		min-height: 0;
-		&__svg {
-      /* Flex, no alto fijo: absorbe el espacio sobrante del panel. */
-			// 3. 🧩 Layout
-			flex: 1;
-
-			// 4. 📦 Box Model
-			height: auto;
-			min-height: 0;
-			margin-top: ds.$space-3xs;
-		}
+	&__lineStopStart {
+		stop-color: ds.$chart-line-gradient-start;
 	}
-}
 
-.playerQuoteChart__caption {
-	// 4. 📦 Box Model
-	padding-bottom: 0.25rem;
+	&__lineStopEnd {
+		stop-color: ds.$chart-line-gradient-end;
+	}
 
-	// 5. 🔤 Typography
-	font-size: 0.8rem;
-	text-align: left;
+	&__areaStopStart {
+		stop-color: ds.$chart-area-gradient-start;
+	}
 
-	// 7. ⚙️ Behavior
-	opacity: 0.75;
-}
+	&__areaStopEnd {
+		stop-color: ds.$chart-area-gradient-end;
+	}
 
-.playerQuoteChart__demo {
-	// 4. 📦 Box Model
-	margin: 0.75rem 0 0;
+	&__axisSymbol {
+		font-size: 13px;
+		font-weight: 800;
+		fill: ds.$accent-gain;
+	}
 
-	// 5. 🔤 Typography
-	font-size: 0.7rem;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
+	&__axisTitle {
+		font-size: 10px;
+		font-weight: 600;
+		fill: ds.$chart-axis-label;
+	}
 
-	// 7. ⚙️ Behavior
-	opacity: 0.75;
+	&__gridLine {
+		stroke: ds.$chart-grid-line;
+	}
+
+	&__axisLine {
+		stroke: ds.$chart-axis-line;
+	}
+
+	&__axisLabel {
+		font-size: 10px;
+		fill: ds.$chart-axis-label;
+	}
+
+	&__marker {
+		fill: ds.$chart-point-fill;
+		stroke: ds.$chart-point-stroke;
+	}
+
+	&__lastMarker {
+		fill: ds.$chart-point-active-fill;
+		stroke: ds.$chart-point-active-stroke;
+	}
+
+	&__crosshair {
+		stroke: ds.$border-highlight-subtle;
+		stroke-dasharray: 3 3;
+		stroke-width: 1px;
+		pointer-events: none;
+	}
+
+	&__activeHalo {
+		fill: ds.$accent-highlight;
+		fill-opacity: 0.25;
+		pointer-events: none;
+	}
+
+	&__activeDot {
+		fill: #ffffff;
+		stroke: ds.$accent-highlight;
+		stroke-width: 2.5px;
+		pointer-events: none;
+	}
+
+	&__tooltip {
+		pointer-events: none;
+	}
+
+	&__tooltipBg {
+		fill: ds.$surface-page-deep;
+		stroke: ds.$border-panel-mid;
+		stroke-width: 1px;
+		rx: 8px;
+	}
+
+	&__tooltipDate {
+		fill: ds.$text-muted-on-dark;
+		font-size: 10px;
+		font-weight: 500;
+	}
+
+	&__tooltipPrice {
+		fill: ds.$text-title-on-dark;
+		font-size: 13px;
+		font-weight: 800;
+	}
+
+	&__tooltipGain {
+		fill: ds.$state-gain;
+		font-size: 10px;
+		font-weight: 700;
+	}
+
+	&__tooltipLoss {
+		fill: ds.$state-loss;
+		font-size: 10px;
+		font-weight: 700;
+	}
 }

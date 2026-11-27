@@ -4,8 +4,11 @@ import type {
 	StatisticsTab,
 } from "@/features/players/types";
 import { Button } from "@/shared/components";
+import PlayerFactorsEvolutionChart from "../../../PlayerFactorsEvolutionChart";
+import PlayerP2PTeaserCard from "../../../PlayerP2PTeaserCard";
 import PlayerQuoteEvolutionChart from "../../../PlayerQuoteEvolutionChart";
 import PlayerQuotePanel from "../../../PlayerQuotePanel";
+import PlayerRecentQuotesCard from "../../../PlayerRecentQuotesCard";
 import styles from "./PlayerQuotesTab.module.scss";
 
 interface Props {
@@ -14,6 +17,8 @@ interface Props {
 	quotesState: QueryState;
 	quotesErrorMessage?: string | null;
 	onRetryQuotes: () => void;
+	playerName?: string;
+	playerId: number;
 }
 
 export default function PlayerQuotesTab({
@@ -22,6 +27,8 @@ export default function PlayerQuotesTab({
 	quotesState,
 	quotesErrorMessage,
 	onRetryQuotes,
+	playerName = "este jugador",
+	playerId,
 }: Props) {
 	const current = quotes?.currentQuote;
 	const series = quotes
@@ -64,10 +71,27 @@ export default function PlayerQuotesTab({
 					</Button>
 				</section>
 			) : (
-				<>
-					<PlayerQuotePanel snapshot={series?.snapshot} />
-					<PlayerQuoteEvolutionChart series={series} />
-				</>
+				<div className={styles.playerQuotesTab__layout}>
+					{/* 1. Dos gráficos gemelos: Cotización Oficial y Factores Híbridos (Deporte vs Mercado) */}
+					<div className={styles.playerQuotesTab__chartsGrid}>
+						<PlayerQuoteEvolutionChart series={series} />
+						<PlayerFactorsEvolutionChart quotes={quotes} />
+					</div>
+
+					{/* 2. Dos columnas gemelas equilibradas (Cero espacio muerto) */}
+					<div className={styles.playerQuotesTab__columns}>
+						<div className={styles.playerQuotesTab__col}>
+							<PlayerRecentQuotesCard
+								quotes={quotes}
+								playerId={quotes?.playerId ?? playerId}
+							/>
+						</div>
+						<div className={styles.playerQuotesTab__col}>
+							<PlayerQuotePanel snapshot={series?.snapshot} quote={current} />
+							<PlayerP2PTeaserCard playerName={playerName} quote={current} />
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	);

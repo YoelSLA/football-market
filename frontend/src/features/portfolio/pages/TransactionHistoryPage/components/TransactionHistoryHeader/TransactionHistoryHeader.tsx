@@ -1,16 +1,17 @@
+import type { TransactionHistorySummary } from "@/features/portfolio/types";
 import { History } from "@/shared/icons";
+import TransactionHistoryMetrics from "../TransactionHistoryMetrics";
 import styles from "./TransactionHistoryHeader.module.scss";
 
 interface Props {
-	transactionCount?: number;
+	summary?: TransactionHistorySummary;
+	isLoading?: boolean;
 }
 
-export default function TransactionHistoryHeader({ transactionCount }: Props) {
-	const countLabel =
-		transactionCount !== undefined
-			? `${transactionCount} ${transactionCount === 1 ? "operación" : "operaciones"}`
-			: null;
-
+export default function TransactionHistoryHeader({
+	summary,
+	isLoading,
+}: Props) {
 	return (
 		<header className={styles.transactionHistoryHeader}>
 			<div className={styles.transactionHistoryHeader__left}>
@@ -32,8 +33,10 @@ export default function TransactionHistoryHeader({ transactionCount }: Props) {
 					</p>
 				</div>
 			</div>
-			{countLabel && (
-				<p className={styles.transactionHistoryHeader__count}>{countLabel}</p>
+			{summary && (
+				<div className={styles.transactionHistoryHeader__metrics}>
+					<TransactionHistoryMetrics summary={summary} isLoading={isLoading} />
+				</div>
 			)}
 		</header>
 	);

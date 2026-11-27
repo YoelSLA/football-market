@@ -10,6 +10,8 @@ interface Props {
 	onPageChange: (page: number) => void;
 	showSummary?: boolean;
 	variant?: "default" | "official";
+	className?: string;
+	itemLabel?: string;
 }
 
 export default function MarketPagination({
@@ -20,13 +22,19 @@ export default function MarketPagination({
 	onPageChange,
 	showSummary = true,
 	variant = "default",
+	className,
+	itemLabel = "jugadores",
 }: Props) {
+	const rootClassName = className
+		? `${styles.marketPagination} ${className}`
+		: styles.marketPagination;
+
 	return (
-		<footer className={styles.marketPagination} data-variant={variant}>
+		<footer className={rootClassName} data-variant={variant}>
 			{showSummary && (
 				<p>
 					Mostrando {visiblePlayers} de{" "}
-					{totalPlayers?.toLocaleString("es-AR") ?? "—"} jugadores
+					{totalPlayers?.toLocaleString("es-AR") ?? "—"} {itemLabel}
 				</p>
 			)}
 			<Pagination

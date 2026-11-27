@@ -1,4 +1,4 @@
-import { Button } from "@/shared/components";
+import { Button, TokenSymbol } from "@/shared/components";
 import { Tag, X } from "@/shared/icons";
 import styles from "./SellModalHeader.module.scss";
 
@@ -15,7 +15,10 @@ export default function SellModalHeader({ onClose, disabled }: Props) {
 			</div>
 			<div className={styles.header__heading}>
 				<h3>Publicar orden de venta</h3>
-				<p>Definí la cantidad de tokens para el mercado secundario</p>
+				<p>
+					Definí la cantidad de <TokenSymbol size="xs" /> para el mercado
+					secundario
+				</p>
 			</div>
 			<Button
 				unstyled

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import type { MarketPlayerQuoteState } from "@/features/market/hooks";
 import { formatCredits } from "@/features/market/utils";
 import { PlayerPositionBadge } from "@/features/players";
-import { Button, PlayerCardShell } from "@/shared/components";
+import { Button, PlayerCardShell, TokenSymbol } from "@/shared/components";
 import { TOKEN_SYMBOL } from "@/shared/constants";
 import { Puzzle, Tag } from "@/shared/icons";
 import type { PlayerHolding } from "../../MarketSellPage";
@@ -34,12 +34,12 @@ export default function MarketSellCard({ player, quoteState, onSell }: Props) {
 				<span className={styles.badgeReserved}>🔒 100% En orden</span>
 			) : hasReservedTokens ? (
 				<span className={styles.badgeMixed}>
-					🪙 {player.availableQuantity} Libres · {player.reservedQuantity} en
-					Venta
+					🪙 {player.availableQuantity} <TokenSymbol size="xs" /> Libres ·{" "}
+					{player.reservedQuantity} en Venta
 				</span>
 			) : (
 				<span className={styles.badgeAvailable}>
-					🪙 {player.availableQuantity}{" "}
+					🪙 {player.availableQuantity} <TokenSymbol size="xs" />{" "}
 					{player.availableQuantity === 1 ? "Libre" : "Libres"}
 				</span>
 			)}
@@ -73,7 +73,7 @@ export default function MarketSellCard({ player, quoteState, onSell }: Props) {
 						: styles.holdingItem_zero
 				}`}
 			>
-				🪙 {player.availableQuantity} {TOKEN_SYMBOL} libres
+				🪙 {player.availableQuantity} <TokenSymbol /> libres
 			</span>
 			<span className={styles.holdingSeparator} aria-hidden="true">
 				·

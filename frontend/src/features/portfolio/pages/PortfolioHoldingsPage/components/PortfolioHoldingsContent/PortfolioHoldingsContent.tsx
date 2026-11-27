@@ -11,6 +11,7 @@ interface Props {
 	filter: "ALL" | "OPEN" | "CLOSED";
 	onRetry: () => void;
 	onOpenDetail: (position: PortfolioPosition) => void;
+	onSell?: (position: PortfolioPosition) => void;
 }
 
 export default function PortfolioHoldingsContent({
@@ -20,6 +21,7 @@ export default function PortfolioHoldingsContent({
 	filter,
 	onRetry,
 	onOpenDetail,
+	onSell,
 }: Props) {
 	if (errorMessage) {
 		return (
@@ -68,6 +70,7 @@ export default function PortfolioHoldingsContent({
 						<PortfolioPositionCard
 							position={position}
 							onDetails={() => onOpenDetail(position)}
+							onSell={onSell}
 						/>
 					</li>
 				))}

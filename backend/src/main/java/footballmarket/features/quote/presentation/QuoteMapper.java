@@ -24,7 +24,12 @@ public final class QuoteMapper {
 
   public static QuoteRankingQuery toRankingQuery(QuoteRankingQueryRequestDTO request) {
     return new QuoteRankingQuery(
-        request.page(), request.size(), request.name(), request.leagueId(), request.position());
+        request.page(),
+        request.size(),
+        request.name(),
+        request.leagueId(),
+        request.position(),
+        request.order());
   }
 
   public static QuoteRankingPageResponseDTO toRankingPageResponse(QuoteRankingPage page) {
@@ -86,6 +91,17 @@ public final class QuoteMapper {
    * @return cotización del contrato de consulta
    */
   public static QuoteResponseDTO toQuoteResponse(PlayerQuote quote) {
+    java.math.BigDecimal variationCap = null;
+    Long minPriceFloor = null;
+    try {
+      if (quote.getExecution() != null) {
+        variationCap = quote.getExecution().getVariationCap();
+        minPriceFloor = quote.getExecution().getMinPriceFloor();
+      }
+    } catch (Exception ignored) {
+      // Protección contra LazyInitializationException fuera de sesión transaccional
+    }
+
     return new QuoteResponseDTO(
         quote.getEffectiveDate(),
         quote.getPrice(),
@@ -95,8 +111,8 @@ public final class QuoteMapper {
         quote.getMarketDemandFactor(),
         quote.getMarketMultiplier(),
         quote.getMarketNetDemandTokens(),
-        quote.getExecution() == null ? null : quote.getExecution().getVariationCap(),
-        quote.getExecution() == null ? null : quote.getExecution().getMinPriceFloor(),
+        variationCap,
+        minPriceFloor,
         quote.getScore(),
         quote.getStrategyName() == null ? null : quote.getStrategyName().name(),
         quote.getStrategyVersion(),

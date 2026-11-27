@@ -7,17 +7,47 @@ set -euo pipefail
 # =============================================================================
 # Ejecuta una corrida de recálculo sobre el backend vía API REST con JWT.
 #
-# Uso individual / manual:
-#   ./scripts/recalculate-quotes.sh
+# Modos de uso:
+#   ./scripts/recalculate-quotes.sh                  # Recálculo habitual híbrido (Deportivo + Demanda)
+#   ./scripts/recalculate-quotes.sh --market-demand  # Recálculo exclusivo por demanda de mercado (SPEC-028)
 #
 # Con parámetros personalizados:
 #   QUOTE_ADJUSTMENT_FACTOR=0.25 QUOTE_VARIATION_CAP=0.15 ./scripts/recalculate-quotes.sh
 # =============================================================================
 
 API_BASE_URL="${API_BASE_URL:-http://localhost:8080}"
-OPERATOR_EMAIL="${QUOTE_OPERATOR_EMAIL:-quote.automation@example.test}"
-OPERATOR_PASSWORD="${QUOTE_OPERATOR_PASSWORD:-QuoteScheduler2026!}"
-OPERATOR_USERNAME="${QUOTE_OPERATOR_USERNAME:-quote_scheduler}"
+RECALC_MODE="hybrid" # hybrid | market_demand
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --market-demand|--demand)
+      RECALC_MODE="market_demand"
+      shift
+      ;;
+    --hybrid)
+      RECALC_MODE="hybrid"
+      shift
+      ;;
+    -h|--help)
+      echo "Uso: $0 [--hybrid | --market-demand]"
+      exit 0
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+if [[ "$RECALC_MODE" == "market_demand" ]]; then
+  # Para el endpoint exclusivo de demanda (SPEC-028) se requiere rol SUPERUSER
+  OPERATOR_EMAIL="${SUPERUSER_EMAIL:-market.owner@example.com}"
+  OPERATOR_PASSWORD="${SUPERUSER_PASSWORD:-passsword123}"
+  OPERATOR_USERNAME="${SUPERUSER_USERNAME:-market.owner}"
+else
+  OPERATOR_EMAIL="${QUOTE_OPERATOR_EMAIL:-quote.automation@example.test}"
+  OPERATOR_PASSWORD="${QUOTE_OPERATOR_PASSWORD:-QuoteScheduler2026!}"
+  OPERATOR_USERNAME="${QUOTE_OPERATOR_USERNAME:-quote_scheduler}"
+fi
 RANDOMIZE_PARAMS="${QUOTE_RANDOMIZE_PARAMS:-true}"
 MIN_PRICE_FLOOR="${QUOTE_MIN_PRICE_FLOOR:-1}"
 WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-0}"
@@ -151,16 +181,22 @@ fi
 TOKEN="$(jq -er '.token' "$RESPONSE_BODY")"
 
 # Ejecutar recálculo
-RECALCULATE_BODY="$(jq -n \
-  --arg strategy "$STRATEGY" \
-  --argjson adjustmentFactor "$ADJUSTMENT_FACTOR" \
-  --argjson variationCap "$VARIATION_CAP" \
-  --argjson minPriceFloor "$MIN_PRICE_FLOOR" \
-  '{strategy: $strategy, adjustmentFactor: $adjustmentFactor, variationCap: $variationCap, minPriceFloor: $minPriceFloor}')"
+if [[ "$RECALC_MODE" == "market_demand" ]]; then
+  echo "[$(date --iso-8601=seconds)] Modo: DEMANDA PURA DE MERCADO (SPEC-028)"
+  echo "[$(date --iso-8601=seconds)] Disparando recálculo de cotizaciones sobre todos los jugadores según demanda neta de 24h..."
+  request POST "$API_BASE_URL/api/quotes/recalculate/market-demand" "$TOKEN"
+else
+  RECALCULATE_BODY="$(jq -n \
+    --arg strategy "$STRATEGY" \
+    --argjson adjustmentFactor "$ADJUSTMENT_FACTOR" \
+    --argjson variationCap "$VARIATION_CAP" \
+    --argjson minPriceFloor "$MIN_PRICE_FLOOR" \
+    '{strategy: $strategy, adjustmentFactor: $adjustmentFactor, variationCap: $variationCap, minPriceFloor: $minPriceFloor}')"
 
-echo "[$(date --iso-8601=seconds)] Clima bursátil: $MARKET_MOOD"
-echo "[$(date --iso-8601=seconds)] Disparando recálculo de cotizaciones (estrategia=$STRATEGY, factor=$ADJUSTMENT_FACTOR, cap=$VARIATION_CAP)..."
-request POST "$API_BASE_URL/api/quotes/recalculate" "$TOKEN" "$RECALCULATE_BODY"
+  echo "[$(date --iso-8601=seconds)] Clima bursátil: $MARKET_MOOD"
+  echo "[$(date --iso-8601=seconds)] Disparando recálculo híbrido (deporte + demanda) (estrategia=$STRATEGY, factor=$ADJUSTMENT_FACTOR, cap=$VARIATION_CAP)..."
+  request POST "$API_BASE_URL/api/quotes/recalculate" "$TOKEN" "$RECALCULATE_BODY"
+fi
 
 if [[ "$HTTP_STATUS" != "200" ]]; then
   echo "Error: Falló el recálculo de cotizaciones (HTTP $HTTP_STATUS):" >&2
@@ -170,6 +206,7 @@ fi
 
 EXECUTION_ID="$(jq -r '.executionId // empty' "$RESPONSE_BODY")"
 QUOTE_DATE="$(jq -r '.quoteDate // empty' "$RESPONSE_BODY")"
+RECALC_TYPE="$(jq -r '.recalculationType // "SPORT_AND_MARKET"' "$RESPONSE_BODY")"
 PRICED_PLAYERS="$(jq -r '.pricedPlayers // 0' "$RESPONSE_BODY")"
 RECOMPUTED_ROWS="$(jq -r '.recomputedRows // 0' "$RESPONSE_BODY")"
 CARRIED_FORWARD="$(jq -r '.carriedForwardRows // 0' "$RESPONSE_BODY")"
@@ -178,7 +215,7 @@ STARTED_AT="$(jq -r '.startedAt // empty' "$RESPONSE_BODY")"
 FINISHED_AT="$(jq -r '.finishedAt // empty' "$RESPONSE_BODY")"
 
 echo "[$(date --iso-8601=seconds)] Recálculo finalizado exitosamente:"
-echo "  - ID Ejecución: $EXECUTION_ID"
+echo "  - ID Ejecución: $EXECUTION_ID ($RECALC_TYPE)"
 echo "  - Fecha de cotización: $QUOTE_DATE"
 echo "  - Jugadores cotizados: $PRICED_PLAYERS (recalculados: $RECOMPUTED_ROWS, arrastrados: $CARRIED_FORWARD, fallidos: $FAILED_PLAYERS)"
 echo "  - Inicio: $STARTED_AT | Fin: $FINISHED_AT"

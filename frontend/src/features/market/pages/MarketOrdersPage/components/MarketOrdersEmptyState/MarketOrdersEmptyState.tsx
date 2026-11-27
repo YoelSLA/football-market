@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { TokenSymbol } from "@/shared/components";
 import { Puzzle } from "@/shared/icons";
 import styles from "./MarketOrdersEmptyState.module.scss";
 
@@ -50,8 +51,8 @@ export default function MarketOrdersEmptyState({
 				Aún no tenés órdenes de venta publicadas
 			</h2>
 			<p className={styles.ordersEmptyState__description}>
-				Ofrecé tokens de tu tenencia a otros usuarios en el mercado secundario
-				fijando el precio al momento de publicar.
+				Ofrecé <TokenSymbol size="xs" /> de tu tenencia a otros usuarios en el
+				mercado secundario fijando el precio al momento de publicar.
 			</p>
 			<Link to="/market/sell" className={styles.ordersEmptyState__actionBtn}>
 				Publicar venta

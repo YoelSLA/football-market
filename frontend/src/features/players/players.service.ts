@@ -94,6 +94,7 @@ function toRankingParams(query: RankingQuery) {
 		name: query.name || undefined,
 		leagueId: query.leagueId,
 		position: query.position || undefined,
+		order: query.order || undefined,
 	};
 }
 

@@ -31,7 +31,9 @@ final class ScoreRankingSql {
       and (cast(:position as text) is null or lower("playerPosition") = lower(cast(:position as text)))
       """;
   static final String PAGE =
-      "select * from ranked " + FILTER + " order by position limit :size offset :offset";
+      "select * from ranked "
+          + FILTER
+          + " order by (case when cast(:order as text) = 'asc' then -position else position end) limit :size offset :offset";
   static final String COUNT = "select count(*) from ranked " + FILTER;
   static final String LEAGUES =
       "select distinct \"leagueId\" as id, \"leagueName\" as name from ranked where \"leagueId\" is not null order by name, id";

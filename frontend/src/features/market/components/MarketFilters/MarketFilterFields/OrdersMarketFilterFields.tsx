@@ -1,4 +1,8 @@
-import { FilterSearch, FilterSelect } from "@/shared/components";
+import {
+	FilterSearch,
+	FilterSelect,
+	type FilterSelectOption,
+} from "@/shared/components";
 import styles from "./MarketFilterFields.module.scss";
 
 interface Props {
@@ -11,7 +15,7 @@ interface Props {
 	onSortChange: (value: string) => void;
 }
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: FilterSelectOption[] = [
 	{ value: "all", label: "Todas las órdenes" },
 	{ value: "ACTIVE", label: "Activas" },
 	{ value: "SOLD", label: "Vendidas" },
@@ -19,7 +23,7 @@ const STATUS_OPTIONS = [
 	{ value: "EXPIRED", label: "Expiradas" },
 ];
 
-const SORT_OPTIONS = [
+const SORT_OPTIONS: FilterSelectOption[] = [
 	{ value: "NEWEST", label: "Más recientes" },
 	{ value: "OLDEST", label: "Más antiguas" },
 	{ value: "PRICE_DESC", label: "Mayor precio" },
@@ -36,33 +40,31 @@ export default function OrdersMarketFilterFields({
 	onSortChange,
 }: Props) {
 	return (
-		<fieldset
-			className={`${styles.marketFilterFields} ${styles.marketFilterFields_orders}`}
-		>
+		<div className={styles.fields}>
 			<FilterSearch
 				id={`${scope}-search`}
-				className={styles.marketFilterFields__search}
+				className={styles.search}
 				value={search}
 				onChange={onSearchChange}
 				label="Buscar jugador o club"
-				placeholder="Nombre o club..."
+				placeholder="Buscar jugador o club…"
 			/>
 			<FilterSelect
 				id={`${scope}-status`}
-				className={styles.marketFilterFields__status}
+				className={styles.select}
 				label="Estado"
 				value={status || "all"}
 				options={STATUS_OPTIONS}
-				onChange={(value) => onStatusChange(value === "all" ? "" : value)}
+				onChange={onStatusChange}
 			/>
 			<FilterSelect
 				id={`${scope}-sort`}
-				className={styles.marketFilterFields__sort}
-				label="Ordenar por"
+				className={styles.select}
+				label="Orden"
 				value={sort || "NEWEST"}
 				options={SORT_OPTIONS}
 				onChange={onSortChange}
 			/>
-		</fieldset>
+		</div>
 	);
 }

@@ -1,0 +1,261 @@
+@use "@/styles/abstracts" as ds;
+
+.tableWrapper {
+	@include ds.data-table-wrapper;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	box-sizing: border-box;
+
+	&__toolbar {
+		flex-shrink: 0;
+		width: 100%;
+	}
+
+	&__container {
+		flex: 1;
+		min-height: 0;
+		width: 100%;
+		overflow-x: auto;
+		overflow-y: auto;
+		scrollbar-color: ds.$border-glass ds.$surface-transparent;
+		scrollbar-width: thin;
+		padding: 0 10px 10px;
+	}
+}
+
+.table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0 6px;
+	margin-top: -6px;
+	font-size: 13px;
+
+	thead {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+
+	th {
+		@include ds.data-table-header;
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		height: 38px;
+		padding: 0 16px;
+		background-color: ds.$surface-data-table;
+		border-bottom: 1px solid ds.$border-glass-subtle;
+		box-shadow: inset 0 -1px 0 ds.$border-glass-subtle;
+		font-size: 11px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: ds.$text-auxiliary-on-dark;
+	}
+
+	tbody tr {
+		background-color: #0b2238;
+		transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+		td {
+			@include ds.data-table-cell;
+			height: 52px;
+			padding: 6px 16px;
+			vertical-align: middle;
+			background-color: inherit;
+			border-top: 1px solid ds.$border-panel-soft;
+			border-bottom: 1px solid ds.$border-panel-soft;
+
+			&:first-child {
+				border-top-left-radius: 8px;
+				border-bottom-left-radius: 8px;
+				border-left: 1px solid ds.$border-panel-soft;
+			}
+
+			&:last-child {
+				border-top-right-radius: 8px;
+				border-bottom-right-radius: 8px;
+				border-right: 1px solid ds.$border-panel-soft;
+			}
+		}
+
+		&:hover td {
+			background-color: ds.$surface-glass-interactive;
+			border-color: ds.$border-panel;
+		}
+	}
+}
+
+.th_date,
+.td_date {
+	width: 16%;
+	text-align: left;
+}
+
+.th_prevPrice,
+.td_prevPrice {
+	width: 16%;
+	text-align: right;
+}
+
+.th_price,
+.td_price {
+	width: 18%;
+	text-align: right;
+}
+
+.th_netChange,
+.td_netChange {
+	width: 16%;
+	text-align: right;
+}
+
+.th_variation,
+.td_variation {
+	width: 17%;
+	text-align: center;
+}
+
+.th_demand,
+.td_demand {
+	width: 17%;
+	text-align: right;
+}
+
+.dateValue {
+	font-size: 12px;
+	font-weight: 600;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+}
+
+.prevPriceValue {
+	font-size: 13px;
+	font-weight: 500;
+	color: ds.$text-auxiliary-on-dark;
+	font-variant-numeric: tabular-nums;
+}
+
+.priceContainer {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 4px;
+	font-variant-numeric: tabular-nums;
+}
+
+.priceValue {
+	font-size: 13px;
+	font-weight: 700;
+	color: ds.$token-gold;
+}
+
+.priceUnit {
+	font-size: 11px;
+	color: ds.$text-auxiliary-on-dark;
+}
+
+.netChangeValue {
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+
+	&_up {
+		color: ds.$state-gain;
+	}
+
+	&_down {
+		color: ds.$state-loss;
+	}
+
+	&_flat {
+		color: ds.$text-auxiliary-on-dark;
+	}
+}
+
+.variationBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	padding: 2px 8px;
+	border-radius: 5px;
+	font-size: 11px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+
+	&_up {
+		background-color: ds.$surface-gain-tint;
+		border: 1px solid ds.$border-gain-subtle;
+		color: ds.$state-gain;
+	}
+
+	&_down {
+		background-color: ds.$surface-loss-tint;
+		border: 1px solid ds.$border-loss-emphasis;
+		color: ds.$state-loss;
+	}
+
+	&_flat {
+		background-color: ds.$surface-highlight-tint;
+		border: 1px solid ds.$border-highlight-subtle;
+		color: ds.$text-auxiliary-on-dark;
+	}
+}
+
+.demandValue {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-primary-on-dark;
+
+	&_positive {
+		color: #38bdf8;
+	}
+
+	&_negative {
+		color: ds.$state-loss;
+	}
+}
+
+.emptyState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 48px 16px;
+	text-align: center;
+	color: ds.$text-auxiliary-on-dark;
+
+	&__text {
+		margin: 0;
+		font-size: 13px;
+	}
+
+	&__btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 32px;
+		padding: 0 14px;
+		border-radius: 8px;
+		font-size: 12px;
+		font-weight: 600;
+		background-color: ds.$surface-glass-interactive;
+		border: 1px solid ds.$border-glass;
+		color: ds.$text-primary-on-dark;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover {
+			background-color: ds.$surface-card-subtle;
+			border-color: ds.$accent-highlight;
+		}
+	}
+}

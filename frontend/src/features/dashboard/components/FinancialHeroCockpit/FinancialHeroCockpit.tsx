@@ -1,6 +1,10 @@
-import { Link } from "react-router-dom";
-import { TOKEN_SYMBOL } from "@/shared/constants";
-import { Coins, Package, TrendingUp, Wallet } from "@/shared/icons";
+import {
+	Coins,
+	Package,
+	TrendingDown,
+	TrendingUp,
+	Wallet,
+} from "@/shared/icons";
 import type { FinancialSummary } from "../../types/models";
 import { FinancialHeroCard } from "./FinancialHeroCard/FinancialHeroCard";
 import styles from "./FinancialHeroCockpit.module.scss";
@@ -32,8 +36,22 @@ export function FinancialHeroCockpit({
 	const unrealizedText =
 		summary.totalUnrealizedProfitLoss !== null
 			? formatCredits(summary.totalUnrealizedProfitLoss)
-			: "—";
+			: "0,00 ₵";
 	const realizedText = formatCredits(summary.totalRealizedProfitLoss);
+
+	const portfolioSubtitle =
+		summary.totalTokens === 0
+			? "Sin futbolistas en cartera"
+			: `${summary.totalTokens} tokens en propiedad${
+					summary.reservedTokens > 0
+						? ` (${summary.reservedTokens} en venta)`
+						: ""
+				}`;
+
+	const pnlSubtitle =
+		summary.totalProfitLoss === null
+			? "Sin operaciones registradas"
+			: `En cartera: ${unrealizedText} · En ventas: ${realizedText}`;
 
 	return (
 		<section
@@ -44,13 +62,13 @@ export function FinancialHeroCockpit({
 			<FinancialHeroCard
 				title="Patrimonio Neto"
 				icon={Wallet}
-				accentTone="gain"
+				accentTone="indigo"
 				value={
 					summary.valuationComplete
 						? formatCredits(summary.netWorth)
 						: "Calculando..."
 				}
-				subtitle="Valoración integral de cartera y saldo"
+				subtitle="Créditos disponibles + valor de tus futbolistas"
 				delta={
 					summary.totalProfitLossPercentage !== null
 						? {
@@ -64,55 +82,48 @@ export function FinancialHeroCockpit({
 					<PatrimonySparkline
 						data={sparklineData}
 						trend={pnlTrend}
-						width={80}
-						height={32}
+						width={70}
+						height={20}
 					/>
 				}
 			/>
 
-			{/* 2. P&L Consolidado */}
+			{/* 2. Ganancia / Pérdida */}
 			<FinancialHeroCard
-				title="P&L Consolidado"
-				icon={TrendingUp}
-				accentTone={pnl >= 0 ? "gain" : "loss"}
+				title="Ganancia / Pérdida"
+				icon={pnl >= 0 ? TrendingUp : TrendingDown}
+				accentTone={pnl >= 0 ? "emerald" : "rose"}
 				value={formatCredits(summary.totalProfitLoss)}
-				subtitle={`No real.: ${unrealizedText} · Real.: ${realizedText}`}
+				subtitle={pnlSubtitle}
 				delta={{
 					value: pnlPercentage,
 					isPercentage: true,
-					label: "total",
 				}}
 				trend={pnlTrend}
 			/>
 
-			{/* 3. Liquidez Disponible */}
+			{/* 3. Saldo Disponible */}
 			<FinancialHeroCard
-				title="Liquidez Disponible"
+				title="Saldo Disponible"
 				icon={Coins}
-				accentTone="highlight"
+				accentTone="blue"
 				value={formatCredits(summary.availableCredits)}
-				subtitle="Efectivo disponible para adquisiciones"
+				subtitle="Créditos libres para operar en el mercado"
 				trend="neutral"
-				extraAction={
-					<Link to="/market/buy" className={styles.actionLink}>
-						Operar →
-					</Link>
-				}
 			/>
 
-			{/* 4. Custodia de Tokens */}
+			{/* 4. Valor de Cartera */}
 			<FinancialHeroCard
-				title="Custodia de Tokens"
+				title="Valor de Cartera"
 				icon={Package}
-				accentTone="investment"
-				value={`${summary.totalTokens} ${TOKEN_SYMBOL}`}
-				subtitle={`${summary.availableTokens} libres · ${summary.reservedTokens} en venta P2P`}
-				trend="neutral"
-				extraAction={
-					<Link to="/portfolio" className={styles.actionLink}>
-						Cartera →
-					</Link>
+				accentTone="violet"
+				value={
+					summary.valuationComplete
+						? formatCredits(summary.totalPortfolioValue)
+						: "Calculando..."
 				}
+				subtitle={portfolioSubtitle}
+				trend="neutral"
 			/>
 		</section>
 	);

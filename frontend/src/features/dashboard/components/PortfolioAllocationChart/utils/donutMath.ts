@@ -66,6 +66,35 @@ const PALETTE = [
 	"#94a3b8", // slate
 ];
 
+const SEMANTIC_COLORS: Record<string, string> = {
+	// Posiciones
+	DELANTERO: "#f43f5e",
+	Delanteros: "#f43f5e",
+	MEDIOCAMPISTA: "#818cf8",
+	Mediocampistas: "#818cf8",
+	DEFENSOR: "#34d399",
+	Defensores: "#34d399",
+	ARQUERO: "#fbbf24",
+	Arqueros: "#fbbf24",
+
+	// Las 5 grandes ligas
+	PREMIER_LEAGUE: "#8b5cf6",
+	"Premier League": "#8b5cf6",
+	LALIGA: "#ea580c",
+	LaLiga: "#ea580c",
+	"La Liga": "#ea580c",
+	"Primera Division": "#ea580c",
+	"Primera División": "#ea580c",
+	SERIE_A: "#0284c7",
+	"Serie A": "#0284c7",
+	BUNDESLIGA: "#dc2626",
+	Bundesliga: "#dc2626",
+	LIGUE_1: "#10b981",
+	"Ligue 1": "#10b981",
+	OTRAS_LIGAS: "#94a3b8",
+	"Otras Ligas": "#94a3b8",
+};
+
 export function calculateDonutSegments(
 	items: Array<{
 		key: string;
@@ -96,7 +125,10 @@ export function calculateDonutSegments(
 				? createDonutArc(cx, cy, innerRadius, outerRadius, startAngle, endAngle)
 				: "";
 
-		const color = PALETTE[index % PALETTE.length];
+		const color =
+			SEMANTIC_COLORS[item.key] ??
+			SEMANTIC_COLORS[item.label] ??
+			PALETTE[index % PALETTE.length];
 
 		return {
 			key: item.key,

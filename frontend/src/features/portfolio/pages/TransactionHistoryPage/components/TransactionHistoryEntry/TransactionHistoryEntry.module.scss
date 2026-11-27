@@ -1,161 +1,130 @@
 @use "@/styles/abstracts" as ds;
 
-.transactionHistoryEntry {
-	display: grid;
-	grid-template-columns: 31% 13% 12% 15% 15% 14%;
+.row {
+	// inherits data-table-row styles
+}
+
+.td_id {
+	text-align: left;
+}
+
+.td_player {
+	text-align: left;
+}
+
+.td_operation {
+	text-align: center;
+}
+
+.td_quantity {
+	text-align: right;
+}
+
+.td_unitPrice {
+	text-align: right;
+}
+
+.td_total {
+	text-align: right;
+}
+
+.td_date {
+	text-align: right;
+}
+
+.ticketBadge {
+	display: inline-flex;
 	align-items: center;
-	box-sizing: border-box;
-	width: 100%;
-	min-width: 0;
-	min-height: 48px;
-	padding: 4px 0;
-	border-bottom: 1px solid ds.$border-glass-faint;
-	transition: background-color 0.15s ease;
+	padding: 2px 7px;
+	border-radius: 4px;
+	border: 1px solid ds.$border-panel-soft;
+	background-color: ds.$surface-panel-to;
+	color: ds.$text-auxiliary-on-dark;
+	font-size: 11px;
+	font-weight: 600;
+	font-family: monospace;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+}
 
-	&:hover {
-		background-color: ds.$surface-glass-subtle;
-	}
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	line-height: 1.3;
 
-	&__player {
-		display: grid;
-		grid-template-columns: 40px minmax(0, 1fr);
-		align-items: center;
-		gap: ds.$space-2xs;
-		min-width: 0;
-		padding-right: ds.$space-2xs;
+	&_buy {
+		background-color: ds.$surface-gain-tint;
+		border: 1px solid ds.$border-gain-subtle;
+		color: ds.$accent-gain;
 
-		> :first-child {
-			width: 40px;
-			height: 40px;
-			background-color: ds.$surface-data-portrait;
+		.badgeDot {
+			background-color: ds.$accent-gain;
 		}
 	}
 
-	&__identity {
-		display: flex;
-		flex-direction: column;
-		gap: 1px;
-		min-width: 0;
-	}
+	&_sell {
+		background-color: ds.$surface-caution-tint;
+		border: 1px solid ds.$border-caution-subtle;
+		color: ds.$state-caution;
 
-	&__affiliations {
-		display: flex;
-		align-items: center;
-		gap: ds.$space-2xs;
-		min-width: 0;
-	}
-
-	&__affiliation {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		min-width: 0;
-		overflow: hidden;
-		color: ds.$text-dimmed-on-dark;
-		font-size: 11px;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-
-		span {
-			overflow: hidden;
-			text-overflow: ellipsis;
+		.badgeDot {
+			background-color: ds.$state-caution;
 		}
 	}
+}
 
-	&__teamBadge,
-	&__leagueLogo {
-		flex: 0 0 auto;
-		width: 16px;
-		height: 16px;
+.badgeDot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.quantityValue {
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-value-on-dark;
+	line-height: 1.2;
+}
+
+.unitPriceValue {
+	font-size: 13px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-value-on-dark;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.totalValue {
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+
+	&_buy {
+		color: ds.$state-loss;
 	}
 
-	&__teamBadge {
-		border: 0;
-		background-color: ds.$surface-transparent;
-		object-fit: contain;
+	&_sell {
+		color: ds.$accent-gain;
 	}
+}
 
-	&__playerName,
-	&__id {
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	&__playerName {
-		color: ds.$text-title-on-dark;
-		font-size: 14px;
-		font-weight: 600;
-	}
-
-	&__id {
-		color: ds.$text-auxiliary-on-dark;
-		font-size: 10px;
-	}
-
-	&__operation,
-	&__quantity,
-	&__unitPrice,
-	&__total,
-	&__date {
-		min-width: 0;
-		padding-right: ds.$space-2xs;
-	}
-
-	&__badge {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: fit-content;
-		padding: 2px 6px;
-		border-radius: 4px;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-
-		&_buy {
-			border: 1px solid ds.$border-gain-subtle;
-			background-color: ds.$surface-gain-tint;
-			color: ds.$accent-gain;
-		}
-
-		&_sell {
-			border: 1px solid ds.$border-caution-subtle;
-			background-color: ds.$surface-caution-tint;
-			color: ds.$state-caution;
-		}
-	}
-
-	&__value,
-	&__totalValue,
-	&__time {
-		display: block;
-		min-width: 0;
-		overflow: hidden;
-		font-variant-numeric: tabular-nums;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	&__value {
-		color: ds.$text-body-on-dark;
-		font-size: 12px;
-	}
-
-	&__totalValue {
-		color: ds.$text-value-on-dark;
-		font-size: 13px;
-		font-weight: 700;
-	}
-
-	&__time {
-		color: ds.$text-dimmed-on-dark;
-		font-size: 11px;
-	}
-
-	&__label {
-		display: none;
-	}
+.timeValue {
+	font-size: 12px;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-dimmed-on-dark;
+	line-height: 1.2;
+	white-space: nowrap;
 }

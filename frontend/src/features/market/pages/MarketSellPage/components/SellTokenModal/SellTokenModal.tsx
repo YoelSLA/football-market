@@ -13,6 +13,7 @@ import type {
 	SellResult,
 } from "@/features/market/types";
 import { Modal } from "@/shared/components";
+import { TOKEN_SYMBOL } from "@/shared/constants";
 import {
 	P2PPriceSelector,
 	SellModalFooter,
@@ -89,8 +90,8 @@ export default function SellTokenModal(props: Props) {
 				className={styles.modal}
 				aria-label={
 					props.sellMode === "OFFICIAL"
-						? "Venta inmediata oficial de tokens"
-						: "Publicar venta de tokens"
+						? `Venta inmediata oficial de ${TOKEN_SYMBOL}`
+						: `Publicar venta de ${TOKEN_SYMBOL}`
 				}
 			>
 				<SellModalHeader onClose={props.onClose} disabled={props.isBusy} />

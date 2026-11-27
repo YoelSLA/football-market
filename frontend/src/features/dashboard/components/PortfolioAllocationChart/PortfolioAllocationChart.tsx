@@ -171,7 +171,10 @@ export function PortfolioAllocationChart({
 												textAnchor="middle"
 												className={styles.centerSub}
 											>
-												{totalTokens} {TOKEN_SYMBOL}
+												{totalTokens}{" "}
+												<tspan className={styles.tokenGoldText}>
+													{TOKEN_SYMBOL}
+												</tspan>
 											</text>
 										</>
 									)}

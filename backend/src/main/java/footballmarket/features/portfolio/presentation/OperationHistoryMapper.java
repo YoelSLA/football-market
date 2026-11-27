@@ -44,6 +44,7 @@ public final class OperationHistoryMapper {
             player.name(),
             player.imageUrl(),
             player.fallbackImageUrl(),
+            player.position(),
             new RelatedDTO(player.team().id(), player.team().name()),
             new RelatedDTO(player.league().id(), player.league().name())),
         entry.quantity(),

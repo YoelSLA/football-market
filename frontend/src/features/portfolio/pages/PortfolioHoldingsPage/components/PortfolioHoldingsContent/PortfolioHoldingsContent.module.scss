@@ -50,15 +50,7 @@
 	}
 
 	&__summary {
-		// 4. 📦 Box Model
-		margin: ds.$space-2xs 0 0;
-		padding: 0 ds.$space-md;
-
-		// 5. 🔤 Typography
-		font-size: 13px;
-
-		// 6. 🎨 Visual
-		color: ds.$text-subtle-on-dark;
+		display: none;
 	}
 
 	&__grid {
@@ -72,10 +64,19 @@
 
 		// 4. 📦 Box Model
 		margin: ds.$space-2xs 0 0;
-		padding: 0 ds.$space-md ds.$space-sm;
+		padding: 0 0 ds.$space-sm;
 
 		// 7. ⚙️ Behavior
 		list-style: none;
+
+		@media (max-width: 1200px) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		@media (max-width: 720px) {
+			grid-template-columns: 1fr;
+		}
+
 		li {
 			// 4. 📦 Box Model
 			min-width: 0;

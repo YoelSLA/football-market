@@ -37,6 +37,8 @@ public record OperationHistoryResponseDTO(
       String name,
       @Schema(nullable = true) String imageUrl,
       @Schema(nullable = true) String fallbackImageUrl,
+      @Schema(description = "Posición deportiva normalizada", example = "ARQ", nullable = true)
+          String position,
       RelatedDTO team,
       RelatedDTO league) {}
 

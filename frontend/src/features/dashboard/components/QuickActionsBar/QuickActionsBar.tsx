@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { TokenSymbol } from "@/shared/components";
 import { BarChart3, Handshake, Tag, Zap } from "@/shared/icons";
 import styles from "./QuickActionsBar.module.scss";
 
@@ -20,7 +21,9 @@ export function QuickActionsBar({ className }: QuickActionsBarProps) {
 					className={`${styles.actionBtn} ${styles.btnPrimary}`}
 				>
 					<Zap className={styles.icon} aria-hidden="true" />
-					<span>Comprar Tokens</span>
+					<span>
+						Comprar <TokenSymbol size="sm" />
+					</span>
 				</Link>
 
 				<Link to="/market/p2p" className={styles.actionBtn}>
@@ -30,7 +33,9 @@ export function QuickActionsBar({ className }: QuickActionsBarProps) {
 
 				<Link to="/market/sell" className={styles.actionBtn}>
 					<Tag className={styles.icon} aria-hidden="true" />
-					<span>Vender Tokens</span>
+					<span>
+						Vender <TokenSymbol size="sm" />
+					</span>
 				</Link>
 
 				<Link to="/portfolio" className={styles.actionBtn}>

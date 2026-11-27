@@ -1,0 +1,158 @@
+@use "@/styles/abstracts" as ds;
+
+.gaugeContainer {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: ds.$space-xs;
+	height: 100%;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-md;
+	border-radius: 12px;
+	min-width: 0;
+	box-sizing: border-box;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-panel-mid;
+	box-shadow: 0 2px 8px ds.$shadow-panel;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: ds.$space-sm;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 700;
+		color: ds.$text-strong-on-dark;
+	}
+
+	&__subtitle {
+		margin: 2px 0 0;
+		font-size: 11.5px;
+		color: ds.$text-dimmed-on-dark;
+	}
+
+	&__bias {
+		display: inline-flex;
+		align-items: center;
+		padding: ds.$space-3xs ds.$space-xs;
+		border-radius: 9999px;
+		font-size: 12px;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+
+		&--bullish {
+			background-color: ds.$surface-status-open;
+			color: ds.$accent-open;
+			border: 1px solid ds.$border-status-open;
+		}
+
+		&--bearish {
+			background-color: ds.$surface-status-closed;
+			color: ds.$state-loss;
+			border: 1px solid ds.$border-status-closed;
+		}
+
+		&--neutral {
+			background-color: ds.$surface-raised;
+			color: ds.$text-body-on-dark;
+			border: 1px solid ds.$border-strong;
+		}
+	}
+}
+
+.gaugeWrapper {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	width: 100%;
+	min-height: 0;
+}
+
+.svg {
+	width: 100%;
+	max-width: 220px;
+	height: auto;
+	overflow: visible;
+}
+
+.axisLabel {
+	font-size: 10px;
+	fill: ds.$text-muted-on-dark;
+	font-weight: 500;
+}
+
+.axisLabelCenter {
+	font-size: 10px;
+	fill: ds.$text-dimmed-on-dark;
+	font-weight: 500;
+}
+
+.needle {
+	fill: ds.$text-primary-on-dark;
+	filter: drop-shadow(0 2px 4px #00000080);
+	transition: points 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pivot {
+	fill: ds.$text-primary-on-dark;
+	stroke: ds.$surface-card-dark;
+}
+
+.readout {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 4px;
+	width: 100%;
+
+	&__group {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-md;
+	}
+
+	&__side {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
+
+	&__value {
+		font-size: 18px;
+		font-weight: 800;
+		color: ds.$accent-gain;
+		line-height: 1.1;
+
+		&_sell {
+			font-size: 18px;
+			font-weight: 800;
+			color: ds.$state-loss;
+			line-height: 1.1;
+		}
+	}
+
+	&__label {
+		font-size: 11px;
+		color: ds.$text-muted-on-dark;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	&__divider {
+		width: 1px;
+		height: 28px;
+		background: ds.$border-strong;
+	}
+}

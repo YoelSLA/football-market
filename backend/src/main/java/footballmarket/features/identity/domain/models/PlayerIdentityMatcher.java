@@ -52,11 +52,17 @@ public final class PlayerIdentityMatcher {
             || (!normCandAltName.isEmpty() && normPlayerName.equals(normCandAltName));
 
     boolean sameTeam =
-        this.normalizeTeam(player.getTeam().getName()).equals(this.normalizeTeam(candidate.team()));
+        candidate.team() == null
+            || candidate.team().isBlank()
+            || this.isRosterTeamCompatible(player.getTeam().getName(), candidate.team());
     boolean sameDate =
         player.getDateOfBirth() != null
             && candidate.dateOfBirth() != null
             && player.getDateOfBirth().equals(candidate.dateOfBirth());
+    boolean sameYear =
+        player.getDateOfBirth() != null
+            && candidate.dateOfBirth() != null
+            && Math.abs(player.getDateOfBirth().getYear() - candidate.dateOfBirth().getYear()) <= 1;
     boolean sameCountry =
         player.getNationality() != null
             && candidate.nationality() != null
@@ -72,8 +78,74 @@ public final class PlayerIdentityMatcher {
       return false;
     }
 
-    return (player.getDateOfBirth() == null || candidate.dateOfBirth() == null || sameDate)
+    boolean dateMatches =
+        player.getDateOfBirth() == null
+            || candidate.dateOfBirth() == null
+            || sameDate
+            || (exactName && sameYear);
+
+    return dateMatches
         && (player.getNationality() == null || candidate.nationality() == null || sameCountry);
+  }
+
+  /**
+   * Compara identidades dentro del plantel cerrado de un club deportivo.
+   *
+   * <p>Dentro del plantel del mismo club, admite coincidencia de nombre exacto tolerando
+   * discrepancias menores de fecha (mismo año +/- 1 por erratas tipográficas del proveedor) o
+   * nacionalidades secundarias por doble ciudadanía, descartando homónimos generacionales. Para
+   * nombres compatibles no exactos, preserva las reglas estrictas de fecha y país.
+   */
+  public boolean matchesRoster(Player player, Candidate candidate) {
+    if (player.getTeam() == null || candidate == null || !"Soccer".equals(candidate.sport())) {
+      return false;
+    }
+
+    String normPlayerName = normalize(player.getName());
+    String normCandName = normalize(candidate.name());
+    String normCandAltName = normalize(candidate.alternateName());
+
+    boolean exactName =
+        normPlayerName.equals(normCandName)
+            || (!normCandAltName.isEmpty() && normPlayerName.equals(normCandAltName));
+
+    boolean sameTeam =
+        candidate.team() == null
+            || candidate.team().isBlank()
+            || this.isRosterTeamCompatible(player.getTeam().getName(), candidate.team());
+
+    if (!sameTeam) {
+      return false;
+    }
+
+    boolean sameDate =
+        player.getDateOfBirth() != null
+            && candidate.dateOfBirth() != null
+            && player.getDateOfBirth().equals(candidate.dateOfBirth());
+
+    boolean sameYear =
+        player.getDateOfBirth() != null
+            && candidate.dateOfBirth() != null
+            && Math.abs(player.getDateOfBirth().getYear() - candidate.dateOfBirth().getYear()) <= 1;
+
+    boolean sameCountry =
+        player.getNationality() != null
+            && candidate.nationality() != null
+            && this.normalizeNationality(player.getNationality())
+                .equals(this.normalizeNationality(candidate.nationality()));
+
+    if (exactName) {
+      boolean generationalConflict =
+          player.getDateOfBirth() != null && candidate.dateOfBirth() != null && !sameYear;
+      return !generationalConflict;
+    }
+
+    boolean nameMatches = sameDate && isNameCompatible(normPlayerName, normCandName);
+    if (!nameMatches) {
+      return false;
+    }
+
+    return (player.getNationality() == null || candidate.nationality() == null || sameCountry);
   }
 
   private boolean isNameCompatible(String normPlayer, String normCandidate) {
@@ -113,15 +185,47 @@ public final class PlayerIdentityMatcher {
     return normalized;
   }
 
+  private boolean isRosterTeamCompatible(String playerTeam, String candTeam) {
+    if (candTeam == null || candTeam.isBlank()) {
+      return true;
+    }
+    String normPlayer = this.normalizeTeam(playerTeam);
+    String normCand = this.normalizeTeam(candTeam);
+    if (normPlayer.equals(normCand)) {
+      return true;
+    }
+    String rawPlayer = normalize(playerTeam);
+    String rawCand = normalize(candTeam);
+    if (rawPlayer.contains(normCand) || rawCand.contains(normPlayer)) {
+      return true;
+    }
+    if (normPlayer.startsWith(normCand) || normCand.startsWith(normPlayer)) {
+      return true;
+    }
+    if (normPlayer.length() >= 4 && normCand.length() >= 4) {
+      return normPlayer.substring(0, 4).equals(normCand.substring(0, 4));
+    }
+    return false;
+  }
+
   private String normalizeTeam(String team) {
     String normalized = normalize(team);
-    for (String suffix : this.aliases.teamSuffixes()) {
-      String normalizedSuffix = normalize(suffix);
-      if (normalized.endsWith(" " + normalizedSuffix)) {
-        return normalized.substring(0, normalized.length() - normalizedSuffix.length() - 1);
-      }
-      if (normalized.startsWith(normalizedSuffix + " ")) {
-        return normalized.substring(normalizedSuffix.length() + 1);
+    boolean changed = true;
+    while (changed) {
+      changed = false;
+      for (String suffix : this.aliases.teamSuffixes()) {
+        String normalizedSuffix = normalize(suffix);
+        if (normalized.endsWith(" " + normalizedSuffix)) {
+          normalized =
+              normalized.substring(0, normalized.length() - normalizedSuffix.length() - 1).strip();
+          changed = true;
+          break;
+        }
+        if (normalized.startsWith(normalizedSuffix + " ")) {
+          normalized = normalized.substring(normalizedSuffix.length() + 1).strip();
+          changed = true;
+          break;
+        }
       }
     }
     return normalized;
@@ -131,8 +235,19 @@ public final class PlayerIdentityMatcher {
     if (text == null) {
       return "";
     }
+    String preprocessed =
+        text.replace('Ł', 'L')
+            .replace('ł', 'l')
+            .replace('Ø', 'O')
+            .replace('ø', 'o')
+            .replace('Đ', 'D')
+            .replace('đ', 'd')
+            .replace('Æ', 'A')
+            .replace('æ', 'a')
+            .replace('Œ', 'O')
+            .replace('œ', 'o');
     String withoutMarks =
-        MARKS.matcher(Normalizer.normalize(text, Normalizer.Form.NFD)).replaceAll("");
+        MARKS.matcher(Normalizer.normalize(preprocessed, Normalizer.Form.NFD)).replaceAll("");
     return SEPARATORS
         .matcher(withoutMarks.strip().toUpperCase(java.util.Locale.ROOT))
         .replaceAll(" ");

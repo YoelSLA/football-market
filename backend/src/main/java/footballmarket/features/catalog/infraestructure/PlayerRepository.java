@@ -103,7 +103,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
    * @param playerIds identificadores de los jugadores de la página
    * @return jugadores indicados con su equipo cargado
    */
-  @Query("select p from Player p join fetch p.team t where p.id in :playerIds")
+  @Query(
+      "select p from Player p join fetch p.team t left join fetch t.league where p.id in :playerIds")
   List<Player> findAllByIdInWithTeam(@Param("playerIds") List<Long> playerIds);
 
   Optional<Player> findFirstByIdGreaterThanOrderByIdAsc(Long id);

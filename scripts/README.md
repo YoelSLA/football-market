@@ -26,11 +26,12 @@ Este directorio contiene la suite de herramientas y utilitarios en Bash para adm
 
 El motor principal y más completo del ecosistema. Coordina y ejecuta en cada ciclo un flujo económico cerrado garantizando **exactamente 10 transacciones financieras confirmadas** cada 3 minutos (200 transacciones/hora):
 
-* **Distribución de las 10 transacciones por ciclo:**
-  * **Compras en Mercado Oficial (Emisión Primaria):** Compradores (Bot 1, Bot 2, Bot 3, Yoel y Nicolas) adquieren de forma aleatoria entre **1 y 10 tokens** directamente al Superusuario. Aplica rotación táctica equilibrada por posición (*Delantero, Centrocampista, Defensa, Portero*) y ligas para enriquecer el **gráfico Donut del Dashboard**, con un 30% de compras concentradas en futbolistas estrella ("Hot Assets" como Yamal, Mbappé, Haaland, Kane).
-  * **Liquidación Inmediata Oficial / Buyback a la Casa (SPEC-026 / PR #111):** Vendedores liquidan tokens directamente al Superusuario vía `POST /api/orders/sell-official` para obtener liquidez inmediata en créditos, aplicándose la comisión oficial del 10% de spread y registrando transacciones auditadas.
-  * **Compras en Mercado P2P:** Compradores adquieren y liquidan publicaciones activas de la comunidad (`token_listings`), acreditando los créditos a los vendedores y pasando las órdenes a `SOLD`.
-  * **Mecanismo de Cuota Garantizada:** Si las ofertas P2P o de liquidación no alcanzaran para completar las 10 operaciones, el motor ejecuta compras oficiales adicionales con bots rotativos hasta alcanzar **estrictamente las 10 transacciones confirmadas**.
+* **Distribución dinámica y balanceada de transacciones por ciclo (Variación aleatoria 40%–60%):**
+  * **Equilibrio de Sentimiento de Mercado (Compras vs. Ventas):** En cada ciclo, el motor sortea un ratio aleatorio entre el **40% y el 60% de ventas** (o configurable mediante `--sells-ratio`), permitiendo que el tablero de tendencias (`/market/trends` de SPEC-029) oscile de manera realista y orgánica entre estados *BULLISH (Alcista)*, *NEUTRAL* y *BEARISH (Bajista)*.
+  * **Compras en Mercado Oficial (Emisión Primaria):** Compradores (Bot 1 a Bot 8, Yoel y Nicolas) adquieren entre **1 y 10 tokens** al Superusuario, con diversificación táctica por posición y compras concentradas en futbolistas estrella ("Hot Assets").
+  * **Liquidación Inmediata Oficial / Buyback a la Casa (SPEC-026 / PR #111):** Múltiples vendedores liquidan tokens directamente al Superusuario vía `POST /api/orders/sell-official` para obtener liquidez inmediata en créditos, aplicándose el spread oficial del 10% y computando como **ventas oficiales auditadas** para el sentimiento colectivo.
+  * **Compras en Mercado P2P:** Compradores adquieren y liquidan publicaciones activas de la comunidad (`token_listings`), acreditando fondos a los vendedores y pasando las órdenes a `SOLD`.
+  * **Mecanismo de Cuota y Balance Garantizado:** Si las transacciones iniciales no completaran la cuota (por defecto 10), el motor compensa dinámicamente: prioriza liquidaciones oficiales a la casa si faltan ventas para alcanzar la meta sorteada (40%–60%), o compras oficiales si la meta de compras aún no fue alcanzada, garantizando **estrictamente las 10 transacciones confirmadas**.
 * **Inyección Continua y Robusta de Oferta P2P (15–25 órdenes activas garantizadas):**
   * Para asegurar que el catálogo P2P nunca se quede vacío, en cada ciclo todos los bots disponibles (Bot #1 a Bot #8) junto a Yoel y Nicolas publican de **8 a 16 órdenes de venta simultáneas** con cantidades realistas (1 a 5 tokens) y precios flexibles (85% a 115% de cotización con etiquetas *Best Deal* o *Sobreprecio*).
   * Si un bot carece de variedad en su cartera, el motor le abastece tokens oficiales de diferentes posiciones y clubes automáticamente antes de publicar.
@@ -100,9 +101,11 @@ Proporciona un reporte integral del estado del sistema en un solo comando:
 
 ## 3. `recalculate-quotes.sh` — Recálculo Atómico de Cotizaciones
 
-Dispara una corrida de recálculo sobre el backend vía `POST /api/quotes/recalculate` autenticado como operador técnico.
+Dispara una corrida de recálculo sobre el backend vía API REST autenticado con JWT:
+* **Modo Híbrido Habitual (`POST /api/quotes/recalculate`):** Combina el score deportivo con la demanda neta de los últimos 24h.
+* **Modo Exclusivo de Demanda (`--market-demand` / `POST /api/quotes/recalculate/market-demand` - SPEC-028):** Recalcula las cotizaciones de todos los jugadores elegibles guiándose estrictamente por el balance de oferta-demanda neta sin requerir nuevos scores deportivos.
 
-* **Climas Bursátiles Aleatorios:** Selecciona de forma orgánica uno de 3 perfiles para simular mercados vivos:
+* **Climas Bursátiles Aleatorios (en modo habitual):** Selecciona de forma orgánica uno de 3 perfiles para simular mercados vivos:
   * **Calmo (30% prob.):** Baja volatilidad (`factor ~0.12`, `cap ~0.08`).
   * **Moderado (45% prob.):** Volatilidad estándar (`factor ~0.22`, `cap ~0.15`).
   * **Volátil / Rally (25% prob.):** Alta volatilidad (`factor ~0.38`, `cap ~0.24`).
@@ -110,8 +113,11 @@ Dispara una corrida de recálculo sobre el backend vía `POST /api/quotes/recalc
 * **Agnóstico al locale:** Formatea números decimales con punto (`0.22`), garantizando compatibilidad con locales en español.
 
 ```bash
-# Uso estándar con clima aleatorio:
+# Uso estándar con clima aleatorio (híbrido deporte + demanda):
 ./scripts/recalculate-quotes.sh
+
+# Recálculo guiado puramente por demanda de mercado (SPEC-028):
+./scripts/recalculate-quotes.sh --market-demand
 
 # Sobrescribir con parámetros manuales específicos:
 QUOTE_ADJUSTMENT_FACTOR=0.30 QUOTE_VARIATION_CAP=0.20 ./scripts/recalculate-quotes.sh

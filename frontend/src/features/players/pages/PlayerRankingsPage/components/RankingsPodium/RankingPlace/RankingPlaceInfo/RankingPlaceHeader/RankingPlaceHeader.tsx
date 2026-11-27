@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import type { PlayerRankingItem } from "@/features/players/types";
+import { PlayerPositionBadge } from "@/shared/components";
 import styles from "./RankingPlaceHeader.module.scss";
 
 interface Props {
@@ -20,14 +21,7 @@ export default function RankingPlaceHeader({ player }: Props) {
 			</Link>
 
 			{player.tacticalPosition ? (
-				<span
-					className={`${styles.positionBadge} ${
-						styles[`positionBadge_${player.tacticalPosition}`] ?? ""
-					}`}
-					title={`Posición: ${player.tacticalPosition}`}
-				>
-					{player.tacticalPosition}
-				</span>
+				<PlayerPositionBadge position={player.tacticalPosition} />
 			) : null}
 		</div>
 	);

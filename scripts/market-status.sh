@@ -62,7 +62,7 @@ fi
 echo
 echo "📈 COTIZACIONES DE JUGADORES:"
 LAST_EXECUTION_INFO="$(psql_cmd "
-SELECT id || '|' || quote_date || '|' || strategy_name || '|' || adjustment_factor || '|' || variation_cap || '|' || priced_players || '|' || started_at
+SELECT CONCAT_WS('|', id, quote_date, COALESCE(strategy_name, recalculation_type), COALESCE(adjustment_factor::text, 'N/A'), variation_cap, priced_players, started_at)
 FROM quote_executions
 ORDER BY started_at DESC
 LIMIT 1;
@@ -71,7 +71,7 @@ LIMIT 1;
 if [[ "$LAST_EXECUTION_INFO" != "N/A" && -n "$LAST_EXECUTION_INFO" ]]; then
   IFS='|' read -r exec_id exec_date exec_strat exec_fact exec_cap exec_players exec_started <<<"$LAST_EXECUTION_INFO"
   echo "  - Último recálculo: Ejecución #$exec_id ($exec_date a las $(echo "$exec_started" | cut -d' ' -f2 | cut -d'.' -f1) UTC)"
-  echo "  - Estrategia: $exec_strat | Factor: $exec_fact | Cap: $exec_cap"
+  echo "  - Modo/Estrategia: $exec_strat | Factor: $exec_fact | Cap: $exec_cap"
   echo "  - Jugadores cotizados: $exec_players"
 else
   echo "  - No hay ejecuciones de recálculo registradas."
@@ -90,16 +90,49 @@ echo "  - Publicaciones Activas vigentes: $ACTIVE_LISTINGS"
 echo "  - Publicaciones Vendidas (Trades): $SOLD_LISTINGS"
 echo "  - Publicaciones Canceladas / Expiradas: $EXPIRED_LISTINGS"
 
-# 4. VOLUMEN Y ACTIVIDAD (ÚLTIMAS 24 HORAS)
+# 4. VOLUMEN, ACTIVIDAD Y SENTIMIENTO (ÚLTIMAS 24 HORAS)
 echo
-echo "💰 ACTIVIDAD Y VOLUMEN (24 HORAS):"
+echo "💰 ACTIVIDAD, VOLUMEN Y SENTIMIENTO (24 HORAS):"
 TOTAL_TX_24H="$(psql_cmd "SELECT COUNT(*) FROM market_transactions WHERE executed_at >= NOW() - INTERVAL '24 hours';")"
 TOTAL_VOL_CENTS="$(psql_cmd "SELECT COALESCE(SUM(total_amount), 0) FROM market_transactions WHERE executed_at >= NOW() - INTERVAL '24 hours';")"
 ALL_TIME_TX="$(psql_cmd "SELECT COUNT(*) FROM market_transactions;")"
+BUY_TX_24H="$(psql_cmd "SELECT COUNT(*) FROM market_transactions t JOIN users b ON b.id = t.buyer_id WHERE b.role = 'USER' AND t.executed_at >= NOW() - INTERVAL '24 hours';")"
+SELL_TX_24H="$(psql_cmd "SELECT COUNT(*) FROM market_transactions t JOIN users b ON b.id = t.buyer_id JOIN users s ON s.id = t.seller_id WHERE b.role = 'SUPERUSER' AND s.role = 'USER' AND t.executed_at >= NOW() - INTERVAL '24 hours';")"
+
+BUY_PCT="0.0"
+SELL_PCT="0.0"
+BIAS_LABEL="NEUTRAL"
+if [[ "$TOTAL_TX_24H" =~ ^[1-9][0-9]*$ ]]; then
+  BUY_PCT="$(awk -v b="$BUY_TX_24H" -v t="$TOTAL_TX_24H" 'BEGIN { printf "%.1f", (b*100)/t }')"
+  SELL_PCT="$(awk -v s="$SELL_TX_24H" -v t="$TOTAL_TX_24H" 'BEGIN { printf "%.1f", (s*100)/t }')"
+  if (( BUY_TX_24H > SELL_TX_24H )); then
+    BIAS_LABEL="BULLISH (Alcista)"
+  elif (( BUY_TX_24H < SELL_TX_24H )); then
+    BIAS_LABEL="BEARISH (Bajista)"
+  fi
+fi
+
 echo "  - Transacciones últimas 24h: $TOTAL_TX_24H (Histórico total: $ALL_TIME_TX)"
+echo "  - Sentimiento colectivo: $BUY_TX_24H Compras ($BUY_PCT%) vs $SELL_TX_24H Ventas ($SELL_PCT%)"
+echo "  - Sesgo de mercado: $BIAS_LABEL"
 echo "  - Volumen negociado 24h: $(format_currency "$TOTAL_VOL_CENTS")"
 
-# 5. MARKET MOVERS (TOP GANADORES Y PERDEDORES)
+# 5. HOT ASSETS (TENDENCIAS Y MAYOR VOLUMEN 24H)
+echo
+echo "🔥 TOP HOT ASSETS (FUTBOLISTAS CON MAYOR COMPRA EN 24H):"
+docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -t -c "
+SELECT '    ' || p.name || ' (' || COALESCE(t.name, 'Club') || '): ' || SUM(tx.quantity) || ' tokens (₵' || ROUND(SUM(tx.total_amount) / 100.0, 2) || ')'
+FROM market_transactions tx
+JOIN users buyer ON buyer.id = tx.buyer_id
+JOIN players p ON p.id = tx.player_id
+LEFT JOIN teams t ON t.id = p.team_id
+WHERE tx.executed_at >= NOW() - INTERVAL '24 hours' AND buyer.role = 'USER'
+GROUP BY p.id, p.name, t.name
+ORDER BY SUM(tx.quantity) DESC, SUM(tx.total_amount) DESC, p.id ASC
+LIMIT 5;
+" 2>/dev/null || echo "    Sin datos suficientes"
+
+# 6. MARKET MOVERS (TOP GANADORES Y PERDEDORES)
 echo
 echo "🏆 MARKET MOVERS (TOP GANADORES DE HOY):"
 docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -t -c "

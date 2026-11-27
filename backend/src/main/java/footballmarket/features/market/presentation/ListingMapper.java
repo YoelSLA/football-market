@@ -46,7 +46,15 @@ public final class ListingMapper {
                         listing.totalAmount(),
                         listing.status().name(),
                         listing.createdAt(),
-                        listing.expiresAt()))
+                        listing.expiresAt(),
+                        listing.playerName(),
+                        listing.teamId(),
+                        listing.teamName(),
+                        listing.leagueId(),
+                        listing.leagueName(),
+                        listing.position(),
+                        listing.imageUrl(),
+                        listing.fallbackImageUrl()))
             .toList());
   }
 

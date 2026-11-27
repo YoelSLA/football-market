@@ -17,7 +17,15 @@
 
 	&__header {
 		flex-shrink: 0;
-		height: 70px;
+		height: 80px;
+		min-height: 80px;
+	}
+
+	&__footer {
+		@include ds.market-panel-footer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	&__error {
