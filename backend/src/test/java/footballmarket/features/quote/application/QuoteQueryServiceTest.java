@@ -53,12 +53,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
       "market.quote.min-price-floor=1"
     })
 @ActiveProfiles("test")
-@Import({
-  TestcontainersConfiguration.class,
-  IdentityCatalogueFixture.class,
-  ValuationTestData.class,
-  QuoteTestData.class
-})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)

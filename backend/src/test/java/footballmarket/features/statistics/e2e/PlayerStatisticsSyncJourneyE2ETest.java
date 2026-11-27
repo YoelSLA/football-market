@@ -45,7 +45,7 @@ import org.springframework.web.client.RestClient;
 /** Journey HTTP completo de un lote de scraping y su consulta de cobertura. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)

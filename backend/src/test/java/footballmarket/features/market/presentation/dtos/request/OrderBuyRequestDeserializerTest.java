@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.exc.InvalidFormatException;
 
@@ -53,6 +55,30 @@ class OrderBuyRequestDeserializerTest {
   @DisplayName("Rechaza JSON que no sea un objeto")
   void rejectNonObject() {
     String json = "\"string\"";
+
+    assertThatThrownBy(() -> mapper.readValue(json, OrderBuyRequestDTO.class))
+        .isInstanceOf(InvalidFormatException.class);
+  }
+
+  @Test
+  @DisplayName("listingId válido ignora campos adicionales aunque tengan tipos incompatibles")
+  void deserializeP2PIgnoresExtraneousFields() throws Exception {
+    String json =
+        "{\"listingId\": 25, \"playerId\": \"abc\", \"quantity\": \"invalid\", \"price\": 1.5}";
+
+    OrderBuyRequestDTO request = mapper.readValue(json, OrderBuyRequestDTO.class);
+
+    assertThat(request).isNotNull();
+    assertThat(request.listingId()).isEqualTo(25L);
+    assertThat(request.playerId()).isNull();
+    assertThat(request.quantity()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"25.0", "1e1", "\"25\"", "true", "[]", "{}", "9223372036854775808"})
+  @DisplayName("Rechaza listingId con formatos no integrales o representaciones inválidas")
+  void rejectNonIntegralOrInvalidListingIdFormats(String invalidValue) {
+    String json = "{\"listingId\": " + invalidValue + "}";
 
     assertThatThrownBy(() -> mapper.readValue(json, OrderBuyRequestDTO.class))
         .isInstanceOf(InvalidFormatException.class);

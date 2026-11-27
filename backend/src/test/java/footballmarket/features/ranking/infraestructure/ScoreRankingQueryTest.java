@@ -37,13 +37,7 @@ import org.springframework.test.context.TestExecutionListeners;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({
-  TestcontainersConfiguration.class,
-  IdentityCatalogueFixture.class,
-  ScoreRankingTestData.class,
-  PlayerCatalogQueryData.class,
-  PlayerStatisticsQueryData.class
-})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)

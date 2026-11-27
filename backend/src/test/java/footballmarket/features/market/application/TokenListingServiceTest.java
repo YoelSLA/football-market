@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
@@ -205,7 +206,11 @@ class TokenListingServiceTest {
   @Autowired private PlayerStatisticsQueryData statistics;
   @Autowired private CacheManager cacheManager;
   @MockitoBean private QuoteSource quotes;
-  @MockitoBean private java.time.Clock marketClock;
+
+  @MockitoBean
+  @Qualifier("marketClock")
+  private java.time.Clock marketClock;
+
   private User seller;
   private User superuser;
   private Player player;

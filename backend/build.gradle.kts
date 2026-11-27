@@ -181,6 +181,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
     testImplementation("org.testcontainers:testcontainers-postgresql")
+    testImplementation(libs.archunit.junit5)
 }
 
 // ============================================================
@@ -301,6 +302,15 @@ tasks.named("check") {
 // JACOCO
 // ============================================================
 
+val coverageExclusions = listOf(
+    "**/dtos/**",
+    "**/exceptions/**",
+    "**/config/**",
+    "**/*Config*",
+    "**/*Configuration*",
+    "**/FootballMarketApplication*"
+)
+
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
 
@@ -313,6 +323,16 @@ tasks.jacocoTestReport {
 
         csv.required.set(false)
     }
+
+    classDirectories.setFrom(
+        files(
+            classDirectories.files.map {
+                fileTree(it) {
+                    exclude(coverageExclusions)
+                }
+            }
+        )
+    )
 }
 
 // ============================================================
@@ -362,6 +382,19 @@ sonar {
         property(
             "sonar.coverage.jacoco.xmlReportPaths",
             "build/reports/jacoco/test/jacocoTestReport.xml"
+        )
+
+        // Exclusión de artefactos declarativos, configuración y boilerplate sin lógica de negocio
+        property(
+            "sonar.coverage.exclusions",
+            listOf(
+                "**/dtos/**",
+                "**/exceptions/**",
+                "**/config/**",
+                "**/*Config.java",
+                "**/*Configuration.java",
+                "**/FootballMarketApplication.java"
+            ).joinToString(",")
         )
     }
 }

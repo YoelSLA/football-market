@@ -1,13 +1,16 @@
 package footballmarket.features.quote.domain.models;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.features.quote.domain.exceptions.InvalidQuoteException;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @org.junit.jupiter.api.Tag("unit")
 class QuoteAdjustmentTest {
@@ -129,6 +132,116 @@ class QuoteAdjustmentTest {
 
       assertThat(result.multiplier()).isEqualByComparingTo("0.900000");
       assertThat(result.price()).isEqualTo(95L);
+    }
+  }
+
+  @Nested
+  @DisplayName("Validación de parámetros y límites extremos")
+  class ValidationAndBoundaries {
+    @Test
+    @DisplayName("calculateWithMarketDemand rechaza precio actual menor o igual a cero")
+    void rejectsInvalidCurrentPriceInCompound() {
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      0L, new BigDecimal("0.60"), BigDecimal.ONE, 0L, new BigDecimal("0.10"), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      -10L, new BigDecimal("0.60"), BigDecimal.ONE, 0L, new BigDecimal("0.10"), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @Test
+    @DisplayName("calculateWithMarketDemand rechaza parámetros nulos obligatorios")
+    void rejectsNullParametersInCompound() {
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      100L, null, BigDecimal.ONE, 0L, new BigDecimal("0.10"), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      100L, new BigDecimal("0.60"), null, 0L, new BigDecimal("0.10"), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      100L, new BigDecimal("0.60"), BigDecimal.ONE, 0L, null, 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @Test
+    @DisplayName("calculateWithMarketDemand rechaza piso mínimo menor o igual a cero")
+    void rejectsInvalidMinPriceFloorInCompound() {
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      100L, new BigDecimal("0.60"), BigDecimal.ONE, 0L, new BigDecimal("0.10"), 0L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateWithMarketDemand(
+                      100L,
+                      new BigDecimal("0.60"),
+                      BigDecimal.ONE,
+                      0L,
+                      new BigDecimal("0.10"),
+                      -5L))
+          .isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @Test
+    @DisplayName("calculateMarketDemand rechaza precio actual inválido")
+    void rejectsInvalidCurrentPriceInMarketDemand() {
+      assertThatThrownBy(
+              () -> QuoteAdjustment.calculateMarketDemand(0L, 10L, new BigDecimal("0.10"), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () -> QuoteAdjustment.calculateMarketDemand(-50L, 10L, new BigDecimal("0.10"), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0.00", "-0.10", "1.01", "2.00"})
+    @DisplayName("calculateMarketDemand rechaza variación fuera del rango (0; 1]")
+    void rejectsInvalidVariationCapInMarketDemand(String invalidCap) {
+      assertThatThrownBy(
+              () ->
+                  QuoteAdjustment.calculateMarketDemand(100L, 10L, new BigDecimal(invalidCap), 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @Test
+    @DisplayName("calculateMarketDemand rechaza variationCap nulo y piso menor o igual a cero")
+    void rejectsNullCapOrInvalidFloorInMarketDemand() {
+      assertThatThrownBy(() -> QuoteAdjustment.calculateMarketDemand(100L, 10L, null, 1L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () -> QuoteAdjustment.calculateMarketDemand(100L, 10L, new BigDecimal("0.10"), 0L))
+          .isInstanceOf(InvalidQuoteException.class);
+
+      assertThatThrownBy(
+              () -> QuoteAdjustment.calculateMarketDemand(100L, 10L, new BigDecimal("0.10"), -1L))
+          .isInstanceOf(InvalidQuoteException.class);
+    }
+
+    @Test
+    @DisplayName("calculateMarketDemand acepta variación máxima de 1.00")
+    void acceptsMaxVariationCapInMarketDemand() {
+      QuoteAdjustment result =
+          QuoteAdjustment.calculateMarketDemand(100L, 100L, BigDecimal.ONE, 1L);
+
+      assertThat(result.multiplier()).isEqualByComparingTo("1.500000");
+      assertThat(result.price()).isEqualTo(150L);
     }
   }
 }

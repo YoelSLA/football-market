@@ -100,6 +100,23 @@ class WhoScoredStatisticsRequestPacerTest {
       // Assert
       assertThat(waits).isEmpty();
     }
+
+    @Test
+    @DisplayName("Un deadline vencido no envía solicitudes e interrumpe la extracción")
+    void interrumpeSiVenceDeadline() {
+      // Arrange
+      WhoScoredRequestPacer.StatisticsWorker worker = pacer.statisticsWorker(2500);
+
+      // Act & Assert
+      assertThatThrownBy(
+              () ->
+                  pacer.executeStatistics(
+                      worker, Instant.parse("2026-10-15T12:00:00Z"), () -> "no debe enviarse"))
+          .isInstanceOfSatisfying(
+              WhoScoredStatisticsException.class,
+              failure -> assertThat(failure.getCode()).isEqualTo("EXTRACTION_INTERRUPTED"));
+      assertThat(provider.requests()).isEmpty();
+    }
   }
 
   @Nested

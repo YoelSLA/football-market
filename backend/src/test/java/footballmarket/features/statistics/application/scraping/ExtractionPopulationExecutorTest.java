@@ -31,11 +31,7 @@ import org.springframework.test.context.bean.override.mockito.*;
 /** Recorrido poblacional desde Service real con DB aislada y proveedor controlado. */
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({
-  TestcontainersConfiguration.class,
-  IdentityCatalogueFixture.class,
-  StatisticsRunTestData.class
-})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
