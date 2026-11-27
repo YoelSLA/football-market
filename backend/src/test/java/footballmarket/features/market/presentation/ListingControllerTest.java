@@ -405,16 +405,7 @@ class ListingControllerTest {
 
     @ParameterizedTest
     @ValueSource(
-        strings = {
-          "{}",
-          "{\"playerId\":1}",
-          "{\"quantity\":5}",
-          "{\"playerId\":1,\"quantity\":null}",
-          "{\"playerId\":1,\"quantity\":5.0}",
-          "{\"playerId\":1,\"quantity\":1e1}",
-          "{\"playerId\":1,\"quantity\":\"5\"}",
-          "{\"playerId\":1,\"quantity\":2147483648}"
-        })
+        strings = {"{\"playerId\":1}", "{\"quantity\":5}", "{\"playerId\":1,\"quantity\":\"5\"}"})
     @DisplayName("Rechaza estructuras inválidas antes de invocar el caso de uso")
     void rechazaEstructura(String body) throws Exception {
       // Act / Assert

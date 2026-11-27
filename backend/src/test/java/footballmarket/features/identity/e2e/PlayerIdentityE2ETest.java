@@ -31,7 +31,7 @@ import org.springframework.web.client.RestClient;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
+@Import(TestcontainersConfiguration.class)
 @org.springframework.test.context.TestExecutionListeners(
     listeners = footballmarket.support.ResetPlayerCatalogListener.class,
     mergeMode =

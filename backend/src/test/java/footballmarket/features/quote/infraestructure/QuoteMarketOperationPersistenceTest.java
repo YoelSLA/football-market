@@ -24,7 +24,6 @@ import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.support.IdentityCatalogueFixture;
 import footballmarket.support.MarketTestData;
-import footballmarket.support.QuoteTestData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import footballmarket.support.ValuationTestData;
@@ -52,12 +51,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
  * cotización, de modo que el puerto vigente queda resuelto contra el repositorio canónico.
  */
 @SpringBootTest
-@Import({
-  TestcontainersConfiguration.class,
-  QuoteTestData.class,
-  IdentityCatalogueFixture.class,
-  ValuationTestData.class
-})
+@Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
