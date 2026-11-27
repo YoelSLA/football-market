@@ -55,6 +55,7 @@ Los tests deben ser deterministas, independientes y ejecutables aisladamente: si
 | Integration | Adaptación de proveedor externo | Integration y cliente/protocolo reales; proveedor controlado, como `MockRestServiceServer`. |
 | Security | Autenticación y autorización conjuntas | Componentes de seguridad reales; Spring, DB y MockMvc según el flujo. |
 | Config | Configuración propia, binding y startup | Instancia directa si basta; preferir `ApplicationContextRunner` para contexto. |
+| Architecture | Reglas de diseño, capas, convenciones y modularidad | Tests automáticos con ArchUnit sobre el bytecode compilado; unitarios puros sin Spring ni DB. |
 | E2E | Journeys críticos completos desde HTTP | Servidor y componentes internos reales, proveedor externo controlado. |
 
 Mapper no tiene tests directos dedicados: sus transformaciones y errores observables se comprueban mediante Controller y el contrato HTTP.
@@ -235,7 +236,7 @@ el sufijo `Test` o `Tests`, también para tests que hereden métodos de prueba.
 
 | Tag | Dependencias reales | Ejemplos |
 | --- | --- | --- |
-| `unit` | Sin contexto Spring, DB ni servidor | Model, Orchestrator, pacers, parsing y componentes instanciados directamente. |
+| `unit` | Sin contexto Spring, DB ni servidor | Model, Orchestrator, pacers, parsing, componentes instanciados directamente y tests de arquitectura con ArchUnit (`footballmarket.architecture.*`). |
 | `lightweight` | Contexto reducido, slice MVC o proveedor controlado; sin PostgreSQL, Docker ni navegador real | Controller, `ApplicationContextRunner`, clientes con `MockRestServiceServer` o HTTP local y Playwright sustituido. |
 | `integration` | Contexto completo o PostgreSQL/Testcontainers | Service, persistencia, migraciones, seguridad completa y startup con DB. |
 | `e2e` | Journey desde HTTP con servidor completo | Tests de `features/<feature>/e2e/`, conservando las reglas de §13. |
