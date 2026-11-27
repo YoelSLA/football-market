@@ -1,4 +1,10 @@
-import { Coins, Package, TrendingUp, Wallet } from "@/shared/icons";
+import {
+	Coins,
+	Package,
+	TrendingDown,
+	TrendingUp,
+	Wallet,
+} from "@/shared/icons";
 import type { FinancialSummary } from "../../types/models";
 import { FinancialHeroCard } from "./FinancialHeroCard/FinancialHeroCard";
 import styles from "./FinancialHeroCockpit.module.scss";
@@ -36,9 +42,9 @@ export function FinancialHeroCockpit({
 	const portfolioSubtitle =
 		summary.totalTokens === 0
 			? "Sin futbolistas en cartera"
-			: `${summary.totalTokens} tokens de futbolistas en propiedad${
+			: `${summary.totalTokens} tokens en propiedad${
 					summary.reservedTokens > 0
-						? ` (${summary.reservedTokens} a la venta)`
+						? ` (${summary.reservedTokens} en venta)`
 						: ""
 				}`;
 
@@ -56,7 +62,7 @@ export function FinancialHeroCockpit({
 			<FinancialHeroCard
 				title="Patrimonio Neto"
 				icon={Wallet}
-				accentTone="gain"
+				accentTone="indigo"
 				value={
 					summary.valuationComplete
 						? formatCredits(summary.netWorth)
@@ -76,8 +82,8 @@ export function FinancialHeroCockpit({
 					<PatrimonySparkline
 						data={sparklineData}
 						trend={pnlTrend}
-						width={85}
-						height={28}
+						width={70}
+						height={20}
 					/>
 				}
 			/>
@@ -85,8 +91,8 @@ export function FinancialHeroCockpit({
 			{/* 2. Ganancia / Pérdida */}
 			<FinancialHeroCard
 				title="Ganancia / Pérdida"
-				icon={TrendingUp}
-				accentTone={pnl >= 0 ? "gain" : "loss"}
+				icon={pnl >= 0 ? TrendingUp : TrendingDown}
+				accentTone={pnl >= 0 ? "emerald" : "rose"}
 				value={formatCredits(summary.totalProfitLoss)}
 				subtitle={pnlSubtitle}
 				delta={{
@@ -100,7 +106,7 @@ export function FinancialHeroCockpit({
 			<FinancialHeroCard
 				title="Saldo Disponible"
 				icon={Coins}
-				accentTone="highlight"
+				accentTone="blue"
 				value={formatCredits(summary.availableCredits)}
 				subtitle="Créditos libres para operar en el mercado"
 				trend="neutral"
@@ -110,7 +116,7 @@ export function FinancialHeroCockpit({
 			<FinancialHeroCard
 				title="Valor de Cartera"
 				icon={Package}
-				accentTone="investment"
+				accentTone="violet"
 				value={
 					summary.valuationComplete
 						? formatCredits(summary.totalPortfolioValue)

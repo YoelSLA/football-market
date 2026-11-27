@@ -2,6 +2,17 @@ import type React from "react";
 import type { LucideIcon } from "@/shared/icons";
 import styles from "./FinancialHeroCard.module.scss";
 
+export type CardAccentTone =
+	| "gain"
+	| "loss"
+	| "highlight"
+	| "investment"
+	| "blue"
+	| "indigo"
+	| "violet"
+	| "rose"
+	| "emerald";
+
 export interface FinancialHeroCardProps {
 	title: string;
 	value: React.ReactNode;
@@ -12,13 +23,23 @@ export interface FinancialHeroCardProps {
 		label?: string;
 	};
 	trend?: "up" | "down" | "neutral";
-	accentTone?: "gain" | "loss" | "highlight" | "investment";
+	accentTone?: CardAccentTone;
 	icon: LucideIcon;
-	extraAction?: React.ReactNode;
 	sparkline?: React.ReactNode;
-	isWarning?: boolean;
 	className?: string;
 }
+
+const TONE_TO_VARIANT: Record<CardAccentTone, string> = {
+	gain: styles.variant_emerald,
+	emerald: styles.variant_emerald,
+	loss: styles.variant_rose,
+	rose: styles.variant_rose,
+	highlight: styles.variant_blue,
+	blue: styles.variant_blue,
+	investment: styles.variant_violet,
+	violet: styles.variant_violet,
+	indigo: styles.variant_indigo,
+};
 
 export function FinancialHeroCard({
 	title,
@@ -26,11 +47,9 @@ export function FinancialHeroCard({
 	subtitle,
 	delta,
 	trend = "neutral",
-	accentTone = "highlight",
+	accentTone = "blue",
 	icon: Icon,
-	extraAction,
 	sparkline,
-	isWarning,
 	className,
 }: FinancialHeroCardProps) {
 	const trendClass =
@@ -40,7 +59,7 @@ export function FinancialHeroCard({
 				? styles.trendDown
 				: styles.trendNeutral;
 
-	const accentClass = styles[`accent_${accentTone}`];
+	const variantClass = TONE_TO_VARIANT[accentTone] ?? styles.variant_blue;
 
 	const formatDelta = (val: number, isPct?: boolean) => {
 		const sign = val > 0 ? "+" : "";
@@ -53,42 +72,31 @@ export function FinancialHeroCard({
 
 	return (
 		<article
-			className={`${styles.card} ${accentClass} ${isWarning ? styles.cardWarning : ""} ${className ?? ""}`.trim()}
+			className={`${styles.card} ${variantClass} ${className ?? ""}`.trim()}
 		>
-			<div className={styles.cardLayout}>
-				<div className={styles.tileWrapper}>
-					<span className={styles.iconTile} aria-hidden="true">
-						<Icon />
-					</span>
+			<span className={styles.tileWrapper} aria-hidden="true">
+				<Icon className={styles.icon} />
+			</span>
+
+			<div className={styles.contentCol}>
+				<header className={styles.header}>
+					<span className={styles.title}>{title}</span>
+					{delta && (
+						<span className={`${styles.deltaBadge} ${trendClass}`}>
+							{formatDelta(delta.value, delta.isPercentage)}
+							{delta.label && <span> {delta.label}</span>}
+						</span>
+					)}
+				</header>
+
+				<div className={styles.valueRow}>
+					<strong className={styles.value}>{value}</strong>
+					{sparkline && (
+						<div className={styles.sparklineWrapper}>{sparkline}</div>
+					)}
 				</div>
 
-				<div className={styles.contentCol}>
-					<header className={styles.header}>
-						<span className={styles.title}>{title}</span>
-						{delta && (
-							<span className={`${styles.deltaBadge} ${trendClass}`}>
-								{formatDelta(delta.value, delta.isPercentage)}
-								{delta.label && (
-									<span className={styles.deltaLabel}> {delta.label}</span>
-								)}
-							</span>
-						)}
-					</header>
-
-					<div className={styles.valueRow}>
-						<span className={styles.value}>{value}</span>
-						{sparkline && (
-							<div className={styles.sparklineContainer}>{sparkline}</div>
-						)}
-					</div>
-
-					<footer className={styles.footer}>
-						{subtitle && <span className={styles.subtitle}>{subtitle}</span>}
-						{extraAction && (
-							<div className={styles.extraAction}>{extraAction}</div>
-						)}
-					</footer>
-				</div>
+				{subtitle && <span className={styles.subtitle}>{subtitle}</span>}
 			</div>
 		</article>
 	);
