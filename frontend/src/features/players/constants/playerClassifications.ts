@@ -18,6 +18,8 @@ const leagueClassifications: Record<string, Classification> = {
 	Bundesliga: { image: bundesligaImage, variant: "bundesliga" },
 	"Primera División": { image: primeraDivisionImage, variant: "primera" },
 	"Primera Division": { image: primeraDivisionImage, variant: "primera" },
+	LaLiga: { image: primeraDivisionImage, variant: "primera" },
+	"La Liga": { image: primeraDivisionImage, variant: "primera" },
 	"Serie A": { image: serieAImage, variant: "serie-a" },
 	"Ligue 1": { image: ligueOneImage, variant: "ligue-one" },
 };
