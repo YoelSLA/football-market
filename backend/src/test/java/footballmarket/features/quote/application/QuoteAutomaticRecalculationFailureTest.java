@@ -38,12 +38,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({
-  TestcontainersConfiguration.class,
-  IdentityCatalogueFixture.class,
-  ValuationTestData.class,
-  QuoteTestData.class
-})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)

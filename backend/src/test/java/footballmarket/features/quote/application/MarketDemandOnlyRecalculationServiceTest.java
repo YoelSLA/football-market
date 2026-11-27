@@ -48,12 +48,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({
-  TestcontainersConfiguration.class,
-  IdentityCatalogueFixture.class,
-  MarketTestData.class,
-  ValuationTestData.class,
-})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)

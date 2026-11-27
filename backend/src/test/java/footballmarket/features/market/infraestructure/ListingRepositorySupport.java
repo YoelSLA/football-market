@@ -21,6 +21,7 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -46,7 +47,11 @@ abstract class ListingRepositorySupport {
   @Autowired protected PlatformTransactionManager manager;
   @Autowired protected JdbcTemplate jdbc;
   @MockitoBean protected QuoteSource quotes;
-  @MockitoBean protected Clock marketClock;
+
+  @MockitoBean
+  @Qualifier("marketClock")
+  protected Clock marketClock;
+
   protected User seller;
   protected User buyer;
   protected Player player;

@@ -40,7 +40,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)

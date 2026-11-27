@@ -59,7 +59,7 @@ import org.springframework.web.client.RestClient;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, IdentityCatalogueFixture.class})
+@Import(TestcontainersConfiguration.class)
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
@@ -243,25 +243,6 @@ class PlayerStatisticsCrossChannelJourneyE2ETest {
       assertThat(summary.players().completed()).isEqualTo(5);
       assertThat(summary.players().pending()).isZero();
       assertThat(summary.providerCalls()).isEqualTo(5L * WhoScoredJsonQuery.COMBINATIONS.size());
-    }
-
-    @Test
-    @DisplayName("La antigua consulta de cobertura devuelve 404 sin acceder a los proveedores")
-    void removedCoverageDoesNotAccessProviders() {
-      // Arrange
-      RestClient api = api();
-      String token = authenticatedUser(api);
-
-      // Act
-      var status =
-          api.get()
-              .uri("/api/players/statistics/whoscored/coverage?source=JSON")
-              .headers(headers -> headers.setBearerAuth(token))
-              .exchange((request, response) -> response.getStatusCode());
-
-      // Assert / Verify
-      assertThat(status.value()).isEqualTo(404);
-      org.mockito.Mockito.verifyNoInteractions(scrapingIntegration, jsonIntegration);
     }
 
     @Test

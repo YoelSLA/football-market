@@ -37,12 +37,7 @@ import org.springframework.test.context.bean.override.convention.TestBean;
 
 /** Verifica que el recálculo combinado persista íntegra su auditoría deportiva y de mercado. */
 @SpringBootTest
-@Import({
-  TestcontainersConfiguration.class,
-  IdentityCatalogueFixture.class,
-  ValuationTestData.class,
-  MarketTestData.class
-})
+@Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,

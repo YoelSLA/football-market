@@ -28,7 +28,7 @@ import org.springframework.test.context.ActiveProfiles;
  * repositorio, que se afirma en su propia categoría.
  */
 @SpringBootTest
-@Import({TestcontainersConfiguration.class, QuoteTestData.class})
+@Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @org.junit.jupiter.api.Tag("integration")
 class RepositoryQuoteSourceTest {

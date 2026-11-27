@@ -257,11 +257,11 @@ public final class DashboardMapper {
       return "OTRAS_LIGAS";
     }
     String l = league.trim().toUpperCase();
-    if (l.contains("PREMIER")) return "PREMIER_LEAGUE";
-    if (l.contains("PRIMERA") || l.contains("LIGA") || l.contains("SANTANDER")) return "LALIGA";
-    if (l.contains("SERIE A") || l.contains("CALCIO")) return "SERIE_A";
     if (l.contains("BUNDESLIGA")) return "BUNDESLIGA";
+    if (l.contains("PREMIER")) return "PREMIER_LEAGUE";
+    if (l.contains("SERIE A") || l.contains("CALCIO")) return "SERIE_A";
     if (l.contains("LIGUE 1")) return "LIGUE_1";
+    if (l.contains("PRIMERA") || l.contains("LIGA") || l.contains("SANTANDER")) return "LALIGA";
     return "OTRAS_LIGAS";
   }
 

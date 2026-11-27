@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -100,12 +101,18 @@ class MarketDomainPersistenceTest {
 
   @MockitoBean private QuoteSource quotes;
 
+  @MockitoBean
+  @Qualifier("marketClock")
+  private java.time.Clock marketClock;
+
   private User buyer;
   private User superuser;
   private Player player;
 
   @BeforeEach
   void arrange() {
+    org.mockito.Mockito.when(marketClock.getZone()).thenReturn(ZoneOffset.UTC);
+    org.mockito.Mockito.when(marketClock.instant()).thenReturn(java.time.Instant.now());
     buyer = market.registerBuyer();
     superuser = market.registerSuperuser();
     player = market.createVisiblePlayer();
