@@ -30,6 +30,7 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Lombok | Gestionada por Spring Boot 4.1.1 | Generación en compilación de constructores, getters y constructores sin argumentos usados por componentes y Models. |
 | springboot4-dotenv | 5.1.0 | Carga de variables desde archivos `.env` exclusivamente durante desarrollo. |
 | Spring Boot Test, JUnit Jupiter, Mockito, AssertJ y MockMvc | Gestionadas por Spring Boot 4.1.1 | Pruebas de dominio, Controller, seguridad, integración y E2E; tags `unit`, `lightweight`, `integration` y `e2e` según dependencias reales, sin filtrar la tarea completa `test`. |
+| ArchUnit JUnit 5 | 1.4.1 | Verificación automatizada de arquitectura en el backend: análisis estático de dependencias de capas, reglas de nombres y anotaciones, modularidad y ausencia de ciclos bajo la suite rápida unitaria (`@Tag("unit")`). |
 | JaCoCo | Plugin incluido con Gradle; versión efectiva predeterminada del plugin | Instrumentación de la suite completa `test` y reportes XML/HTML para Sonar y consulta humana. Instrumentación deshabilitada en suites parciales y pre-push. |
 | Testcontainers | Gestionada por Spring Boot 4.1.1 | Provisionamiento de PostgreSQL 18 aislado para las pruebas que requieren persistencia real. |
 | Spotless | 7.2.1 | Formato y controles de estilo de Java y archivos auxiliares, con Google Java Format y orden de imports. |

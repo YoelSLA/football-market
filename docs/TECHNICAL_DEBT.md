@@ -92,8 +92,19 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-038](#td-038--fallo-de-cierre-scraping-oculto-en-el-log-automático) | Fallo de cierre scraping oculto en el log automático | Backend / Observabilidad | Media | En curso | 2026-11-06 13:22:21 |
 | [TD-039](#td-039--selector-de-estrategia-del-ranking-pendiente-de-adopción-multicorrida) | Selector de estrategia del ranking pendiente de adopción multicorrida | Backend / Datos | Media | Pendiente | 2026-11-10 |
 | [TD-040](#td-040--predicado-de-elegibilidad-por-métricas-duplicado-en-repositorios) | Predicado de elegibilidad por métricas duplicado en repositorios | Backend / Datos | Media | Pendiente | 2026-11-12 00:35:59 |
+| [TD-041](#td-041--acoplamiento-cíclico-transversal-heredado-entre-módulos-de-features) | Acoplamiento cíclico transversal heredado entre módulos de features | Backend / Arquitectura | Media | Pendiente | 2026-11-27 19:16:16 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-041 — Acoplamiento cíclico transversal heredado entre módulos de features
+
+- **Área / prioridad / estado:** Backend / Arquitectura; Media; Pendiente.
+- **Registro:** 2026-11-27 19:16:16 (`America/Argentina/Buenos_Aires`).
+- **Origen:** implementación de la suite de tests de arquitectura con ArchUnit en SPEC-037 (`FeatureCyclesTest`), evaluando el grafo de dependencias entre paquetes `footballmarket.features.*`.
+- **Evidencia:** la verificación de cortes modulares sin exclusiones detecta 40 violaciones por dependencias cíclicas directas e indirectas entre 11 pares de features (`auth <-> market`, `businessmetrics <-> market`, `catalog <-> identity`, `catalog <-> images`, `catalog <-> market`, `catalog <-> statistics`, `market <-> portfolio`, `market <-> quote`, `quote <-> valuation`, `ranking <-> valuation`, `statistics <-> valuation`). Específicamente, entidades y servicios de dominio como `UserCredit` en `auth`, `MarketTransaction` en `market`, y `PendingReviewRecorder` en `identity` mantienen acoplamientos bidireccionales cruzados preexistentes a la adopción de Package by Feature estricto.
+- **Impacto:** impide la independencia modular completa de las features del backend y obligó a incorporar reglas de exclusión explícitas (`ignoreDependency`) en `FeatureCyclesTest` para preservar el paso limpio de las pruebas rápidas sin encubrir regresiones ni ciclos futuros.
+- **Resolución propuesta:** desacoplar los modelos de dominio compartidos y la comunicación entre features mediante identificadores opacos, eventos de dominio o fachadas de aplicación neutrales, retirando progresivamente las dependencias directas entre módulos hermanos.
+- **Cierre:** refactorización modular autorizada de las interacciones entre features afectadas, retiro de las 11 directivas `ignoreDependency` en `FeatureCyclesTest` y verificación de que `featuresLibresDeCiclos` apruebe con cero violaciones.
 
 ### TD-040 — Predicado de elegibilidad por métricas duplicado en repositorios
 
@@ -2434,3 +2445,4 @@ Identificador anterior en `dev`: TD-032; renumerado por colisión durante la int
 | 2026-10-21 23:05:00 | Remediación del code review de SPEC-016 por decisión del responsable del proyecto: se cierra el desempate no determinista de la lectura de cotizaciones (CR-01, TD-022, T051 y T052) y se registran las decisiones sobre CR-02 (TD-023 se conserva como deuda), CR-05 (TD-026 descartada) y CR-07 (TD-028 descartada). TD-022 pasa a `En curso` porque la ejecución de los tests corresponde al usuario. Se modificó el repositorio de cotizaciones y la suite de pruebas de consultas; no se modificaron migraciones, contratos HTTP ni el esquema. |
 | 2026-11-12 00:35:59 | Incorporación de TD-040 tras la revisión del diff del IMPLEMENT conjunto de SPEC-002/SPEC-005: el predicado de elegibilidad por métricas se repite literalmente en cuatro consultas de catálogo, mercado y rankings. No se modificó código como parte del registro. |
 | 2026-11-17 12:15:00 | Actualización de TD-040 tras alinear el catálogo de emisión oficial del mercado primario (OfficialMarketRepository) con el predicado de elegibilidad por métricas vigentes del catálogo de jugadores, incorporando su consulta nativa a las cinco fuentes afectadas. |
+| 2026-11-27 19:16:16 | Incorporación de TD-041 tras la implementación de la suite de arquitectura de SPEC-037 (Issue #98): se detectaron 11 pares de dependencias cíclicas cruzadas preexistentes entre paquetes de features en ArchUnit, aisladas mediante ignoreDependency en FeatureCyclesTest para evitar fallos en fastTest y documentadas con criterio de cierre explícito. No se modificó código funcional de features. |
