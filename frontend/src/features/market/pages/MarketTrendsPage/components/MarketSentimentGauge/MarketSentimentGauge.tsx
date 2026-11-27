@@ -3,16 +3,22 @@ import styles from "./MarketSentimentGauge.module.scss";
 
 export interface MarketSentimentGaugeProps {
 	buyPercentage?: number | null;
+	sellPercentage?: number | null;
 	bias?: MarketBias | null;
 }
 
 export default function MarketSentimentGauge({
 	buyPercentage,
+	sellPercentage,
 	bias,
 }: MarketSentimentGaugeProps) {
 	const clampedBuy = Math.max(
 		0,
 		Math.min(100, Math.round(buyPercentage ?? 50)),
+	);
+	const clampedSell = Math.max(
+		0,
+		Math.min(100, Math.round(sellPercentage ?? 100 - clampedBuy)),
 	);
 	const effectiveBias: MarketBias = bias ?? "NEUTRAL";
 
@@ -47,7 +53,14 @@ export default function MarketSentimentGauge({
 			aria-label="Tacómetro de sentimiento del mercado"
 		>
 			<div className={styles.gaugeContainer__header}>
-				<h3 className={styles.gaugeContainer__title}>Sentimiento Radial</h3>
+				<div>
+					<h3 className={styles.gaugeContainer__title}>
+						Sentimiento Colectivo
+					</h3>
+					<p className={styles.gaugeContainer__subtitle}>
+						Presión compradora vs. vendedora en tiempo real
+					</p>
+				</div>
 				<span
 					className={`${styles.gaugeContainer__bias} ${
 						styles[`gaugeContainer__bias--${effectiveBias.toLowerCase()}`]
@@ -129,8 +142,17 @@ export default function MarketSentimentGauge({
 				</svg>
 
 				<div className={styles.readout}>
-					<span className={styles.readout__value}>{clampedBuy}%</span>
-					<span className={styles.readout__label}>Presión Compradora</span>
+					<div className={styles.readout__group}>
+						<div className={styles.readout__side}>
+							<span className={styles.readout__value}>{clampedBuy}%</span>
+							<span className={styles.readout__label}>Compras</span>
+						</div>
+						<div className={styles.readout__divider} aria-hidden="true" />
+						<div className={styles.readout__side}>
+							<span className={styles.readout__value_sell}>{clampedSell}%</span>
+							<span className={styles.readout__label}>Ventas</span>
+						</div>
+					</div>
 				</div>
 			</div>
 		</section>

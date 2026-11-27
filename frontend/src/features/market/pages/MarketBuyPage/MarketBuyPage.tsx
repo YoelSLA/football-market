@@ -1,5 +1,6 @@
 import { PageLayout } from "@/app/layouts";
 import { useMarketBuyPage } from "@/features/market/hooks";
+import { usePortfolioSummaryQuery } from "@/features/portfolio/hooks/queries";
 import BuyTokenModal from "./components/BuyTokenModal";
 import MarketHeader from "./components/MarketHeader";
 import OfficialMarketPanel from "./components/OfficialMarketPanel";
@@ -11,12 +12,18 @@ import styles from "./MarketBuyPage.module.scss";
  */
 export default function MarketBuyPage() {
 	const marketBuy = useMarketBuyPage();
+	const portfolioQuery = usePortfolioSummaryQuery();
 
 	return (
 		<PageLayout>
 			<div className={styles.page}>
 				<div className={styles.page__header}>
-					<MarketHeader availableCredits={marketBuy.availableCredits} />
+					<MarketHeader
+						availableCredits={marketBuy.availableCredits}
+						totalPlayers={marketBuy.totalPlayers}
+						priceRange={marketBuy.priceRange}
+						portfolioSummary={portfolioQuery.data?.summary}
+					/>
 				</div>
 
 				<OfficialMarketPanel marketBuy={marketBuy} />

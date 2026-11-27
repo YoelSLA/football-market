@@ -1,119 +1,98 @@
 @use "@/styles/abstracts" as ds;
 
 .header {
-	// 3. 🧩 Layout
 	display: flex;
-	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: ds.$space-md;
+	gap: ds.$space-sm;
+	padding: 4px 0;
+	width: 100%;
+	flex-shrink: 0;
 
-	// 4. 📦 Box Model
-	height: 80px;
-	min-height: 80px;
-	padding: 0 16px;
-	border-radius: 12px;
-	box-sizing: border-box;
-
-	// 6. 🎨 Visual
-	background: linear-gradient(
-		135deg,
-		ds.$surface-panel-from 0%,
-		ds.$surface-panel-to 100%
-	);
-	border: 1px solid ds.$border-subtle;
-
-	&__main {
+	&__left {
 		display: flex;
 		align-items: center;
-		min-width: 0;
-	}
-
-	&__titleGroup {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	&__iconTile {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 48px;
-		height: 48px;
-		border-radius: 12px;
-		background-color: ds.$surface-accent-dark;
-		border: 1px solid ds.$accent-sports-green;
-		flex-shrink: 0;
+		gap: 8px;
 	}
 
 	&__icon {
-		width: 24px;
-		height: 24px;
-		color: ds.$accent-sports-green;
+		width: 18px;
+		height: 18px;
+		color: ds.$accent-gain;
 	}
 
 	&__title {
 		margin: 0;
-		font-size: 20px;
+		font-size: 16px;
+		font-weight: 750;
+		color: ds.$text-strong-on-dark;
+	}
+
+	&__tag {
+		font-size: 11px;
 		font-weight: 700;
-		color: ds.$text-title-on-dark;
-		line-height: 1.2;
-		white-space: nowrap;
+		padding: 2px 8px;
+		border-radius: 9999px;
+		background: ds.$surface-gain-soft;
+		color: ds.$accent-gain;
+		border: 1px solid ds.$border-gain-subtle;
 	}
 
-	&__subtitle {
-		margin: 3px 0 0;
-		font-size: 13px;
-		line-height: 1.3;
-		color: ds.$text-muted-on-dark;
-		white-space: nowrap;
-	}
-
-	&__actions {
+	&__right {
 		display: flex;
 		align-items: center;
-		gap: ds.$space-sm;
-		flex-wrap: wrap;
+		gap: 8px;
 	}
 
 	&__badge {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: ds.$space-2xs;
-		padding: ds.$space-2xs ds.$space-sm;
-		border-radius: 9999px;
-		background-color: ds.$surface-card-dark;
-		border: 1px solid ds.$border-subtle;
+		gap: 6px;
+		padding: 4px 10px;
+		border-radius: 6px;
+		background-color: ds.$surface-data-control;
+		border: 1px solid ds.$border-panel-mid;
 		font-size: 12px;
-		color: ds.$text-body-on-dark;
-		font-weight: 500;
+		font-weight: 600;
+		color: ds.$text-dimmed-on-dark;
+		font-variant-numeric: tabular-nums;
 	}
 
 	&__badgeIcon {
-		width: 14px;
-		height: 14px;
-		color: ds.$accent-highlight;
+		width: 13px;
+		height: 13px;
+		color: ds.$text-dimmed-on-dark;
 	}
 
 	&__refreshButton {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: ds.$space-2xs;
-		padding: ds.$space-2xs ds.$space-md;
-		font-size: 14px;
-		font-weight: 500;
+		gap: 6px;
+		height: 28px;
+		padding: 0 12px;
+		border-radius: 6px;
+		background-color: ds.$surface-panel-from;
+		border: 1px solid ds.$border-panel-mid;
+		font-size: 12px;
+		font-weight: 700;
+		color: ds.$text-strong-on-dark;
 		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background-color: ds.$surface-control-active;
+			border-color: ds.$accent-gain;
+			color: ds.$accent-gain;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
 	}
 
-	&__refreshIcon {
-		width: 16px;
-		height: 16px;
-		transition: transform 0.3s ease;
-
-		&--spinning {
-			animation: spin 1s linear infinite;
-		}
+	&__spinning {
+		animation: spin 1s linear infinite;
 	}
 }
 
@@ -123,17 +102,5 @@
 	}
 	to {
 		transform: rotate(360deg);
-	}
-}
-
-@media (max-width: 900px) {
-	.header {
-		flex-direction: column;
-		align-items: flex-start;
-
-		&__actions {
-			width: 100%;
-			justify-content: space-between;
-		}
 	}
 }

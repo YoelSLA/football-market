@@ -1,34 +1,51 @@
 import { useMemo } from "react";
 import { PageLayout } from "@/app/layouts";
 import { useMarketTrendsQuery } from "@/features/market/hooks";
+import { useMarketQuotesQuery } from "@/features/market/hooks/queries";
+import BuyTokenModal from "@/features/market/pages/MarketBuyPage/components/BuyTokenModal";
 import { useAllPlayersQuery } from "@/features/players";
 import type { Player } from "@/features/players/types";
+import { AuthStatus, useAuthStore } from "@/infrastructure/storage";
 import { Button } from "@/shared/components";
-import { TriangleAlert } from "@/shared/icons";
-import MarketDemandCurveChart from "./components/MarketDemandCurveChart";
-import MarketDemandShareChart from "./components/MarketDemandShareChart";
+import { TrendingUp, TriangleAlert } from "@/shared/icons";
 import MarketHotAssets from "./components/MarketHotAssets";
+import MarketLeagueDemandChart from "./components/MarketLeagueDemandChart";
 import MarketMacroMetrics from "./components/MarketMacroMetrics";
 import MarketPositionalDemandChart from "./components/MarketPositionalDemandChart";
-import MarketSentimentBar from "./components/MarketSentimentBar";
 import MarketSentimentGauge from "./components/MarketSentimentGauge";
-import MarketSupplyDemandBalance from "./components/MarketSupplyDemandBalance";
+import MarketTopValuedPlayers from "./components/MarketTopValuedPlayers";
 import MarketTrendsEmptyState from "./components/MarketTrendsEmptyState";
-import MarketTrendsHeader from "./components/MarketTrendsHeader";
 import MarketTrendsSkeleton from "./components/MarketTrendsSkeleton";
+import { useMarketTrendsBuyModal } from "./hooks";
 import styles from "./MarketTrendsPage.module.scss";
 
 /**
  * Tablero de Tendencias y Sentimiento del Mercado (SPEC-029).
- * Visualiza la presión compradora/vendedora macro de la comunidad,
- * el tacómetro de sentimiento radial, análisis de oferta y demanda,
- * curva de elasticidad, cuota de demanda del Top 5, demanda táctica
- * por demarcación y ranking de activos calientes en las últimas 24 horas.
+ * - Fila 1: Cockpit Macro 24h (4 KPIs: Volumen, Tokens, Transacciones, Ticket Promedio).
+ * - Fila 2: Análisis Triple (Sentimiento Colectivo, Demanda Táctica, Flujo por Liga).
+ * - Fila 3: Tablas de Mercado (Activos en Tendencia Top 5 + Mayores Cotizaciones Top 5).
  */
 export default function MarketTrendsPage() {
-	const { data, isLoading, isError, isFetching, refetch } =
-		useMarketTrendsQuery();
+	const { data, isLoading, isError, refetch } = useMarketTrendsQuery();
 	const { data: playersData } = useAllPlayersQuery();
+
+	const authenticated = useAuthStore(
+		(state) =>
+			state.status === AuthStatus.AUTHENTICATED && state.session !== null,
+	);
+
+	const quotePlayerIds = useMemo(() => {
+		const ids: number[] = [];
+		if (data?.topHotPlayers) {
+			for (const p of data.topHotPlayers) {
+				ids.push(p.playerId);
+			}
+		}
+		return ids;
+	}, [data?.topHotPlayers]);
+
+	const quotesQuery = useMarketQuotesQuery(quotePlayerIds, authenticated);
+	const buyModal = useMarketTrendsBuyModal();
 
 	const playerMap = useMemo(() => {
 		const map = new Map<number, Player>();
@@ -45,13 +62,6 @@ export default function MarketTrendsPage() {
 	return (
 		<PageLayout>
 			<div className={styles.page}>
-				<MarketTrendsHeader
-					startsAt={data?.window?.startsAt}
-					endsAt={data?.window?.endsAt}
-					isFetching={isFetching}
-					onRefresh={() => void refetch()}
-				/>
-
 				{isLoading && !data && <MarketTrendsSkeleton />}
 
 				{isError && !data && (
@@ -81,78 +91,104 @@ export default function MarketTrendsPage() {
 
 				{data && !hasNoTransactions && (
 					<main className={styles.content}>
-						{/* Fila 1: Indicadores de Sentimiento (Tacómetro Radial + Barra Proporcional) */}
-						<section
-							className={styles.sentimentRow}
-							aria-label="Indicadores de sentimiento"
-						>
-							<MarketSentimentGauge
-								buyPercentage={data.buyTransactionsPercentage}
-								bias={data.marketBias}
-							/>
-							<MarketSentimentBar
-								buyPercentage={data.buyTransactionsPercentage}
-								sellPercentage={data.sellTransactionsPercentage}
-								bias={data.marketBias}
-								totalTransactions={data.totalTransactions}
-							/>
-						</section>
-
-						{/* Fila 2: Métricas Cuantitativas Macro */}
-						<section aria-label="Métricas macro del mercado">
-							<MarketMacroMetrics
-								totalTradedCredits={data.totalTradedCredits}
-								totalTradedTokens={data.totalTradedTokens}
-								totalTransactions={data.totalTransactions}
-								topPlayerName={data.topHotPlayers[0]?.playerName}
-							/>
-						</section>
-
-						{/* Fila 3: Análisis Avanzado de Oferta y Demanda */}
-						<section
-							className={styles.supplyDemandRow}
-							aria-label="Balance y elasticidad de oferta y demanda"
-						>
-							<MarketSupplyDemandBalance
-								buyPercentage={data.buyTransactionsPercentage}
-								sellPercentage={data.sellTransactionsPercentage}
-								totalTransactions={data.totalTransactions}
-								totalTradedCredits={data.totalTradedCredits}
-								totalTradedTokens={data.totalTradedTokens}
-							/>
-							<MarketDemandCurveChart
-								buyPercentage={data.buyTransactionsPercentage}
-								bias={data.marketBias}
-							/>
-						</section>
-
-						{/* Fila 4: Segmentación de Demanda y Demarcación Táctica */}
-						{data.topHotPlayers.length > 0 && (
-							<section
-								className={styles.analysisRow}
-								aria-label="Cuota de demanda y distribución táctica"
-							>
-								<MarketDemandShareChart
-									topHotPlayers={data.topHotPlayers}
+						{/* Fila 1: Cockpit Header Estilo Historial de Transacciones */}
+						<header className={styles.header}>
+							<div className={styles.header__left}>
+								<div className={styles.header__iconWrapper}>
+									<TrendingUp
+										aria-hidden="true"
+										className={styles.header__icon}
+									/>
+								</div>
+								<div className={styles.header__titleWrapper}>
+									<h1 className={styles.header__title}>
+										Tendencias del Mercado
+									</h1>
+									<p className={styles.header__description}>
+										Métricas macroeconómicas y volumen en tiempo real (24h).
+									</p>
+								</div>
+							</div>
+							<div className={styles.header__metrics}>
+								<MarketMacroMetrics
+									totalTradedCredits={data.totalTradedCredits}
 									totalTradedTokens={data.totalTradedTokens}
-									playerMap={playerMap}
+									totalTransactions={data.totalTransactions}
 								/>
+							</div>
+						</header>
+
+						{/* Fila 2: Análisis Triple (Sentimiento Colectivo | Demanda Táctica | Flujo por Liga) */}
+						<section
+							className={styles.chartsRow}
+							aria-label="Sentimiento de mercado, demanda táctica y flujo por competencia"
+						>
+							<div className={styles.chartCol}>
+								<MarketSentimentGauge
+									buyPercentage={data.buyTransactionsPercentage}
+									sellPercentage={data.sellTransactionsPercentage}
+									bias={data.marketBias}
+								/>
+							</div>
+							<div className={styles.chartCol}>
 								<MarketPositionalDemandChart
 									topHotPlayers={data.topHotPlayers}
 									playerMap={playerMap}
 								/>
-							</section>
-						)}
+							</div>
+							<div className={styles.chartCol}>
+								<MarketLeagueDemandChart
+									topHotPlayers={data.topHotPlayers}
+									playerMap={playerMap}
+								/>
+							</div>
+						</section>
 
-						{/* Fila 5: Tarjetas Interactivas de Activos en Tendencia */}
-						{data.topHotPlayers.length > 0 && (
-							<MarketHotAssets
-								topHotPlayers={data.topHotPlayers}
-								playerMap={playerMap}
-							/>
-						)}
+						{/* Fila 3: Tablas de Activos y Mercado (Activos en Tendencia | Mayores Cotizaciones) */}
+						<section
+							className={styles.tablesRow}
+							aria-label="Activos en tendencia y mayores cotizaciones del mercado"
+						>
+							<div className={styles.hotAssetsCol}>
+								<MarketHotAssets
+									topHotPlayers={data.topHotPlayers}
+									totalTradedTokens={data.totalTradedTokens}
+									playerMap={playerMap}
+									quotesByPlayerId={quotesQuery.quotesByPlayerId}
+									onBuyClick={buyModal.openBuyModal}
+								/>
+							</div>
+							<div className={styles.topValuedCol}>
+								<MarketTopValuedPlayers
+									playerMap={playerMap}
+									quotesByPlayerId={quotesQuery.quotesByPlayerId}
+									onBuyClick={buyModal.openBuyModal}
+								/>
+							</div>
+						</section>
 					</main>
 				)}
+
+				<BuyTokenModal
+					isOpen={buyModal.isModalOpen}
+					player={buyModal.selectedPlayer}
+					quote={buyModal.selectedQuote}
+					confirmationBlockReason={buyModal.confirmationBlockReason}
+					estimation={buyModal.estimation}
+					formRegister={buyModal.formRegister}
+					formError={buyModal.formError}
+					quantity={buyModal.quantity}
+					onQuantityChange={buyModal.onQuantityChange}
+					isBusy={buyModal.isBusy}
+					canConfirm={buyModal.canConfirm}
+					isSuccess={buyModal.isSuccess}
+					purchaseResult={buyModal.purchaseResult}
+					errorMessage={buyModal.errorMessage}
+					onClose={buyModal.closeBuyModal}
+					onConfirm={buyModal.handleConfirmBuy}
+					triggerRef={buyModal.triggerRef}
+					initialFocusRef={buyModal.initialFocusRef}
+				/>
 			</div>
 		</PageLayout>
 	);

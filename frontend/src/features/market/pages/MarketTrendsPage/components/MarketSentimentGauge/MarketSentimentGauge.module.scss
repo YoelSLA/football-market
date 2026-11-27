@@ -4,16 +4,20 @@
 	// 3. 🧩 Layout
 	display: flex;
 	flex-direction: column;
-	gap: ds.$space-sm;
+	justify-content: space-between;
+	gap: ds.$space-xs;
+	height: 100%;
 
 	// 4. 📦 Box Model
 	padding: ds.$space-md;
 	border-radius: 12px;
 	min-width: 0;
+	box-sizing: border-box;
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-card-dark;
-	border: 1px solid ds.$border-subtle;
+	border: 1px solid ds.$border-panel-mid;
+	box-shadow: 0 2px 8px ds.$shadow-panel;
 
 	&__header {
 		display: flex;
@@ -24,9 +28,15 @@
 
 	&__title {
 		margin: 0;
-		font-size: 16px;
-		font-weight: 600;
+		font-size: 15px;
+		font-weight: 700;
 		color: ds.$text-strong-on-dark;
+	}
+
+	&__subtitle {
+		margin: 2px 0 0;
+		font-size: 11.5px;
+		color: ds.$text-dimmed-on-dark;
 	}
 
 	&__bias {
@@ -61,15 +71,18 @@
 
 .gaugeWrapper {
 	display: flex;
+	flex: 1;
 	flex-direction: column;
 	align-items: center;
+	justify-content: center;
 	position: relative;
 	width: 100%;
+	min-height: 0;
 }
 
 .svg {
 	width: 100%;
-	max-width: 280px;
+	max-width: 220px;
 	height: auto;
 	overflow: visible;
 }
@@ -99,21 +112,47 @@
 
 .readout {
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	margin-top: - ds.$space-2xs;
+	justify-content: center;
+	margin-top: 4px;
+	width: 100%;
+
+	&__group {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-md;
+	}
+
+	&__side {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+	}
 
 	&__value {
-		font-size: 28px;
+		font-size: 18px;
 		font-weight: 800;
-		color: ds.$text-title-on-dark;
-		line-height: 1.2;
+		color: ds.$accent-gain;
+		line-height: 1.1;
+
+		&_sell {
+			font-size: 18px;
+			font-weight: 800;
+			color: ds.$state-loss;
+			line-height: 1.1;
+		}
 	}
 
 	&__label {
-		font-size: 12px;
+		font-size: 11px;
 		color: ds.$text-muted-on-dark;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
+	}
+
+	&__divider {
+		width: 1px;
+		height: 28px;
+		background: ds.$border-strong;
 	}
 }

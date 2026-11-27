@@ -3,8 +3,15 @@
 .section {
 	display: flex;
 	flex-direction: column;
-	gap: ds.$space-md;
-	width: 100%;
+	gap: ds.$space-sm;
+	padding: ds.$space-md;
+	border-radius: 12px;
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-panel-mid;
+	min-width: 0;
+	height: 100%;
+	box-sizing: border-box;
+	box-shadow: 0 2px 8px ds.$shadow-panel;
 }
 
 .sectionHeader {
@@ -20,233 +27,288 @@
 }
 
 .flameIcon {
-	width: 24px;
-	height: 24px;
-	color: ds.$state-caution;
+	width: 20px;
+	height: 20px;
+	color: ds.$token-gold;
+	flex-shrink: 0;
 }
 
 .title {
 	margin: 0;
-	font-size: 18px;
+	font-size: 15px;
 	font-weight: 700;
-	color: ds.$text-title-on-dark;
-}
-
-.subtitle {
-	margin: ds.$space-3xs 0 0;
-	font-size: 12px;
-	color: ds.$text-muted-on-dark;
-}
-
-.grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: ds.$space-md;
-	width: 100%;
-}
-
-.playerCard {
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	gap: ds.$space-sm;
-	padding: ds.$space-md;
-	border-radius: 12px;
-	min-width: 0;
-	background-color: ds.$surface-card-dark;
-	border: 1px solid ds.$border-subtle;
-	transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-
-	&:hover {
-		border-color: ds.$accent-sports-green;
-		transform: translateY(-2px);
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-	}
-
-	&__top {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: ds.$space-xs;
-	}
-
-	&__rankBadge {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border-radius: 9999px;
-		background-color: ds.$surface-dark;
-		border: 1px solid ds.$border-strong;
-		font-size: 12px;
-		font-weight: 700;
-		color: ds.$accent-highlight;
-	}
-
-	&__badges {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	&__hotBadge {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 2px ds.$space-2xs;
-		border-radius: 9999px;
-		background-color: #451a03;
-		border: 1px solid #92400e;
-		color: #fde047;
-		font-size: 11px;
-		font-weight: 700;
-	}
-
-	&__flameIcon {
-		width: 12px;
-		height: 12px;
-		color: #f59e0b;
-	}
-
-	&__identity {
-		display: flex;
-		align-items: center;
-		gap: ds.$space-sm;
-		padding: ds.$space-2xs 0;
-	}
-
-	&__portraitWrapper {
-		position: relative;
-		width: 52px;
-		height: 52px;
-		border-radius: 9999px;
-		border: 2px solid ds.$border-strong;
-		overflow: visible;
-		flex-shrink: 0;
-	}
-
-	&__portrait {
-		width: 100%;
-		height: 100%;
-		border-radius: 9999px;
-		object-fit: cover;
-	}
-
-	&__flag {
-		position: absolute;
-		bottom: -2px;
-		right: -2px;
-		width: 18px;
-		height: 14px;
-		border-radius: 2px;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-		border: 1px solid #ffffff33;
-	}
-
-	&__meta {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		min-width: 0;
-	}
-
-	&__name {
-		margin: 0;
-		font-size: 15px;
-		font-weight: 700;
-		line-height: 1.2;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	&__link {
-		color: ds.$text-title-on-dark;
-		text-decoration: none;
-		transition: color 0.2s ease;
-
-		&:hover,
-		&:focus-visible {
-			color: ds.$accent-highlight;
-			text-decoration: underline;
-		}
-	}
-
-	&__clubLeague {
-		font-size: 11px;
-		color: ds.$text-muted-on-dark;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	&__stats {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-		padding: ds.$space-2xs ds.$space-xs;
-		background-color: ds.$surface-dark;
-		border-radius: 8px;
-		border: 1px solid ds.$border-strong;
-	}
-
-	&__actions {
-		display: flex;
-		width: 100%;
-		margin-top: ds.$space-3xs;
-	}
-}
-
-.statRow {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 12px;
-}
-
-.statLabel {
-	color: ds.$text-muted-on-dark;
-}
-
-.statValue {
 	color: ds.$text-strong-on-dark;
 }
 
-.statValueAccent {
-	color: ds.$accent-open;
-	font-weight: 700;
+.subtitle {
+	margin: 2px 0 0;
+	font-size: 11.5px;
+	color: ds.$text-dimmed-on-dark;
 }
 
-.statValueShare {
-	color: ds.$accent-highlight;
-	font-weight: 700;
+.tableWrap {
+	width: 100%;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
-.actionButton {
+.table {
+	width: 100%;
+	height: 100%;
+	border-collapse: collapse;
+	font-size: 12.5px;
+	table-layout: auto;
+
+	thead {
+		th {
+			padding: 8px 10px;
+			font-size: 10.5px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: ds.$text-dimmed-on-dark;
+			border-bottom: 1px solid ds.$border-panel-soft;
+			white-space: nowrap;
+		}
+	}
+
+	tbody {
+		height: 100%;
+
+		.row {
+			border-bottom: 1px solid ds.$border-panel-soft;
+			transition: background-color 0.15s ease;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			&:hover {
+				background-color: ds.$surface-panel-alt;
+			}
+		}
+
+		td {
+			padding: 8px 10px;
+			vertical-align: middle;
+		}
+	}
+}
+
+.thRank {
+	width: 44px;
+	text-align: center;
+}
+
+.thPlayer {
+	text-align: left;
+}
+
+.thPos {
+	width: 65px;
+	text-align: center;
+}
+
+.thTokens {
+	width: 100px;
+	text-align: right;
+}
+
+.thVolume {
+	width: 105px;
+	text-align: right;
+}
+
+.thShare {
+	width: 110px;
+	text-align: right;
+}
+
+.thAction {
+	width: 85px;
+	text-align: center;
+}
+
+.tdRank {
+	text-align: center;
+}
+
+.rankBadge {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: ds.$space-2xs;
+	width: 26px;
+	height: 26px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 750;
+	background-color: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel-mid;
+	color: ds.$text-dimmed-on-dark;
+
+	&_gold {
+		background-color: rgba(245, 158, 11, 0.15);
+		border-color: ds.$badge-podium-gold-border;
+		color: ds.$token-gold;
+	}
+}
+
+.tdPlayer {
+	text-align: left;
+}
+
+.playerMeta {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-xs;
+	min-width: 0;
+}
+
+.avatarWrap {
+	position: relative;
+	width: 28px;
+	height: 28px;
+	flex-shrink: 0;
+}
+
+.avatar {
 	width: 100%;
-	padding: 8px ds.$space-sm;
-	border-radius: 8px;
-	background-color: ds.$surface-action-subtle;
-	border: 1px solid ds.$border-status-open;
-	color: ds.$accent-open;
+	height: 100%;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+.flag {
+	position: absolute;
+	bottom: -2px;
+	right: -2px;
+	width: 12px;
+	height: 9px;
+	border-radius: 1px;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.nameGroup {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.playerName {
+	font-weight: 700;
+	font-size: 13px;
+	color: ds.$text-strong-on-dark;
+	text-decoration: none;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.2;
+
+	&:hover {
+		color: ds.$accent-gain;
+		text-decoration: underline;
+	}
+}
+
+.playerTeam {
+	font-size: 11px;
+	color: ds.$text-dimmed-on-dark;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.2;
+}
+
+.tdPos {
+	text-align: center;
+}
+
+.tdTokens {
+	text-align: right;
+}
+
+.tokensValue {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 4px;
+	font-weight: 700;
+	color: ds.$text-strong-on-dark;
+	font-variant-numeric: tabular-nums;
+}
+
+.tdVolume {
+	text-align: right;
+}
+
+.volumeValue {
 	font-size: 12px;
 	font-weight: 600;
-	text-decoration: none;
-	transition: background-color 0.2s ease, border-color 0.2s ease;
+	color: ds.$text-dimmed-on-dark;
+	font-variant-numeric: tabular-nums;
+}
 
-	&:hover,
-	&:focus-visible {
-		background-color: ds.$surface-status-open;
-		color: ds.$text-primary-on-dark;
-	}
+.tdShare {
+	text-align: right;
+}
 
-	&__icon {
-		width: 14px;
-		height: 14px;
+.shareGroup {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 3px;
+	min-width: 60px;
+}
+
+.shareText {
+	font-size: 11px;
+	font-weight: 700;
+	color: ds.$accent-gain;
+	font-variant-numeric: tabular-nums;
+}
+
+.barTrack {
+	width: 100%;
+	max-width: 90px;
+	height: 4px;
+	border-radius: 9999px;
+	background-color: ds.$surface-dark;
+	overflow: hidden;
+}
+
+.barFill {
+	height: 100%;
+	border-radius: 9999px;
+	background: linear-gradient(90deg, ds.$accent-gain 0%, ds.$accent-sports-green 100%);
+	transition: width 0.3s ease;
+}
+
+.tdAction {
+	text-align: center;
+}
+
+.buyButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	height: 26px;
+	padding: 0 8px;
+	border-radius: 5px;
+	font-size: 11px;
+	font-weight: 700;
+	background-color: ds.$surface-gain-soft;
+	border: 1px solid ds.$border-gain-subtle;
+	color: ds.$accent-gain;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background-color 0.15s ease;
+
+	&:hover {
+		background-color: ds.$surface-gain-emphasis;
 	}
 }

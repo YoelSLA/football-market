@@ -56,15 +56,23 @@ export default function MarketPositionalDemandChart({
 
 		for (const p of topHotPlayers) {
 			const playerInfo = playerMap.get(p.playerId);
-			const rawPos = playerInfo?.position?.toUpperCase() ?? "DEL";
+			const rawPos = (playerInfo?.position ?? "").toUpperCase();
 			const posKey =
-				rawPos.includes("MED") || rawPos.includes("MID")
-					? "MED"
+				rawPos.includes("POR") ||
+				rawPos.includes("ARQ") ||
+				rawPos.includes("GOAL") ||
+				rawPos.includes("GK")
+					? "POR"
 					: rawPos.includes("DEF")
 						? "DEF"
-						: rawPos.includes("POR") || rawPos.includes("ARQ")
-							? "POR"
-							: "DEL";
+						: rawPos.includes("MED") || rawPos.includes("MID")
+							? "MED"
+							: rawPos.includes("DEL") ||
+									rawPos.includes("FOR") ||
+									rawPos.includes("ATT") ||
+									rawPos.includes("OFF")
+								? "DEL"
+								: "MED";
 
 			groups[posKey].tokens += p.boughtTokens;
 			groups[posKey].volume += p.buyVolumeCredits;
@@ -74,18 +82,18 @@ export default function MarketPositionalDemandChart({
 
 		if (totalTokens === 0) return [];
 
-		return Object.entries(groups)
-			.map(([pos, data]) => ({
+		return ["POR", "DEF", "MED", "DEL"].map((pos) => {
+			const data = groups[pos] ?? { tokens: 0, volume: 0, count: 0 };
+			return {
 				position: pos,
 				label: POSITION_NAMES[pos] ?? pos,
 				tokens: data.tokens,
 				volumeCredits: data.volume,
-				percentage: (data.tokens / totalTokens) * 100,
+				percentage: totalTokens > 0 ? (data.tokens / totalTokens) * 100 : 0,
 				playerCount: data.count,
 				color: POSITION_COLORS[pos] ?? "#3b82f6",
-			}))
-			.filter((s) => s.tokens > 0)
-			.sort((a, b) => b.tokens - a.tokens);
+			};
+		});
 	}, [topHotPlayers, playerMap]);
 
 	if (!stats.length) return null;
@@ -117,7 +125,9 @@ export default function MarketPositionalDemandChart({
 							</div>
 							<div className={styles.itemStats}>
 								<span className={styles.itemTokens}>
-									{item.tokens.toLocaleString("es-AR")}{" "}
+									<span className={styles.tokensNum}>
+										{item.tokens.toLocaleString("es-AR")}
+									</span>
 									<TokenSymbol size="xs" />
 								</span>
 								<strong className={styles.itemPercent}>

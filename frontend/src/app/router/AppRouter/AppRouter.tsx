@@ -17,7 +17,6 @@ import {
 } from "@/features/players";
 import {
 	PortfolioHoldingsPage,
-	PortfolioSummaryPage,
 	TransactionHistoryPage,
 } from "@/features/portfolio";
 
@@ -37,10 +36,10 @@ export default function AppRouter() {
 			<Route element={<AuthGuard privateRoute />}>
 				<Route element={<AppLayout />}>
 					<Route path="/home" element={<DashboardPage />} />
-					<Route path="/portfolio" element={<PortfolioSummaryPage />} />
+					<Route path="/portfolio" element={<PortfolioHoldingsPage />} />
 					<Route
 						path="/portfolio/holdings"
-						element={<PortfolioHoldingsPage />}
+						element={<Navigate to="/portfolio" replace />}
 					/>
 					<Route
 						path="/portfolio/transactions"

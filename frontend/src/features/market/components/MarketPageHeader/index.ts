@@ -1,5 +1,5 @@
 export {
 	default,
-	MarketHeaderMetric,
-	type MarketHeaderMetricProps,
+	type MarketHeaderMetricItem,
+	type MarketPageHeaderProps,
 } from "./MarketPageHeader";
