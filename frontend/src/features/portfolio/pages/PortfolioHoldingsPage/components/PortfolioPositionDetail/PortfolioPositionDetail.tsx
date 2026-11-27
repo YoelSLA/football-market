@@ -6,8 +6,8 @@ import {
 	formatDateTime,
 	formatPercentage,
 } from "@/features/portfolio/utils";
-import { Drawer, TokenSymbol } from "@/shared/components";
-import { Activity, BarChart3, FileText, Package } from "@/shared/icons";
+import { Button, Drawer, TokenSymbol } from "@/shared/components";
+import { Activity, BarChart3, FileText, Package, Tag } from "@/shared/icons";
 import {
 	PositionDetailHeader,
 	PositionDetailIdentity,
@@ -20,11 +20,13 @@ import styles from "./PortfolioPositionDetail.module.scss";
 interface Props {
 	position: PortfolioPosition;
 	onClose: () => void;
+	onSell?: (position: PortfolioPosition) => void;
 }
 
 export default function PortfolioPositionDetail({
 	position: p,
 	onClose,
+	onSell,
 }: Props) {
 	const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -165,6 +167,22 @@ export default function PortfolioPositionDetail({
 						},
 					]}
 				/>
+				{p.status === "OPEN" && p.availableQuantity > 0 && onSell && (
+					<div className={styles.portfolioDetail__actions}>
+						<Button
+							type="button"
+							variant="primary"
+							onClick={() => {
+								onClose();
+								onSell(p);
+							}}
+							className={styles.portfolioDetail__sellButton}
+						>
+							<Tag size={16} aria-hidden="true" />
+							Vender tokens de este jugador
+						</Button>
+					</div>
+				)}
 				<p className={styles.portfolioDetail__note}>
 					Importes en créditos · Fechas locales.
 					<br />

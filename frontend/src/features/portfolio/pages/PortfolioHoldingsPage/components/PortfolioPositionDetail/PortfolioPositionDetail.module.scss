@@ -57,6 +57,21 @@
 		align-content: stretch;
 	}
 
+	&__actions {
+		display: flex;
+		margin-top: ds.$space-2xs;
+	}
+
+	&__sellButton {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
+		height: 40px;
+		font-weight: 700;
+	}
+
 	&__note {
 		// 4. 📦 Box Model
 		margin: 0;

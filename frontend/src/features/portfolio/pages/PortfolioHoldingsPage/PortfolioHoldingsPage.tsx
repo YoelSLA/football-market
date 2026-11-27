@@ -1,39 +1,42 @@
+import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/app/layouts";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { usePortfolioHoldingsPage } from "@/features/portfolio/hooks";
+import type { PortfolioPosition } from "@/features/portfolio/types";
+import PortfolioCockpit from "./components/PortfolioCockpit";
 import PortfolioHoldingsContent from "./components/PortfolioHoldingsContent";
-import PortfolioHoldingsHeader from "./components/PortfolioHoldingsHeader";
-import PortfolioHoldingsPagination from "./components/PortfolioHoldingsPagination";
 import PortfolioPositionDetail from "./components/PortfolioPositionDetail";
+import PortfolioToolbar from "./components/PortfolioToolbar";
 import styles from "./PortfolioHoldingsPage.module.scss";
 
 export default function PortfolioHoldingsPage() {
+	const navigate = useNavigate();
 	const page = usePortfolioHoldingsPage();
 	const data = page.portfolio;
 
 	const totalPages = data?.pagination.totalPages ?? 0;
 	const showPagination = totalPages > 0;
 
-	const pagination = showPagination ? (
-		<PortfolioHoldingsPagination
-			page={page.selectedPage}
-			totalPages={totalPages}
-			totalElements={data?.pagination.totalElements ?? 0}
-			pageSize={page.pageSize}
-			onPageChange={page.selectPage}
-		/>
-	) : undefined;
+	const handleSell = (position: PortfolioPosition) => {
+		const searchParam = position.playerName
+			? `?search=${encodeURIComponent(position.playerName)}`
+			: "";
+		navigate(`/market/sell${searchParam}`);
+	};
 
 	return (
 		<PageLayout>
 			<div className={styles.portfolioHoldings} aria-busy={page.isLoading}>
+				{data?.summary && (
+					<PortfolioCockpit summary={data.summary} isLoading={page.isLoading} />
+				)}
+
 				{data && (
-					<div className={styles.portfolioHoldings__header}>
-						<PortfolioHoldingsHeader
-							filter={page.filter}
-							onFilterChange={page.selectFilter}
-							totalElements={data.pagination.totalElements}
-						/>
-					</div>
+					<PortfolioToolbar
+						filter={page.filter}
+						onFilterChange={page.selectFilter}
+						totalElements={data.pagination.totalElements}
+					/>
 				)}
 
 				<div className={styles.portfolioHoldings__scrollRegion}>
@@ -44,12 +47,22 @@ export default function PortfolioHoldingsPage() {
 						filter={page.filter}
 						onRetry={page.retry}
 						onOpenDetail={page.openDetail}
+						onSell={handleSell}
 					/>
 				</div>
 
-				{pagination && (
+				{showPagination && data && (
 					<div className={styles.portfolioHoldings__pagination}>
-						{pagination}
+						<MarketPagination
+							page={page.selectedPage}
+							totalPages={totalPages}
+							visiblePlayers={data.positions.length}
+							totalPlayers={data.pagination.totalElements}
+							pageSize={page.pageSize}
+							showSummary={false}
+							variant="official"
+							onPageChange={page.selectPage}
+						/>
 					</div>
 				)}
 
@@ -58,6 +71,7 @@ export default function PortfolioHoldingsPage() {
 						key={page.selectedPosition.playerId}
 						position={page.selectedPosition}
 						onClose={page.closeDetail}
+						onSell={handleSell}
 					/>
 				)}
 			</div>

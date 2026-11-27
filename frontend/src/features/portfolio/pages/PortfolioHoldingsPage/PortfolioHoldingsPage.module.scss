@@ -13,7 +13,7 @@
 	min-height: 0;
 	min-width: 0;
 	box-sizing: border-box;
-	padding: ds.$space-2xs;
+	padding: ds.$space-2xs ds.$space-xs;
 
 	// 6. 🎨 Visual
 	background-color: ds.$surface-page;
@@ -21,10 +21,11 @@
 
 	// 7. ⚙️ Behavior
 	overflow: hidden;
-	&__header,
 	&__pagination {
-		// 3. 🧩 Layout
-		flex-shrink: 0;
+		@include ds.market-panel-footer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	&__scrollRegion {
