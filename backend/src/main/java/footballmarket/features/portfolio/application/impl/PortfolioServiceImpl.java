@@ -248,10 +248,16 @@ public class PortfolioServiceImpl implements PortfolioService {
         percentage(unrealizedProfitLoss, calculated.acquisitionCost());
     BigDecimal weightPercentage = percentage(currentValue, totalCurrentValue);
 
+    String leagueName =
+        player != null && player.getTeam() != null && player.getTeam().getLeague() != null
+            ? player.getTeam().getLeague().getName()
+            : null;
+
     return new PortfolioView.PortfolioPosition(
         calculated.playerId(),
         player == null ? null : player.getName(),
-        player == null ? null : player.getTeam().getName(),
+        player == null || player.getTeam() == null ? null : player.getTeam().getName(),
+        leagueName,
         player == null ? null : player.getPosition(),
         player == null ? null : player.getImageUrl(),
         player != null && player.isActive(),

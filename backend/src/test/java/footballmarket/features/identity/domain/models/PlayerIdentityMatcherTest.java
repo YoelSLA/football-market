@@ -53,7 +53,7 @@ class PlayerIdentityMatcherTest {
       Player player = new Player("Name", team, "Forward");
       player.updateOptionalDetails(LocalDate.of(1990, 1, 1), "Spain");
       Candidate candidate =
-          new Candidate("Name", null, "Team", "Soccer", LocalDate.of(1990, 1, 2), "España");
+          new Candidate("Name", null, "Team", "Soccer", LocalDate.of(1980, 1, 2), "España");
       assertThat(matcher.matches(player, candidate)).isFalse();
     }
 
