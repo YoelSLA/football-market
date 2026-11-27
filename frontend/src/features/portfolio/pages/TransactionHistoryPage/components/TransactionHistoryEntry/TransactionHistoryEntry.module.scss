@@ -1,0 +1,130 @@
+@use "@/styles/abstracts" as ds;
+
+.row {
+	// inherits data-table-row styles
+}
+
+.td_id {
+	text-align: left;
+}
+
+.td_player {
+	text-align: left;
+}
+
+.td_operation {
+	text-align: center;
+}
+
+.td_quantity {
+	text-align: right;
+}
+
+.td_unitPrice {
+	text-align: right;
+}
+
+.td_total {
+	text-align: right;
+}
+
+.td_date {
+	text-align: right;
+}
+
+.ticketBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 7px;
+	border-radius: 4px;
+	border: 1px solid ds.$border-panel-soft;
+	background-color: ds.$surface-panel-to;
+	color: ds.$text-auxiliary-on-dark;
+	font-size: 11px;
+	font-weight: 600;
+	font-family: monospace;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	line-height: 1.3;
+
+	&_buy {
+		background-color: ds.$surface-gain-tint;
+		border: 1px solid ds.$border-gain-subtle;
+		color: ds.$accent-gain;
+
+		.badgeDot {
+			background-color: ds.$accent-gain;
+		}
+	}
+
+	&_sell {
+		background-color: ds.$surface-caution-tint;
+		border: 1px solid ds.$border-caution-subtle;
+		color: ds.$state-caution;
+
+		.badgeDot {
+			background-color: ds.$state-caution;
+		}
+	}
+}
+
+.badgeDot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.quantityValue {
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-value-on-dark;
+	line-height: 1.2;
+}
+
+.unitPriceValue {
+	font-size: 13px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-value-on-dark;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.totalValue {
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+
+	&_buy {
+		color: ds.$state-loss;
+	}
+
+	&_sell {
+		color: ds.$accent-gain;
+	}
+}
+
+.timeValue {
+	font-size: 12px;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	color: ds.$text-dimmed-on-dark;
+	line-height: 1.2;
+	white-space: nowrap;
+}

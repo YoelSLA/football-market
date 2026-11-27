@@ -1,0 +1,37 @@
+meta {
+  name: Filtrar y ordenar historial
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/users/me/transactions?page=0&size=20&search=Messi&type=BUY&executedFrom=2026-01-01T00:00:00Z&executedBefore=2027-01-01T00:00:00Z&sort=AMOUNT_DESC
+  body: none
+  auth: bearer
+}
+
+params:query {
+  page: 0
+  size: 20
+  search: Messi
+  type: BUY
+  executedFrom: 2026-01-01T00:00:00Z
+  executedBefore: 2027-01-01T00:00:00Z
+  sort: AMOUNT_DESC
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

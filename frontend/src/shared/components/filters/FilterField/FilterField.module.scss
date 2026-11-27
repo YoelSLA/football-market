@@ -1,0 +1,33 @@
+@use "@/styles/abstracts" as ds;
+
+.filterField {
+	// 3. 🧩 Layout
+	display: grid;
+	gap: 4px;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	&__label {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 6px;
+
+		// 5. 🔤 Typography
+		font-size: 0.8rem;
+		line-height: 1.2;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+
+		svg {
+			// 4. 📦 Box Model
+			width: 1rem;
+			height: 1rem;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-highlight;
+		}
+	}
+}

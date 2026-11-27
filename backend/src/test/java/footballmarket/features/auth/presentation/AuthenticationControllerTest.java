@@ -5,10 +5,10 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,14 +17,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
 import footballmarket.features.auth.application.exceptions.EmailAlreadyRegisteredException;
 import footballmarket.features.auth.application.exceptions.InvalidCredentialsException;
 import footballmarket.features.auth.application.exceptions.UsernameAlreadyRegisteredException;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
+import footballmarket.features.auth.domain.records.CurrentUserView;
 import footballmarket.features.auth.presentation.dtos.request.LoginRequestDTO;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -65,12 +66,14 @@ class AuthenticationControllerTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey jwtSecretKey;
   @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   private MockMvc mockMvc;
 
   @BeforeEach
   void setUp() {
     mockMvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
+    when(identityValidator.exists(anyString())).thenReturn(true);
   }
 
   @Nested
@@ -127,15 +130,18 @@ class AuthenticationControllerTest {
               .compact();
       // JJWT omite el claim cuando recibe una cadena vacía o en blanco.
       String expectedSubject = subject == null || subject.isBlank() ? null : subject;
-      when(authenticationService.getCurrentUser(expectedSubject))
-          .thenThrow(new CurrentUserNotFoundException());
+      if (expectedSubject != null) {
+        when(identityValidator.exists(expectedSubject)).thenReturn(false);
+      }
 
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
           .andExpect(status().isUnauthorized())
           .andExpect(content().string(""));
-      verify(authenticationService).getCurrentUser(expectedSubject);
-      verifyNoMoreInteractions(authenticationService);
+      if (expectedSubject != null) {
+        verify(identityValidator).exists(expectedSubject);
+      }
+      verifyNoInteractions(authenticationService);
     }
 
     @Test
@@ -151,7 +157,7 @@ class AuthenticationControllerTest {
               .compact();
       when(authenticationService.getCurrentUser("CURRENT@TEST.COM"))
           .thenReturn(
-              new User(42L, "current.user", "current@test.com", "password123", UserRole.USER));
+              new CurrentUserView(42L, "current.user", "current@test.com", UserRole.USER, 10000L));
 
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
@@ -159,7 +165,7 @@ class AuthenticationControllerTest {
           .andExpect(
               content()
                   .json(
-                      "{\"id\":42,\"username\":\"current.user\",\"email\":\"current@test.com\",\"role\":\"USER\"}",
+                      "{\"id\":42,\"username\":\"current.user\",\"email\":\"current@test.com\",\"role\":\"USER\",\"availableCredits\":100}",
                       JsonCompareMode.STRICT));
     }
 
@@ -174,7 +180,7 @@ class AuthenticationControllerTest {
               .compact();
       when(authenticationService.getCurrentUser("owner@test.com"))
           .thenReturn(
-              new User(7L, "market.owner", "owner@test.com", "password123", UserRole.SUPERUSER));
+              new CurrentUserView(7L, "market.owner", "owner@test.com", UserRole.SUPERUSER, 0L));
 
       mockMvc
           .perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
@@ -182,7 +188,7 @@ class AuthenticationControllerTest {
           .andExpect(
               content()
                   .json(
-                      "{\"id\":7,\"username\":\"market.owner\",\"email\":\"owner@test.com\",\"role\":\"SUPERUSER\"}",
+                      "{\"id\":7,\"username\":\"market.owner\",\"email\":\"owner@test.com\",\"role\":\"SUPERUSER\",\"availableCredits\":0}",
                       JsonCompareMode.STRICT));
     }
   }

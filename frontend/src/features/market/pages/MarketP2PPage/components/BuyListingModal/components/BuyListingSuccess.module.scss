@@ -1,0 +1,65 @@
+@use "@/styles/abstracts" as ds;
+
+.success {
+	display: grid;
+	justify-items: center;
+	gap: 12px;
+	min-height: 270px;
+	margin: 0 16px 16px;
+	padding: 20px;
+	text-align: center;
+	border: 1px solid ds.$accent-gain;
+	border-radius: 0.6rem;
+	background-color: ds.$surface-accent-deep;
+
+	h3,
+	p {
+		margin: 0;
+	}
+
+	h3 {
+		font-size: 1.15rem;
+		color: ds.$accent-gain;
+	}
+
+	p {
+		font-size: 0.75rem;
+		color: ds.$text-label-on-dark;
+	}
+
+	dl {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+		width: 100%;
+		margin: 0;
+	}
+
+	dl > div {
+		display: grid;
+		gap: 3px;
+		padding: 8px;
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.4rem;
+		background-color: ds.$surface-card-subtle;
+	}
+
+	dt {
+		font-size: 0.65rem;
+		color: ds.$text-label-on-dark;
+	}
+
+	dd {
+		margin: 0;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: ds.$text-value-on-dark;
+	}
+
+	button {
+		@include ds.market-action;
+		min-width: 180px;
+		height: 40px;
+		padding: 0 16px;
+	}
+}

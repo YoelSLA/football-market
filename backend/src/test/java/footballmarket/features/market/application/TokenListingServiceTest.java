@@ -5,7 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import footballmarket.common.config.QueryCacheConfiguration;
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.businessmetrics.application.BusinessMetricsService;
+import footballmarket.features.businessmetrics.domain.records.BusinessMetricsTotals;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -17,7 +20,9 @@ import footballmarket.features.market.application.exceptions.ListingNotAvailable
 import footballmarket.features.market.application.exceptions.ListingNotFoundException;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.market.application.exceptions.SuperuserCannotSellException;
+import footballmarket.features.market.domain.exceptions.InvalidListingPriceException;
 import footballmarket.features.market.domain.models.TokenListing;
+import footballmarket.features.market.domain.records.BuyListingRequest;
 import footballmarket.features.market.domain.records.BuyOrderRequest;
 import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.quote.application.QuoteSource;
@@ -25,9 +30,14 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
 import footballmarket.support.MarketTestData;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.TestcontainersConfiguration;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +47,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -87,12 +98,15 @@ class TokenListingServiceTest {
       // Arrange
       TokenListing listing =
           listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
+      BusinessMetricsTotals before = businessMetricsService.getCurrentMetrics();
       // Act
       footballmarket.features.market.domain.records.TokenListingView result =
           listingService.cancel(seller.getEmail(), listing.getId());
+      BusinessMetricsTotals after = businessMetricsService.getCurrentMetrics();
       // Assert
       assertThat(result.status().name()).isEqualTo("CANCELLED");
       assertThat(result.closedAt()).isNotNull();
+      assertThat(after.cancelledListings() - before.cancelledListings()).isEqualTo(1L);
       assertThatThrownBy(() -> listingService.cancel(seller.getEmail(), listing.getId()))
           .isInstanceOf(ListingNotAvailableException.class);
     }
@@ -147,6 +161,26 @@ class TokenListingServiceTest {
     }
 
     @Test
+    @DisplayName("La consulta paginada de publicaciones propias devuelve métricas, orden y página")
+    void consultaPaginadaPropias() {
+      // Arrange
+      TokenListing listing1 =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 2));
+      TokenListing listing2 =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 3));
+      // Act
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          listingService.mine(seller.getEmail(), null, 0, 10, "NEWEST");
+      // Assert
+      assertThat(page.summary().activeOrders()).isGreaterThanOrEqualTo(2);
+      assertThat(page.summary().activeTokens()).isGreaterThanOrEqualTo(5);
+      assertThat(page.content())
+          .extracting(footballmarket.features.market.domain.records.TokenListingView::listingId)
+          .contains(listing2.getId(), listing1.getId());
+      assertThat(page.totalElements()).isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
     @DisplayName("Un tercero no obtiene detalle de una publicación ya vendida")
     void ocultaPublicacionCerrada() {
       // Arrange
@@ -165,13 +199,35 @@ class TokenListingServiceTest {
   }
 
   @Autowired private TokenListingService listingService;
+  @Autowired private BusinessMetricsService businessMetricsService;
   @Autowired private BuyOrderService buyService;
   @Autowired private MarketTestData market;
+  @Autowired private PlayerStatisticsQueryData statistics;
+  @Autowired private CacheManager cacheManager;
   @MockitoBean private QuoteSource quotes;
   @MockitoBean private java.time.Clock marketClock;
   private User seller;
   private User superuser;
   private Player player;
+
+  @Test
+  @DisplayName("Rechaza publicar una venta si la última extracción no tiene métricas")
+  void rejectsSaleWhenLatestMetricsAreEmpty() {
+    // Arrange
+    statistics.row(
+        player.getId(),
+        LocalDate.of(2026, 10, 18),
+        MetricSource.JSON,
+        "2026",
+        "1",
+        PlayerExtractionResult.COMPLETED,
+        Map.of());
+    // Act / Assert
+    assertThatThrownBy(
+            () ->
+                listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 1)))
+        .isInstanceOf(PlayerNotVisibleException.class);
+  }
 
   @BeforeEach
   void arrange() {
@@ -382,6 +438,122 @@ class TokenListingServiceTest {
                   listingService.publish(
                       seller.getEmail(), new SellOrderRequest(player.getId(), 5)))
           .isInstanceOf(QuoteUnavailableException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("Precio acordado de la publicación")
+  class NegotiatedPrice {
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"80, 400", "85, 425", "120, 600"})
+    @DisplayName("Publica al precio solicitado y congela el importe exacto")
+    void publicaPrecioDentroDeBanda(long unitPrice, long totalAmount) {
+      // Act
+      TokenListing listing =
+          listingService.publish(
+              seller.getEmail(), new SellOrderRequest(player.getId(), 5, unitPrice));
+
+      // Assert
+      assertThat(listing.getUnitPrice()).isEqualTo(unitPrice);
+      assertThat(listing.getTotalAmount()).isEqualTo(totalAmount);
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, 79, 121})
+    @DisplayName("Rechaza el precio fuera de banda sin crear ni reservar la publicación")
+    void rechazaPrecioFueraDeBanda(long unitPrice) {
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  listingService.publish(
+                      seller.getEmail(), new SellOrderRequest(player.getId(), 5, unitPrice)))
+          .isInstanceOf(InvalidListingPriceException.class);
+
+      // Verify
+      assertThat(
+              listingService
+                  .mine(seller.getEmail(), null, 0, 100, "NEWEST")
+                  .summary()
+                  .activeOrders())
+          .isZero();
+      TokenListing fullHolding =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 20));
+      assertThat(fullHolding.getQuantity()).isEqualTo(20);
+    }
+
+    @Test
+    @DisplayName("La compra posterior liquida al precio acordado aunque cambie la cotización")
+    void compraUsaElPrecioCongelado() {
+      // Arrange
+      TokenListing listing =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5, 85L));
+      User buyer = market.registerBuyer();
+      when(quotes.currentQuote(any()))
+          .thenReturn(
+              Optional.of(
+                  new CurrentQuote(player.getId(), 1000L, OffsetDateTime.now(), "updated-quote")));
+
+      // Act
+      footballmarket.features.market.domain.models.MarketTransaction transaction =
+          buyService.buyListing(buyer.getEmail(), new BuyListingRequest(listing.getId()));
+
+      // Assert
+      assertThat(transaction.getUnitPrice()).isEqualTo(85);
+      assertThat(transaction.getTotalAmount()).isEqualTo(425);
+      assertThat(listingService.detail(seller.getEmail(), listing.getId()).unitPrice())
+          .isEqualTo(85);
+      assertThat(listingService.detail(seller.getEmail(), listing.getId()).totalAmount())
+          .isEqualTo(425);
+    }
+  }
+
+  @Nested
+  @DisplayName("Invalidación de lecturas P2P")
+  class CacheInvalidation {
+    @Test
+    @DisplayName("Publicar y cancelar ofertas invalida solo el mercado P2P")
+    void invalidatesP2PReadsAfterPublicationAndCancellation() {
+      // Arrange
+      Object p2pKey = new Object();
+      Object officialKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).put(officialKey, "cached");
+
+      // Act
+      TokenListing listing =
+          listingService.publish(seller.getEmail(), new SellOrderRequest(player.getId(), 5));
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialKey))
+          .isNotNull();
+
+      // Arrange
+      Object cancellationKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(cancellationKey, "cached");
+
+      // Act
+      listingService.cancel(seller.getEmail(), listing.getId());
+
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(cancellationKey))
+          .isNull();
+    }
+
+    @Test
+    @DisplayName("Una publicación rechazada conserva las lecturas cacheadas")
+    void preservesP2PReadsWhenPublicationFails() {
+      // Arrange
+      Object p2pKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pKey, "cached");
+
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  listingService.publish(
+                      seller.getEmail(), new SellOrderRequest(player.getId(), 0)))
+          .isInstanceOf(InvalidQuantityException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pKey)).isNotNull();
     }
   }
 }

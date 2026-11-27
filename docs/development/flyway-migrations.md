@@ -1,81 +1,89 @@
 # Migraciones Flyway con timestamps UTC
 
-Las migraciones nuevas usan `VyyyyMMddHHmmss__descripcion.sql`. Las versiones históricas
-V1–V10 siguen siendo válidas y no se convierten a timestamps. El generador usa el reloj UTC
-de Java, independientemente de la zona horaria del equipo, y no necesita instalar Flyway
-ni conectarse a PostgreSQL. Requiere el JDK del proyecto y el Gradle Wrapper.
+## Convención única
+
+Todas las migraciones versionadas usan exclusivamente:
+
+```text
+VyyyyMMddHHmmss__description.sql
+```
+
+- `yyyyMMddHHmmss` es un timestamp UTC real, válido y de catorce dígitos.
+- `description` está en inglés, `snake_case` ASCII, comienza con una letra y tiene hasta cien caracteres.
+- No se admiten versiones ordinales, timestamps futuros, migraciones repetibles ni archivos SQL fuera de esta convención.
+- La versión ordena la ejecución de Flyway y debe respetar las dependencias del esquema.
+
+El historial vigente comienza en `V20261107030001__create_users.sql` y fue reconstruido para una
+instalación limpia. No es compatible con `flyway_schema_history` del ciclo anterior: las bases de
+desarrollo son descartables y deben recrearse por decisión de su responsable, nunca por la
+aplicación ni por un agente.
 
 ## Crear una migración
 
-Desde `backend/`, en Linux:
+Desde `backend/`:
 
 ```bash
 ./gradlew createMigration -PmigrationDescription=add_market_transaction_index
 ```
 
-Desde `backend/`, en Windows PowerShell:
+En Windows se utiliza `gradlew.bat` con los mismos argumentos. La tarea valida todos los nombres y
+timestamps existentes, rechaza duplicados, toma el reloj UTC real, exige una versión posterior a la
+máxima local y crea el archivo de forma exclusiva. El lock local no coordina otras ramas, checkouts
+o equipos.
 
-```powershell
-.\gradlew.bat createMigration -PmigrationDescription=add_market_transaction_index
+## Estados de publicación e inmutabilidad
+
+Una migración está **integrada** cuando forma parte de `dev`. Desde ese momento es inmutable byte
+por byte: no se modifica SQL, comentarios, formato, nombre, ubicación ni finales de línea; tampoco
+se elimina o copia bajo otra versión. Toda corrección se expresa en una migración posterior.
+
+Una migración que existe solo en una rama local y nunca fue integrada puede renombrarse o
+regenerarse para resolver el orden antes del merge. Si esa migración ya fue aplicada en una base
+PostgreSQL local, cambiarla invalida el checksum registrado: el responsable debe recrear esa base
+descartable antes de volver a usarla. No se ejecuta `repair` para encubrir la modificación.
+
+`.githooks/flyway-migrations.sh` compara una rama con `dev` y rechaza modificaciones, eliminaciones,
+renombres y copias de migraciones integradas, además de nuevas versiones no posteriores a la máxima
+publicada. CI ejecuta el mismo control. La excepción autocontenida del corte inicial deja de aplicar
+cuando el marcador de la reconstrucción ya existe en `dev`.
+
+## Ramas y PostgreSQL local
+
+Cada desarrollador utiliza una base PostgreSQL local independiente. No se comparten bases entre
+ramas con historiales distintos. Antes de generar y antes de integrar una migración se actualiza la
+rama desde `dev`, se valida el layout y se revisan orden y dependencias.
+
+Si otra rama integró una versión posterior, una migración todavía local puede regenerarse con un
+timestamp UTC actual. Una migración ya integrada nunca se renumera. `outOfOrder` permanece
+deshabilitado y no se usa como mecanismo normal de integración.
+
+## Configuración segura
+
+Desarrollo y testing declaran explícitamente:
+
+```yaml
+spring:
+  flyway:
+    validate-on-migrate: true
+    out-of-order: false
+    baseline-on-migrate: false
+    clean-disabled: true
 ```
 
-En Windows CMD, usar `gradlew.bat` con los mismos argumentos.
-El resultado está en `backend/src/main/resources/db/migration/`, por ejemplo
-`V20261017143005__add_market_transaction_index.sql`. Completar el SQL antes del commit.
-La tarea no está vinculada al build ni al arranque de la aplicación.
+`repair`, `clean` y la edición de `flyway_schema_history` no forman parte del flujo normal. La
+aplicación nunca elimina una base. La recreación local requiere una acción humana deliberada sobre
+el destino exacto.
 
-La descripción debe estar en inglés, en `snake_case` ASCII minúsculo, empezar con letra
-y tener como máximo 100 caracteres. No se admiten espacios, extensiones ni rutas.
-La tarea comprueba nombres de migraciones V existentes, versiones numéricas duplicadas
-(incluso con ceros iniciales), fechas de versiones de 14 dígitos y que la nueva versión
-supere todas las versiones locales. Mantiene compatibilidad con descripciones históricas.
-Las migraciones repetibles `R__...` no participan del orden de versiones.
+## Validaciones
 
-Si el reloj está atrasado o ya se generó una versión en ese segundo, falla sin generar
-una versión futura artificial. Esperar o corregir el reloj antes de reintentar. Un bloqueo
-local en `backend/.gradle/` serializa las invocaciones del generador en el mismo checkout;
-la creación exclusiva evita sobrescribir archivos. No coordina checkouts ni equipos distintos.
-La comparación es contra archivos locales, **no** contra `flyway_schema_history`.
+`./gradlew validateMigrationLayout` es estática: no abre conexiones ni ejecuta SQL. `check` y Sonar
+dependen de ella. La suite de integración cubre PostgreSQL 18 vacío, checkpoints incrementales,
+`Flyway.validate()` y el esquema final; Hibernate conserva `ddl-auto: validate`.
 
-## Ramas paralelas e integración
+Conforme a las reglas del repositorio, los agentes no ejecutan tests. Los comandos humanos son:
 
-1. Antes de crear una migración, actualizar la rama con el procedimiento Git acordado y
-   revisar las migraciones de la rama compartida. Los timestamps reducen las colisiones,
-   pero dos equipos pueden generar la misma versión en el mismo segundo.
-2. Antes de integrar, revisar versiones duplicadas, orden y dependencias SQL. Crear después
-   no garantiza integrar después. El orden relevante de Flyway es numérico, no el del commit.
-3. Si una migración **nunca fue aplicada en ninguna base**, se puede regenerar con un timestamp
-   posterior al máximo integrado, trasladar su SQL y retirar solo el archivo no aplicado.
-   Coordinarlo con todos los integrantes antes de renombrar o eliminar archivos.
-4. Si ya fue aplicada, no renombrarla, editarla ni modificar sus checksums. Si llega una versión
-   menor que la máxima aplicada, con el comportamiento normal de Flyway no se ejecutará en
-   orden normal y puede bloquear la validación. Detener el despliegue y revisar el historial,
-   las dependencias y el SQL con el responsable de la base.
-5. Solo si se confirma que la migración pendiente es segura después de las ya aplicadas,
-   el responsable puede autorizar `outOfOrder` **para una ejecución y base concretas** mediante
-   su herramienta de despliegue. Si usa Spring Boot, la propiedad puntual equivalente es
-   `spring.flyway.out-of-order=true`. Retirar el override después y verificar el historial.
-   No versionar ese ajuste, no habilitarlo globalmente y no usarlo para resolver duplicados,
-   errores de checksum o dependencias incompatibles. Si no es seguro, acordar una remediación
-   específica; no ejecutar `repair`, `clean` ni editar el historial como atajo.
-
-## Corrección histórica V9 → V10
-
-`dev` contenía dos V9: auditoría de identidad y dominio de mercado. Se conserva V9 para
-`create_player_identity_audit` y se renombra únicamente mercado a
-`V10__create_market_domain.sql`, sin modificar sus bytes SQL. Sus dependencias son tablas
-previas (`users` y `players`); no depende de objetos de la auditoría ni viceversa.
-
-El renombrado conserva el checksum del contenido, pero **cambia la identidad de versión**.
-No se inspeccionaron bases durante este cambio. Antes de usarlo sobre una base existente,
-su responsable debe comprobar qué V9 figura aplicada. Si mercado ya fue aplicado como V9,
-detenerse y acordar una reconciliación: no ejecutar automáticamente V10, `repair` ni editar
-`flyway_schema_history`. La autorización del renombrado no autoriza alterar ninguna base.
-
-## Verificaciones pendientes del usuario
-
-Además del build sin tests, verificar en un checkout desechable Linux y Windows: creación
-correcta, descripción ausente/inválida, versiones duplicadas, timestamp futuro o inválido,
-dos invocaciones en el mismo segundo y preservación de archivos ante errores. Comprobar
-también el orden SQL sobre una base de pruebas autorizada. Estas pruebas no fueron ejecutadas
-por el agente y el build no acredita su resultado.
+```bash
+./gradlew validateMigrationLayout
+./gradlew integrationTest
+./gradlew build
+```

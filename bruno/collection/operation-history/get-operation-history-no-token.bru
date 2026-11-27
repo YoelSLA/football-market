@@ -1,0 +1,22 @@
+meta {
+  name: Rechazar consulta sin token (401)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/users/me/transactions
+  body: none
+  auth: none
+}
+
+headers {
+  accept: application/json
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

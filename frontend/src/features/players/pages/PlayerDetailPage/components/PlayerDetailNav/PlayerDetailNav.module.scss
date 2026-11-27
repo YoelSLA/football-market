@@ -1,0 +1,64 @@
+@use "@/styles/abstracts" as ds;
+
+.playerDetailNav {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	height: 36px;
+	padding: 4px 0;
+
+	&__breadcrumb {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-size: 12px;
+	}
+
+	&__backLink {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 28px;
+		padding: 0 12px 0 8px;
+		border-radius: 8px;
+		font-size: 12px;
+		font-weight: 600;
+		text-decoration: none;
+		color: ds.$text-muted-on-dark;
+		background-color: ds.$surface-card-dark;
+		border: 1px solid ds.$border-panel-soft;
+		transition: all 160ms ease;
+
+		svg {
+			flex-shrink: 0;
+			color: ds.$accent-gain;
+			transition: transform 140ms ease;
+		}
+
+		&:hover {
+			border-color: ds.$border-gain-subtle;
+			background-color: ds.$surface-panel-alt;
+			color: ds.$text-title-on-dark;
+
+			svg {
+				transform: translateX(-2px);
+			}
+		}
+	}
+
+	&__sep {
+		color: ds.$border-panel-mid;
+		font-size: 11px;
+	}
+
+	&__crumb {
+		color: ds.$text-muted-on-dark;
+		font-size: 12px;
+	}
+
+	&__current {
+		color: ds.$accent-gain;
+		font-weight: 600;
+		font-size: 12px;
+	}
+}

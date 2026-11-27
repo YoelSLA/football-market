@@ -2,6 +2,8 @@ package footballmarket.features.statistics.application.shared.internal;
 
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsRunNotFoundException;
 import footballmarket.features.statistics.application.exceptions.PlayerStatisticsSyncInProgressException;
+import footballmarket.features.statistics.application.exceptions.ScheduledStatisticsSyncException;
+import footballmarket.features.statistics.application.exceptions.ScheduledStatisticsSyncException.Reason;
 import footballmarket.features.statistics.domain.enums.ExtractionRunStatus;
 import footballmarket.features.statistics.domain.enums.MetricSource;
 import footballmarket.features.statistics.domain.enums.PlayerExtractionResult;
@@ -84,11 +86,62 @@ public class ExtractionRunManager {
                 providerCalls));
   }
 
+  /**
+   * Confirma el cierre antes de comunicar un fallo a la entrada programada. La causa global no se
+   * infiere de contadores ni del resultado parcial, y no revierte datos ya confirmados.
+   */
+  public PlayerStatisticsSyncSummary closeScheduled(
+      Long runId, ExtractionRunStatus requested, String failureCode, long providerCalls) {
+    PlayerStatisticsSyncSummary summary = this.close(runId, requested, failureCode, providerCalls);
+    Reason reason =
+        switch (failureCode == null ? "" : failureCode) {
+          case "PROVIDER_UNAVAILABLE" -> Reason.PROVIDER_UNAVAILABLE;
+          case "HEADED_BROWSER_UNAVAILABLE" -> Reason.HEADED_BROWSER_UNAVAILABLE;
+          case "EXECUTION_INTERRUPTED" -> Reason.EXECUTION_INTERRUPTED;
+          default -> null;
+        };
+    if (reason == null) {
+      reason =
+          switch (summary.status()) {
+            case FAILED -> Reason.FAILED;
+            case INTERRUPTED -> Reason.INTERRUPTED;
+            default -> null;
+          };
+    }
+    if (reason != null) {
+      throw new ScheduledStatisticsSyncException(reason);
+    }
+    return summary;
+  }
+
+  /**
+   * Interrumpe una campaña automática tras limpiar workers, sin revertir confirmaciones previas.
+   */
+  public void abortScheduled(Long runId, String failureCode, long providerCalls) {
+    this.transaction.executeWithoutResult(
+        status ->
+            this.finish(
+                this.runs.findById(runId).orElseThrow(PlayerStatisticsRunNotFoundException::new),
+                failureCode,
+                true,
+                providerCalls,
+                true));
+  }
+
   private PlayerStatisticsSyncSummary finish(
       PlayerStatisticsExtractionRun run,
       String failureCode,
       boolean interrupted,
       long providerCalls) {
+    return this.finish(run, failureCode, interrupted, providerCalls, false);
+  }
+
+  private PlayerStatisticsSyncSummary finish(
+      PlayerStatisticsExtractionRun run,
+      String failureCode,
+      boolean interrupted,
+      long providerCalls,
+      boolean forceInterrupted) {
     List<PlayerStatisticsRunItem> items = this.items.findByRunIdOrderByPlayerIdAsc(run.getId());
     long completed =
         items.stream().filter(item -> item.getResult() == PlayerExtractionResult.COMPLETED).count();
@@ -103,7 +156,8 @@ public class ExtractionRunManager {
     PlayerStatisticsCoverage current =
         this.coverage.coverage(run.getExtractionDate(), run.getSource());
     ExtractionRunStatus status =
-        (interrupted && run.getSource() == MetricSource.SCRAPING)
+        forceInterrupted
+                || (interrupted && run.getSource() == MetricSource.SCRAPING)
                 || (selected == 0 && current.pendingPlayers() > 0)
             ? ExtractionRunStatus.INTERRUPTED
             : resolve(selected, completed, withoutData, failed, interrupted);

@@ -1,0 +1,35 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioToolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	padding: 4px 0;
+	width: 100%;
+	flex-shrink: 0;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-xs;
+	}
+
+	&__right {
+		display: flex;
+		align-items: center;
+		gap: ds.$space-xs;
+	}
+
+	&__count {
+		font-size: 12px;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: ds.$text-dimmed-on-dark;
+		padding: 4px 10px;
+		border-radius: 6px;
+		background: ds.$surface-data-control;
+		border: 1px solid ds.$border-panel-mid;
+		box-shadow: 0 1px 3px ds.$shadow-panel;
+	}
+}

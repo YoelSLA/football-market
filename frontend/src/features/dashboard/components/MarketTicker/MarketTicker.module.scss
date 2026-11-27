@@ -1,0 +1,206 @@
+@use "@/styles/abstracts" as ds;
+
+.tickerBar {
+	display: flex;
+	align-items: center;
+	height: 54px;
+	background: ds.$surface-data-header;
+	border-bottom: 1px solid ds.$border-panel;
+	overflow: hidden;
+	user-select: none;
+	width: 100%;
+	flex-shrink: 0;
+	z-index: 10;
+}
+
+.pulseSummary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 ds.$space-md;
+	height: 100%;
+	background: ds.$surface-data-control;
+	border-right: 1px solid ds.$border-panel;
+	flex-shrink: 0;
+	z-index: 2;
+
+	@media (max-width: 640px) {
+		padding: 0 ds.$space-sm;
+	}
+}
+
+.pulseLiveDot {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	background-color: ds.$accent-gain;
+	box-shadow: 0 0 10px ds.$surface-gain-glow;
+	animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+	0%, 100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.4;
+		transform: scale(0.8);
+	}
+}
+
+.pulseIcon {
+	width: 15px;
+	height: 15px;
+	color: ds.$accent-gain;
+}
+
+.pulseTitle {
+	font-size: 0.75rem;
+	font-weight: 800;
+	letter-spacing: 0.06em;
+	color: ds.$accent-gain;
+	white-space: nowrap;
+
+	@media (max-width: 640px) {
+		display: none;
+	}
+}
+
+.marqueeTrackWrapper {
+	flex: 1;
+	overflow: hidden;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	position: relative;
+	mask-image: linear-gradient(
+		to right,
+		transparent 0px,
+		black 28px,
+		black calc(100% - 28px),
+		transparent 100%
+	);
+}
+
+.marqueeTrack {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-md;
+	white-space: nowrap;
+	width: max-content;
+	animation: scrollTicker 45s linear infinite;
+
+	&:hover {
+		animation-play-state: paused;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+		overflow-x: auto;
+	}
+}
+
+@keyframes scrollTicker {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.tickerChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	padding: 5px 14px 5px 8px;
+	border-radius: 10px;
+	text-decoration: none;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-panel;
+	font-size: 0.8125rem;
+	transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+
+	&:hover {
+		background: ds.$surface-card-subtle;
+		border-color: ds.$accent-gain;
+		transform: translateY(-1px);
+	}
+
+	.teamBadge {
+		width: 18px;
+		height: 18px;
+		object-fit: contain;
+		flex-shrink: 0;
+		vertical-align: middle;
+	}
+}
+
+.chipPortrait {
+	width: 34px;
+	height: 34px;
+	border-radius: 50% !important;
+	object-fit: cover;
+	flex-shrink: 0;
+	border: 1.5px solid ds.$border-subtle;
+	background-color: ds.$surface-card-dark;
+}
+
+.chipName {
+	font-weight: 700;
+	color: ds.$text-strong-on-dark;
+	white-space: nowrap;
+	letter-spacing: 0.01em;
+}
+
+.chipTeamGroup {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 8px;
+	background: ds.$surface-card-dark;
+	border-radius: 6px;
+	border: 1px solid ds.$border-subtle;
+}
+
+.chipTeamName {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: ds.$text-muted-on-dark;
+	white-space: nowrap;
+}
+
+.chipPrice {
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	margin-left: 2px;
+}
+
+.chipDelta {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-weight: 700;
+	font-size: 0.75rem;
+	font-variant-numeric: tabular-nums;
+	padding: 2px 8px;
+	border-radius: 6px;
+	white-space: nowrap;
+}
+
+.chipArrow {
+	font-size: 0.6875rem;
+}
+
+.chipDeltaUp {
+	color: ds.$state-gain;
+	background: ds.$surface-gain-soft;
+}
+
+.chipDeltaDown {
+	color: ds.$state-loss;
+	background: ds.$surface-loss-subtle;
+}

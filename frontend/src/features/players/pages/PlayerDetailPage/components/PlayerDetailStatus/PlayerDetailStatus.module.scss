@@ -1,0 +1,47 @@
+@use "@/styles/abstracts" as ds;
+
+.detailStatus {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+
+	// 4. 📦 Box Model
+	padding: 12px;
+	margin: 10px 0;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-subtle;
+	border-radius: 8px;
+	p {
+		// 4. 📦 Box Model
+		margin: 0;
+	}
+
+	button,
+	a {
+		// 4. 📦 Box Model
+		padding: 8px 12px;
+
+		// 5. 🔤 Typography
+		text-decoration: none;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-nav;
+		background-color: ds.$surface-nav-active;
+		border: 1px solid ds.$border-subtle;
+		border-radius: 4px;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+	}
+
+	button:focus-visible,
+	a:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+}
+

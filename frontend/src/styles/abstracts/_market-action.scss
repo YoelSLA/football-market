@@ -1,0 +1,44 @@
+@use "tokens/colors" as colors;
+
+@mixin market-action {
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	// 5. 🔤 Typography
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1.2;
+
+	// 6. 🎨 Visual
+	border: 1px solid colors.$accent-gain;
+	border-radius: 0.45rem;
+	background-color: colors.$surface-control-active;
+	color: colors.$accent-gain;
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		// 6. 🎨 Visual
+		background-color: colors.$surface-card-subtle;
+	}
+
+	&:focus-visible {
+		// 6. 🎨 Visual
+		outline: 2px solid colors.$accent-gain;
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		// 6. 🎨 Visual
+		border-color: colors.$border-panel-mid;
+		background-color: colors.$surface-card-subtle;
+		color: colors.$text-label-on-dark;
+		opacity: 0.5;
+
+		// 7. ⚙️ Behavior
+		cursor: not-allowed;
+	}
+}

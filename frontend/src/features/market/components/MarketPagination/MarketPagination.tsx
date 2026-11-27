@@ -8,6 +8,10 @@ interface Props {
 	visiblePlayers: number;
 	pageSize?: number;
 	onPageChange: (page: number) => void;
+	showSummary?: boolean;
+	variant?: "default" | "official";
+	className?: string;
+	itemLabel?: string;
 }
 
 export default function MarketPagination({
@@ -15,32 +19,30 @@ export default function MarketPagination({
 	totalPages,
 	totalPlayers,
 	visiblePlayers,
-	pageSize,
 	onPageChange,
+	showSummary = true,
+	variant = "default",
+	className,
+	itemLabel = "jugadores",
 }: Props) {
+	const rootClassName = className
+		? `${styles.marketPagination} ${className}`
+		: styles.marketPagination;
+
 	return (
-		<footer className={styles.marketPagination}>
-			<p>
-				Mostrando {visiblePlayers} de{" "}
-				{totalPlayers?.toLocaleString("es-AR") ?? "—"} jugadores
-			</p>
+		<footer className={rootClassName} data-variant={variant}>
+			{showSummary && (
+				<p>
+					Mostrando {visiblePlayers} de{" "}
+					{totalPlayers?.toLocaleString("es-AR") ?? "—"} {itemLabel}
+				</p>
+			)}
 			<Pagination
 				page={page}
 				totalPages={totalPages}
 				onChange={onPageChange}
 				className={styles.marketPagination__pages}
 			/>
-			<label className={styles.marketPagination__size}>
-				Jugadores por página
-				<select
-					disabled
-					value={pageSize ?? 12}
-					aria-label="Jugadores por página: pendiente"
-				>
-					<option value={pageSize ?? 12}>{pageSize ?? 12}</option>
-				</select>
-				<small>Pendiente</small>
-			</label>
 		</footer>
 	);
 }

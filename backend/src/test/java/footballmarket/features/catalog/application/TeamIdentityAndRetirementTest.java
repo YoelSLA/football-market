@@ -10,6 +10,7 @@ import footballmarket.features.catalog.domain.records.PlayerSnapshot;
 import footballmarket.features.catalog.domain.records.PlayerSynchronizationResult;
 import footballmarket.features.catalog.domain.records.TeamCandidate;
 import footballmarket.integrations.thesportsdb.TheSportsDbIntegration;
+import footballmarket.support.PlayerStatisticsQueryData;
 import footballmarket.support.ResetPlayerCatalogListener;
 import footballmarket.support.TestcontainersConfiguration;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @org.junit.jupiter.api.Tag("integration")
 class TeamIdentityAndRetirementTest {
   @Autowired private PlayerCatalogService catalog;
+  @Autowired private PlayerStatisticsQueryData statistics;
   @MockitoBean private TheSportsDbIntegration integration;
 
   private PlayerCandidate candidate(String externalId, String name, String teamId) {
@@ -68,7 +70,7 @@ class TeamIdentityAndRetirementTest {
   }
 
   private Long firstPlayerId() {
-    return catalog.getActivePlayers(0, 20).getContent().getFirst().getId();
+    return statistics.makeSynchronizedPlayerEligible("1");
   }
 
   @Nested
@@ -156,6 +158,7 @@ class TeamIdentityAndRetirementTest {
     void keepCatalogWhenLeagueUnresolved() {
       // Arrange
       catalog.applySynchronization(snapshot(candidate("1", "Player", "101")));
+      firstPlayerId();
       Player previous = catalog.getActivePlayers(0, 20).getContent().getFirst();
       Long previousPlayerId = previous.getId();
       Long previousTeamId = previous.getTeam().getId();

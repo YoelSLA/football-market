@@ -1,0 +1,72 @@
+@use "@/styles/abstracts" as ds;
+
+.filterSearch {
+	&__control {
+		// 2. 📍 Positioning
+		position: relative;
+
+		// 3. 🧩 Layout
+		display: block;
+	}
+
+	&__icon {
+		// 2. 📍 Positioning
+		position: absolute;
+		top: 50%;
+		left: 12px;
+
+		// 4. 📦 Box Model
+		width: 18px;
+		height: 18px;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+
+		// 7. ⚙️ Behavior
+		pointer-events: none;
+
+		// 8. ✨ Animation
+		transform: translateY(-50%);
+	}
+
+	&__input {
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		width: 100%;
+		min-width: 0;
+		height: var(--filter-control-height, 38px);
+		padding: 0 12px 0 40px;
+
+		// 5. 🔤 Typography
+		font: inherit;
+		font-size: 0.8rem;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.45rem;
+		background-color: ds.$surface-page;
+		color: ds.$text-title-on-dark;
+
+		&::placeholder {
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+		}
+
+		&:hover:not(:disabled) {
+			// 6. 🎨 Visual
+			border-color: ds.$accent-highlight;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+	}
+}

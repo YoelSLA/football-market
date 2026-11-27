@@ -6,6 +6,7 @@ import footballmarket.features.auth.application.exceptions.EmailAlreadyRegistere
 import footballmarket.features.auth.application.exceptions.InvalidCredentialsException;
 import footballmarket.features.auth.application.exceptions.UsernameAlreadyRegisteredException;
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.records.CurrentUserView;
 import footballmarket.features.auth.infraestructure.UserRepository;
 import footballmarket.features.auth.security.JWTProvider;
 import footballmarket.features.market.domain.models.UserCredit;
@@ -30,13 +31,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   /** {@inheritDoc} */
   @Override
   @Transactional(readOnly = true)
-  public User getCurrentUser(String subjectEmail) {
+  public CurrentUserView getCurrentUser(String subjectEmail) {
     if (subjectEmail == null || subjectEmail.isBlank()) {
       throw new CurrentUserNotFoundException();
     }
-    return this.userRepository
-        .findByEmail(subjectEmail.toLowerCase(Locale.ROOT))
-        .orElseThrow(CurrentUserNotFoundException::new);
+    User user =
+        this.userRepository
+            .findByEmail(subjectEmail.toLowerCase(Locale.ROOT))
+            .orElseThrow(CurrentUserNotFoundException::new);
+
+    long availableCredits =
+        this.userCreditRepository
+            .findById(user.getId())
+            .map(UserCredit::getAvailableCredits)
+            .orElse(0L);
+
+    return new CurrentUserView(
+        user.getId(), user.getUsername(), user.getEmail(), user.getRole(), availableCredits);
   }
 
   /**

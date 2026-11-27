@@ -1,0 +1,24 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioPosition {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: ds.$space-sm ds.$space-sm ds.$space-2xs;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-radius: 14px;
+	background-color: ds.$surface-panel-from;
+	box-shadow: inset 0 1px ds.$surface-glass-soft, 0 2px 12px ds.$shadow-soft;
+	color: ds.$text-strong-on-dark;
+
+	:focus-visible {
+		outline: 3px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+}

@@ -1,5 +1,10 @@
 import type { PlayerRankingItem } from "@/features/players/types";
 import { getNationalityFlag } from "@/features/players/utils";
+import {
+	CompetitionLogo,
+	NationalityFlag,
+	TeamBadge,
+} from "@/shared/components";
 import styles from "./RankingPlaceMeta.module.scss";
 
 interface Props {
@@ -9,7 +14,9 @@ interface Props {
 /**
  * Resuelve la bandera correspondiente al país de la liga.
  */
-function getLeagueCountryFlag(leagueName: string): string | null {
+function getLeagueCountryFlag(leagueName: string | null): string | null {
+	if (!leagueName) return null;
+
 	const norm = leagueName.toLowerCase().trim();
 
 	if (norm.includes("premier")) return getNationalityFlag("England");
@@ -27,26 +34,38 @@ function getLeagueCountryFlag(leagueName: string): string | null {
 }
 
 export default function RankingPlaceMeta({ player }: Props) {
-	const flag = getLeagueCountryFlag(player.leagueName) ?? player.leagueFlag;
+	const flag = getLeagueCountryFlag(player.leagueName);
 
 	return (
 		<div className={styles.meta}>
 			<div className={styles.meta__clubRow}>
-				{player.teamBadge ? (
-					<img src={player.teamBadge} alt="" className={styles.meta__shield} />
-				) : (
-					<span className={styles.meta__shieldPlaceholder} aria-hidden="true">
-						◇
-					</span>
-				)}
-
-				<span className={styles.meta__teamName}>{player.teamName}</span>
+				<TeamBadge
+					src={player.teamBadge}
+					teamName={player.teamName ?? "Equipo no disponible"}
+					leagueName={player.leagueName ?? undefined}
+					className={styles.meta__shield}
+				/>
+				<span className={styles.meta__teamName}>{player.teamName ?? "—"}</span>
 			</div>
 
 			<div className={styles.meta__leagueRow}>
-				{flag && <img src={flag} alt="" className={styles.meta__flag} />}
-
-				<span className={styles.meta__leagueName}>{player.leagueName}</span>
+				{flag ? (
+					<NationalityFlag
+						src={flag}
+						nationality={player.leagueName ?? "Liga"}
+						className={styles.meta__flag}
+					/>
+				) : (
+					<CompetitionLogo
+						src={player.leagueFlag}
+						competitionName={player.leagueName ?? "Liga"}
+						className={styles.meta__competitionLogo}
+						decorative
+					/>
+				)}
+				<span className={styles.meta__leagueName}>
+					{player.leagueName ?? "—"}
+				</span>
 			</div>
 		</div>
 	);

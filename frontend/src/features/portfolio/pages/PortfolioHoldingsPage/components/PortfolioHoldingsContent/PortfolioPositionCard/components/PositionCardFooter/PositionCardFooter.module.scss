@@ -1,0 +1,157 @@
+@use "@/styles/abstracts" as ds;
+
+.footer {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-xs;
+
+	// 4. 📦 Box Model
+	margin-top: ds.$space-2xs;
+	padding-top: ds.$space-2xs;
+
+	// 6. 🎨 Visual
+	border-top: 1px solid ds.$border-panel;
+}
+
+.result {
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+
+	// 5. 🔤 Typography
+	font-size: 13px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+
+	&_positive {
+		color: ds.$accent-gain;
+
+		.resultIcon {
+			stroke: ds.$state-gain;
+		}
+	}
+
+	&_negative {
+		color: ds.$state-loss;
+
+		.resultIcon {
+			stroke: ds.$state-loss;
+		}
+	}
+
+	&_neutral {
+		color: ds.$text-dimmed-on-dark;
+
+		.resultIcon {
+			stroke: ds.$text-dimmed-on-dark;
+		}
+	}
+}
+
+.resultIcon {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	width: 14px;
+	height: 14px;
+}
+
+.resultValue {
+	// 5. 🔤 Typography
+	white-space: nowrap;
+}
+
+.actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+}
+
+.sellButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	flex-shrink: 0;
+	height: 30px;
+	padding: 0 10px;
+	font-size: 12px;
+	font-weight: 700;
+	text-decoration: none;
+	white-space: nowrap;
+	border: 1px solid ds.$badge-podium-gold-border;
+	border-radius: 6px;
+	background-color: rgba(245, 158, 11, 0.12);
+	color: ds.$token-gold;
+	cursor: pointer;
+	transition: all 0.18s ease;
+
+	&:hover {
+		background-color: rgba(245, 158, 11, 0.22);
+		box-shadow: 0 0 10px ds.$badge-podium-gold-glow;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+}
+
+.details {
+	// 3. 🧩 Layout
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	height: 30px;
+	padding: 0 10px;
+
+	// 5. 🔤 Typography
+	font-size: 12px;
+	font-weight: 700;
+	text-decoration: none;
+	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$accent-gain;
+	border-radius: 6px;
+	background-color: ds.$surface-control-active;
+	box-shadow: 0 0 0 2px ds.$shadow-intense, inset 0 1px ds.$surface-gain-tint;
+	color: ds.$accent-gain;
+
+	// 7. ⚙️ Behavior
+	cursor: pointer;
+
+	// 8. ✨ Animation
+	transition: all 0.18s ease;
+
+	&:hover {
+		background-color: ds.$surface-control-active;
+		box-shadow: 0 0 12px ds.$surface-gain-soft;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 2px;
+	}
+}
+
+.arrowIcon {
+	// 3. 🧩 Layout
+	flex-shrink: 0;
+
+	// 4. 📦 Box Model
+	width: 16px;
+	height: 16px;
+
+	// 6. 🎨 Visual
+	stroke: ds.$action-link;
+}

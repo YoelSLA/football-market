@@ -1,0 +1,81 @@
+@use "@/styles/abstracts" as ds;
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-shrink: 0;
+	height: 60px;
+	padding: 12px 18px;
+	border-top: 1px solid ds.$border-panel;
+}
+
+.btnSecondary {
+	height: 36px;
+	padding: 0 16px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 6px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$text-title-on-dark;
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	&:hover:not(:disabled) {
+		background-color: ds.$surface-panel-from;
+		border-color: ds.$accent-highlight;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.btnPrimary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 36px;
+	padding: 0 18px;
+	border: 1px solid ds.$accent-gain;
+	border-radius: 6px;
+	background-color: ds.$surface-control-active;
+	color: ds.$accent-gain;
+	font-size: 12.5px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background-color 0.15s ease, opacity 0.15s ease;
+
+	svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	&:hover:not(:disabled) {
+		background-color: ds.$surface-card-subtle;
+	}
+
+	&:disabled {
+		border-color: ds.$border-panel-mid;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$text-label-on-dark;
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.spinner {
+	width: 15px;
+	height: 15px;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}

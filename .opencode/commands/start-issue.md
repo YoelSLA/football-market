@@ -76,72 +76,114 @@ gh issue view <n> --json number,title,body,state,labels,milestone,assignees,url,
   `Dependency ≠ Blocker`. Se informa de forma destacada en el reporte final y se deja constancia en
   la salida.
 
-**0.5 — Verificar que el identificador SPEC no esté usado.** Obligatorio antes de cualquier escritura.
-Cruzar cuatro fuentes y registrar el resultado de cada una:
-- Specs locales: `ls specs/ | grep -E '^<num>-'` → cualquier coincidencia es conflicto.
-- Ramas remotas: `git ls-remote --heads origin | grep -E '/<num>-'` → conflicto.
-- Issues de GitHub: `gh issue list --state all --search "SPEC-<num> in:title"` → cualquier issue
-  distinto del actual es conflicto.
-- Items del proyecto: cualquier título que empiece con `SPEC-<num> |` es conflicto.
-
-Si hay cualquier conflicto: **detener**, reportar la fuente y el conflicting, y no escribir nada. No
-se reasigna ni se corrige el número.
-
-**0.6 — Estado de Git.**
+**0.5 — Estado de Git y sincronización obligatoria con origin/dev.**
+Debe ejecutarse antes de determinar el modo de operación para asegurar que el repositorio local refleje el estado real de la rama de integración:
 ```bash
-git fetch origin
 git status --short
 ```
-- Si hay cambios rastreados pendientes, **detener**: no se descarta, no se hace `stash`, el árbol
-  queda intacto.
-- `git checkout dev` y `git merge --ff-only origin/dev` para dejar `HEAD` en `origin/dev`. Si el
-  `ff-only` falla, detener y reportar.
+- Si hay cambios rastreados pendientes en el árbol de trabajo, **detener**: no se descarta nada, no se hace `stash`, el árbol queda intacto.
+```bash
+git fetch origin
+git checkout dev
+git merge --ff-only origin/dev
+```
+- Se valida y sincroniza `dev` contra `origin/dev`. Si el `ff-only` falla o hay divergencias, detener y reportar.
 - Guardar `ORIGIN_DEV_SHA=$(git rev-parse origin/dev)`.
 
-**0.7 — Scope.** El scope forma parte de la identidad de la SPEC (`<num>-<scope>`) y de la rama
-(`<type>/<num>-<scope>`), por lo que su resolución es siempre explícita y auditable.
-- El scope MUST estar en **inglés**, en `kebab-case` y en ASCII (`^[a-z0-9]+(-[a-z0-9]+)*$`), con
-  independencia del idioma del issue de origen. El scope es un identificador técnico de la spec y
-  de la rama, no un texto de negocio: los issues, los títulos y la documentación están en español,
-  pero el scope expresa en inglés la misma intención, conforme al `<scope>` en inglés de
-  `docs/development/git-workflow.md`.
-- Si `$3` viene: se usa verbatim como scope, tras validar `^[a-z0-9]+(-[a-z0-9]+)*$` y confirmar que
-  está en inglés.
-- Si `$3` no viene: derivarlo del título del issue **traduciendo primero la intención al inglés** y
-  después normalizando. Quitar el código de prefijo (`REQ-...`, `TSK-...`, `SPEC-...`) y el
-  separador `|`, expresar el resto en inglés, pasar a minúsculas, convertir toda secuencia no
-  alfanumérica en `-`, colapsar guiones repetidos y quitar guiones de los extremos. Validar el
-  resultado con la misma expresión.
-- **Control de idioma.** No es válido un scope con palabras del español. Se consideran señales de un
-  scope sin traducir, entre otras: `de`, `del`, `la`, `el`, `los`, `las`, `un`, `una`, `y`, `en`,
-  `para`, `con`, `por`, `al`, `se`, `su`, `sus`, `mis`, `más`, `ver`, `obtener`, `mostrar`,
-  `consultar`, `visualizar`, `crear`, `definir`, `datos`, `detalle`, `usuario`. Ante cualquiera de
-  ellas, el scope se corrige traduciéndolo al inglés antes de continuar. La lista es orientativa:
-  el criterio es que el scope describa la funcionalidad en inglés.
-- **Reportar siempre el scope resultante**, indicate si fue provisto o derivado. No se descarta un
-  scope inválido sin avisar: se detiene y se pide uno válido.
+**0.6 — Determinación de modo (Creación vs. Evolución) y validación de colisiones.**
+Con `dev` sincronizado a `origin/dev`, inspeccionar `specs/`:
 
-**0.8 — Tipo de rama.** `feat` por defecto. El conjunto cerrado es `feat fix refactor test docs chore
-perf ci` de `docs/development/git-workflow.md`. Si el trabajo no es una funcionalidad nueva, elegir el
-tipo que corresponda y reportarlo.
+- **Detección de modo:**
+  - Si `specs/` NO contiene ningún directorio que empiece con `<num>-`, el comando opera en **Modo A (Creación de SPEC nueva)**.
+  - Si `specs/` contiene un directorio `specs/<num>-<existing-scope>`, el comando opera en **Modo B (Evolución de SPEC existente)**.
+
+- **Validación de colisiones para Modo A (SPEC nueva):**
+  - Specs locales: `ls specs/ | grep -E '^<num>-'` → ninguna coincidencia.
+  - Ramas remotas: `git ls-remote --heads origin | grep -E '/<num>-'` → ninguna coincidencia activa.
+  - Issues de GitHub: ningún issue distinto del actual debe tener `SPEC-<num>` en su título.
+  - Items del proyecto: ningún item distinto del actual debe tener `SPEC-<num> |` en su título.
+  - Ante cualquier coincidencia en Modo A: **detener**, reportar la fuente en conflicto y no escribir nada.
+
+- **Validación de consistencia y concurrencia para Modo B (Evolución de SPEC existente):**
+  - El directorio `specs/<num>-<existing-scope>` MUST existir y contener la tríada permanente (`spec.md`, `plan.md`, `tasks.md`).
+  - El issue actual debe representar una evolución funcional legítima de dicha SPEC.
+  - Comprobar concurrencia remota activa: `git ls-remote --heads origin | grep -E '/<num>-'` y `gh pr list --state open --search "SPEC-<num>"`. Si existe una rama remota activa vinculada a un Pull Request abierto de esa SPEC, **detener** y reportar colisión de concurrencia para evitar trabajo paralelo no coordinado sobre la misma especificación viva.
+  - Si el identificador `<num>` no corresponde inequívocamente a esa spec existente, **detener** y reportar.
+
+**0.7 — Scope e identidad de rama.**
+Conforme a `docs/development/git-workflow.md` (§ "El `<scope>` es el mismo en la rama y en el directorio de la spec"):
+- **En Modo A (SPEC nueva)**:
+  - El scope define el nombre del nuevo directorio y de la rama (`<num>-<scope>`).
+  - El scope MUST estar en **inglés**, en `kebab-case` y en ASCII (`^[a-z0-9]+(-[a-z0-9]+)*$`), con independencia del idioma del issue de origen.
+  - Si `$3` viene: se usa verbatim tras validarlo y confirmar que está en inglés.
+  - Si `$3` no viene: derivarlo del título del issue **traduciendo primero la intención al inglés** y después normalizando. Quitar el código de prefijo (`REQ-...`, `TSK-...`, `SPEC-...`) y el separador `|`, expresar el resto en inglés, pasar a minúsculas, convertir toda secuencia no alfanumérica en `-`, colapsar guiones repetidos y quitar guiones de los extremos. Validar el resultado con la misma expresión.
+  - **Control de idioma.** No es válido un scope con palabras del español. Se consideran señales de un scope sin traducir, entre otras: `de`, `del`, `la`, `el`, `los`, `las`, `un`, `una`, `y`, `en`, `para`, `con`, `por`, `al`, `se`, `su`, `sus`, `mis`, `más`, `ver`, `obtener`, `mostrar`, `consultar`, `visualizar`, `crear`, `definir`, `datos`, `detalle`, `usuario`. Ante cualquiera de ellas, el scope se corrige traduciéndolo al inglés antes de continuar.
+  - **Reportar siempre el scope resultante**, indicando si fue provisto o derivado.
+- **En Modo B (Evolución de SPEC existente)**:
+  - El scope de la rama y de la spec **debe ser obligatoriamente el `<existing-scope>` del directorio existente**.
+  - Al reutilizar y evolucionar una SPEC, la rama conserva la identidad unificada de su directorio: `<type>/<num>-<existing-scope>`, en estricta compatibilidad con `git-workflow.md` y `create-new-feature.sh`.
+  - Si el usuario suministró `$3` y este contradice el `<existing-scope>` existente, el comando **se detiene y reporta** la discrepancia; no altera el scope de la spec existente ni crea ramas divergentes.
+
+**0.8 — Tipo de rama.** `feat` por defecto. El conjunto cerrado es `feat fix refactor test docs chore perf ci` de `docs/development/git-workflow.md`. Si el trabajo no es una funcionalidad nueva, elegir el tipo que corresponda y reportarlo.
+
+**0.9 — Inspección de rama previa y garantía de arranque desde origin/dev.**
+Con el tipo y el scope resueltos, se fija el nombre unívoco de la rama: `<BRANCH_NAME>="<type>/<num>-<scope>"`.
+Antes de invocar el script de materialización, MUST auditarse si la rama ya existe para garantizar que todo ciclo comience desde `origin/dev`:
+- Comprobar existencia remota:
+  ```bash
+  git ls-remote --exit-code --heads origin "<BRANCH_NAME>" || true
+  ```
+  - Si la rama existe en remoto y tiene un PR abierto, **detener** (concurrencia).
+  - Si la rama existe en remoto pero su PR previo ya fue cerrado/mergeado, reportarlo al usuario antes de reutilizar la referencia remota.
+- Comprobar existencia local:
+  ```bash
+  git show-ref --verify --quiet "refs/heads/<BRANCH_NAME>" || true
+  ```
+  - Si la rama **no existe localmente**: `create-new-feature.sh` la creará limpiamente desde `HEAD` (que está en `dev` en `ORIGIN_DEV_SHA`).
+  - Si la rama **ya existe localmente** (por ejemplo, remanente de un ciclo de trabajo anterior):
+    - **NUNCA eliminarla, resetearla ni sobrescribirla automáticamente.**
+    - Inspeccionar su estado detallado:
+      - `LOCAL_SHA=$(git rev-parse "<BRANCH_NAME>")`
+      - `IS_ANCESTOR=$(git merge-base --is-ancestor "<BRANCH_NAME>" origin/dev && echo "yes" || echo "no")`
+      - `COMMITS_AHEAD=$(git rev-list --count origin/dev.."<BRANCH_NAME>")`
+      - `COMMITS_BEHIND=$(git rev-list --count "<BRANCH_NAME>"..origin/dev)`
+    - **Si `LOCAL_SHA == ORIGIN_DEV_SHA`**: la rama local ya apunta a la base limpia de `origin/dev`. Se puede reutilizar con seguridad.
+    - **Si `LOCAL_SHA != ORIGIN_DEV_SHA`**:
+      - **DETENER inmediatamente**: reportar la discrepancia técnica completa (SHA local vs `ORIGIN_DEV_SHA`, commits ahead/behind, y si sus cambios ya forman parte de `origin/dev`).
+      - Solicitar confirmación explícita del usuario para resolver el conflicto (por ejemplo, renombrar la rama local obsoleta como backup antes de recrearla desde `origin/dev`).
 
 ## Fase 1 — Materializar la SPEC (solo issues `REQ-` y `SPEC-`)
 
 **1.1 — Mecanismo sancionado.** Ejecutar desde la raíz, una sola vez:
 
-```bash
-.specify/scripts/bash/create-new-feature.sh --json --number <num> --short-name '<scope>' --type <type> '<título del issue>'
-```
+- **En Modo A (SPEC nueva):**
+  ```bash
+  .specify/scripts/bash/create-new-feature.sh --json --number <num> --short-name '<scope>' --type <type> '<título del issue>'
+  ```
+- **En Modo B (Evolución de SPEC existente):**
+  ```bash
+  .specify/scripts/bash/create-new-feature.sh --json --reuse --short-name '<existing-scope>' --type <type> '<título del issue>'
+  ```
+  La rama conserva siempre el scope original del directorio de la spec (`<type>/<num>-<existing-scope>`), conforme a `docs/development/git-workflow.md` y `create-new-feature.sh`.
 
 **1.2 — Verificar la salida.** Leer `SPEC_NAME`, `SPEC_FILE`, `FEATURE_NUM`, `BRANCH_NAME`,
 `SPEC_ACTION`, `BRANCH_STATUS`.
 - `FEATURE_NUM` distinto del número pedido → **detener y reportar**; el script ajustó el número y ese
   ajuste no se acepta.
-- `SPEC_ACTION` distinto de `created` → reportar; no continuar como si fuera una SPEC nueva.
+- En Modo A: `SPEC_ACTION` distinto de `created` → reportar fallo.
+- En Modo B: `SPEC_ACTION` distinto de `reused` → reportar fallo.
 - `BRANCH_STATUS` que no acredite rama disponible → reportar el estado real, no asumir.
+- Verificar que el commit inicial de la rama activa coincida exactamente con `ORIGIN_DEV_SHA`:
+  ```bash
+  git rev-parse HEAD
+  ```
+  Si `HEAD` no coincide con `ORIGIN_DEV_SHA`, **detener y reportar**: cada nuevo ciclo de trabajo debe partir rigurosamente de `origin/dev`.
 
-**1.3 — Verificar el materializado.** Que exista `specs/<SPEC_NAME>/` con `spec.md` de plantilla. **No
-escribir el contenido de la especificación**: corresponde a SPECIFY.
+**1.3 — Verificar el materializado.**
+- En Modo A: que exista `specs/<SPEC_NAME>/` con `spec.md` de plantilla.
+- En Modo B: que exista `specs/<SPEC_NAME>/` con su tríada permanente (`spec.md`, `plan.md`, `tasks.md`).
+  No se sobrescriben con plantillas; se conservan como documentación viva.
+**No escribir el contenido de la especificación**: corresponde a SPECIFY.
 
 **1.4 — Issues `TSK-`.** No hay SPEC. La rama se crea directamente como `<type>/<scope>` (sin
 identificador de SPEC), según `docs/development/git-workflow.md` para cambios que no justifican spec

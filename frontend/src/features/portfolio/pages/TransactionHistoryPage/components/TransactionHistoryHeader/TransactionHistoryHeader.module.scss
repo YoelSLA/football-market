@@ -1,0 +1,71 @@
+@use "@/styles/abstracts" as ds;
+
+.transactionHistoryHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-md;
+	flex-shrink: 0;
+	box-sizing: border-box;
+	width: 100%;
+	height: 80px;
+	min-height: 80px;
+	padding: 0;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		min-width: 0;
+		flex-shrink: 0;
+	}
+
+	&__iconWrapper {
+		display: grid;
+		place-items: center;
+		flex-shrink: 0;
+		width: 48px;
+		height: 48px;
+		border-radius: 12px;
+		background-color: ds.$surface-card-subtle;
+		color: ds.$accent-gain;
+	}
+
+	&__icon {
+		width: 24px;
+		height: 24px;
+		stroke-width: 2.5;
+	}
+
+	&__titleWrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 0;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 20px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+		white-space: nowrap;
+	}
+
+	&__description {
+		margin: 0;
+		font-size: 13px;
+		line-height: 1.3;
+		color: ds.$text-subtle-on-dark;
+		white-space: nowrap;
+	}
+
+	&__metrics {
+		display: flex;
+		align-items: center;
+		flex: 1;
+		min-width: 0;
+		justify-content: flex-end;
+	}
+}

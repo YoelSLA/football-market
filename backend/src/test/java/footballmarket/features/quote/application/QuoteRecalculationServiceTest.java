@@ -3,306 +3,409 @@ package footballmarket.features.quote.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.features.auth.domain.User;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.market.application.BuyOrderService;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
+import footballmarket.features.market.domain.records.BuyOrderRequest;
 import footballmarket.features.quote.application.exceptions.ExecutionAlreadyExistsException;
 import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFactorException;
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
-import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
-import footballmarket.features.quote.domain.enums.QuoteOrigin;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
+import footballmarket.features.quote.domain.enums.QuoteExecutionResult;
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
-import footballmarket.features.valuation.domain.enums.ValuationStrategy;
 import footballmarket.support.IdentityCatalogueFixture;
+import footballmarket.support.MarketTestData;
 import footballmarket.support.ResetPlayerCatalogListener;
+import footballmarket.support.ScoreRankingTestData;
 import footballmarket.support.TestcontainersConfiguration;
 import footballmarket.support.ValuationTestData;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.bean.override.convention.TestBean;
 
-/**
- * Categoría Service del recálculo manual de cotizaciones.
- *
- * <p>Afirma exclusivamente lo que devuelve o lanza la API pública de {@link
- * QuoteRecalculationService}. No accede a la persistencia: el estado durable se comprueba en {@code
- * QuoteExecutionPersistenceTest}.
- */
-@SpringBootTest
+@SpringBootTest(
+    properties = {
+      "market.quote.strategy=GENERAL_ATTRIBUTES", "market.quote.adjustment-factor=0.25",
+      "market.quote.variation-cap=0.20", "market.quote.min-price-floor=7"
+    })
 @ActiveProfiles("test")
 @Import({
   TestcontainersConfiguration.class,
   IdentityCatalogueFixture.class,
-  ValuationTestData.class
+  MarketTestData.class,
+  ValuationTestData.class,
+  ScoreRankingTestData.class
 })
 @TestExecutionListeners(
     listeners = ResetPlayerCatalogListener.class,
     mergeMode = TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS)
-@org.junit.jupiter.api.Tag("integration")
+@Tag("integration")
 class QuoteRecalculationServiceTest {
-
-  /** Fecha de mercado de las filas iniciales: dos días antes de la corrida. */
-  private static final LocalDate MARKET_DATE = LocalDate.of(2026, 10, 17);
-
-  /** Fecha de la campaña de métricas previa a la valuación. */
-  private static final LocalDate CAMPAIGN_DATE = LocalDate.of(2026, 10, 18);
-
-  /** Fecha de cotización de la ejecución: el día en que corre el recálculo. */
   private static final LocalDate QUOTE_DATE = LocalDate.of(2026, 10, 19);
-
+  private static final Instant NOW = Instant.parse("2026-10-19T09:00:00Z");
   @Autowired private QuoteRecalculationService service;
   @Autowired private QuoteMarketInitializationService initialization;
+  @Autowired private QuoteQueryService quoteQuery;
+  @Autowired private BuyOrderService buyOrderService;
   @Autowired private ValuationEvaluationService valuation;
-  @Autowired private PlayerCatalogService playerCatalogue;
-  @Autowired private QuotePlayerPublisher publisher;
+  @Autowired private PlayerCatalogService players;
   @Autowired private IdentityCatalogueFixture catalogue;
   @Autowired private ValuationTestData data;
+  @Autowired private MarketTestData market;
+  @Autowired private ScoreRankingTestData scores;
+  @Autowired private CacheManager cacheManager;
 
-  /**
-   * Reloj de las campañas de estadísticas, fijado a la fecha de la corrida.
-   *
-   * <p>La valuación se sella con el día en que se evalúa y su fecha es la fecha de vigencia de la
-   * fila recalculada, de modo que fijarla hace que el historial no dependa del día en que se
-   * ejecuta la suite.
-   */
   @TestBean(name = "statisticsClock", methodName = "valuationClock")
   private Clock statisticsClock;
 
-  /**
-   * Reloj de mercado, fijado a la fecha de cotización de la corrida.
-   *
-   * <p>La fecha de cotización de una ejecución es el día en que corre, de modo que fijarla mantiene
-   * la corrida y su resumen estables entre ejecuciones de la suite.
-   */
   @TestBean(name = "marketClock", methodName = "quoteClock")
   private Clock marketClock;
 
   static Clock valuationClock() {
-    return Clock.fixed(Instant.parse("2026-10-19T09:00:00Z"), ZoneOffset.UTC);
+    return Clock.fixed(NOW, ZoneOffset.UTC);
   }
 
   static Clock quoteClock() {
-    return Clock.fixed(Instant.parse("2026-10-19T09:00:00Z"), ZoneOffset.UTC);
+    return new ControlledClock();
+  }
+
+  @BeforeEach
+  void resetClock() {
+    ((ControlledClock) marketClock).time.set(NOW);
+    ((ControlledClock) marketClock).nextRead = null;
   }
 
   @Nested
-  @DisplayName("Publicación individual")
-  class PlayerPublication {
-
+  @DisplayName("Recálculo diario por jugador")
+  class DailyRecalculation {
     @Test
-    @DisplayName("Publica una fila recalculada con score y estrategia")
-    void publishesRecomputedQuote() {
-      Player player = prepareValuedMarket();
+    @DisplayName("Invalida ranking y mercado oficial tras completar el recálculo")
+    void invalidatesReadsAfterSuccessfulRecalculation() {
+      // Arrange
+      prepareMarket(false);
+      Object rankingKey = new Object();
+      Object officialMarketKey = new Object();
+      Object p2pMarketKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).put(rankingKey, "cached");
+      cacheManager
+          .getCache(QueryCacheConfiguration.OFFICIAL_MARKET)
+          .put(officialMarketKey, "cached");
+      cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).put(p2pMarketKey, "cached");
 
-      QuotePlayerPublisher.PublicationResult result =
-          publisher.publish(
-              player,
-              QUOTE_DATE,
-              ValuationStrategy.POSITIONAL_PERFORMANCE,
-              new BigDecimal("0.10"),
-              new BigDecimal("0.10"),
-              1L,
-              Instant.parse("2026-10-19T10:00:00Z"));
+      // Act
+      service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
 
-      PlayerQuote quote = result.quote().orElseThrow();
-      assertThat(result.publication()).isEqualTo(QuotePlayerPublisher.Publication.RECOMPUTED);
-      assertThat(quote.getOrigin()).isEqualTo(QuoteOrigin.RECOMPUTED);
-      assertThat(quote.getScore()).isNotNull();
-      assertThat(quote.getStrategyName()).isEqualTo(ValuationStrategy.POSITIONAL_PERFORMANCE);
-      assertThat(quote.getStrategyVersion()).isEqualTo("v1");
+      // Assert
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(rankingKey))
+          .isNull();
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialMarketKey))
+          .isNull();
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.P2P_MARKET).get(p2pMarketKey))
+          .isNotNull();
     }
 
     @Test
-    @DisplayName("Arrastra el precio sin score y hereda la estrategia vigente")
-    void carriesForwardCurrentQuote() {
-      Player player = prepareMarketWithoutValuations();
+    @DisplayName("Conserva las lecturas cacheadas si el recálculo es rechazado")
+    void preservesReadsWhenRecalculationFails() {
+      // Arrange
+      Object rankingKey = new Object();
+      Object officialMarketKey = new Object();
+      cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).put(rankingKey, "cached");
+      cacheManager
+          .getCache(QueryCacheConfiguration.OFFICIAL_MARKET)
+          .put(officialMarketKey, "cached");
 
-      QuotePlayerPublisher.PublicationResult result =
-          publisher.publish(
-              player,
-              QUOTE_DATE,
-              ValuationStrategy.POSITIONAL_PERFORMANCE,
-              new BigDecimal("0.10"),
-              new BigDecimal("0.10"),
-              1L,
-              Instant.parse("2026-10-19T10:00:00Z"));
-
-      PlayerQuote quote = result.quote().orElseThrow();
-      assertThat(result.publication()).isEqualTo(QuotePlayerPublisher.Publication.CARRIED_FORWARD);
-      assertThat(quote.getScore()).isNull();
-      assertThat(quote.getStrategyName()).isNull();
-      assertThat(quote.getPrice()).isEqualTo(quote.getPreviousPrice());
+      // Act / Assert
+      assertThatThrownBy(() -> service.recalculate("UNKNOWN", null, null, null))
+          .isInstanceOf(UnknownQuoteStrategyException.class);
+      assertThat(cacheManager.getCache(QueryCacheConfiguration.SCORE_RANKINGS).get(rankingKey))
+          .isNotNull();
+      assertThat(
+              cacheManager.getCache(QueryCacheConfiguration.OFFICIAL_MARKET).get(officialMarketKey))
+          .isNotNull();
     }
 
     @Test
-    @DisplayName("No reprecia con una valuación no posterior a la referencia")
-    void skipsOldValuation() {
-      // Arrange: el mercado queda inicializado en la misma fecha que la valuación, de modo que la
-      // valuación no es posterior a la fecha de vigencia de referencia del jugador.
-      catalogue.prepare();
-      data.prepareConfirmedJsonCampaign(CAMPAIGN_DATE);
-      valuation.evaluate();
-      initialization.initialize(QUOTE_DATE);
-      Player player = firstPlayer();
+    @DisplayName("Compone el score deportivo con la demanda de mercado y audita ambos")
+    void incorporatesMarketDemandWithSportsScore() {
+      // Arrange
+      prepareMarket(true);
+      Player player = players.getActivePlayers(0, 10).getContent().getFirst();
+      User buyer = market.registerBuyer();
+      User superuser = market.registerSuperuser();
+      market.emitInitialTokens(player, superuser);
+      buyOrderService.buy(buyer.getEmail(), new BuyOrderRequest(player.getId(), 10));
+      ((ControlledClock) marketClock).time.set(NOW.plusSeconds(1));
 
-      QuotePlayerPublisher.PublicationResult result =
-          publisher.publish(
-              player,
-              QUOTE_DATE,
-              ValuationStrategy.POSITIONAL_PERFORMANCE,
-              new BigDecimal("0.10"),
-              new BigDecimal("0.10"),
-              1L,
-              Instant.parse("2026-10-19T10:00:00Z"));
-
-      assertThat(result.publication()).isEqualTo(QuotePlayerPublisher.Publication.NOT_REPRICED);
-      assertThat(result.quote()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Una fila arrastrada no impide publicar la recalculada de la misma fecha")
-    void recomputedQuoteCoexistsWithCarriedForward() {
-      Player player = prepareMarketWithoutValuations();
-      publisher.publish(
-          player,
-          QUOTE_DATE,
-          ValuationStrategy.POSITIONAL_PERFORMANCE,
-          new BigDecimal("0.10"),
-          new BigDecimal("0.10"),
-          1L,
-          Instant.parse("2026-10-19T09:00:00Z"));
-      valuation.evaluate();
-
-      QuotePlayerPublisher.PublicationResult result =
-          publisher.publish(
-              player,
-              QUOTE_DATE,
-              ValuationStrategy.POSITIONAL_PERFORMANCE,
-              new BigDecimal("0.10"),
-              new BigDecimal("0.10"),
-              1L,
-              Instant.parse("2026-10-19T10:00:00Z"));
-
-      assertThat(result.publication()).isEqualTo(QuotePlayerPublisher.Publication.RECOMPUTED);
-      assertThat(result.quote().orElseThrow().getEffectiveDate()).isEqualTo(QUOTE_DATE);
-    }
-  }
-
-  @Nested
-  @DisplayName("Ejecución poblacional")
-  class PopulationExecution {
-
-    @Test
-    @DisplayName("Persiste el resumen y rechaza una segunda corrida del día")
-    void persistsSummaryAndRejectsSecondRun() {
-      prepareValuedMarket();
-
+      // Act
       QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
 
-      assertThat(result.getPricedPlayers()).isEqualTo(5);
-      assertThat(result.getRecomputedRows()).isEqualTo(5);
-      // El resumen se compara por identificador: la consulta lo relee de la base en otra
-      // transacción y devuelve otra instancia de la misma fila.
-      assertThat(service.executions(result.getQuoteDate()))
-          .extracting(QuoteExecution::getId)
-          .containsExactly(result.getId());
-      assertThatThrownBy(() -> service.recalculate("POSITIONAL_PERFORMANCE", null, null, null))
+      // Assert
+      PlayerQuote quote = quoteQuery.findOnDate(player.getId(), QUOTE_DATE);
+      assertThat(result.getDemandWindow()).isEqualTo(java.time.Duration.ofHours(24));
+      assertThat(quote.getMarketNetDemandTokens()).isEqualTo(10L);
+      assertThat(quote.getMarketDemandFactor()).isEqualByComparingTo("0.050000");
+      assertThat(quote.getMarketMultiplier()).isEqualByComparingTo("1.050000");
+      assertThat(quote.getSportMultiplier()).isNotNull();
+      assertThat(quote.getMultiplier())
+          .isEqualByComparingTo(
+              quote
+                  .getSportMultiplier()
+                  .multiply(quote.getMarketMultiplier())
+                  .max(BigDecimal.ONE.subtract(result.getVariationCap()))
+                  .min(BigDecimal.ONE.add(result.getVariationCap()))
+                  .setScale(6, java.math.RoundingMode.HALF_UP));
+      assertThat(quote.getPrice()).isGreaterThanOrEqualTo(result.getMinPriceFloor());
+    }
+
+    @Test
+    @DisplayName("Conserva el arrastre existente cuando no hay score deportivo")
+    void preservesCarryForwardWithoutSportsScore() {
+      // Arrange
+      prepareMarket(false);
+
+      // Act
+      QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      Player player = players.getActivePlayers(0, 10).getContent().getFirst();
+      PlayerQuote quote = quoteQuery.findOnDate(player.getId(), QUOTE_DATE);
+
+      // Assert
+      assertThat(result.getCarriedForwardRows()).isEqualTo(5);
+      assertThat(quote.getOrigin().name()).isEqualTo("CARRIED_FORWARD");
+      assertThat(quote.getMarketDemandFactor()).isNull();
+      assertThat(quote.getMarketNetDemandTokens()).isNull();
+    }
+
+    @Test
+    @DisplayName("Un score neutro existente es recalculado, no arrastrado")
+    void neutralScoreIsRecomputed() {
+      // Arrange
+      prepareMarket(false);
+      Player player = players.getActivePlayers(0, 10).getContent().getFirst();
+      scores.preparePositionalValuation(player, QUOTE_DATE.minusDays(1), new BigDecimal("0.5"));
+      // Act
+      QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      assertThat(result.getRecomputedRows()).isEqualTo(1);
+      assertThat(result.getCarriedForwardRows()).isEqualTo(4);
+      assertThat(result.getFailedPlayers()).isZero();
+    }
+
+    @Test
+    @DisplayName("Registra manuales antes y después de una automática y rechaza otra automática")
+    void acceptsRepeatedRun() {
+      // Arrange
+      prepareMarket(true);
+      // Act
+      QuoteExecution first = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      QuoteExecution automatic = service.recalculateAutomatic();
+      QuoteExecution last = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      assertThat(first.getRecomputedRows()).isEqualTo(5);
+      assertThat(automatic.getRecomputedRows()).isEqualTo(5);
+      assertThat(last.getRecomputedRows()).isEqualTo(5);
+      assertThat(last.getNotRepricedPlayers()).isZero();
+      assertThat(last.result()).isEqualTo(QuoteExecutionResult.SUCCESS);
+      assertThatThrownBy(service::recalculateAutomatic)
           .isInstanceOf(ExecutionAlreadyExistsException.class);
+      assertThat(service.executions(QUOTE_DATE))
+          .extracting(QuoteExecution::getId)
+          .containsExactly(last.getId(), automatic.getId(), first.getId());
     }
 
     @Test
-    @DisplayName("Aplica la precedencia de estrategia, mercado y factor")
-    void appliesRejectionPrecedence() {
-      assertThatThrownBy(
-              () -> service.recalculate("UNKNOWN", new BigDecimal("2.00"), BigDecimal.ZERO, 0L))
-          .isInstanceOf(UnknownQuoteStrategyException.class);
-      assertThatThrownBy(
-              () ->
-                  service.recalculate(
-                      "POSITIONAL_PERFORMANCE", new BigDecimal("2.00"), BigDecimal.ZERO, 0L))
-          .isInstanceOf(MarketNotInitializedException.class);
-
-      prepareMarketWithoutValuations();
-
-      assertThatThrownBy(
-              () ->
-                  service.recalculate(
-                      "POSITIONAL_PERFORMANCE", new BigDecimal("2.00"), BigDecimal.ZERO, 0L))
-          .isInstanceOf(InvalidAdjustmentFactorException.class);
+    @DisplayName("Reutiliza el mismo score en días sucesivos en vez de congelar el precio")
+    void reusesOldScoreNextDay() {
+      // Arrange
+      prepareMarket(true);
+      service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      ((ControlledClock) marketClock).time.set(NOW.plusSeconds(86400));
+      // Act
+      QuoteExecution next = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      assertThat(next.getQuoteDate()).isEqualTo(QUOTE_DATE.plusDays(1));
+      assertThat(next.getRecomputedRows()).isEqualTo(5);
+      assertThat(next.getNotRepricedPlayers()).isZero();
+      assertThat(next.getFailedPlayers()).isZero();
     }
 
     @Test
-    @DisplayName("Dos corridas concurrentes resuelven una sola ejecución")
-    void resolvesConcurrentExecutions() throws Exception {
-      prepareValuedMarket();
+    @DisplayName("Sin score arrastra diariamente y audita la configuración automática")
+    void carriesWithoutScore() {
+      // Arrange
+      prepareMarket(false);
+      // Act
+      QuoteExecution result = service.recalculateAutomatic();
+      // Assert
+      assertThat(result.getCarriedForwardRows()).isEqualTo(5);
+      assertThat(result.getOrigin()).isEqualTo(QuoteExecutionOrigin.AUTOMATIC);
+      assertThat(result.getAdjustmentFactor()).isEqualByComparingTo("0.25");
+      assertThat(result.getVariationCap()).isEqualByComparingTo("0.20");
+      assertThat(result.getMinPriceFloor()).isEqualTo(7);
+      assertThat(result.getFailedPlayers()).isZero();
+    }
+
+    @Test
+    @DisplayName("Recalcular INITIAL no duplica ni desinicializa el mercado")
+    void updatesInitialDay() {
+      // Arrange
+      catalogue.prepare();
+      data.prepareConfirmedJsonCampaign(QUOTE_DATE.minusDays(1));
+      valuation.evaluate();
+      initialization.initialize(QUOTE_DATE);
+      // Act
+      QuoteExecution first = service.recalculateAutomatic();
+      QuoteExecution next = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      assertThat(first.getRecomputedRows()).isEqualTo(5);
+      assertThat(next.getRecomputedRows()).isEqualTo(5);
+      assertThat(next.getFailedPlayers()).isZero();
+    }
+
+    @Test
+    @DisplayName("Una valuación llegada después reemplaza la cotización arrastrada del día")
+    void lateScoreReplacesDailyQuote() {
+      // Arrange
+      prepareMarket(false);
+      service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      valuation.evaluate();
+      // Act
+      QuoteExecution result = service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
+      // Assert
+      assertThat(result.getRecomputedRows()).isEqualTo(5);
+      assertThat(result.getNotRepricedPlayers()).isZero();
+      assertThat(result.getFailedPlayers()).isZero();
+    }
+
+    @Test
+    @DisplayName(
+        "Dos corridas concurrentes publican cálculos completos sin duplicar la fila diaria")
+    void concurrentRunsPublishBothCalculations() throws Exception {
+      // Arrange
+      prepareMarket(true);
       CountDownLatch start = new CountDownLatch(1);
       ExecutorService executor = Executors.newFixedThreadPool(2);
       try {
-        List<Future<Class<?>>> results =
-            List.of(
-                executor.submit(() -> executeAfter(start)),
-                executor.submit(() -> executeAfter(start)));
+        Future<QuoteExecution> manual = executor.submit(() -> runAfter(start, false));
+        Future<QuoteExecution> automatic = executor.submit(() -> runAfter(start, true));
+        // Act
         start.countDown();
-
-        assertThat(results)
-            .extracting(result -> result.get().getSimpleName())
-            .containsExactlyInAnyOrder("QuoteExecution", "ExecutionAlreadyExistsException");
+        QuoteExecution first = manual.get(30, TimeUnit.SECONDS);
+        QuoteExecution second = automatic.get(30, TimeUnit.SECONDS);
+        // Assert
+        assertThat(first.getId()).isNotEqualTo(second.getId());
+        assertThat(first.getRecomputedRows() + second.getRecomputedRows()).isEqualTo(10);
+        assertThat(first.getNotRepricedPlayers() + second.getNotRepricedPlayers()).isZero();
+        assertThat(first.getFailedPlayers() + second.getFailedPlayers()).isZero();
+        assertThat(service.executions(QUOTE_DATE)).hasSize(2);
       } finally {
         executor.shutdownNow();
       }
     }
-  }
 
-  private Class<?> executeAfter(CountDownLatch start) throws InterruptedException {
-    start.await();
-    try {
-      return service.recalculate("POSITIONAL_PERFORMANCE", null, null, null).getClass();
-    } catch (ExecutionAlreadyExistsException exception) {
-      return exception.getClass();
+    @Test
+    @DisplayName("Fija el día UTC inicial aunque el cierre cruce medianoche")
+    void fixesUtcDayAtStart() {
+      // Arrange
+      prepareMarket(false);
+      ControlledClock clock = (ControlledClock) marketClock;
+      clock.time.set(Instant.parse("2026-10-19T23:59:59Z"));
+      clock.nextRead = Instant.parse("2026-10-20T00:00:01Z");
+      // Act
+      QuoteExecution result = service.recalculateAutomatic();
+      // Assert
+      assertThat(result.getQuoteDate()).isEqualTo(QUOTE_DATE);
+      assertThat(result.getStartedAt()).isEqualTo(Instant.parse("2026-10-19T23:59:59Z"));
+      assertThat(result.getFinishedAt()).isEqualTo(Instant.parse("2026-10-20T00:00:01Z"));
+      assertThat(result.getCarriedForwardRows()).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("Conserva la precedencia de estrategia, mercado y factor")
+    void preservesRejectionPrecedence() {
+      // Act / Assert
+      assertThatThrownBy(() -> service.recalculate("UNKNOWN", new BigDecimal("2"), null, null))
+          .isInstanceOf(UnknownQuoteStrategyException.class);
+      assertThatThrownBy(
+              () -> service.recalculate("POSITIONAL_PERFORMANCE", new BigDecimal("2"), null, null))
+          .isInstanceOf(MarketNotInitializedException.class);
+      // Arrange
+      prepareMarket(false);
+      // Act / Assert
+      assertThatThrownBy(
+              () -> service.recalculate("POSITIONAL_PERFORMANCE", new BigDecimal("2"), null, null))
+          .isInstanceOf(InvalidAdjustmentFactorException.class);
+      assertThat(service.executions(QUOTE_DATE)).isEmpty();
     }
   }
 
-  /**
-   * Mercado con métricas valoradas y con el ancla inicial de dos días antes.
-   *
-   * <p>La valuación se sella en la fecha de la corrida y la fecha de vigencia de referencia del
-   * jugador es la del ancla, de modo que la ejecución reprecia a toda la población.
-   */
-  private Player prepareValuedMarket() {
+  private void prepareMarket(boolean valued) {
     catalogue.prepare();
-    data.prepareConfirmedJsonCampaign(CAMPAIGN_DATE);
-    valuation.evaluate();
-    initialization.initialize(MARKET_DATE);
-    return firstPlayer();
+    data.prepareConfirmedJsonCampaign(QUOTE_DATE.minusDays(1));
+    if (valued) {
+      valuation.evaluate();
+    }
+    initialization.initialize(QUOTE_DATE.minusDays(2));
   }
 
-  /** Mercado con métricas y con el ancla inicial, pero sin valuaciones publicadas. */
-  private Player prepareMarketWithoutValuations() {
-    catalogue.prepare();
-    data.prepareConfirmedJsonCampaign(CAMPAIGN_DATE);
-    initialization.initialize(MARKET_DATE);
-    return firstPlayer();
+  private QuoteExecution runAfter(CountDownLatch start, boolean automatic) throws Exception {
+    if (!start.await(10, TimeUnit.SECONDS)) {
+      throw new AssertionError("No se liberó la barrera de inicio");
+    }
+    return automatic
+        ? service.recalculateAutomatic()
+        : service.recalculate("POSITIONAL_PERFORMANCE", null, null, null);
   }
 
-  private Player firstPlayer() {
-    return playerCatalogue.getActivePlayers(0, 10).getContent().getFirst();
+  static class ControlledClock extends Clock {
+    final AtomicReference<Instant> time = new AtomicReference<>(NOW);
+    volatile Instant nextRead;
+
+    @Override
+    public ZoneId getZone() {
+      return ZoneOffset.UTC;
+    }
+
+    @Override
+    public Clock withZone(ZoneId zone) {
+      return Clock.fixed(time.get(), zone);
+    }
+
+    @Override
+    public synchronized Instant instant() {
+      Instant result = time.get();
+      if (nextRead != null) {
+        time.set(nextRead);
+        nextRead = null;
+      }
+      return result;
+    }
   }
 }

@@ -1,0 +1,38 @@
+@use "@/styles/abstracts" as ds;
+
+.playerRankings {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: ds.$space-2xs;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	padding: ds.$space-2xs;
+	overflow: hidden;
+	background-color: ds.$surface-page;
+	color: ds.$text-strong-on-dark;
+
+	&__scrollRegion {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: ds.$space-xs;
+		min-width: 0;
+		min-height: 0;
+		padding: 8px 4px 16px 4px;
+		overflow-y: auto;
+		overflow-x: hidden;
+		scrollbar-gutter: stable;
+		scrollbar-color: ds.$border-glass ds.$surface-transparent;
+		scrollbar-width: thin;
+	}
+
+	&__footer {
+		@include ds.market-panel-footer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+}

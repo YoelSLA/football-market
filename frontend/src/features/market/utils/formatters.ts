@@ -1,3 +1,4 @@
+import { CREDIT_SYMBOL, TOKEN_SYMBOL } from "@/shared/constants";
 import type { BuyEstimation } from "../types";
 
 const creditsFormatter = new Intl.NumberFormat("es-AR", {
@@ -15,6 +16,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
 	year: "numeric",
 	hour: "2-digit",
 	minute: "2-digit",
+	hour12: false,
 });
 
 /**
@@ -22,13 +24,37 @@ const dateTimeFormatter = new Intl.DateTimeFormat("es-AR", {
  */
 export function formatCredits(
 	centimes: number | null | undefined,
-	compact = false,
+	_compact = false,
 ): string {
 	if (centimes === null || centimes === undefined || Number.isNaN(centimes)) {
 		return "—";
 	}
 	const formatted = creditsFormatter.format(centimes / 100);
-	return compact ? `${formatted} cr.` : `${formatted} créditos`;
+	return `${formatted} ${CREDIT_SYMBOL}`;
+}
+
+/**
+ * Formatea un valor que ya está en unidades de crédito con 2 decimales y coma (locale es-AR).
+ */
+export function formatCreditsAmount(
+	credits: number | null | undefined,
+	_compact = false,
+): string {
+	if (credits === null || credits === undefined || Number.isNaN(credits)) {
+		return "—";
+	}
+	const formatted = creditsFormatter.format(credits);
+	return `${formatted} ${CREDIT_SYMBOL}`;
+}
+
+/**
+ * Formatea una cantidad de tokens con el símbolo canónico (Ⓣ).
+ */
+export function formatTokens(quantity: number | null | undefined): string {
+	if (quantity === null || quantity === undefined || Number.isNaN(quantity)) {
+		return "—";
+	}
+	return `${quantity.toLocaleString("es-AR")} ${TOKEN_SYMBOL}`;
 }
 
 /**
@@ -72,76 +98,37 @@ export function calculateEstimation(
 	};
 }
 
-/**
- * Información de variación respecto a la cotización previa.
- */
-export interface MarketQuoteVariation {
-	direction: "positive" | "negative" | "neutral";
-	percentageText: string;
-	amountText: string;
-	arrow: "↗" | "↘" | "→";
-	hasPreviousPrice: boolean;
-}
+export type VariationDirection = "positive" | "negative" | "neutral";
 
-const variationFormatter = new Intl.NumberFormat("es-AR", {
+const variationPercentageFormatter = new Intl.NumberFormat("es-AR", {
 	minimumFractionDigits: 1,
-	maximumFractionDigits: 1,
+	maximumFractionDigits: 2,
 });
 
 /**
- * Calcula la variación porcentual y nominal respecto al precio anterior real del backend.
- * Sin asumir ventanas temporales fijas (e.g. 24h).
+ * Determina la dirección de una variación porcentual.
  */
-export function calculateQuoteVariation(
-	currentPriceCentimes: number,
-	previousPriceCentimes?: number | null,
-): MarketQuoteVariation {
-	if (
-		previousPriceCentimes === null ||
-		previousPriceCentimes === undefined ||
-		previousPriceCentimes <= 0
-	) {
-		return {
-			direction: "neutral",
-			percentageText: "0,0 %",
-			amountText: "(0,00 cr.)",
-			arrow: "→",
-			hasPreviousPrice: false,
-		};
+export function getVariationDirection(
+	variation: number | null | undefined,
+): VariationDirection {
+	if (variation == null || variation === 0) {
+		return "neutral";
 	}
+	return variation > 0 ? "positive" : "negative";
+}
 
-	const diffCentimes = currentPriceCentimes - previousPriceCentimes;
-	if (diffCentimes === 0) {
-		return {
-			direction: "neutral",
-			percentageText: "0,0 %",
-			amountText: "(0,00 cr.)",
-			arrow: "→",
-			hasPreviousPrice: true,
-		};
+/**
+ * Formatea una variación porcentual con prefijo de signo (+/-) y símbolo %.
+ */
+export function formatVariationPercentage(
+	variation: number | null | undefined,
+	fallback = "Sin referencia",
+): string {
+	if (variation == null) {
+		return fallback;
 	}
-
-	const percentage = (Math.abs(diffCentimes) / previousPriceCentimes) * 100;
-	const formattedPercentage = variationFormatter.format(percentage);
-	const formattedDiffCredits = formatCredits(Math.abs(diffCentimes), true);
-
-	if (diffCentimes > 0) {
-		return {
-			direction: "positive",
-			percentageText: `+${formattedPercentage} %`,
-			amountText: `(+${formattedDiffCredits})`,
-			arrow: "↗",
-			hasPreviousPrice: true,
-		};
-	}
-
-	return {
-		direction: "negative",
-		percentageText: `-${formattedPercentage} %`,
-		amountText: `(-${formattedDiffCredits})`,
-		arrow: "↘",
-		hasPreviousPrice: true,
-	};
+	const prefix = variation > 0 ? "+" : "";
+	return `${prefix}${variationPercentageFormatter.format(variation)} %`;
 }
 
 /**
@@ -168,4 +155,36 @@ export function formatQuoteEffectiveDate(
 		year: "numeric",
 		timeZone: "UTC",
 	});
+}
+
+/**
+ * Formatea el tiempo restante relativo de vencimiento de una orden de forma estática.
+ * No genera suscripciones continuas ni timers en segundo plano.
+ */
+export function formatOrderRelativeExpiration(
+	expiresAt: string | null | undefined,
+	status: string,
+): string {
+	if (status === "SOLD") return "Liquidada";
+	if (status === "CANCELLED") return "Cancelada";
+	if (status === "EXPIRED") return "Expirada";
+	if (!expiresAt) return "Sin vencimiento";
+
+	const target = new Date(expiresAt).getTime();
+	if (Number.isNaN(target)) return "Fecha inválida";
+
+	const diffMs = target - Date.now();
+	if (diffMs <= 0) return "Vencida";
+
+	const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+	if (diffHours < 1) {
+		const diffMins = Math.max(1, Math.round(diffMs / (1000 * 60)));
+		return `Vence en ${diffMins} min`;
+	}
+	if (diffHours < 24) {
+		return `Vence en ${diffHours}h`;
+	}
+	const diffDays = Math.round(diffHours / 24);
+	if (diffDays === 1) return "Vence en 1 día";
+	return `Vence en ${diffDays} días`;
 }

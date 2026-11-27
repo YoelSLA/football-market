@@ -8,9 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.images.application.PlayerImageAuditService;
 import footballmarket.features.images.application.PlayerImageSynchronizationService;
 import footballmarket.features.images.application.exceptions.PlayerImageRunNotFoundException;
@@ -23,6 +20,7 @@ import footballmarket.features.images.domain.records.PlayerImageSyncCounters;
 import footballmarket.features.images.domain.records.PlayerImageSyncRunItemRecord;
 import footballmarket.features.images.domain.records.PlayerImageSyncSummary;
 import footballmarket.integrations.thesportsdb.exceptions.InvalidTheSportsDbConfigurationException;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -55,15 +53,13 @@ class PlayerImageControllerTest {
   @Autowired private SecretKey key;
   @MockitoBean private PlayerImageSynchronizationService synchronization;
   @MockitoBean private PlayerImageAuditService audit;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("images@example.com"))
-        .thenReturn(
-            new User(1L, "images.user", "images@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("images@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

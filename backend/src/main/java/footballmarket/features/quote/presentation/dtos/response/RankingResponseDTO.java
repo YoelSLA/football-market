@@ -19,7 +19,7 @@ import java.time.LocalDate;
     name = "RankingResponse",
     description = "Entrada del ranking de jugadores por cotización vigente")
 public record RankingResponseDTO(
-    @Schema(description = "Posición en el ranking", example = "1") int position,
+    @Schema(description = "Posición en el ranking", example = "1") long position,
     @Schema(description = "Identificador interno del jugador", example = "7821") Long playerId,
     @Schema(description = "Precio vigente en centésimas de crédito", example = "105") long price,
     @Schema(description = "Fecha de vigencia de la cotización vigente", example = "2026-10-20")

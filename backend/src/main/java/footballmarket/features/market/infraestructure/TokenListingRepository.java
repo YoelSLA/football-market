@@ -1,5 +1,6 @@
 package footballmarket.features.market.infraestructure;
 
+import footballmarket.features.market.domain.enums.TokenListingStatus;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.ListingIdentity;
 import footballmarket.features.market.infraestructure.projections.ReservedQuantity;
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Repository;
 /** Reservas derivadas, lecturas de publicaciones y bloqueo exclusivo para compra y cancelación. */
 @Repository
 public interface TokenListingRepository extends JpaRepository<TokenListing, Long> {
+  /** Cuenta únicamente publicaciones persistidas en el estado indicado. */
+  long countByStatus(TokenListingStatus status);
+
   /**
    * Solo orienta los bloqueos; no incorpora una entidad potencialmente obsoleta al contexto JPA.
    */
@@ -54,6 +58,9 @@ public interface TokenListingRepository extends JpaRepository<TokenListing, Long
   @Query(
       "select l from TokenListing l join l.player p join p.team t join t.league league"
           + " where l.seller.id <> :viewerId and p.active = true and t.current = true"
+          + " and exists (select s.id from PlayerStatistics s where s.player = p"
+          + " and s.presentMetrics > 0 and s.extractionDate ="
+          + " (select max(latest.extractionDate) from PlayerStatistics latest where latest.player = p))"
           + " and l.status = footballmarket.features.market.domain.enums.TokenListingStatus.ACTIVE and l.expiresAt > :now")
   List<TokenListing> findMarket(Long viewerId, OffsetDateTime now);
 

@@ -1,5 +1,7 @@
 package footballmarket.features.quote.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.common.config.QueryCacheInvalidationEvent;
 import footballmarket.features.catalog.domain.models.player.Player;
 import footballmarket.features.market.application.exceptions.MarketNotInitializedException;
 import footballmarket.features.quote.application.QuoteRecalculationService;
@@ -8,9 +10,11 @@ import footballmarket.features.quote.application.exceptions.InvalidAdjustmentFac
 import footballmarket.features.quote.application.exceptions.InvalidMinPriceFloorException;
 import footballmarket.features.quote.application.exceptions.InvalidVariationCapException;
 import footballmarket.features.quote.application.exceptions.UnknownQuoteStrategyException;
+import footballmarket.features.quote.application.internal.QuoteExecutionRecorder;
 import footballmarket.features.quote.application.internal.QuotePlayerPublisher;
 import footballmarket.features.quote.application.internal.QuotePopulationSelector;
-import footballmarket.features.quote.domain.enums.QuoteOrigin;
+import footballmarket.features.quote.domain.enums.QuoteExecutionOrigin;
+import footballmarket.features.quote.domain.enums.QuoteRecalculationType;
 import footballmarket.features.quote.domain.models.QuoteExecution;
 import footballmarket.features.quote.infraestructure.PlayerQuoteRepository;
 import footballmarket.features.quote.infraestructure.QuoteExecutionRepository;
@@ -20,25 +24,31 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Implementación del recálculo manual con una reserva única por fecha UTC. */
+/** Recálculo compartido con corridas manuales múltiples y una reserva automática por fecha UTC. */
 @Service
-@Transactional
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 public class QuoteRecalculationServiceImpl implements QuoteRecalculationService {
   private static final Logger LOG = LoggerFactory.getLogger(QuoteRecalculationServiceImpl.class);
 
   private final PlayerQuoteRepository quotes;
   private final QuoteExecutionRepository executions;
+  private final QuoteExecutionRecorder recorder;
   private final QuotePopulationSelector population;
   private final QuotePlayerPublisher publisher;
   private final QuoteProperties properties;
   private final Clock marketClock;
+  private final ApplicationEventPublisher events;
 
   public QuoteRecalculationServiceImpl(
       PlayerQuoteRepository quotes,
@@ -46,13 +56,17 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       QuotePopulationSelector population,
       QuotePlayerPublisher publisher,
       QuoteProperties properties,
-      Clock marketClock) {
+      Clock marketClock,
+      QuoteExecutionRecorder recorder,
+      ApplicationEventPublisher events) {
     this.quotes = quotes;
     this.executions = executions;
     this.population = population;
     this.publisher = publisher;
     this.properties = properties;
     this.marketClock = marketClock;
+    this.recorder = recorder;
+    this.events = events;
   }
 
   @Override
@@ -61,8 +75,115 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       BigDecimal requestedFactor,
       BigDecimal requestedCap,
       Long requestedFloor) {
+    return this.recalculate(
+        requestedStrategy,
+        requestedFactor,
+        requestedCap,
+        requestedFloor,
+        QuoteExecutionOrigin.MANUAL);
+  }
+
+  @Override
+  public QuoteExecution recalculateAutomatic() {
+    return this.recalculate(
+        this.properties.strategy().name(),
+        this.properties.adjustmentFactor(),
+        this.properties.variationCap(),
+        this.properties.minPriceFloor(),
+        QuoteExecutionOrigin.AUTOMATIC);
+  }
+
+  @Override
+  public QuoteExecution recalculateMarketDemand() {
+    if (this.quotes.count() == 0) {
+      throw new MarketNotInitializedException();
+    }
+    BigDecimal cap = this.properties.variationCap();
+    long floor = this.properties.minPriceFloor();
+    Instant startedAt = Instant.now(this.marketClock);
+    LocalDate quoteDate = startedAt.atOffset(ZoneOffset.UTC).toLocalDate();
+    LOG.info(
+        "market_demand_quote_execution_started quoteDate={} demandWindow={} variationCap={}"
+            + " minPriceFloor={} origin={}",
+        quoteDate,
+        this.properties.demandWindow(),
+        cap,
+        floor,
+        QuoteExecutionOrigin.MANUAL);
+    QuoteExecution execution =
+        new QuoteExecution(
+            quoteDate,
+            QuoteExecutionOrigin.MANUAL,
+            null,
+            null,
+            null,
+            cap,
+            floor,
+            0,
+            0,
+            0,
+            0,
+            0,
+            startedAt,
+            null,
+            QuoteRecalculationType.MARKET_DEMAND_ONLY,
+            this.properties.demandWindow());
+    execution = this.recorder.start(execution);
+
+    List<Player> players = this.population.pricablePlayers();
+    int recomputed = 0;
+    int notRepriced = 0;
+    int failed = 0;
+    for (Player player : players) {
+      try {
+        QuotePlayerPublisher.PublicationResult result =
+            this.publisher.publishMarketDemand(player, quoteDate, cap, floor, startedAt, execution);
+        switch (result.publication()) {
+          case MARKET_DEMAND -> recomputed++;
+          case NOT_REPRICED -> notRepriced++;
+          case RECOMPUTED, CARRIED_FORWARD -> failed++;
+        }
+      } catch (RuntimeException exception) {
+        failed++;
+        LOG.error(
+            "quote_player_market_demand_recalculation_failed playerId={} stage=recalculate cause={}",
+            player.getId(),
+            exception.getClass().getSimpleName());
+      }
+    }
+    QuoteExecution completed =
+        this.recorder.complete(
+            execution.getId(),
+            players.size(),
+            recomputed,
+            0,
+            notRepriced,
+            failed,
+            Instant.now(this.marketClock));
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(
+            java.util.Set.of(
+                QueryCacheConfiguration.SCORE_RANKINGS, QueryCacheConfiguration.OFFICIAL_MARKET)));
+    LOG.info(
+        "market_demand_quote_execution_completed quoteDate={} pricedPlayers={} recomputedRows={}"
+            + " notRepricedPlayers={} failedPlayers={} origin={}",
+        quoteDate,
+        players.size(),
+        recomputed,
+        notRepriced,
+        failed,
+        QuoteExecutionOrigin.MANUAL);
+    return completed;
+  }
+
+  private QuoteExecution recalculate(
+      String requestedStrategy,
+      BigDecimal requestedFactor,
+      BigDecimal requestedCap,
+      Long requestedFloor,
+      QuoteExecutionOrigin origin) {
     ValuationStrategy strategy = this.parseStrategy(requestedStrategy);
-    if (!this.quotes.existsByOrigin(QuoteOrigin.INITIAL)) {
+    if (this.quotes.count() == 0) {
       throw new MarketNotInitializedException();
     }
     BigDecimal factor =
@@ -79,23 +200,42 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
       throw new InvalidMinPriceFloorException();
     }
 
-    LocalDate quoteDate = LocalDate.now(this.marketClock);
     Instant startedAt = Instant.now(this.marketClock);
+    LocalDate quoteDate = startedAt.atOffset(ZoneOffset.UTC).toLocalDate();
     LOG.info(
         "quote_execution_started quoteDate={} strategy={} strategyVersion=v1 adjustmentFactor={}"
-            + " variationCap={} minPriceFloor={}",
+            + " variationCap={} minPriceFloor={} origin={}",
         quoteDate,
         strategy,
         factor,
         cap,
-        floor);
+        floor,
+        origin);
     QuoteExecution execution =
         new QuoteExecution(
-            quoteDate, strategy, "v1", factor, cap, floor, 0, 0, 0, 0, 0, startedAt, startedAt);
+            quoteDate,
+            origin,
+            strategy,
+            "v1",
+            factor,
+            cap,
+            floor,
+            0,
+            0,
+            0,
+            0,
+            0,
+            startedAt,
+            null,
+            QuoteRecalculationType.SPORT_AND_MARKET,
+            this.properties.demandWindow());
     try {
-      this.executions.saveAndFlush(execution);
+      execution = this.recorder.start(execution);
     } catch (DataIntegrityViolationException exception) {
-      throw new ExecutionAlreadyExistsException();
+      if (origin == QuoteExecutionOrigin.AUTOMATIC && this.isAutomaticConflict(exception)) {
+        throw new ExecutionAlreadyExistsException();
+      }
+      throw exception;
     }
 
     List<Player> players = this.population.pricablePlayers();
@@ -106,9 +246,11 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
     for (Player player : players) {
       try {
         QuotePlayerPublisher.PublicationResult result =
-            this.publisher.publish(player, quoteDate, strategy, factor, cap, floor, startedAt);
+            this.publisher.publish(
+                player, quoteDate, strategy, factor, cap, floor, startedAt, execution);
         switch (result.publication()) {
           case RECOMPUTED -> recomputed++;
+          case MARKET_DEMAND -> recomputed++;
           case CARRIED_FORWARD -> carried++;
           case NOT_REPRICED -> notRepriced++;
         }
@@ -117,29 +259,57 @@ public class QuoteRecalculationServiceImpl implements QuoteRecalculationService 
         LOG.error(
             "quote_player_recalculation_failed playerId={} stage=recalculate cause={}",
             player.getId(),
-            exception.getClass().getSimpleName(),
-            exception);
+            exception.getClass().getSimpleName());
       }
     }
-    execution.complete(
-        players.size(), recomputed, carried, notRepriced, failed, Instant.now(this.marketClock));
+    QuoteExecution completed =
+        this.recorder.complete(
+            execution.getId(),
+            players.size(),
+            recomputed,
+            carried,
+            notRepriced,
+            failed,
+            Instant.now(this.marketClock));
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(
+            java.util.Set.of(
+                QueryCacheConfiguration.SCORE_RANKINGS, QueryCacheConfiguration.OFFICIAL_MARKET)));
     LOG.info(
         "quote_execution_completed quoteDate={} strategy={} strategyVersion=v1 pricedPlayers={}"
-            + " recomputedRows={} carriedForwardRows={} notRepricedPlayers={} failedPlayers={}",
+            + " recomputedRows={} carriedForwardRows={} notRepricedPlayers={} failedPlayers={} origin={}",
         quoteDate,
         strategy,
         players.size(),
         recomputed,
         carried,
         notRepriced,
-        failed);
-    return this.executions.save(execution);
+        failed,
+        origin);
+    return completed;
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<QuoteExecution> executions(LocalDate date) {
-    return this.executions.findAllByQuoteDateOrderByStartedAtDesc(date);
+    return this.executions.findAllByQuoteDateAndFinishedAtIsNotNullOrderByStartedAtDescIdDesc(date);
+  }
+
+  private boolean isAutomaticConflict(RuntimeException exception) {
+    if (!(exception instanceof DataIntegrityViolationException)) {
+      return false;
+    }
+    for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+      if (cause instanceof PSQLException sql
+          && "23505".equals(sql.getSQLState())
+          && sql.getServerErrorMessage() != null
+          && "quote_executions".equals(sql.getServerErrorMessage().getTable())
+          && "uq_quote_executions_automatic_date"
+              .equals(sql.getServerErrorMessage().getConstraint())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private ValuationStrategy parseStrategy(String requestedStrategy) {

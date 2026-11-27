@@ -1,0 +1,79 @@
+@use "@/styles/abstracts" as ds;
+
+.headlineMetrics {
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-items: stretch;
+
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	min-width: 0;
+	height: 94px;
+	padding: 6px 0;
+	border-radius: 12px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page-deep;
+	border: 1px solid ds.$border-panel-tint;
+	box-shadow: inset 0 1px 2px ds.$shadow-subtle;
+
+	&__card {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		min-width: 0;
+		padding: 4px 8px;
+
+		// 5. 🔤 Typography
+		text-align: center;
+
+		// 6. 🎨 Visual
+		border-right: 1px solid ds.$border-panel-soft;
+
+		&:last-child {
+			border-right: none;
+		}
+	}
+
+	&__icon {
+		flex-shrink: 0;
+		color: ds.$accent-gain;
+		margin-bottom: 2px;
+	}
+
+	&__label {
+		// 4. 📦 Box Model
+		width: 100%;
+		overflow: hidden;
+
+		// 5. 🔤 Typography
+		font-size: 10.5px;
+		font-weight: 700;
+		line-height: 1.2;
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__value {
+		// 5. 🔤 Typography
+		font-size: 19px;
+		font-weight: 800;
+		line-height: 1.15;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__unit {
+		// 5. 🔤 Typography
+		font-size: 10px;
+		color: ds.$text-muted-on-dark;
+	}
+}

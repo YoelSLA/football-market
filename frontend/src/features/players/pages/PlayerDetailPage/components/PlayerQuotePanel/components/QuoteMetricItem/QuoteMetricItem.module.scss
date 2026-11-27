@@ -1,0 +1,52 @@
+@use "@/styles/abstracts" as ds;
+
+.item {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	padding: 8px 12px;
+	border-radius: 8px;
+
+	// 6. 🎨 Visual
+	background-color: ds.$surface-page-deep;
+	border: 1px solid ds.$border-panel-soft;
+}
+
+.label {
+	// 4. 📦 Box Model
+	margin: 0;
+
+	// 5. 🔤 Typography
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+
+	// 6. 🎨 Visual
+	color: ds.$text-muted-on-dark;
+}
+
+.value {
+	// 4. 📦 Box Model
+	margin: 0;
+
+	// 5. 🔤 Typography
+	font-size: 13px;
+	font-weight: 700;
+	overflow-wrap: break-word;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
+
+	&_positive {
+		color: ds.$state-gain;
+	}
+
+	&_negative {
+		color: ds.$state-loss;
+	}
+}

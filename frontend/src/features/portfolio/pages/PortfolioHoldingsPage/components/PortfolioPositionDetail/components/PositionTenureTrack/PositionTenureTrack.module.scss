@@ -1,0 +1,41 @@
+@use "@/styles/abstracts" as ds;
+
+.track {
+	// 3. 🧩 Layout
+	display: flex;
+
+	// 4. 📦 Box Model
+	height: 14px;
+	margin-top: ds.$space-xs;
+
+	// 6. 🎨 Visual
+	border-radius: 999px;
+	background-color: ds.$surface-card-subtle;
+
+	span:first-child {
+		background-color: ds.$accent-gain;
+		border-radius: 999px 0 0 999px;
+	}
+
+	span:last-child {
+		background-color: ds.$accent-investment;
+		border-radius: 0 999px 999px 0;
+	}
+}
+
+.legend {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: ds.$space-2xs;
+
+	// 4. 📦 Box Model
+	margin-top: ds.$space-2xs;
+
+	// 5. 🔤 Typography
+	font-size: 10px;
+
+	// 6. 🎨 Visual
+	color: ds.$text-subtle-on-dark;
+}

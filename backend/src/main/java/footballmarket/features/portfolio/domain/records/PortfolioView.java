@@ -86,6 +86,7 @@ public record PortfolioView(
       Long playerId,
       String playerName,
       String teamName,
+      String leagueName,
       String position,
       String imageUrl,
       boolean active,

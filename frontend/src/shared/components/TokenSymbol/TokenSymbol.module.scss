@@ -1,0 +1,45 @@
+@use "@/styles/abstracts" as ds;
+
+.tokenSymbol {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+	line-height: 1;
+	vertical-align: -0.06em;
+	user-select: none;
+	font-family: inherit;
+
+	// Acabado metálico de oro auténtico
+	color: ds.$token-gold;
+	background: ds.$token-gold-gradient;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	filter: drop-shadow(0 0 1.5px ds.$token-gold-glow);
+
+	// Tamaño base ampliado para destacar como moneda de oro
+	font-size: 1.35em;
+	font-weight: 900;
+	margin-inline-start: 0.15em;
+	margin-inline-end: 0.05em;
+
+	&_xs {
+		font-size: 1.1em;
+	}
+
+	&_sm {
+		font-size: 1.25em;
+	}
+
+	&_md {
+		font-size: 1.45em;
+	}
+
+	&_lg {
+		font-size: 1.75em;
+	}
+
+	&_xl {
+		font-size: 2.2em;
+	}
+}

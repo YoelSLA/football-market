@@ -1,0 +1,83 @@
+@use "@/styles/abstracts" as ds;
+
+.cancelModal {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-xs;
+	padding: ds.$space-sm;
+	width: 100%;
+	box-sizing: border-box;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 700;
+		line-height: 1.2;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__body {
+		display: flex;
+		flex-direction: column;
+		gap: ds.$space-xs;
+		font-size: 13px;
+		line-height: 1.4;
+		color: ds.$text-body-on-dark;
+
+		p {
+			margin: 0;
+		}
+	}
+
+	&__warning {
+		padding: 8px 12px;
+		border-radius: 6px;
+		border-left: 3px solid ds.$state-caution;
+		background-color: ds.$surface-caution-subtle;
+		color: ds.$state-caution;
+		font-size: 11px;
+		line-height: 1.4;
+	}
+
+	&__footer {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: ds.$space-2xs;
+		padding-top: ds.$space-xs;
+		border-top: 1px solid ds.$border-panel;
+	}
+
+	&__cancelBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 36px;
+		padding: 0 14px;
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	&__confirmBtn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 36px;
+		padding: 0 16px;
+		font-size: 12px;
+		font-weight: 700;
+		background-color: ds.$state-error-on-dark;
+		border-color: ds.$state-error-border;
+		color: #ffffff;
+
+		&:hover:not(:disabled) {
+			background-color: #dc2626;
+		}
+	}
+}

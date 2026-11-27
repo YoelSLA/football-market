@@ -1,5 +1,26 @@
 # Implementation Plan: Player Catalog
 
+## Plan del delta — elegibilidad por métricas (2026-11-11)
+
+**Alcance**: SPEC-002 y SPEC-005, rama `feat/002-005-players-with-metrics`; decisiones de [spec.md](spec.md) y [SPEC-005](../005-players-page/spec.md). Este bloque prevalece sobre el diseño histórico cuando difiere. El PR #86 existe en otra rama; integrar este trabajo allí queda pendiente y no acredita publicación de estos cambios.
+
+### Diseño y límites
+
+- `PlayerRepository`: aplicar un `exists` correlacionado a `PlayerStatistics` con `presentMetrics > 0` en la fecha máxima de extracción del jugador a `findCatalog`, su conteo, `findByActiveTrue`, las cuatro opciones globales y el acceso individual. La fecha máxima se determina sobre todas sus filas, no solo sobre filas con métricas; varias fuentes de esa fecha son elegibles si cualquiera informa una. Usar predicados de existencia evita duplicar jugadores o totales. Mantener activo/equipo vigente/liga y búsqueda, orden y paginación existentes.
+- `findVisibleById` también es consumido por estadísticas y mercado: identidad y consulta individual de estadísticas deben aplicar el mismo criterio y devolver el 404 existente para un ID válido no elegible. La ausencia de snapshot confirmado para un jugador elegible conserva 200 `NO_DATA`. Revisar cada consumidor y preservar consultas históricas financieras independientes, sin alterar la validación de ID ni seguridad.
+- Mercado: `TokenListingServiceImpl`, `BuyOrderServiceImpl` y `TokenListingRepository.findMarket` deben aplicar elegibilidad vigente en publicaciones visibles, detalle de publicación ajena, publicación de venta y compra directa o de publicación; rechazar antes de cambios financieros. Mantener cancelación y consulta propia de publicaciones, reservas, tenencias y transacciones históricas sin borrar datos. Comprobar la condición en el límite transaccional de la operación, sin presentar la disponibilidad de la UI como garantía de autorización. Por decisión del usuario, no se incorpora al alcance una garantía adicional específica para la concurrencia entre actualización de métricas y operación de mercado; esta decisión no modifica las garantías vigentes de integridad financiera.
+- Rankings: la consulta paginada de precio en `PlayerQuoteRepository.RANKED_QUOTES` ya usa fecha máxima y `present_metrics > 0`; conservarla y verificar sus opciones/conteos. Las consultas `findScoreRanking` de `PositionalValuationRepository` y `AttributeValuationRepository` hoy comprueban cotización y valuación, no elegibilidad vigente: añadir la misma condición antes de ordenar y numerar, conservando sus reglas adicionales. No exigir score ni cotización para catálogo.
+- `PortfolioServiceImpl` utiliza `findAllByIdInWithTeam` sin filtrar visibilidad: conservar ese acceso y la lectura del historial para que las posiciones existentes permanezcan visibles. Revisar sus consumidores frontend cuando el detalle responda 404; no eliminar tenencias, cotizaciones, valoraciones ni transacciones.
+- Reutilizar tablas e índices existentes; no introducir migración ni dependencia sin necesidad demostrada. No cambiar extracción, identidad, sincronización o cálculo de métricas. La elegibilidad y el resumen de tres valores de tarjeta son reglas distintas: el resumen puede seguir ausente aun con elegibilidad positiva.
+
+### Constitución y validación
+
+Antes y después del diseño: simplicidad y alcance, seguridad, contratos y arquitectura respetados por el diseño propuesto; no hay autorización de implementación. La población devuelta cambia para todos los consumidores, incluso los que no usan parámetros nuevos: no afirmar compatibilidad idéntica de contenido. Actualizar contrato HTTP, OpenAPI y tests backend en la implementación futura; frontend exento de tests. Repository PostgreSQL cubre fecha máxima, dos fuentes, cero, último registro vacío, ausencia, conteo/página/opciones y ranking; Service/Controller cubren 404, operaciones rechazadas sin movimientos y preservación de tenencias e historial. Ejecución de tests a cargo del usuario.
+
+`setup-plan.sh --json` resolvió explícitamente SPEC-002 conservando el plan existente; la selección previa de `.specify/feature.json` se restauró. Investigación, modelo, contrato y guía del delta se documentan en los archivos de esta carpeta. CHECKLIST, TASKS y ANALYZE quedan fuera de este encargo.
+
+---
+
 **Branch**: `002-player-catalog` | **Date**: 2026-09-17 | **Última actualización**: 2026-09-30 | **Spec**: [spec.md](spec.md)
 
 **Input**: Especificación funcional validada y aclarada en `specs/002-player-catalog/spec.md`.

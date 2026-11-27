@@ -1,0 +1,136 @@
+@use "@/styles/abstracts" as ds;
+
+.playerQuotePanel {
+	box-sizing: border-box;
+	padding: 18px 20px;
+	border-radius: 16px;
+	background: linear-gradient(135deg, ds.$surface-panel-from 0%, ds.$surface-chart 100%);
+	border: 1px solid ds.$border-panel-tint;
+	box-shadow: 0 4px 20px -2px ds.$shadow-panel;
+	color: ds.$text-body-on-dark;
+
+	&__header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 12px;
+
+		span {
+			font-size: 11px;
+			color: ds.$text-muted-on-dark;
+		}
+
+		h2 {
+			margin: 0;
+			font-size: 14px;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__metrics {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 8px;
+		margin: 0;
+	}
+
+	&__breakdown {
+		margin-top: 14px;
+		padding-top: 14px;
+		border-top: 1px solid ds.$border-panel-tint;
+	}
+
+	&__breakdownHeader {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 10px;
+	}
+
+	&__breakdownTitle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin: 0;
+		font-size: 13px;
+		font-weight: 700;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__breakdownIcon {
+		color: ds.$accent-gain;
+	}
+
+	&__badge {
+		font-size: 10px;
+		font-weight: 700;
+		padding: 2px 6px;
+		border-radius: 4px;
+		background-color: ds.$surface-highlight-tint;
+		border: 1px solid ds.$border-highlight-subtle;
+		color: ds.$accent-highlight;
+	}
+
+	&__factorList {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+
+	&__factorItem {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 8px 12px;
+		border-radius: 10px;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel-soft;
+	}
+
+	&__factorInfo {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__factorName {
+		font-size: 11px;
+		font-weight: 600;
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__factorDesc {
+		font-size: 10px;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__factorValueSport {
+		font-size: 13px;
+		font-weight: 700;
+		color: ds.$state-gain;
+	}
+
+	&__factorValueMarket {
+		font-size: 13px;
+		font-weight: 700;
+		color: ds.$accent-highlight;
+	}
+
+	&__factorValueDemand {
+		font-size: 13px;
+		font-weight: 700;
+		color: #f59e0b;
+	}
+
+	&__explanation {
+		margin: 10px 0 0;
+		padding-top: 10px;
+		border-top: 1px solid ds.$border-panel-tint;
+		font-size: 11px;
+		line-height: 1.45;
+		color: ds.$text-muted-on-dark;
+	}
+}

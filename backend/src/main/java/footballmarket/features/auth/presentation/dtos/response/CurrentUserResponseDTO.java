@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param email email actual del usuario
  * @param role capacidad del usuario en el dominio; es informativo y el backend sigue evaluando toda
  *     autorización a partir del rol persistido
+ * @param availableCredits saldo disponible del usuario en créditos
  */
 public record CurrentUserResponseDTO(
     @Schema(
@@ -36,4 +37,9 @@ public record CurrentUserResponseDTO(
                     + " autorización.",
             example = "USER",
             requiredMode = Schema.RequiredMode.REQUIRED)
-        UserRole role) {}
+        UserRole role,
+    @Schema(
+            description = "Saldo disponible del usuario en créditos.",
+            example = "100",
+            requiredMode = Schema.RequiredMode.REQUIRED)
+        long availableCredits) {}

@@ -1,0 +1,266 @@
+@use "@/styles/abstracts" as ds;
+
+.p2pPrice {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 240px;
+	height: 100%;
+	padding: 10px 14px;
+	border: 1px solid ds.$border-panel;
+	border-radius: 8px;
+	background-color: ds.$surface-card-subtle;
+	box-sizing: border-box;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	&__title {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: ds.$accent-highlight;
+
+		svg {
+			width: 14px;
+			height: 14px;
+			color: ds.$accent-highlight;
+		}
+	}
+
+	&__body {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: 7px;
+		margin-top: 4px;
+	}
+
+	&__inputGroup {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+
+	&__inputLabel {
+		font-size: 11px;
+		color: ds.$text-label-on-dark;
+		font-weight: 600;
+	}
+
+	&__inputWrapper {
+		position: relative;
+		display: flex;
+		align-items: center;
+	}
+
+	&__coinsIcon {
+		position: absolute;
+		left: 10px;
+		width: 15px;
+		height: 15px;
+		color: ds.$text-muted-on-dark;
+		pointer-events: none;
+	}
+
+	&__numberInput {
+		width: 100%;
+		padding: 5px 12px 5px 32px;
+		background-color: ds.$surface-data-table;
+		border: 1px solid ds.$border-panel;
+		border-radius: 6px;
+		color: ds.$text-title-on-dark;
+		font-size: 13px;
+		font-weight: 750;
+		outline: none;
+		transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+		&:focus {
+			border-color: ds.$accent-highlight;
+			box-shadow: 0 0 0 2px ds.$surface-highlight-tint;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+
+	&__sliderGroup {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__slider {
+		width: 100%;
+		height: 5px;
+		border-radius: 3px;
+		background: ds.$surface-panel-from;
+		outline: none;
+		cursor: pointer;
+		accent-color: ds.$accent-highlight;
+
+		&:focus-visible {
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 2px;
+		}
+
+		&:disabled {
+			cursor: not-allowed;
+			opacity: 0.45;
+		}
+	}
+
+	&__sliderLabels {
+		display: flex;
+		justify-content: space-between;
+		font-size: 10px;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__presets {
+		display: flex;
+		gap: 5px;
+		justify-content: space-between;
+		border: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	&__divider {
+		height: 1px;
+		margin: 2px 0;
+		background-color: ds.$border-panel;
+	}
+
+	&__totalRow {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 12px;
+		padding-top: 2px;
+	}
+
+	&__totalHeader {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	&__totalLabel {
+		font-size: 12.5px;
+		font-weight: 750;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__disclaimer {
+		font-size: 10px;
+		color: ds.$text-muted-on-dark;
+		margin: 0;
+		line-height: 1.3;
+	}
+
+	&__totalAmount {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 1px;
+
+		strong {
+			font-size: 1.2rem;
+			font-weight: 800;
+			letter-spacing: -0.02em;
+			color: ds.$state-info;
+		}
+
+		small {
+			font-size: 10px;
+			color: ds.$text-muted-on-dark;
+		}
+	}
+}
+
+.preset_button {
+	flex: 1;
+	padding: 3px 5px;
+	background: ds.$surface-glass-interactive;
+	border: 1px solid ds.$border-panel-mid;
+	border-radius: 5px;
+	color: ds.$text-label-on-dark;
+	font-size: 10.5px;
+	font-weight: 650;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	user-select: none;
+
+	&:hover:not(:disabled) {
+		background: ds.$surface-glass-soft;
+		color: ds.$text-title-on-dark;
+		border-color: ds.$border-panel;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 1px;
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+}
+
+.preset_active {
+	flex: 1;
+	padding: 3px 5px;
+	background: ds.$surface-highlight-emphasis;
+	border: 1px solid ds.$accent-highlight;
+	border-radius: 5px;
+	color: ds.$accent-highlight;
+	font-size: 10.5px;
+	font-weight: 750;
+	cursor: pointer;
+	box-shadow: 0 1px 4px ds.$surface-highlight-glow;
+	user-select: none;
+
+	&:focus-visible {
+		outline: 2px solid ds.$focus-ring-dark;
+		outline-offset: 1px;
+	}
+}
+
+.badge_discount {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 7px;
+	border-radius: 9999px;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: 0.01em;
+	background-color: ds.$action-selected-accent-tint;
+	color: ds.$action-selected-accent;
+	border: 1px solid ds.$action-selected-accent-border;
+}
+
+.badge_premium {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 7px;
+	border-radius: 9999px;
+	font-size: 10px;
+	font-weight: 750;
+	letter-spacing: 0.01em;
+	background-color: ds.$surface-caution-soft;
+	color: ds.$state-caution;
+	border: 1px solid ds.$border-caution-emphasis;
+}

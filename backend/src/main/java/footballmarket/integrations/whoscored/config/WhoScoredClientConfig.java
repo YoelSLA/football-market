@@ -22,10 +22,16 @@ public class WhoScoredClientConfig {
             .build();
     JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
     factory.setReadTimeout(Duration.ofMillis(properties.readTimeoutMs()));
+    factory.enableCompression(false);
     return RestClient.builder()
         .baseUrl(properties.baseUrl())
         .requestFactory(factory)
         .defaultHeader(HttpHeaders.USER_AGENT, properties.userAgent())
+        .defaultHeader(HttpHeaders.ACCEPT, "application/json, text/plain, */*")
+        .defaultHeader(HttpHeaders.REFERER, properties.baseUrl() + "/")
+        .defaultHeader("sec-fetch-dest", "empty")
+        .defaultHeader("sec-fetch-mode", "cors")
+        .defaultHeader("sec-fetch-site", "same-origin")
         .build();
   }
 }

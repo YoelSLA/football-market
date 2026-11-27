@@ -1,3 +1,5 @@
+import { CREDIT_SYMBOL } from "@/shared/constants";
+
 const credits = new Intl.NumberFormat("es-AR", {
 	minimumFractionDigits: 2,
 	maximumFractionDigits: 2,
@@ -9,8 +11,8 @@ const credits = new Intl.NumberFormat("es-AR", {
  * La forma compacta se usa donde el espacio es reducido, como en las
  * tarjetas y en el panel de detalle.
  */
-export function formatCredits(value: number | null, compact = false): string {
+export function formatCredits(value: number | null, _compact = false): string {
 	if (value === null) return "—";
 	const amount = credits.format(value / 100);
-	return compact ? `${amount} cr.` : `${amount} créditos`;
+	return `${amount} ${CREDIT_SYMBOL}`;
 }

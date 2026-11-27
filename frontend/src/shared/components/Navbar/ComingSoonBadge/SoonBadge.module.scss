@@ -1,28 +1,37 @@
 @use "@/styles/abstracts" as ds;
 
 .soonBadge {
+	// 4. 📦 Box Model
 	padding: 1px 4px;
-	border: 1px solid ds.$border-strong;
-	border-radius: 999px;
-	color: ds.$text-on-dark-muted;
+
+	// 5. 🔤 Typography
 	font-size: 10px;
 	font-weight: 600;
 	line-height: 1.4;
 	white-space: nowrap;
 
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-strong;
+	border-radius: 999px;
+	color: ds.$text-muted-on-dark;
 	&_gold,
 	&_violet {
+		// 4. 📦 Box Model
 		padding: ds.$space-3xs ds.$space-2xs;
-		box-shadow: 0 0 0 2px rgba(ds.$surface-finance-base, 0.75);
+
+		// 6. 🎨 Visual
+		box-shadow: 0 0 0 2px ds.$overlay-backdrop-intense;
 	}
 
 	&_gold {
+		// 6. 🎨 Visual
 		color: ds.$state-caution;
 		border-color: ds.$state-caution;
 	}
 
 	&_violet {
-		color: ds.$accent-finance-violet;
-		border-color: ds.$accent-finance-violet;
+		// 6. 🎨 Visual
+		color: ds.$accent-investment;
+		border-color: ds.$accent-investment;
 	}
 }

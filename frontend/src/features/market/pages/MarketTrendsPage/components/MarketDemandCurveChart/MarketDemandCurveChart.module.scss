@@ -1,0 +1,145 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-md;
+	padding: ds.$space-md;
+	border-radius: 12px;
+	background-color: ds.$surface-card-dark;
+	border: 1px solid ds.$border-subtle;
+	min-width: 0;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	flex-wrap: wrap;
+}
+
+.titleGroup {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+}
+
+.icon {
+	width: 22px;
+	height: 22px;
+	color: ds.$accent-highlight;
+}
+
+.title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: ds.$text-strong-on-dark;
+}
+
+.subtitle {
+	margin: ds.$space-3xs 0 0;
+	font-size: 12px;
+	color: ds.$text-muted-on-dark;
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px ds.$space-sm;
+	border-radius: 9999px;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-strong;
+	font-size: 12px;
+	font-weight: 700;
+	color: ds.$accent-open;
+}
+
+.badgeIcon {
+	width: 14px;
+	height: 14px;
+}
+
+.chartWrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+}
+
+.svg {
+	width: 100%;
+	max-width: 480px;
+	height: auto;
+	overflow: visible;
+}
+
+.equilibriumLine {
+	stroke: ds.$border-strong;
+	stroke-width: 1;
+	stroke-dasharray: 4 4;
+}
+
+.centerLine {
+	stroke: ds.$surface-card-subtle;
+	stroke-width: 1;
+	stroke-dasharray: 2 4;
+}
+
+.axisLabel {
+	font-size: 10px;
+	fill: ds.$text-muted-on-dark;
+	font-weight: 500;
+}
+
+.subAxisLabel {
+	font-size: 10px;
+	fill: ds.$text-dimmed-on-dark;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.projectionLine {
+	stroke: ds.$accent-highlight;
+	stroke-width: 1;
+	stroke-dasharray: 3 3;
+}
+
+.pointPulse {
+	fill: ds.$accent-sports-green;
+	opacity: 0.35;
+	animation: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pointActive {
+	fill: ds.$accent-sports-green;
+	stroke: #ffffff;
+	stroke-width: 2;
+}
+
+@keyframes pulseRing {
+	0% {
+		r: 6;
+		opacity: 0.8;
+	}
+	100% {
+		r: 16;
+		opacity: 0;
+	}
+}
+
+.footerNote {
+	margin-top: ds.$space-xs;
+	padding: ds.$space-2xs ds.$space-sm;
+	border-radius: 8px;
+	background-color: ds.$surface-dark;
+	border: 1px solid ds.$border-strong;
+	font-size: 11px;
+	color: ds.$text-body-on-dark;
+	line-height: 1.4;
+	width: 100%;
+	text-align: left;
+}

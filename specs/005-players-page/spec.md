@@ -1,5 +1,27 @@
 # Feature Specification: Página de catálogo de jugadores
 
+## Revisión vigente — 2026-11-10 (SPECIFY)
+
+**Status vigente del cambio**: Draft. Solo preparación documental; IMPLEMENT AUTHORIZATION: NONE. Reutiliza SPEC-005 y conserva cierres y decisiones históricas no afectadas.
+
+- **FR-023 / FR-025 / FR-028**: Consumir el universo con métricas definido en SPEC-002 para listado, conteos, filtros globales y acceso al detalle. No mostrar jugadores sin métricas ni opciones aportadas únicamente por ellos. La ausencia de una de las tres estadísticas de tarjeta sigue mostrando «Sin datos»: no se exige que todas estén informadas ni que exista score.
+- **US1 / US2 / US4 — aceptación**: un jugador sin métricas queda fuera del listado y no altera totales ni opciones globales; un jugador elegible fuera de la página inicial puede encontrarse mediante filtros backend. Los filtros no se calculan desde la página. Un acceso directo al detalle no elude la misma elegibilidad backend.
+- Se conserva el rediseño, búsqueda, filtros, orden y paginación ya especificados; no se agregan filtros numéricos por valores deportivos. «Filtrar por métricas» delimita la población por existencia de métricas, no introduce rangos estadísticos.
+- Un jugador que deja de tener métricas informadas en los registros de su fecha más reciente queda excluido del mercado y de los rankings mientras no sea elegible, incluso si conserva cotizaciones o valoraciones anteriores; los datos históricos no se eliminan.
+- Las tenencias existentes de ese jugador y su historial permanecen visibles para el usuario; nuevas compras y ventas quedan impedidas mientras no sea elegible.
+
+Este bloque sustituye las frases anteriores que exigían mantener visible al jugador sin estadísticas y que excluían cualquier impacto sobre el detalle, únicamente respecto de elegibilidad. La corrección autorizada alinea SPEC-009 sin rediseñar su dashboard. Identidad y estadísticas de un jugador no elegible responden 404 «Jugador no encontrado»; un elegible sin snapshot confirmado en el contexto consultado conserva 200 `NO_DATA` en estadísticas.
+
+**Impacto SDD**: no hay ANALYZE vigente para el delta. CODE REVIEW, TESTING y cierre del nuevo alcance pendientes, sin gates retroactivos sobre el cierre histórico. CLARIFY fue ejecutado y sus respuestas se registraron en la sesión 2026-11-11; su publicación e incorporación al PR #86 siguen pendientes.
+
+**Validación de SPECIFY**: aceptación y distinción entre elegibilidad y disponibilidad de cada cifra definidas. La interpretación de métricas y la respuesta de detalle quedaron aclaradas junto con SPEC-002. No se marcan checklists del revisor. Issue #58 CLOSED observada; sin item de esa issue entre los 29 recuperados del proyecto. Seguimiento del delta PENDING, sin escritura remota.
+
+**Evidencia**: script real `--reuse`, `FEATURE_NUM=005`, `SPEC_ACTION=reused`, `BRANCH_STATUS=skipped-dirty-tree`; trabajo previo preservado y sin nueva spec.
+
+---
+
+## Base anterior — conservada para trazabilidad
+
 ## Revisión vigente — catálogo real con filtros globales
 
 **Fecha**: 2026-10-25. **Identidad**: `005-players-page`, reutilizada, sin nueva SPEC.
@@ -78,6 +100,13 @@ SPECIFY reanudado mediante script real con `--reuse --number 005 --short-name pl
 **Input**: Página privada de jugadores con catálogo en tarjetas, paginación, filtros visuales, recursos gráficos por liga, etiqueta textual de posición y efecto de elevación al interactuar con cada tarjeta. El indicador lateral de estado y el recurso gráfico de posición de la redacción original de 2026-09-28 fueron sustituidos por decisión de producto el 2026-10-13; ambos antecedentes se conservan en la sección de requisitos derogados.
 
 ## Clarifications
+
+### Session 2026-11-11
+
+- Q: ¿Qué debe responder el detalle cuando se solicita por ID un jugador que existe, pero no tiene métricas? → A: 404 «Jugador no encontrado», igual que un jugador no visible, sin exponer su identidad.
+- Q: Si un jugador deja de tener métricas informadas en su último registro, ¿qué debe pasar con su presencia en el mercado y los rankings, aunque conserve cotizaciones o valoraciones anteriores? → A: Excluirlo del mercado y de los rankings mientras no sea elegible, conservando sus cotizaciones y valoraciones históricas.
+- Q: ¿Qué debe pasar con los tokens que un usuario ya posee si ese jugador deja de ser elegible por falta de métricas? → A: Mantener visibles la tenencia y el historial, pero impedir nuevas compras y ventas mientras no sea elegible.
+- Q: ¿Qué ocurre si en la fecha de extracción más reciente una fuente tiene métricas y la otra no? → A: El jugador es elegible si al menos uno de los registros de esa fecha contiene una métrica informada, como define SPEC-002.
 
 ### Session 2026-09-28
 

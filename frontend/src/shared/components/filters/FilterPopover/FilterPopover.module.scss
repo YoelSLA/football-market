@@ -1,0 +1,392 @@
+@use "@/styles/abstracts" as ds;
+
+.filterPopover {
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: inline-flex;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	&__trigger {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		height: var(--filter-control-height, 32px);
+		min-width: 0;
+		padding: 0 10px;
+
+		// 5. 🔤 Typography
+		font: inherit;
+		font-size: 0.75rem;
+		font-weight: 600;
+		line-height: 1;
+		white-space: nowrap;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 6px;
+		background-color: ds.$surface-data-control;
+		color: ds.$text-title-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+		user-select: none;
+		transition: all 0.15s ease;
+
+		&:hover:not(:disabled),
+		&[aria-expanded="true"] {
+			// 6. 🎨 Visual
+			border-color: ds.$accent-highlight;
+			background-color: ds.$surface-data-control-active;
+			color: ds.$text-title-on-dark;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+			opacity: 0.5;
+		}
+
+		&_active {
+			// 6. 🎨 Visual
+			border-color: ds.$accent-highlight;
+			background-color: ds.$surface-nav-active;
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__icon {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 13px;
+		height: 13px;
+
+		// 6. 🎨 Visual
+		color: ds.$accent-highlight;
+	}
+
+	&__label {
+		// 5. 🔤 Typography
+		white-space: nowrap;
+	}
+
+	&__badge {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		min-width: 17px;
+		height: 17px;
+		padding: 0 4px;
+		margin-left: 2px;
+
+		// 5. 🔤 Typography
+		font-size: 10px;
+		font-weight: 700;
+		line-height: 1;
+
+		// 6. 🎨 Visual
+		border-radius: 9999px;
+		background-color: ds.$accent-highlight;
+		color: ds.$surface-data-header;
+	}
+
+	&__srOnly {
+		// 2. 📍 Positioning
+		position: absolute;
+
+		// 4. 📦 Box Model
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+
+		// 6. 🎨 Visual
+		border: 0;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+	}
+
+	&__panel {
+		// 2. 📍 Positioning
+		position: absolute;
+		top: calc(100% + 6px);
+		z-index: 60;
+
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		max-width: min(calc(100vw - 24px), 440px);
+		max-height: calc(100dvh - 120px);
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 8px;
+		background-color: ds.$surface-data-header;
+		box-shadow:
+			0 12px 32px ds.$shadow-deep,
+			0 4px 12px ds.$shadow-black-medium;
+
+		// 8. ✨ Animation
+		animation: popoverFadeIn 0.15s ease-out;
+
+		&_alignEnd {
+			// 2. 📍 Positioning
+			right: 0;
+		}
+
+		&_alignStart {
+			// 2. 📍 Positioning
+			left: 0;
+		}
+
+		&_widthSm {
+			// 4. 📦 Box Model
+			width: 280px;
+		}
+
+		&_widthMd {
+			// 4. 📦 Box Model
+			width: 340px;
+		}
+
+		&_widthLg {
+			// 4. 📦 Box Model
+			width: 420px;
+		}
+	}
+
+	&__header {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		padding: 10px 14px;
+
+		// 6. 🎨 Visual
+		border-bottom: 1px solid ds.$border-glass-subtle;
+		background-color: ds.$surface-page-deep;
+		border-top-left-radius: 7px;
+		border-top-right-radius: 7px;
+	}
+
+	&__title {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 6px;
+
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 0.8rem;
+		font-weight: 700;
+		line-height: 1.2;
+
+		// 6. 🎨 Visual
+		color: ds.$text-title-on-dark;
+
+		svg {
+			// 4. 📦 Box Model
+			width: 14px;
+			height: 14px;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-highlight;
+		}
+	}
+
+	&__headerActions {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	&__headerClear {
+		// 4. 📦 Box Model
+		padding: 2px 6px;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 600;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: 4px;
+		background: transparent;
+		color: ds.$accent-highlight;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		&:hover {
+			// 6. 🎨 Visual
+			background-color: ds.$surface-loss-subtle;
+			color: ds.$state-closed;
+		}
+	}
+
+	&__close {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
+		// 4. 📦 Box Model
+		width: 22px;
+		height: 22px;
+		padding: 0;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: 4px;
+		background: transparent;
+		color: ds.$text-auxiliary-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		&:hover {
+			// 6. 🎨 Visual
+			background-color: ds.$surface-glass-subtle;
+			color: ds.$text-title-on-dark;
+		}
+
+		svg {
+			// 4. 📦 Box Model
+			width: 14px;
+			height: 14px;
+		}
+	}
+
+	&__body {
+		// 3. 🧩 Layout
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+
+		// 4. 📦 Box Model
+		padding: 14px;
+
+		// 7. ⚙️ Behavior
+		overflow-y: auto;
+	}
+
+	&__footer {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		padding: 10px 14px;
+
+		// 6. 🎨 Visual
+		border-top: 1px solid ds.$border-glass-subtle;
+		background-color: ds.$surface-page-deep;
+		border-bottom-left-radius: 7px;
+		border-bottom-right-radius: 7px;
+	}
+
+	&__footerClear {
+		// 4. 📦 Box Model
+		padding: 4px 8px;
+
+		// 5. 🔤 Typography
+		font-size: 11px;
+		font-weight: 600;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: 4px;
+		background: transparent;
+		color: ds.$text-auxiliary-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		&:hover:not(:disabled) {
+			// 6. 🎨 Visual
+			color: ds.$state-closed;
+		}
+
+		&:disabled {
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+			opacity: 0.4;
+		}
+	}
+
+	&__apply {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
+		// 4. 📦 Box Model
+		height: 28px;
+		padding: 0 14px;
+
+		// 5. 🔤 Typography
+		font-size: 12px;
+		font-weight: 600;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$action-primary;
+		border-radius: 6px;
+		background-color: ds.$action-primary;
+		color: ds.$text-inverse;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			// 6. 🎨 Visual
+			background-color: ds.$action-primary-hover;
+		}
+	}
+}
+
+@keyframes popoverFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

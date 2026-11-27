@@ -1,0 +1,267 @@
+@use "@/styles/abstracts" as ds;
+
+.filterSelect {
+	&__trigger {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		box-sizing: border-box;
+		width: 100%;
+		min-width: 0;
+		height: var(--filter-control-height, 38px);
+		padding: 0 12px;
+
+		// 5. 🔤 Typography
+		font: inherit;
+		font-size: 0.8rem;
+		text-align: left;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.45rem;
+		background-color: ds.$surface-page;
+		color: ds.$text-title-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		&:hover:not(:disabled),
+		&[aria-expanded="true"] {
+			// 6. 🎨 Visual
+			border-color: ds.$accent-highlight;
+		}
+
+		&:focus-visible {
+			// 6. 🎨 Visual
+			outline: 2px solid ds.$focus-ring-dark;
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+			opacity: 0.6;
+		}
+	}
+
+	&__value {
+		// 3. 🧩 Layout
+		flex: 1;
+
+		// 4. 📦 Box Model
+		min-width: 0;
+
+		// 5. 🔤 Typography
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+	}
+
+	&__visual {
+		// 3. 🧩 Layout
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 20px;
+		height: 20px;
+
+		img,
+		span,
+		svg {
+			// 4. 📦 Box Model
+			max-width: 100%;
+			max-height: 100%;
+		}
+	}
+
+	&__caret {
+		// 3. 🧩 Layout
+		flex-shrink: 0;
+
+		// 4. 📦 Box Model
+		width: 8px;
+		height: 8px;
+		margin: 0 2px 4px 4px;
+
+		// 6. 🎨 Visual
+		border-right: 2px solid currentColor;
+		border-bottom: 2px solid currentColor;
+
+		// 8. ✨ Animation
+		transform: rotate(45deg);
+	}
+
+	&__popover {
+		// 2. 📍 Positioning
+		position: fixed;
+		position-area: bottom span-right;
+		position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+		inset: auto;
+
+		// 4. 📦 Box Model
+		width: max(anchor-size(width), 240px);
+		max-width: min(420px, calc(100vw - 16px));
+		max-height: calc(100dvh - 16px);
+		margin: 4px 0 0;
+		padding: 4px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: 0.45rem;
+		background-color: ds.$surface-page;
+		color: ds.$text-title-on-dark;
+		box-shadow: 0 8px 24px ds.$shadow-deep;
+
+		&::backdrop {
+			// 6. 🎨 Visual
+			background: transparent;
+		}
+	}
+
+	&__search {
+		// 2. 📍 Positioning
+		position: relative;
+
+		// 3. 🧩 Layout
+		display: block;
+
+		// 4. 📦 Box Model
+		padding: 4px;
+
+		svg {
+			// 2. 📍 Positioning
+			position: absolute;
+			top: 50%;
+			left: 14px;
+
+			// 4. 📦 Box Model
+			width: 16px;
+			height: 16px;
+
+			// 6. 🎨 Visual
+			color: ds.$text-label-on-dark;
+
+			// 7. ⚙️ Behavior
+			pointer-events: none;
+
+			// 8. ✨ Animation
+			transform: translateY(-50%);
+		}
+
+		input {
+			// 4. 📦 Box Model
+			box-sizing: border-box;
+			width: 100%;
+			height: 34px;
+			padding: 0 10px 0 34px;
+
+			// 5. 🔤 Typography
+			font: inherit;
+			font-size: 0.8rem;
+
+			// 6. 🎨 Visual
+			border: 1px solid ds.$border-panel;
+			border-radius: 0.4rem;
+			outline: none;
+			background-color: ds.$surface-data-control;
+			color: ds.$text-title-on-dark;
+
+			&:focus-visible {
+				// 6. 🎨 Visual
+				border-color: ds.$accent-highlight;
+				box-shadow: 0 0 0 2px ds.$surface-highlight-tint;
+			}
+		}
+	}
+
+	&__searchLabel {
+		// 2. 📍 Positioning
+		position: absolute;
+
+		// 4. 📦 Box Model
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+
+		// 7. ⚙️ Behavior
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+	}
+
+	&__list {
+		// 4. 📦 Box Model
+		max-height: min(220px, calc(100dvh - 76px));
+
+		// 7. ⚙️ Behavior
+		overflow-y: auto;
+	}
+
+	&__option {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		gap: 8px;
+
+		// 4. 📦 Box Model
+		width: 100%;
+		min-height: 34px;
+		padding: 6px 8px;
+
+		// 5. 🔤 Typography
+		font: inherit;
+		font-size: 0.8rem;
+		text-align: left;
+
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: 0.35rem;
+		background-color: ds.$surface-transparent;
+		color: ds.$text-title-on-dark;
+
+		// 7. ⚙️ Behavior
+		cursor: pointer;
+
+		&_active,
+		&:hover:not(:disabled) {
+			// 6. 🎨 Visual
+			background-color: ds.$surface-nav-active;
+		}
+
+		&[aria-selected="true"] {
+			// 5. 🔤 Typography
+			font-weight: 700;
+
+			// 6. 🎨 Visual
+			color: ds.$accent-highlight;
+		}
+
+		&[aria-disabled="true"] {
+			// 7. ⚙️ Behavior
+			cursor: not-allowed;
+			opacity: 0.5;
+		}
+	}
+
+	&__empty {
+		// 4. 📦 Box Model
+		padding: 12px;
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 0.8rem;
+		text-align: center;
+
+		// 6. 🎨 Visual
+		color: ds.$text-label-on-dark;
+	}
+}

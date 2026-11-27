@@ -11,7 +11,7 @@ interface Props {
 	children: ReactNode;
 	status: RankingsPageData["status"];
 	mode: RankingsPageData["mode"];
-	isEmpty: boolean;
+	isGlobalEmpty: boolean;
 	isFilterEmpty: boolean;
 	hasActiveFilters: boolean;
 	onClearFilters: () => void;
@@ -21,7 +21,7 @@ export default function RankingsStatus({
 	children,
 	status,
 	mode,
-	isEmpty,
+	isGlobalEmpty,
 	isFilterEmpty,
 	hasActiveFilters,
 	onClearFilters,
@@ -34,7 +34,7 @@ export default function RankingsStatus({
 		return <RankingsLoading />;
 	}
 
-	if (isEmpty) {
+	if (isGlobalEmpty) {
 		return <RankingsEmpty mode={mode} />;
 	}
 

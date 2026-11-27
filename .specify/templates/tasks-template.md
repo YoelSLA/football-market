@@ -11,7 +11,7 @@ description: "Task list template for feature implementation"
 
 **Tests**: MUST incluir tests backend necesarios según Constitution y normas aplicables; ejecución a cargo del usuario, nunca del agente. MUST NOT crear tests ni infraestructura frontend. Los ejemplos genéricos siguientes se adaptan a estas reglas.
 
-**Workflow local**: MUST seguir `docs/development/sdd-workflow.md`. Tasks nacen del SDD y viven en este archivo; no se exportan automáticamente a tarjetas. Generar Tasks no completa implementación ni habilita Ready: requiere Analyze OK. MUST conservar IDs/avance al reanudar.
+**Workflow local**: MUST seguir `docs/development/sdd-workflow.md`. Tasks nacen del SDD y viven en este archivo (que forma parte de la tríada permanente obligatoria junto a `spec.md` y `plan.md`); no se exportan automáticamente a tarjetas. Generar Tasks no completa implementación ni habilita Ready: requiere Analyze OK. Al reanudar tareas en curso de un mismo issue, MUST conservar IDs y avance existente. Al iniciar un nuevo issue o ciclo sobre una SPEC existente, las tareas completadas anteriores se delegan a Git y este archivo se simplifica para listar exclusivamente las tareas activas del nuevo alcance (documentación viva, Constitución §V).
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 

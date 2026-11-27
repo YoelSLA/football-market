@@ -73,6 +73,31 @@ class TheSportsDbIntegrationTest {
     }
 
     @Test
+    @DisplayName("El lookup por plantel adapta los jugadores con imágenes válidas")
+    void lookupPlayersByTeamAdaptsCandidates() {
+      RestClient.Builder builder = RestClient.builder().baseUrl(BASE);
+      MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+      server
+          .expect(requestTo(BASE + "/lookup_all_players.php?id=133604"))
+          .andRespond(
+              withSuccess(
+                  """
+              {"player":[{"idPlayer":"34172252","strPlayer":"Gabriel","strTeam":"Arsenal",
+              "strSport":"Soccer","strCutout":"https://r2.thesportsdb.com/cutout.png"}]}
+              """,
+                  MediaType.APPLICATION_JSON));
+      TheSportsDbIntegration integration = createIntegration(builder);
+
+      List<TheSportsDbIntegration.PlayerData> candidates =
+          integration.lookupPlayersByTeam("133604");
+
+      assertThat(candidates).hasSize(1);
+      assertThat(candidates.getFirst().externalId()).isEqualTo("34172252");
+      assertThat(candidates.getFirst().cutout()).isEqualTo("https://r2.thesportsdb.com/cutout.png");
+      server.verify();
+    }
+
+    @Test
     @DisplayName("La búsqueda vacía es un resultado funcional, no un error técnico")
     void handlesEmptySearch() {
       RestClient.Builder builder = RestClient.builder().baseUrl(BASE);

@@ -1,66 +1,92 @@
 @use "@/styles/abstracts" as ds;
 
 .authForm {
+	// 3. 🧩 Layout
 	display: grid;
 	gap: .5rem;
-	min-width: 0;
 
+	// 4. 📦 Box Model
+	min-width: 0;
 	&__fields {
+		// 3. 🧩 Layout
 		display: grid;
 		gap: .45rem;
-		border: 0;
+
+		// 4. 📦 Box Model
 		padding: 0;
 		min-width: 0;
+
+		// 6. 🎨 Visual
+		border: 0;
 	}
 
 	&__submit {
+		// 4. 📦 Box Model
 		width: 100%;
-		border: 0;
-		border-radius: .5rem;
 		padding: .85rem 1rem;
-		background: ds.$action-primary;
-		color: ds.$text-inverse;
+
+		// 5. 🔤 Typography
 		font-size: .9rem;
 		font-weight: 650;
-		transition: background .15s;
 
+		// 6. 🎨 Visual
+		border: 0;
+		border-radius: .5rem;
+		background-color: ds.$action-primary;
+		color: ds.$text-inverse;
+
+		// 8. ✨ Animation
+		transition: background-color .15s;
 		&:hover:not(:disabled) {
-			background: ds.$action-primary-hover;
+			// 6. 🎨 Visual
+			background-color: ds.$action-primary-hover;
 		}
 
 		&:disabled {
+			// 7. ⚙️ Behavior
 			cursor: wait;
 			opacity: .65;
 		}
 	}
 
 	&__feedback {
+		// 5. 🔤 Typography
 		font-size: .8rem;
 		overflow-wrap: anywhere;
 	}
 
 	&__error {
+		// 6. 🎨 Visual
 		color: ds.$state-error;
 	}
 
 	&__success {
+		// 6. 🎨 Visual
 		color: ds.$state-success;
 	}
 
 	&__switch {
+		// 4. 📦 Box Model
 		margin: .5rem 0 0;
+
+		// 5. 🔤 Typography
 		text-align: center;
-		color: ds.$text-secondary;
 		font-size: .8rem;
+
+		// 6. 🎨 Visual
+		color: ds.$text-secondary-on-light;
 	}
 
 	&__link {
-		color: ds.$action-primary;
+		// 5. 🔤 Typography
 		font-weight: 700;
 		text-decoration: underline;
 		text-underline-offset: .2em;
 
+		// 6. 🎨 Visual
+		color: ds.$action-primary;
 		&[aria-disabled="true"] {
+			// 7. ⚙️ Behavior
 			opacity: .5;
 			cursor: wait;
 		}

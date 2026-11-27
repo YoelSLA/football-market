@@ -348,6 +348,7 @@ Cada compra exitosa registra una `MarketTransaction` append-only para operacione
 - Identificador, comprador, vendedor (superusuario), jugador, cantidad, precio unitario, importe total, timestamp.
 - Autor: comprador autenticado persistido, nunca un identificador proporcionado en el body.
 - Estados anteriores/posteriores de saldos y tenencias; precio aplicado y procedencia de la cotización conservados como datos de la operación (formato interno en `data-model.md`).
+- Los campos nullable `quote_price` y `discount_percentage` existen para la auditoría de la venta oficial de SPEC-026. En las compras de esta funcionalidad permanecen `null`: la compra conserva su precio y procedencia sin aplicar descuento. La venta oficial los completa con la cotización de referencia y el descuento aplicado, sin alterar el comportamiento de compra descrito aquí.
 - Si falla el registro, revierte la compra. Sin modificación, eliminación, retención ni cascadas sobre auditoría histórica; no se promete resistencia a SQL privilegiado.
 
 ---

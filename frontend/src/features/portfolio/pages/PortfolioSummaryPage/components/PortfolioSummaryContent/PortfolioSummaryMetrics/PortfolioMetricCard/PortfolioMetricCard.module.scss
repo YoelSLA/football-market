@@ -1,0 +1,220 @@
+@use "@/styles/abstracts" as ds;
+
+.portfolioMetric {
+	// 1. 🏷️ Custom Properties
+	--metric-accent: #{ds.$accent-highlight};
+
+	// 2. 📍 Positioning
+	position: relative;
+
+	// 3. 🧩 Layout
+	display: grid;
+	grid-template-columns: 88px minmax(0, 1fr);
+	align-content: start;
+	row-gap: ds.$space-2xs;
+
+	// 4. 📦 Box Model
+	min-width: 0;
+	min-height: var(--portfolio-summary-metric-height, 152px);
+	padding: var(--portfolio-summary-metric-top, 28px) ds.$space-sm ds.$space-sm 0;
+
+	// 6. 🎨 Visual
+	border: 1px solid ds.$border-panel;
+	border-left: 4px solid var(--metric-accent);
+	border-radius: 12px;
+	background-color: ds.$surface-panel-from;
+	box-shadow: inset 0 1px ds.$surface-glass-interactive, 0 4px 16px ds.$shadow-medium;
+	color: var(--metric-accent);
+	&::before {
+		// 2. 📍 Positioning
+		position: absolute;
+		inset: 0 auto 0 0;
+
+		// 4. 📦 Box Model
+		width: 84px;
+
+		// 6. 🎨 Visual
+		border-radius: 8px 0 0 8px;
+		background-color: ds.$surface-panel-from;
+
+		// 7. ⚙️ Behavior
+		content: "";
+	}
+
+	&::after {
+		// 2. 📍 Positioning
+		position: absolute;
+		bottom: 0;
+		left: 0;
+
+		// 4. 📦 Box Model
+		width: 84px;
+		height: 6px;
+
+		// 6. 🎨 Visual
+		border-radius: 0 3px 3px 8px;
+		background-color: var(--metric-accent);
+		box-shadow: 0 -2px 12px ds.$surface-highlight-glow;
+
+		// 7. ⚙️ Behavior
+		content: "";
+	}
+
+	&_invested {
+		// 1. 🏷️ Custom Properties
+		--metric-accent: #{ds.$accent-investment};
+
+		// 6. 🎨 Visual
+		border-color: ds.$border-investment-mid;
+		background-color: ds.$surface-panel-from;
+	}
+
+	&_current::after {
+		// 6. 🎨 Visual
+		background-color: ds.$accent-gain;
+	}
+
+	&_invested::before {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-panel-from;
+	}
+
+	&_profit::before {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-panel-from;
+	}
+
+	&_profit {
+		// 1. 🏷️ Custom Properties
+		--metric-accent: #{ds.$accent-gain};
+	}
+
+	&_positions {
+		// 1. 🏷️ Custom Properties
+		--metric-accent: #{ds.$accent-highlight};
+	}
+
+	&_negative {
+		// 1. 🏷️ Custom Properties
+		--metric-accent: #{ds.$state-loss};
+	}
+
+	&__tile {
+		// 2. 📍 Positioning
+		position: absolute;
+		top: ds.$space-sm;
+		left: ds.$space-sm;
+		z-index: 1;
+
+		// 3. 🧩 Layout
+		display: grid;
+		place-items: center;
+
+		// 4. 📦 Box Model
+		width: 56px;
+		height: 56px;
+
+		// 6. 🎨 Visual
+		border-radius: 12px;
+		background-color: ds.$surface-metric-tile-highlight;
+	}
+
+	&_invested &__tile {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-metric-tile-investment;
+	}
+
+	&_profit &__tile {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-metric-tile-gain;
+	}
+
+	&_negative &__tile {
+		// 6. 🎨 Visual
+		background-color: ds.$surface-metric-tile-loss;
+	}
+
+	&__icon {
+		// 4. 📦 Box Model
+		width: 34px;
+		height: 34px;
+
+		// 6. 🎨 Visual
+		stroke-width: 2.5;
+		filter: drop-shadow(0 2px 3px ds.$shadow-intense);
+	}
+
+	&__label {
+		// 3. 🧩 Layout
+		grid-column: 2;
+
+		// 4. 📦 Box Model
+		margin: 0;
+
+		// 5. 🔤 Typography
+		font-size: 16px;
+		line-height: 1.25;
+		font-weight: 400;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
+	}
+
+	&__value {
+		// 3. 🧩 Layout
+		grid-column: 2;
+
+		// 4. 📦 Box Model
+		margin-top: var(--portfolio-summary-value-gap, #{ds.$space-xs});
+
+		// 5. 🔤 Typography
+		font-size: clamp(24px, 1.8vw, 30px);
+		line-height: 1.2;
+		font-weight: 750;
+		letter-spacing: -0.025em;
+		overflow-wrap: anywhere;
+	}
+
+	&_positions &__value {
+		// 6. 🎨 Visual
+		color: ds.$text-value-on-dark;
+	}
+
+	&__amount {
+		// 6. 🎨 Visual
+		color: ds.$text-value-on-dark;
+	}
+
+	&__description {
+		// 3. 🧩 Layout
+		grid-column: 2;
+
+		// 4. 📦 Box Model
+		margin: 0;
+		padding-right: ds.$space-lg;
+
+		// 5. 🔤 Typography
+		font-size: 14px;
+		line-height: 1.35;
+
+		// 6. 🎨 Visual
+		color: ds.$text-subtle-on-dark;
+	}
+
+	&__indicator {
+		// 2. 📍 Positioning
+		position: absolute;
+		right: ds.$space-md;
+		bottom: ds.$space-md;
+
+		// 4. 📦 Box Model
+		width: 28px;
+		height: 28px;
+	}
+
+	&_positions &__indicator {
+		// 4. 📦 Box Model
+		width: 44px;
+		height: 44px;
+	}
+}

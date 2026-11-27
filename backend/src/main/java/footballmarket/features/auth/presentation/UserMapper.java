@@ -1,6 +1,7 @@
 package footballmarket.features.auth.presentation;
 
 import footballmarket.features.auth.domain.User;
+import footballmarket.features.auth.domain.records.CurrentUserView;
 import footballmarket.features.auth.presentation.dtos.request.RegisterRequestDTO;
 import footballmarket.features.auth.presentation.dtos.response.CurrentUserResponseDTO;
 
@@ -10,14 +11,29 @@ public final class UserMapper {
   private UserMapper() {}
 
   /**
-   * Expone la identidad actual del usuario persistido.
+   * Expone la identidad y el saldo actuales del usuario persistido expresados en créditos.
+   *
+   * @param user vista del usuario recuperada por el servicio
+   * @return identificador, nombre de usuario, email, rol y créditos disponibles actuales en
+   *     créditos
+   */
+  public static CurrentUserResponseDTO toCurrentUserResponse(CurrentUserView user) {
+    return new CurrentUserResponseDTO(
+        user.id(), user.username(), user.email(), user.role(), user.availableCredits() / 100);
+  }
+
+  /**
+   * Expone la identidad y el saldo actuales del usuario persistido a partir del modelo y saldo en
+   * centésimas.
    *
    * @param user usuario recuperado por el servicio
-   * @return identificador, nombre de usuario, email y rol actuales
+   * @param availableCredits saldo disponible en centésimas de crédito
+   * @return identificador, nombre de usuario, email, rol y créditos disponibles actuales en
+   *     créditos
    */
-  public static CurrentUserResponseDTO toCurrentUserResponse(User user) {
+  public static CurrentUserResponseDTO toCurrentUserResponse(User user, long availableCredits) {
     return new CurrentUserResponseDTO(
-        user.getId(), user.getUsername(), user.getEmail(), user.getRole());
+        user.getId(), user.getUsername(), user.getEmail(), user.getRole(), availableCredits / 100);
   }
 
   /**

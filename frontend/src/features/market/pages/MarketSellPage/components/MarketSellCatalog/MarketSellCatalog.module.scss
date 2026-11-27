@@ -1,0 +1,9 @@
+@use "@/styles/abstracts" as ds;
+
+.sellCatalog {
+	@include ds.catalog-container;
+
+	&__grid {
+		@include ds.catalog-grid;
+	}
+}

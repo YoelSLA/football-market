@@ -52,7 +52,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 
 | ID | Título | Área | Prioridad | Estado | Registrada |
 | --- | --- | --- | --- | --- | --- |
-| [TD-001](#td-001--protección-de-los-endpoints-de-monitoreo-de-spring-boot-actuator) | Protección de los endpoints de monitoreo de Spring Boot Actuator | Backend / Seguridad | Alta | Pendiente | 2026-10-14 16:29:48 |
+| [TD-001](#td-001--protección-de-los-endpoints-de-monitoreo-de-spring-boot-actuator) | Protección de los endpoints de monitoreo de Spring Boot Actuator | Backend / Seguridad | Alta | En curso | 2026-10-14 16:29:48 |
 | [TD-002](#td-002--autorización-por-rol-inexistente-prometida-en-el-contrato-público) | Autorización por rol inexistente, prometida en el contrato público | Backend / Seguridad | Alta | Pendiente | 2026-10-14 17:48:44 |
 | [TD-003](#td-003--sincronizaciones-del-catálogo-abiertas-a-cualquier-usuario-autenticado) | Sincronizaciones del catálogo abiertas a cualquier usuario autenticado | Backend / Seguridad | Alta | Pendiente | 2026-10-14 17:48:44 |
 | [TD-004](#td-004--migración-v5-reescrita-tras-su-publicación-rompe-la-validación-de-flyway) | Migración V5 reescrita tras su publicación rompe la validación de Flyway | Backend / Datos | Alta | Pendiente | 2026-10-14 17:48:44 |
@@ -88,8 +88,73 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | [TD-034](#td-034--esperas-dom-de-estadísticas-no-ejercitadas-por-los-dobles-de-playwright) | Esperas DOM de estadísticas no ejercitadas por los dobles de Playwright | Backend / Testing | Media | En curso | 2026-10-28 11:39:59 |
 | [TD-035](#td-035--doble-división-potencial-de-estadísticas-json-y-auditoría-histórica-pendiente) | Doble división potencial de estadísticas JSON y auditoría histórica pendiente | Backend / Datos | Alta | Pendiente | 2026-10-29 12:59:24 |
 | [TD-036](#td-036--acoplamiento-de-paquete-entre-referencias-del-catálogo-e-identidad-whoscored) | Acoplamiento de paquete entre referencias del catálogo e identidad WhoScored | Backend / Arquitectura | Media | Pendiente | 2026-10-28 16:08:35 |
+| [TD-037](#td-037--excepción-inesperada-json-deja-la-campaña-activa) | Excepción inesperada JSON deja la campaña activa | Backend / Disponibilidad | Alta | En curso | 2026-11-05 22:01:33 |
+| [TD-038](#td-038--fallo-de-cierre-scraping-oculto-en-el-log-automático) | Fallo de cierre scraping oculto en el log automático | Backend / Observabilidad | Media | En curso | 2026-11-06 13:22:21 |
+| [TD-039](#td-039--selector-de-estrategia-del-ranking-pendiente-de-adopción-multicorrida) | Selector de estrategia del ranking pendiente de adopción multicorrida | Backend / Datos | Media | Pendiente | 2026-11-10 |
+| [TD-040](#td-040--predicado-de-elegibilidad-por-métricas-duplicado-en-repositorios) | Predicado de elegibilidad por métricas duplicado en repositorios | Backend / Datos | Media | Pendiente | 2026-11-12 00:35:59 |
 
 ## 6. Detalle de las deudas técnicas
+
+### TD-040 — Predicado de elegibilidad por métricas duplicado en repositorios
+
+- **Área / prioridad / estado:** Backend / Datos; Media; Pendiente.
+- **Origen:** revisión del diff del IMPLEMENT conjunto de SPEC-002/SPEC-005
+  (T071–T090), antes del commit.
+- **Evidencia:** `PlayerRepository.HAS_LATEST_METRICS` define la regla de elegibilidad
+  (última `extractionDate` con `presentMetrics > 0`); `TokenListingRepository.findMarket`,
+  `AttributeValuationRepository.findScoreRanking`,
+  `PositionalValuationRepository.findScoreRanking` y las consultas nativas de
+  `OfficialMarketRepository` replican la misma regla (en JPQL y SQL nativo) de
+  forma literal en lugar de reutilizarlo.
+- **Impacto:** cualquier cambio futuro de la regla exige editar cinco consultas; omitir
+  una produce divergencia entre catálogo, mercado oficial, mercado P2P y rankings sin
+  que ningún test lo garantice por sí solo.
+- **Resolución propuesta:** extraer el fragmento a un punto compartido y neutral entre
+  features cuando exista, sin trasladar dominio de catálogo a mercado o valuación sin
+  autorización.
+- **Cierre:** implementación acordada y evidencia verificable de que las cinco consultas
+  aplican la misma regla; los tests aplicables siguen a cargo del usuario.
+
+### TD-039 — Selector de estrategia del ranking pendiente de adopción multicorrida
+
+- **Área / prioridad / estado:** Backend / Datos; Media; Pendiente.
+- **Origen:** revisión de consumidores durante IMPLEMENT de SPEC-016, T057/T078.
+- **Evidencia:** `ScoreRankingQueryServiceImpl.findScoreRanking` consume
+  `QuoteExecutionRepository.findTopByOrderByQuoteDateDesc`. Con varias corridas diarias,
+  la fecha sola no establece un orden total y el selector no excluye contextos sin cierre.
+- **Impacto:** la estrategia y el encabezado del ranking por score pueden proceder de
+  cualquiera de las corridas de una fecha, incluso de una todavía no finalizada.
+- **Decisión humana:** el usuario indicó durante esta ejecución «ese problema es para
+  otro bloque el cual nos vamos a preocupar». Se conserva el selector sin imponer
+  semántica nueva a SPEC-018; la dependencia no frena el trabajo independiente de SPEC-016.
+- **Pendiente:** consolidar la selección temporal en SPEC-018 y adaptar allí consumidor,
+  consulta y regresiones. La propuesta de SPEC-016 es usar finalizadas con orden
+  `quoteDate DESC, startedAt DESC, id DESC`; no se presenta como decisión aprobada de SPEC-018.
+- **Cierre:** requiere implementación, evidencia verificable y los gates humanos aplicables.
+  No se declara resuelta por el build de SPEC-016. El retiro de la ruta histórica de
+  cotización permanece además coordinado con SPEC-022 en T077, sin ampliación a UI.
+
+### TD-038 — Fallo de cierre scraping oculto en el log automático
+
+- **Registro:** 2026-11-06 13:22:21 (`America/Argentina/Buenos_Aires`).
+- **Estado:** En curso. **Prioridad:** Media (hallazgo P2). **Área:** Backend / Observabilidad.
+- **Evidencia estática:** en `PlayerStatisticsSynchronizationServiceImpl.synchronizeScraping`, un error de ejecución y otro de cierre se propagaban como excepción original con cierre suprimido. El scheduler solo reconoce cierres fallidos en `ScheduledStatisticsSyncException`, por lo que registraba `closeFailed=false` para esa combinación.
+- **Impacto:** el registro ocultaba el fallo de cierre y no permitía identificar correctamente el estado operativo de la campaña. Relacionado con TD-037, sin modificar su alcance JSON.
+- **Corrección autorizada:** únicamente en la entrada automática, señalar el motivo seguro y conservar excepción original como causa y error de cierre como suprimido. La entrada manual mantiene la excepción y suprimidos originales. No se cambia el scheduler para considerar cualquier excepción suprimida como fallo de cierre.
+- **Verificación pendiente:** regresiones de fachada automática/manual y log scraping sin secretos/trazas ni evaluación posterior. Escritas, no ejecutadas ni compiladas por el agente.
+- **Criterio de cierre:** revisión humana de la corrección y ejecución satisfactoria de esas regresiones desde los tests de Service y scheduler de SPEC-024.
+- **Historial:** 2026-11-06 13:22:21 — hallazgo reportado por el usuario, comprobado por lectura y corrección expresamente autorizada. Implementación y tests escritos; no se declara resolución sin evidencia funcional humana.
+
+### TD-037 — Excepción inesperada JSON deja la campaña activa
+
+- **Registro:** 2026-11-05 22:01:33 (`America/Argentina/Buenos_Aires`).
+- **Estado:** En curso. **Prioridad:** Alta. **Área:** Backend / Disponibilidad.
+- **Evidencia estática:** `PlayerStatisticsSynchronizationServiceImpl.synchronizeJson` abre el run antes de seleccionar pendientes y recorrer workers. Una excepción inesperada del selector o propagada por `ExtractionWorkerPool.forEach` sale sin llegar a `closeRun`. Este recorrido ya existía antes de SPEC-024; no se ha ejecutado para demostrarlo.
+- **Impacto:** queda un run `RUNNING`; `ExtractionRunManager.open` rechaza una nueva entrada JSON hasta que resulte recuperable por su presupuesto de 24 horas. Puede afectar la disponibilidad manual tras un fallo automático (SPEC-024, FR-006).
+- **Propuesta:** acordar cierre seguro tras fallos e interrupción del coordinador, manteniendo el error original, transacciones y confirmaciones previas. No se corrige ni se amplía el contrato manual en esta entrega.
+- **Criterio de cierre:** regresión desde la fachada real que provoque un fallo inesperado o interrupción del coordinador y demuestre cierre y relanzamiento inmediato sin pérdida de datos, ejecutada y validada por el usuario.
+- **Historial:** 2026-11-05 22:01:33 — detectada al revisar T003 de SPEC-024; registrada sin afirmar resolución ni ampliar las tareas autorizadas.
+- **Actualización — 2026-11-05 22:43:13:** tras la corrección upstream autorizada y la reanudación solicitada por el usuario, se implementa el cierre del recorrido JSON automático después de limpiar workers, preservando error principal, interrupción y fallo de cierre. Se escriben regresiones de relanzamiento manual, confirmaciones conservadas y fallo de cierre con PostgreSQL real y una inyección técnica acotada a una sentencia en testing. Build sin tests satisfactorio; tests y validación humana pendientes. El comportamiento JSON manual preexistente se conserva, conforme al plan. No se declara resuelta la deuda ni se garantiza disponibilidad si la DB impide cerrar.
 
 ### TD-035 — Doble división potencial de estadísticas JSON y auditoría histórica pendiente
 
@@ -97,7 +162,7 @@ deuda describe trabajo diferido, nunca comportamiento deseado omitido.
 | --- | --- |
 | **ID** | TD-035 |
 | **Fecha y hora de registro** | 2026-10-29 12:59:24 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `En curso` |
 | **Prioridad** | Alta |
 | **Área afectada** | Backend / Datos |
 | **Fecha de resolución** | — |
@@ -421,6 +486,59 @@ cotización queda libre para una segunda ejecución que ya no puede reproducir e
 alcances transaccionales distintos, sin una decisión sobre qué ocurre cuando el segundo nivel falla
 después de que el primero confirmó.
 
+**Reevaluación en IMPLEMENT de SPEC-023 (2026-11-04).** La deuda sigue pendiente. Las rutas actuales
+son `backend/src/main/java/footballmarket/features/quote/application/internal/QuotePlayerPublisher.java`
+(`publish`, `REQUIRES_NEW`) y
+`backend/src/main/java/footballmarket/features/quote/application/impl/QuoteRecalculationServiceImpl.java`
+(`recalculate`, transacción externa y guardado final del resumen). FR-013 y US3 de SPEC-023 exigen
+conservar las cotizaciones válidas previas ante fallo completo; el diseño de `research.md` §16 mantiene
+las confirmaciones independientes, por lo que no garantiza esa conservación si falla el guardado del
+resumen. IMPLEMENT se detuvo tras T001–T010: resolver esa contradicción requiere decisión upstream y
+nuevo ANALYZE. No se cambió la política transaccional ni se ejecutaron tests para dar la deuda por
+resuelta.
+
+**Decisión de alcance en SPEC-023 (2026-11-04).** El equipo resolvió que la ejecución automática **no**
+es responsable de las cotizaciones que ya quedaron confirmadas por jugadores individuales cuando falla
+el guardado del resumen: compensarlas excede su alcance. SPEC-023 ajustó FR-013, SC-003 y sus supuestos
+para declarar ese límite explícitamente, sin cambiar la política transaccional. La deuda **sigue
+pendiente**: la decisión acota la responsabilidad de la feature, no resuelve la falta de atomicidad
+entre las cotizaciones confirmadas y su resumen de ejecución. La lectura previa de FR-013 como exigencia
+de conservar también las cotizaciones confirmadas durante la corrida fallida queda superada por esta
+decisión de alcance.
+
+**Evidencia humana adicional (2026-11-04).** En
+`QuoteAutomaticRecalculationFailureTest.retriesManuallyWhenAutomaticAttemptLeavesNoExecution`, el
+fallo técnico inducido al cerrar la corrida deja la fecha sin resumen, pero conserva las cinco
+filas `CARRIED_FORWARD` ya confirmadas. La salida aportada por el usuario muestra que el reintento
+manual se acepta y termina con `failedPlayers=5` por `uq_player_quote` (SQLSTATE `23505`): intenta
+insertar nuevamente esas filas. `findReferenceDatesByPlayerId` excluye las filas arrastradas, por lo
+que no evita esos intentos repetidos. Poder reintentar no implica recuperar exitosamente los datos.
+Se corrigió la expectativa adicional de cero fallos del test de SPEC-023, no el comportamiento
+productivo; TD-024 permanece pendiente.
+
+**Delta diario de SPEC-023 (2026-11-11).** La publicación ahora actualiza una cotización existente
+por jugador-fecha en vez de intentar duplicarla, también en un reintento. Esto elimina esa causa
+concreta de conflicto de unicidad, pero no cambia `REQUIRES_NEW` ni compensa filas confirmadas si
+falla el resumen. TD-024 permanece pendiente; no hay evidencia de tests ejecutados por el agente.
+**Diseño del delta SPEC-016 (2026-11-10, PLAN).** Se planifica identidad de corrida y referencia
+`execution_id` desde la cotización, con contexto confirmado antes de publicar jugadores y resumen
+finalizado aparte. Evita depender del instante para identificar parámetros, pero no acredita
+recuperación de una corrida cuyo cierre falla ni exactitud de contadores incompletos. La deuda sigue
+`Pendiente`, sin implementación ni pruebas ejecutadas. Fuente: revisión vigente de
+`specs/016-ejecutar-recalculo-manual-de-cotizaciones/research.md`, R2. No se añade compensación al
+scheduler ni se declara resuelta por permitir múltiples ejecuciones diarias.
+
+**IMPLEMENT del delta SPEC-016 (sesión de 2026-11-10).** Se implementó contexto
+confirmado antes de publicaciones y cierre independiente, con FK desde filas no
+iniciales. La consulta pública solo devuelve finalizadas. El test de fallo de cierre
+se adaptó para distinguir contexto persistido de resumen final y nuevas corridas de
+recuperación del contexto anterior. Las pruebas no se ejecutaron y los contadores de
+un contexto interrumpido no se reconstruyen: TD-024 sigue `Pendiente`.
+
+**Integración SPEC-016/023 (2026-11-11).** El reemplazo diario actualiza también la FK de ejecución.
+Un contexto automático sin cierre consume la cuota diaria; una manual posterior puede publicar
+nuevos cálculos, pero no repara el contexto anterior. TD-024 continúa pendiente.
+
 **Impacto técnico.** Historial de cotizaciones sin resumen de ejecución, que es lo que FR-061 exige
 consultar para reconstruir el cálculo. La trazabilidad se degrada sin que el sistema lo detecte.
 
@@ -447,6 +565,8 @@ distinga "en curso" de "terminada" y permita reconciliar las filas confirmadas c
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-21 22:20:53 | Registro inicial tras el code review de SPEC-016. No se modificó código, migraciones ni contratos. |
+| 2026-11-04 | Reevaluación durante IMPLEMENT de SPEC-023; se registró el bloqueo y la detención tras T001–T010. |
+| 2026-11-04 | Decisión de alcance de SPEC-023: la ejecución automática no compensa cotizaciones ya confirmadas por jugadores individuales. La deuda permanece `Pendiente`; no se modificó código ni se declara resuelta. |
 
 ### TD-025 — `quote_executions` sin estado: una ejecución en curso es indistinguible de una terminada
 
@@ -1055,59 +1175,34 @@ resuelta por la alineación documental ni por build.
 | --- | --- |
 | **ID** | TD-001 |
 | **Fecha y hora de registro** | 2026-10-14 16:29:48 (`America/Argentina/Buenos_Aires`) |
-| **Estado** | `Pendiente` |
+| **Estado** | `En curso` |
 | **Prioridad** | Alta |
 | **Área afectada** | Backend / Seguridad |
 | **Fecha de resolución** | — |
 
-**Descripción.** Durante el desarrollo se decidió permitir temporalmente el acceso sin
-autenticación a los endpoints de monitoreo de Spring Boot Actuator, para poder consultarlos desde
-Postman durante el diagnóstico local. La configuración habilita `/actuator`, `/actuator/health`,
-`/actuator/info` y `/actuator/metrics`.
+**Descripción.** La configuración de Actuator debe limitar la superficie HTTP a los endpoints
+definidos por SPEC-032 y evitar información sensible. `/actuator/prometheus` es público y no requiere
+ni utiliza JWT; `/actuator/health` y `/actuator/info` son públicos con respuestas mínimas/no
+sensibles. La verificación del comportamiento en ejecución queda pendiente.
 
-La exposición por HTTP de las métricas es doblemente restrictiva: requiere la habilitación
-explícita por entorno `MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics`, que el repositorio no
-define por defecto. Aun así, la autorización es abierta para las rutas de monitoreo.
-
-**Motivo del aplazamiento.** La medida responde a una decisión consciente y temporal del
-responsable del proyecto: el monitoreo es una herramienta de diagnóstico local y no está prevista
-para ningún despliegue público. Implementar la protección antes de que exista un despliegue real
-sumaría complejidad arquitectónica —autorización por roles o un puerto de gestión independiente—
-que el proyecto todavía no necesita.
-
-**Impacto técnico.** Una exposición accidental en producción podría revelar información operativa:
-consumo de memoria de la JVM, uso de CPU del sistema y del proceso, número de hilos, tiempo de
-actividad y métricas de las solicitudes HTTP servidas. `/actuator/info` quedaría accesible en todos
-los perfiles; actualmente no expone datos porque no hay propiedades `management.info.*` declaradas,
-pero esa condición depende de la configuración y no de un control de acceso. `/actuator/health` no
-es parte del riesgo: `show-details` es `never` y solo informa el estado general.
-
-**Solución propuesta.** Implementar controles de acceso adecuados para los endpoints de monitoreo.
-Las alternativas a evaluar son:
-
-- **Autorización administrativa.** Requiere un rol con autoridad real, que el sistema todavía no
-  implementa: hoy `role` es informativo y no existe autorización por rol.
-- **Restricciones de red.** Puerto de gestión independiente ligado a la loopback. Es la única
-  variante que no depende del cliente, pero tiene un coste conocido: al compartir puerto los
-  endpoints, `/actuator/health` pasaría también a quedar ligado a la loopback y dejaría de ser
-  alcanzable desde fuera.
-- **Separación del puerto de gestión.** Puede combinarse con la anterior y permite tratar la
-  seguridad de ese contexto de forma independiente.
+**Decisión vigente.** `/actuator/prometheus` es accesible sin autenticación ni JWT; la presencia,
+ausencia o validez de un JWT no cambia el acceso ni la respuesta. `/actuator/health` y
+`/actuator/info` permanecen públicos, con respuestas mínimas/no sensibles. La lista HTTP se limita
+exactamente a `prometheus,health,info`, sin raíz, subendpoints ni otros endpoints.
 
 **Criterios de resolución.** La deuda no se considera resuelta hasta:
 
-1. Haber implementado el control de acceso elegido para `/actuator/info` y `/actuator/metrics/**`.
-2. Haber verificado el comportamiento efectivo de esa restricción en ejecución.
-3. Mantener `/actuator/health` accesible sin información interna sensible.
-4. No volver a exponer por error `env`, `heapdump`, `threaddump`, `configprops`, `beans` ni
-   `shutdown`, cuya exposición está hoy vedada en todos los perfiles.
+1. Verificar en ejecución que `/actuator/prometheus` devuelve métricas sin JWT y conserva el mismo
+   acceso cuando se presenta un JWT válido, vencido o inválido.
+2. Verificar health/info públicos sin información sensible.
+3. Verificar que la raíz, los subendpoints y el resto de endpoints no están expuestos.
 
 **Referencias.**
 
-- `backend/src/main/java/footballmarket/config/SecurityConfig.java`
+- `backend/src/main/java/footballmarket/security/SecurityConfig.java`
 - `backend/src/main/resources/application.yml`
 - `docs/backend/technologies.md`
-- `specs/trello.md`
+- `specs/032-prometheus-actuator-monitoring/`
 
 **Historial de cambios.**
 
@@ -1115,6 +1210,8 @@ Las alternativas a evaluar son:
 | --- | --- |
 | 2026-10-14 16:29:48 | Registro inicial en `docs/TECHNICAL_DEBT.md`. La anotación previa existía en `specs/trello.md` y en `docs/backend/technologies.md`; la fecha de creación original de esas anotaciones no se conoce, por lo que se registra la de incorporación a este documento. |
 | 2026-10-14 16:52:29 | Actualización de la referencia al mecanismo de habilitación: `FOOTBALLMARKET_MONITORING_LOCAL_METRICS` se reemplaza por `MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics`. La corrección del arranque no altera el alcance, la prioridad ni el estado de la deuda, que continúa `Pendiente`. Sin cambios funcionales: la exposición sigue siendo abierta para las rutas de monitoreo. |
+| 2026-11-24 13:23:07 | SPEC-032 implementa la protección de Prometheus mediante JWT válido, la exposición explícita de `prometheus,health,info`, y la denegación de las demás rutas; las pruebas de ejecución aún no han sido ejecutadas por el usuario. Se actualizan la decisión vigente, los criterios y las referencias. Estado `En curso`; no se declara resuelta hasta verificar el comportamiento en ejecución. |
+| 2026-11-25 | Se corrige la decisión vigente conforme a SPEC-032: `/actuator/prometheus` es público y no requiere ni utiliza JWT. La anotación del 2026-11-24 se conserva como historial documental, pero no describe la política vigente. No se modificó código ni se ejecutaron verificaciones; el estado permanece `En curso`. |
 
 ### TD-002 — Autorización por rol inexistente, prometida en el contrato público
 
@@ -1353,6 +1450,7 @@ una base migrada con la versión previa.
 | Fecha y hora | Cambio |
 | --- | --- |
 | 2026-10-14 17:48:44 | Registro inicial en `docs/TECHNICAL_DEBT.md`, tras auditoría técnica de solo lectura del 2026-10-14. La reescritura se produjo en el commit `dd6fda3` al cerrar SPEC-007 y no fue registrada en su momento, por lo que la fecha registrada es la de su incorporación a este documento. |
+| 2026-11-07 | Se preparó una reconstrucción completa del historial con migraciones timestamp UTC, validación estática, control Git de inmutabilidad y pruebas de reconstrucción e incremento. La deuda permanece pendiente hasta que el nuevo historial se integre en `dev`, se recree y valide una base PostgreSQL vacía y exista evidencia de los tests; no se alteró ninguna base durante la preparación. |
 
 ### TD-005 — Perfil `dev` activo por defecto con credenciales de base de datos versionadas
 
@@ -2334,3 +2432,5 @@ Identificador anterior en `dev`: TD-032; renumerado por colisión durante la int
 | 2026-10-21 16:20:55 | Incorporación de TD-021 tras la revisión funcional de SPEC-016, en la que se verificó que la capa de valuación reutiliza en silencio la campaña de métricas anterior cuando la campaña vigente no está confirmada y sella esas valuaciones con el día de la evaluación, con lo que el recálculo reprecia a todos los jugadores sobre datos que no cambiaron. El responsable del proyecto decidió no modificar el código; la entrada registra el comportamiento real y su regla de resolución propuesta. No se modificó código, migraciones ni contratos. |
 | 2026-10-21 22:20:53 | Incorporación de TD-022 a TD-029 tras el code review de SPEC-016: una deuda de prioridad Alta (TD-022, ranking sin desempate determinista) y siete de prioridad Media (TD-023 a TD-029). TD-011 se actualizó con `InvalidQuoteException` entre las excepciones propias sin manejador global. El code review completo, con los hallazgos, el orden de revisión y el checklist humano, quedó registrado en `specs/016-ejecutar-recalculo-manual-de-cotizaciones/code-review-report.md`. No se modificó código, migraciones ni contratos. |
 | 2026-10-21 23:05:00 | Remediación del code review de SPEC-016 por decisión del responsable del proyecto: se cierra el desempate no determinista de la lectura de cotizaciones (CR-01, TD-022, T051 y T052) y se registran las decisiones sobre CR-02 (TD-023 se conserva como deuda), CR-05 (TD-026 descartada) y CR-07 (TD-028 descartada). TD-022 pasa a `En curso` porque la ejecución de los tests corresponde al usuario. Se modificó el repositorio de cotizaciones y la suite de pruebas de consultas; no se modificaron migraciones, contratos HTTP ni el esquema. |
+| 2026-11-12 00:35:59 | Incorporación de TD-040 tras la revisión del diff del IMPLEMENT conjunto de SPEC-002/SPEC-005: el predicado de elegibilidad por métricas se repite literalmente en cuatro consultas de catálogo, mercado y rankings. No se modificó código como parte del registro. |
+| 2026-11-17 12:15:00 | Actualización de TD-040 tras alinear el catálogo de emisión oficial del mercado primario (OfficialMarketRepository) con el predicado de elegibilidad por métricas vigentes del catálogo de jugadores, incorporando su consulta nativa a las cinco fuentes afectadas. |

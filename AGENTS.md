@@ -14,7 +14,7 @@ Leer la [constitución](.specify/memory/constitution.md) antes de modificar cód
 | Feature especificada | Artefactos relevantes de su carpeta en `specs/`; la numeración más alta no identifica necesariamente la tarea. |
 | Creación o nombre de una rama | [Convenciones de Git](docs/development/git-workflow.md): formato, tipos y reglas obligatorias. |
 | Paso de Spec Kit | Definición del comando correspondiente en `.opencode/commands/`, subordinada al workflow SDD y Constitution; ejecutar solo el paso solicitado. |
-| Asignación de modelos SDD | [Matriz normativa de modelos](#matriz-normativa-de-asignación-de-modelos-por-fase-arquitectura-de-3-niveles): arquitectura de 3 niveles y asignaciones por etapa. |
+| Selección de modelos SDD | [Referencia orientativa de capacidades](#referencia-orientativa-de-capacidades-de-modelos-arquitectura-de-3-niveles): arquitectura de 3 niveles y libre elección. |
 | Inicio de un issue | [Comando `/start-issue`](.opencode/commands/start-issue.md) y [§5.1 del workflow operativo SDD + Git](docs/development/sdd-workflow.md). |
 
 No cargar instrucciones ni documentación del backend para una tarea exclusivamente frontend ni viceversa. Una tarea que afecte ambas áreas debe consultar ambos archivos específicos.
@@ -29,57 +29,50 @@ No cargar instrucciones ni documentación del backend para una tarea exclusivame
 
 ### Inicio de un issue
 
-El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue: verificación del issue y sus dependencias, materialización de la SPEC con el identificador provisto, creación y publicación de la rama desde `origin/dev`, vinculación de la rama al issue, actualización del seguimiento en GitHub Projects y preparación del flujo SDD. La definición completa está en [`.opencode/commands/start-issue.md`](.opencode/commands/start-issue.md) y las reglas que lo gobiernan en [§5.1 del workflow SDD](docs/development/sdd-workflow.md).
+El comando `/start-issue <issue_number> <spec_id> [<scope>]` automatiza el arranque operativo de un issue: verificación del issue y sus dependencias, materialización de la SPEC con el identificador provisto (creación nueva o evolución de una existente), creación y publicación de la rama desde `origin/dev`, vinculación de la rama al issue, actualización del seguimiento en GitHub Projects y preparación del flujo SDD. La definición completa está en [`.opencode/commands/start-issue.md`](.opencode/commands/start-issue.md) y las reglas que lo gobiernan en [§5.1 del workflow SDD](docs/development/sdd-workflow.md).
 
 - El identificador de la SPEC lo provee siempre la persona que invoca el comando. Nunca se genera, infiere ni asigna automáticamente.
-- Antes de modificar el issue, el comando comprueba que el identificador no esté usado en specs locales, ramas remotas, issues de GitHub ni items del proyecto, y se detiene ante cualquier coincidencia.
+- Antes de determinar el modo operativo, comprueba que el árbol de trabajo esté limpio y sincroniza `dev` con `origin/dev`.
+- El comando opera en dos modos según la existencia previa de la spec: en **Modo A (creación de SPEC nueva)** comprueba que el identificador no esté usado en ninguna de las 4 fuentes (specs locales, ramas remotas, issues de GitHub ni items del proyecto), deteniéndose ante cualquier coincidencia. En **Modo B (evolución de SPEC existente)**, valida la presencia de la tríada permanente (`spec.md`, `plan.md`, `tasks.md`), verifica que no exista colisión de rama activa o PR abierto en remoto para esa SPEC, reutiliza la spec existente sin sobrescribir sus artefactos y conserva el scope original de su directorio en la rama (`<type>/<num>-<existing-scope>`).
+- Cada nuevo ciclo de trabajo parte obligatoriamente de `origin/dev`. Si ya existía una rama local previa, audita su estado, commits y relación con `origin/dev`; nunca la elimina, resetea ni sobrescribe automáticamente, y consulta a la persona usuaria ante cualquier desalineación o conflicto.
 - El body —con sus RF, CA, dependencias y referencias—, los labels, el milestone, las asignaciones y las relaciones del issue se conservan íntegros y se verifican por comparación con el estado previo.
 - El comando no implementa código funcional, no redacta la especificación y no autoriza implementación: deja el contexto preparado y la continuación es `/speckit.specify`.
 
 ### Creación y reanudación de una spec
 
-Una spec nueva se crea con el flujo normal, sin `--reuse`. Para retomar trabajo que pertenece a una spec existente, usar siempre `--reuse` con el `--short-name` de esa spec. **No provocar un identificador nuevo para continuar trabajo de una spec existente**: sin `--reuse` el flujo asigna el siguiente número y crea una spec distinta.
+Una spec nueva se crea con el flujo normal, sin `--reuse`. Para retomar trabajo o evolucionar una spec existente a través de un nuevo issue, usar siempre `--reuse` con el `--short-name` de esa spec. **No provocar un identificador nuevo para continuar o evolucionar trabajo de una spec existente**: sin `--reuse` el flujo asigna el siguiente número y crea una spec distinta.
 
+- La carpeta de cada spec sostiene obligatoria y permanentemente la tríada `spec.md`, `plan.md` y `tasks.md`. Como documentación viva, describen exclusivamente el estado vigente del sistema y delegan el historial de versiones a Git.
 - El flujo intenta crear o reutilizar la rama asociada cuando el estado Git lo permite. Es idempotente: si la rama ya existe localmente la reutiliza, si existe solo en remoto crea la rama local siguiendo la remota, y nunca genera ramas duplicadas ni sufijos adicionales. Un fallo u omisión de ese paso no acredita que la rama esté disponible.
 - `--reuse` reutiliza el `spec-id`, el nombre de spec y el directorio existentes, y no sobrescribe `spec.md` ni los demás artefactos. Resuelve por coincidencia exacta del nombre de directorio o del scope; sin coincidencia o con varias, falla y las lista, sin elegir por su cuenta. Combinado con `--number`, desambigua o valida el identificador, y falla si contradice la spec encontrada.
 - `--reuse` es distinto de `--allow-existing-branch`: el primero localiza una spec existente por scope; el segundo solo permite que el flujo de creación caiga sobre un directorio ya existente.
 - Ninguno de los dos descarta, sobrescribe ni hace `stash` de cambios locales. Si hay cambios rastreados pendientes o `HEAD` está separado, el paso de rama se aborta con un mensaje y deja el estado de trabajo intacto; la spec se crea o se reutiliza igual.
 - Comprobar el resultado con `SPEC_ACTION` y `BRANCH_STATUS` en la salida en vez de asumirlo por el texto.
 
-## Matriz normativa de asignación de modelos por fase (Arquitectura de 3 niveles)
+## Referencia orientativa de capacidades de modelos (Arquitectura de 3 niveles)
 
-El flujo SDD (Spec-Driven Development) estructura la asignación de modelos de lenguaje en una **arquitectura de 3 niveles**:
+La clasificación de modelos de lenguaje en una **arquitectura de 3 niveles** se mantiene exclusivamente como una referencia orientativa de capacidades y propósitos, sin carácter normativo ni asignaciones obligatorias:
 
 - **Nivel 1 (Razonamiento Profundo y Arquitectura)**: `Claude Opus 5.5` y `GPT Astra`. Modelos de máxima capacidad cognitiva para análisis profundo, detección de huecos, arquitectura estructural, contratos/APIs complejos y resolución de bloqueos críticos.
-- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol` y `Gemini 4 Argon`. Modelos especializados en redacción de especificaciones, contratos iniciales, pulido terminológico, checklists sin ambigüedades, descomposición atómica de tareas en ventanas largas de contexto, auditoría estática integral e implementación de código React, hooks y servicios.
-- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash` y `GPT Luna`. Modelos de alta velocidad para ejecución append-only en Converge, Biome, linter, builds y generación de commits semánticos.
+- **Nivel 2 (Implementación, Análisis y Contexto Extendido)**: `Claude Sonnet 5.5`, `GPT Sol` y `Gemini 4 Argon`. Modelos orientados a redacción de especificaciones, contratos iniciales, pulido terminológico, checklists sin ambigüedades, descomposición atómica de tareas en ventanas largas de contexto, auditoría estática integral e implementación de código React, hooks y servicios.
+- **Nivel 3 (Operación Rápida, Higiene y Convergencia)**: `Gemini 3.8 Flash` y `GPT Luna`. Modelos de alta velocidad para tareas operativas, ejecución append-only en Converge, Biome, linter, builds y generación de commits semánticos.
 
-### Asignaciones por etapa
+### Libre elección de modelos y agentes
 
-| Etapa / Fase | Archivo / Contexto | Nivel | Modelo Principal | Modelo de Respaldo | Alcance y Propósito |
-| --- | --- | --- | --- | --- | --- |
-| Specify | `speckit.specify.md` | Nivel 2 | `GPT Sol` | `Gemini 4 Argon` | Contratos y borrador inicial. |
-| Clarify | `speckit.clarify.md` | Nivel 1 | `GPT Astra` | `Claude Opus 5.5` | Análisis profundo y detección de huecos. |
-| Revisión/Corrección spec | Revisión documental / refinamiento | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Pulido y consistencia terminológica. |
-| Plan | `speckit.plan.md` | Nivel 1 | `Claude Opus 5.5` | `GPT Astra` | Arquitectura estructural y APIs. |
-| Checklist | `speckit.checklist.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Verificación sin ambigüedades. |
-| Tasks | `speckit.tasks.md` | Nivel 2 | `Gemini 4 Argon` | `GPT Sol` | Desglose atómico de tareas y contexto largo. |
-| Analyze | `speckit.analyze.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Astra` | Auditoría estática integral. |
-| Implement | `speckit.implement.md` | Nivel 2 | `Claude Sonnet 5.5` | `GPT Sol` | Código React, hooks y servicios. |
-| Converge | `speckit.converge.md` | Nivel 3 | `Gemini 3.8 Flash` | `GPT Luna` | Biome, linter, builds y commits semánticos; escalamiento a Opus/Astra solo por bloqueos críticos. |
-
-### Reglas de uso, respaldo y escalamiento
-
-- **Invocación predeterminada:** Cada fase o comando ejecuta por defecto su **Modelo Principal**.
-- **Activación de respaldo:** El **Modelo de Respaldo** se activa ante indisponibilidad del proveedor, agotamiento de cuota de API o necesidad de contraste cruzado.
-- **Escalamiento restringido en Converge:** Converge opera con modelos de Nivel 3 (`Gemini 3.8 Flash` / `GPT Luna`) para garantizar velocidad y bajo costo en tareas de higiene, linter y commits. El escalamiento a Nivel 1 (`Claude Opus 5.5` o `GPT Astra`) está permitido **únicamente** ante bloqueos críticos o contradicciones estructurales insalvables.
+No existen restricciones documentales ni condicionamientos sobre qué modelos o agentes deben utilizarse en las distintas etapas de SDD:
+- Se permite elegir libremente cualquier agente o modelo para cualquier etapa del flujo SDD.
+- Es posible cambiar de agente o modelo entre etapas según resulte conveniente o necesario para la tarea.
+- La selección de modelos principales, alternativos o de respaldo queda a libre criterio operativo, sin restricciones documentales de escalamiento ni exclusividad.
 
 ## Antes y durante el cambio
 
 - Revisar `git status --short` y el diff. Preservar cambios previos y archivos sin seguimiento; no incorporarlos ni revertirlos accidentalmente.
 - Buscar con `rg` / `rg --files` y leer implementación, consumidores, tests y configuración afectados antes de editar.
 - Resolver decisiones rutinarias con el contexto disponible; consultar si falta una decisión funcional que cambie el resultado esperado.
-- Mantener `tasks.md` cuando sea el seguimiento de la tarea. Marcar completado solo lo implementado y verificado; registrar las comprobaciones pendientes del usuario.
+- Tríada obligatoria permanente y documentación viva: `spec.md`, `plan.md` y `tasks.md` son archivos permanentes en toda carpeta de spec; nunca deben eliminarse. Describen exclusivamente el comportamiento, diseño técnico y tareas vigentes del sistema, eliminando secciones de antecedentes históricos o contratos derogados cuyo historial preserva Git.
+- Verificación previa en Git: antes de eliminar cualquier sección histórica, requisito superado o archivo auxiliar de una spec, verificar obligatoriamente con `git log -- <archivo>` que dicho contenido esté comprometido y preservado en el historial de Git.
+- Mantenimiento y diferenciación de tareas: al reanudar tareas en curso de un mismo issue, preservar IDs y avance existente. Al iniciar un nuevo issue o ciclo de evolución sobre una SPEC existente, las tareas completadas del ciclo anterior quedan delegadas a Git; `tasks.md` se actualiza y simplifica para listar exclusivamente las tareas del alcance actual. Marcar completado solo lo implementado y verificado; registrar las comprobaciones pendientes del usuario.
+- Sincronización continua de 4 vías: todo cambio funcional debe mantener sincronizados en el mismo cambio los requisitos vigentes (`spec.md`), los contratos (`contracts/`), la implementación de código y las pruebas backend pertinentes (principios IV y V de la Constitución).
 - Mientras el sistema de seguimiento operativo no esté disponible, aplicar exclusivamente la contingencia local registrada en `docs/development/sdd-workflow.md` §12: persistir y releer `sdd-gates.md` de la Feature y distinguir los estados locales de los del seguimiento remoto. No extender la excepción a otros gates.
 - No editar salidas generadas; modificar sus fuentes. Las instrucciones de cada área identifican sus ubicaciones específicas. Revisar el diff después del build.
 - Cuando se identifique una deuda técnica real durante una implementación, revisión o refactorización, registrar su entrada en [deuda técnica](docs/TECHNICAL_DEBT.md) o actualizar la existente. No resolverla sin autorización ni declararla resuelta sin evidencia verificable.

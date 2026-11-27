@@ -1,0 +1,226 @@
+@use "@/styles/abstracts" as ds;
+
+.factorsChart {
+	padding: 1.25rem;
+	border-radius: 1rem;
+	background: linear-gradient(135deg, ds.$surface-panel-from 0%, ds.$surface-chart 100%);
+	border: 1px solid ds.$border-panel-tint;
+	box-shadow: 0 4px 20px -2px ds.$shadow-panel;
+	color: ds.$text-body-on-dark;
+
+	&__header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		margin-bottom: 12px;
+
+		h2 {
+			margin: 0;
+			font-size: 1.05rem;
+			font-weight: 700;
+			letter-spacing: 0.02em;
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__subtitle {
+		display: block;
+		font-size: 11px;
+		color: ds.$text-muted-on-dark;
+		margin-top: 2px;
+	}
+
+	&__legend {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 11px;
+		font-weight: 600;
+	}
+
+	&__legendItemSport {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		color: ds.$accent-gain;
+	}
+
+	&__legendDotSport {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background-color: ds.$accent-gain;
+	}
+
+	&__legendItemMarket {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		color: ds.$accent-highlight;
+	}
+
+	&__legendDotMarket {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background-color: ds.$accent-highlight;
+	}
+
+	&__ribbon {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 10px;
+		padding: 10px 14px;
+		margin-bottom: 14px;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel-soft;
+		border-radius: 10px;
+	}
+
+	&__ribbonItem {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+
+		span {
+			font-size: 10px;
+			font-weight: 600;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: ds.$text-muted-on-dark;
+		}
+
+		strong {
+			font-size: 14px;
+			font-weight: 800;
+			color: ds.$text-title-on-dark;
+		}
+	}
+
+	&__sportValue {
+		color: ds.$accent-gain !important;
+	}
+
+	&__marketValue {
+		color: ds.$accent-highlight !important;
+	}
+
+	&__demandValue {
+		color: #f59e0b !important;
+	}
+
+	&__svgWrapper {
+		width: 100%;
+		overflow-x: auto;
+		overflow-y: hidden;
+		border-radius: 10px;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel-soft;
+	}
+
+	&__svg {
+		display: block;
+		width: 100%;
+		min-width: 320px;
+		height: 200px;
+		background-color: transparent;
+		cursor: crosshair;
+		touch-action: none;
+	}
+
+	&__axisSymbol {
+		font-size: 12px;
+		font-weight: 700;
+		fill: ds.$text-muted-on-dark;
+	}
+
+	&__axisTitle {
+		font-size: 10px;
+		font-weight: 600;
+		fill: ds.$chart-axis-label;
+	}
+
+	&__gridLine {
+		stroke: ds.$chart-grid-line;
+	}
+
+	&__axisLine {
+		stroke: ds.$chart-axis-line;
+	}
+
+	&__axisLabel {
+		font-size: 10px;
+		fill: ds.$chart-axis-label;
+	}
+
+	&__crosshair {
+		stroke: ds.$border-highlight-subtle;
+		stroke-dasharray: 3 3;
+		stroke-width: 1px;
+		pointer-events: none;
+	}
+
+	&__activeHaloSport {
+		fill: ds.$accent-gain;
+		fill-opacity: 0.25;
+		pointer-events: none;
+	}
+
+	&__activeDotSport {
+		fill: #ffffff;
+		stroke: ds.$accent-gain;
+		stroke-width: 2.5px;
+		pointer-events: none;
+	}
+
+	&__activeHaloMarket {
+		fill: ds.$accent-highlight;
+		fill-opacity: 0.25;
+		pointer-events: none;
+	}
+
+	&__activeDotMarket {
+		fill: #ffffff;
+		stroke: ds.$accent-highlight;
+		stroke-width: 2.5px;
+		pointer-events: none;
+	}
+
+	&__tooltip {
+		pointer-events: none;
+	}
+
+	&__tooltipBg {
+		fill: ds.$surface-page-deep;
+		stroke: ds.$border-panel-mid;
+		stroke-width: 1px;
+		rx: 8px;
+	}
+
+	&__tooltipDate {
+		fill: ds.$text-muted-on-dark;
+		font-size: 10px;
+		font-weight: 500;
+	}
+
+	&__tooltipSport {
+		fill: ds.$accent-gain;
+		font-size: 10px;
+		font-weight: 700;
+	}
+
+	&__tooltipMarket {
+		fill: ds.$accent-highlight;
+		font-size: 10px;
+		font-weight: 700;
+	}
+
+	&__tooltipDemand {
+		fill: #f59e0b;
+		font-size: 10px;
+		font-weight: 700;
+	}
+}
+

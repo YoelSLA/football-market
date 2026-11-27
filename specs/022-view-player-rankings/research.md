@@ -1,76 +1,40 @@
-# Research & Technical Decisions: Visualizar ranking de jugadores (SPEC-022)
+# Investigación y decisiones técnicas: Visualizar ranking de jugadores
 
 **Feature**: `022-view-player-rankings`
-**Spec**: [`spec.md`](spec.md) · **Plan**: [`plan.md`](plan.md)
+**Fuentes**: [`spec.md`](spec.md), [`plan.md`](plan.md), contrato score de [SPEC-018](../018-consultar-rankings-de-jugadores/contracts/score-ranking-http.md) y contrato quote de [SPEC-016](../016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md).
 
-Este documento registra las decisiones técnicas, su justificación y las alternativas evaluadas para la implementación de la vista de ranking de jugadores en el frontend.
+## 1. Transporte y estado remoto
 
----
+- **Decisión**: Reutilizar Axios y TanStack Query existentes a través del patrón Page → Hook → Service/Mapper → API. Consultar `GET /api/rankings/score` y `GET /api/rankings/quote`, enviando `page`, `size` y los filtros provistos por los contratos.
+- **Rationale**: Mantiene el flujo y la infraestructura existentes y limita las respuestas a la página requerida. Query keys deben distinguir modo, página, tamaño y filtros para no mostrar resultados de otra consulta.
+- **Alternativas**: Descargar el ranking entero y paginar/filtrar en el navegador (contradice los contratos y desperdicia datos); crear infraestructura HTTP o caché propia (innecesario).
 
-## 1. Consumo de endpoints y gestión de estado remoto
+## 2. Podio y tabla
 
-- **Decisión**: Consumir directamente los dos endpoints REST de ranking provistos por el backend mediante Axios en `players.service.ts`:
-  1. `GET /api/players/ranking/score`: Ranking por rendimiento de la estrategia activa.
-  2. `GET /api/players/ranking`: Ranking por cotización vigente de mercado.
-  El estado remoto se administra con TanStack Query a través de hooks dedicados (`usePlayerScoreRankingQuery` y `usePlayerQuoteRankingQuery`).
-- **Justificación**: Sigue la arquitectura canónica del frontend (`Page → Hook → Service/Mapper → API`). TanStack Query proporciona manejo nativo de estados de carga (`isPending`), refresco en segundo plano, deduplicación de solicitudes y caché coherente (con `staleTime` global de 30 s).
-- **Alternativas consideradas**:
-  - *Estado local con `useState` + `useEffect`*: Descartado; generaría código repetitivo, riesgo de condiciones de carrera y carece de caché global o reintentos automáticos.
-  - *Unificar ambos contratos en un único endpoint en backend*: Descartado; violaría el principio de mínimo alcance y modificaría contratos cerrados de SPEC-018.
+- **Decisión**: Consultar el mismo endpoint del modo activo dos veces con propósitos distintos: tabla con sus criterios actuales, y podio global sin filtros con `page=0&size=3`. Consumir posiciones del servidor sin reordenar ni renumerar.
+- **Rationale**: Es la forma definida en SPEC-018 y SPEC-016; ambas solicitudes no garantizan una instantánea compartida.
+- **Alternativas**: Derivar el podio de la página/tabla (no garantiza los líderes globales); añadir una ruta de podio (no está en contrato).
 
----
+## 3. Identidad y opciones de filtros
 
-## 2. Hidratación y enriquecimiento de datos del jugador
+- **Decisión**: Renderizar la identidad `player` incluida en cada fila; poblar selectores desde `filterOptions` de la respuesta. Tratar campos opcionales conforme a nulabilidad contractual, con fallbacks visuales sin fabricar datos ni consultar el catálogo para enriquecer filas.
+- **Rationale**: Los contratos proveen identidad por entrada y opciones globales elegibles; usar el catálogo agregaría una consulta y una dependencia no requeridas.
+- **Alternativas**: Cargar `useAllPlayersQuery()` o consultar cada jugador (acoplamiento/solicitudes adicionales); derivar opciones de la página actual (incompleto y dependiente de filtros).
 
-- **Decisión**: Reutilizar el hook existente `useAllPlayersQuery()` de `@/features/players` para obtener el catálogo completo de jugadores y construir un mapa indexado por `playerId` (`Map<number, Player>`). Cada entrada del ranking (`playerId`, `position`, `score`/`price`) se enriquece en memoria con:
-  - Nombre completo del jugador.
-  - Imagen/avatar o fallback genérico.
-  - Nombre y escudo del equipo.
-  - Nombre y bandera de la liga.
-  - Demarcación táctica (`position` deportiva: DEL, MED, DEF, POR).
-- **Justificación**: El contrato de backend de ranking solo devuelve el identificador (`playerId`) para maximizar la velocidad y respetar el principio de responsabilidad única. Como la sección de Jugadores ya descarga y cachea el catálogo completo en TanStack Query, la hidratación en memoria es instantánea ($O(1)$) y no genera solicitudes de red adicionales.
-- **Alternativas consideradas**:
-  - *Consultar `/players/:id` para cada jugador visible*: Descartado por ser ineficiente (problema N+1 de red en el navegador).
-  - *Modificar el backend para incluir campos visuales en el ranking*: Descartado por el principio de coherencia de contratos y alcance acotado.
+## 4. Estado de consulta y navegación
 
----
+- **Decisión**: Mantener filtros y paginación en el alcance más reducido de la Page o su Hook autorizado. Cambios de filtro/tamaño/modo llevan a página cero; cambios de página retienen criterios. Usar cancelación/identidad de query existente para que respuestas de criterios anteriores no sustituyan a las actuales. Exponer carga, error reintentable, vacío global y vacío filtrado.
+- **Rationale**: Cumple los escenarios de SPEC-022 y evita estado remoto duplicado.
+- **Alternativas**: Estado global o lógica manual de peticiones en componentes (innecesarios frente a la infraestructura disponible).
 
-## 3. Arquitectura del Podio Top 3 y Tabla de Clasificación
+## 5. Presentación y recursos
 
-- **Decisión**: Implementar la presentación visual en dos niveles complementarios, tal como establecen los mockups normativos (`docs/design/mockups/players/raking/`):
-  1. **Sección Podio (Top 3)**: Presenta de forma destacada a los 3 primeros clasificados con laureles (#1 central y aumentado con oro; #2 izquierda en plata; #3 derecha en bronce). Muestra fotografía ampliada, marca de agua con escudo del club, badge de posición, club, liga y valor. El podio es **fijo** en la modalidad activa y no se recalcula por filtros de tabla.
-  2. **Tabla Detallada con Paginación**: Muestra todas las posiciones consecutivas (1 a N) con paginación local de 10 elementos por página, con columnas completas y estados visuales claros.
-- **Justificación**: Proporciona una experiencia de usuario atractiva y gamificada (reconocimiento visual instantáneo de los líderes del mercado), complementada con la precisión de una tabla analítica exhaustiva.
-- **Alternativas consideradas**:
-  - *Solo tabla de posiciones*: Descartado por no cumplir la referencia visual aprobada en los mockups.
-  - *Solo tarjetas de jugadores*: Descartado; la inspección y comparación de cientos de clasificaciones se vuelve ineficiente sin formato tabular.
+- **Decisión**: Reutilizar recursos y componentes públicos compartidos existentes, iconos desde su API autorizada, SCSS Modules y tokens del tema. No añadir dependencias. Los detalles de composición visual respetan mockups y normas de arquitectura; la planificación no crea componentes sin responsabilidad definida.
+- **Rationale**: Reduce alcance y mantiene consistencia visual/accesible.
+- **Alternativas**: Biblioteca UI/tabla, iconos importados directamente desde el paquete, copia de assets compartidos (no necesarios y contrarios a convenciones).
 
----
+## 6. Verificación
 
-## 4. Filtrado y búsqueda reactiva en cliente
-
-- **Decisión**: Implementar la barra de herramientas de filtrado (búsqueda por nombre de jugador, selector desplegable de ligas y selector de posiciones) como filtrado reactivo en el cliente sobre los datos cacheados en memoria.
-- **Justificación**: El backend no soporta ni admite query parameters en los endpoints de ranking (los ignora según el contrato). El filtrado en cliente es instantáneo (sin latencia de red), conserva intacta la numeración original de la posición (#) de cada jugador y permite al usuario ubicar rápidamente jugadores específicos dentro de la clasificación oficial.
-- **Alternativas consideradas**:
-  - *No incluir filtros*: Descartado; los mockups oficiales incluyen explícitamente la barra de filtros para usabilidad en listas de más de 2.000 jugadores.
-  - *Reasignar posiciones del 1 al M en la lista filtrada*: Descartado por RF-06 y CA-05; la interfaz no debe recalcular posiciones ni simular rankings alternativos.
-
----
-
-## 5. Paginación y control de rendimiento
-
-- **Decisión**: Paginación en cliente sobre el conjunto filtrado, mostrando por defecto 10 jugadores por página, con selector para alternar a 20 o 50 filas, y controles de avance, retroceso y acceso a páginas extremas.
-- **Justificación**: El conjunto de jugadores clasificados puede superar los 2.000 registros. Renderizar 2.000 nodos del DOM simultáneamente degradaría el rendimiento en dispositivos móviles. La paginación en cliente mantiene el DOM ligero (< 20 filas a la vez) con cambios de página instantáneos.
-- **Alternativas consideradas**:
-  - *Scroll infinito*: Descartado; dificulta acceder al pie de página y no coincide con el diseño de paginación explícito de los mockups.
-
----
-
-## 6. Estilos, Tokens y Componentes
-
-- **Decisión**:
-  - Estructuración mediante **SCSS Modules** (`*.module.scss`) aislados por componente.
-  - Uso exclusivo de variables semánticas de color y espaciado de `styles/abstracts/themes/_default.scss` y mixins tipográficos/responsivos.
-  - Reutilización de componentes compartidos: `Navbar`, `NavIcon`, `LoadingSpinner`, `EmptyState`, badges de posición y botones existentes.
-  - Iconos SVG de `lucide-react` acordes al diseño (trofeo, monedas, gráfico de rendimiento, laureles, lupa, banderas/escudos).
-- **Justificación**: Respeta estrictamente las directrices de `frontend/conventions.md` y `docs/frontend/architecture.md`. No se agregan librerías de estilos ni paquetes externos.
+- **Decisión**: No crear ni ejecutar tests frontend. La exención temporal sigue vigente. `quickstart.md` sirve de guía manual. Si en una fase autorizada se modifica código frontend, solo aplicar los controles permitidos por `frontend/AGENTS.md` y la Constitución; no ejecutar tests indirectamente.
+- **Rationale**: Respeta las normas del repositorio.
+- **Alternativas**: Añadir infraestructura de tests (expresamente prohibido por las instrucciones vigentes).

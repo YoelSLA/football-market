@@ -47,6 +47,25 @@ class RepositoryQuoteSourceTest {
   class CurrentQuoteOfPlayer {
 
     @Test
+    @DisplayName("El lote y la consulta individual preservan el precio arrastrado y su instante")
+    void batchPreservesDailyCarriedQuote() {
+      // Arrange
+      Player player = preparePlayer();
+      quoteData.persistInitial(player, MARKET_DATE, INITIAL_INSTANT);
+      quoteData.persistCarriedForward(player, QUOTE_DATE, 100L, RECOMPUTED_INSTANT);
+      // Act
+      java.util.Map<Long, CurrentQuote> batch =
+          source.currentQuotes(java.util.Set.of(player.getId()));
+      CurrentQuote individual = source.currentQuote(player.getId()).orElseThrow();
+      // Assert
+      assertThat(batch).containsOnlyKeys(player.getId());
+      assertThat(batch.get(player.getId())).isEqualTo(individual);
+      assertThat(individual.price()).isEqualTo(100);
+      assertThat(individual.calculatedAt())
+          .isEqualTo(RECOMPUTED_INSTANT.atOffset(java.time.ZoneOffset.UTC));
+    }
+
+    @Test
     @DisplayName("Devuelve la última fila persistida del jugador")
     void devuelveLaUltimaFilaDelJugador() {
       // Arrange

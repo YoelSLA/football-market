@@ -1,0 +1,250 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	flex-direction: column;
+	padding: ds.$space-md;
+	background: linear-gradient(145deg, ds.$surface-panel-from 0%, ds.$surface-panel-to 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ds.$space-md;
+	flex-wrap: wrap;
+	gap: ds.$space-sm;
+}
+
+.titleGroup {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.headerIconTile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	border-radius: 9px;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$state-gain;
+	flex-shrink: 0;
+}
+
+.headerIcon {
+	width: 18px;
+	height: 18px;
+}
+
+.headerTitles {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+}
+
+.subtitle {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+}
+
+.tabGroup {
+	display: inline-flex;
+	padding: 2px;
+	background: ds.$surface-data-control;
+	border: 1px solid ds.$border-subtle;
+	border-radius: ds.$space-xs;
+}
+
+.tabButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 5px 12px;
+	border: none;
+	background: transparent;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+
+	&:hover {
+		color: ds.$text-body-on-dark;
+	}
+}
+
+.tabIcon {
+	flex-shrink: 0;
+}
+
+.tabGainersActive {
+	background: ds.$surface-control-active;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.tabLosersActive {
+	background: ds.$surface-loss-subtle;
+	color: ds.$state-loss;
+	border: 1px solid ds.$border-loss-emphasis;
+}
+
+.tableWrapper {
+	width: 100%;
+	overflow-x: auto;
+}
+
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8125rem;
+
+	th {
+		@include ds.data-table-header;
+		text-align: left;
+		padding: ds.$space-xs ds.$space-sm;
+		font-size: 0.7rem;
+		letter-spacing: 0.05em;
+		color: ds.$text-auxiliary-on-dark;
+		border-bottom: 1px solid ds.$border-panel;
+	}
+
+	td {
+		@include ds.data-table-cell;
+		padding: ds.$space-xs ds.$space-sm;
+		border-bottom: 1px solid ds.$surface-data-control-soft;
+	}
+}
+
+.row {
+	@include ds.data-table-row;
+
+	&:hover {
+		background-color: ds.$surface-data-control;
+	}
+}
+
+.thRank,
+.tdRank {
+	width: 32px;
+	color: ds.$text-muted-on-dark;
+	font-weight: 600;
+	text-align: center;
+}
+
+.thPrice,
+.tdPrice {
+	text-align: right;
+	font-weight: 600;
+	color: ds.$text-primary-on-dark;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.thDeltaPct,
+.tdDeltaPct {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.thDeltaCredits,
+.tdDeltaCredits {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.playerLink {
+	display: flex;
+	align-items: center;
+	gap: ds.$space-sm;
+	text-decoration: none;
+	color: inherit;
+
+	&:hover .playerName {
+		color: ds.$accent-gain;
+	}
+}
+
+.portrait {
+	width: 32px;
+	height: 32px;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+
+.playerInfo {
+	display: flex;
+	flex-direction: column;
+}
+
+.playerName {
+	font-weight: 600;
+	color: ds.$text-primary-on-dark;
+	transition: color 0.15s ease;
+}
+
+.playerMeta {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 0.7rem;
+	color: ds.$text-muted-on-dark;
+}
+
+.teamBadge {
+	width: 12px;
+	height: 12px;
+	object-fit: contain;
+}
+
+.deltaBadge {
+	display: inline-flex;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.gainBadge {
+	background-color: ds.$surface-gain-soft;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.lossBadge {
+	background-color: ds.$surface-loss-subtle;
+	color: ds.$state-loss;
+	border: 1px solid ds.$border-loss-emphasis;
+}
+
+.gainText {
+	color: ds.$state-gain;
+}
+
+.lossText {
+	color: ds.$state-loss;
+}
+
+.emptyState {
+	text-align: center;
+	padding: ds.$space-xl 0;
+	color: ds.$text-muted-on-dark;
+	font-size: 0.875rem;
+}

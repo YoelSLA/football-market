@@ -10,8 +10,9 @@ import styles from "./AppLayout.module.scss";
 export default function AppLayout() {
 	const revision = useAuthStore((state) => state.revision);
 	const location = useLocation();
+	const normalizedPath = location.pathname.replace(/\/+$/, "");
 	const containsPageScroll =
-		location.pathname.replace(/\/+$/, "") === "/market/buy";
+		normalizedPath === "/market/buy" || normalizedPath === "/market/p2p";
 
 	const logout = useLogout();
 

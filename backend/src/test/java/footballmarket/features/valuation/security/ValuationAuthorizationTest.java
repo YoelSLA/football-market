@@ -5,10 +5,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.application.exceptions.CurrentUserNotFoundException;
 import footballmarket.features.valuation.application.ValuationEvaluationService;
 import footballmarket.features.valuation.presentation.ValuationController;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -36,7 +35,7 @@ class ValuationAuthorizationTest {
   @Autowired private FilterChainProxy security;
   @Autowired private SecretKey key;
   @MockitoBean private ValuationEvaluationService service;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
 
   @Nested
   @DisplayName("Protección Bearer de valoración")
@@ -61,8 +60,7 @@ class ValuationAuthorizationTest {
     @Test
     @DisplayName("Rechaza un JWT cuyo usuario ya no está persistido")
     void rejectsMissingPersistedUser() throws Exception {
-      when(authenticationService.getCurrentUser("missing@example.com"))
-          .thenThrow(new CurrentUserNotFoundException());
+      when(identityValidator.exists("missing@example.com")).thenReturn(false);
       String token =
           "Bearer "
               + Jwts.builder()

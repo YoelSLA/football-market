@@ -1,0 +1,31 @@
+meta {
+  name: Rechazar fecha con formato inválido (400)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/users/me/transactions?executedFrom=not-a-date
+  body: none
+  auth: bearer
+}
+
+params:query {
+  executedFrom: not-a-date
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

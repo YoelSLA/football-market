@@ -1,0 +1,217 @@
+@use "@/styles/abstracts" as ds;
+
+.holdingBadge {
+	display: inline-flex;
+	align-items: center;
+	font-size: 11px;
+	font-weight: 700;
+	border-radius: 9999px;
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+.badgeAvailable {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	background: rgba(0, 223, 160, 0.12);
+	color: ds.$accent-gain;
+	border: 1px solid rgba(0, 223, 160, 0.35);
+}
+
+.badgeMixed {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	background: rgba(13, 187, 250, 0.12);
+	color: ds.$accent-highlight;
+	border: 1px solid rgba(13, 187, 250, 0.35);
+}
+
+.badgeReserved {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 9999px;
+	background: rgba(179, 99, 255, 0.15);
+	color: ds.$accent-investment;
+	border: 1px solid rgba(179, 99, 255, 0.45);
+}
+
+.priceBlock {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	flex-shrink: 0;
+}
+
+.priceLabel {
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: ds.$text-muted-on-dark;
+}
+
+.priceValue {
+	font-size: 1.25rem;
+	font-weight: 850;
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+	white-space: nowrap;
+	color: ds.$text-value-on-dark;
+}
+
+.priceSubtext {
+	font-size: 0.64rem;
+	white-space: nowrap;
+	color: ds.$text-muted-on-dark;
+}
+
+.holdingBar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	padding: 5px 9px;
+	border-radius: 0.5rem;
+	font-size: 0.72rem;
+	font-weight: 650;
+	background: rgba(3, 23, 44, 0.42);
+	border: 1px solid rgba(43, 83, 120, 0.32);
+	color: ds.$text-body-on-dark;
+}
+
+.holdingItem {
+	white-space: nowrap;
+
+	&_available {
+		color: ds.$accent-gain;
+		font-weight: 700;
+	}
+
+	&_reserved {
+		color: ds.$accent-highlight;
+		font-weight: 700;
+	}
+
+	&_zero {
+		color: ds.$text-muted-on-dark;
+	}
+
+	&_muted {
+		color: ds.$text-muted-on-dark;
+	}
+}
+
+.holdingSeparator {
+	color: ds.$border-panel;
+	font-weight: 700;
+}
+
+.actionsSingle {
+	display: flex;
+	width: 100%;
+}
+
+.actionsRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+}
+
+.sellButton {
+	@include ds.market-action;
+
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 38px;
+	padding: 0 12px;
+	font-size: 0.8rem;
+	font-weight: 750;
+	border-radius: 0.5rem;
+
+	svg {
+		width: 14px;
+		height: 14px;
+		flex-shrink: 0;
+	}
+}
+
+.viewOrdersButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	width: 100%;
+	height: 38px;
+	padding: 0 12px;
+	font-size: 0.8rem;
+	font-weight: 750;
+	background: rgba(179, 99, 255, 0.15);
+	border: 1px solid rgba(179, 99, 255, 0.5);
+	border-radius: 0.55rem;
+	color: ds.$accent-investment;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	svg {
+		width: 14px;
+		height: 14px;
+		flex-shrink: 0;
+	}
+
+	&:hover {
+		background: rgba(179, 99, 255, 0.25);
+		border-color: ds.$accent-investment;
+	}
+
+	&:focus-visible {
+		outline: 2px solid ds.$accent-investment;
+		outline-offset: 2px;
+	}
+}
+
+.viewOrdersLink {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	height: 34px;
+	padding: 0 10px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	white-space: nowrap;
+	border: 1px solid ds.$border-panel;
+	border-radius: 0.55rem;
+	background-color: ds.$surface-card-subtle;
+	color: ds.$accent-highlight;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
+
+	svg {
+		width: 12px;
+		height: 12px;
+		flex-shrink: 0;
+	}
+
+	&:hover {
+		background-color: ds.$surface-panel-from;
+		border-color: ds.$accent-highlight;
+	}
+}
+
+.actionArrow {
+	font-size: 0.85rem;
+	font-weight: 800;
+	transition: transform 0.2s ease;
+}

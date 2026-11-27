@@ -1,0 +1,41 @@
+@use "@/styles/abstracts" as ds;
+
+.playersCatalog {
+	&__grid {
+		@include ds.catalog-grid;
+	}
+
+	&__message {
+		// 3. 🧩 Layout
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+
+		// 4. 📦 Box Model
+		min-height: 80px;
+		padding: 12px;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-subtle;
+		border-radius: 8px;
+		button {
+			// 4. 📦 Box Model
+			padding: 7px 12px;
+
+			// 6. 🎨 Visual
+			background-color: ds.$surface-nav-active;
+			color: ds.$accent-nav;
+			border: 1px solid ds.$accent-nav;
+			border-radius: 5px;
+
+			// 7. ⚙️ Behavior
+			cursor: pointer;
+			&:focus-visible {
+				// 6. 🎨 Visual
+				outline: 2px solid ds.$focus-ring-dark;
+				outline-offset: 3px;
+			}
+		}
+	}
+}

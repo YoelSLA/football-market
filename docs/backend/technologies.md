@@ -14,6 +14,8 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Spring Dependency Management Plugin | 1.1.7 | Aplica la gestión de versiones de dependencias provista por Spring Boot. |
 | Spring Boot | 4.1.1 | Arranque, configuración y plataforma de versiones de la aplicación backend. |
 | Spring Web MVC y `RestClient` | Gestionada por Spring Boot 4.1.1 | Endpoints HTTP, serialización web y clientes HTTP para Football-Data.org, TheSportsDB, identidad WhoScored y pruebas E2E. WhoScored usa cliente JDK dedicado sin redirecciones, timeouts y parsing JSON explícito independiente del MIME. |
+| Spring Cache | Gestionada por Spring Boot 4.1.1 | Abstracción de caché para lecturas de alta frecuencia del ranking, catálogo de jugadores y mercados; proveedor local Caffeine. |
+| Caffeine | Gestionada por Spring Boot 4.1.1 | Cachés locales en memoria con expiración y capacidad diferenciadas para las consultas de SPEC-034. |
 | Spring Data JPA | Gestionada por Spring Boot 4.1.1 | Repositories del catálogo de jugadores y usuarios, paginación y acceso a persistencia. Las conexiones utilizan el pool HikariCP, también gestionado por Spring Boot, con UTC configurado en desarrollo y testing. |
 | Hibernate ORM | Gestionada por Spring Boot 4.1.1 | Implementación JPA y validación del esquema de entidades contra la base migrada; soporte JDBC JSON para estructuras JSONB de los modelos persistidos. La sincronización WhoScored conserva solo referencias de catálogo: candidatos y resultados son transitorios, sin auditoría propia persistida. |
 | Spring Security y OAuth2 Resource Server | Gestionada por Spring Boot 4.1.1 | Cadena de seguridad, autenticación Bearer JWT, autorización de endpoints y conversión del principal persistido. |
@@ -21,9 +23,10 @@ Las versiones efectivas se obtienen de `backend/build.gradle.kts`, `backend/grad
 | Jakarta Validation | Gestionada por Spring Boot 4.1.1 | Validación estructural de los DTO de entrada HTTP. |
 | PostgreSQL | 18 en tests; no fijada para desarrollo y producción | Base de datos relacional. Testcontainers levanta la imagen `postgres:18`; el proyecto no fija actualmente la versión del servidor utilizada fuera de tests. |
 | pgJDBC | Gestionada por Spring Boot 4.1.1 | Driver JDBC y dependencia de compilación para clasificar errores de PostgreSQL por SQLSTATE, tabla y constraint estructurados, sin interpretar mensajes. |
-| Flyway | Gestionada por Spring Boot 4.1.1 | Aplicación de las migraciones SQL versionadas de usuarios y jugadores. |
+| Flyway | Gestionada por Spring Boot 4.1.1 | Autoridad del esquema PostgreSQL. Historial atómico con timestamps UTC, validación al migrar, orden estricto e inmutabilidad de las migraciones integradas en `dev`; Hibernate valida el resultado. |
 | SpringDoc OpenAPI | 2.8.13 | Documentación del contrato HTTP: generación de la especificación OpenAPI y UI a partir de los endpoints y sus anotaciones. |
-| Spring Boot Actuator | Gestionada por Spring Boot 4.1.1 | Monitoreo del backend. La exposición por HTTP es restrictiva y explícita, nunca el comodín `*`. Ver §Monitoreo con Actuator. |
+| Spring Boot Actuator | Gestionada por Spring Boot 4.1.1 | Health, info y métricas del backend mediante HTTP; exposición explícita y restrictiva, nunca el comodín `*`. |
+| Micrometer Prometheus Registry | Gestionada por Spring Boot 4.1.1 | Exporta las métricas estándar de CPU, JVM y solicitudes HTTP en formato Prometheus mediante Actuator. |
 | Lombok | Gestionada por Spring Boot 4.1.1 | Generación en compilación de constructores, getters y constructores sin argumentos usados por componentes y Models. |
 | springboot4-dotenv | 5.1.0 | Carga de variables desde archivos `.env` exclusivamente durante desarrollo. |
 | Spring Boot Test, JUnit Jupiter, Mockito, AssertJ y MockMvc | Gestionadas por Spring Boot 4.1.1 | Pruebas de dominio, Controller, seguridad, integración y E2E; tags `unit`, `lightweight`, `integration` y `e2e` según dependencias reales, sin filtrar la tarea completa `test`. |
@@ -45,62 +48,43 @@ las rutas `/api/**`, y su configuración se resuelve por entorno.
 
 | Endpoint | Habilitado | Expuesto por HTTP | Acceso |
 | --- | --- | --- | --- |
-| `/actuator` (enlaces) | Sí | Sí | Sin token |
-| `/actuator/health` | Sí | Sí | Sin token. Devuelve únicamente `{"status":"UP"}` |
-| `/actuator/info` | Sí | Sí | Sin token (temporal, ver la deuda técnica) |
-| `/actuator/metrics` y `/actuator/metrics/{name}` | Sí | **Solo con habilitación explícita** | Sin token cuando está expuesto |
-| `env`, `heapdump`, `threaddump`, `configprops`, `beans`, `shutdown` | Habilitados por Actuator | **Nunca** | — |
+| `/actuator/prometheus` | Sí | Sí | Público; ignora cualquier JWT |
+| `/actuator/health` | Sí | Sí | Sin token; devuelve únicamente `{"status":"UP"}` |
+| `/actuator/info` | Sí | Sí | Sin token; publica solo nombre y descripción estáticos |
+| Raíz `/actuator`, subendpoints y demás endpoints | Según Actuator | **Nunca** | — |
 
-La exposición se declara de forma explícita mediante `management.endpoints.web.exposure.include` y
-nunca con el comodín `*`. La lista completa se resuelve por entorno con un valor por defecto que
-no incluye `metrics`:
+La exposición se declara exactamente mediante `management.endpoints.web.exposure.include` y nunca
+con el comodín `*` ni con una variable que amplíe la lista:
 
 ```yaml
 management:
   endpoints:
     web:
       exposure:
-        include: "${MANAGEMENT_EXPOSED_ENDPOINTS:health,info}"
+        include: prometheus,health,info
 ```
-
-### Habilitación de las métricas
-
-Las métricas **no** se ligan al perfil `dev`. Ese perfil es el valor por defecto de
-`spring.profiles.active` en este repositorio, por lo que asociarle la exposición haría que las
-métricas quedaran disponibles en cualquier entorno que no fije el perfil. La habilitación es una
-variable de entorno independiente, ausente por defecto:
-
-```bash
-# Habilitar, solo para diagnóstico local
-MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics ./gradlew bootRun
-
-# Restablecer: basta con unset de la variable
-```
-
-Sin esa variable, `metrics` no se expone en ningún perfil, incluido producción. Solo `health`,
-`info` y `metrics` son endpoints de monitoreo previstos; exponer cualquier otro es una regresión
-de seguridad.
-
-La lista se resuelve con un placeholder de Spring Boot y no con un documento de configuración
-activado por propiedad: `spring.config.activate.on-property` **no existe en Spring Boot 4.1.1**
-(las únicas activaciones admitidas son `on-profile` y `on-cloud-platform`). Además de romper el
-arranque por sintaxis YAML inválida, un documento con una activación no reconocida se incluiría
-siempre, lo que expondría las métricas en todos los entornos.
 
 ### Consideraciones de seguridad
 
-- `management.endpoint.health.show-details` es `never` en todos los perfiles: el health check no
+- `management.endpoint.health.show-details` y `show-components` son `never`: el health check no
   revela componentes, rutas, versiones ni datos de conexión. Es la razón por la que puede quedar
   accesible sin token.
-- `SecurityConfig` lista de forma explícita las rutas de monitoreo accesibles, en lugar de abrir
-  `/actuator/**`. Exponer por error un endpoint sensible no lo volvería accesible.
-- `info` no expone datos porque no hay propiedades `management.info.*` declaradas.
+- `SecurityConfig` permite Prometheus sin autenticación e ignora cualquier JWT enviado a esa ruta;
+  deja públicos health e info y deniega la raíz, los subendpoints y cualquier otro endpoint de
+  Actuator.
+- `info` usa únicamente `info.app.name` y `info.app.description` estáticos mediante el contributor
+  `management.info.env`; ambos valores son públicos y no se agregan credenciales ni otros valores
+  del entorno.
 - Los endpoints de Actuator comparten el puerto de la API. `management.server.port` no está
   configurado.
 
-### PENDIENTE — Seguridad de Actuator
+## Demostración local de monitoreo (SPEC-033)
 
-Los endpoints de monitoreo están actualmente accesibles sin autenticación para facilitar el
-desarrollo local. **Esa condición es temporal y no debe llegar a un despliegue público.** El
-detalle, el riesgo, las alternativas a evaluar y el criterio de cierre se registran en
-[deuda técnica](TECHNICAL_DEBT.md) como TD-001, que es la fuente única de ese seguimiento.
+| Tecnología | Versión | Uso en el proyecto |
+| ---------- | ------- | ------------------ |
+| Docker Compose | v2 | Reproducir localmente, como proyecto independiente en `monitoring/compose.yml`, Prometheus y Grafana conectados al endpoint de métricas existente. |
+| Prometheus | `prom/prometheus:v3.16.0` | Recolectar y almacenar localmente las métricas expuestas por Actuator; permanece en la red privada de Compose. |
+| Grafana OSS | `grafana/grafana:13.3.2` | Consultar las métricas mediante el dashboard aprovisionado; su interfaz de demostración requiere autenticación y se publica solo en `127.0.0.1:3000`. |
+
+Estas imágenes y esta herramienta corresponden a la demostración local de SPEC-033; no son
+dependencias de ejecución de la aplicación backend.

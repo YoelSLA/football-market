@@ -1,0 +1,261 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	height: 72px;
+	box-sizing: border-box;
+	padding: 8px 16px;
+	border-radius: 10px;
+	min-width: 0;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+	&:hover {
+		transform: translateY(-1px);
+	}
+}
+
+.tileWrapper {
+	display: grid;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	flex-shrink: 0;
+	border-radius: 10px;
+}
+
+.icon {
+	width: 24px;
+	height: 24px;
+	stroke-width: 2.2;
+}
+
+.contentCol {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 100%;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	padding: 1px 0;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+	line-height: 1.1;
+}
+
+.title {
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.1;
+}
+
+.deltaBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px 5px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.2;
+	flex-shrink: 0;
+}
+
+.trendUp {
+	background-color: rgba(52, 211, 153, 0.15);
+	color: #34d399;
+}
+
+.trendDown {
+	background-color: rgba(244, 63, 94, 0.15);
+	color: #f43f5e;
+}
+
+.trendNeutral {
+	background-color: rgba(148, 163, 184, 0.15);
+	color: #94a3b8;
+}
+
+.valueRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.value {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 5px;
+	font-size: 18px;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.2;
+}
+
+.sparklineWrapper {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.subtitle {
+	display: block;
+	font-size: 11px;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.1;
+}
+
+// 🎨 Color variations matching header cards
+.variant_blue {
+	background: linear-gradient(135deg, rgba(14, 116, 244, 0.18) 0%, rgba(6, 182, 212, 0.07) 100%);
+	border: 1px solid rgba(56, 189, 248, 0.35);
+
+	.tileWrapper {
+		background-color: rgba(14, 165, 233, 0.18);
+		color: #38bdf8;
+	}
+
+	.title {
+		color: rgba(186, 230, 253, 0.85);
+	}
+
+	.value {
+		color: #e0f2fe;
+	}
+
+	.subtitle {
+		color: rgba(125, 211, 252, 0.85);
+	}
+
+	&:hover {
+		border-color: rgba(56, 189, 248, 0.55);
+		box-shadow: 0 4px 16px rgba(14, 165, 233, 0.18);
+	}
+}
+
+.variant_violet {
+	background: linear-gradient(135deg, rgba(124, 58, 237, 0.18) 0%, rgba(168, 85, 247, 0.07) 100%);
+	border: 1px solid rgba(167, 139, 250, 0.35);
+
+	.tileWrapper {
+		background-color: rgba(139, 92, 246, 0.18);
+		color: #a78bfa;
+	}
+
+	.title {
+		color: rgba(221, 214, 254, 0.85);
+	}
+
+	.value {
+		color: #ede9fe;
+	}
+
+	.subtitle {
+		color: rgba(196, 181, 253, 0.85);
+	}
+
+	&:hover {
+		border-color: rgba(167, 139, 250, 0.55);
+		box-shadow: 0 4px 16px rgba(139, 92, 246, 0.18);
+	}
+}
+
+.variant_indigo {
+	background: linear-gradient(135deg, rgba(79, 70, 229, 0.18) 0%, rgba(99, 102, 241, 0.07) 100%);
+	border: 1px solid rgba(129, 140, 248, 0.35);
+
+	.tileWrapper {
+		background-color: rgba(99, 102, 241, 0.18);
+		color: #818cf8;
+	}
+
+	.title {
+		color: rgba(199, 210, 254, 0.85);
+	}
+
+	.value {
+		color: #e0e7ff;
+	}
+
+	.subtitle {
+		color: rgba(165, 180, 252, 0.85);
+	}
+
+	&:hover {
+		border-color: rgba(129, 140, 248, 0.55);
+		box-shadow: 0 4px 16px rgba(99, 102, 241, 0.18);
+	}
+}
+
+.variant_rose {
+	background: linear-gradient(135deg, rgba(219, 39, 119, 0.18) 0%, rgba(244, 63, 94, 0.07) 100%);
+	border: 1px solid rgba(244, 114, 182, 0.35);
+
+	.tileWrapper {
+		background-color: rgba(244, 63, 94, 0.18);
+		color: #f472b6;
+	}
+
+	.title {
+		color: rgba(251, 207, 232, 0.85);
+	}
+
+	.value {
+		color: #fce7f3;
+	}
+
+	.subtitle {
+		color: rgba(249, 168, 212, 0.85);
+	}
+
+	&:hover {
+		border-color: rgba(244, 114, 182, 0.55);
+		box-shadow: 0 4px 16px rgba(244, 63, 94, 0.18);
+	}
+}
+
+.variant_emerald {
+	background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(5, 150, 105, 0.07) 100%);
+	border: 1px solid rgba(52, 211, 153, 0.35);
+
+	.tileWrapper {
+		background-color: rgba(16, 185, 129, 0.18);
+		color: #34d399;
+	}
+
+	.title {
+		color: rgba(167, 243, 208, 0.85);
+	}
+
+	.value {
+		color: #ecfdf5;
+	}
+
+	.subtitle {
+		color: rgba(110, 231, 183, 0.85);
+	}
+
+	&:hover {
+		border-color: rgba(52, 211, 153, 0.55);
+		box-shadow: 0 4px 16px rgba(16, 185, 129, 0.18);
+	}
+}

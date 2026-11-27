@@ -1,4 +1,4 @@
-import genericPlayerImage from "@/shared/assets/Player Generic-Icon.png";
+import { PlayerPortrait } from "@/shared/components";
 import styles from "./RankingPlacePortrait.module.scss";
 
 interface Props {
@@ -9,15 +9,10 @@ interface Props {
 export default function RankingPlacePortrait({ src, name }: Props) {
 	return (
 		<div className={styles.portrait}>
-			<img
-				src={src || genericPlayerImage}
-				alt={name}
+			<PlayerPortrait
+				src={src}
+				name={name}
 				className={styles.portrait__image}
-				loading="lazy"
-				onError={(event) => {
-					event.currentTarget.onerror = null;
-					event.currentTarget.src = genericPlayerImage;
-				}}
 			/>
 		</div>
 	);

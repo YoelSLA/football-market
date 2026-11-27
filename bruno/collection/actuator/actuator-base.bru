@@ -1,16 +1,21 @@
 meta {
-  name: Actuator base
+  name: Actuator root is not exposed
   type: http
-  seq: 1
+  seq: 4
 }
 
 get {
   url: {{baseUrl}}/actuator
-  auth: none
+  auth: bearer
 }
 
 headers {
+  authorization: Bearer {{auth_token}}
   accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
 }
 
 settings {

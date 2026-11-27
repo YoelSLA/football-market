@@ -1,6 +1,7 @@
 package footballmarket.features.market.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -8,7 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import footballmarket.features.auth.application.AuthenticationService;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.market.application.BuyOrderService;
@@ -26,6 +26,7 @@ import footballmarket.features.quote.application.exceptions.InvalidQuotePriceExc
 import footballmarket.features.quote.application.exceptions.QuoteContractViolationException;
 import footballmarket.features.quote.application.exceptions.QuoteUnavailableException;
 import footballmarket.features.quote.domain.records.CurrentQuote;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import footballmarket.support.TestFixtures;
 import io.jsonwebtoken.Jwts;
@@ -136,8 +137,15 @@ class ListingControllerTest {
     void listaPropiasSinFiltro() throws Exception {
       // Arrange
       footballmarket.features.market.domain.records.TokenListingView view = listing().snapshot(NOW);
-      when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.isNull()))
-          .thenReturn(java.util.List.of(view));
+      footballmarket.features.market.domain.records.UserOrdersSummary summary =
+          new footballmarket.features.market.domain.records.UserOrdersSummary(
+              1, 5, 500, 0, 0, 0, 0, 0, 1);
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          new footballmarket.features.market.domain.records.UserOrdersPage(
+              summary, java.util.List.of(view), 0, 10, 1, 1);
+      when(listingService.mine(
+              anyString(), org.mockito.ArgumentMatchers.isNull(), anyInt(), anyInt(), anyString()))
+          .thenReturn(page);
       // Act / Assert
       mvc.perform(
               org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
@@ -145,13 +153,16 @@ class ListingControllerTest {
                   .header("Authorization", authorization))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.listings.length()").value(1))
-          .andExpect(jsonPath("$.listings[0].listingId").value(25));
+          .andExpect(jsonPath("$.listings[0].listingId").value(25))
+          .andExpect(jsonPath("$.summary.activeOrders").value(1))
+          .andExpect(jsonPath("$.pagination.totalElements").value(1));
       // Verify
-      org.mockito.Mockito.verify(listingService).mine("seller@example.com", null);
+      org.mockito.Mockito.verify(listingService).mine("seller@example.com", null, 0, 10, "NEWEST");
     }
 
     @Test
-    @DisplayName("El mercado devuelve el sobre y los nueve campos de cada elemento sin closedAt")
+    @DisplayName(
+        "El mercado devuelve el sobre y los diecisiete campos de cada elemento sin closedAt")
     void listaMercado() throws Exception {
       // Arrange
       footballmarket.features.market.domain.records.TokenListingView view = listing().snapshot(NOW);
@@ -164,7 +175,7 @@ class ListingControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(1))
           .andExpect(jsonPath("$.listings.length()").value(1))
-          .andExpect(jsonPath("$.listings[0].length()").value(9))
+          .andExpect(jsonPath("$.listings[0].length()").value(17))
           .andExpect(jsonPath("$.listings[0].listingId").value(25))
           .andExpect(jsonPath("$.listings[0].sellerId").value(2))
           .andExpect(jsonPath("$.listings[0].playerId").value(1))
@@ -207,8 +218,19 @@ class ListingControllerTest {
     @DisplayName("Las propias transportan al Service el filtro exacto recibido")
     void filtraPropias(String filter) throws Exception {
       // Arrange
-      when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.eq(filter)))
-          .thenReturn(java.util.List.of());
+      footballmarket.features.market.domain.records.UserOrdersSummary summary =
+          new footballmarket.features.market.domain.records.UserOrdersSummary(
+              0, 0, 0, 0, 0, 0, 0, 0, 0);
+      footballmarket.features.market.domain.records.UserOrdersPage page =
+          new footballmarket.features.market.domain.records.UserOrdersPage(
+              summary, java.util.List.of(), 0, 10, 0, 0);
+      when(listingService.mine(
+              anyString(),
+              org.mockito.ArgumentMatchers.eq(filter),
+              anyInt(),
+              anyInt(),
+              anyString()))
+          .thenReturn(page);
       // Act / Assert
       mvc.perform(
               org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
@@ -218,7 +240,8 @@ class ListingControllerTest {
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.listings.length()").value(0));
       // Verify
-      org.mockito.Mockito.verify(listingService).mine("seller@example.com", filter);
+      org.mockito.Mockito.verify(listingService)
+          .mine("seller@example.com", filter, 0, 10, "NEWEST");
     }
 
     @ParameterizedTest
@@ -226,7 +249,12 @@ class ListingControllerTest {
     @DisplayName("Un estado no reconocido devuelve INVALID_PARAMETER_TYPE sin resultados")
     void rechazaFiltro(String filter) throws Exception {
       // Arrange
-      when(listingService.mine(anyString(), org.mockito.ArgumentMatchers.eq(filter)))
+      when(listingService.mine(
+              anyString(),
+              org.mockito.ArgumentMatchers.eq(filter),
+              anyInt(),
+              anyInt(),
+              anyString()))
           .thenThrow(new InvalidListingStatusException());
       // Act / Assert
       mvc.perform(
@@ -298,12 +326,13 @@ class ListingControllerTest {
   @Autowired private SecretKey key;
   @MockitoBean private TokenListingService listingService;
   @MockitoBean private BuyOrderService buyService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void arrange() {
+    when(identityValidator.exists("seller@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "

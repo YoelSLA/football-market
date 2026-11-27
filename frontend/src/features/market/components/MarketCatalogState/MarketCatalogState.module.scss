@@ -1,0 +1,21 @@
+@use "@/styles/abstracts" as ds;
+
+.state {
+  // 3. 🧩 Layout
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+
+  // 4. 📦 Box Model
+  min-height: 16rem;
+  padding: 1rem;
+
+  // 5. 🔤 Typography
+  text-align: center;
+
+  // 6. 🎨 Visual
+  color: ds.$text-label-on-dark;
+}

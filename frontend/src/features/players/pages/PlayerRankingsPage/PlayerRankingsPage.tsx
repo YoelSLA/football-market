@@ -1,75 +1,85 @@
+import { PageLayout } from "@/app/layouts";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { usePlayerRankingsPage } from "@/features/players/hooks";
-import RankingContent from "./components/RankingContent";
 import RankingsStatus from "./components/RankingStatus";
 import PlayerRankingsFilters from "./components/RankingsFilters";
 import PlayerRankingsHeader from "./components/RankingsHeader";
-import PlayerRankingsPagination from "./components/RankingsPagination";
 import PlayerRankingsPodium from "./components/RankingsPodium";
 import PlayerRankingsTable from "./components/RankingsTable";
+import styles from "./PlayerRankingsPage.module.scss";
 
 export default function PlayerRankingsPage() {
 	const {
 		mode,
-		handleModeChange,
 		metadata,
-		podiumPlayers,
+		podiumItems,
 		tableItems,
-		allRankedItems,
-		filteredCount,
-		totalCount,
 		filters,
 		handleFilterChange,
 		handleClearFilters,
-		availableLeagues,
+		filterOptions,
+		hasActiveFilters,
 		pagination,
 		status,
 	} = usePlayerRankingsPage();
 
-	const hasActiveFilters =
-		Boolean(filters.searchTerm.trim()) ||
-		Boolean(filters.selectedLeague) ||
-		Boolean(filters.selectedPosition);
-
 	return (
-		<RankingContent isLoading={status.isLoading}>
-			<PlayerRankingsHeader
-				mode={mode}
-				onModeChange={handleModeChange}
-				metadata={metadata}
-			/>
-
-			<RankingsStatus
-				status={status}
-				mode={mode}
-				isEmpty={allRankedItems.length === 0}
-				isFilterEmpty={filteredCount === 0}
-				hasActiveFilters={hasActiveFilters}
-				onClearFilters={handleClearFilters}
+		<PageLayout>
+			<main
+				className={styles.playerRankings}
+				aria-busy={status.isLoading}
+				aria-label="Página de ranking de jugadores"
 			>
-				<PlayerRankingsPodium topPlayers={podiumPlayers} mode={mode} />
-
-				<PlayerRankingsFilters
-					filters={filters}
-					onFilterChange={handleFilterChange}
-					onClearFilters={handleClearFilters}
-					availableLeagues={availableLeagues}
-					totalCount={totalCount}
-					filteredCount={filteredCount}
+				<PlayerRankingsHeader
+					metadata={metadata}
+					isLoading={status.isLoading}
 				/>
 
-				{filteredCount > 0 && (
-					<>
-						<PlayerRankingsTable items={tableItems} mode={mode} />
+				<div className={styles.playerRankings__scrollRegion}>
+					<RankingsStatus
+						status={status}
+						mode={mode}
+						isGlobalEmpty={status.isGlobalEmpty}
+						isFilterEmpty={status.isFilterEmpty}
+						hasActiveFilters={hasActiveFilters}
+						onClearFilters={handleClearFilters}
+					>
+						{podiumItems.length > 0 && (
+							<PlayerRankingsPodium topPlayers={podiumItems} mode={mode} />
+						)}
 
-						<PlayerRankingsPagination
-							currentPage={pagination.currentPage}
-							totalPages={pagination.totalPages}
-							totalItems={pagination.totalItems}
-							onPageChange={pagination.onPageChange}
+						<PlayerRankingsTable
+							items={tableItems}
+							toolbar={
+								<PlayerRankingsFilters
+									filters={filters}
+									onFilterChange={handleFilterChange}
+									onClearFilters={handleClearFilters}
+									availableLeagues={filterOptions.leagues}
+									availablePositions={filterOptions.positions}
+								/>
+							}
 						/>
-					</>
+					</RankingsStatus>
+				</div>
+
+				{!status.isLoading && !status.isError && pagination.totalItems > 0 && (
+					<footer className={styles.playerRankings__footer}>
+						<MarketPagination
+							page={pagination.currentPage - 1}
+							totalPages={pagination.totalPages}
+							visiblePlayers={pagination.itemsOnPage}
+							totalPlayers={pagination.totalItems}
+							pageSize={pagination.pageSize}
+							showSummary={false}
+							variant="official"
+							onPageChange={(zeroBasedPage) =>
+								pagination.onPageChange(zeroBasedPage + 1)
+							}
+						/>
+					</footer>
 				)}
-			</RankingsStatus>
-		</RankingContent>
+			</main>
+		</PageLayout>
 	);
 }

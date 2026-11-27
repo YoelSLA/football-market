@@ -1,48 +1,77 @@
 @use "@/styles/abstracts" as ds;
 
 .marketPagination {
+	// 3. 🧩 Layout
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: .8rem;
 	flex-wrap: wrap;
+
+	// 4. 📦 Box Model
 	min-width: 0;
-	color: ds.$text-portfolio-label;
+
+	// 5. 🔤 Typography
 	font-size: .8rem;
 
+	// 6. 🎨 Visual
+	color: ds.$text-label-on-dark;
+
 	&__pages {
-		--pagination-surface: transparent;
-		--pagination-border: #{ds.$border-finance};
-		--pagination-control-surface: #{ds.$surface-finance-panel-to};
-		--pagination-active: #{ds.$accent-finance-cyan};
+		// 4. 📦 Box Model
 		width: auto;
 		max-width: 100%;
 		padding: 0;
-		gap: .4rem;
 	}
 
-	&__size {
-		display: flex;
-		align-items: center;
-		gap: .65rem;
-		flex-wrap: wrap;
-
-		select {
-			color: ds.$text-portfolio-title;
-			background: ds.$surface-finance-base;
-			border: 1px solid ds.$border-finance;
-			border-radius: .35rem;
-			padding: .3rem 1rem;
-			opacity: 1;
-		}
-
-		small {
-			font-size: .65rem;
-			color: ds.$state-caution;
-		}
-	}
-
-	@media (max-width: 850px) {
+	&[data-variant="official"] {
+		// 3. 🧩 Layout
 		justify-content: center;
+		flex-wrap: nowrap;
+
+		// 4. 📦 Box Model
+		width: 100%;
+		height: 44px;
+
+		.marketPagination__pages {
+			// 1. 🏷️ Custom Properties
+			--pagination-gap: 12px;
+			--pagination-min-height: 44px;
+			--pagination-padding: 6px 16px;
+			--pagination-radius: 8px;
+			--pagination-background-color: #{ds.$surface-panel-to};
+			--pagination-container-border: 1px solid #{ds.$border-panel};
+			--pagination-content-width: max-content;
+			--pagination-content-height: 32px;
+			--pagination-pages-track: max-content;
+			--pagination-control-size: 32px;
+			--pagination-control-radius: 6px;
+			--pagination-control-background-color: #{ds.$surface-data-control-soft};
+			--pagination-control-border: #{ds.$border-panel-mid};
+			--pagination-control-color: #{ds.$text-pagination};
+			--pagination-control-hover-background-color: #{ds.$surface-action-subtle};
+			--pagination-control-hover-border: #{ds.$action-selected-accent};
+			--pagination-control-hover-color: #{ds.$text-title-on-dark};
+			--pagination-disabled-opacity: .35;
+			--pagination-focus-ring: #{ds.$focus-ring-dark};
+			--pagination-pages-gap: 6px;
+			--pagination-page-background-color: #{ds.$surface-transparent};
+			--pagination-page-border: #{ds.$border-transparent};
+			--pagination-page-color: #{ds.$text-pagination};
+			--pagination-page-hover-background-color: #{ds.$surface-glass-interactive};
+			--pagination-page-hover-color: #{ds.$text-title-on-dark};
+			--pagination-active-background-color: #{ds.$action-selected-accent};
+			--pagination-active-border: #{ds.$action-selected-accent};
+			--pagination-active-color: #{ds.$text-inverse};
+			--pagination-ellipsis-width: 20px;
+			--pagination-ellipsis-color: #{ds.$text-label-on-dark};
+
+			// 4. 📦 Box Model
+			width: fit-content;
+			height: 44px;
+			max-width: 100%;
+			padding: 6px 16px;
+			box-sizing: border-box;
+		}
 	}
 }

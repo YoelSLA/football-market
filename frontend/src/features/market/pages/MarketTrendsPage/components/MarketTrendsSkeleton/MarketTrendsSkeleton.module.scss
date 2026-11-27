@@ -1,0 +1,72 @@
+@use "@/styles/abstracts" as ds;
+
+.skeletonContainer {
+	display: flex;
+	flex-direction: column;
+	gap: ds.$space-md;
+	width: 100%;
+}
+
+.box {
+	background: linear-gradient(
+		90deg,
+		ds.$surface-card-dark 25%,
+		ds.$surface-card-subtle 37%,
+		ds.$surface-card-dark 63%
+	);
+	background-size: 400% 100%;
+	animation: pulse 1.4s ease infinite;
+	border-radius: 12px;
+	border: 1px solid ds.$border-subtle;
+}
+
+@keyframes pulse {
+	0% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0 50%;
+	}
+}
+
+.topRow {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: ds.$space-md;
+
+	@media (max-width: 900px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.gaugeBox {
+	height: 220px;
+}
+
+.sentimentBarBox {
+	height: 220px;
+}
+
+.metricsRow {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: ds.$space-md;
+}
+
+.metricCard {
+	height: 100px;
+}
+
+.chartBox {
+	height: 260px;
+}
+
+.hotAssetsGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: ds.$space-md;
+}
+
+.hotAssetCard {
+	height: 180px;
+}

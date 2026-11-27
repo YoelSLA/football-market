@@ -5,9 +5,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import footballmarket.features.auth.application.AuthenticationService;
-import footballmarket.features.auth.domain.User;
-import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.catalog.application.PlayerCatalogService;
 import footballmarket.features.catalog.application.PlayerSynchronizationOrchestrator;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
@@ -20,6 +17,7 @@ import footballmarket.features.catalog.domain.records.PlayerSynchronizationResul
 import footballmarket.features.statistics.application.PlayerStatisticsQueryService;
 import footballmarket.features.statistics.domain.records.PlayerStatisticsSnapshot;
 import footballmarket.integrations.footballdata.exceptions.FootballDataUnavailableException;
+import footballmarket.security.PersistedIdentityValidator;
 import footballmarket.security.SecurityConfig;
 import io.jsonwebtoken.Jwts;
 import java.time.Instant;
@@ -58,16 +56,14 @@ class PlayerControllerTest {
   @Autowired private SecretKey key;
   @MockitoBean private PlayerCatalogService service;
   @MockitoBean private PlayerStatisticsQueryService statisticsService;
-  @MockitoBean private AuthenticationService authenticationService;
+  @MockitoBean private PersistedIdentityValidator identityValidator;
   @MockitoBean private PlayerSynchronizationOrchestrator orchestrator;
   private MockMvc mvc;
   private String authorization;
 
   @BeforeEach
   void setUp() {
-    when(authenticationService.getCurrentUser("catalog@example.com"))
-        .thenReturn(
-            new User(1L, "catalog.user", "catalog@example.com", "password123", UserRole.USER));
+    when(identityValidator.exists("catalog@example.com")).thenReturn(true);
     mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(security).build();
     authorization =
         "Bearer "
@@ -183,6 +179,34 @@ class PlayerControllerTest {
           .andExpect(jsonPath("$.teams").isEmpty())
           .andExpect(jsonPath("$.positions").isEmpty())
           .andExpect(jsonPath("$.nationalities").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Expone únicamente las opciones globales entregadas por el servicio")
+    void returnsEligibleFilterOptions() throws Exception {
+      // Arrange
+      var filters =
+          new footballmarket.features.catalog.domain.records.PlayerCatalogFilters(
+              List.of(
+                  new footballmarket.features.catalog.domain.records.PlayerCatalogFilters
+                      .LeagueOption(9, "Liga")),
+              List.of(
+                  new footballmarket.features.catalog.domain.records.PlayerCatalogFilters
+                      .TeamOption(8, "Equipo", 9)),
+              List.of("Forward"),
+              List.of("Spain"));
+      when(service.catalogFilters()).thenReturn(filters);
+
+      // Act / Assert
+      mvc.perform(get("/api/players/filters").header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.leagues", hasSize(1)))
+          .andExpect(jsonPath("$.leagues[0].id").value(9))
+          .andExpect(jsonPath("$.teams", hasSize(1)))
+          .andExpect(jsonPath("$.teams[0].id").value(8))
+          .andExpect(jsonPath("$.positions[0]").value("Forward"))
+          .andExpect(jsonPath("$.nationalities[0]").value("Spain"));
+      verify(service).catalogFilters();
     }
 
     @Test

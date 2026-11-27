@@ -1,9 +1,6 @@
 import type { NavSection } from "@/shared/components";
 import {
-	BarChart3,
 	FileText,
-	History,
-	LayoutDashboard,
 	Package,
 	Puzzle,
 	ShoppingCart,
@@ -29,14 +26,7 @@ export const NAV_SECTIONS: NavSection[] = [
 		label: "Inicio",
 		icon: "home",
 		path: "/home",
-		tabs: [
-			{
-				key: "home-dashboard",
-				label: "Dashboard",
-				icon: LayoutDashboard,
-				path: "/home",
-			},
-		],
+		tabs: [],
 	},
 	{
 		key: "players",
@@ -56,12 +46,6 @@ export const NAV_SECTIONS: NavSection[] = [
 				icon: Trophy,
 				path: "/players/ranking",
 			},
-			{
-				key: "players-quote-history",
-				label: "Historial de cotizaciones",
-				icon: TrendingUp,
-				path: null,
-			},
 		],
 	},
 	{
@@ -71,14 +55,20 @@ export const NAV_SECTIONS: NavSection[] = [
 		path: "/market/buy",
 		tabs: [
 			{
-				key: "market-buy",
-				label: "Comprar tokens",
+				key: "market-official",
+				label: "Mercado Oficial",
 				icon: ShoppingCart,
 				path: "/market/buy",
 			},
 			{
+				key: "market-p2p",
+				label: "Mercado P2P",
+				icon: UsersRound,
+				path: "/market/p2p",
+			},
+			{
 				key: "market-sell",
-				label: "Vender tokens",
+				label: "Publicar venta",
 				icon: Tag,
 				path: "/market/sell",
 			},
@@ -86,13 +76,13 @@ export const NAV_SECTIONS: NavSection[] = [
 				key: "market-orders",
 				label: "Mis órdenes",
 				icon: Puzzle,
-				path: null,
+				path: "/market/orders",
 			},
 			{
-				key: "market-history",
-				label: "Historial de operaciones",
-				icon: History,
-				path: null,
+				key: "market-trends",
+				label: "Tendencias",
+				icon: TrendingUp,
+				path: "/market/trends",
 			},
 		],
 	},
@@ -103,30 +93,17 @@ export const NAV_SECTIONS: NavSection[] = [
 		path: "/portfolio",
 		tabs: [
 			{
-				key: "portfolio-overview",
-				label: "Mi portfolio",
-				icon: BarChart3,
-				path: "/portfolio",
-			},
-			{
 				key: "portfolio-holdings",
-				label: "Mis tenencias",
+				label: "Posiciones",
 				icon: Package,
-				path: "/portfolio/holdings",
+				path: "/portfolio",
 			},
 			{
 				key: "portfolio-transactions",
 				icon: FileText,
 				badgeTone: "gold",
 				label: "Historial de transacciones",
-				path: null,
-			},
-			{
-				key: "portfolio-stats",
-				label: "Estadísticas/gráficos",
-				path: null,
-				icon: BarChart3,
-				badgeTone: "violet",
+				path: "/portfolio/transactions",
 			},
 		],
 	},

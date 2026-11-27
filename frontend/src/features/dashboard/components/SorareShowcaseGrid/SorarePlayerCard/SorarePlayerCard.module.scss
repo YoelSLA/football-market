@@ -1,0 +1,79 @@
+@use "@/styles/abstracts" as ds;
+
+.card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	padding: ds.$space-md;
+	background: linear-gradient(170deg, ds.$surface-data-control 0%, ds.$surface-page-deep 100%);
+	border: 1px solid ds.$border-panel;
+	border-radius: 10px;
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+	transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+	overflow: hidden;
+
+	&:hover {
+		transform: translateY(-4px);
+		border-color: ds.$accent-gain;
+		box-shadow: 0 10px 24px rgba(0, 223, 160, 0.15);
+
+		.cardGlow {
+			opacity: 1;
+		}
+
+		.cardActionLink {
+			background: ds.$surface-control-active;
+			color: ds.$state-gain;
+			border-color: ds.$border-gain-subtle;
+		}
+	}
+}
+
+.cardGlow {
+	position: absolute;
+	top: -30px;
+	left: -30px;
+	width: 120px;
+	height: 120px;
+	background: radial-gradient(circle, ds.$surface-gain-soft 0%, transparent 70%);
+	pointer-events: none;
+	opacity: 0.4;
+	transition: opacity 0.3s ease;
+}
+
+.infoSection {
+	text-align: center;
+	margin-bottom: ds.$space-md;
+}
+
+.playerName {
+	font-size: 0.9375rem;
+	font-weight: 700;
+	color: ds.$text-primary-on-dark;
+	margin: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	letter-spacing: 0.02em;
+}
+
+.teamName {
+	font-size: 0.75rem;
+	color: ds.$text-muted-on-dark;
+	margin-top: 2px;
+	display: block;
+}
+
+.cardActionLink {
+	display: block;
+	text-align: center;
+	padding: 6px ds.$space-sm;
+	background: ds.$surface-data-control-soft;
+	border: 1px solid ds.$border-strong;
+	border-radius: 4px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: ds.$text-body-on-dark;
+	text-decoration: none;
+	transition: all 0.2s ease;
+}

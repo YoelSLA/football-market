@@ -1,0 +1,10 @@
+@use "@/styles/abstracts" as ds;
+.communityPanel {
+	&__content {
+		@include ds.market-panel-content;
+	}
+
+	&__footer {
+		@include ds.market-panel-footer;
+	}
+}

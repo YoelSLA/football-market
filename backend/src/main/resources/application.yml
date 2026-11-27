@@ -10,6 +10,11 @@ valuation:
   attribute-penalty-maximum-impact: ${VALUATION_ATTRIBUTE_PENALTY_MAXIMUM_IMPACT:0.10}
 
 spring:
+  task:
+    scheduling:
+      pool:
+        size: 1
+      thread-name-prefix: market-batch-
   profiles:
     active: dev
 
@@ -27,11 +32,6 @@ spring:
     time-zone: America/Argentina/Buenos_Aires
 
 logging:
-  charset:
-    file: UTF-8
-  file:
-    # Archivo completo independiente del límite de consola; conservar también sus rotaciones.
-    name: ${FOOTBALL_MARKET_LOG_FILE:logs/football-market.log}
   level:
     root: INFO
     ar.edu.unq.schoolmanager: DEBUG
@@ -47,34 +47,26 @@ the-sports-db:
   image-retry-days: ${THE_SPORTS_DB_IMAGE_RETRY_DAYS:30}
   audit-retention-days: ${THE_SPORTS_DB_AUDIT_RETENTION_DAYS:}
 
-# Monitoreo del backend con Spring Boot Actuator.
-# La exposición es restrictiva y explícita: nunca se usa el comodín `*`. El health check informa
-# únicamente el estado general, sin componentes ni detalles internos, y por eso es seguro
-# dejarlo accesible sin token. No se exponen `env`, `heapdump`, `threaddump`, `configprops`,
-# `beans` ni `shutdown` en ningún perfil.
-#
-# `info` queda accesible sin token para el diagnóstico local. Antes de cualquier despliegue
-# público debe restringirse: ver "PENDIENTE — Seguridad de Actuator" en docs/backend/technologies.md
-# y la deuda TD-001 en docs/TECHNICAL_DEBT.md.
-#
-# La lista de exposición se resuelve por entorno con un valor por defecto que NO incluye
-# `metrics`. Deliberadamente no se condiciona al perfil `dev`: ese perfil es el valor por defecto
-# de `spring.profiles.active` en este repositorio, de modo que atar la exposición a ese perfil
-# dejaría las métricas disponibles en cualquier entorno que no fije el perfil.
-#
-#   Habilitar métricas:  MANAGEMENT_EXPOSED_ENDPOINTS=health,info,metrics
-#   Restablecer:        unset de la variable
-#
-# Solo `health`, `info` y `metrics` son endpoints de monitoreo previstos. Exponer cualquier otro
-# es una regresión de seguridad cubierta por TD-001.
+# Exposición HTTP explícita de monitoreo: no ampliar con comodines ni configuración externa.
+# Health devuelve solo el estado general y info no incluye propiedades sensibles.
 management:
   endpoints:
     web:
       exposure:
-        include: "${MANAGEMENT_EXPOSED_ENDPOINTS:health,info}"
+        include: prometheus,health,info
   endpoint:
     health:
       show-details: never
+      show-components: never
+  info:
+    env:
+      enabled: true
+
+# Solo se publica esta metadata estática y no sensible en /actuator/info.
+info:
+  app:
+    name: Football Market
+    description: API de mercado de jugadores de fútbol
 
 # Aprovisionamiento de la cuenta singular SUPERUSER, propietario inicial de los tokens.
 # Deshabilitado por defecto. Identidad y contraseña se proveen por el entorno de ejecución:
@@ -96,7 +88,15 @@ footballmarket:
 market:
   listing:
     expiration-duration: ${MARKET_LISTING_EXPIRATION_DURATION:PT24H}
+  buyback:
+    # Comisión entera aplicada por la venta oficial inmediata. Rango inclusivo 10–99; un valor
+    # fuera de rango impide el arranque.
+    discount-percentage: ${MARKET_BUYBACK_DISCOUNT_PERCENTAGE:10}
   quote:
+    strategy: ${MARKET_QUOTE_STRATEGY:POSITIONAL_PERFORMANCE}
+    schedule:
+      cron: ${MARKET_QUOTE_SCHEDULE_CRON:0 0 12 * * *}
+      enabled: ${MARKET_QUOTE_SCHEDULE_ENABLED:true}
     # Control de variabilidad de las cotizaciones. Los valores por defecto están disponibles sin
     # configuración explícita y el operador puede ajustarlos en cada ejecución.
     adjustment-factor: ${MARKET_QUOTE_ADJUSTMENT_FACTOR:0.10}

@@ -1,92 +1,79 @@
-import { PaginatedPageLayout } from "@/app/layouts";
+import { PageLayout } from "@/app/layouts";
+import MarketPagination from "@/features/market/components/MarketPagination";
 import { usePlayersPage } from "@/features/players/hooks";
-import { Search } from "@/shared/icons";
-import PlayerCard from "./PlayerCard";
-import PlayerCatalogControls from "./PlayerCatalogControls";
+import PlayersCatalog from "./components/PlayersCatalog";
+import PlayersHeader from "./components/PlayersHeader";
+import PlayersToolbar from "./components/PlayersToolbar";
 import styles from "./PlayersPage.module.scss";
 
 export default function PlayersPage() {
 	const page = usePlayersPage();
 	const players = page.playersPage?.players ?? [];
-	const header = (
-		<div className={styles.playersPage__toolbar}>
-			<div className={styles.playersPage__heading}>
-				<h1>Catálogo de jugadores</h1>
-				{page.playersPage && (
-					<span>{page.playersPage.totalElements} jugadores activos</span>
-				)}
-				<label className={styles.playersPage__search}>
-					<Search size={18} aria-hidden="true" />
-					<input
-						type="search"
-						aria-label="Buscar jugador por nombre"
-						placeholder="Buscar jugador…"
-						value={page.searchText}
-						onChange={(event) => page.setSearchText(event.target.value)}
-						maxLength={255}
-					/>
-				</label>
-			</div>
-			<PlayerCatalogControls
-				criteria={page.criteria}
-				options={page.options}
-				disabled={page.optionsLoading || !page.options}
-				onChange={page.changeFilter}
-				onClear={page.clearFilters}
-			/>
-			{page.optionsError && (
-				<div role="alert">
-					{page.optionsError}{" "}
-					<button type="button" onClick={() => page.retryOptions()}>
-						Reintentar filtros
-					</button>
-				</div>
-			)}
-		</div>
+	const hasActiveFilters = Boolean(
+		page.searchText.trim() ||
+			page.criteria.name ||
+			page.criteria.leagueId ||
+			page.criteria.teamId ||
+			page.criteria.position ||
+			page.criteria.nationality ||
+			(page.criteria.sort && page.criteria.sort !== "name,asc"),
 	);
+
+	const showPagination =
+		Boolean(page.playersPage && players.length) &&
+		(page.playersPage?.totalPages ?? 0) > 0;
+
 	return (
-		<div className={styles.playersPage} aria-busy={page.isLoading}>
-			<PaginatedPageLayout
-				header={header}
-				page={
-					page.playersPage && players.length ? page.selectedPage : undefined
-				}
-				totalPages={
-					page.playersPage && players.length
-						? page.playersPage.totalPages
-						: undefined
-				}
-				onPageChange={page.selectPage}
-			>
-				{page.errorMessage ? (
-					<section className={styles.playersPage__message} role="alert">
-						<p>{page.errorMessage}</p>
-						<button type="button" onClick={() => page.retry()}>
-							Reintentar
-						</button>
-					</section>
-				) : page.isLoading ? (
-					<p className={styles.playersPage__message} role="status">
-						Cargando jugadores…
-					</p>
-				) : players.length === 0 ? (
-					<p className={styles.playersPage__message} role="status">
-						{page.criteria.name ||
-						page.criteria.leagueId ||
-						page.criteria.teamId ||
-						page.criteria.position ||
-						page.criteria.nationality
-							? "No hay jugadores que coincidan con los filtros."
-							: "No hay jugadores disponibles."}
-					</p>
-				) : (
-					<section className={styles.playersPage__grid} aria-label="Jugadores">
-						{players.map((player) => (
-							<PlayerCard key={player.id} player={player} />
-						))}
-					</section>
+		<PageLayout>
+			<div className={styles.playersPage} aria-busy={page.isLoading}>
+				<div className={styles.playersPage__header}>
+					<PlayersHeader
+						totalElements={page.playersPage?.totalElements}
+						options={page.options}
+						isLoading={page.isLoading}
+						optionsLoading={page.optionsLoading}
+					/>
+				</div>
+
+				<div className={styles.playersPage__toolbar}>
+					<PlayersToolbar
+						searchText={page.searchText}
+						onSearchChange={page.setSearchText}
+						criteria={page.criteria}
+						options={page.options}
+						optionsLoading={page.optionsLoading}
+						optionsError={page.optionsError}
+						onChangeFilter={page.changeFilter}
+						onClearFilters={page.clearFilters}
+						onRetryOptions={page.retryOptions}
+					/>
+				</div>
+
+				<div className={styles.playersPage__scrollRegion}>
+					<PlayersCatalog
+						isLoading={page.isLoading}
+						errorMessage={page.errorMessage}
+						onRetry={page.retry}
+						players={players}
+						hasActiveFilters={hasActiveFilters}
+					/>
+				</div>
+
+				{showPagination && page.playersPage && (
+					<div className={styles.playersPage__footer}>
+						<MarketPagination
+							page={page.selectedPage}
+							totalPages={page.playersPage.totalPages}
+							visiblePlayers={players.length}
+							totalPlayers={page.playersPage.totalElements}
+							pageSize={page.playersPage.size}
+							showSummary={false}
+							variant="official"
+							onPageChange={page.selectPage}
+						/>
+					</div>
 				)}
-			</PaginatedPageLayout>
-		</div>
+			</div>
+		</PageLayout>
 	);
 }

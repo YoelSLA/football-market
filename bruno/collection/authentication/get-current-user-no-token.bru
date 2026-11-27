@@ -1,11 +1,12 @@
 meta {
   name: Obtener usuario sin token (401)
   type: http
-  seq: 1
+  seq: 7
 }
 
 get {
   url: {{baseUrl}}/api/auth/me
+  body: none
   auth: bearer
 }
 

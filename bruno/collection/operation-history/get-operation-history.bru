@@ -1,11 +1,12 @@
 meta {
-  name: Consultar mi historial de operaciones
+  name: Consultar historial con valores por defecto
   type: http
   seq: 1
 }
 
 get {
   url: {{baseUrl}}/api/users/me/transactions
+  body: none
   auth: bearer
 }
 

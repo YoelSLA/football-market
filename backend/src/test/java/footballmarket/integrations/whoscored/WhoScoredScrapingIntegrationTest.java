@@ -523,6 +523,9 @@ class WhoScoredScrapingIntegrationTest {
         verify(stub.browser()).close();
         verify(playwright, times(2)).close();
         verify(stub.browser(), times(2)).newContext();
+        verify(summary)
+            .navigate(
+                eq("https://provider.example/players/123/show"), any(Page.NavigateOptions.class));
         for (BrowserContext context : stub.contexts()) {
           verify(context).close();
         }

@@ -11,10 +11,16 @@ public final class QuoteExecutionMapper {
 
   public static QuoteExecutionResponseDTO toResponse(QuoteExecution execution) {
     return new QuoteExecutionResponseDTO(
+        execution.getId(),
         execution.getQuoteDate(),
+        execution.getOrigin(),
+        execution.result(),
+        execution.failureReason(),
         execution.getStrategyName(),
         execution.getStrategyVersion(),
         execution.getAdjustmentFactor(),
+        execution.getRecalculationType(),
+        execution.getDemandWindow(),
         execution.getVariationCap(),
         execution.getMinPriceFloor(),
         execution.getPricedPlayers(),

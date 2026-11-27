@@ -3,31 +3,37 @@ import styles from "./RankingPlaceValue.module.scss";
 
 interface Props {
 	player: PlayerRankingItem;
-	mode: RankingMode;
+	mode?: RankingMode;
 }
 
-function formatValue(player: PlayerRankingItem, mode: RankingMode): string {
-	if (mode === "PERFORMANCE") {
-		return player.score !== undefined
+export default function RankingPlaceValue({ player }: Props) {
+	const scoreText =
+		player.score !== undefined
 			? player.score.toFixed(6).replace(".", ",")
-			: "0,000000";
-	}
+			: null;
 
-	return player.price !== undefined
-		? `${player.price.toFixed(2).replace(".", ",")} cr.`
-		: "0,00 cr.";
-}
+	const priceText =
+		player.price !== undefined
+			? `${player.price.toFixed(2).replace(".", ",")} ₵`
+			: null;
 
-export default function RankingPlaceValue({ player, mode }: Props) {
 	return (
 		<div className={styles.value}>
-			<span className={styles.value__label}>
-				{mode === "PERFORMANCE" ? "Score" : "Cotización"}
-			</span>
-
-			<strong className={styles.value__number}>
-				{formatValue(player, mode)}
-			</strong>
+			<div className={styles.value__row}>
+				{scoreText && (
+					<div className={styles.metric}>
+						<span className={styles.metricLabel}>Score</span>
+						<strong className={styles.metricScore}>{scoreText}</strong>
+					</div>
+				)}
+				{scoreText && priceText && <span className={styles.divider}>·</span>}
+				{priceText && (
+					<div className={styles.metric}>
+						<span className={styles.metricLabel}>Cotización</span>
+						<strong className={styles.metricPrice}>{priceText}</strong>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }

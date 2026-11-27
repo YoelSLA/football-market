@@ -8,49 +8,51 @@
 **Review Ownership**: This checklist is a reviewer-owned requirements-quality review artifact. Mark an item `[x]` only when the reviewer determines the requirements-quality criterion is satisfied.
 **Marker Semantics**: `[x]` means the criterion has been reviewed and satisfied for requirements quality. It does not mean implementation work is complete.
 
+> **Vigencia**: Este checklist conserva la evaluación del alcance histórico de 2026-10-27. Los criterios que mencionan filtrado/paginación en cliente, enriquecimiento desde catálogo o endpoints anteriores no describen el delta vigente y no deben usarse como evidencia de su calidad. Para el delta, consultar [`delta.md`](delta.md). Se conservan los marcadores como evidencia histórica; no se reevalúan aquí.
+
 ---
 
 ## 1. Completitud de Requisitos
 
-- [ ] CHK001 ¿Están definidos los requisitos funcionales para los dos modos de ranking (rendimiento con score y cotización de mercado con precio y origen)? [Completeness, Spec §FR-002, FR-003, FR-011]
-- [ ] CHK002 ¿Están definidos los requisitos para la sección de Podio Top 3 destacando los 3 primeros puestos con laureles y orden jerárquico? [Completeness, Spec §FR-004]
-- [ ] CHK003 ¿Están definidos los requisitos de filtrado reactivo del lado cliente (búsqueda por nombre, filtro de liga y filtro de posición deportiva)? [Completeness, Spec §FR-005]
-- [ ] CHK004 ¿Están definidos los requisitos de la tabla detallada, incluyendo todas las columnas (#, Jugador, Equipo, Liga, Posición, Valor, Fecha)? [Completeness, Spec §FR-006]
-- [ ] CHK005 ¿Están definidos los requisitos de paginación en cliente (selector de página y selector de filas por página)? [Completeness, Spec §FR-007]
-- [ ] CHK006 ¿Están definidos los requisitos de enlace hacia la ficha de detalle individual del jugador (`/players/:id`)? [Completeness, Spec §FR-008]
-- [ ] CHK007 ¿Están definidos los requisitos para los tres estados asíncronos: carga (`aria-busy`), datos vacíos (`EmptyState`) y fallo con acción de reintento? [Completeness, Spec §FR-009, US2]
+- [x] CHK001 ¿Están definidos los requisitos funcionales para los dos modos de ranking (rendimiento con score y cotización de mercado con precio y origen)? [Completeness, Spec §FR-002, FR-003, FR-011]
+- [x] CHK002 ¿Están definidos los requisitos para la sección de Podio Top 3 destacando los 3 primeros puestos con laureles y orden jerárquico? [Completeness, Spec §FR-004]
+- [x] CHK003 ¿Están definidos los requisitos de filtrado reactivo del lado cliente (búsqueda por nombre, filtro de liga y filtro de posición deportiva)? [Completeness, Spec §FR-005]
+- [x] CHK004 ¿Están definidos los requisitos de la tabla detallada, incluyendo todas las columnas (#, Jugador, Equipo, Liga, Posición, Valor, Fecha)? [Completeness, Spec §FR-006]
+- [x] CHK005 ¿Están definidos los requisitos de paginación en cliente (selector de página y selector de filas por página)? [Completeness, Spec §FR-007]
+- [x] CHK006 ¿Están definidos los requisitos de enlace hacia la ficha de detalle individual del jugador (`/players/:id`)? [Completeness, Spec §FR-008]
+- [x] CHK007 ¿Están definidos los requisitos para los tres estados asíncronos: carga (`aria-busy`), datos vacíos (`EmptyState`) y fallo con acción de reintento? [Completeness, Spec §FR-009, US2]
 
 ---
 
 ## 2. Claridad y Precisión
 
-- [ ] CHK008 ¿Está especificado con exactitud que el score de valuación se muestra con 6 decimales y coma decimal según el mockup oficial? [Clarity, Spec §FR-006, mockups]
-- [ ] CHK009 ¿Está especificado con precisión que el Podio Top 3 permanece fijo en los 3 mejores globales de la modalidad activa sin verse afectado por los filtros de la tabla? [Clarity, Spec §FR-012, Clarifications Q2]
-- [ ] CHK010 ¿Está definido con claridad que los filtros cliente ocultan filas pero preservan la numeración de posición original `#` sin renumerar? [Clarity, Spec §FR-005, Data Model §5]
-- [ ] CHK011 ¿Está definido qué texto legible se asigna a cada estrategia activa (`POSITIONAL_PERFORMANCE` y `GENERAL_ATTRIBUTES`)? [Clarity, Spec §Assumptions, US1]
-- [ ] CHK012 ¿Está especificado qué ocurre si el catálogo de jugadores experimenta demoras o falla al hidratar los datos complementarios? [Clarity, Spec §Edge Cases]
+- [x] CHK008 ¿Está especificado con exactitud que el score de valuación se muestra con 6 decimales y coma decimal según el mockup oficial? [Clarity, Spec §FR-006, mockups]
+- [x] CHK009 ¿Está especificado con precisión que el Podio Top 3 permanece fijo en los 3 mejores globales de la modalidad activa sin verse afectado por los filtros de la tabla? [Clarity, Spec §FR-012, Clarifications Q2]
+- [x] CHK010 ¿Está definido con claridad que los filtros cliente ocultan filas pero preservan la numeración de posición original `#` sin renumerar? [Clarity, Spec §FR-005, Data Model §5]
+- [x] CHK011 ¿Está definido qué texto legible se asigna a cada estrategia activa (`POSITIONAL_PERFORMANCE` y `GENERAL_ATTRIBUTES`)? [Clarity, Spec §Assumptions, US1]
+- [x] CHK012 ¿Está especificado qué ocurre si el catálogo de jugadores experimenta demoras o falla al hidratar los datos complementarios? [Clarity, Spec §Edge Cases]
 
 ---
 
 ## 3. Consistencia de Requisitos
 
-- [ ] CHK013 ¿Son consistentes los requisitos de consumo con los contratos HTTP existentes de SPEC-018 (`/api/players/ranking/score` y `/api/players/ranking`)? [Consistency, Spec §Trazabilidad, contracts/]
-- [ ] CHK014 ¿Es consistente la exclusión del menú de tres puntos ('...') entre las aclaraciones, los requisitos y la sección Out of Scope? [Consistency, Spec §Clarifications Q3, Out of Scope]
-- [ ] CHK015 ¿Se mantiene la consistencia terminológica de las demarcaciones tácticas (`DEL`, `MED`, `DEF`, `POR`) con el catálogo de jugadores? [Consistency, Spec §Key Entities, Data Model §2.1]
+- [x] CHK013 ¿Son consistentes los requisitos de consumo con los contratos HTTP existentes de SPEC-018 (`/api/players/ranking/score` y `/api/players/ranking`)? [Consistency, Spec §Trazabilidad, contracts/]
+- [x] CHK014 ¿Es consistente la exclusión del menú de tres puntos ('...') entre las aclaraciones, los requisitos y la sección Out of Scope? [Consistency, Spec §Clarifications Q3, Out of Scope]
+- [x] CHK015 ¿Se mantiene la consistencia terminológica de las demarcaciones tácticas (`DEL`, `MED`, `DEF`, `POR`) con el catálogo de jugadores? [Consistency, Spec §Key Entities, Data Model §2.1]
 
 ---
 
 ## 4. Cobertura de Escenarios y Casos Límite
 
-- [ ] CHK016 ¿Está cubierto el escenario en que el backend responde `200 OK` pero el arreglo `ranking` está vacío (sin ejecuciones o sin valuaciones)? [Edge Case, Spec §Edge Cases, US2]
-- [ ] CHK017 ¿Está cubierto el escenario de empate en score o cotización, asegurando que se respeta la posición consecutiva provista por el backend? [Edge Case, Spec §Edge Cases, FR-003]
-- [ ] CHK018 ¿Está cubierto el escenario en que el usuario aplica filtros que no coinciden con ningún jugador, mostrando mensaje de ausencia de coincidencias sin romper el podio? [Scenario Coverage, Spec §FR-005, Data Model §4]
-- [ ] CHK019 ¿Está cubierto el escenario de sesión expirada (HTTP 401) redirigiendo a la pantalla de login? [Scenario Coverage, contracts/ §3]
+- [x] CHK016 ¿Está cubierto el escenario en que el backend responde `200 OK` pero el arreglo `ranking` está vacío (sin ejecuciones o sin valuaciones)? [Edge Case, Spec §Edge Cases, US2]
+- [x] CHK017 ¿Está cubierto el escenario de empate en score o cotización, asegurando que se respeta la posición consecutiva provista por el backend? [Edge Case, Spec §Edge Cases, FR-003]
+- [x] CHK018 ¿Está cubierto el escenario en que el usuario aplica filtros que no coinciden con ningún jugador, mostrando mensaje de ausencia de coincidencias sin romper el podio? [Scenario Coverage, Spec §FR-005, Data Model §4]
+- [x] CHK019 ¿Está cubierto el escenario de sesión expirada (HTTP 401) redirigiendo a la pantalla de login? [Scenario Coverage, contracts/ §3]
 
 ---
 
 ## 5. Requisitos No Funcionales y Trazabilidad
 
-- [ ] CHK020 ¿Están especificados los requisitos de accesibilidad web (roles semánticos, indicadores `aria-busy` y contraste adecuado)? [Non-Functional, Spec §FR-009, SC-004]
-- [ ] CHK021 ¿Están especificados los requisitos responsivos cubriendo el rango de 320 px a 1920 px sin scroll horizontal roto? [Non-Functional, Spec §FR-010, SC-004]
-- [ ] CHK022 ¿Se garantiza la trazabilidad entre el Issue #25, la rama Git, el Pull Request #76 y los artefactos de la spec? [Traceability, Spec §Trazabilidad, plan §Constitution Check]
+- [x] CHK020 ¿Están especificados los requisitos de accesibilidad web (roles semánticos, indicadores `aria-busy` y contraste adecuado)? [Non-Functional, Spec §FR-009, SC-004]
+- [x] CHK021 ¿Están especificados los requisitos responsivos cubriendo el rango de 320 px a 1920 px sin scroll horizontal roto? [Non-Functional, Spec §FR-010, SC-004]
+- [x] CHK022 ¿Se garantiza la trazabilidad entre el Issue #25, la rama Git, el Pull Request #76 y los artefactos de la spec? [Traceability, Spec §Trazabilidad, plan §Constitution Check]

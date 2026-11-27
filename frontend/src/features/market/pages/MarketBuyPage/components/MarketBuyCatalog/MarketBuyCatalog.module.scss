@@ -1,0 +1,13 @@
+@use "@/styles/abstracts" as ds;
+
+.buyCatalog {
+	@include ds.catalog-container;
+
+	&__grid {
+		@include ds.catalog-grid;
+	}
+
+	&__status {
+		@include ds.catalog-sr-status;
+	}
+}

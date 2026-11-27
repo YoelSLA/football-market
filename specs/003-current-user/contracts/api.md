@@ -29,7 +29,9 @@ Content-Type: `application/json`
   "id": 123,
   "username": "juan.perez",
   "email": "usuario@email.com",
-  "role": "USER"
+  "role": "USER",
+  "availableCredits": 100,
+  "availableCreditsCentimes": 10056
 }
 ```
 
@@ -39,8 +41,10 @@ Content-Type: `application/json`
 | `username` | string | Sí | Nombre de usuario actual, normalizado a minúsculas. |
 | `email` | string (`email`) | Sí | Email actual del usuario persistido identificado por el `sub`. |
 | `role` | string (enumeración) | Sí | Rol del usuario: `USER` o `SUPERUSER`. Informativo para el cliente. |
+| `availableCredits` | integer (`int64`) | Sí | Saldo disponible del usuario en créditos. |
+| `availableCreditsCentimes` | integer (`int64`) | Sí | Saldo preciso en centésimas de crédito. Es la fuente monetaria para comparaciones y cálculos del cliente. |
 
-La respuesta contiene exactamente esos cuatro campos. No incluye password, token ni datos provenientes de claims como sustituto de la consulta persistida.
+La respuesta contiene exactamente esos seis campos. `availableCredits` se conserva por compatibilidad; `availableCreditsCentimes` evita perder la fracción monetaria. No incluye password, token ni datos provenientes de claims como sustituto de la consulta persistida.
 
 `role` describe la capacidad del usuario en el dominio y se expone únicamente como información: el cliente no lo utiliza para autorizar, y toda autorización se evalúa en el backend.
 

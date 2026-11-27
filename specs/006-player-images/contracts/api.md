@@ -14,7 +14,13 @@ Ambas URLs pueden ser `null`. Consulta local sin llamadas a TheSportsDB y sin re
 
 ## `POST /api/players/images/sync`
 
-Solicitud manual sin body; query opcional `force` booleano (`false` por defecto). Síncrona: responde al concluir. `force=true` salta la elegibilidad de los activos, pero **no** vuelve a buscar identidad externa ya resuelta. Un único run activo por instancia; una solicitud concurrente devuelve `409` sin crear otro run.
+Solicitud manual sin body; parámetros query opcionales:
+- `force`: booleano (`false` por defecto). Salta la elegibilidad de los activos, pero no vuelve a buscar identidad externa ya resuelta.
+- `missingOnly`: booleano opcional. Si es `true`, filtra en base de datos para evaluar únicamente jugadores sin imagen asignada (`imageUrl is null`).
+- `limit`: entero opcional positivo. Acota el número máximo de jugadores a procesar remotamente en la ejecución.
+- `teamId`: entero opcional. Restringe la evaluación a los jugadores pertenecientes a ese equipo.
+
+Síncrona: responde al concluir. Un único run activo por instancia; una solicitud concurrente devuelve `409` sin crear otro run.
 
 `200 OK` para `COMPLETED` o `PARTIAL`:
 
@@ -46,6 +52,16 @@ Solicitud manual sin body; query opcional `force` booleano (`false` por defecto)
 `NOT_FOUND` por sí solo permite `COMPLETED`; cualquier `RETRYABLE_ERROR`, `FAILED` de jugador o conflicto deja `PARTIAL`, incluso un conflicto único. `conflicts` es un subconjunto de `failed`: no sumarlo dos veces. `evaluated` coincide con los items de jugadores activos al inicio de su evaluación individual e incluye skips; `processed` solo cuenta items con intento real contra TheSportsDB. Un cambio posterior de `active` no cancela ni revierte un item iniciado. La respuesta nunca embebe items.
 
 Errores: `401` sin credenciales válidas; `409 Conflict` (código `PLAYER_IMAGE_SYNC_IN_PROGRESS`) si ya hay run activo; un error global/fatal deja run `FAILED` y devuelve el estado HTTP de error correspondiente (código `PLAYER_IMAGE_SYNC_FAILED`, cuando sea posible), conservando resultados y auditoría previos. Un error de configuración antes de admitir la ejecución también devuelve error y no afirma que se haya creado un run.
+
+## `POST /api/players/images/sync/roster`
+
+Sincronización masiva por plantel completo de equipo. Consulta el plantel de TheSportsDB en una sola llamada por equipo (`lookup_all_players.php?id={teamExternalId}`) y asocia en memoria las fotos de los jugadores del club.
+
+Parámetros query opcionales:
+- `force`: booleano (`false` por defecto). Si es `true`, sobreescribe imágenes previas.
+- `teamId`: entero opcional. Restringe la sincronización a ese equipo; si se omite, recorre todos los equipos vigentes.
+
+`200 OK` con `PlayerImageSyncRunResponseDTO` con contadores del run. Mismos códigos de error que la sincronización general.
 
 ## `GET /api/players/images/sync-runs`
 

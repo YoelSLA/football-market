@@ -18,6 +18,68 @@ cronología, conservados en el mismo orden inverso al de las fechas.
 
 ---
 <!--
+Sync Impact Report — Enmienda 2026-11-18
+Versión: 9.2.0 → 9.3.0 (MINOR: ampliación material compatible de las Restricciones adicionales para
+formalizar la arquitectura de interfaz exclusivamente desktop. No se elimina ni se debilita ningún
+principio ni ninguna garantía previa).
+Principios modificados: ninguno.
+Secciones añadidas:
+- Restricciones adicionales / Viewport y arquitectura de interfaz: se establece Desktop como único
+  viewport soportado (ancho mínimo: 1024px), prohibiendo variantes específicas para mobile o tablet
+  (< 1024px), permitiendo adaptaciones entre resoluciones desktop (≥ 1024px) y por altura de viewport
+  (modo compacto vertical), y fijando su cumplimiento para toda nueva feature, componente, página
+  o refactorización.
+Secciones eliminadas: ninguna. Ninguna sección renumerada.
+Línea de versión: Last Amended 2026-11-12 → 2026-11-18. Ratificación conservada: 2026-08-31.
+Reglas adoptadas:
+- Desktop como único viewport soportado en Football Market (ancho mínimo: 1024px).
+- Prohibición estricta de implementar variantes específicas para dispositivos móviles (mobile) o tablets.
+- Se permiten adaptaciones entre resoluciones dentro del rango desktop (≥ 1024px) y adaptaciones por altura
+  de viewport (modo compacto vertical).
+- Toda nueva feature, componente, página o refactorización debe respetar este criterio de forma estricta.
+Garantías preservadas sin cambio: principios I a VI; clasificación de casos límite; seguridad e integridad;
+coherencia de contratos; trazabilidad y fuente de verdad; cuatro autorizaciones humanas; condiciones de entrega
+y definición de cierre; y gobernanza.
+Plan de migración: refactorización global de estilos en el frontend eliminando consultas de medios y
+reglas correspondientes a mobile y tablet (< 1024px).
+-->
+
+---
+<!--
+Sync Impact Report — Enmienda 2026-11-12
+Versión: 9.1.0 → 9.2.0 (MINOR: ampliación material compatible del Principio I, Simplicidad y calidad,
+y del Principio V, Trazabilidad y fuente de verdad, para formalizar el enfoque de Documentación Viva
+/ Spec-Anchored y la delegación del historial a Git. No se elimina ni se debilita ningún principio ni
+ninguna garantía previa).
+Principios modificados:
+- I. Simplicidad y calidad: se amplía la obligación de eliminar código muerto a la eliminación de
+  documentación obsoleta, redundante o derogada dentro del alcance de las especificaciones.
+- V. Trazabilidad y fuente de verdad: se precisa que la conservación inmutable de evidencia histórica
+  aplica exclusivamente a registros de autorizaciones humanas y eventos de auditoría, mientras que los
+  artefactos de especificación (`specs/`) son expresamente documentación viva que refleja únicamente
+  el estado vigente del sistema. El historial de versiones previas queda delegado formal e íntegramente
+  a Git (commits, ramas y diffs), prohibiendo acumular secciones de antecedentes históricos o tareas
+  superseded en los documentos normativos activos.
+Secciones añadidas: ninguna.
+Secciones eliminadas: ninguna. Ninguna sección renumerada.
+Línea de versión: Last Amended 2026-10-26 → 2026-11-12. Ratificación conservada: 2026-08-31.
+Reglas adoptadas:
+- Las especificaciones (`specs/`): `spec.md`, `plan.md`, `tasks.md`, modelos y contratos, constituyen
+  documentación viva y describen exclusivamente el comportamiento, arquitectura, tareas y requisitos
+  vigentes del sistema.
+- La trazabilidad histórica de versiones, decisiones anteriores y evolución de requisitos se delega
+  a Git; no se acumulan capas de antecedentes históricos en los artefactos activos.
+- Se elimina la documentación obsoleta, redundante o derogada en el mismo cambio en que se actualiza
+  el alcance de una funcionalidad.
+Garantías preservadas sin cambio: principios II, III, IV y VI; clasificación de casos límite;
+seguridad e integridad; coherencia de contratos; autorizaciones humanas y sus evidencias; prohibición
+de ejecutar tests por el agente; condiciones de entrega y definición de cierre; y gobernanza.
+Plan de migración: no requiere migración retroactiva obligatoria inmediata de especificaciones ya
+cerradas; aplica a especificaciones en curso y a refactorizaciones de documentación solicitadas.
+-->
+
+---
+<!--
 Sync Impact Report — Enmienda 2026-10-26
 Versión: 9.0.0 → 9.1.0 (MINOR: se añade el principio VI, Mínimo alcance necesario, de forma
 compatible. No se elimina ni se redefine de forma incompatible ningún principio ni ninguna

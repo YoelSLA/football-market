@@ -1,6 +1,11 @@
 # Feature Specification: [FEATURE NAME]
 
-<!-- MUST seguir Constitution y docs/development/sdd-workflow.md.
+<!-- MUST seguir Constitution (§V) y docs/development/sdd-workflow.md.
+Documentación viva: este documento describe exclusivamente el comportamiento funcional
+vigente y aprobado del sistema. El historial de cambios, decisiones superadas y requisitos
+derogados se delega íntegramente a Git; queda prohibido acumular secciones de antecedentes
+históricos o revisiones pasadas en este archivo. Forma parte de la tríada permanente
+obligatoria junto a plan.md y tasks.md.
 Specify materializa/reanuda identidad mediante create-new-feature.sh; no asignar números
 manualmente ni sobrescribir artefactos al usar --reuse. Las US formales nacen aquí,
 no de épicas REQ. La existencia de este archivo no completa Specify ni habilita Ready. -->

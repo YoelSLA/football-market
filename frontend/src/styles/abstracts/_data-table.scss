@@ -1,0 +1,52 @@
+@use "tokens/colors" as colors;
+@use "tokens/spacing" as spacing;
+
+@mixin data-table-wrapper {
+	// 4. 📦 Box Model
+	width: 100%;
+	border: 1px solid colors.$border-panel;
+	border-radius: 8px;
+
+	// 6. 🎨 Visual
+	background-color: colors.$surface-data-table;
+
+	// 7. ⚙️ Behavior
+	overflow: hidden;
+}
+
+@mixin data-table-header {
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+
+	// 5. 🔤 Typography
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	white-space: nowrap;
+
+	// 6. 🎨 Visual
+	background-color: colors.$surface-data-header;
+	border-bottom: 1px solid colors.$border-glass-subtle;
+	color: colors.$text-header-table;
+}
+
+@mixin data-table-cell {
+	// 4. 📦 Box Model
+	box-sizing: border-box;
+	vertical-align: middle;
+
+	// 6. 🎨 Visual
+	border-bottom: 1px solid colors.$border-glass-faint;
+	color: colors.$text-body-on-dark;
+}
+
+@mixin data-table-row {
+	// 7. ⚙️ Behavior
+	transition: background-color 0.15s ease;
+
+	&:hover {
+		background-color: colors.$surface-glass-subtle;
+	}
+}
+

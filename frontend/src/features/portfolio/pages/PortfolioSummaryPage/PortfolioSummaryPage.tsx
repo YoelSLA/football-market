@@ -1,8 +1,8 @@
 import { PageLayout } from "@/app/layouts";
 import { usePortfolioSummaryPage } from "@/features/portfolio/hooks";
 import type { PortfolioSummary } from "@/features/portfolio/types";
-import PortfolioSummaryContent from "./PortfolioSummaryContent";
-import PortfolioSummaryHeader from "./PortfolioSummaryHeader";
+import PortfolioSummaryContent from "./components/PortfolioSummaryContent";
+import PortfolioSummaryHeader from "./components/PortfolioSummaryHeader";
 import styles from "./PortfolioSummaryPage.module.scss";
 
 export default function PortfolioSummaryPage() {
@@ -10,8 +10,8 @@ export default function PortfolioSummaryPage() {
 	const s: PortfolioSummary | null | undefined = page.summary;
 
 	return (
-		<div className={styles.portfolioSummary} aria-busy={page.isLoading}>
-			<PageLayout>
+		<PageLayout>
+			<div className={styles.portfolioSummary} aria-busy={page.isLoading}>
 				<div className={styles.portfolioSummary__panel}>
 					<PortfolioSummaryHeader
 						title="Mi portfolio"
@@ -25,7 +25,7 @@ export default function PortfolioSummaryPage() {
 						onRetry={page.retry}
 					/>
 				</div>
-			</PageLayout>
-		</div>
+			</div>
+		</PageLayout>
 	);
 }

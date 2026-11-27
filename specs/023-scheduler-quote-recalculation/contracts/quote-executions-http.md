@@ -1,0 +1,182 @@
+# Contrato HTTP: ejecuciones de recálculo con origen y resultado
+
+## Contrato vigente de integración — 2026-11-11
+
+Referencia normativa compartida:
+[contrato HTTP de SPEC-016](../../016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md)
+y [base común](../integration-baseline.md). Este encabezado sustituye ejemplos/afirmaciones
+incompatibles del antecedente siguiente.
+
+- POST manual conserva request/defaults y devuelve 200 con `executionId` público, incluso repetido
+  en la misma fecha. Puede reemplazar la cotización diaria; no devuelve conflicto por fecha manual.
+- GET por fecha conserva `{ "executions": [...] }`, sin paginación, con todas las finalizadas y
+  orden `startedAt DESC, executionId DESC`; vacía sin resultados. Cada elemento incluye ID público,
+  origen, resultado/motivo derivados, parámetros, contadores y tiempos. No exponer contexto abierto
+  como éxito ni exigir ocultar `executionId` como si fuera un detalle interno accidental.
+- `notRepricedPlayers` cuenta solo fecha vigente posterior a la corrida. Reemplazo del mismo día
+  cuenta como recalculado/arrastrado, no omitido. Se conserva partición de contadores al cerrar.
+- AUTOMATIC tiene cuota de una corrida registrada por día; manuales ilimitadas. El conflicto
+  automático conserva `EXECUTION_ALREADY_EXISTS` como evento `skipped`, no una ruta automática HTTP.
+- Conservar JWT y errores estructurales existentes. No exponer trazas, mensajes técnicos ni IDs
+  ajenos al contrato. No se agregan rutas de scheduler ni filtros de origen.
+
+El ranking paginado de SPEC-016 y su adopción por SPEC-022 son ajenos a la programación; mantener
+su contrato y pendientes existentes. No acreditar que la integración ya esté implementada.
+
+## Contrato de origen — antecedente, no aplicar reglas sustituidas
+
+**Feature**: `023-scheduler-quote-recalculation`
+**Spec**: [`spec.md`](../spec.md) · **Data model**: [`../data-model.md`](../data-model.md)
+
+Este documento fija el **delta** que esta feature introduce en el contrato HTTP del recálculo de
+cotizaciones. El contrato funcional y normativo completo de la API de cotizaciones sigue siendo
+[`specs/016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md`](../../016-ejecutar-recalculo-manual-de-cotizaciones/contracts/quotes-http.md),
+que **debe actualizarse de forma aditiva en el mismo cambio** (§IV de la Constitución). Ante
+discrepancia entre ambos documentos, prevalece el de SPEC-016 actualizado.
+
+## 1. Rutas
+
+**No se crea, modifica ni retira ninguna ruta.** No hay endpoint de disparo manual del proceso
+automático ni consulta histórica nueva (FR-005).
+
+| Método y ruta | Cambio en esta feature |
+| --- | --- |
+| `POST /api/quotes/recalculate` | Sin cambios en el request. El response gana tres campos aditivos. `origin` siempre `MANUAL` |
+| `GET /api/quotes/executions?date=` | Sin cambios en la query. Retorna todas las corridas de la fecha; cada elemento gana los mismos tres campos aditivos |
+| `POST /api/quotes/initialize` | Sin cambios |
+| `GET /api/players/{id}/quotes`, `.../quotes/current`, `/api/players/ranking` | Sin cambios |
+
+Todas las rutas conservan la exigencia de JWT válido y el formato de error `ErrorResponseDTO`.
+
+## 2. Objeto de ejecución ampliado
+
+Se añaden tres campos al objeto `QuoteExecutionResponse`:
+
+| Campo | Tipo | Nulable | Semántica |
+| --- | --- | --- | --- |
+| `origin` | `string` | no | Origen de la corrida: `MANUAL` o `AUTOMATIC` (FR-004) |
+| `result` | `string` | no | Desenlace: `SUCCESS` cuando `failedPlayers = 0`; `FAILED` en caso contrario (FR-004) |
+| `failureReason` | `string` | sí | Nulo con `SUCCESS`; `INDIVIDUAL_PLAYER_FAILURES` con `FAILED`. Catálogo cerrado, apto para exposición (FR-010) |
+
+Los campos existentes conservan nombre, tipo y significado. El orden de serialización no es parte del
+contrato.
+
+### Ejemplo — `GET /api/quotes/executions?date=2026-11-02`
+
+```json
+{
+  "executions": [
+    {
+      "id": 912,
+      "quoteDate": "2026-11-02",
+      "origin": "AUTOMATIC",
+      "result": "SUCCESS",
+      "failureReason": null,
+      "strategy": "POSITIONAL_PERFORMANCE",
+      "strategyVersion": "v1",
+      "adjustmentFactor": 0.10,
+      "variationCap": 0.10,
+      "minPriceFloor": 1,
+      "pricedPlayers": 42,
+      "recomputedRows": 30,
+      "carriedForwardRows": 12,
+      "notRepricedPlayers": 3,
+      "failedPlayers": 0,
+      "startedAt": "2026-11-02T00:00:00Z",
+      "finishedAt": "2026-11-02T12:00:12Z"
+    },
+    {
+      "id": 913,
+      "quoteDate": "2026-11-02",
+      "origin": "MANUAL",
+      "result": "SUCCESS",
+      "failureReason": null,
+      "strategy": "POSITIONAL_PERFORMANCE",
+      "strategyVersion": "v1",
+      "adjustmentFactor": 0.10,
+      "variationCap": 0.10,
+      "minPriceFloor": 1,
+      "pricedPlayers": 42,
+      "recomputedRows": 30,
+      "carriedForwardRows": 12,
+      "notRepricedPlayers": 3,
+      "failedPlayers": 0,
+      "startedAt": "2026-11-02T13:00:00Z",
+      "finishedAt": "2026-11-02T13:00:12Z"
+    }
+  ]
+}
+```
+
+### Ejemplo — `POST /api/quotes/recalculate` (sin cambios en el request)
+
+```json
+{ "strategy": "POSITIONAL_PERFORMANCE" }
+```
+
+Response `200`:
+
+```json
+{
+  "quoteDate": "2026-11-03",
+  "origin": "MANUAL",
+  "result": "FAILED",
+  "failureReason": "INDIVIDUAL_PLAYER_FAILURES",
+  "strategy": "POSITIONAL_PERFORMANCE",
+  "strategyVersion": "v1",
+  "adjustmentFactor": 0.10,
+  "variationCap": 0.10,
+  "minPriceFloor": 1,
+  "pricedPlayers": 42,
+  "recomputedRows": 29,
+  "carriedForwardRows": 12,
+  "notRepricedPlayers": 3,
+  "failedPlayers": 1,
+  "startedAt": "2026-11-03T10:00:00Z",
+  "finishedAt": "2026-11-03T10:00:09Z"
+}
+```
+
+## 3. Comportamiento en la consulta por fecha
+
+- La lista incluye todas las corridas de la fecha, ordenadas por inicio descendente. Puede incluir muchas `MANUAL` y como máximo una `AUTOMATIC`.
+- Una fecha sin ejecución devuelve `{"executions": []}`. Si el disparo se omite porque ya existe
+  una ejecución automática para esa fecha, se devuelve la corrida automática existente junto con cualquier manual. El motivo del rechazo o fallo
+  no aparece en la respuesta: está en el registro operativo; la persistencia depende del caso de uso existente.
+- El origen no es un filtro: no se añade query parameter ni se cambia el índice.
+
+## 4. Errores
+
+Sin códigos nuevos ni cambios de código HTTP. Se mantienen los de SPEC-016:
+
+| Código | HTTP | Causa |
+| --- | --- | --- |
+| `INVALID_REQUEST` | 400 | Body o query ausentes o malformados |
+| `UNKNOWN_QUOTE_STRATEGY` | 400 | Estrategia fuera del catálogo |
+| `INVALID_ADJUSTMENT_FACTOR`, `INVALID_VARIATION_CAP`, `INVALID_MIN_PRICE_FLOOR` | 400 | Parámetros fuera de rango |
+| `MARKET_NOT_INITIALIZED` | 409 | Mercado no inicializado |
+| `EXECUTION_ALREADY_EXISTS` | 409 | Conflicto idempotente de corrida automática para la fecha; no limita corridas manuales |
+| `401` | — | JWT ausente o inválido |
+| `INTERNAL_ERROR` | 500 | Fallo general |
+
+El orden de precedencia de SPEC-016 se conserva. La vía automática **no** usa este contrato: no
+responde HTTP y traduce los rechazos a eventos operativos.
+
+## 5. Compatibilidad
+
+- Los campos nuevos son aditivos: ningún campo existente cambia de nombre, tipo, obligatoriedad ni
+  significado.
+- Un consumidor que ignore los campos nuevos sigue funcionando; el frontend de esta entrega no los
+  consume. No se requieren cambios de frontend (FR-005, fuera de alcance).
+- La obligación de coherencia incluye, en el mismo cambio: las anotaciones OpenAPI de
+  `QuoteExecutionResponseDTO` y la descripción de `GET /api/quotes/executions` en `QuoteController`,
+  el contrato de SPEC-016 y los tests funcionales de Controller afectados.
+
+## 6. Trazabilidad
+
+| Requisito | Cobertura en este contrato |
+| --- | --- |
+| FR-004 | Campos `origin`, `result` y `failureReason` del objeto de ejecución |
+| FR-005 | Mismo endpoint y misma query; sin consulta histórica nueva |
+| FR-010 | `failureReason` limitado a códigos cerrados, sin trazas ni identificadores internos |
+| FR-006, FR-012, FR-013 | Consulta de la ejecución existente, si la hay; los errores se registran operativamente |

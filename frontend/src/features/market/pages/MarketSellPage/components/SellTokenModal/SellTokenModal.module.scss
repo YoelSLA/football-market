@@ -1,0 +1,67 @@
+@use "@/styles/abstracts" as ds;
+
+.dialog {
+	@include ds.operation-dialog;
+}
+
+.modal {
+	@include ds.operation-modal-shell;
+
+	&__content {
+		@include ds.operation-modal-content;
+	}
+
+	&__grid {
+		@include ds.operation-modal-grid;
+	}
+
+	&__heroCol {
+		@include ds.operation-modal-col;
+	}
+
+	&__formCol {
+		@include ds.operation-modal-col;
+		justify-content: flex-start;
+		gap: 10px;
+	}
+
+	&__form {
+		@include ds.operation-modal-col;
+		gap: 10px;
+	}
+
+	&__estimationSlot {
+		min-height: 240px;
+		height: 240px;
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__error {
+		padding: 8px 12px;
+		border-radius: 6px;
+		border: 1px solid ds.$state-error-border;
+		background-color: ds.$surface-data-table;
+		color: ds.$state-error-on-dark;
+		font-size: 12px;
+		line-height: 1.4;
+
+		p {
+			margin: 0;
+		}
+	}
+
+	&__blockReason {
+		padding: 8px 12px;
+		border-radius: 6px;
+		border-left: 3px solid ds.$state-caution;
+		background-color: ds.$surface-caution-subtle;
+		color: ds.$state-caution;
+		font-size: 11.5px;
+		line-height: 1.4;
+
+		p {
+			margin: 0;
+		}
+	}
+}

@@ -1,9 +1,12 @@
 package footballmarket.features.market.application.impl;
 
+import footballmarket.common.config.QueryCacheConfiguration;
+import footballmarket.common.config.QueryCacheInvalidationEvent;
 import footballmarket.features.auth.application.exceptions.UserNotFoundException;
 import footballmarket.features.auth.domain.User;
 import footballmarket.features.auth.domain.enums.UserRole;
 import footballmarket.features.auth.infraestructure.UserRepository;
+import footballmarket.features.businessmetrics.application.BusinessMetricListingCancelledEvent;
 import footballmarket.features.catalog.application.exceptions.PlayerNotFoundException;
 import footballmarket.features.catalog.application.exceptions.PlayerNotVisibleException;
 import footballmarket.features.catalog.domain.models.player.Player;
@@ -16,6 +19,8 @@ import footballmarket.features.market.domain.models.PlayerToken;
 import footballmarket.features.market.domain.models.TokenListing;
 import footballmarket.features.market.domain.records.SellOrderRequest;
 import footballmarket.features.market.domain.records.TokenListingView;
+import footballmarket.features.market.domain.records.UserOrdersPage;
+import footballmarket.features.market.domain.records.UserOrdersSummary;
 import footballmarket.features.market.infraestructure.PlayerTokenRepository;
 import footballmarket.features.market.infraestructure.TokenListingRepository;
 import footballmarket.features.quote.application.QuoteSource;
@@ -26,10 +31,12 @@ import footballmarket.features.quote.domain.records.CurrentQuote;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +54,7 @@ public class TokenListingServiceImpl implements TokenListingService {
   private final QuoteSource quoteSource;
   private final MarketInitializationGuard marketInitialization;
   private final Clock marketClock;
+  private final ApplicationEventPublisher events;
 
   @Value("${market.listing.expiration-duration:PT24H}")
   private Duration expirationDuration;
@@ -89,9 +97,19 @@ public class TokenListingServiceImpl implements TokenListingService {
       throw new InsufficientStockException();
     }
     try {
-      return this.listings.save(
-          TokenListing.publish(
-              seller, player, order.quantity(), quote, now, now.plus(this.expirationDuration)));
+      TokenListing listing =
+          this.listings.save(
+              TokenListing.publish(
+                  seller,
+                  player,
+                  order.quantity(),
+                  order.unitPrice(),
+                  quote,
+                  now,
+                  now.plus(this.expirationDuration)));
+      this.events.publishEvent(
+          new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
+      return listing;
     } catch (ArithmeticException overflow) {
       throw new ArithmeticOverflowException();
     }
@@ -117,6 +135,9 @@ public class TokenListingServiceImpl implements TokenListingService {
       throw new ListingNotAvailableException();
     }
     listing.markCancelled(now);
+    this.events.publishEvent(new BusinessMetricListingCancelledEvent());
+    this.events.publishEvent(
+        new QueryCacheInvalidationEvent(java.util.Set.of(QueryCacheConfiguration.P2P_MARKET)));
     return listing.snapshot(now);
   }
 
@@ -133,6 +154,15 @@ public class TokenListingServiceImpl implements TokenListingService {
   @Override
   @Transactional(readOnly = true)
   public List<TokenListingView> mine(String viewerEmail, String status) {
+    return this.mine(viewerEmail, status, 0, 100, "NEWEST").content();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public UserOrdersPage mine(String viewerEmail, String status, int page, int size, String sort) {
+    if (page < 0 || size < 1 || size > 100) {
+      throw new InvalidListingStatusException();
+    }
     User viewer = this.resolveUser(viewerEmail);
     TokenListingStatus filter = null;
     if (status != null) {
@@ -142,12 +172,89 @@ public class TokenListingServiceImpl implements TokenListingService {
               .findFirst()
               .orElseThrow(InvalidListingStatusException::new);
     }
+
+    String effectiveSort = (sort == null || sort.isBlank()) ? "NEWEST" : sort;
+    Comparator<TokenListingView> comparator;
+    switch (effectiveSort) {
+      case "NEWEST" ->
+          comparator =
+              Comparator.comparing(TokenListingView::createdAt)
+                  .reversed()
+                  .thenComparing(Comparator.comparing(TokenListingView::listingId).reversed());
+      case "OLDEST" ->
+          comparator =
+              Comparator.comparing(TokenListingView::createdAt)
+                  .thenComparing(TokenListingView::listingId);
+      case "PRICE_DESC" ->
+          comparator =
+              Comparator.comparing(TokenListingView::unitPrice)
+                  .reversed()
+                  .thenComparing(Comparator.comparing(TokenListingView::createdAt).reversed());
+      case "PRICE_ASC" ->
+          comparator =
+              Comparator.comparing(TokenListingView::unitPrice)
+                  .thenComparing(Comparator.comparing(TokenListingView::createdAt).reversed());
+      default -> throw new InvalidListingStatusException();
+    }
+
     OffsetDateTime now = OffsetDateTime.now(this.marketClock);
+    List<TokenListingView> allUserListings =
+        this.listings.findBySellerId(viewer.getId()).stream()
+            .map(listing -> listing.snapshot(now))
+            .toList();
+
+    int activeOrders = 0;
+    int activeTokens = 0;
+    long activeValue = 0;
+    int soldOrders = 0;
+    int soldTokens = 0;
+    long soldValue = 0;
+    int cancelledOrders = 0;
+    int expiredOrders = 0;
+
+    for (TokenListingView view : allUserListings) {
+      switch (view.status()) {
+        case ACTIVE -> {
+          activeOrders++;
+          activeTokens += view.quantity();
+          activeValue += view.totalAmount();
+        }
+        case SOLD -> {
+          soldOrders++;
+          soldTokens += view.quantity();
+          soldValue += view.totalAmount();
+        }
+        case CANCELLED -> cancelledOrders++;
+        case EXPIRED -> expiredOrders++;
+      }
+    }
+
+    UserOrdersSummary summary =
+        new UserOrdersSummary(
+            activeOrders,
+            activeTokens,
+            activeValue,
+            soldOrders,
+            soldTokens,
+            soldValue,
+            cancelledOrders,
+            expiredOrders,
+            allUserListings.size());
+
     TokenListingStatus selected = filter;
-    return this.listings.findBySellerId(viewer.getId()).stream()
-        .map(listing -> listing.snapshot(now))
-        .filter(listing -> selected == null || listing.status() == selected)
-        .toList();
+    List<TokenListingView> filtered =
+        allUserListings.stream()
+            .filter(listing -> selected == null || listing.status() == selected)
+            .sorted(comparator)
+            .toList();
+
+    long totalElements = filtered.size();
+    int totalPages = totalElements == 0 ? 0 : (int) Math.ceil((double) totalElements / size);
+    int fromIndex = Math.min(page * size, filtered.size());
+    int toIndex = Math.min(fromIndex + size, filtered.size());
+    List<TokenListingView> pageContent = filtered.subList(fromIndex, toIndex);
+
+    return new UserOrdersPage(summary, pageContent, page, size, totalElements, totalPages);
   }
 
   @Override

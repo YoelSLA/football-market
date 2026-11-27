@@ -1,0 +1,259 @@
+@use "@/styles/abstracts" as ds;
+
+.recentQuotesCard {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	height: 100%;
+	padding: 18px 20px;
+	border-radius: 16px;
+	background: linear-gradient(135deg, ds.$surface-panel-from 0%, ds.$surface-chart 100%);
+	border: 1px solid ds.$border-panel-tint;
+	box-shadow: 0 4px 20px -2px ds.$shadow-panel;
+	color: ds.$text-body-on-dark;
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-bottom: 12px;
+		border-bottom: 1px solid ds.$border-panel-tint;
+	}
+
+	&__titleRow {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	&__iconWrapper {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		background-color: ds.$surface-highlight-tint;
+		border: 1px solid ds.$border-highlight-subtle;
+		color: ds.$accent-gain;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 14px;
+		font-weight: 700;
+		color: ds.$text-title-on-dark;
+	}
+
+	&__subtitle {
+		font-size: 11px;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__headerBtn {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		border-radius: 8px;
+		font-size: 11px;
+		font-weight: 600;
+		background-color: ds.$surface-card-dark;
+		border: 1px solid ds.$border-panel;
+		color: ds.$accent-gain;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover {
+			background-color: ds.$surface-panel-alt;
+			border-color: ds.$border-gain-subtle;
+		}
+	}
+
+	&__tableContainer {
+		flex: 1;
+		margin: 12px 0;
+		overflow-x: auto;
+		overflow-y: auto;
+		max-height: 440px;
+		border-radius: 10px;
+		background-color: ds.$surface-page-deep;
+		border: 1px solid ds.$border-panel-soft;
+		scrollbar-gutter: stable;
+	}
+
+	&__empty {
+		margin: 0;
+		padding: 24px 16px;
+		text-align: center;
+		font-size: 12px;
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__table {
+		width: 100%;
+		border-collapse: collapse;
+		text-align: left;
+		font-size: 12px;
+
+		thead tr {
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			background-color: ds.$surface-data-header;
+			border-bottom: 1px solid ds.$border-panel-soft;
+		}
+
+		th {
+			position: sticky;
+			top: 0;
+			z-index: 2;
+			padding: 8px 12px;
+			font-size: 10px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: ds.$text-muted-on-dark;
+			background-color: ds.$surface-data-header;
+			border-bottom: 1px solid ds.$border-panel-soft;
+		}
+
+		tbody tr {
+			border-bottom: 1px solid ds.$border-panel-tint;
+			transition: background-color 0.12s ease;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			&:hover {
+				background-color: ds.$surface-glass-subtle;
+			}
+		}
+
+		td {
+			padding: 8px 12px;
+			white-space: nowrap;
+		}
+	}
+
+	&__cellDate {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		font-weight: 600;
+		color: ds.$text-primary-on-dark;
+	}
+
+	&__dot {
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background-color: ds.$accent-gain;
+	}
+
+	&__tagHoy {
+		font-size: 10px;
+		font-weight: 700;
+		color: ds.$accent-gain;
+	}
+
+	&__cellPrice {
+		color: ds.$text-title-on-dark;
+	}
+
+	&__badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 6px;
+		border-radius: 4px;
+		font-size: 10px;
+		font-weight: 700;
+
+		&--up {
+			background-color: ds.$surface-gain-tint;
+			border: 1px solid ds.$border-gain-subtle;
+			color: ds.$state-gain;
+		}
+
+		&--down {
+			background-color: ds.$surface-loss-tint;
+			border: 1px solid ds.$border-loss-emphasis;
+			color: ds.$state-loss;
+		}
+
+		&--flat {
+			background-color: ds.$surface-highlight-tint;
+			border: 1px solid ds.$border-highlight-subtle;
+			color: ds.$text-muted-on-dark;
+		}
+	}
+
+	&__cellFactorSport {
+		font-family: monospace;
+		font-size: 11px;
+		font-weight: 600;
+		color: ds.$state-gain;
+	}
+
+	&__cellFactorMarket {
+		font-family: monospace;
+		font-size: 11px;
+		font-weight: 600;
+		color: ds.$accent-highlight;
+	}
+
+	&__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		padding-top: 12px;
+		border-top: 1px solid ds.$border-panel-tint;
+		font-size: 11px;
+	}
+
+	&__footerInfo {
+		color: ds.$text-muted-on-dark;
+	}
+
+	&__footerBtn {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 14px;
+		border-radius: 10px;
+		font-size: 12px;
+		font-weight: 700;
+		background: linear-gradient(135deg, ds.$surface-panel-alt 0%, ds.$surface-card-dark 100%);
+		border: 1px solid ds.$border-gain-subtle;
+		color: ds.$accent-gain;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover {
+			background: ds.$surface-panel-alt;
+			box-shadow: 0 2px 10px ds.$surface-gain-glow;
+			transform: translateY(-1px);
+		}
+
+		&:active {
+			transform: translateY(0);
+		}
+	}
+}
+
+@media (max-width: 640px) {
+	.recentQuotesCard {
+		&__footer {
+			flex-direction: column;
+			align-items: stretch;
+		}
+
+		&__footerBtn {
+			justify-content: center;
+		}
+	}
+}
+

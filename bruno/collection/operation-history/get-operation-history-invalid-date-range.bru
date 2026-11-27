@@ -1,0 +1,32 @@
+meta {
+  name: Rechazar rango de fechas inválido (400)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/users/me/transactions?executedFrom=2026-11-12T00:00:00Z&executedBefore=2026-11-12T00:00:00Z
+  body: none
+  auth: bearer
+}
+
+params:query {
+  executedFrom: 2026-11-12T00:00:00Z
+  executedBefore: 2026-11-12T00:00:00Z
+}
+
+headers {
+  authorization: Bearer {{auth_token}}
+  accept: application/json
+}
+
+auth:bearer {
+  token: {{auth_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+}

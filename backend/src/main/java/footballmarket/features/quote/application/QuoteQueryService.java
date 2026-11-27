@@ -2,6 +2,8 @@ package footballmarket.features.quote.application;
 
 import footballmarket.features.quote.domain.models.PlayerQuote;
 import footballmarket.features.quote.domain.records.PlayerRankingEntry;
+import footballmarket.features.quote.domain.records.QuoteRankingPage;
+import footballmarket.features.quote.domain.records.QuoteRankingQuery;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -53,4 +55,7 @@ public interface QuoteQueryService {
    *     tiene cotizaciones
    */
   List<PlayerRankingEntry> findRanking();
+
+  /** Lee una página filtrada conservando posiciones y opciones globales en un único snapshot. */
+  QuoteRankingPage findRanking(QuoteRankingQuery query);
 }

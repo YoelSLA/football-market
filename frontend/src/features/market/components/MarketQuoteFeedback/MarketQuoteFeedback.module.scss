@@ -1,20 +1,33 @@
 @use "@/styles/abstracts" as ds;
 
 .marketQuoteFeedback {
+	// 3. 🧩 Layout
 	display: grid;
 	gap: .3rem;
-	min-width: 0;
-	font-size: .73rem;
-	color: ds.$state-caution;
 
+	// 4. 📦 Box Model
+	min-width: 0;
+
+	// 5. 🔤 Typography
+	font-size: .73rem;
+
+	// 6. 🎨 Visual
+	color: ds.$state-caution;
 	button {
+		// 3. 🧩 Layout
 		justify-self: start;
-		border: 1px solid ds.$border-finance;
-		border-radius: .35rem;
+
+		// 4. 📦 Box Model
 		padding: .25rem .4rem;
-		background: ds.$surface-finance-panel-to;
-		color: ds.$accent-finance-cyan;
+
+		// 5. 🔤 Typography
 		font-size: .7rem;
 		text-align: left;
+
+		// 6. 🎨 Visual
+		border: 1px solid ds.$border-panel;
+		border-radius: .35rem;
+		background-color: ds.$surface-panel-to;
+		color: ds.$accent-highlight;
 	}
 }

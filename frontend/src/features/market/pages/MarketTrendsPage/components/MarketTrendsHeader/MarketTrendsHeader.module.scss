@@ -1,0 +1,106 @@
+@use "@/styles/abstracts" as ds;
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ds.$space-sm;
+	padding: 4px 0;
+	width: 100%;
+	flex-shrink: 0;
+
+	&__left {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	&__icon {
+		width: 18px;
+		height: 18px;
+		color: ds.$accent-gain;
+	}
+
+	&__title {
+		margin: 0;
+		font-size: 16px;
+		font-weight: 750;
+		color: ds.$text-strong-on-dark;
+	}
+
+	&__tag {
+		font-size: 11px;
+		font-weight: 700;
+		padding: 2px 8px;
+		border-radius: 9999px;
+		background: ds.$surface-gain-soft;
+		color: ds.$accent-gain;
+		border: 1px solid ds.$border-gain-subtle;
+	}
+
+	&__right {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	&__badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 10px;
+		border-radius: 6px;
+		background-color: ds.$surface-data-control;
+		border: 1px solid ds.$border-panel-mid;
+		font-size: 12px;
+		font-weight: 600;
+		color: ds.$text-dimmed-on-dark;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&__badgeIcon {
+		width: 13px;
+		height: 13px;
+		color: ds.$text-dimmed-on-dark;
+	}
+
+	&__refreshButton {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 28px;
+		padding: 0 12px;
+		border-radius: 6px;
+		background-color: ds.$surface-panel-from;
+		border: 1px solid ds.$border-panel-mid;
+		font-size: 12px;
+		font-weight: 700;
+		color: ds.$text-strong-on-dark;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background-color: ds.$surface-control-active;
+			border-color: ds.$accent-gain;
+			color: ds.$accent-gain;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+
+	&__spinning {
+		animation: spin 1s linear infinite;
+	}
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

@@ -1,0 +1,104 @@
+@use "@/styles/abstracts" as ds;
+
+.footer {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+
+	// 4. 📦 Box Model
+	padding: ds.$space-xs 0;
+	margin-bottom: ds.$space-sm;
+
+	// 6. 🎨 Visual
+	border-top: 1px solid ds.$border-panel;
+}
+
+.priceBlock {
+	// 3. 🧩 Layout
+	display: flex;
+	flex-direction: column;
+}
+
+.priceLabel {
+	// 5. 🔤 Typography
+	font-size: 0.65rem;
+	font-weight: 600;
+	text-transform: uppercase;
+
+	// 6. 🎨 Visual
+	color: ds.$text-auxiliary-on-dark;
+}
+
+.priceValue {
+	// 5. 🔤 Typography
+	font-size: 0.875rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+
+	// 6. 🎨 Visual
+	color: ds.$text-primary-on-dark;
+}
+
+.metaBlock {
+	// 3. 🧩 Layout
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.tokensBadge {
+	// 4. 📦 Box Model
+	padding: 2px 6px;
+
+	// 5. 🔤 Typography
+	font-size: 0.7rem;
+	font-weight: 600;
+
+	// 6. 🎨 Visual
+	border-radius: 4px;
+	background: ds.$surface-data-control;
+	color: ds.$text-strong-on-dark;
+	border: 1px solid ds.$border-subtle;
+}
+
+.deltaBadge {
+	// 4. 📦 Box Model
+	padding: 2px 6px;
+
+	// 5. 🔤 Typography
+	font-size: 0.7rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+
+	// 6. 🎨 Visual
+	border-radius: 4px;
+}
+
+.deltaUp {
+	background: ds.$surface-gain-soft;
+	color: ds.$state-gain;
+	border: 1px solid ds.$border-gain-subtle;
+}
+
+.deltaDown {
+	background: ds.$surface-loss-subtle;
+	color: ds.$state-loss;
+	border: 1px solid ds.$border-loss-emphasis;
+}
+
+.ratioBadge {
+	// 4. 📦 Box Model
+	padding: 2px 6px;
+
+	// 5. 🔤 Typography
+	font-size: 0.7rem;
+	font-weight: 600;
+
+	// 6. 🎨 Visual
+	border-radius: 4px;
+	background: ds.$surface-data-control;
+	color: ds.$text-soft-on-dark;
+	border: 1px solid ds.$border-subtle;
+}
+

@@ -1,17 +1,25 @@
-import { http } from "@/infrastructure/http";
+import axios from "axios";
+import { getErrorCode, http } from "@/infrastructure/http";
 import {
 	toPlayerCatalogFilters,
 	toPlayerDetail,
+	toPlayerQuote,
+	toPlayerQuoteHistory,
 	toPlayersPage,
 	toStatistics,
 } from "./players.mapper";
 import type {
 	PlayerDetail,
+	PlayerQuote,
+	PlayerQuoteHistory,
+	PlayerQuoteHistoryResponseDTO,
+	PlayerQuoteResponseDTO,
 	PlayerResponseDTO,
 	PlayerStatistics,
 	PlayersPage,
 	PlayersPageResponseDTO,
 	QuoteRankingResponseDTO,
+	RankingQuery,
 	ScoreRankingResponseDTO,
 } from "./types";
 
@@ -79,24 +87,81 @@ async function getFilters(
 	return toPlayerCatalogFilters(data);
 }
 
+function toRankingParams(query: RankingQuery) {
+	return {
+		page: query.page,
+		size: query.size,
+		name: query.name || undefined,
+		leagueId: query.leagueId,
+		position: query.position || undefined,
+		order: query.order || undefined,
+	};
+}
+
 async function getScoreRanking(
+	query: RankingQuery,
 	signal: AbortSignal,
 ): Promise<ScoreRankingResponseDTO> {
-	const { data } = await http.get<ScoreRankingResponseDTO>(
-		"/players/ranking/score",
-		{ authenticated: true, signal },
-	);
+	const { data } = await http.get<ScoreRankingResponseDTO>("/rankings/score", {
+		authenticated: true,
+		params: toRankingParams(query),
+		signal,
+	});
 	return data;
 }
 
 async function getQuoteRanking(
+	query: RankingQuery,
 	signal: AbortSignal,
 ): Promise<QuoteRankingResponseDTO> {
-	const { data } = await http.get<QuoteRankingResponseDTO>("/players/ranking", {
+	const { data } = await http.get<QuoteRankingResponseDTO>("/rankings/quote", {
 		authenticated: true,
+		params: toRankingParams(query),
 		signal,
 	});
 	return data;
+}
+
+async function getCurrentQuote(
+	playerId: number,
+	signal?: AbortSignal,
+): Promise<PlayerQuote | null> {
+	try {
+		const { data } = await http.get<PlayerQuoteResponseDTO>(
+			`/players/${playerId}/quotes/current`,
+			{
+				authenticated: true,
+				signal,
+			},
+		);
+		return toPlayerQuote(data);
+	} catch (error: unknown) {
+		if (axios.isCancel(error)) {
+			throw error;
+		}
+		if (
+			axios.isAxiosError(error) &&
+			error.response?.status === 404 &&
+			getErrorCode(error) === "QUOTE_NOT_FOUND"
+		) {
+			return null;
+		}
+		throw error;
+	}
+}
+
+async function getQuoteHistory(
+	playerId: number,
+	signal?: AbortSignal,
+): Promise<PlayerQuoteHistory> {
+	const { data } = await http.get<PlayerQuoteHistoryResponseDTO>(
+		`/players/${playerId}/quotes`,
+		{
+			authenticated: true,
+			signal,
+		},
+	);
+	return toPlayerQuoteHistory(data);
 }
 
 export const playersService = {
@@ -106,4 +171,6 @@ export const playersService = {
 	getFilters,
 	getScoreRanking,
 	getQuoteRanking,
+	getCurrentQuote,
+	getQuoteHistory,
 };

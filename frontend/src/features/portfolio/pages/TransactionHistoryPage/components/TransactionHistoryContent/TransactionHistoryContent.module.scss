@@ -1,0 +1,121 @@
+@use "@/styles/abstracts" as ds;
+
+.transactionHistoryContent {
+	@include ds.data-table-wrapper;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	box-sizing: border-box;
+
+	&__toolbarWrapper {
+		flex-shrink: 0;
+		width: 100%;
+	}
+
+	&__tableContainer {
+		flex: 1;
+		min-height: 0;
+		width: 100%;
+		overflow-x: auto;
+		overflow-y: auto;
+		scrollbar-color: ds.$border-glass ds.$surface-transparent;
+		scrollbar-width: thin;
+		padding: 0 10px 10px;
+	}
+
+	&__table {
+		width: 100%;
+		table-layout: fixed;
+		border-collapse: separate;
+		border-spacing: 0 6px;
+		margin-top: -6px;
+		font-size: 12px;
+
+		thead {
+			position: sticky;
+			top: 0;
+			z-index: 10;
+		}
+
+		th {
+			@include ds.data-table-header;
+			position: sticky;
+			top: 0;
+			z-index: 10;
+			height: 38px;
+			padding: 0 16px;
+			text-align: inherit;
+			background-color: ds.$surface-data-table;
+			border-bottom: 1px solid ds.$border-glass-subtle;
+			box-shadow: inset 0 -1px 0 ds.$border-glass-subtle;
+		}
+
+		tbody tr {
+			background-color: #0b2238;
+			transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+			td {
+				@include ds.data-table-cell;
+				height: 68px;
+				padding: 8px 16px;
+				text-align: inherit;
+				background-color: inherit;
+				border-top: 1px solid ds.$border-panel-soft;
+				border-bottom: 1px solid ds.$border-panel-soft;
+
+				&:first-child {
+					border-top-left-radius: 8px;
+					border-bottom-left-radius: 8px;
+					border-left: 1px solid ds.$border-panel-soft;
+				}
+
+				&:last-child {
+					border-top-right-radius: 8px;
+					border-bottom-right-radius: 8px;
+					border-right: 1px solid ds.$border-panel-soft;
+				}
+			}
+
+			&:hover td {
+				background-color: ds.$surface-glass-interactive;
+				border-color: ds.$border-panel;
+			}
+		}
+	}
+}
+
+.th_id {
+	width: 9%;
+	text-align: left;
+}
+
+.th_player {
+	width: 29%;
+	text-align: left;
+}
+
+.th_operation {
+	width: 12%;
+	text-align: center;
+}
+
+.th_quantity {
+	width: 11%;
+	text-align: right;
+}
+
+.th_unitPrice {
+	width: 14%;
+	text-align: right;
+}
+
+.th_total {
+	width: 12%;
+	text-align: right;
+}
+
+.th_date {
+	width: 13%;
+	text-align: right;
+}

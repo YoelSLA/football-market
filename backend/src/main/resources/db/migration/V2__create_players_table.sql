@@ -1,8 +1,0 @@
-CREATE TABLE players (
-    id BIGINT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    team VARCHAR(255) NOT NULL,
-    league VARCHAR(255) NOT NULL,
-    position VARCHAR(255) NOT NULL,
-    active BOOLEAN NOT NULL
-);

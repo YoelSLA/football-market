@@ -1,27 +1,19 @@
+import styles from "./LaurelRank.module.scss";
+
 interface Props {
 	rank: 1 | 2 | 3;
 }
 
+const RANK_MODIFIERS = {
+	1: styles.laurelRank_rank1,
+	2: styles.laurelRank_rank2,
+	3: styles.laurelRank_rank3,
+} as const;
+
 export default function LaurelRank({ rank }: Props) {
-	const colors = {
-		1: {
-			primary: "#FBBF24",
-			accent: "#F59E0B",
-		},
-		2: {
-			primary: "#CBD5E1",
-			accent: "#94A3B8",
-		},
-		3: {
-			primary: "#F97316",
-			accent: "#EA580C",
-		},
-	};
-
-	const { primary } = colors[rank];
-
 	return (
 		<svg
+			className={`${styles.laurelRank} ${RANK_MODIFIERS[rank]}`}
 			width="62"
 			height="62"
 			viewBox="0 0 64 64"
@@ -31,15 +23,19 @@ export default function LaurelRank({ rank }: Props) {
 		>
 			{/* Estrella superior de 5 puntas */}
 			<path
+				className={styles.laurelRank__star}
 				d="M32 9L33.2 12.8H37.2L34 15.1L35.2 18.9L32 16.5L28.8 18.9L30 15.1L26.8 12.8H30.8L32 9Z"
-				fill={primary}
 			/>
 
 			{/* Rama izquierda de laureles */}
-			<g stroke={primary} strokeWidth="1.5" strokeLinecap="round">
+			<g
+				className={styles.laurelRank__branch}
+				strokeWidth="1.5"
+				strokeLinecap="round"
+			>
 				<path d="M30 52C22 50 16 42 16 32C16 23 20 17 24 14" fill="none" />
 			</g>
-			<g fill={primary}>
+			<g className={styles.laurelRank__leaves}>
 				{/* Hojas izquierda */}
 				<path d="M22 17C19 16 16 19 18 22C21 21 23 18 22 17Z" />
 				<path d="M17 24C14 24 12 28 15 30C18 28 19 25 17 24Z" />
@@ -55,10 +51,14 @@ export default function LaurelRank({ rank }: Props) {
 			</g>
 
 			{/* Rama derecha de laureles */}
-			<g stroke={primary} strokeWidth="1.5" strokeLinecap="round">
+			<g
+				className={styles.laurelRank__branch}
+				strokeWidth="1.5"
+				strokeLinecap="round"
+			>
 				<path d="M34 52C42 50 48 42 48 32C48 23 44 17 40 14" fill="none" />
 			</g>
-			<g fill={primary}>
+			<g className={styles.laurelRank__leaves}>
 				{/* Hojas derecha */}
 				<path d="M42 17C45 16 48 19 46 22C43 21 41 18 42 17Z" />
 				<path d="M47 24C50 24 52 28 49 30C46 28 45 25 47 24Z" />
@@ -75,17 +75,17 @@ export default function LaurelRank({ rank }: Props) {
 
 			{/* Lazo inferior */}
 			<path
+				className={styles.laurelRank__bow}
 				d="M30 52C31 51 33 51 34 52L36 56L32 54L28 56L30 52Z"
-				fill={primary}
 			/>
 
 			{/* Número en el centro */}
 			<text
+				className={styles.laurelRank__number}
 				x="32"
 				y="37"
 				textAnchor="middle"
 				dominantBaseline="central"
-				fill={primary}
 				fontSize="22"
 				fontWeight="900"
 				fontFamily="system-ui, -apple-system, sans-serif"

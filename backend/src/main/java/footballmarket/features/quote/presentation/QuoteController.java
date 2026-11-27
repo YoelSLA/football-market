@@ -83,8 +83,14 @@ public class QuoteController {
   @Operation(
       summary = "Recalcular las cotizaciones",
       description =
-          "Ejecuta una única corrida para la fecha UTC actual con la estrategia y los límites "
-              + "indicados. Todos los parámetros salvo la estrategia tienen valores por defecto.")
+          "Ejecuta una corrida identificable para el día UTC fijado al iniciar, con la estrategia y los límites "
+              + "indicados. Todos los parámetros salvo la estrategia tienen valores por defecto. "
+              + "Admite manuales ilimitadas y actualiza la cotización del mismo día; omite solo fechas posteriores. "
+              + "Cuando hay score, combina el multiplicador deportivo con la demanda neta del jugador y aplica "
+              + "el tope general y el piso mínimo; sin score conserva el comportamiento de arrastre existente. "
+              + "La respuesta identifica el tipo de recálculo y la ventana de demanda usada. "
+              + "El resumen identifica executionId, origin=MANUAL, result y failureReason derivado; "
+              + "no expone detalles internos de los fallos individuales.")
   @ApiResponse(
       responseCode = "200",
       description = "Resumen persistido de la corrida",
@@ -97,7 +103,7 @@ public class QuoteController {
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(
       responseCode = "409",
-      description = "MARKET_NOT_INITIALIZED o EXECUTION_ALREADY_EXISTS",
+      description = "MARKET_NOT_INITIALIZED",
       content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
   @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
   @ApiResponse(
@@ -115,13 +121,41 @@ public class QuoteController {
                 request == null ? null : request.minPriceFloor())));
   }
 
+  @PostMapping("/recalculate/market-demand")
+  @Operation(
+      summary = "Recalcular cotizaciones solo por demanda de mercado",
+      description =
+          "Ejecuta manualmente el recálculo de todos los jugadores elegibles usando únicamente "
+              + "la demanda neta en la ventana configurada. No consulta ni aplica scores deportivos. "
+              + "Requiere JWT válido y la autorización vigente para operaciones administrativas del mercado.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Resumen persistido de la corrida de mercado",
+      content = @Content(schema = @Schema(implementation = QuoteExecutionResponseDTO.class)))
+  @ApiResponse(responseCode = "401", description = "JWT ausente o inválido", content = @Content)
+  @ApiResponse(
+      responseCode = "409",
+      description = "MARKET_NOT_INITIALIZED",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  @ApiResponse(
+      responseCode = "500",
+      description = "INTERNAL_ERROR",
+      content = @Content(schema = @Schema(implementation = ErrorResponseDTO.class)))
+  public ResponseEntity<QuoteExecutionResponseDTO> recalculateMarketDemand() {
+    return ResponseEntity.ok(
+        QuoteExecutionMapper.toResponse(this.recalculationService.recalculateMarketDemand()));
+  }
+
   @GetMapping("/executions")
   @Operation(
       summary = "Consultar ejecuciones por fecha de cotización",
       description =
-          "Devuelve el resumen de las ejecuciones de la fecha consultada. Como máximo hay una "
-              + "ejecución por fecha de cotización; una fecha sin ejecuciones devuelve una lista "
-              + "vacía, no un error.")
+          "Devuelve todos los resúmenes finalizados de la fecha UTC consultada, ordenados por inicio e ID descendentes. "
+              + "Admite manuales múltiples y como máximo una automática por fecha. "
+              + "Los contextos sin cierre no se devuelven; una fecha sin ejecuciones devuelve una lista "
+              + "vacía, no un error. Cada resumen incluye el origen MANUAL o AUTOMATIC, "
+              + "el resultado SUCCESS o FAILED y un motivo cerrado de fallo individual, "
+              + "nulo si hubo éxito.")
   @ApiResponse(
       responseCode = "200",
       description = "Ejecuciones de la fecha",
