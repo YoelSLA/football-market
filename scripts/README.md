@@ -101,9 +101,11 @@ Proporciona un reporte integral del estado del sistema en un solo comando:
 
 ## 3. `recalculate-quotes.sh` — Recálculo Atómico de Cotizaciones
 
-Dispara una corrida de recálculo sobre el backend vía `POST /api/quotes/recalculate` autenticado como operador técnico.
+Dispara una corrida de recálculo sobre el backend vía API REST autenticado con JWT:
+* **Modo Híbrido Habitual (`POST /api/quotes/recalculate`):** Combina el score deportivo con la demanda neta de los últimos 24h.
+* **Modo Exclusivo de Demanda (`--market-demand` / `POST /api/quotes/recalculate/market-demand` - SPEC-028):** Recalcula las cotizaciones de todos los jugadores elegibles guiándose estrictamente por el balance de oferta-demanda neta sin requerir nuevos scores deportivos.
 
-* **Climas Bursátiles Aleatorios:** Selecciona de forma orgánica uno de 3 perfiles para simular mercados vivos:
+* **Climas Bursátiles Aleatorios (en modo habitual):** Selecciona de forma orgánica uno de 3 perfiles para simular mercados vivos:
   * **Calmo (30% prob.):** Baja volatilidad (`factor ~0.12`, `cap ~0.08`).
   * **Moderado (45% prob.):** Volatilidad estándar (`factor ~0.22`, `cap ~0.15`).
   * **Volátil / Rally (25% prob.):** Alta volatilidad (`factor ~0.38`, `cap ~0.24`).
@@ -111,8 +113,11 @@ Dispara una corrida de recálculo sobre el backend vía `POST /api/quotes/recalc
 * **Agnóstico al locale:** Formatea números decimales con punto (`0.22`), garantizando compatibilidad con locales en español.
 
 ```bash
-# Uso estándar con clima aleatorio:
+# Uso estándar con clima aleatorio (híbrido deporte + demanda):
 ./scripts/recalculate-quotes.sh
+
+# Recálculo guiado puramente por demanda de mercado (SPEC-028):
+./scripts/recalculate-quotes.sh --market-demand
 
 # Sobrescribir con parámetros manuales específicos:
 QUOTE_ADJUSTMENT_FACTOR=0.30 QUOTE_VARIATION_CAP=0.20 ./scripts/recalculate-quotes.sh

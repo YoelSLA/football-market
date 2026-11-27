@@ -525,10 +525,11 @@ ensure_bot_inventory() {
   if (( avail_count < min_positions )); then
     local needed=$(( min_positions - avail_count ))
     for (( b=0; b<needed; b++ )); do
-      local page=$(( (RANDOM % 15) + 1 ))
+      local target_league=$(( ((RANDOM + b) % 5) + 1 ))
       declare -a POS_LIST=("Offence" "Midfield" "Defence" "Goalkeeper")
       local target_pos="${POS_LIST[$(( (RANDOM + b) % 4 ))]}"
-      request GET "$API_BASE_URL/api/market/official?page=$page&size=10&hasQuote=true&position=$target_pos" "$bot_token"
+      local page=$(( RANDOM % 5 ))
+      request GET "$API_BASE_URL/api/market/official?leagueId=$target_league&position=$target_pos&page=$page&size=10&hasQuote=true" "$bot_token"
       if [[ "$HTTP_STATUS" == "200" ]]; then
         local c_len
         c_len="$(jq '.content | length' "$RESPONSE_BODY" 2>/dev/null || echo 0)"
@@ -555,31 +556,49 @@ ensure_bot_inventory() {
 # Fases de Operación del Mercado
 # -----------------------------------------------------------------------------
 
-# 1. Compras Primarias en Mercado Oficial (1 a 10 tokens aleatorios con diversidad táctica)
+# 1. Compras Primarias en Mercado Oficial (1 a 10 tokens aleatorios con diversidad táctica y por liga)
 operate_official_buys() {
   local buyer_token="$1"
   local buyer_name="$2"
   local round_num="$3"
 
-  # Diversificación por posición para enriquecer el Donut Chart del Dashboard
+  # Diversificación rotativa por posición (4 demarcaciones)
   declare -a POSITIONS=("Offence" "Midfield" "Defence" "Goalkeeper")
-  local target_position="${POSITIONS[$(( round_num % 4 ))]}"
+  local target_position="${POSITIONS[$(( (round_num + RANDOM) % 4 ))]}"
 
-  # Lista de "Hot Players" estrella (30% de probabilidad de compra concentrada)
-  declare -a HOT_STARS=("Yamal" "Mbappé" "Haaland" "Kane" "Vinicius" "Salah" "Bellingham" "Pedri" "Musiala")
+  # Diversificación rotativa por liga (1: Premier League, 2: Bundesliga, 3: LaLiga, 4: Serie A, 5: Ligue 1)
+  local target_league=$(( ((round_num + RANDOM) % 5) + 1 ))
+
+  # Estrellas de las 5 ligas y las 4 demarcaciones para balancear Top 5, Demanda Táctica y Flujo por Liga
+  declare -a HOT_STARS=(
+    # LaLiga (Offence, Midfield)
+    "Lamine Yamal" "Kylian Mbappé" "Pedri" "Jude Bellingham" "Vinicius Junior" "Raphinha"
+    # Bundesliga (Offence, Midfield)
+    "Jamal Musiala" "Harry Kane" "Joshua Kimmich" "Florian Wirtz"
+    # Serie A (Defence, Midfield, Offence)
+    "Alessandro Bastoni" "Giorgio Cittadini" "Nicolò Barella" "Lautaro Martínez"
+    # Ligue 1 (Defence, Midfield, Offence, Goalkeeper)
+    "Achraf Hakimi" "Warren Zaïre-Emery" "Ousmane Dembélé" "Brice Samba"
+    # Premier League (Defence, Midfield, Offence, Goalkeeper)
+    "Declan Rice" "Erling Haaland" "Bukayo Saka" "Cole Palmer" "Gianluigi Donnarumma" "David Raya"
+  )
 
   local catalog_query
-  if (( (RANDOM % 100) < 30 )); then
+  if (( (RANDOM % 100) < 45 )); then
     local star_name="${HOT_STARS[$(( RANDOM % ${#HOT_STARS[@]} ))]}"
-    catalog_query="size=5&hasQuote=true&search=$star_name"
+    catalog_query="size=5&hasQuote=true&name=$star_name"
   else
-    catalog_query="size=5&hasQuote=true&position=$target_position&page=$(( RANDOM % 4 ))"
+    catalog_query="size=10&hasQuote=true&leagueId=$target_league&position=$target_position&page=$(( RANDOM % 5 ))"
   fi
 
   request GET "$API_BASE_URL/api/market/official?$catalog_query" "$buyer_token"
   if [[ "$HTTP_STATUS" == "200" ]]; then
-    local candidate
-    candidate="$(jq -c '.content[0] // empty' "$RESPONSE_BODY")"
+    local c_len
+    c_len="$(jq '.content | length' "$RESPONSE_BODY" 2>/dev/null || echo 0)"
+    if (( c_len > 0 )); then
+      local rand_idx=$(( RANDOM % c_len ))
+      local candidate
+      candidate="$(jq -c ".content[$rand_idx] // empty" "$RESPONSE_BODY")"
     if [[ -n "$candidate" ]]; then
       local p_id p_name p_pos p_price p_team
       p_id="$(jq -r '.id' <<<"$candidate")"
@@ -628,6 +647,7 @@ operate_official_buys() {
           return 0
         fi
       fi
+    fi
     fi
   fi
   return 1
