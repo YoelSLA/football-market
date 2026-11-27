@@ -53,3 +53,4 @@ se corrige con una fila nueva que la referencie.
 | SPEC-034 | Optimizar ranking de jugadores según estrategia activa para alta frecuencia de consultas | Vaqui26 | https://github.com/YoelSLA/football-market/issues/101 | REQ-S3-04 | feat/034-high-frequency-query-caching | 2026-11-25 |
 | SPEC-035 | Endpoints de métricas de negocio con Micrometer | Vaqui26 | https://github.com/YoelSLA/football-market/issues/102 | REQ-S3-05 | feat/035-business-metrics-endpoints | 2026-11-26 |
 | SPEC-036 | Auditoría y logging de servicios web publicados | Vaqui26 | https://github.com/YoelSLA/football-market/issues/99 | REQ-S3-02 | feat/036-web-service-audit-logging | 2026-11-26 |
+| SPEC-037 | Crear tests de arquitectura con ArchUnit | YoelSLA | https://github.com/YoelSLA/football-market/issues/98 | REQ-S3-01 | feat/037-arch-tests | 2026-11-27 |
