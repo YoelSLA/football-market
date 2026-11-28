@@ -83,12 +83,14 @@ public class PlayerImageRosterSyncService {
    * @param force si true, sobreescribe fotos existentes
    * @return cantidad de jugadores enriquecidos exitosamente
    */
+  @SuppressWarnings("java:S2583")
   public int syncTeamRoster(Long runId, Long teamId, boolean force) {
     Team team =
         this.transaction.execute(
             status ->
                 this.teams.findWithReferencesById(teamId).filter(Team::isCurrent).orElse(null));
 
+    // El callback devuelve null cuando el equipo no existe o ya no está vigente.
     if (team == null) {
       LOG.info("Equipo {} no encontrado o no vigente, se omite", teamId);
       return 0;
@@ -139,7 +141,7 @@ public class PlayerImageRosterSyncService {
                   .findFirst();
             });
 
-    if (existingId != null && existingId.isPresent()) {
+    if (existingId.isPresent()) {
       return existingId.get();
     }
 

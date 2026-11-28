@@ -29,6 +29,7 @@ public class WhoScoredRequestPacer {
   /** Estado de pacing exclusivo de un worker y un canal, con vida limitada al lote. */
   public static final class StatisticsWorker {
     private final long intervalMs;
+    private final Object monitor = new Object();
     private long nextStart = Long.MIN_VALUE;
 
     private StatisticsWorker(long intervalMs) {
@@ -43,7 +44,7 @@ public class WhoScoredRequestPacer {
   /** Permisos por worker: no mantiene el monitor global durante solicitudes estadísticas. */
   public <T> T executeStatistics(
       StatisticsWorker worker, java.time.Instant deadline, Supplier<T> request) {
-    synchronized (worker) {
+    synchronized (worker.monitor) {
       try {
         long now = this.milliseconds.getAsLong();
         long start = Math.max(worker.nextStart, this.unavailableUntil);

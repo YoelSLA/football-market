@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /** Definición inmutable de una métrica admitida por el catálogo. */
 public record MetricDefinition(
@@ -20,9 +21,11 @@ public record MetricDefinition(
     boolean optional,
     DerivationRule derivation) {
 
+  private static final Pattern METRIC_KEY = Pattern.compile("[a-z0-9]++(?:_[a-z0-9]++)*+");
+
   public MetricDefinition {
     if (key == null
-        || !key.matches("[a-z0-9]+(?:_[a-z0-9]+)*")
+        || !METRIC_KEY.matcher(key).matches()
         || unit == null
         || sources == null
         || sources.isEmpty()

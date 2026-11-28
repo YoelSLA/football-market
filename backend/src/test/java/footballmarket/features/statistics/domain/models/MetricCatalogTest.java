@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.*;
 import footballmarket.features.catalog.domain.exceptions.InvalidPlayerException;
 import footballmarket.features.statistics.domain.enums.DerivationRule;
 import footballmarket.features.statistics.domain.enums.MetricSource;
+import footballmarket.features.statistics.domain.enums.MetricUnit;
 import footballmarket.features.statistics.domain.records.MetricDefinition;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.*;
 
 @org.junit.jupiter.api.Tag("unit")
@@ -81,6 +84,24 @@ class MetricCatalogTest {
           .isInstanceOf(InvalidPlayerException.class);
       assertThatThrownBy(() -> MetricCatalog.definitions().clear())
           .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    @DisplayName("Rechaza una clave extensa mal formada sin desbordar la pila")
+    void rejectsLongMalformedMetricKey() {
+      // Arrange
+      String key = "metric_".repeat(10_000) + "!";
+      // Act / Assert
+      assertThatThrownBy(
+              () ->
+                  new MetricDefinition(
+                      key,
+                      MetricUnit.SEASON_TOTAL,
+                      Set.of(MetricSource.SCRAPING),
+                      Map.of(MetricSource.SCRAPING, Set.of("field")),
+                      false,
+                      DerivationRule.NONE))
+          .isInstanceOf(InvalidPlayerException.class);
     }
   }
 }

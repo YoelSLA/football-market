@@ -32,7 +32,7 @@ public class ScrapingMetricAssembler {
 
   /** Contador de apariciones, con el suplente opcional entre paréntesis. */
   private static final Pattern APPEARANCES =
-      Pattern.compile("^([0-9]+)\\s*(?:\\(\\s*[0-9]*\\s*\\))?$");
+      Pattern.compile("^([0-9]++)\\s*+(?:\\(\\s*+[0-9]*+\\s*+\\))?$");
 
   /**
    * Columnas que el proveedor publica en las tablas y que no pertenecen al catálogo cerrado.

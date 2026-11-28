@@ -35,7 +35,7 @@ public final class RequestAuditInterceptor implements HandlerInterceptor {
   private static final String TIMESTAMP_ATTRIBUTE =
       RequestAuditInterceptor.class.getName() + ".timestamp";
   private static final Pattern SENSITIVE_PARAMETER =
-      Pattern.compile("(?i).*(password|passwd|token|secret|credential|authorization|api.?key).*");
+      Pattern.compile("(?i)(password|passwd|token|secret|credential|authorization|api.?key)");
 
   @Override
   public boolean preHandle(
@@ -136,6 +136,6 @@ public final class RequestAuditInterceptor implements HandlerInterceptor {
             || normalizedName.endsWith("ids")
             || normalizedName.endsWith("identifier")
             || normalizedName.endsWith("identifiers");
-    return !identifier && !SENSITIVE_PARAMETER.matcher(name).matches();
+    return !identifier && !SENSITIVE_PARAMETER.matcher(name).find();
   }
 }
