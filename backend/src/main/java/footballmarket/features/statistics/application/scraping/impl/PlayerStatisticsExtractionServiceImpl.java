@@ -42,8 +42,10 @@ public class PlayerStatisticsExtractionServiceImpl implements PlayerStatisticsEx
   }
 
   @Override
+  @SuppressWarnings("java:S2095")
   public Batch openBatch() {
     this.requireOutsideTransaction();
+    // El Batch devuelto asume la propiedad de la sesión y delega su cierre en Batch.close().
     WhoScoredStatisticsScrapingIntegration.Session session = this.browser.open();
     return new Batch() {
       private final java.util.concurrent.atomic.AtomicLong calls =

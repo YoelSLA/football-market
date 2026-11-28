@@ -78,7 +78,7 @@ public class PlayerReferenceReadGate {
                   && arguments[0] instanceof String sql
                   && sql.startsWith("select")
                   && sql.contains("player_external_references")
-                  && sql.matches("(?s).*where.*external_id\\s*=.*")) {
+                  && hasExternalIdPredicate(sql)) {
                 Gate gate = NEXT.getAndSet(null);
                 if (gate != null) {
                   gate.entered.countDown();
@@ -93,5 +93,21 @@ public class PlayerReferenceReadGate {
                 throw failure.getCause();
               }
             });
+  }
+
+  private static boolean hasExternalIdPredicate(String sql) {
+    int whereIndex = sql.indexOf("where");
+    if (whereIndex < 0) {
+      return false;
+    }
+    int externalIdIndex = sql.indexOf("external_id", whereIndex + "where".length());
+    if (externalIdIndex < 0) {
+      return false;
+    }
+    int operatorIndex = externalIdIndex + "external_id".length();
+    while (operatorIndex < sql.length() && Character.isWhitespace(sql.charAt(operatorIndex))) {
+      operatorIndex++;
+    }
+    return operatorIndex < sql.length() && sql.charAt(operatorIndex) == '=';
   }
 }

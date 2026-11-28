@@ -10,7 +10,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -123,6 +125,22 @@ class ExtractionWorkerPoolTest {
     }
 
     @Test
+    @DisplayName("Propaga el fallo de limpieza cuando la tarea termina correctamente")
+    void propagatesCleanupFailureAfterSuccessfulTask() {
+      // Arrange
+      IllegalStateException cleanup = new IllegalStateException("limpieza");
+      try (ExtractionWorkerPool pool =
+          ExtractionWorkerPool.open(
+              1,
+              () -> {
+                throw cleanup;
+              })) {
+        // Act / Assert
+        assertThatThrownBy(() -> pool.forEach(List.of(1L), id -> {})).isSameAs(cleanup);
+      }
+    }
+
+    @Test
     @DisplayName("Libera los recursos una vez en cada hilo de worker")
     void cleansUpOncePerWorkerThread() {
       // Arrange
@@ -180,6 +198,46 @@ class ExtractionWorkerPoolTest {
       assertThat(cleanups).hasValue(1);
       runner.join(5000);
       assertThat(runner.isAlive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Restaura inmediatamente la interrupción del coordinador y detiene los workers")
+    void restoresCoordinatorInterruption() throws Exception {
+      // Arrange
+      CountDownLatch taskStarted = new CountDownLatch(1);
+      AtomicReference<RuntimeException> failure = new AtomicReference<>();
+      AtomicBoolean interruptedAfterReturn = new AtomicBoolean();
+      Thread runner =
+          new Thread(
+              () -> {
+                try (ExtractionWorkerPool pool = ExtractionWorkerPool.open(1)) {
+                  pool.forEach(
+                      List.of(1L),
+                      id -> {
+                        taskStarted.countDown();
+                        try {
+                          new CountDownLatch(1).await();
+                        } catch (InterruptedException interrupted) {
+                          Thread.currentThread().interrupt();
+                        }
+                      });
+                } catch (RuntimeException workerFailure) {
+                  failure.set(workerFailure);
+                  interruptedAfterReturn.set(Thread.currentThread().isInterrupted());
+                }
+              });
+      runner.setDaemon(true);
+      runner.start();
+      assertThat(taskStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+      // Act
+      runner.interrupt();
+      runner.join(5000);
+
+      // Assert
+      assertThat(runner.isAlive()).isFalse();
+      assertThat(failure.get()).isInstanceOf(PlayerStatisticsSynchronizationException.class);
+      assertThat(interruptedAfterReturn).isTrue();
     }
   }
 

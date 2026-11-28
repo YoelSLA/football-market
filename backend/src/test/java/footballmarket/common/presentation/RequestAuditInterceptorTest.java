@@ -71,6 +71,8 @@ class RequestAuditInterceptorTest {
                   .queryParam("term", "forward")
                   .queryParam("leagueId", "5")
                   .queryParam("password", "secret")
+                  .queryParam("token", "sensitive-token")
+                  .queryParam("apiKey", "sensitive-api-key")
                   .queryParam("unknown", "ignored"))
           .andReturn();
 
@@ -86,6 +88,10 @@ class RequestAuditInterceptorTest {
           .doesNotContain("leagueId")
           .doesNotContain("password")
           .doesNotContain("secret")
+          .doesNotContain("token")
+          .doesNotContain("apiKey")
+          .doesNotContain("sensitive-token")
+          .doesNotContain("sensitive-api-key")
           .doesNotContain("unknown")
           .doesNotContain("/api/audit/42");
     }
@@ -154,6 +160,6 @@ class RequestAuditInterceptorTest {
       throw new IllegalStateException("failure");
     }
 
-    record AuditQuery(String term, Long leagueId, String password) {}
+    record AuditQuery(String term, Long leagueId, String password, String token, String apiKey) {}
   }
 }

@@ -564,6 +564,40 @@ class PlayerControllerTest {
     }
 
     @Test
+    @DisplayName("Serializa un jugador sin equipo ni liga sin producir un error")
+    void devuelveJugadorSinEquipoNiLiga() throws Exception {
+      // Arrange
+      Player player = visiblePlayer(7L, "Nombre");
+      ReflectionTestUtils.setField(player, "team", null);
+      when(service.getVisiblePlayerById(7L)).thenReturn(player);
+
+      // Act / Assert
+      mvc.perform(get("/api/players/{id}", 7L).header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.teamId").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.teamName").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.leagueId").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.leagueName").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    @DisplayName("Serializa un jugador cuyo equipo no tiene liga asociada")
+    void devuelveJugadorSinLiga() throws Exception {
+      // Arrange
+      Player player = visiblePlayer(7L, "Nombre");
+      ReflectionTestUtils.setField(player.getTeam(), "league", null);
+      when(service.getVisiblePlayerById(7L)).thenReturn(player);
+
+      // Act / Assert
+      mvc.perform(get("/api/players/{id}", 7L).header("Authorization", authorization))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.teamId").value(41))
+          .andExpect(jsonPath("$.teamName").value("Real Betis Balompié"))
+          .andExpect(jsonPath("$.leagueId").value(org.hamcrest.Matchers.nullValue()))
+          .andExpect(jsonPath("$.leagueName").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
     @DisplayName("Responde 404 con el mismo cuerpo si el jugador no es visible")
     void responde404SiNoEsVisible() throws Exception {
       when(service.getVisiblePlayerById(999999L))

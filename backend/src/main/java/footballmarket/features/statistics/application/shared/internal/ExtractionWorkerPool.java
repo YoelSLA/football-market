@@ -90,41 +90,52 @@ public final class ExtractionWorkerPool implements AutoCloseable {
                 index ->
                     this.executor.submit(
                         () -> {
-                          RuntimeException primary = null;
+                          Throwable primary = null;
                           try {
                             int selected;
                             while (!stopping.get()
                                 && (selected = next.getAndIncrement()) < playerIds.size()) {
                               task.accept(playerIds.get(selected));
                             }
-                            return null;
-                          } catch (RuntimeException failure) {
+                          } catch (RuntimeException | Error failure) {
                             primary = failure;
                             stopping.set(true);
-                            throw failure;
+                          }
+
+                          // El driver recibe mensajes durante close: no hacerlo con el hilo
+                          // interrumpido.
+                          boolean interrupted = Thread.interrupted();
+                          Throwable cleanupFailure = null;
+                          try {
+                            this.threadCleanup.run();
+                          } catch (RuntimeException | Error failure) {
+                            stopping.set(true);
+                            cleanupFailure = failure;
                           } finally {
-                            // El driver recibe mensajes durante close: no hacerlo con el hilo
-                            // interrumpido.
-                            boolean interrupted = Thread.interrupted();
-                            try {
-                              this.threadCleanup.run();
-                            } catch (RuntimeException cleanupFailure) {
-                              stopping.set(true);
-                              if (primary != null) {
-                                primary.addSuppressed(cleanupFailure);
-                              } else {
-                                throw cleanupFailure;
-                              }
-                            } finally {
-                              if (interrupted) {
-                                Thread.currentThread().interrupt();
-                              }
+                            if (interrupted) {
+                              Thread.currentThread().interrupt();
                             }
                           }
+
+                          if (primary != null) {
+                            if (cleanupFailure != null && primary != cleanupFailure) {
+                              primary.addSuppressed(cleanupFailure);
+                            }
+                            if (primary instanceof RuntimeException runtime) {
+                              throw runtime;
+                            }
+                            throw (Error) primary;
+                          }
+                          if (cleanupFailure instanceof RuntimeException runtime) {
+                            throw runtime;
+                          }
+                          if (cleanupFailure instanceof Error error) {
+                            throw error;
+                          }
+                          return null;
                         }))
             .toList();
-    RuntimeException failure = null;
-    boolean interrupted = false;
+    Throwable failure = null;
     for (Future<Object> future : futures) {
       boolean finished = false;
       while (!finished) {
@@ -132,31 +143,30 @@ public final class ExtractionWorkerPool implements AutoCloseable {
           future.get();
           finished = true;
         } catch (InterruptedException interruption) {
-          interrupted = true;
           stopping.set(true);
           this.workerThreads.forEach(Thread::interrupt);
+          Thread.currentThread().interrupt();
+          throw new PlayerStatisticsSynchronizationException();
         } catch (ExecutionException error) {
           finished = true;
-          RuntimeException cause =
-              error.getCause() instanceof RuntimeException runtime
-                  ? runtime
+          Throwable cause = error.getCause();
+          Throwable taskFailure =
+              cause instanceof RuntimeException || cause instanceof Error
+                  ? cause
                   : new PlayerStatisticsSynchronizationException();
           if (failure == null) {
-            failure = cause;
-          } else if (failure != cause) {
-            failure.addSuppressed(cause);
+            failure = taskFailure;
+          } else if (failure != taskFailure) {
+            failure.addSuppressed(taskFailure);
           }
         }
       }
     }
-    if (interrupted) {
-      Thread.currentThread().interrupt();
-      if (failure == null) {
-        failure = new PlayerStatisticsSynchronizationException();
-      }
+    if (failure instanceof RuntimeException runtime) {
+      throw runtime;
     }
-    if (failure != null) {
-      throw failure;
+    if (failure instanceof Error error) {
+      throw error;
     }
   }
 

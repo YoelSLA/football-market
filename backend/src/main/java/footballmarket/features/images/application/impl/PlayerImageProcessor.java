@@ -78,9 +78,11 @@ public class PlayerImageProcessor {
   }
 
   /** Evalúa y procesa un jugador. Retorna true si requirió llamada remota, false si se omitió. */
+  @SuppressWarnings({"java:S2583", "java:S3516"})
   public boolean processPlayer(Long runId, Long playerId, boolean force) {
     Evaluation evaluation =
         this.transaction.execute(status -> this.evaluate(runId, playerId, force));
+    // El callback devuelve null intencionalmente para jugadores inactivos o sin equipo.
     if (evaluation == null) {
       return false;
     }

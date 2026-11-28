@@ -1,6 +1,8 @@
 package footballmarket.features.catalog.presentation;
 
+import footballmarket.features.catalog.domain.models.league.League;
 import footballmarket.features.catalog.domain.models.player.Player;
+import footballmarket.features.catalog.domain.models.team.Team;
 import footballmarket.features.catalog.domain.records.PlayerCatalogCriteria;
 import footballmarket.features.catalog.domain.records.PlayerCatalogFilters;
 import footballmarket.features.catalog.domain.records.PlayerCatalogPage;
@@ -35,6 +37,8 @@ public final class PlayerMapper {
             .map(
                 entry -> {
                   Player player = entry.player();
+                  Team team = player.getTeam();
+                  League league = player.getLeague();
                   footballmarket.features.catalog.domain.records.PlayerCatalogStatistics stats =
                       entry.statistics();
                   PlayerCatalogEntryResponseDTO.Statistics statistics =
@@ -55,10 +59,10 @@ public final class PlayerMapper {
                   return new PlayerCatalogEntryResponseDTO(
                       player.getId(),
                       player.getName(),
-                      player.getTeam().getId(),
-                      player.getTeam().getName(),
-                      player.getLeague().getId(),
-                      player.getLeague().getName(),
+                      team == null ? null : team.getId(),
+                      team == null ? null : team.getName(),
+                      league == null ? null : league.getId(),
+                      league == null ? null : league.getName(),
                       player.getPosition(),
                       player.getDateOfBirth(),
                       player.getNationality(),
@@ -103,13 +107,15 @@ public final class PlayerMapper {
   }
 
   public static PlayerResponseDTO toResponse(Player player) {
+    Team team = player.getTeam();
+    League league = player.getLeague();
     return new PlayerResponseDTO(
         player.getId(),
         player.getName(),
-        player.getTeam().getId(),
-        player.getTeam().getName(),
-        player.getLeague().getId(),
-        player.getLeague().getName(),
+        team == null ? null : team.getId(),
+        team == null ? null : team.getName(),
+        league == null ? null : league.getId(),
+        league == null ? null : league.getName(),
         player.getPosition(),
         player.getDateOfBirth(),
         player.getNationality(),
